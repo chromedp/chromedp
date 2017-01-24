@@ -1,0 +1,7 @@
+out.txt
+out*.txt
+old*.txt
+
+# binaries
+/chromedp-gen
+/cmd/chromedp-gen/chromedp-gen

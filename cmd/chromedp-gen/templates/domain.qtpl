@@ -1,0 +1,163 @@
+{% import (
+	. "github.com/knq/chromedp/cmd/chromedp-gen/internal"
+) %}
+
+// DomainTemplate is the template for a single domain.
+{% func DomainTemplate(d *Domain, domains []*Domain) %}
+{%s= FileLocalImportTemplate(*FlagPkg) %}
+{%s= FileEmptyVarTemplate(InternalTypeList()...) %}
+{% for _, c := range d.Commands %}
+{%s= CommandTemplate(c, d, domains) %}
+{% endfor %}
+{% endfunc %}
+
+// CommandTemplate is the general command template.
+{% func CommandTemplate(c *Type, d *Domain, domains []*Domain) %}
+{% code /* add *Param type */ %}
+{%s= TypeTemplate(c, CommandTypePrefix, CommandTypeSuffix, d, domains, nil, false, true) %}
+
+{% code /* add Command func */ %}
+{%s= CommandFuncTemplate(c, d, domains) %}
+
+{% code /* add param funcs (only if it has parameters and a returns). */ %}
+{% if len(c.Parameters) != 0 %}{% for _, p := range c.Parameters %}{% if !p.Optional %}{% continue %}{% end %}
+{%s= CommandOptionFuncTemplate(p, c, d, domains) %}
+{% endfor %}{% endif %}
+
+{% code /* add *Returns type */ %}
+{% if len(c.Returns) != 0 %}
+{%s= TypeTemplate(&Type{
+	ID: c.Name,
+	Type: TypeObject,
+	Description: "Return values.",
+	Properties: c.Returns,
+}, CommandReturnsPrefix, CommandReturnsSuffix, d, domains, nil, false, false) %}
+{% endif %}
+
+{% code /* add CommandParams.Do func */ %}
+{%s= CommandDoFuncTemplate(c, d, domains) %}
+{% endfunc %}
+
+// CommandFuncTemplate is the command func template.
+{% func CommandFuncTemplate(c *Type, d *Domain, domains []*Domain) %}{% code
+	cmdName := c.CamelName()
+	typ := c.CommandType()
+
+	desc := c.GetDescription()
+%}
+{% if desc != "" %}{%s= formatComment(desc, "", cmdName + " ") %}{% end %}{% if len(c.Parameters) > 0 %}{% if desc != "" %}
+//{% endif %}
+// parameters:{% for _, p := range c.Parameters %}{% if p.Optional %}{% continue %}{% end %}
+//   {%s= p.String() %}{% if p.Optional %} (optional){% end %}{% endfor %}{% endif %}
+func {%s= cmdName %}({%s= c.ParamList(d, domains, false) %}) *{%s= typ %}{
+	return &{%s= typ %}{{% for _, t := range c.Parameters %}{% if !t.Optional %}
+		{%s= t.GoName(false) %}: {%s= t.GoName(true) %},{% endif %}{% endfor %}
+	}
+}
+{% endfunc %}
+
+// CommandOptionFuncTemplate is the command option func template.
+{% func CommandOptionFuncTemplate(t *Type, c *Type, d *Domain, domains []*Domain) %}{% code
+	n := t.GoName(false)
+	optName := OptionFuncPrefix+n+OptionFuncSuffix
+	typ := c.CommandType()
+	v := t.GoName(true)
+%}
+{% if desc := t.GetDescription(); desc != "" %}{%s= formatComment(desc, "", optName + " ") %}{% end %}
+func (p {%s= typ %}) {%s= optName %}({%s= v %} {%s= t.GoType(d, domains) %}) *{%s= typ %}{
+	p.{%s= n %} = {%s= v %}
+	return &p
+}
+{% endfunc %}
+
+// CommandDoFuncTemplate is the command do func template.
+{% func CommandDoFuncTemplate(c *Type, d *Domain, domains[]*Domain) %}{% code
+	typ := c.CommandType()
+
+	hasEmptyParams := len(c.Parameters) == 0
+	hasEmptyRet := len(c.Returns) == 0
+
+	emptyRet := c.EmptyRetList(d, domains)
+	if emptyRet != "" {
+		emptyRet += ", "
+	}
+
+	retTypeList := c.RetTypeList(d, domains)
+	if retTypeList != "" {
+		retTypeList += ", "
+	}
+
+	retValueList := c.RetValueList(d, domains)
+	if retValueList != "" {
+		retValueList += ", "
+	}
+
+	b64ret := c.Base64EncodedRetParam()
+
+	// determine if there's a conditional return value with it
+	b64cond := false
+	for _, p := range c.Returns {
+		if p.Name == Base64EncodedParamName {
+			b64cond = true
+			break
+		}
+	}
+%}
+// Do executes {%s= c.ProtoName(d) %}.{% if len(c.Returns) > 0 %}
+//
+// returns:{% for _, p := range c.Returns %}{% if p.Name == Base64EncodedParamName %}{% continue %}{% end %}
+//   {%s= p.String() %}{% endfor %}{% endif %}
+func (p *{%s= typ %}) Do(ctxt context.Context, h FrameHandler) ({%s= retTypeList %}err error) {
+	if ctxt == nil {
+		ctxt = context.Background()
+	}{% if !hasEmptyParams %}
+
+	// marshal
+	buf, err := easyjson.Marshal(p)
+	if err != nil {
+		return {%s= emptyRet %}err
+	}{% endif %}
+
+	// execute
+	ch := h.Execute(ctxt, {%s= c.CommandMethodType(d) %}, {% if hasEmptyParams %}Empty{% else %}easyjson.RawMessage(buf){% end %})
+
+	// read response
+	select {
+	case res := <-ch:
+		if res == nil {
+			return {%s= emptyRet %}ErrChannelClosed
+		}
+
+		switch v := res.(type) {
+		case easyjson.RawMessage:{% if !hasEmptyRet %}
+			// unmarshal
+			var r {%s= c.CommandReturnsType() %}
+			err = easyjson.Unmarshal(v, &r)
+			if err != nil {
+				return {%s= emptyRet %}ErrInvalidResult
+			}{% if b64ret != nil %}
+
+			// decode
+			var dec []byte{% if b64cond %}
+			if r.Base64encoded {{% endif %}
+				dec, err = base64.StdEncoding.DecodeString(r.{%s= b64ret.GoName(false) %})
+				if err != nil {
+					return nil, err
+				}{% if b64cond %}
+			} else {
+				dec = []byte(r.{%s= b64ret.GoName(false) %})
+			}{% endif %}{% endif %}
+			{% endif %}
+			return {%s= retValueList %}nil
+
+		case error:
+			return {%s= emptyRet %}v
+		}
+
+	case <-ctxt.Done():
+		return {%s= emptyRet %}ErrContextDone
+	}
+
+	return {%s= emptyRet %}ErrUnknownResult
+}
+{% endfunc %}
