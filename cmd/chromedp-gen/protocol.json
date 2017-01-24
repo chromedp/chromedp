@@ -2387,6 +2387,7 @@
               "enum": [
                 "parser",
                 "script",
+                "preload",
                 "other"
               ],
               "description": "Type of this initiator."
@@ -2621,6 +2622,17 @@
         },
         {
           "name": "getCookies",
+          "parameters": [
+            {
+              "name": "urls",
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "optional": true,
+              "description": "The list of URLs for which applicable cookies will be fetched"
+            }
+          ],
           "returns": [
             {
               "name": "cookies",

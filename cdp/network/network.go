@@ -739,13 +739,23 @@ func (p *ClearBrowserCookiesParams) Do(ctxt context.Context, h FrameHandler) (er
 // GetCookiesParams returns all browser cookies for the current URL.
 // Depending on the backend support, will return detailed cookie information in
 // the cookies field.
-type GetCookiesParams struct{}
+type GetCookiesParams struct {
+	Urls []string `json:"urls,omitempty"` // The list of URLs for which applicable cookies will be fetched
+}
 
 // GetCookies returns all browser cookies for the current URL. Depending on
 // the backend support, will return detailed cookie information in the cookies
 // field.
+//
+// parameters:
 func GetCookies() *GetCookiesParams {
 	return &GetCookiesParams{}
+}
+
+// WithUrls the list of URLs for which applicable cookies will be fetched.
+func (p GetCookiesParams) WithUrls(urls []string) *GetCookiesParams {
+	p.Urls = urls
+	return &p
 }
 
 // GetCookiesReturns return values.
@@ -762,8 +772,14 @@ func (p *GetCookiesParams) Do(ctxt context.Context, h FrameHandler) (cookies []*
 		ctxt = context.Background()
 	}
 
+	// marshal
+	buf, err := easyjson.Marshal(p)
+	if err != nil {
+		return nil, err
+	}
+
 	// execute
-	ch := h.Execute(ctxt, CommandNetworkGetCookies, Empty)
+	ch := h.Execute(ctxt, CommandNetworkGetCookies, easyjson.RawMessage(buf))
 
 	// read response
 	select {
