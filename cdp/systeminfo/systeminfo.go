@@ -12,28 +12,8 @@ package systeminfo
 import (
 	"context"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/mailru/easyjson"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // GetInfoParams returns information about the system.
@@ -57,19 +37,19 @@ type GetInfoReturns struct {
 //   gpu - Information about the GPUs on the system.
 //   modelName - A platform-dependent description of the model of the machine. On Mac OS, this is, for example, 'MacBookPro'. Will be the empty string if not supported.
 //   modelVersion - A platform-dependent description of the version of the machine. On Mac OS, this is, for example, '10.1'. Will be the empty string if not supported.
-func (p *GetInfoParams) Do(ctxt context.Context, h FrameHandler) (gpu *GPUInfo, modelName string, modelVersion string, err error) {
+func (p *GetInfoParams) Do(ctxt context.Context, h cdp.FrameHandler) (gpu *GPUInfo, modelName string, modelVersion string, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandSystemInfoGetInfo, Empty)
+	ch := h.Execute(ctxt, cdp.CommandSystemInfoGetInfo, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, "", "", ErrChannelClosed
+			return nil, "", "", cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -78,7 +58,7 @@ func (p *GetInfoParams) Do(ctxt context.Context, h FrameHandler) (gpu *GPUInfo, 
 			var r GetInfoReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, "", "", ErrInvalidResult
+				return nil, "", "", cdp.ErrInvalidResult
 			}
 
 			return r.Gpu, r.ModelName, r.ModelVersion, nil
@@ -88,8 +68,8 @@ func (p *GetInfoParams) Do(ctxt context.Context, h FrameHandler) (gpu *GPUInfo, 
 		}
 
 	case <-ctxt.Done():
-		return nil, "", "", ErrContextDone
+		return nil, "", "", cdp.ErrContextDone
 	}
 
-	return nil, "", "", ErrUnknownResult
+	return nil, "", "", cdp.ErrUnknownResult
 }

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	. "github.com/knq/chromedp/cdp"
+	"github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/dom"
 	"github.com/knq/chromedp/cdp/input"
 )
@@ -34,8 +34,8 @@ func MouseClickXY(x, y int64, opts ...MouseOption) Action {
 }
 
 // MouseActionNode dispatches a mouse event at the center of a specified node.
-func MouseActionNode(n *Node, opts ...MouseOption) Action {
-	return ActionFunc(func(ctxt context.Context, h FrameHandler) error {
+func MouseActionNode(n *cdp.Node, opts ...MouseOption) Action {
+	return ActionFunc(func(ctxt context.Context, h cdp.FrameHandler) error {
 		box, err := dom.GetBoxModel(n.NodeID).Do(ctxt, h)
 		if err != nil {
 			return err
@@ -104,7 +104,7 @@ var keyNames = map[rune]string{
 }
 
 // Do satisfies Action interface.
-func (ka *KeyAction) Do(ctxt context.Context, h FrameHandler) error {
+func (ka *KeyAction) Do(ctxt context.Context, h cdp.FrameHandler) error {
 	var err error
 
 	// apply opts
@@ -148,7 +148,7 @@ func (ka *KeyAction) Do(ctxt context.Context, h FrameHandler) error {
 }
 
 // KeyActionNode dispatches a key event on a node.
-func KeyActionNode(n *Node, v string, opts ...KeyOption) Action {
+func KeyActionNode(n *cdp.Node, v string, opts ...KeyOption) Action {
 	return Tasks{
 		dom.Focus(n.NodeID),
 		MouseActionNode(n),

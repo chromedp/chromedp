@@ -1,10 +1,10 @@
 {% import (
-	. "github.com/knq/chromedp/cmd/chromedp-gen/internal"
+	"github.com/knq/chromedp/cmd/chromedp-gen/internal"
 ) %}
 
 // ExtraTimestampTemplate is a special template for the Timestamp type that
 // defines its JSON unmarshaling.
-{% func ExtraTimestampTemplate(t *Type, d *Domain) %}{%code
+{% func ExtraTimestampTemplate(t *internal.Type, d *internal.Domain) %}{%code
 	typ := t.IdOrName()
 %}
 // MarshalEasyJSON satisfies easyjson.Marshaler.
@@ -179,9 +179,9 @@ func (t *{%s= typ %}) UnmarshalJSON(buf []byte) error {
 }
 {% endfunc %}
 
-// ExtraInternalTypes is the template for additional internal type
+// ExtraCDPTypes is the template for additional internal type
 // declarations.
-{% func ExtraInternalTypes() %}
+{% func ExtraCDPTypes() %}
 
 // Error satisfies the error interface.
 func (t ErrorType) Error() string {
@@ -201,24 +201,24 @@ type FrameHandler interface {
 	Execute(context.Context, MethodType, easyjson.RawMessage) <-chan interface{}
 }
 
-// Empty is an empty JSON object message
+// Empty is an empty JSON object message.
 var Empty = easyjson.RawMessage(`{}`)
 {% endfunc %}
 
 // ExtraUtilTemplate generates the decode func for the Message type.
-{% func ExtraUtilTemplate(domains []*Domain) %}
+{% func ExtraUtilTemplate(domains []*internal.Domain) %}
 type empty struct{}
 var emptyVal = &empty{}
 
 // UnmarshalMessage unmarshals the message result or params.
-func UnmarshalMessage(msg *Message) (interface{}, error) {
+func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	var v easyjson.Unmarshaler
 	switch msg.Method {{% for _, d := range domains %}{% for _, c := range d.Commands %}
-	case {%s= c.CommandMethodType(d) %}:{% if len(c.Returns) == 0 %}
+	case cdp.{%s= c.CommandMethodType(d) %}:{% if len(c.Returns) == 0 %}
 		return emptyVal, nil{% else %}
 		v = new({%s= d.PackageRefName() %}.{%s= c.CommandReturnsType() %}){% endif %}
 	{% endfor %}{% for _, e := range d.Events %}
-	case {%s= e.EventMethodType(d) %}:
+	case cdp.{%s= e.EventMethodType(d) %}:
 		v = new({%s= d.PackageRefName() %}.{%s= e.EventType() %})
 	{% endfor %}{% endfor %}}
 

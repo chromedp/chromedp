@@ -14,28 +14,8 @@ import (
 	"context"
 	"encoding/base64"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/mailru/easyjson"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // EnableParams enables network tracking, network events will now be
@@ -68,7 +48,7 @@ func (p EnableParams) WithMaxResourceBufferSize(maxResourceBufferSize int64) *En
 }
 
 // Do executes Network.enable.
-func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -80,13 +60,13 @@ func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandNetworkEnable, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandNetworkEnable, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -98,10 +78,10 @@ func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // DisableParams disables network tracking, prevents network events from
@@ -115,19 +95,19 @@ func Disable() *DisableParams {
 }
 
 // Do executes Network.disable.
-func (p *DisableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandNetworkDisable, Empty)
+	ch := h.Execute(ctxt, cdp.CommandNetworkDisable, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -139,10 +119,10 @@ func (p *DisableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetUserAgentOverrideParams allows overriding user agent with the given
@@ -162,7 +142,7 @@ func SetUserAgentOverride(userAgent string) *SetUserAgentOverrideParams {
 }
 
 // Do executes Network.setUserAgentOverride.
-func (p *SetUserAgentOverrideParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetUserAgentOverrideParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -174,13 +154,13 @@ func (p *SetUserAgentOverrideParams) Do(ctxt context.Context, h FrameHandler) (e
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandNetworkSetUserAgentOverride, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandNetworkSetUserAgentOverride, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -192,10 +172,10 @@ func (p *SetUserAgentOverrideParams) Do(ctxt context.Context, h FrameHandler) (e
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetExtraHTTPHeadersParams specifies whether to always send extra HTTP
@@ -216,7 +196,7 @@ func SetExtraHTTPHeaders(headers *Headers) *SetExtraHTTPHeadersParams {
 }
 
 // Do executes Network.setExtraHTTPHeaders.
-func (p *SetExtraHTTPHeadersParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetExtraHTTPHeadersParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -228,13 +208,13 @@ func (p *SetExtraHTTPHeadersParams) Do(ctxt context.Context, h FrameHandler) (er
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandNetworkSetExtraHTTPHeaders, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandNetworkSetExtraHTTPHeaders, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -246,10 +226,10 @@ func (p *SetExtraHTTPHeadersParams) Do(ctxt context.Context, h FrameHandler) (er
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // GetResponseBodyParams returns content served for the given request.
@@ -260,10 +240,10 @@ type GetResponseBodyParams struct {
 // GetResponseBody returns content served for the given request.
 //
 // parameters:
-//   requestId - Identifier of the network request to get content for.
-func GetResponseBody(requestId RequestID) *GetResponseBodyParams {
+//   requestID - Identifier of the network request to get content for.
+func GetResponseBody(requestID RequestID) *GetResponseBodyParams {
 	return &GetResponseBodyParams{
-		RequestID: requestId,
+		RequestID: requestID,
 	}
 }
 
@@ -277,7 +257,7 @@ type GetResponseBodyReturns struct {
 //
 // returns:
 //   body - Response body.
-func (p *GetResponseBodyParams) Do(ctxt context.Context, h FrameHandler) (body []byte, err error) {
+func (p *GetResponseBodyParams) Do(ctxt context.Context, h cdp.FrameHandler) (body []byte, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -289,13 +269,13 @@ func (p *GetResponseBodyParams) Do(ctxt context.Context, h FrameHandler) (body [
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandNetworkGetResponseBody, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandNetworkGetResponseBody, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -304,7 +284,7 @@ func (p *GetResponseBodyParams) Do(ctxt context.Context, h FrameHandler) (body [
 			var r GetResponseBodyReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			// decode
@@ -325,10 +305,10 @@ func (p *GetResponseBodyParams) Do(ctxt context.Context, h FrameHandler) (body [
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // AddBlockedURLParams blocks specific URL from loading.
@@ -347,7 +327,7 @@ func AddBlockedURL(url string) *AddBlockedURLParams {
 }
 
 // Do executes Network.addBlockedURL.
-func (p *AddBlockedURLParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *AddBlockedURLParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -359,13 +339,13 @@ func (p *AddBlockedURLParams) Do(ctxt context.Context, h FrameHandler) (err erro
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandNetworkAddBlockedURL, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandNetworkAddBlockedURL, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -377,10 +357,10 @@ func (p *AddBlockedURLParams) Do(ctxt context.Context, h FrameHandler) (err erro
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // RemoveBlockedURLParams cancels blocking of a specific URL from loading.
@@ -399,7 +379,7 @@ func RemoveBlockedURL(url string) *RemoveBlockedURLParams {
 }
 
 // Do executes Network.removeBlockedURL.
-func (p *RemoveBlockedURLParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *RemoveBlockedURLParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -411,13 +391,13 @@ func (p *RemoveBlockedURLParams) Do(ctxt context.Context, h FrameHandler) (err e
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandNetworkRemoveBlockedURL, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandNetworkRemoveBlockedURL, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -429,10 +409,10 @@ func (p *RemoveBlockedURLParams) Do(ctxt context.Context, h FrameHandler) (err e
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // ReplayXHRParams this method sends a new XMLHttpRequest which is identical
@@ -449,15 +429,15 @@ type ReplayXHRParams struct {
 // password.
 //
 // parameters:
-//   requestId - Identifier of XHR to replay.
-func ReplayXHR(requestId RequestID) *ReplayXHRParams {
+//   requestID - Identifier of XHR to replay.
+func ReplayXHR(requestID RequestID) *ReplayXHRParams {
 	return &ReplayXHRParams{
-		RequestID: requestId,
+		RequestID: requestID,
 	}
 }
 
 // Do executes Network.replayXHR.
-func (p *ReplayXHRParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *ReplayXHRParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -469,13 +449,13 @@ func (p *ReplayXHRParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandNetworkReplayXHR, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandNetworkReplayXHR, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -487,10 +467,10 @@ func (p *ReplayXHRParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetMonitoringXHREnabledParams toggles monitoring of XMLHttpRequest. If
@@ -511,7 +491,7 @@ func SetMonitoringXHREnabled(enabled bool) *SetMonitoringXHREnabledParams {
 }
 
 // Do executes Network.setMonitoringXHREnabled.
-func (p *SetMonitoringXHREnabledParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetMonitoringXHREnabledParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -523,13 +503,13 @@ func (p *SetMonitoringXHREnabledParams) Do(ctxt context.Context, h FrameHandler)
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandNetworkSetMonitoringXHREnabled, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandNetworkSetMonitoringXHREnabled, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -541,10 +521,10 @@ func (p *SetMonitoringXHREnabledParams) Do(ctxt context.Context, h FrameHandler)
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // CanClearBrowserCacheParams tells whether clearing browser cache is
@@ -565,19 +545,19 @@ type CanClearBrowserCacheReturns struct {
 //
 // returns:
 //   result - True if browser cache can be cleared.
-func (p *CanClearBrowserCacheParams) Do(ctxt context.Context, h FrameHandler) (result bool, err error) {
+func (p *CanClearBrowserCacheParams) Do(ctxt context.Context, h cdp.FrameHandler) (result bool, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandNetworkCanClearBrowserCache, Empty)
+	ch := h.Execute(ctxt, cdp.CommandNetworkCanClearBrowserCache, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return false, ErrChannelClosed
+			return false, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -586,7 +566,7 @@ func (p *CanClearBrowserCacheParams) Do(ctxt context.Context, h FrameHandler) (r
 			var r CanClearBrowserCacheReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return false, ErrInvalidResult
+				return false, cdp.ErrInvalidResult
 			}
 
 			return r.Result, nil
@@ -596,10 +576,10 @@ func (p *CanClearBrowserCacheParams) Do(ctxt context.Context, h FrameHandler) (r
 		}
 
 	case <-ctxt.Done():
-		return false, ErrContextDone
+		return false, cdp.ErrContextDone
 	}
 
-	return false, ErrUnknownResult
+	return false, cdp.ErrUnknownResult
 }
 
 // ClearBrowserCacheParams clears browser cache.
@@ -611,19 +591,19 @@ func ClearBrowserCache() *ClearBrowserCacheParams {
 }
 
 // Do executes Network.clearBrowserCache.
-func (p *ClearBrowserCacheParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *ClearBrowserCacheParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandNetworkClearBrowserCache, Empty)
+	ch := h.Execute(ctxt, cdp.CommandNetworkClearBrowserCache, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -635,10 +615,10 @@ func (p *ClearBrowserCacheParams) Do(ctxt context.Context, h FrameHandler) (err 
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // CanClearBrowserCookiesParams tells whether clearing browser cookies is
@@ -660,19 +640,19 @@ type CanClearBrowserCookiesReturns struct {
 //
 // returns:
 //   result - True if browser cookies can be cleared.
-func (p *CanClearBrowserCookiesParams) Do(ctxt context.Context, h FrameHandler) (result bool, err error) {
+func (p *CanClearBrowserCookiesParams) Do(ctxt context.Context, h cdp.FrameHandler) (result bool, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandNetworkCanClearBrowserCookies, Empty)
+	ch := h.Execute(ctxt, cdp.CommandNetworkCanClearBrowserCookies, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return false, ErrChannelClosed
+			return false, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -681,7 +661,7 @@ func (p *CanClearBrowserCookiesParams) Do(ctxt context.Context, h FrameHandler) 
 			var r CanClearBrowserCookiesReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return false, ErrInvalidResult
+				return false, cdp.ErrInvalidResult
 			}
 
 			return r.Result, nil
@@ -691,10 +671,10 @@ func (p *CanClearBrowserCookiesParams) Do(ctxt context.Context, h FrameHandler) 
 		}
 
 	case <-ctxt.Done():
-		return false, ErrContextDone
+		return false, cdp.ErrContextDone
 	}
 
-	return false, ErrUnknownResult
+	return false, cdp.ErrUnknownResult
 }
 
 // ClearBrowserCookiesParams clears browser cookies.
@@ -706,19 +686,19 @@ func ClearBrowserCookies() *ClearBrowserCookiesParams {
 }
 
 // Do executes Network.clearBrowserCookies.
-func (p *ClearBrowserCookiesParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *ClearBrowserCookiesParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandNetworkClearBrowserCookies, Empty)
+	ch := h.Execute(ctxt, cdp.CommandNetworkClearBrowserCookies, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -730,10 +710,10 @@ func (p *ClearBrowserCookiesParams) Do(ctxt context.Context, h FrameHandler) (er
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // GetCookiesParams returns all browser cookies for the current URL.
@@ -767,7 +747,7 @@ type GetCookiesReturns struct {
 //
 // returns:
 //   cookies - Array of cookie objects.
-func (p *GetCookiesParams) Do(ctxt context.Context, h FrameHandler) (cookies []*Cookie, err error) {
+func (p *GetCookiesParams) Do(ctxt context.Context, h cdp.FrameHandler) (cookies []*Cookie, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -779,13 +759,13 @@ func (p *GetCookiesParams) Do(ctxt context.Context, h FrameHandler) (cookies []*
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandNetworkGetCookies, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandNetworkGetCookies, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -794,7 +774,7 @@ func (p *GetCookiesParams) Do(ctxt context.Context, h FrameHandler) (cookies []*
 			var r GetCookiesReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.Cookies, nil
@@ -804,10 +784,10 @@ func (p *GetCookiesParams) Do(ctxt context.Context, h FrameHandler) (cookies []*
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // GetAllCookiesParams returns all browser cookies. Depending on the backend
@@ -829,19 +809,19 @@ type GetAllCookiesReturns struct {
 //
 // returns:
 //   cookies - Array of cookie objects.
-func (p *GetAllCookiesParams) Do(ctxt context.Context, h FrameHandler) (cookies []*Cookie, err error) {
+func (p *GetAllCookiesParams) Do(ctxt context.Context, h cdp.FrameHandler) (cookies []*Cookie, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandNetworkGetAllCookies, Empty)
+	ch := h.Execute(ctxt, cdp.CommandNetworkGetAllCookies, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -850,7 +830,7 @@ func (p *GetAllCookiesParams) Do(ctxt context.Context, h FrameHandler) (cookies 
 			var r GetAllCookiesReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.Cookies, nil
@@ -860,10 +840,10 @@ func (p *GetAllCookiesParams) Do(ctxt context.Context, h FrameHandler) (cookies 
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // DeleteCookieParams deletes browser cookie with given name, domain and
@@ -886,7 +866,7 @@ func DeleteCookie(cookieName string, url string) *DeleteCookieParams {
 }
 
 // Do executes Network.deleteCookie.
-func (p *DeleteCookieParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *DeleteCookieParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -898,13 +878,13 @@ func (p *DeleteCookieParams) Do(ctxt context.Context, h FrameHandler) (err error
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandNetworkDeleteCookie, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandNetworkDeleteCookie, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -916,10 +896,10 @@ func (p *DeleteCookieParams) Do(ctxt context.Context, h FrameHandler) (err error
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetCookieParams sets a cookie with the given cookie data; may overwrite
@@ -933,7 +913,7 @@ type SetCookieParams struct {
 	Secure         bool           `json:"secure,omitempty"`         // Defaults ot false.
 	HTTPOnly       bool           `json:"httpOnly,omitempty"`       // Defaults to false.
 	SameSite       CookieSameSite `json:"sameSite,omitempty"`       // Defaults to browser default behavior.
-	ExpirationDate Timestamp      `json:"expirationDate,omitempty"` // If omitted, the cookie becomes a session cookie.
+	ExpirationDate cdp.Timestamp  `json:"expirationDate,omitempty"` // If omitted, the cookie becomes a session cookie.
 }
 
 // SetCookie sets a cookie with the given cookie data; may overwrite
@@ -982,7 +962,7 @@ func (p SetCookieParams) WithSameSite(sameSite CookieSameSite) *SetCookieParams 
 }
 
 // WithExpirationDate if omitted, the cookie becomes a session cookie.
-func (p SetCookieParams) WithExpirationDate(expirationDate Timestamp) *SetCookieParams {
+func (p SetCookieParams) WithExpirationDate(expirationDate cdp.Timestamp) *SetCookieParams {
 	p.ExpirationDate = expirationDate
 	return &p
 }
@@ -996,7 +976,7 @@ type SetCookieReturns struct {
 //
 // returns:
 //   success - True if successfully set cookie.
-func (p *SetCookieParams) Do(ctxt context.Context, h FrameHandler) (success bool, err error) {
+func (p *SetCookieParams) Do(ctxt context.Context, h cdp.FrameHandler) (success bool, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1008,13 +988,13 @@ func (p *SetCookieParams) Do(ctxt context.Context, h FrameHandler) (success bool
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandNetworkSetCookie, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandNetworkSetCookie, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return false, ErrChannelClosed
+			return false, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1023,7 +1003,7 @@ func (p *SetCookieParams) Do(ctxt context.Context, h FrameHandler) (success bool
 			var r SetCookieReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return false, ErrInvalidResult
+				return false, cdp.ErrInvalidResult
 			}
 
 			return r.Success, nil
@@ -1033,10 +1013,10 @@ func (p *SetCookieParams) Do(ctxt context.Context, h FrameHandler) (success bool
 		}
 
 	case <-ctxt.Done():
-		return false, ErrContextDone
+		return false, cdp.ErrContextDone
 	}
 
-	return false, ErrUnknownResult
+	return false, cdp.ErrUnknownResult
 }
 
 // CanEmulateNetworkConditionsParams tells whether emulation of network
@@ -1058,19 +1038,19 @@ type CanEmulateNetworkConditionsReturns struct {
 //
 // returns:
 //   result - True if emulation of network conditions is supported.
-func (p *CanEmulateNetworkConditionsParams) Do(ctxt context.Context, h FrameHandler) (result bool, err error) {
+func (p *CanEmulateNetworkConditionsParams) Do(ctxt context.Context, h cdp.FrameHandler) (result bool, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandNetworkCanEmulateNetworkConditions, Empty)
+	ch := h.Execute(ctxt, cdp.CommandNetworkCanEmulateNetworkConditions, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return false, ErrChannelClosed
+			return false, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1079,7 +1059,7 @@ func (p *CanEmulateNetworkConditionsParams) Do(ctxt context.Context, h FrameHand
 			var r CanEmulateNetworkConditionsReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return false, ErrInvalidResult
+				return false, cdp.ErrInvalidResult
 			}
 
 			return r.Result, nil
@@ -1089,10 +1069,10 @@ func (p *CanEmulateNetworkConditionsParams) Do(ctxt context.Context, h FrameHand
 		}
 
 	case <-ctxt.Done():
-		return false, ErrContextDone
+		return false, cdp.ErrContextDone
 	}
 
-	return false, ErrUnknownResult
+	return false, cdp.ErrUnknownResult
 }
 
 // EmulateNetworkConditionsParams activates emulation of network conditions.
@@ -1127,7 +1107,7 @@ func (p EmulateNetworkConditionsParams) WithConnectionType(connectionType Connec
 }
 
 // Do executes Network.emulateNetworkConditions.
-func (p *EmulateNetworkConditionsParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *EmulateNetworkConditionsParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1139,13 +1119,13 @@ func (p *EmulateNetworkConditionsParams) Do(ctxt context.Context, h FrameHandler
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandNetworkEmulateNetworkConditions, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandNetworkEmulateNetworkConditions, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1157,10 +1137,10 @@ func (p *EmulateNetworkConditionsParams) Do(ctxt context.Context, h FrameHandler
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetCacheDisabledParams toggles ignoring cache for each request. If true,
@@ -1181,7 +1161,7 @@ func SetCacheDisabled(cacheDisabled bool) *SetCacheDisabledParams {
 }
 
 // Do executes Network.setCacheDisabled.
-func (p *SetCacheDisabledParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetCacheDisabledParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1193,13 +1173,13 @@ func (p *SetCacheDisabledParams) Do(ctxt context.Context, h FrameHandler) (err e
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandNetworkSetCacheDisabled, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandNetworkSetCacheDisabled, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1211,10 +1191,10 @@ func (p *SetCacheDisabledParams) Do(ctxt context.Context, h FrameHandler) (err e
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetBypassServiceWorkerParams toggles ignoring of service worker for each
@@ -1235,7 +1215,7 @@ func SetBypassServiceWorker(bypass bool) *SetBypassServiceWorkerParams {
 }
 
 // Do executes Network.setBypassServiceWorker.
-func (p *SetBypassServiceWorkerParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetBypassServiceWorkerParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1247,13 +1227,13 @@ func (p *SetBypassServiceWorkerParams) Do(ctxt context.Context, h FrameHandler) 
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandNetworkSetBypassServiceWorker, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandNetworkSetBypassServiceWorker, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1265,10 +1245,10 @@ func (p *SetBypassServiceWorkerParams) Do(ctxt context.Context, h FrameHandler) 
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetDataSizeLimitsForTestParams for testing.
@@ -1290,7 +1270,7 @@ func SetDataSizeLimitsForTest(maxTotalSize int64, maxResourceSize int64) *SetDat
 }
 
 // Do executes Network.setDataSizeLimitsForTest.
-func (p *SetDataSizeLimitsForTestParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetDataSizeLimitsForTestParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1302,13 +1282,13 @@ func (p *SetDataSizeLimitsForTestParams) Do(ctxt context.Context, h FrameHandler
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandNetworkSetDataSizeLimitsForTest, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandNetworkSetDataSizeLimitsForTest, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1320,10 +1300,10 @@ func (p *SetDataSizeLimitsForTestParams) Do(ctxt context.Context, h FrameHandler
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // GetCertificateParams returns the DER-encoded certificate.
@@ -1350,7 +1330,7 @@ type GetCertificateReturns struct {
 //
 // returns:
 //   tableNames
-func (p *GetCertificateParams) Do(ctxt context.Context, h FrameHandler) (tableNames []string, err error) {
+func (p *GetCertificateParams) Do(ctxt context.Context, h cdp.FrameHandler) (tableNames []string, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1362,13 +1342,13 @@ func (p *GetCertificateParams) Do(ctxt context.Context, h FrameHandler) (tableNa
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandNetworkGetCertificate, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandNetworkGetCertificate, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1377,7 +1357,7 @@ func (p *GetCertificateParams) Do(ctxt context.Context, h FrameHandler) (tableNa
 			var r GetCertificateReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.TableNames, nil
@@ -1387,8 +1367,8 @@ func (p *GetCertificateParams) Do(ctxt context.Context, h FrameHandler) (tableNa
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }

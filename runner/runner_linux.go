@@ -27,8 +27,8 @@ const (
 // modified.
 //
 // see: man 2 prlimit
-func prlimit(pid int, res int, new_, old *syscall.Rlimit) error {
-	_, _, err := syscall.RawSyscall6(syscall.SYS_PRLIMIT64, uintptr(pid), uintptr(res), uintptr(unsafe.Pointer(new_)), uintptr(unsafe.Pointer(old)), 0, 0)
+func prlimit(pid int, res int, newv, old *syscall.Rlimit) error {
+	_, _, err := syscall.RawSyscall6(syscall.SYS_PRLIMIT64, uintptr(pid), uintptr(res), uintptr(unsafe.Pointer(newv)), uintptr(unsafe.Pointer(old)), 0, 0)
 	if err != 0 {
 		return err
 	}

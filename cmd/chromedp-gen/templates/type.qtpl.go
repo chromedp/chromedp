@@ -16,7 +16,7 @@ import (
 	"strconv"
 	"strings"
 
-	. "github.com/knq/chromedp/cmd/chromedp-gen/internal"
+	"github.com/knq/chromedp/cmd/chromedp-gen/internal"
 )
 
 // TypeTemplate is a template for a Typable type.
@@ -28,13 +28,13 @@ var (
 )
 
 //line templates/type.qtpl:9
-func StreamTypeTemplate(qw422016 *qt422016.Writer, t *Type, prefix, suffix string, d *Domain, domains []*Domain, v interface{}, noExposeOverride, omitOnlyWhenOptional bool) {
+func StreamTypeTemplate(qw422016 *qt422016.Writer, t *internal.Type, prefix, suffix string, d *internal.Domain, domains []*internal.Domain, v interface{}, noExposeOverride, omitOnlyWhenOptional bool) {
 	//line templates/type.qtpl:10
 	typ := prefix + t.CamelName() + suffix
 
-	var extra []*Type
+	var extra []*internal.Type
 	switch x := v.(type) {
-	case []*Type:
+	case []*internal.Type:
 		extra = x
 	}
 
@@ -42,11 +42,7 @@ func StreamTypeTemplate(qw422016 *qt422016.Writer, t *Type, prefix, suffix strin
 	qw422016.N().S(`
 `)
 	//line templates/type.qtpl:18
-	if desc := t.GetDescription(); desc != "" {
-		//line templates/type.qtpl:18
-		qw422016.N().S(formatComment(desc, "", typ+" "))
-		//line templates/type.qtpl:18
-	}
+	qw422016.N().S(formatComment(t.GetDescription(), "", typ+" "))
 	//line templates/type.qtpl:18
 	qw422016.N().S(`
 type `)
@@ -60,7 +56,7 @@ type `)
 	qw422016.N().S(`
 `)
 	//line templates/type.qtpl:20
-	if t.Parameters == nil && t.Type != TypeArray && t.Type != TypeObject && t.Type != TypeAny {
+	if t.Parameters == nil && t.Type != internal.TypeArray && t.Type != internal.TypeObject && t.Type != internal.TypeAny {
 		//line templates/type.qtpl:21
 		gz := t.Type.GoType()
 		z := gz
@@ -131,9 +127,9 @@ const (`)
 			//line templates/type.qtpl:42
 			n := t.EnumValueName(e)
 			val := `"` + e + `"`
-			if t.Type == TypeInteger && t.EnumBitMask {
+			if t.Type == internal.TypeInteger && t.EnumBitMask {
 				val = strconv.Itoa(1 << uint(i-1))
-			} else if t.Type == TypeInteger {
+			} else if t.Type == internal.TypeInteger {
 				val = strconv.Itoa(i + 1)
 			}
 
@@ -157,7 +153,7 @@ const (`)
 )
 `)
 		//line templates/type.qtpl:52
-		if t.Type != TypeString {
+		if t.Type != internal.TypeString {
 			//line templates/type.qtpl:52
 			qw422016.N().S(`
 // String returns the `)
@@ -302,7 +298,7 @@ func (t *`)
 }
 
 //line templates/type.qtpl:93
-func WriteTypeTemplate(qq422016 qtio422016.Writer, t *Type, prefix, suffix string, d *Domain, domains []*Domain, v interface{}, noExposeOverride, omitOnlyWhenOptional bool) {
+func WriteTypeTemplate(qq422016 qtio422016.Writer, t *internal.Type, prefix, suffix string, d *internal.Domain, domains []*internal.Domain, v interface{}, noExposeOverride, omitOnlyWhenOptional bool) {
 	//line templates/type.qtpl:93
 	qw422016 := qt422016.AcquireWriter(qq422016)
 	//line templates/type.qtpl:93
@@ -313,7 +309,7 @@ func WriteTypeTemplate(qq422016 qtio422016.Writer, t *Type, prefix, suffix strin
 }
 
 //line templates/type.qtpl:93
-func TypeTemplate(t *Type, prefix, suffix string, d *Domain, domains []*Domain, v interface{}, noExposeOverride, omitOnlyWhenOptional bool) string {
+func TypeTemplate(t *internal.Type, prefix, suffix string, d *internal.Domain, domains []*internal.Domain, v interface{}, noExposeOverride, omitOnlyWhenOptional bool) string {
 	//line templates/type.qtpl:93
 	qb422016 := qt422016.AcquireByteBuffer()
 	//line templates/type.qtpl:93

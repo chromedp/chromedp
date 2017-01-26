@@ -13,29 +13,9 @@ import (
 	"context"
 	"encoding/base64"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/debugger"
 	"github.com/mailru/easyjson"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // EnableParams enables page domain notifications.
@@ -47,19 +27,19 @@ func Enable() *EnableParams {
 }
 
 // Do executes Page.enable.
-func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandPageEnable, Empty)
+	ch := h.Execute(ctxt, cdp.CommandPageEnable, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -71,10 +51,10 @@ func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // DisableParams disables page domain notifications.
@@ -86,19 +66,19 @@ func Disable() *DisableParams {
 }
 
 // Do executes Page.disable.
-func (p *DisableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandPageDisable, Empty)
+	ch := h.Execute(ctxt, cdp.CommandPageDisable, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -110,16 +90,19 @@ func (p *DisableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
+// AddScriptToEvaluateOnLoadParams [no description].
 type AddScriptToEvaluateOnLoadParams struct {
 	ScriptSource string `json:"scriptSource"`
 }
 
+// AddScriptToEvaluateOnLoad [no description].
+//
 // parameters:
 //   scriptSource
 func AddScriptToEvaluateOnLoad(scriptSource string) *AddScriptToEvaluateOnLoadParams {
@@ -137,7 +120,7 @@ type AddScriptToEvaluateOnLoadReturns struct {
 //
 // returns:
 //   identifier - Identifier of the added script.
-func (p *AddScriptToEvaluateOnLoadParams) Do(ctxt context.Context, h FrameHandler) (identifier ScriptIdentifier, err error) {
+func (p *AddScriptToEvaluateOnLoadParams) Do(ctxt context.Context, h cdp.FrameHandler) (identifier ScriptIdentifier, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -149,13 +132,13 @@ func (p *AddScriptToEvaluateOnLoadParams) Do(ctxt context.Context, h FrameHandle
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandPageAddScriptToEvaluateOnLoad, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandPageAddScriptToEvaluateOnLoad, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return "", ErrChannelClosed
+			return "", cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -164,7 +147,7 @@ func (p *AddScriptToEvaluateOnLoadParams) Do(ctxt context.Context, h FrameHandle
 			var r AddScriptToEvaluateOnLoadReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return "", ErrInvalidResult
+				return "", cdp.ErrInvalidResult
 			}
 
 			return r.Identifier, nil
@@ -174,16 +157,19 @@ func (p *AddScriptToEvaluateOnLoadParams) Do(ctxt context.Context, h FrameHandle
 		}
 
 	case <-ctxt.Done():
-		return "", ErrContextDone
+		return "", cdp.ErrContextDone
 	}
 
-	return "", ErrUnknownResult
+	return "", cdp.ErrUnknownResult
 }
 
+// RemoveScriptToEvaluateOnLoadParams [no description].
 type RemoveScriptToEvaluateOnLoadParams struct {
 	Identifier ScriptIdentifier `json:"identifier"`
 }
 
+// RemoveScriptToEvaluateOnLoad [no description].
+//
 // parameters:
 //   identifier
 func RemoveScriptToEvaluateOnLoad(identifier ScriptIdentifier) *RemoveScriptToEvaluateOnLoadParams {
@@ -193,7 +179,7 @@ func RemoveScriptToEvaluateOnLoad(identifier ScriptIdentifier) *RemoveScriptToEv
 }
 
 // Do executes Page.removeScriptToEvaluateOnLoad.
-func (p *RemoveScriptToEvaluateOnLoadParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *RemoveScriptToEvaluateOnLoadParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -205,13 +191,13 @@ func (p *RemoveScriptToEvaluateOnLoadParams) Do(ctxt context.Context, h FrameHan
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandPageRemoveScriptToEvaluateOnLoad, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandPageRemoveScriptToEvaluateOnLoad, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -223,10 +209,10 @@ func (p *RemoveScriptToEvaluateOnLoadParams) Do(ctxt context.Context, h FrameHan
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetAutoAttachToCreatedPagesParams controls whether browser will open a new
@@ -247,7 +233,7 @@ func SetAutoAttachToCreatedPages(autoAttach bool) *SetAutoAttachToCreatedPagesPa
 }
 
 // Do executes Page.setAutoAttachToCreatedPages.
-func (p *SetAutoAttachToCreatedPagesParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetAutoAttachToCreatedPagesParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -259,13 +245,13 @@ func (p *SetAutoAttachToCreatedPagesParams) Do(ctxt context.Context, h FrameHand
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandPageSetAutoAttachToCreatedPages, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandPageSetAutoAttachToCreatedPages, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -277,10 +263,10 @@ func (p *SetAutoAttachToCreatedPagesParams) Do(ctxt context.Context, h FrameHand
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // ReloadParams reloads given page optionally ignoring the cache.
@@ -311,7 +297,7 @@ func (p ReloadParams) WithScriptToEvaluateOnLoad(scriptToEvaluateOnLoad string) 
 }
 
 // Do executes Page.reload.
-func (p *ReloadParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *ReloadParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -323,13 +309,13 @@ func (p *ReloadParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandPageReload, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandPageReload, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -341,10 +327,10 @@ func (p *ReloadParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // NavigateParams navigates current page to the given URL.
@@ -364,14 +350,14 @@ func Navigate(url string) *NavigateParams {
 
 // NavigateReturns return values.
 type NavigateReturns struct {
-	FrameID FrameID `json:"frameId,omitempty"` // Frame id that will be navigated.
+	FrameID cdp.FrameID `json:"frameId,omitempty"` // Frame id that will be navigated.
 }
 
 // Do executes Page.navigate.
 //
 // returns:
-//   frameId - Frame id that will be navigated.
-func (p *NavigateParams) Do(ctxt context.Context, h FrameHandler) (frameId FrameID, err error) {
+//   frameID - Frame id that will be navigated.
+func (p *NavigateParams) Do(ctxt context.Context, h cdp.FrameHandler) (frameID cdp.FrameID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -383,13 +369,13 @@ func (p *NavigateParams) Do(ctxt context.Context, h FrameHandler) (frameId Frame
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandPageNavigate, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandPageNavigate, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return "", ErrChannelClosed
+			return "", cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -398,7 +384,7 @@ func (p *NavigateParams) Do(ctxt context.Context, h FrameHandler) (frameId Frame
 			var r NavigateReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return "", ErrInvalidResult
+				return "", cdp.ErrInvalidResult
 			}
 
 			return r.FrameID, nil
@@ -408,10 +394,10 @@ func (p *NavigateParams) Do(ctxt context.Context, h FrameHandler) (frameId Frame
 		}
 
 	case <-ctxt.Done():
-		return "", ErrContextDone
+		return "", cdp.ErrContextDone
 	}
 
-	return "", ErrUnknownResult
+	return "", cdp.ErrUnknownResult
 }
 
 // StopLoadingParams force the page stop all navigations and pending resource
@@ -425,19 +411,19 @@ func StopLoading() *StopLoadingParams {
 }
 
 // Do executes Page.stopLoading.
-func (p *StopLoadingParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *StopLoadingParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandPageStopLoading, Empty)
+	ch := h.Execute(ctxt, cdp.CommandPageStopLoading, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -449,10 +435,10 @@ func (p *StopLoadingParams) Do(ctxt context.Context, h FrameHandler) (err error)
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // GetNavigationHistoryParams returns navigation history for the current
@@ -475,19 +461,19 @@ type GetNavigationHistoryReturns struct {
 // returns:
 //   currentIndex - Index of the current navigation history entry.
 //   entries - Array of navigation history entries.
-func (p *GetNavigationHistoryParams) Do(ctxt context.Context, h FrameHandler) (currentIndex int64, entries []*NavigationEntry, err error) {
+func (p *GetNavigationHistoryParams) Do(ctxt context.Context, h cdp.FrameHandler) (currentIndex int64, entries []*NavigationEntry, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandPageGetNavigationHistory, Empty)
+	ch := h.Execute(ctxt, cdp.CommandPageGetNavigationHistory, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return 0, nil, ErrChannelClosed
+			return 0, nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -496,7 +482,7 @@ func (p *GetNavigationHistoryParams) Do(ctxt context.Context, h FrameHandler) (c
 			var r GetNavigationHistoryReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return 0, nil, ErrInvalidResult
+				return 0, nil, cdp.ErrInvalidResult
 			}
 
 			return r.CurrentIndex, r.Entries, nil
@@ -506,10 +492,10 @@ func (p *GetNavigationHistoryParams) Do(ctxt context.Context, h FrameHandler) (c
 		}
 
 	case <-ctxt.Done():
-		return 0, nil, ErrContextDone
+		return 0, nil, cdp.ErrContextDone
 	}
 
-	return 0, nil, ErrUnknownResult
+	return 0, nil, cdp.ErrUnknownResult
 }
 
 // NavigateToHistoryEntryParams navigates current page to the given history
@@ -521,15 +507,15 @@ type NavigateToHistoryEntryParams struct {
 // NavigateToHistoryEntry navigates current page to the given history entry.
 //
 // parameters:
-//   entryId - Unique id of the entry to navigate to.
-func NavigateToHistoryEntry(entryId int64) *NavigateToHistoryEntryParams {
+//   entryID - Unique id of the entry to navigate to.
+func NavigateToHistoryEntry(entryID int64) *NavigateToHistoryEntryParams {
 	return &NavigateToHistoryEntryParams{
-		EntryID: entryId,
+		EntryID: entryID,
 	}
 }
 
 // Do executes Page.navigateToHistoryEntry.
-func (p *NavigateToHistoryEntryParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *NavigateToHistoryEntryParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -541,13 +527,13 @@ func (p *NavigateToHistoryEntryParams) Do(ctxt context.Context, h FrameHandler) 
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandPageNavigateToHistoryEntry, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandPageNavigateToHistoryEntry, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -559,10 +545,10 @@ func (p *NavigateToHistoryEntryParams) Do(ctxt context.Context, h FrameHandler) 
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // GetResourceTreeParams returns present frame / resource tree structure.
@@ -582,19 +568,19 @@ type GetResourceTreeReturns struct {
 //
 // returns:
 //   frameTree - Present frame / resource tree structure.
-func (p *GetResourceTreeParams) Do(ctxt context.Context, h FrameHandler) (frameTree *FrameResourceTree, err error) {
+func (p *GetResourceTreeParams) Do(ctxt context.Context, h cdp.FrameHandler) (frameTree *FrameResourceTree, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandPageGetResourceTree, Empty)
+	ch := h.Execute(ctxt, cdp.CommandPageGetResourceTree, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -603,7 +589,7 @@ func (p *GetResourceTreeParams) Do(ctxt context.Context, h FrameHandler) (frameT
 			var r GetResourceTreeReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.FrameTree, nil
@@ -613,26 +599,26 @@ func (p *GetResourceTreeParams) Do(ctxt context.Context, h FrameHandler) (frameT
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // GetResourceContentParams returns content of the given resource.
 type GetResourceContentParams struct {
-	FrameID FrameID `json:"frameId"` // Frame id to get resource for.
-	URL     string  `json:"url"`     // URL of the resource to get content for.
+	FrameID cdp.FrameID `json:"frameId"` // Frame id to get resource for.
+	URL     string      `json:"url"`     // URL of the resource to get content for.
 }
 
 // GetResourceContent returns content of the given resource.
 //
 // parameters:
-//   frameId - Frame id to get resource for.
+//   frameID - Frame id to get resource for.
 //   url - URL of the resource to get content for.
-func GetResourceContent(frameId FrameID, url string) *GetResourceContentParams {
+func GetResourceContent(frameID cdp.FrameID, url string) *GetResourceContentParams {
 	return &GetResourceContentParams{
-		FrameID: frameId,
+		FrameID: frameID,
 		URL:     url,
 	}
 }
@@ -647,7 +633,7 @@ type GetResourceContentReturns struct {
 //
 // returns:
 //   content - Resource content.
-func (p *GetResourceContentParams) Do(ctxt context.Context, h FrameHandler) (content []byte, err error) {
+func (p *GetResourceContentParams) Do(ctxt context.Context, h cdp.FrameHandler) (content []byte, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -659,13 +645,13 @@ func (p *GetResourceContentParams) Do(ctxt context.Context, h FrameHandler) (con
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandPageGetResourceContent, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandPageGetResourceContent, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -674,7 +660,7 @@ func (p *GetResourceContentParams) Do(ctxt context.Context, h FrameHandler) (con
 			var r GetResourceContentReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			// decode
@@ -695,30 +681,30 @@ func (p *GetResourceContentParams) Do(ctxt context.Context, h FrameHandler) (con
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // SearchInResourceParams searches for given string in resource content.
 type SearchInResourceParams struct {
-	FrameID       FrameID `json:"frameId"`                 // Frame id for resource to search in.
-	URL           string  `json:"url"`                     // URL of the resource to search in.
-	Query         string  `json:"query"`                   // String to search for.
-	CaseSensitive bool    `json:"caseSensitive,omitempty"` // If true, search is case sensitive.
-	IsRegex       bool    `json:"isRegex,omitempty"`       // If true, treats string parameter as regex.
+	FrameID       cdp.FrameID `json:"frameId"`                 // Frame id for resource to search in.
+	URL           string      `json:"url"`                     // URL of the resource to search in.
+	Query         string      `json:"query"`                   // String to search for.
+	CaseSensitive bool        `json:"caseSensitive,omitempty"` // If true, search is case sensitive.
+	IsRegex       bool        `json:"isRegex,omitempty"`       // If true, treats string parameter as regex.
 }
 
 // SearchInResource searches for given string in resource content.
 //
 // parameters:
-//   frameId - Frame id for resource to search in.
+//   frameID - Frame id for resource to search in.
 //   url - URL of the resource to search in.
 //   query - String to search for.
-func SearchInResource(frameId FrameID, url string, query string) *SearchInResourceParams {
+func SearchInResource(frameID cdp.FrameID, url string, query string) *SearchInResourceParams {
 	return &SearchInResourceParams{
-		FrameID: frameId,
+		FrameID: frameID,
 		URL:     url,
 		Query:   query,
 	}
@@ -745,7 +731,7 @@ type SearchInResourceReturns struct {
 //
 // returns:
 //   result - List of search matches.
-func (p *SearchInResourceParams) Do(ctxt context.Context, h FrameHandler) (result []*debugger.SearchMatch, err error) {
+func (p *SearchInResourceParams) Do(ctxt context.Context, h cdp.FrameHandler) (result []*debugger.SearchMatch, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -757,13 +743,13 @@ func (p *SearchInResourceParams) Do(ctxt context.Context, h FrameHandler) (resul
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandPageSearchInResource, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandPageSearchInResource, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -772,7 +758,7 @@ func (p *SearchInResourceParams) Do(ctxt context.Context, h FrameHandler) (resul
 			var r SearchInResourceReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.Result, nil
@@ -782,32 +768,32 @@ func (p *SearchInResourceParams) Do(ctxt context.Context, h FrameHandler) (resul
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // SetDocumentContentParams sets given markup as the document's HTML.
 type SetDocumentContentParams struct {
-	FrameID FrameID `json:"frameId"` // Frame id to set HTML for.
-	HTML    string  `json:"html"`    // HTML content to set.
+	FrameID cdp.FrameID `json:"frameId"` // Frame id to set HTML for.
+	HTML    string      `json:"html"`    // HTML content to set.
 }
 
 // SetDocumentContent sets given markup as the document's HTML.
 //
 // parameters:
-//   frameId - Frame id to set HTML for.
+//   frameID - Frame id to set HTML for.
 //   html - HTML content to set.
-func SetDocumentContent(frameId FrameID, html string) *SetDocumentContentParams {
+func SetDocumentContent(frameID cdp.FrameID, html string) *SetDocumentContentParams {
 	return &SetDocumentContentParams{
-		FrameID: frameId,
+		FrameID: frameID,
 		HTML:    html,
 	}
 }
 
 // Do executes Page.setDocumentContent.
-func (p *SetDocumentContentParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetDocumentContentParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -819,13 +805,13 @@ func (p *SetDocumentContentParams) Do(ctxt context.Context, h FrameHandler) (err
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandPageSetDocumentContent, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandPageSetDocumentContent, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -837,10 +823,10 @@ func (p *SetDocumentContentParams) Do(ctxt context.Context, h FrameHandler) (err
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // CaptureScreenshotParams capture page screenshot.
@@ -860,19 +846,19 @@ type CaptureScreenshotReturns struct {
 //
 // returns:
 //   data - Base64-encoded image data (PNG).
-func (p *CaptureScreenshotParams) Do(ctxt context.Context, h FrameHandler) (data []byte, err error) {
+func (p *CaptureScreenshotParams) Do(ctxt context.Context, h cdp.FrameHandler) (data []byte, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandPageCaptureScreenshot, Empty)
+	ch := h.Execute(ctxt, cdp.CommandPageCaptureScreenshot, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -881,7 +867,7 @@ func (p *CaptureScreenshotParams) Do(ctxt context.Context, h FrameHandler) (data
 			var r CaptureScreenshotReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			// decode
@@ -898,10 +884,10 @@ func (p *CaptureScreenshotParams) Do(ctxt context.Context, h FrameHandler) (data
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // StartScreencastParams starts sending each frame using the screencastFrame
@@ -952,7 +938,7 @@ func (p StartScreencastParams) WithEveryNthFrame(everyNthFrame int64) *StartScre
 }
 
 // Do executes Page.startScreencast.
-func (p *StartScreencastParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *StartScreencastParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -964,13 +950,13 @@ func (p *StartScreencastParams) Do(ctxt context.Context, h FrameHandler) (err er
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandPageStartScreencast, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandPageStartScreencast, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -982,10 +968,10 @@ func (p *StartScreencastParams) Do(ctxt context.Context, h FrameHandler) (err er
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // StopScreencastParams stops sending each frame in the screencastFrame.
@@ -997,19 +983,19 @@ func StopScreencast() *StopScreencastParams {
 }
 
 // Do executes Page.stopScreencast.
-func (p *StopScreencastParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *StopScreencastParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandPageStopScreencast, Empty)
+	ch := h.Execute(ctxt, cdp.CommandPageStopScreencast, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1021,10 +1007,10 @@ func (p *StopScreencastParams) Do(ctxt context.Context, h FrameHandler) (err err
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // ScreencastFrameAckParams acknowledges that a screencast frame has been
@@ -1037,15 +1023,15 @@ type ScreencastFrameAckParams struct {
 // by the frontend.
 //
 // parameters:
-//   sessionId - Frame number.
-func ScreencastFrameAck(sessionId int64) *ScreencastFrameAckParams {
+//   sessionID - Frame number.
+func ScreencastFrameAck(sessionID int64) *ScreencastFrameAckParams {
 	return &ScreencastFrameAckParams{
-		SessionID: sessionId,
+		SessionID: sessionID,
 	}
 }
 
 // Do executes Page.screencastFrameAck.
-func (p *ScreencastFrameAckParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *ScreencastFrameAckParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1057,13 +1043,13 @@ func (p *ScreencastFrameAckParams) Do(ctxt context.Context, h FrameHandler) (err
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandPageScreencastFrameAck, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandPageScreencastFrameAck, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1075,10 +1061,10 @@ func (p *ScreencastFrameAckParams) Do(ctxt context.Context, h FrameHandler) (err
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // HandleJavaScriptDialogParams accepts or dismisses a JavaScript initiated
@@ -1107,7 +1093,7 @@ func (p HandleJavaScriptDialogParams) WithPromptText(promptText string) *HandleJ
 }
 
 // Do executes Page.handleJavaScriptDialog.
-func (p *HandleJavaScriptDialogParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *HandleJavaScriptDialogParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1119,13 +1105,13 @@ func (p *HandleJavaScriptDialogParams) Do(ctxt context.Context, h FrameHandler) 
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandPageHandleJavaScriptDialog, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandPageHandleJavaScriptDialog, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1137,10 +1123,10 @@ func (p *HandleJavaScriptDialogParams) Do(ctxt context.Context, h FrameHandler) 
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetColorPickerEnabledParams shows / hides color picker.
@@ -1159,7 +1145,7 @@ func SetColorPickerEnabled(enabled bool) *SetColorPickerEnabledParams {
 }
 
 // Do executes Page.setColorPickerEnabled.
-func (p *SetColorPickerEnabledParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetColorPickerEnabledParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1171,13 +1157,13 @@ func (p *SetColorPickerEnabledParams) Do(ctxt context.Context, h FrameHandler) (
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandPageSetColorPickerEnabled, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandPageSetColorPickerEnabled, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1189,10 +1175,10 @@ func (p *SetColorPickerEnabledParams) Do(ctxt context.Context, h FrameHandler) (
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // ConfigureOverlayParams configures overlay.
@@ -1222,7 +1208,7 @@ func (p ConfigureOverlayParams) WithMessage(message string) *ConfigureOverlayPar
 }
 
 // Do executes Page.configureOverlay.
-func (p *ConfigureOverlayParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *ConfigureOverlayParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1234,13 +1220,13 @@ func (p *ConfigureOverlayParams) Do(ctxt context.Context, h FrameHandler) (err e
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandPageConfigureOverlay, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandPageConfigureOverlay, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1252,14 +1238,16 @@ func (p *ConfigureOverlayParams) Do(ctxt context.Context, h FrameHandler) (err e
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
+// GetAppManifestParams [no description].
 type GetAppManifestParams struct{}
 
+// GetAppManifest [no description].
 func GetAppManifest() *GetAppManifestParams {
 	return &GetAppManifestParams{}
 }
@@ -1277,19 +1265,19 @@ type GetAppManifestReturns struct {
 //   url - Manifest location.
 //   errors
 //   data - Manifest content.
-func (p *GetAppManifestParams) Do(ctxt context.Context, h FrameHandler) (url string, errors []*AppManifestError, data string, err error) {
+func (p *GetAppManifestParams) Do(ctxt context.Context, h cdp.FrameHandler) (url string, errors []*AppManifestError, data string, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandPageGetAppManifest, Empty)
+	ch := h.Execute(ctxt, cdp.CommandPageGetAppManifest, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return "", nil, "", ErrChannelClosed
+			return "", nil, "", cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1298,7 +1286,7 @@ func (p *GetAppManifestParams) Do(ctxt context.Context, h FrameHandler) (url str
 			var r GetAppManifestReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return "", nil, "", ErrInvalidResult
+				return "", nil, "", cdp.ErrInvalidResult
 			}
 
 			return r.URL, r.Errors, r.Data, nil
@@ -1308,32 +1296,34 @@ func (p *GetAppManifestParams) Do(ctxt context.Context, h FrameHandler) (url str
 		}
 
 	case <-ctxt.Done():
-		return "", nil, "", ErrContextDone
+		return "", nil, "", cdp.ErrContextDone
 	}
 
-	return "", nil, "", ErrUnknownResult
+	return "", nil, "", cdp.ErrUnknownResult
 }
 
+// RequestAppBannerParams [no description].
 type RequestAppBannerParams struct{}
 
+// RequestAppBanner [no description].
 func RequestAppBanner() *RequestAppBannerParams {
 	return &RequestAppBannerParams{}
 }
 
 // Do executes Page.requestAppBanner.
-func (p *RequestAppBannerParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *RequestAppBannerParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandPageRequestAppBanner, Empty)
+	ch := h.Execute(ctxt, cdp.CommandPageRequestAppBanner, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1345,10 +1335,10 @@ func (p *RequestAppBannerParams) Do(ctxt context.Context, h FrameHandler) (err e
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetControlNavigationsParams toggles navigation throttling which allows
@@ -1369,7 +1359,7 @@ func SetControlNavigations(enabled bool) *SetControlNavigationsParams {
 }
 
 // Do executes Page.setControlNavigations.
-func (p *SetControlNavigationsParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetControlNavigationsParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1381,13 +1371,13 @@ func (p *SetControlNavigationsParams) Do(ctxt context.Context, h FrameHandler) (
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandPageSetControlNavigations, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandPageSetControlNavigations, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1399,10 +1389,10 @@ func (p *SetControlNavigationsParams) Do(ctxt context.Context, h FrameHandler) (
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // ProcessNavigationParams should be sent in response to a
@@ -1418,16 +1408,16 @@ type ProcessNavigationParams struct {
 //
 // parameters:
 //   response
-//   navigationId
-func ProcessNavigation(response NavigationResponse, navigationId int64) *ProcessNavigationParams {
+//   navigationID
+func ProcessNavigation(response NavigationResponse, navigationID int64) *ProcessNavigationParams {
 	return &ProcessNavigationParams{
 		Response:     response,
-		NavigationID: navigationId,
+		NavigationID: navigationID,
 	}
 }
 
 // Do executes Page.processNavigation.
-func (p *ProcessNavigationParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *ProcessNavigationParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1439,13 +1429,13 @@ func (p *ProcessNavigationParams) Do(ctxt context.Context, h FrameHandler) (err 
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandPageProcessNavigation, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandPageProcessNavigation, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1457,10 +1447,10 @@ func (p *ProcessNavigationParams) Do(ctxt context.Context, h FrameHandler) (err 
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // GetLayoutMetricsParams returns metrics relating to the layouting of the
@@ -1484,19 +1474,19 @@ type GetLayoutMetricsReturns struct {
 // returns:
 //   layoutViewport - Metrics relating to the layout viewport.
 //   visualViewport - Metrics relating to the visual viewport.
-func (p *GetLayoutMetricsParams) Do(ctxt context.Context, h FrameHandler) (layoutViewport *LayoutViewport, visualViewport *VisualViewport, err error) {
+func (p *GetLayoutMetricsParams) Do(ctxt context.Context, h cdp.FrameHandler) (layoutViewport *LayoutViewport, visualViewport *VisualViewport, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandPageGetLayoutMetrics, Empty)
+	ch := h.Execute(ctxt, cdp.CommandPageGetLayoutMetrics, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, nil, ErrChannelClosed
+			return nil, nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1505,7 +1495,7 @@ func (p *GetLayoutMetricsParams) Do(ctxt context.Context, h FrameHandler) (layou
 			var r GetLayoutMetricsReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, nil, ErrInvalidResult
+				return nil, nil, cdp.ErrInvalidResult
 			}
 
 			return r.LayoutViewport, r.VisualViewport, nil
@@ -1515,8 +1505,8 @@ func (p *GetLayoutMetricsParams) Do(ctxt context.Context, h FrameHandler) (layou
 		}
 
 	case <-ctxt.Done():
-		return nil, nil, ErrContextDone
+		return nil, nil, cdp.ErrContextDone
 	}
 
-	return nil, nil, ErrUnknownResult
+	return nil, nil, cdp.ErrUnknownResult
 }

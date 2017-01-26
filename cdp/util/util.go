@@ -5,7 +5,7 @@ package util
 import (
 	"errors"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/accessibility"
 	"github.com/knq/chromedp/cdp/animation"
 	"github.com/knq/chromedp/cdp/applicationcache"
@@ -43,1204 +43,1204 @@ type empty struct{}
 var emptyVal = &empty{}
 
 // UnmarshalMessage unmarshals the message result or params.
-func UnmarshalMessage(msg *Message) (interface{}, error) {
+func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	var v easyjson.Unmarshaler
 	switch msg.Method {
-	case CommandInspectorEnable:
+	case cdp.CommandInspectorEnable:
 		return emptyVal, nil
 
-	case CommandInspectorDisable:
+	case cdp.CommandInspectorDisable:
 		return emptyVal, nil
 
-	case EventInspectorDetached:
+	case cdp.EventInspectorDetached:
 		v = new(inspector.EventDetached)
 
-	case EventInspectorTargetCrashed:
+	case cdp.EventInspectorTargetCrashed:
 		v = new(inspector.EventTargetCrashed)
 
-	case CommandMemoryGetDOMCounters:
+	case cdp.CommandMemoryGetDOMCounters:
 		v = new(memory.GetDOMCountersReturns)
 
-	case CommandMemorySetPressureNotificationsSuppressed:
+	case cdp.CommandMemorySetPressureNotificationsSuppressed:
 		return emptyVal, nil
 
-	case CommandMemorySimulatePressureNotification:
+	case cdp.CommandMemorySimulatePressureNotification:
 		return emptyVal, nil
 
-	case CommandPageEnable:
+	case cdp.CommandPageEnable:
 		return emptyVal, nil
 
-	case CommandPageDisable:
+	case cdp.CommandPageDisable:
 		return emptyVal, nil
 
-	case CommandPageAddScriptToEvaluateOnLoad:
+	case cdp.CommandPageAddScriptToEvaluateOnLoad:
 		v = new(page.AddScriptToEvaluateOnLoadReturns)
 
-	case CommandPageRemoveScriptToEvaluateOnLoad:
+	case cdp.CommandPageRemoveScriptToEvaluateOnLoad:
 		return emptyVal, nil
 
-	case CommandPageSetAutoAttachToCreatedPages:
+	case cdp.CommandPageSetAutoAttachToCreatedPages:
 		return emptyVal, nil
 
-	case CommandPageReload:
+	case cdp.CommandPageReload:
 		return emptyVal, nil
 
-	case CommandPageNavigate:
+	case cdp.CommandPageNavigate:
 		v = new(page.NavigateReturns)
 
-	case CommandPageStopLoading:
+	case cdp.CommandPageStopLoading:
 		return emptyVal, nil
 
-	case CommandPageGetNavigationHistory:
+	case cdp.CommandPageGetNavigationHistory:
 		v = new(page.GetNavigationHistoryReturns)
 
-	case CommandPageNavigateToHistoryEntry:
+	case cdp.CommandPageNavigateToHistoryEntry:
 		return emptyVal, nil
 
-	case CommandPageGetResourceTree:
+	case cdp.CommandPageGetResourceTree:
 		v = new(page.GetResourceTreeReturns)
 
-	case CommandPageGetResourceContent:
+	case cdp.CommandPageGetResourceContent:
 		v = new(page.GetResourceContentReturns)
 
-	case CommandPageSearchInResource:
+	case cdp.CommandPageSearchInResource:
 		v = new(page.SearchInResourceReturns)
 
-	case CommandPageSetDocumentContent:
+	case cdp.CommandPageSetDocumentContent:
 		return emptyVal, nil
 
-	case CommandPageCaptureScreenshot:
+	case cdp.CommandPageCaptureScreenshot:
 		v = new(page.CaptureScreenshotReturns)
 
-	case CommandPageStartScreencast:
+	case cdp.CommandPageStartScreencast:
 		return emptyVal, nil
 
-	case CommandPageStopScreencast:
+	case cdp.CommandPageStopScreencast:
 		return emptyVal, nil
 
-	case CommandPageScreencastFrameAck:
+	case cdp.CommandPageScreencastFrameAck:
 		return emptyVal, nil
 
-	case CommandPageHandleJavaScriptDialog:
+	case cdp.CommandPageHandleJavaScriptDialog:
 		return emptyVal, nil
 
-	case CommandPageSetColorPickerEnabled:
+	case cdp.CommandPageSetColorPickerEnabled:
 		return emptyVal, nil
 
-	case CommandPageConfigureOverlay:
+	case cdp.CommandPageConfigureOverlay:
 		return emptyVal, nil
 
-	case CommandPageGetAppManifest:
+	case cdp.CommandPageGetAppManifest:
 		v = new(page.GetAppManifestReturns)
 
-	case CommandPageRequestAppBanner:
+	case cdp.CommandPageRequestAppBanner:
 		return emptyVal, nil
 
-	case CommandPageSetControlNavigations:
+	case cdp.CommandPageSetControlNavigations:
 		return emptyVal, nil
 
-	case CommandPageProcessNavigation:
+	case cdp.CommandPageProcessNavigation:
 		return emptyVal, nil
 
-	case CommandPageGetLayoutMetrics:
+	case cdp.CommandPageGetLayoutMetrics:
 		v = new(page.GetLayoutMetricsReturns)
 
-	case EventPageDomContentEventFired:
+	case cdp.EventPageDomContentEventFired:
 		v = new(page.EventDomContentEventFired)
 
-	case EventPageLoadEventFired:
+	case cdp.EventPageLoadEventFired:
 		v = new(page.EventLoadEventFired)
 
-	case EventPageFrameAttached:
+	case cdp.EventPageFrameAttached:
 		v = new(page.EventFrameAttached)
 
-	case EventPageFrameNavigated:
+	case cdp.EventPageFrameNavigated:
 		v = new(page.EventFrameNavigated)
 
-	case EventPageFrameDetached:
+	case cdp.EventPageFrameDetached:
 		v = new(page.EventFrameDetached)
 
-	case EventPageFrameStartedLoading:
+	case cdp.EventPageFrameStartedLoading:
 		v = new(page.EventFrameStartedLoading)
 
-	case EventPageFrameStoppedLoading:
+	case cdp.EventPageFrameStoppedLoading:
 		v = new(page.EventFrameStoppedLoading)
 
-	case EventPageFrameScheduledNavigation:
+	case cdp.EventPageFrameScheduledNavigation:
 		v = new(page.EventFrameScheduledNavigation)
 
-	case EventPageFrameClearedScheduledNavigation:
+	case cdp.EventPageFrameClearedScheduledNavigation:
 		v = new(page.EventFrameClearedScheduledNavigation)
 
-	case EventPageFrameResized:
+	case cdp.EventPageFrameResized:
 		v = new(page.EventFrameResized)
 
-	case EventPageJavascriptDialogOpening:
+	case cdp.EventPageJavascriptDialogOpening:
 		v = new(page.EventJavascriptDialogOpening)
 
-	case EventPageJavascriptDialogClosed:
+	case cdp.EventPageJavascriptDialogClosed:
 		v = new(page.EventJavascriptDialogClosed)
 
-	case EventPageScreencastFrame:
+	case cdp.EventPageScreencastFrame:
 		v = new(page.EventScreencastFrame)
 
-	case EventPageScreencastVisibilityChanged:
+	case cdp.EventPageScreencastVisibilityChanged:
 		v = new(page.EventScreencastVisibilityChanged)
 
-	case EventPageColorPicked:
+	case cdp.EventPageColorPicked:
 		v = new(page.EventColorPicked)
 
-	case EventPageInterstitialShown:
+	case cdp.EventPageInterstitialShown:
 		v = new(page.EventInterstitialShown)
 
-	case EventPageInterstitialHidden:
+	case cdp.EventPageInterstitialHidden:
 		v = new(page.EventInterstitialHidden)
 
-	case EventPageNavigationRequested:
+	case cdp.EventPageNavigationRequested:
 		v = new(page.EventNavigationRequested)
 
-	case CommandRenderingSetShowPaintRects:
+	case cdp.CommandRenderingSetShowPaintRects:
 		return emptyVal, nil
 
-	case CommandRenderingSetShowDebugBorders:
+	case cdp.CommandRenderingSetShowDebugBorders:
 		return emptyVal, nil
 
-	case CommandRenderingSetShowFPSCounter:
+	case cdp.CommandRenderingSetShowFPSCounter:
 		return emptyVal, nil
 
-	case CommandRenderingSetShowScrollBottleneckRects:
+	case cdp.CommandRenderingSetShowScrollBottleneckRects:
 		return emptyVal, nil
 
-	case CommandRenderingSetShowViewportSizeOnResize:
+	case cdp.CommandRenderingSetShowViewportSizeOnResize:
 		return emptyVal, nil
 
-	case CommandEmulationSetDeviceMetricsOverride:
+	case cdp.CommandEmulationSetDeviceMetricsOverride:
 		return emptyVal, nil
 
-	case CommandEmulationClearDeviceMetricsOverride:
+	case cdp.CommandEmulationClearDeviceMetricsOverride:
 		return emptyVal, nil
 
-	case CommandEmulationForceViewport:
+	case cdp.CommandEmulationForceViewport:
 		return emptyVal, nil
 
-	case CommandEmulationResetViewport:
+	case cdp.CommandEmulationResetViewport:
 		return emptyVal, nil
 
-	case CommandEmulationResetPageScaleFactor:
+	case cdp.CommandEmulationResetPageScaleFactor:
 		return emptyVal, nil
 
-	case CommandEmulationSetPageScaleFactor:
+	case cdp.CommandEmulationSetPageScaleFactor:
 		return emptyVal, nil
 
-	case CommandEmulationSetVisibleSize:
+	case cdp.CommandEmulationSetVisibleSize:
 		return emptyVal, nil
 
-	case CommandEmulationSetScriptExecutionDisabled:
+	case cdp.CommandEmulationSetScriptExecutionDisabled:
 		return emptyVal, nil
 
-	case CommandEmulationSetGeolocationOverride:
+	case cdp.CommandEmulationSetGeolocationOverride:
 		return emptyVal, nil
 
-	case CommandEmulationClearGeolocationOverride:
+	case cdp.CommandEmulationClearGeolocationOverride:
 		return emptyVal, nil
 
-	case CommandEmulationSetTouchEmulationEnabled:
+	case cdp.CommandEmulationSetTouchEmulationEnabled:
 		return emptyVal, nil
 
-	case CommandEmulationSetEmulatedMedia:
+	case cdp.CommandEmulationSetEmulatedMedia:
 		return emptyVal, nil
 
-	case CommandEmulationSetCPUThrottlingRate:
+	case cdp.CommandEmulationSetCPUThrottlingRate:
 		return emptyVal, nil
 
-	case CommandEmulationCanEmulate:
+	case cdp.CommandEmulationCanEmulate:
 		v = new(emulation.CanEmulateReturns)
 
-	case CommandEmulationSetVirtualTimePolicy:
+	case cdp.CommandEmulationSetVirtualTimePolicy:
 		return emptyVal, nil
 
-	case EventEmulationVirtualTimeBudgetExpired:
+	case cdp.EventEmulationVirtualTimeBudgetExpired:
 		v = new(emulation.EventVirtualTimeBudgetExpired)
 
-	case CommandSecurityEnable:
+	case cdp.CommandSecurityEnable:
 		return emptyVal, nil
 
-	case CommandSecurityDisable:
+	case cdp.CommandSecurityDisable:
 		return emptyVal, nil
 
-	case CommandSecurityShowCertificateViewer:
+	case cdp.CommandSecurityShowCertificateViewer:
 		return emptyVal, nil
 
-	case EventSecuritySecurityStateChanged:
+	case cdp.EventSecuritySecurityStateChanged:
 		v = new(security.EventSecurityStateChanged)
 
-	case CommandNetworkEnable:
+	case cdp.CommandNetworkEnable:
 		return emptyVal, nil
 
-	case CommandNetworkDisable:
+	case cdp.CommandNetworkDisable:
 		return emptyVal, nil
 
-	case CommandNetworkSetUserAgentOverride:
+	case cdp.CommandNetworkSetUserAgentOverride:
 		return emptyVal, nil
 
-	case CommandNetworkSetExtraHTTPHeaders:
+	case cdp.CommandNetworkSetExtraHTTPHeaders:
 		return emptyVal, nil
 
-	case CommandNetworkGetResponseBody:
+	case cdp.CommandNetworkGetResponseBody:
 		v = new(network.GetResponseBodyReturns)
 
-	case CommandNetworkAddBlockedURL:
+	case cdp.CommandNetworkAddBlockedURL:
 		return emptyVal, nil
 
-	case CommandNetworkRemoveBlockedURL:
+	case cdp.CommandNetworkRemoveBlockedURL:
 		return emptyVal, nil
 
-	case CommandNetworkReplayXHR:
+	case cdp.CommandNetworkReplayXHR:
 		return emptyVal, nil
 
-	case CommandNetworkSetMonitoringXHREnabled:
+	case cdp.CommandNetworkSetMonitoringXHREnabled:
 		return emptyVal, nil
 
-	case CommandNetworkCanClearBrowserCache:
+	case cdp.CommandNetworkCanClearBrowserCache:
 		v = new(network.CanClearBrowserCacheReturns)
 
-	case CommandNetworkClearBrowserCache:
+	case cdp.CommandNetworkClearBrowserCache:
 		return emptyVal, nil
 
-	case CommandNetworkCanClearBrowserCookies:
+	case cdp.CommandNetworkCanClearBrowserCookies:
 		v = new(network.CanClearBrowserCookiesReturns)
 
-	case CommandNetworkClearBrowserCookies:
+	case cdp.CommandNetworkClearBrowserCookies:
 		return emptyVal, nil
 
-	case CommandNetworkGetCookies:
+	case cdp.CommandNetworkGetCookies:
 		v = new(network.GetCookiesReturns)
 
-	case CommandNetworkGetAllCookies:
+	case cdp.CommandNetworkGetAllCookies:
 		v = new(network.GetAllCookiesReturns)
 
-	case CommandNetworkDeleteCookie:
+	case cdp.CommandNetworkDeleteCookie:
 		return emptyVal, nil
 
-	case CommandNetworkSetCookie:
+	case cdp.CommandNetworkSetCookie:
 		v = new(network.SetCookieReturns)
 
-	case CommandNetworkCanEmulateNetworkConditions:
+	case cdp.CommandNetworkCanEmulateNetworkConditions:
 		v = new(network.CanEmulateNetworkConditionsReturns)
 
-	case CommandNetworkEmulateNetworkConditions:
+	case cdp.CommandNetworkEmulateNetworkConditions:
 		return emptyVal, nil
 
-	case CommandNetworkSetCacheDisabled:
+	case cdp.CommandNetworkSetCacheDisabled:
 		return emptyVal, nil
 
-	case CommandNetworkSetBypassServiceWorker:
+	case cdp.CommandNetworkSetBypassServiceWorker:
 		return emptyVal, nil
 
-	case CommandNetworkSetDataSizeLimitsForTest:
+	case cdp.CommandNetworkSetDataSizeLimitsForTest:
 		return emptyVal, nil
 
-	case CommandNetworkGetCertificate:
+	case cdp.CommandNetworkGetCertificate:
 		v = new(network.GetCertificateReturns)
 
-	case EventNetworkResourceChangedPriority:
+	case cdp.EventNetworkResourceChangedPriority:
 		v = new(network.EventResourceChangedPriority)
 
-	case EventNetworkRequestWillBeSent:
+	case cdp.EventNetworkRequestWillBeSent:
 		v = new(network.EventRequestWillBeSent)
 
-	case EventNetworkRequestServedFromCache:
+	case cdp.EventNetworkRequestServedFromCache:
 		v = new(network.EventRequestServedFromCache)
 
-	case EventNetworkResponseReceived:
+	case cdp.EventNetworkResponseReceived:
 		v = new(network.EventResponseReceived)
 
-	case EventNetworkDataReceived:
+	case cdp.EventNetworkDataReceived:
 		v = new(network.EventDataReceived)
 
-	case EventNetworkLoadingFinished:
+	case cdp.EventNetworkLoadingFinished:
 		v = new(network.EventLoadingFinished)
 
-	case EventNetworkLoadingFailed:
+	case cdp.EventNetworkLoadingFailed:
 		v = new(network.EventLoadingFailed)
 
-	case EventNetworkWebSocketWillSendHandshakeRequest:
+	case cdp.EventNetworkWebSocketWillSendHandshakeRequest:
 		v = new(network.EventWebSocketWillSendHandshakeRequest)
 
-	case EventNetworkWebSocketHandshakeResponseReceived:
+	case cdp.EventNetworkWebSocketHandshakeResponseReceived:
 		v = new(network.EventWebSocketHandshakeResponseReceived)
 
-	case EventNetworkWebSocketCreated:
+	case cdp.EventNetworkWebSocketCreated:
 		v = new(network.EventWebSocketCreated)
 
-	case EventNetworkWebSocketClosed:
+	case cdp.EventNetworkWebSocketClosed:
 		v = new(network.EventWebSocketClosed)
 
-	case EventNetworkWebSocketFrameReceived:
+	case cdp.EventNetworkWebSocketFrameReceived:
 		v = new(network.EventWebSocketFrameReceived)
 
-	case EventNetworkWebSocketFrameError:
+	case cdp.EventNetworkWebSocketFrameError:
 		v = new(network.EventWebSocketFrameError)
 
-	case EventNetworkWebSocketFrameSent:
+	case cdp.EventNetworkWebSocketFrameSent:
 		v = new(network.EventWebSocketFrameSent)
 
-	case EventNetworkEventSourceMessageReceived:
+	case cdp.EventNetworkEventSourceMessageReceived:
 		v = new(network.EventEventSourceMessageReceived)
 
-	case CommandDatabaseEnable:
+	case cdp.CommandDatabaseEnable:
 		return emptyVal, nil
 
-	case CommandDatabaseDisable:
+	case cdp.CommandDatabaseDisable:
 		return emptyVal, nil
 
-	case CommandDatabaseGetDatabaseTableNames:
+	case cdp.CommandDatabaseGetDatabaseTableNames:
 		v = new(database.GetDatabaseTableNamesReturns)
 
-	case CommandDatabaseExecuteSQL:
+	case cdp.CommandDatabaseExecuteSQL:
 		v = new(database.ExecuteSQLReturns)
 
-	case EventDatabaseAddDatabase:
+	case cdp.EventDatabaseAddDatabase:
 		v = new(database.EventAddDatabase)
 
-	case CommandIndexedDBEnable:
+	case cdp.CommandIndexedDBEnable:
 		return emptyVal, nil
 
-	case CommandIndexedDBDisable:
+	case cdp.CommandIndexedDBDisable:
 		return emptyVal, nil
 
-	case CommandIndexedDBRequestDatabaseNames:
+	case cdp.CommandIndexedDBRequestDatabaseNames:
 		v = new(indexeddb.RequestDatabaseNamesReturns)
 
-	case CommandIndexedDBRequestDatabase:
+	case cdp.CommandIndexedDBRequestDatabase:
 		v = new(indexeddb.RequestDatabaseReturns)
 
-	case CommandIndexedDBRequestData:
+	case cdp.CommandIndexedDBRequestData:
 		v = new(indexeddb.RequestDataReturns)
 
-	case CommandIndexedDBClearObjectStore:
+	case cdp.CommandIndexedDBClearObjectStore:
 		return emptyVal, nil
 
-	case CommandCacheStorageRequestCacheNames:
+	case cdp.CommandCacheStorageRequestCacheNames:
 		v = new(cachestorage.RequestCacheNamesReturns)
 
-	case CommandCacheStorageRequestEntries:
+	case cdp.CommandCacheStorageRequestEntries:
 		v = new(cachestorage.RequestEntriesReturns)
 
-	case CommandCacheStorageDeleteCache:
+	case cdp.CommandCacheStorageDeleteCache:
 		return emptyVal, nil
 
-	case CommandCacheStorageDeleteEntry:
+	case cdp.CommandCacheStorageDeleteEntry:
 		return emptyVal, nil
 
-	case CommandDOMStorageEnable:
+	case cdp.CommandDOMStorageEnable:
 		return emptyVal, nil
 
-	case CommandDOMStorageDisable:
+	case cdp.CommandDOMStorageDisable:
 		return emptyVal, nil
 
-	case CommandDOMStorageClear:
+	case cdp.CommandDOMStorageClear:
 		return emptyVal, nil
 
-	case CommandDOMStorageGetDOMStorageItems:
+	case cdp.CommandDOMStorageGetDOMStorageItems:
 		v = new(domstorage.GetDOMStorageItemsReturns)
 
-	case CommandDOMStorageSetDOMStorageItem:
+	case cdp.CommandDOMStorageSetDOMStorageItem:
 		return emptyVal, nil
 
-	case CommandDOMStorageRemoveDOMStorageItem:
+	case cdp.CommandDOMStorageRemoveDOMStorageItem:
 		return emptyVal, nil
 
-	case EventDOMStorageDomStorageItemsCleared:
+	case cdp.EventDOMStorageDomStorageItemsCleared:
 		v = new(domstorage.EventDomStorageItemsCleared)
 
-	case EventDOMStorageDomStorageItemRemoved:
+	case cdp.EventDOMStorageDomStorageItemRemoved:
 		v = new(domstorage.EventDomStorageItemRemoved)
 
-	case EventDOMStorageDomStorageItemAdded:
+	case cdp.EventDOMStorageDomStorageItemAdded:
 		v = new(domstorage.EventDomStorageItemAdded)
 
-	case EventDOMStorageDomStorageItemUpdated:
+	case cdp.EventDOMStorageDomStorageItemUpdated:
 		v = new(domstorage.EventDomStorageItemUpdated)
 
-	case CommandApplicationCacheGetFramesWithManifests:
+	case cdp.CommandApplicationCacheGetFramesWithManifests:
 		v = new(applicationcache.GetFramesWithManifestsReturns)
 
-	case CommandApplicationCacheEnable:
+	case cdp.CommandApplicationCacheEnable:
 		return emptyVal, nil
 
-	case CommandApplicationCacheGetManifestForFrame:
+	case cdp.CommandApplicationCacheGetManifestForFrame:
 		v = new(applicationcache.GetManifestForFrameReturns)
 
-	case CommandApplicationCacheGetApplicationCacheForFrame:
+	case cdp.CommandApplicationCacheGetApplicationCacheForFrame:
 		v = new(applicationcache.GetApplicationCacheForFrameReturns)
 
-	case EventApplicationCacheApplicationCacheStatusUpdated:
+	case cdp.EventApplicationCacheApplicationCacheStatusUpdated:
 		v = new(applicationcache.EventApplicationCacheStatusUpdated)
 
-	case EventApplicationCacheNetworkStateUpdated:
+	case cdp.EventApplicationCacheNetworkStateUpdated:
 		v = new(applicationcache.EventNetworkStateUpdated)
 
-	case CommandDOMEnable:
+	case cdp.CommandDOMEnable:
 		return emptyVal, nil
 
-	case CommandDOMDisable:
+	case cdp.CommandDOMDisable:
 		return emptyVal, nil
 
-	case CommandDOMGetDocument:
+	case cdp.CommandDOMGetDocument:
 		v = new(dom.GetDocumentReturns)
 
-	case CommandDOMCollectClassNamesFromSubtree:
+	case cdp.CommandDOMCollectClassNamesFromSubtree:
 		v = new(dom.CollectClassNamesFromSubtreeReturns)
 
-	case CommandDOMRequestChildNodes:
+	case cdp.CommandDOMRequestChildNodes:
 		return emptyVal, nil
 
-	case CommandDOMQuerySelector:
+	case cdp.CommandDOMQuerySelector:
 		v = new(dom.QuerySelectorReturns)
 
-	case CommandDOMQuerySelectorAll:
+	case cdp.CommandDOMQuerySelectorAll:
 		v = new(dom.QuerySelectorAllReturns)
 
-	case CommandDOMSetNodeName:
+	case cdp.CommandDOMSetNodeName:
 		v = new(dom.SetNodeNameReturns)
 
-	case CommandDOMSetNodeValue:
+	case cdp.CommandDOMSetNodeValue:
 		return emptyVal, nil
 
-	case CommandDOMRemoveNode:
+	case cdp.CommandDOMRemoveNode:
 		return emptyVal, nil
 
-	case CommandDOMSetAttributeValue:
+	case cdp.CommandDOMSetAttributeValue:
 		return emptyVal, nil
 
-	case CommandDOMSetAttributesAsText:
+	case cdp.CommandDOMSetAttributesAsText:
 		return emptyVal, nil
 
-	case CommandDOMRemoveAttribute:
+	case cdp.CommandDOMRemoveAttribute:
 		return emptyVal, nil
 
-	case CommandDOMGetOuterHTML:
+	case cdp.CommandDOMGetOuterHTML:
 		v = new(dom.GetOuterHTMLReturns)
 
-	case CommandDOMSetOuterHTML:
+	case cdp.CommandDOMSetOuterHTML:
 		return emptyVal, nil
 
-	case CommandDOMPerformSearch:
+	case cdp.CommandDOMPerformSearch:
 		v = new(dom.PerformSearchReturns)
 
-	case CommandDOMGetSearchResults:
+	case cdp.CommandDOMGetSearchResults:
 		v = new(dom.GetSearchResultsReturns)
 
-	case CommandDOMDiscardSearchResults:
+	case cdp.CommandDOMDiscardSearchResults:
 		return emptyVal, nil
 
-	case CommandDOMRequestNode:
+	case cdp.CommandDOMRequestNode:
 		v = new(dom.RequestNodeReturns)
 
-	case CommandDOMSetInspectMode:
+	case cdp.CommandDOMSetInspectMode:
 		return emptyVal, nil
 
-	case CommandDOMHighlightRect:
+	case cdp.CommandDOMHighlightRect:
 		return emptyVal, nil
 
-	case CommandDOMHighlightQuad:
+	case cdp.CommandDOMHighlightQuad:
 		return emptyVal, nil
 
-	case CommandDOMHighlightNode:
+	case cdp.CommandDOMHighlightNode:
 		return emptyVal, nil
 
-	case CommandDOMHideHighlight:
+	case cdp.CommandDOMHideHighlight:
 		return emptyVal, nil
 
-	case CommandDOMHighlightFrame:
+	case cdp.CommandDOMHighlightFrame:
 		return emptyVal, nil
 
-	case CommandDOMPushNodeByPathToFrontend:
+	case cdp.CommandDOMPushNodeByPathToFrontend:
 		v = new(dom.PushNodeByPathToFrontendReturns)
 
-	case CommandDOMPushNodesByBackendIdsToFrontend:
+	case cdp.CommandDOMPushNodesByBackendIdsToFrontend:
 		v = new(dom.PushNodesByBackendIdsToFrontendReturns)
 
-	case CommandDOMSetInspectedNode:
+	case cdp.CommandDOMSetInspectedNode:
 		return emptyVal, nil
 
-	case CommandDOMResolveNode:
+	case cdp.CommandDOMResolveNode:
 		v = new(dom.ResolveNodeReturns)
 
-	case CommandDOMGetAttributes:
+	case cdp.CommandDOMGetAttributes:
 		v = new(dom.GetAttributesReturns)
 
-	case CommandDOMCopyTo:
+	case cdp.CommandDOMCopyTo:
 		v = new(dom.CopyToReturns)
 
-	case CommandDOMMoveTo:
+	case cdp.CommandDOMMoveTo:
 		v = new(dom.MoveToReturns)
 
-	case CommandDOMUndo:
+	case cdp.CommandDOMUndo:
 		return emptyVal, nil
 
-	case CommandDOMRedo:
+	case cdp.CommandDOMRedo:
 		return emptyVal, nil
 
-	case CommandDOMMarkUndoableState:
+	case cdp.CommandDOMMarkUndoableState:
 		return emptyVal, nil
 
-	case CommandDOMFocus:
+	case cdp.CommandDOMFocus:
 		return emptyVal, nil
 
-	case CommandDOMSetFileInputFiles:
+	case cdp.CommandDOMSetFileInputFiles:
 		return emptyVal, nil
 
-	case CommandDOMGetBoxModel:
+	case cdp.CommandDOMGetBoxModel:
 		v = new(dom.GetBoxModelReturns)
 
-	case CommandDOMGetNodeForLocation:
+	case cdp.CommandDOMGetNodeForLocation:
 		v = new(dom.GetNodeForLocationReturns)
 
-	case CommandDOMGetRelayoutBoundary:
+	case cdp.CommandDOMGetRelayoutBoundary:
 		v = new(dom.GetRelayoutBoundaryReturns)
 
-	case CommandDOMGetHighlightObjectForTest:
+	case cdp.CommandDOMGetHighlightObjectForTest:
 		v = new(dom.GetHighlightObjectForTestReturns)
 
-	case EventDOMDocumentUpdated:
+	case cdp.EventDOMDocumentUpdated:
 		v = new(dom.EventDocumentUpdated)
 
-	case EventDOMInspectNodeRequested:
+	case cdp.EventDOMInspectNodeRequested:
 		v = new(dom.EventInspectNodeRequested)
 
-	case EventDOMSetChildNodes:
+	case cdp.EventDOMSetChildNodes:
 		v = new(dom.EventSetChildNodes)
 
-	case EventDOMAttributeModified:
+	case cdp.EventDOMAttributeModified:
 		v = new(dom.EventAttributeModified)
 
-	case EventDOMAttributeRemoved:
+	case cdp.EventDOMAttributeRemoved:
 		v = new(dom.EventAttributeRemoved)
 
-	case EventDOMInlineStyleInvalidated:
+	case cdp.EventDOMInlineStyleInvalidated:
 		v = new(dom.EventInlineStyleInvalidated)
 
-	case EventDOMCharacterDataModified:
+	case cdp.EventDOMCharacterDataModified:
 		v = new(dom.EventCharacterDataModified)
 
-	case EventDOMChildNodeCountUpdated:
+	case cdp.EventDOMChildNodeCountUpdated:
 		v = new(dom.EventChildNodeCountUpdated)
 
-	case EventDOMChildNodeInserted:
+	case cdp.EventDOMChildNodeInserted:
 		v = new(dom.EventChildNodeInserted)
 
-	case EventDOMChildNodeRemoved:
+	case cdp.EventDOMChildNodeRemoved:
 		v = new(dom.EventChildNodeRemoved)
 
-	case EventDOMShadowRootPushed:
+	case cdp.EventDOMShadowRootPushed:
 		v = new(dom.EventShadowRootPushed)
 
-	case EventDOMShadowRootPopped:
+	case cdp.EventDOMShadowRootPopped:
 		v = new(dom.EventShadowRootPopped)
 
-	case EventDOMPseudoElementAdded:
+	case cdp.EventDOMPseudoElementAdded:
 		v = new(dom.EventPseudoElementAdded)
 
-	case EventDOMPseudoElementRemoved:
+	case cdp.EventDOMPseudoElementRemoved:
 		v = new(dom.EventPseudoElementRemoved)
 
-	case EventDOMDistributedNodesUpdated:
+	case cdp.EventDOMDistributedNodesUpdated:
 		v = new(dom.EventDistributedNodesUpdated)
 
-	case EventDOMNodeHighlightRequested:
+	case cdp.EventDOMNodeHighlightRequested:
 		v = new(dom.EventNodeHighlightRequested)
 
-	case CommandCSSEnable:
+	case cdp.CommandCSSEnable:
 		return emptyVal, nil
 
-	case CommandCSSDisable:
+	case cdp.CommandCSSDisable:
 		return emptyVal, nil
 
-	case CommandCSSGetMatchedStylesForNode:
+	case cdp.CommandCSSGetMatchedStylesForNode:
 		v = new(css.GetMatchedStylesForNodeReturns)
 
-	case CommandCSSGetInlineStylesForNode:
+	case cdp.CommandCSSGetInlineStylesForNode:
 		v = new(css.GetInlineStylesForNodeReturns)
 
-	case CommandCSSGetComputedStyleForNode:
+	case cdp.CommandCSSGetComputedStyleForNode:
 		v = new(css.GetComputedStyleForNodeReturns)
 
-	case CommandCSSGetPlatformFontsForNode:
+	case cdp.CommandCSSGetPlatformFontsForNode:
 		v = new(css.GetPlatformFontsForNodeReturns)
 
-	case CommandCSSGetStyleSheetText:
+	case cdp.CommandCSSGetStyleSheetText:
 		v = new(css.GetStyleSheetTextReturns)
 
-	case CommandCSSCollectClassNames:
+	case cdp.CommandCSSCollectClassNames:
 		v = new(css.CollectClassNamesReturns)
 
-	case CommandCSSSetStyleSheetText:
+	case cdp.CommandCSSSetStyleSheetText:
 		v = new(css.SetStyleSheetTextReturns)
 
-	case CommandCSSSetRuleSelector:
+	case cdp.CommandCSSSetRuleSelector:
 		v = new(css.SetRuleSelectorReturns)
 
-	case CommandCSSSetKeyframeKey:
+	case cdp.CommandCSSSetKeyframeKey:
 		v = new(css.SetKeyframeKeyReturns)
 
-	case CommandCSSSetStyleTexts:
+	case cdp.CommandCSSSetStyleTexts:
 		v = new(css.SetStyleTextsReturns)
 
-	case CommandCSSSetMediaText:
+	case cdp.CommandCSSSetMediaText:
 		v = new(css.SetMediaTextReturns)
 
-	case CommandCSSCreateStyleSheet:
+	case cdp.CommandCSSCreateStyleSheet:
 		v = new(css.CreateStyleSheetReturns)
 
-	case CommandCSSAddRule:
+	case cdp.CommandCSSAddRule:
 		v = new(css.AddRuleReturns)
 
-	case CommandCSSForcePseudoState:
+	case cdp.CommandCSSForcePseudoState:
 		return emptyVal, nil
 
-	case CommandCSSGetMediaQueries:
+	case cdp.CommandCSSGetMediaQueries:
 		v = new(css.GetMediaQueriesReturns)
 
-	case CommandCSSSetEffectivePropertyValueForNode:
+	case cdp.CommandCSSSetEffectivePropertyValueForNode:
 		return emptyVal, nil
 
-	case CommandCSSGetBackgroundColors:
+	case cdp.CommandCSSGetBackgroundColors:
 		v = new(css.GetBackgroundColorsReturns)
 
-	case CommandCSSGetLayoutTreeAndStyles:
+	case cdp.CommandCSSGetLayoutTreeAndStyles:
 		v = new(css.GetLayoutTreeAndStylesReturns)
 
-	case CommandCSSStartRuleUsageTracking:
+	case cdp.CommandCSSStartRuleUsageTracking:
 		return emptyVal, nil
 
-	case CommandCSSStopRuleUsageTracking:
+	case cdp.CommandCSSStopRuleUsageTracking:
 		v = new(css.StopRuleUsageTrackingReturns)
 
-	case EventCSSMediaQueryResultChanged:
+	case cdp.EventCSSMediaQueryResultChanged:
 		v = new(css.EventMediaQueryResultChanged)
 
-	case EventCSSFontsUpdated:
+	case cdp.EventCSSFontsUpdated:
 		v = new(css.EventFontsUpdated)
 
-	case EventCSSStyleSheetChanged:
+	case cdp.EventCSSStyleSheetChanged:
 		v = new(css.EventStyleSheetChanged)
 
-	case EventCSSStyleSheetAdded:
+	case cdp.EventCSSStyleSheetAdded:
 		v = new(css.EventStyleSheetAdded)
 
-	case EventCSSStyleSheetRemoved:
+	case cdp.EventCSSStyleSheetRemoved:
 		v = new(css.EventStyleSheetRemoved)
 
-	case CommandIORead:
+	case cdp.CommandIORead:
 		v = new(iodom.ReadReturns)
 
-	case CommandIOClose:
+	case cdp.CommandIOClose:
 		return emptyVal, nil
 
-	case CommandDOMDebuggerSetDOMBreakpoint:
+	case cdp.CommandDOMDebuggerSetDOMBreakpoint:
 		return emptyVal, nil
 
-	case CommandDOMDebuggerRemoveDOMBreakpoint:
+	case cdp.CommandDOMDebuggerRemoveDOMBreakpoint:
 		return emptyVal, nil
 
-	case CommandDOMDebuggerSetEventListenerBreakpoint:
+	case cdp.CommandDOMDebuggerSetEventListenerBreakpoint:
 		return emptyVal, nil
 
-	case CommandDOMDebuggerRemoveEventListenerBreakpoint:
+	case cdp.CommandDOMDebuggerRemoveEventListenerBreakpoint:
 		return emptyVal, nil
 
-	case CommandDOMDebuggerSetInstrumentationBreakpoint:
+	case cdp.CommandDOMDebuggerSetInstrumentationBreakpoint:
 		return emptyVal, nil
 
-	case CommandDOMDebuggerRemoveInstrumentationBreakpoint:
+	case cdp.CommandDOMDebuggerRemoveInstrumentationBreakpoint:
 		return emptyVal, nil
 
-	case CommandDOMDebuggerSetXHRBreakpoint:
+	case cdp.CommandDOMDebuggerSetXHRBreakpoint:
 		return emptyVal, nil
 
-	case CommandDOMDebuggerRemoveXHRBreakpoint:
+	case cdp.CommandDOMDebuggerRemoveXHRBreakpoint:
 		return emptyVal, nil
 
-	case CommandDOMDebuggerGetEventListeners:
+	case cdp.CommandDOMDebuggerGetEventListeners:
 		v = new(domdebugger.GetEventListenersReturns)
 
-	case CommandTargetSetDiscoverTargets:
+	case cdp.CommandTargetSetDiscoverTargets:
 		return emptyVal, nil
 
-	case CommandTargetSetAutoAttach:
+	case cdp.CommandTargetSetAutoAttach:
 		return emptyVal, nil
 
-	case CommandTargetSetAttachToFrames:
+	case cdp.CommandTargetSetAttachToFrames:
 		return emptyVal, nil
 
-	case CommandTargetSetRemoteLocations:
+	case cdp.CommandTargetSetRemoteLocations:
 		return emptyVal, nil
 
-	case CommandTargetSendMessageToTarget:
+	case cdp.CommandTargetSendMessageToTarget:
 		return emptyVal, nil
 
-	case CommandTargetGetTargetInfo:
+	case cdp.CommandTargetGetTargetInfo:
 		v = new(target.GetTargetInfoReturns)
 
-	case CommandTargetActivateTarget:
+	case cdp.CommandTargetActivateTarget:
 		return emptyVal, nil
 
-	case CommandTargetCloseTarget:
+	case cdp.CommandTargetCloseTarget:
 		v = new(target.CloseTargetReturns)
 
-	case CommandTargetAttachToTarget:
+	case cdp.CommandTargetAttachToTarget:
 		v = new(target.AttachToTargetReturns)
 
-	case CommandTargetDetachFromTarget:
+	case cdp.CommandTargetDetachFromTarget:
 		return emptyVal, nil
 
-	case CommandTargetCreateBrowserContext:
+	case cdp.CommandTargetCreateBrowserContext:
 		v = new(target.CreateBrowserContextReturns)
 
-	case CommandTargetDisposeBrowserContext:
+	case cdp.CommandTargetDisposeBrowserContext:
 		v = new(target.DisposeBrowserContextReturns)
 
-	case CommandTargetCreateTarget:
+	case cdp.CommandTargetCreateTarget:
 		v = new(target.CreateTargetReturns)
 
-	case CommandTargetGetTargets:
+	case cdp.CommandTargetGetTargets:
 		v = new(target.GetTargetsReturns)
 
-	case EventTargetTargetCreated:
+	case cdp.EventTargetTargetCreated:
 		v = new(target.EventTargetCreated)
 
-	case EventTargetTargetDestroyed:
+	case cdp.EventTargetTargetDestroyed:
 		v = new(target.EventTargetDestroyed)
 
-	case EventTargetAttachedToTarget:
+	case cdp.EventTargetAttachedToTarget:
 		v = new(target.EventAttachedToTarget)
 
-	case EventTargetDetachedFromTarget:
+	case cdp.EventTargetDetachedFromTarget:
 		v = new(target.EventDetachedFromTarget)
 
-	case EventTargetReceivedMessageFromTarget:
+	case cdp.EventTargetReceivedMessageFromTarget:
 		v = new(target.EventReceivedMessageFromTarget)
 
-	case CommandServiceWorkerEnable:
+	case cdp.CommandServiceWorkerEnable:
 		return emptyVal, nil
 
-	case CommandServiceWorkerDisable:
+	case cdp.CommandServiceWorkerDisable:
 		return emptyVal, nil
 
-	case CommandServiceWorkerUnregister:
+	case cdp.CommandServiceWorkerUnregister:
 		return emptyVal, nil
 
-	case CommandServiceWorkerUpdateRegistration:
+	case cdp.CommandServiceWorkerUpdateRegistration:
 		return emptyVal, nil
 
-	case CommandServiceWorkerStartWorker:
+	case cdp.CommandServiceWorkerStartWorker:
 		return emptyVal, nil
 
-	case CommandServiceWorkerSkipWaiting:
+	case cdp.CommandServiceWorkerSkipWaiting:
 		return emptyVal, nil
 
-	case CommandServiceWorkerStopWorker:
+	case cdp.CommandServiceWorkerStopWorker:
 		return emptyVal, nil
 
-	case CommandServiceWorkerInspectWorker:
+	case cdp.CommandServiceWorkerInspectWorker:
 		return emptyVal, nil
 
-	case CommandServiceWorkerSetForceUpdateOnPageLoad:
+	case cdp.CommandServiceWorkerSetForceUpdateOnPageLoad:
 		return emptyVal, nil
 
-	case CommandServiceWorkerDeliverPushMessage:
+	case cdp.CommandServiceWorkerDeliverPushMessage:
 		return emptyVal, nil
 
-	case CommandServiceWorkerDispatchSyncEvent:
+	case cdp.CommandServiceWorkerDispatchSyncEvent:
 		return emptyVal, nil
 
-	case EventServiceWorkerWorkerRegistrationUpdated:
+	case cdp.EventServiceWorkerWorkerRegistrationUpdated:
 		v = new(serviceworker.EventWorkerRegistrationUpdated)
 
-	case EventServiceWorkerWorkerVersionUpdated:
+	case cdp.EventServiceWorkerWorkerVersionUpdated:
 		v = new(serviceworker.EventWorkerVersionUpdated)
 
-	case EventServiceWorkerWorkerErrorReported:
+	case cdp.EventServiceWorkerWorkerErrorReported:
 		v = new(serviceworker.EventWorkerErrorReported)
 
-	case CommandInputDispatchKeyEvent:
+	case cdp.CommandInputDispatchKeyEvent:
 		return emptyVal, nil
 
-	case CommandInputDispatchMouseEvent:
+	case cdp.CommandInputDispatchMouseEvent:
 		return emptyVal, nil
 
-	case CommandInputDispatchTouchEvent:
+	case cdp.CommandInputDispatchTouchEvent:
 		return emptyVal, nil
 
-	case CommandInputEmulateTouchFromMouseEvent:
+	case cdp.CommandInputEmulateTouchFromMouseEvent:
 		return emptyVal, nil
 
-	case CommandInputSynthesizePinchGesture:
+	case cdp.CommandInputSynthesizePinchGesture:
 		return emptyVal, nil
 
-	case CommandInputSynthesizeScrollGesture:
+	case cdp.CommandInputSynthesizeScrollGesture:
 		return emptyVal, nil
 
-	case CommandInputSynthesizeTapGesture:
+	case cdp.CommandInputSynthesizeTapGesture:
 		return emptyVal, nil
 
-	case CommandLayerTreeEnable:
+	case cdp.CommandLayerTreeEnable:
 		return emptyVal, nil
 
-	case CommandLayerTreeDisable:
+	case cdp.CommandLayerTreeDisable:
 		return emptyVal, nil
 
-	case CommandLayerTreeCompositingReasons:
+	case cdp.CommandLayerTreeCompositingReasons:
 		v = new(layertree.CompositingReasonsReturns)
 
-	case CommandLayerTreeMakeSnapshot:
+	case cdp.CommandLayerTreeMakeSnapshot:
 		v = new(layertree.MakeSnapshotReturns)
 
-	case CommandLayerTreeLoadSnapshot:
+	case cdp.CommandLayerTreeLoadSnapshot:
 		v = new(layertree.LoadSnapshotReturns)
 
-	case CommandLayerTreeReleaseSnapshot:
+	case cdp.CommandLayerTreeReleaseSnapshot:
 		return emptyVal, nil
 
-	case CommandLayerTreeProfileSnapshot:
+	case cdp.CommandLayerTreeProfileSnapshot:
 		v = new(layertree.ProfileSnapshotReturns)
 
-	case CommandLayerTreeReplaySnapshot:
+	case cdp.CommandLayerTreeReplaySnapshot:
 		v = new(layertree.ReplaySnapshotReturns)
 
-	case CommandLayerTreeSnapshotCommandLog:
+	case cdp.CommandLayerTreeSnapshotCommandLog:
 		v = new(layertree.SnapshotCommandLogReturns)
 
-	case EventLayerTreeLayerTreeDidChange:
+	case cdp.EventLayerTreeLayerTreeDidChange:
 		v = new(layertree.EventLayerTreeDidChange)
 
-	case EventLayerTreeLayerPainted:
+	case cdp.EventLayerTreeLayerPainted:
 		v = new(layertree.EventLayerPainted)
 
-	case CommandDeviceOrientationSetDeviceOrientationOverride:
+	case cdp.CommandDeviceOrientationSetDeviceOrientationOverride:
 		return emptyVal, nil
 
-	case CommandDeviceOrientationClearDeviceOrientationOverride:
+	case cdp.CommandDeviceOrientationClearDeviceOrientationOverride:
 		return emptyVal, nil
 
-	case CommandTracingStart:
+	case cdp.CommandTracingStart:
 		return emptyVal, nil
 
-	case CommandTracingEnd:
+	case cdp.CommandTracingEnd:
 		return emptyVal, nil
 
-	case CommandTracingGetCategories:
+	case cdp.CommandTracingGetCategories:
 		v = new(tracing.GetCategoriesReturns)
 
-	case CommandTracingRequestMemoryDump:
+	case cdp.CommandTracingRequestMemoryDump:
 		v = new(tracing.RequestMemoryDumpReturns)
 
-	case CommandTracingRecordClockSyncMarker:
+	case cdp.CommandTracingRecordClockSyncMarker:
 		return emptyVal, nil
 
-	case EventTracingDataCollected:
+	case cdp.EventTracingDataCollected:
 		v = new(tracing.EventDataCollected)
 
-	case EventTracingTracingComplete:
+	case cdp.EventTracingTracingComplete:
 		v = new(tracing.EventTracingComplete)
 
-	case EventTracingBufferUsage:
+	case cdp.EventTracingBufferUsage:
 		v = new(tracing.EventBufferUsage)
 
-	case CommandAnimationEnable:
+	case cdp.CommandAnimationEnable:
 		return emptyVal, nil
 
-	case CommandAnimationDisable:
+	case cdp.CommandAnimationDisable:
 		return emptyVal, nil
 
-	case CommandAnimationGetPlaybackRate:
+	case cdp.CommandAnimationGetPlaybackRate:
 		v = new(animation.GetPlaybackRateReturns)
 
-	case CommandAnimationSetPlaybackRate:
+	case cdp.CommandAnimationSetPlaybackRate:
 		return emptyVal, nil
 
-	case CommandAnimationGetCurrentTime:
+	case cdp.CommandAnimationGetCurrentTime:
 		v = new(animation.GetCurrentTimeReturns)
 
-	case CommandAnimationSetPaused:
+	case cdp.CommandAnimationSetPaused:
 		return emptyVal, nil
 
-	case CommandAnimationSetTiming:
+	case cdp.CommandAnimationSetTiming:
 		return emptyVal, nil
 
-	case CommandAnimationSeekAnimations:
+	case cdp.CommandAnimationSeekAnimations:
 		return emptyVal, nil
 
-	case CommandAnimationReleaseAnimations:
+	case cdp.CommandAnimationReleaseAnimations:
 		return emptyVal, nil
 
-	case CommandAnimationResolveAnimation:
+	case cdp.CommandAnimationResolveAnimation:
 		v = new(animation.ResolveAnimationReturns)
 
-	case EventAnimationAnimationCreated:
+	case cdp.EventAnimationAnimationCreated:
 		v = new(animation.EventAnimationCreated)
 
-	case EventAnimationAnimationStarted:
+	case cdp.EventAnimationAnimationStarted:
 		v = new(animation.EventAnimationStarted)
 
-	case EventAnimationAnimationCanceled:
+	case cdp.EventAnimationAnimationCanceled:
 		v = new(animation.EventAnimationCanceled)
 
-	case CommandAccessibilityGetPartialAXTree:
+	case cdp.CommandAccessibilityGetPartialAXTree:
 		v = new(accessibility.GetPartialAXTreeReturns)
 
-	case CommandStorageClearDataForOrigin:
+	case cdp.CommandStorageClearDataForOrigin:
 		return emptyVal, nil
 
-	case CommandLogEnable:
+	case cdp.CommandLogEnable:
 		return emptyVal, nil
 
-	case CommandLogDisable:
+	case cdp.CommandLogDisable:
 		return emptyVal, nil
 
-	case CommandLogClear:
+	case cdp.CommandLogClear:
 		return emptyVal, nil
 
-	case CommandLogStartViolationsReport:
+	case cdp.CommandLogStartViolationsReport:
 		return emptyVal, nil
 
-	case CommandLogStopViolationsReport:
+	case cdp.CommandLogStopViolationsReport:
 		return emptyVal, nil
 
-	case EventLogEntryAdded:
+	case cdp.EventLogEntryAdded:
 		v = new(logdom.EventEntryAdded)
 
-	case CommandSystemInfoGetInfo:
+	case cdp.CommandSystemInfoGetInfo:
 		v = new(systeminfo.GetInfoReturns)
 
-	case CommandTetheringBind:
+	case cdp.CommandTetheringBind:
 		return emptyVal, nil
 
-	case CommandTetheringUnbind:
+	case cdp.CommandTetheringUnbind:
 		return emptyVal, nil
 
-	case EventTetheringAccepted:
+	case cdp.EventTetheringAccepted:
 		v = new(tethering.EventAccepted)
 
-	case CommandSchemaGetDomains:
+	case cdp.CommandSchemaGetDomains:
 		v = new(schema.GetDomainsReturns)
 
-	case CommandRuntimeEvaluate:
+	case cdp.CommandRuntimeEvaluate:
 		v = new(runtime.EvaluateReturns)
 
-	case CommandRuntimeAwaitPromise:
+	case cdp.CommandRuntimeAwaitPromise:
 		v = new(runtime.AwaitPromiseReturns)
 
-	case CommandRuntimeCallFunctionOn:
+	case cdp.CommandRuntimeCallFunctionOn:
 		v = new(runtime.CallFunctionOnReturns)
 
-	case CommandRuntimeGetProperties:
+	case cdp.CommandRuntimeGetProperties:
 		v = new(runtime.GetPropertiesReturns)
 
-	case CommandRuntimeReleaseObject:
+	case cdp.CommandRuntimeReleaseObject:
 		return emptyVal, nil
 
-	case CommandRuntimeReleaseObjectGroup:
+	case cdp.CommandRuntimeReleaseObjectGroup:
 		return emptyVal, nil
 
-	case CommandRuntimeRunIfWaitingForDebugger:
+	case cdp.CommandRuntimeRunIfWaitingForDebugger:
 		return emptyVal, nil
 
-	case CommandRuntimeEnable:
+	case cdp.CommandRuntimeEnable:
 		return emptyVal, nil
 
-	case CommandRuntimeDisable:
+	case cdp.CommandRuntimeDisable:
 		return emptyVal, nil
 
-	case CommandRuntimeDiscardConsoleEntries:
+	case cdp.CommandRuntimeDiscardConsoleEntries:
 		return emptyVal, nil
 
-	case CommandRuntimeSetCustomObjectFormatterEnabled:
+	case cdp.CommandRuntimeSetCustomObjectFormatterEnabled:
 		return emptyVal, nil
 
-	case CommandRuntimeCompileScript:
+	case cdp.CommandRuntimeCompileScript:
 		v = new(runtime.CompileScriptReturns)
 
-	case CommandRuntimeRunScript:
+	case cdp.CommandRuntimeRunScript:
 		v = new(runtime.RunScriptReturns)
 
-	case EventRuntimeExecutionContextCreated:
+	case cdp.EventRuntimeExecutionContextCreated:
 		v = new(runtime.EventExecutionContextCreated)
 
-	case EventRuntimeExecutionContextDestroyed:
+	case cdp.EventRuntimeExecutionContextDestroyed:
 		v = new(runtime.EventExecutionContextDestroyed)
 
-	case EventRuntimeExecutionContextsCleared:
+	case cdp.EventRuntimeExecutionContextsCleared:
 		v = new(runtime.EventExecutionContextsCleared)
 
-	case EventRuntimeExceptionThrown:
+	case cdp.EventRuntimeExceptionThrown:
 		v = new(runtime.EventExceptionThrown)
 
-	case EventRuntimeExceptionRevoked:
+	case cdp.EventRuntimeExceptionRevoked:
 		v = new(runtime.EventExceptionRevoked)
 
-	case EventRuntimeConsoleAPICalled:
+	case cdp.EventRuntimeConsoleAPICalled:
 		v = new(runtime.EventConsoleAPICalled)
 
-	case EventRuntimeInspectRequested:
+	case cdp.EventRuntimeInspectRequested:
 		v = new(runtime.EventInspectRequested)
 
-	case CommandDebuggerEnable:
+	case cdp.CommandDebuggerEnable:
 		return emptyVal, nil
 
-	case CommandDebuggerDisable:
+	case cdp.CommandDebuggerDisable:
 		return emptyVal, nil
 
-	case CommandDebuggerSetBreakpointsActive:
+	case cdp.CommandDebuggerSetBreakpointsActive:
 		return emptyVal, nil
 
-	case CommandDebuggerSetSkipAllPauses:
+	case cdp.CommandDebuggerSetSkipAllPauses:
 		return emptyVal, nil
 
-	case CommandDebuggerSetBreakpointByURL:
+	case cdp.CommandDebuggerSetBreakpointByURL:
 		v = new(debugger.SetBreakpointByURLReturns)
 
-	case CommandDebuggerSetBreakpoint:
+	case cdp.CommandDebuggerSetBreakpoint:
 		v = new(debugger.SetBreakpointReturns)
 
-	case CommandDebuggerRemoveBreakpoint:
+	case cdp.CommandDebuggerRemoveBreakpoint:
 		return emptyVal, nil
 
-	case CommandDebuggerGetPossibleBreakpoints:
+	case cdp.CommandDebuggerGetPossibleBreakpoints:
 		v = new(debugger.GetPossibleBreakpointsReturns)
 
-	case CommandDebuggerContinueToLocation:
+	case cdp.CommandDebuggerContinueToLocation:
 		return emptyVal, nil
 
-	case CommandDebuggerStepOver:
+	case cdp.CommandDebuggerStepOver:
 		return emptyVal, nil
 
-	case CommandDebuggerStepInto:
+	case cdp.CommandDebuggerStepInto:
 		return emptyVal, nil
 
-	case CommandDebuggerStepOut:
+	case cdp.CommandDebuggerStepOut:
 		return emptyVal, nil
 
-	case CommandDebuggerPause:
+	case cdp.CommandDebuggerPause:
 		return emptyVal, nil
 
-	case CommandDebuggerResume:
+	case cdp.CommandDebuggerResume:
 		return emptyVal, nil
 
-	case CommandDebuggerSearchInContent:
+	case cdp.CommandDebuggerSearchInContent:
 		v = new(debugger.SearchInContentReturns)
 
-	case CommandDebuggerSetScriptSource:
+	case cdp.CommandDebuggerSetScriptSource:
 		v = new(debugger.SetScriptSourceReturns)
 
-	case CommandDebuggerRestartFrame:
+	case cdp.CommandDebuggerRestartFrame:
 		v = new(debugger.RestartFrameReturns)
 
-	case CommandDebuggerGetScriptSource:
+	case cdp.CommandDebuggerGetScriptSource:
 		v = new(debugger.GetScriptSourceReturns)
 
-	case CommandDebuggerSetPauseOnExceptions:
+	case cdp.CommandDebuggerSetPauseOnExceptions:
 		return emptyVal, nil
 
-	case CommandDebuggerEvaluateOnCallFrame:
+	case cdp.CommandDebuggerEvaluateOnCallFrame:
 		v = new(debugger.EvaluateOnCallFrameReturns)
 
-	case CommandDebuggerSetVariableValue:
+	case cdp.CommandDebuggerSetVariableValue:
 		return emptyVal, nil
 
-	case CommandDebuggerSetAsyncCallStackDepth:
+	case cdp.CommandDebuggerSetAsyncCallStackDepth:
 		return emptyVal, nil
 
-	case CommandDebuggerSetBlackboxPatterns:
+	case cdp.CommandDebuggerSetBlackboxPatterns:
 		return emptyVal, nil
 
-	case CommandDebuggerSetBlackboxedRanges:
+	case cdp.CommandDebuggerSetBlackboxedRanges:
 		return emptyVal, nil
 
-	case EventDebuggerScriptParsed:
+	case cdp.EventDebuggerScriptParsed:
 		v = new(debugger.EventScriptParsed)
 
-	case EventDebuggerScriptFailedToParse:
+	case cdp.EventDebuggerScriptFailedToParse:
 		v = new(debugger.EventScriptFailedToParse)
 
-	case EventDebuggerBreakpointResolved:
+	case cdp.EventDebuggerBreakpointResolved:
 		v = new(debugger.EventBreakpointResolved)
 
-	case EventDebuggerPaused:
+	case cdp.EventDebuggerPaused:
 		v = new(debugger.EventPaused)
 
-	case EventDebuggerResumed:
+	case cdp.EventDebuggerResumed:
 		v = new(debugger.EventResumed)
 
-	case CommandProfilerEnable:
+	case cdp.CommandProfilerEnable:
 		return emptyVal, nil
 
-	case CommandProfilerDisable:
+	case cdp.CommandProfilerDisable:
 		return emptyVal, nil
 
-	case CommandProfilerSetSamplingInterval:
+	case cdp.CommandProfilerSetSamplingInterval:
 		return emptyVal, nil
 
-	case CommandProfilerStart:
+	case cdp.CommandProfilerStart:
 		return emptyVal, nil
 
-	case CommandProfilerStop:
+	case cdp.CommandProfilerStop:
 		v = new(profiler.StopReturns)
 
-	case EventProfilerConsoleProfileStarted:
+	case cdp.EventProfilerConsoleProfileStarted:
 		v = new(profiler.EventConsoleProfileStarted)
 
-	case EventProfilerConsoleProfileFinished:
+	case cdp.EventProfilerConsoleProfileFinished:
 		v = new(profiler.EventConsoleProfileFinished)
 
-	case CommandHeapProfilerEnable:
+	case cdp.CommandHeapProfilerEnable:
 		return emptyVal, nil
 
-	case CommandHeapProfilerDisable:
+	case cdp.CommandHeapProfilerDisable:
 		return emptyVal, nil
 
-	case CommandHeapProfilerStartTrackingHeapObjects:
+	case cdp.CommandHeapProfilerStartTrackingHeapObjects:
 		return emptyVal, nil
 
-	case CommandHeapProfilerStopTrackingHeapObjects:
+	case cdp.CommandHeapProfilerStopTrackingHeapObjects:
 		return emptyVal, nil
 
-	case CommandHeapProfilerTakeHeapSnapshot:
+	case cdp.CommandHeapProfilerTakeHeapSnapshot:
 		return emptyVal, nil
 
-	case CommandHeapProfilerCollectGarbage:
+	case cdp.CommandHeapProfilerCollectGarbage:
 		return emptyVal, nil
 
-	case CommandHeapProfilerGetObjectByHeapObjectID:
+	case cdp.CommandHeapProfilerGetObjectByHeapObjectID:
 		v = new(heapprofiler.GetObjectByHeapObjectIDReturns)
 
-	case CommandHeapProfilerAddInspectedHeapObject:
+	case cdp.CommandHeapProfilerAddInspectedHeapObject:
 		return emptyVal, nil
 
-	case CommandHeapProfilerGetHeapObjectID:
+	case cdp.CommandHeapProfilerGetHeapObjectID:
 		v = new(heapprofiler.GetHeapObjectIDReturns)
 
-	case CommandHeapProfilerStartSampling:
+	case cdp.CommandHeapProfilerStartSampling:
 		return emptyVal, nil
 
-	case CommandHeapProfilerStopSampling:
+	case cdp.CommandHeapProfilerStopSampling:
 		v = new(heapprofiler.StopSamplingReturns)
 
-	case EventHeapProfilerAddHeapSnapshotChunk:
+	case cdp.EventHeapProfilerAddHeapSnapshotChunk:
 		v = new(heapprofiler.EventAddHeapSnapshotChunk)
 
-	case EventHeapProfilerResetProfiles:
+	case cdp.EventHeapProfilerResetProfiles:
 		v = new(heapprofiler.EventResetProfiles)
 
-	case EventHeapProfilerReportHeapSnapshotProgress:
+	case cdp.EventHeapProfilerReportHeapSnapshotProgress:
 		v = new(heapprofiler.EventReportHeapSnapshotProgress)
 
-	case EventHeapProfilerLastSeenObjectID:
+	case cdp.EventHeapProfilerLastSeenObjectID:
 		v = new(heapprofiler.EventLastSeenObjectID)
 
-	case EventHeapProfilerHeapStatsUpdate:
+	case cdp.EventHeapProfilerHeapStatsUpdate:
 		v = new(heapprofiler.EventHeapStatsUpdate)
 	}
 

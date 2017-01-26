@@ -5,31 +5,11 @@ package layertree
 import (
 	"errors"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/dom"
 	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // LayerID unique Layer identifier.
@@ -64,21 +44,21 @@ type PictureTile struct {
 
 // Layer information about a compositing layer.
 type Layer struct {
-	LayerID       LayerID       `json:"layerId,omitempty"`       // The unique id for this layer.
-	ParentLayerID LayerID       `json:"parentLayerId,omitempty"` // The id of parent (not present for root).
-	BackendNodeID BackendNodeID `json:"backendNodeId,omitempty"` // The backend id for the node associated with this layer.
-	OffsetX       float64       `json:"offsetX,omitempty"`       // Offset from parent layer, X coordinate.
-	OffsetY       float64       `json:"offsetY,omitempty"`       // Offset from parent layer, Y coordinate.
-	Width         float64       `json:"width,omitempty"`         // Layer width.
-	Height        float64       `json:"height,omitempty"`        // Layer height.
-	Transform     []float64     `json:"transform,omitempty"`     // Transformation matrix for layer, default is identity matrix
-	AnchorX       float64       `json:"anchorX,omitempty"`       // Transform anchor point X, absent if no transform specified
-	AnchorY       float64       `json:"anchorY,omitempty"`       // Transform anchor point Y, absent if no transform specified
-	AnchorZ       float64       `json:"anchorZ,omitempty"`       // Transform anchor point Z, absent if no transform specified
-	PaintCount    int64         `json:"paintCount,omitempty"`    // Indicates how many time this layer has painted.
-	DrawsContent  bool          `json:"drawsContent,omitempty"`  // Indicates whether this layer hosts any content, rather than being used for transform/scrolling purposes only.
-	Invisible     bool          `json:"invisible,omitempty"`     // Set if layer is not visible.
-	ScrollRects   []*ScrollRect `json:"scrollRects,omitempty"`   // Rectangles scrolling on main thread only.
+	LayerID       LayerID           `json:"layerId,omitempty"`       // The unique id for this layer.
+	ParentLayerID LayerID           `json:"parentLayerId,omitempty"` // The id of parent (not present for root).
+	BackendNodeID cdp.BackendNodeID `json:"backendNodeId,omitempty"` // The backend id for the node associated with this layer.
+	OffsetX       float64           `json:"offsetX,omitempty"`       // Offset from parent layer, X coordinate.
+	OffsetY       float64           `json:"offsetY,omitempty"`       // Offset from parent layer, Y coordinate.
+	Width         float64           `json:"width,omitempty"`         // Layer width.
+	Height        float64           `json:"height,omitempty"`        // Layer height.
+	Transform     []float64         `json:"transform,omitempty"`     // Transformation matrix for layer, default is identity matrix
+	AnchorX       float64           `json:"anchorX,omitempty"`       // Transform anchor point X, absent if no transform specified
+	AnchorY       float64           `json:"anchorY,omitempty"`       // Transform anchor point Y, absent if no transform specified
+	AnchorZ       float64           `json:"anchorZ,omitempty"`       // Transform anchor point Z, absent if no transform specified
+	PaintCount    int64             `json:"paintCount,omitempty"`    // Indicates how many time this layer has painted.
+	DrawsContent  bool              `json:"drawsContent,omitempty"`  // Indicates whether this layer hosts any content, rather than being used for transform/scrolling purposes only.
+	Invisible     bool              `json:"invisible,omitempty"`     // Set if layer is not visible.
+	ScrollRects   []*ScrollRect     `json:"scrollRects,omitempty"`   // Rectangles scrolling on main thread only.
 }
 
 // PaintProfile array of timings, one per paint step.

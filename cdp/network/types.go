@@ -5,33 +5,13 @@ package network
 import (
 	"errors"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/page"
 	"github.com/knq/chromedp/cdp/runtime"
 	"github.com/knq/chromedp/cdp/security"
 	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // RequestID unique request identifier.
@@ -236,14 +216,14 @@ type Request struct {
 // SignedCertificateTimestamp details of a signed certificate timestamp
 // (SCT).
 type SignedCertificateTimestamp struct {
-	Status             string    `json:"status,omitempty"`             // Validation status.
-	Origin             string    `json:"origin,omitempty"`             // Origin.
-	LogDescription     string    `json:"logDescription,omitempty"`     // Log name / description.
-	LogID              string    `json:"logId,omitempty"`              // Log ID.
-	Timestamp          Timestamp `json:"timestamp,omitempty"`          // Issuance date.
-	HashAlgorithm      string    `json:"hashAlgorithm,omitempty"`      // Hash algorithm.
-	SignatureAlgorithm string    `json:"signatureAlgorithm,omitempty"` // Signature algorithm.
-	SignatureData      string    `json:"signatureData,omitempty"`      // Signature data.
+	Status             string        `json:"status,omitempty"`             // Validation status.
+	Origin             string        `json:"origin,omitempty"`             // Origin.
+	LogDescription     string        `json:"logDescription,omitempty"`     // Log name / description.
+	LogID              string        `json:"logId,omitempty"`              // Log ID.
+	Timestamp          cdp.Timestamp `json:"timestamp,omitempty"`          // Issuance date.
+	HashAlgorithm      string        `json:"hashAlgorithm,omitempty"`      // Hash algorithm.
+	SignatureAlgorithm string        `json:"signatureAlgorithm,omitempty"` // Signature algorithm.
+	SignatureData      string        `json:"signatureData,omitempty"`      // Signature data.
 }
 
 // SecurityDetails security details about a request.
@@ -257,8 +237,8 @@ type SecurityDetails struct {
 	SubjectName                    string                        `json:"subjectName,omitempty"`                    // Certificate subject name.
 	SanList                        []string                      `json:"sanList,omitempty"`                        // Subject Alternative Name (SAN) DNS names and IP addresses.
 	Issuer                         string                        `json:"issuer,omitempty"`                         // Name of the issuing CA.
-	ValidFrom                      Timestamp                     `json:"validFrom,omitempty"`                      // Certificate valid from date.
-	ValidTo                        Timestamp                     `json:"validTo,omitempty"`                        // Certificate valid to (expiration) date
+	ValidFrom                      cdp.Timestamp                 `json:"validFrom,omitempty"`                      // Certificate valid from date.
+	ValidTo                        cdp.Timestamp                 `json:"validTo,omitempty"`                        // Certificate valid to (expiration) date
 	SignedCertificateTimestampList []*SignedCertificateTimestamp `json:"signedCertificateTimestampList,omitempty"` // List of signed certificate timestamps (SCTs).
 }
 
@@ -318,25 +298,25 @@ func (t *BlockedReason) UnmarshalJSON(buf []byte) error {
 
 // Response hTTP response data.
 type Response struct {
-	URL                string                 `json:"url,omitempty"`                // Response URL. This URL can be different from CachedResource.url in case of redirect.
-	Status             float64                `json:"status,omitempty"`             // HTTP response status code.
-	StatusText         string                 `json:"statusText,omitempty"`         // HTTP response status text.
-	Headers            *Headers               `json:"headers,omitempty"`            // HTTP response headers.
-	HeadersText        string                 `json:"headersText,omitempty"`        // HTTP response headers text.
-	MimeType           string                 `json:"mimeType,omitempty"`           // Resource mimeType as determined by the browser.
-	RequestHeaders     *Headers               `json:"requestHeaders,omitempty"`     // Refined HTTP request headers that were actually transmitted over the network.
-	RequestHeadersText string                 `json:"requestHeadersText,omitempty"` // HTTP request headers text.
-	ConnectionReused   bool                   `json:"connectionReused,omitempty"`   // Specifies whether physical connection was actually reused for this request.
-	ConnectionID       float64                `json:"connectionId,omitempty"`       // Physical connection id that was actually used for this request.
-	RemoteIPAddress    string                 `json:"remoteIPAddress,omitempty"`    // Remote IP address.
-	RemotePort         int64                  `json:"remotePort,omitempty"`         // Remote port.
-	FromDiskCache      bool                   `json:"fromDiskCache,omitempty"`      // Specifies that the request was served from the disk cache.
-	FromServiceWorker  bool                   `json:"fromServiceWorker,omitempty"`  // Specifies that the request was served from the ServiceWorker.
-	EncodedDataLength  float64                `json:"encodedDataLength,omitempty"`  // Total number of bytes received for this request so far.
-	Timing             *ResourceTiming        `json:"timing,omitempty"`             // Timing information for the given request.
-	Protocol           string                 `json:"protocol,omitempty"`           // Protocol used to fetch this request.
-	SecurityState      security.SecurityState `json:"securityState,omitempty"`      // Security state of the request resource.
-	SecurityDetails    *SecurityDetails       `json:"securityDetails,omitempty"`    // Security details for the request.
+	URL                string           `json:"url,omitempty"`                // Response URL. This URL can be different from CachedResource.url in case of redirect.
+	Status             float64          `json:"status,omitempty"`             // HTTP response status code.
+	StatusText         string           `json:"statusText,omitempty"`         // HTTP response status text.
+	Headers            *Headers         `json:"headers,omitempty"`            // HTTP response headers.
+	HeadersText        string           `json:"headersText,omitempty"`        // HTTP response headers text.
+	MimeType           string           `json:"mimeType,omitempty"`           // Resource mimeType as determined by the browser.
+	RequestHeaders     *Headers         `json:"requestHeaders,omitempty"`     // Refined HTTP request headers that were actually transmitted over the network.
+	RequestHeadersText string           `json:"requestHeadersText,omitempty"` // HTTP request headers text.
+	ConnectionReused   bool             `json:"connectionReused,omitempty"`   // Specifies whether physical connection was actually reused for this request.
+	ConnectionID       float64          `json:"connectionId,omitempty"`       // Physical connection id that was actually used for this request.
+	RemoteIPAddress    string           `json:"remoteIPAddress,omitempty"`    // Remote IP address.
+	RemotePort         int64            `json:"remotePort,omitempty"`         // Remote port.
+	FromDiskCache      bool             `json:"fromDiskCache,omitempty"`      // Specifies that the request was served from the disk cache.
+	FromServiceWorker  bool             `json:"fromServiceWorker,omitempty"`  // Specifies that the request was served from the ServiceWorker.
+	EncodedDataLength  float64          `json:"encodedDataLength,omitempty"`  // Total number of bytes received for this request so far.
+	Timing             *ResourceTiming  `json:"timing,omitempty"`             // Timing information for the given request.
+	Protocol           string           `json:"protocol,omitempty"`           // Protocol used to fetch this request.
+	SecurityState      security.State   `json:"securityState,omitempty"`      // Security state of the request resource.
+	SecurityDetails    *SecurityDetails `json:"securityDetails,omitempty"`    // Security details for the request.
 }
 
 // WebSocketRequest webSocket request data.

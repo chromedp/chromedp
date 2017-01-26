@@ -11,28 +11,8 @@ package io
 import (
 	"context"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/mailru/easyjson"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // ReadParams read a chunk of the stream.
@@ -77,7 +57,7 @@ type ReadReturns struct {
 // returns:
 //   data - Data that were read.
 //   eof - Set if the end-of-file condition occured while reading.
-func (p *ReadParams) Do(ctxt context.Context, h FrameHandler) (data string, eof bool, err error) {
+func (p *ReadParams) Do(ctxt context.Context, h cdp.FrameHandler) (data string, eof bool, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -89,13 +69,13 @@ func (p *ReadParams) Do(ctxt context.Context, h FrameHandler) (data string, eof 
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandIORead, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandIORead, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return "", false, ErrChannelClosed
+			return "", false, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -104,7 +84,7 @@ func (p *ReadParams) Do(ctxt context.Context, h FrameHandler) (data string, eof 
 			var r ReadReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return "", false, ErrInvalidResult
+				return "", false, cdp.ErrInvalidResult
 			}
 
 			return r.Data, r.EOF, nil
@@ -114,10 +94,10 @@ func (p *ReadParams) Do(ctxt context.Context, h FrameHandler) (data string, eof 
 		}
 
 	case <-ctxt.Done():
-		return "", false, ErrContextDone
+		return "", false, cdp.ErrContextDone
 	}
 
-	return "", false, ErrUnknownResult
+	return "", false, cdp.ErrUnknownResult
 }
 
 // CloseParams close the stream, discard any temporary backing storage.
@@ -136,7 +116,7 @@ func Close(handle StreamHandle) *CloseParams {
 }
 
 // Do executes IO.close.
-func (p *CloseParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *CloseParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -148,13 +128,13 @@ func (p *CloseParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandIOClose, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandIOClose, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -166,8 +146,8 @@ func (p *CloseParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }

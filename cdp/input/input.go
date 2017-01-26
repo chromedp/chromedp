@@ -9,28 +9,8 @@ package input
 import (
 	"context"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/mailru/easyjson"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // DispatchKeyEventParams dispatches a key event to the page.
@@ -54,9 +34,9 @@ type DispatchKeyEventParams struct {
 //
 // parameters:
 //   type - Type of the key event.
-func DispatchKeyEvent(type_ KeyType) *DispatchKeyEventParams {
+func DispatchKeyEvent(typeVal KeyType) *DispatchKeyEventParams {
 	return &DispatchKeyEventParams{
-		Type: type_,
+		Type: typeVal,
 	}
 }
 
@@ -144,7 +124,7 @@ func (p DispatchKeyEventParams) WithIsSystemKey(isSystemKey bool) *DispatchKeyEv
 }
 
 // Do executes Input.dispatchKeyEvent.
-func (p *DispatchKeyEventParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *DispatchKeyEventParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -156,13 +136,13 @@ func (p *DispatchKeyEventParams) Do(ctxt context.Context, h FrameHandler) (err e
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandInputDispatchKeyEvent, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandInputDispatchKeyEvent, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -174,10 +154,10 @@ func (p *DispatchKeyEventParams) Do(ctxt context.Context, h FrameHandler) (err e
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // DispatchMouseEventParams dispatches a mouse event to the page.
@@ -197,9 +177,9 @@ type DispatchMouseEventParams struct {
 //   type - Type of the mouse event.
 //   x - X coordinate of the event relative to the main frame's viewport.
 //   y - Y coordinate of the event relative to the main frame's viewport. 0 refers to the top of the viewport and Y increases as it proceeds towards the bottom of the viewport.
-func DispatchMouseEvent(type_ MouseType, x int64, y int64) *DispatchMouseEventParams {
+func DispatchMouseEvent(typeVal MouseType, x int64, y int64) *DispatchMouseEventParams {
 	return &DispatchMouseEventParams{
-		Type: type_,
+		Type: typeVal,
 		X:    x,
 		Y:    y,
 	}
@@ -232,7 +212,7 @@ func (p DispatchMouseEventParams) WithClickCount(clickCount int64) *DispatchMous
 }
 
 // Do executes Input.dispatchMouseEvent.
-func (p *DispatchMouseEventParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *DispatchMouseEventParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -244,13 +224,13 @@ func (p *DispatchMouseEventParams) Do(ctxt context.Context, h FrameHandler) (err
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandInputDispatchMouseEvent, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandInputDispatchMouseEvent, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -262,10 +242,10 @@ func (p *DispatchMouseEventParams) Do(ctxt context.Context, h FrameHandler) (err
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // DispatchTouchEventParams dispatches a touch event to the page.
@@ -281,9 +261,9 @@ type DispatchTouchEventParams struct {
 // parameters:
 //   type - Type of the touch event.
 //   touchPoints - Touch points.
-func DispatchTouchEvent(type_ TouchType, touchPoints []*TouchPoint) *DispatchTouchEventParams {
+func DispatchTouchEvent(typeVal TouchType, touchPoints []*TouchPoint) *DispatchTouchEventParams {
 	return &DispatchTouchEventParams{
-		Type:        type_,
+		Type:        typeVal,
 		TouchPoints: touchPoints,
 	}
 }
@@ -303,7 +283,7 @@ func (p DispatchTouchEventParams) WithTimestamp(timestamp float64) *DispatchTouc
 }
 
 // Do executes Input.dispatchTouchEvent.
-func (p *DispatchTouchEventParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *DispatchTouchEventParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -315,13 +295,13 @@ func (p *DispatchTouchEventParams) Do(ctxt context.Context, h FrameHandler) (err
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandInputDispatchTouchEvent, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandInputDispatchTouchEvent, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -333,10 +313,10 @@ func (p *DispatchTouchEventParams) Do(ctxt context.Context, h FrameHandler) (err
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // EmulateTouchFromMouseEventParams emulates touch event from the mouse event
@@ -362,9 +342,9 @@ type EmulateTouchFromMouseEventParams struct {
 //   y - Y coordinate of the mouse pointer in DIP.
 //   timestamp - Time at which the event occurred. Measured in UTC time in seconds since January 1, 1970.
 //   button - Mouse button.
-func EmulateTouchFromMouseEvent(type_ MouseType, x int64, y int64, timestamp float64, button ButtonType) *EmulateTouchFromMouseEventParams {
+func EmulateTouchFromMouseEvent(typeVal MouseType, x int64, y int64, timestamp float64, button ButtonType) *EmulateTouchFromMouseEventParams {
 	return &EmulateTouchFromMouseEventParams{
-		Type:      type_,
+		Type:      typeVal,
 		X:         x,
 		Y:         y,
 		Timestamp: timestamp,
@@ -398,7 +378,7 @@ func (p EmulateTouchFromMouseEventParams) WithClickCount(clickCount int64) *Emul
 }
 
 // Do executes Input.emulateTouchFromMouseEvent.
-func (p *EmulateTouchFromMouseEventParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *EmulateTouchFromMouseEventParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -410,13 +390,13 @@ func (p *EmulateTouchFromMouseEventParams) Do(ctxt context.Context, h FrameHandl
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandInputEmulateTouchFromMouseEvent, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandInputEmulateTouchFromMouseEvent, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -428,10 +408,10 @@ func (p *EmulateTouchFromMouseEventParams) Do(ctxt context.Context, h FrameHandl
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SynthesizePinchGestureParams synthesizes a pinch gesture over a time
@@ -474,7 +454,7 @@ func (p SynthesizePinchGestureParams) WithGestureSourceType(gestureSourceType Ge
 }
 
 // Do executes Input.synthesizePinchGesture.
-func (p *SynthesizePinchGestureParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SynthesizePinchGestureParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -486,13 +466,13 @@ func (p *SynthesizePinchGestureParams) Do(ctxt context.Context, h FrameHandler) 
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandInputSynthesizePinchGesture, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandInputSynthesizePinchGesture, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -504,10 +484,10 @@ func (p *SynthesizePinchGestureParams) Do(ctxt context.Context, h FrameHandler) 
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SynthesizeScrollGestureParams synthesizes a scroll gesture over a time
@@ -608,7 +588,7 @@ func (p SynthesizeScrollGestureParams) WithInteractionMarkerName(interactionMark
 }
 
 // Do executes Input.synthesizeScrollGesture.
-func (p *SynthesizeScrollGestureParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SynthesizeScrollGestureParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -620,13 +600,13 @@ func (p *SynthesizeScrollGestureParams) Do(ctxt context.Context, h FrameHandler)
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandInputSynthesizeScrollGesture, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandInputSynthesizeScrollGesture, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -638,10 +618,10 @@ func (p *SynthesizeScrollGestureParams) Do(ctxt context.Context, h FrameHandler)
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SynthesizeTapGestureParams synthesizes a tap gesture over a time period by
@@ -689,7 +669,7 @@ func (p SynthesizeTapGestureParams) WithGestureSourceType(gestureSourceType Gest
 }
 
 // Do executes Input.synthesizeTapGesture.
-func (p *SynthesizeTapGestureParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SynthesizeTapGestureParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -701,13 +681,13 @@ func (p *SynthesizeTapGestureParams) Do(ctxt context.Context, h FrameHandler) (e
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandInputSynthesizeTapGesture, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandInputSynthesizeTapGesture, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -719,8 +699,8 @@ func (p *SynthesizeTapGestureParams) Do(ctxt context.Context, h FrameHandler) (e
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }

@@ -9,50 +9,32 @@ package profiler
 import (
 	"context"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/mailru/easyjson"
 )
 
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
-)
-
+// EnableParams [no description].
 type EnableParams struct{}
 
+// Enable [no description].
 func Enable() *EnableParams {
 	return &EnableParams{}
 }
 
 // Do executes Profiler.enable.
-func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandProfilerEnable, Empty)
+	ch := h.Execute(ctxt, cdp.CommandProfilerEnable, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -64,32 +46,34 @@ func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
+// DisableParams [no description].
 type DisableParams struct{}
 
+// Disable [no description].
 func Disable() *DisableParams {
 	return &DisableParams{}
 }
 
 // Do executes Profiler.disable.
-func (p *DisableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandProfilerDisable, Empty)
+	ch := h.Execute(ctxt, cdp.CommandProfilerDisable, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -101,10 +85,10 @@ func (p *DisableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetSamplingIntervalParams changes CPU profiler sampling interval. Must be
@@ -125,7 +109,7 @@ func SetSamplingInterval(interval int64) *SetSamplingIntervalParams {
 }
 
 // Do executes Profiler.setSamplingInterval.
-func (p *SetSamplingIntervalParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetSamplingIntervalParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -137,13 +121,13 @@ func (p *SetSamplingIntervalParams) Do(ctxt context.Context, h FrameHandler) (er
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandProfilerSetSamplingInterval, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandProfilerSetSamplingInterval, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -155,32 +139,34 @@ func (p *SetSamplingIntervalParams) Do(ctxt context.Context, h FrameHandler) (er
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
+// StartParams [no description].
 type StartParams struct{}
 
+// Start [no description].
 func Start() *StartParams {
 	return &StartParams{}
 }
 
 // Do executes Profiler.start.
-func (p *StartParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *StartParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandProfilerStart, Empty)
+	ch := h.Execute(ctxt, cdp.CommandProfilerStart, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -192,14 +178,16 @@ func (p *StartParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
+// StopParams [no description].
 type StopParams struct{}
 
+// Stop [no description].
 func Stop() *StopParams {
 	return &StopParams{}
 }
@@ -213,19 +201,19 @@ type StopReturns struct {
 //
 // returns:
 //   profile - Recorded profile.
-func (p *StopParams) Do(ctxt context.Context, h FrameHandler) (profile *Profile, err error) {
+func (p *StopParams) Do(ctxt context.Context, h cdp.FrameHandler) (profile *Profile, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandProfilerStop, Empty)
+	ch := h.Execute(ctxt, cdp.CommandProfilerStop, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -234,7 +222,7 @@ func (p *StopParams) Do(ctxt context.Context, h FrameHandler) (profile *Profile,
 			var r StopReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.Profile, nil
@@ -244,8 +232,8 @@ func (p *StopParams) Do(ctxt context.Context, h FrameHandler) (profile *Profile,
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }

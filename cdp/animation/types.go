@@ -5,58 +5,38 @@ package animation
 import (
 	"errors"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"
 )
 
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
-)
-
 // Animation animation instance.
 type Animation struct {
-	ID           string           `json:"id,omitempty"`           // Animation's id.
-	Name         string           `json:"name,omitempty"`         // Animation's name.
-	PausedState  bool             `json:"pausedState,omitempty"`  // Animation's internal paused state.
-	PlayState    string           `json:"playState,omitempty"`    // Animation's play state.
-	PlaybackRate float64          `json:"playbackRate,omitempty"` // Animation's playback rate.
-	StartTime    float64          `json:"startTime,omitempty"`    // Animation's start time.
-	CurrentTime  float64          `json:"currentTime,omitempty"`  // Animation's current time.
-	Source       *AnimationEffect `json:"source,omitempty"`       // Animation's source animation node.
-	Type         AnimationType    `json:"type,omitempty"`         // Animation type of Animation.
-	CSSID        string           `json:"cssId,omitempty"`        // A unique ID for Animation representing the sources that triggered this CSS animation/transition.
+	ID           string  `json:"id,omitempty"`           // Animation's id.
+	Name         string  `json:"name,omitempty"`         // Animation's name.
+	PausedState  bool    `json:"pausedState,omitempty"`  // Animation's internal paused state.
+	PlayState    string  `json:"playState,omitempty"`    // Animation's play state.
+	PlaybackRate float64 `json:"playbackRate,omitempty"` // Animation's playback rate.
+	StartTime    float64 `json:"startTime,omitempty"`    // Animation's start time.
+	CurrentTime  float64 `json:"currentTime,omitempty"`  // Animation's current time.
+	Source       *Effect `json:"source,omitempty"`       // Animation's source animation node.
+	Type         Type    `json:"type,omitempty"`         // Animation type of Animation.
+	CSSID        string  `json:"cssId,omitempty"`        // A unique ID for Animation representing the sources that triggered this CSS animation/transition.
 }
 
-// AnimationEffect animationEffect instance.
-type AnimationEffect struct {
-	Delay          float64        `json:"delay,omitempty"`          // AnimationEffect's delay.
-	EndDelay       float64        `json:"endDelay,omitempty"`       // AnimationEffect's end delay.
-	IterationStart float64        `json:"iterationStart,omitempty"` // AnimationEffect's iteration start.
-	Iterations     float64        `json:"iterations,omitempty"`     // AnimationEffect's iterations.
-	Duration       float64        `json:"duration,omitempty"`       // AnimationEffect's iteration duration.
-	Direction      string         `json:"direction,omitempty"`      // AnimationEffect's playback direction.
-	Fill           string         `json:"fill,omitempty"`           // AnimationEffect's fill mode.
-	BackendNodeID  BackendNodeID  `json:"backendNodeId,omitempty"`  // AnimationEffect's target node.
-	KeyframesRule  *KeyframesRule `json:"keyframesRule,omitempty"`  // AnimationEffect's keyframes.
-	Easing         string         `json:"easing,omitempty"`         // AnimationEffect's timing function.
+// Effect animationEffect instance.
+type Effect struct {
+	Delay          float64           `json:"delay,omitempty"`          // AnimationEffect's delay.
+	EndDelay       float64           `json:"endDelay,omitempty"`       // AnimationEffect's end delay.
+	IterationStart float64           `json:"iterationStart,omitempty"` // AnimationEffect's iteration start.
+	Iterations     float64           `json:"iterations,omitempty"`     // AnimationEffect's iterations.
+	Duration       float64           `json:"duration,omitempty"`       // AnimationEffect's iteration duration.
+	Direction      string            `json:"direction,omitempty"`      // AnimationEffect's playback direction.
+	Fill           string            `json:"fill,omitempty"`           // AnimationEffect's fill mode.
+	BackendNodeID  cdp.BackendNodeID `json:"backendNodeId,omitempty"`  // AnimationEffect's target node.
+	KeyframesRule  *KeyframesRule    `json:"keyframesRule,omitempty"`  // AnimationEffect's keyframes.
+	Easing         string            `json:"easing,omitempty"`         // AnimationEffect's timing function.
 }
 
 // KeyframesRule keyframes Rule.
@@ -71,47 +51,47 @@ type KeyframeStyle struct {
 	Easing string `json:"easing,omitempty"` // AnimationEffect's timing function.
 }
 
-// AnimationType animation type of Animation.
-type AnimationType string
+// Type animation type of Animation.
+type Type string
 
-// String returns the AnimationType as string value.
-func (t AnimationType) String() string {
+// String returns the Type as string value.
+func (t Type) String() string {
 	return string(t)
 }
 
-// AnimationType values.
+// Type values.
 const (
-	AnimationTypeCSSTransition AnimationType = "CSSTransition"
-	AnimationTypeCSSAnimation  AnimationType = "CSSAnimation"
-	AnimationTypeWebAnimation  AnimationType = "WebAnimation"
+	TypeCSSTransition Type = "CSSTransition"
+	TypeCSSAnimation  Type = "CSSAnimation"
+	TypeWebAnimation  Type = "WebAnimation"
 )
 
 // MarshalEasyJSON satisfies easyjson.Marshaler.
-func (t AnimationType) MarshalEasyJSON(out *jwriter.Writer) {
+func (t Type) MarshalEasyJSON(out *jwriter.Writer) {
 	out.String(string(t))
 }
 
 // MarshalJSON satisfies json.Marshaler.
-func (t AnimationType) MarshalJSON() ([]byte, error) {
+func (t Type) MarshalJSON() ([]byte, error) {
 	return easyjson.Marshal(t)
 }
 
 // UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
-func (t *AnimationType) UnmarshalEasyJSON(in *jlexer.Lexer) {
-	switch AnimationType(in.String()) {
-	case AnimationTypeCSSTransition:
-		*t = AnimationTypeCSSTransition
-	case AnimationTypeCSSAnimation:
-		*t = AnimationTypeCSSAnimation
-	case AnimationTypeWebAnimation:
-		*t = AnimationTypeWebAnimation
+func (t *Type) UnmarshalEasyJSON(in *jlexer.Lexer) {
+	switch Type(in.String()) {
+	case TypeCSSTransition:
+		*t = TypeCSSTransition
+	case TypeCSSAnimation:
+		*t = TypeCSSAnimation
+	case TypeWebAnimation:
+		*t = TypeWebAnimation
 
 	default:
-		in.AddError(errors.New("unknown AnimationType value"))
+		in.AddError(errors.New("unknown Type value"))
 	}
 }
 
 // UnmarshalJSON satisfies json.Unmarshaler.
-func (t *AnimationType) UnmarshalJSON(buf []byte) error {
+func (t *Type) UnmarshalJSON(buf []byte) error {
 	return easyjson.Unmarshal(buf, t)
 }

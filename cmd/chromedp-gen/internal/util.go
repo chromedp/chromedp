@@ -27,6 +27,19 @@ func ForceCamel(s string) string {
 	return snaker.SnakeToCamelIdentifier(snaker.CamelToSnake(s))
 }
 
+// ForceCamelWithFirstLower forces the first portion to be lower case.
+func ForceCamelWithFirstLower(s string) string {
+	if s == "" {
+		return ""
+	}
+
+	s = snaker.CamelToSnake(s)
+	first := strings.SplitN(s, "_", -1)[0]
+	s = snaker.SnakeToCamelIdentifier(s)
+
+	return strings.ToLower(first) + s[len(first):]
+}
+
 // CodeRE is a regexp to match <code> and </code> tags.
 var CodeRE = regexp.MustCompile(`<\/?code>`)
 
@@ -66,7 +79,11 @@ func resolve(ref string, d *Domain, domains []*Domain) (DomainType, *Type, strin
 
 	var s string
 	// add prefix if not an internal type and not defined in the domain
-	if !IsInternalType(dtyp, typ) && dtyp != d.Domain {
+	if IsCDPType(dtyp, typ) {
+		if d.Domain != DomainType("cdp") {
+			s += "cdp."
+		}
+	} else if dtyp != d.Domain {
 		s += strings.ToLower(dtyp.String()) + "."
 	}
 
@@ -108,28 +125,28 @@ func structDef(types []*Type, d *Domain, domains []*Domain, noExposeOverride, om
 	return s
 }
 
-// internalTypes is the list of internal types.
-var internalTypes map[string]bool
+// cdpTypes is the list of internal types.
+var cdpTypes map[string]bool
 
-// SetInternalTypes sets the internal types.
-func SetInternalTypes(types map[string]bool) {
-	internalTypes = types
+// SetCDPTypes sets the internal types.
+func SetCDPTypes(types map[string]bool) {
+	cdpTypes = types
 }
 
-// IsInternalType determines if the specified domain and typ constitute an
+// IsCDPType determines if the specified domain and typ constitute an
 // internal type.
-func IsInternalType(dtyp DomainType, typ string) bool {
-	if _, ok := internalTypes[dtyp.String()+"."+typ]; ok {
+func IsCDPType(dtyp DomainType, typ string) bool {
+	if _, ok := cdpTypes[dtyp.String()+"."+typ]; ok {
 		return true
 	}
 
 	return false
 }
 
-// InternalTypeList returns the list of internal types.
-func InternalTypeList() []string {
+// CDPTypeList returns the list of internal types.
+func CDPTypeList() []string {
 	var types []string
-	for k := range internalTypes {
+	for k := range cdpTypes {
 		n := strings.SplitN(k, ".", 2)
 		types = append(types, ForceCamel(n[1]))
 	}

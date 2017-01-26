@@ -11,28 +11,8 @@ package schema
 import (
 	"context"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/mailru/easyjson"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // GetDomainsParams returns supported domains.
@@ -52,19 +32,19 @@ type GetDomainsReturns struct {
 //
 // returns:
 //   domains - List of supported domains.
-func (p *GetDomainsParams) Do(ctxt context.Context, h FrameHandler) (domains []*Domain, err error) {
+func (p *GetDomainsParams) Do(ctxt context.Context, h cdp.FrameHandler) (domains []*Domain, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandSchemaGetDomains, Empty)
+	ch := h.Execute(ctxt, cdp.CommandSchemaGetDomains, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -73,7 +53,7 @@ func (p *GetDomainsParams) Do(ctxt context.Context, h FrameHandler) (domains []*
 			var r GetDomainsReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.Domains, nil
@@ -83,8 +63,8 @@ func (p *GetDomainsParams) Do(ctxt context.Context, h FrameHandler) (domains []*
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }

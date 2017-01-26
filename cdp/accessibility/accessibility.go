@@ -9,45 +9,25 @@ package accessibility
 import (
 	"context"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/mailru/easyjson"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // GetPartialAXTreeParams fetches the accessibility node and partial
 // accessibility tree for this DOM node, if it exists.
 type GetPartialAXTreeParams struct {
-	NodeID         NodeID `json:"nodeId"`                   // ID of node to get the partial accessibility tree for.
-	FetchRelatives bool   `json:"fetchRelatives,omitempty"` // Whether to fetch this nodes ancestors, siblings and children. Defaults to true.
+	NodeID         cdp.NodeID `json:"nodeId"`                   // ID of node to get the partial accessibility tree for.
+	FetchRelatives bool       `json:"fetchRelatives,omitempty"` // Whether to fetch this nodes ancestors, siblings and children. Defaults to true.
 }
 
 // GetPartialAXTree fetches the accessibility node and partial accessibility
 // tree for this DOM node, if it exists.
 //
 // parameters:
-//   nodeId - ID of node to get the partial accessibility tree for.
-func GetPartialAXTree(nodeId NodeID) *GetPartialAXTreeParams {
+//   nodeID - ID of node to get the partial accessibility tree for.
+func GetPartialAXTree(nodeID cdp.NodeID) *GetPartialAXTreeParams {
 	return &GetPartialAXTreeParams{
-		NodeID: nodeId,
+		NodeID: nodeID,
 	}
 }
 
@@ -67,7 +47,7 @@ type GetPartialAXTreeReturns struct {
 //
 // returns:
 //   nodes - The Accessibility.AXNode for this DOM node, if it exists, plus its ancestors, siblings and children, if requested.
-func (p *GetPartialAXTreeParams) Do(ctxt context.Context, h FrameHandler) (nodes []*AXNode, err error) {
+func (p *GetPartialAXTreeParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodes []*AXNode, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -79,13 +59,13 @@ func (p *GetPartialAXTreeParams) Do(ctxt context.Context, h FrameHandler) (nodes
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandAccessibilityGetPartialAXTree, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandAccessibilityGetPartialAXTree, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -94,7 +74,7 @@ func (p *GetPartialAXTreeParams) Do(ctxt context.Context, h FrameHandler) (nodes
 			var r GetPartialAXTreeReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.Nodes, nil
@@ -104,8 +84,8 @@ func (p *GetPartialAXTreeParams) Do(ctxt context.Context, h FrameHandler) (nodes
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }

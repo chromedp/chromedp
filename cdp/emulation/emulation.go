@@ -11,28 +11,8 @@ package emulation
 import (
 	"context"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/mailru/easyjson"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // SetDeviceMetricsOverrideParams overrides the values of device screen
@@ -116,7 +96,7 @@ func (p SetDeviceMetricsOverrideParams) WithScreenOrientation(screenOrientation 
 }
 
 // Do executes Emulation.setDeviceMetricsOverride.
-func (p *SetDeviceMetricsOverrideParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetDeviceMetricsOverrideParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -128,13 +108,13 @@ func (p *SetDeviceMetricsOverrideParams) Do(ctxt context.Context, h FrameHandler
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandEmulationSetDeviceMetricsOverride, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandEmulationSetDeviceMetricsOverride, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -146,10 +126,10 @@ func (p *SetDeviceMetricsOverrideParams) Do(ctxt context.Context, h FrameHandler
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // ClearDeviceMetricsOverrideParams clears the overriden device metrics.
@@ -161,19 +141,19 @@ func ClearDeviceMetricsOverride() *ClearDeviceMetricsOverrideParams {
 }
 
 // Do executes Emulation.clearDeviceMetricsOverride.
-func (p *ClearDeviceMetricsOverrideParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *ClearDeviceMetricsOverrideParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandEmulationClearDeviceMetricsOverride, Empty)
+	ch := h.Execute(ctxt, cdp.CommandEmulationClearDeviceMetricsOverride, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -185,10 +165,10 @@ func (p *ClearDeviceMetricsOverrideParams) Do(ctxt context.Context, h FrameHandl
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // ForceViewportParams overrides the visible area of the page. The change is
@@ -219,7 +199,7 @@ func ForceViewport(x float64, y float64, scale float64) *ForceViewportParams {
 }
 
 // Do executes Emulation.forceViewport.
-func (p *ForceViewportParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *ForceViewportParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -231,13 +211,13 @@ func (p *ForceViewportParams) Do(ctxt context.Context, h FrameHandler) (err erro
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandEmulationForceViewport, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandEmulationForceViewport, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -249,10 +229,10 @@ func (p *ForceViewportParams) Do(ctxt context.Context, h FrameHandler) (err erro
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // ResetViewportParams resets the visible area of the page to the original
@@ -266,19 +246,19 @@ func ResetViewport() *ResetViewportParams {
 }
 
 // Do executes Emulation.resetViewport.
-func (p *ResetViewportParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *ResetViewportParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandEmulationResetViewport, Empty)
+	ch := h.Execute(ctxt, cdp.CommandEmulationResetViewport, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -290,10 +270,10 @@ func (p *ResetViewportParams) Do(ctxt context.Context, h FrameHandler) (err erro
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // ResetPageScaleFactorParams requests that page scale factor is reset to
@@ -307,19 +287,19 @@ func ResetPageScaleFactor() *ResetPageScaleFactorParams {
 }
 
 // Do executes Emulation.resetPageScaleFactor.
-func (p *ResetPageScaleFactorParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *ResetPageScaleFactorParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandEmulationResetPageScaleFactor, Empty)
+	ch := h.Execute(ctxt, cdp.CommandEmulationResetPageScaleFactor, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -331,10 +311,10 @@ func (p *ResetPageScaleFactorParams) Do(ctxt context.Context, h FrameHandler) (e
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetPageScaleFactorParams sets a specified page scale factor.
@@ -353,7 +333,7 @@ func SetPageScaleFactor(pageScaleFactor float64) *SetPageScaleFactorParams {
 }
 
 // Do executes Emulation.setPageScaleFactor.
-func (p *SetPageScaleFactorParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetPageScaleFactorParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -365,13 +345,13 @@ func (p *SetPageScaleFactorParams) Do(ctxt context.Context, h FrameHandler) (err
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandEmulationSetPageScaleFactor, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandEmulationSetPageScaleFactor, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -383,10 +363,10 @@ func (p *SetPageScaleFactorParams) Do(ctxt context.Context, h FrameHandler) (err
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetVisibleSizeParams resizes the frame/viewport of the page. Note that
@@ -412,7 +392,7 @@ func SetVisibleSize(width int64, height int64) *SetVisibleSizeParams {
 }
 
 // Do executes Emulation.setVisibleSize.
-func (p *SetVisibleSizeParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetVisibleSizeParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -424,13 +404,13 @@ func (p *SetVisibleSizeParams) Do(ctxt context.Context, h FrameHandler) (err err
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandEmulationSetVisibleSize, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandEmulationSetVisibleSize, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -442,10 +422,10 @@ func (p *SetVisibleSizeParams) Do(ctxt context.Context, h FrameHandler) (err err
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetScriptExecutionDisabledParams switches script execution in the page.
@@ -464,7 +444,7 @@ func SetScriptExecutionDisabled(value bool) *SetScriptExecutionDisabledParams {
 }
 
 // Do executes Emulation.setScriptExecutionDisabled.
-func (p *SetScriptExecutionDisabledParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetScriptExecutionDisabledParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -476,13 +456,13 @@ func (p *SetScriptExecutionDisabledParams) Do(ctxt context.Context, h FrameHandl
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandEmulationSetScriptExecutionDisabled, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandEmulationSetScriptExecutionDisabled, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -494,10 +474,10 @@ func (p *SetScriptExecutionDisabledParams) Do(ctxt context.Context, h FrameHandl
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetGeolocationOverrideParams overrides the Geolocation Position or Error.
@@ -535,7 +515,7 @@ func (p SetGeolocationOverrideParams) WithAccuracy(accuracy float64) *SetGeoloca
 }
 
 // Do executes Emulation.setGeolocationOverride.
-func (p *SetGeolocationOverrideParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetGeolocationOverrideParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -547,13 +527,13 @@ func (p *SetGeolocationOverrideParams) Do(ctxt context.Context, h FrameHandler) 
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandEmulationSetGeolocationOverride, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandEmulationSetGeolocationOverride, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -565,10 +545,10 @@ func (p *SetGeolocationOverrideParams) Do(ctxt context.Context, h FrameHandler) 
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // ClearGeolocationOverrideParams clears the overriden Geolocation Position
@@ -582,19 +562,19 @@ func ClearGeolocationOverride() *ClearGeolocationOverrideParams {
 }
 
 // Do executes Emulation.clearGeolocationOverride.
-func (p *ClearGeolocationOverrideParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *ClearGeolocationOverrideParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandEmulationClearGeolocationOverride, Empty)
+	ch := h.Execute(ctxt, cdp.CommandEmulationClearGeolocationOverride, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -606,10 +586,10 @@ func (p *ClearGeolocationOverrideParams) Do(ctxt context.Context, h FrameHandler
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetTouchEmulationEnabledParams toggles mouse event-based touch event
@@ -637,7 +617,7 @@ func (p SetTouchEmulationEnabledParams) WithConfiguration(configuration EnabledC
 }
 
 // Do executes Emulation.setTouchEmulationEnabled.
-func (p *SetTouchEmulationEnabledParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetTouchEmulationEnabledParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -649,13 +629,13 @@ func (p *SetTouchEmulationEnabledParams) Do(ctxt context.Context, h FrameHandler
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandEmulationSetTouchEmulationEnabled, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandEmulationSetTouchEmulationEnabled, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -667,10 +647,10 @@ func (p *SetTouchEmulationEnabledParams) Do(ctxt context.Context, h FrameHandler
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetEmulatedMediaParams emulates the given media for CSS media queries.
@@ -689,7 +669,7 @@ func SetEmulatedMedia(media string) *SetEmulatedMediaParams {
 }
 
 // Do executes Emulation.setEmulatedMedia.
-func (p *SetEmulatedMediaParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetEmulatedMediaParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -701,13 +681,13 @@ func (p *SetEmulatedMediaParams) Do(ctxt context.Context, h FrameHandler) (err e
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandEmulationSetEmulatedMedia, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandEmulationSetEmulatedMedia, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -719,10 +699,10 @@ func (p *SetEmulatedMediaParams) Do(ctxt context.Context, h FrameHandler) (err e
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetCPUThrottlingRateParams enables CPU throttling to emulate slow CPUs.
@@ -741,7 +721,7 @@ func SetCPUThrottlingRate(rate float64) *SetCPUThrottlingRateParams {
 }
 
 // Do executes Emulation.setCPUThrottlingRate.
-func (p *SetCPUThrottlingRateParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetCPUThrottlingRateParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -753,13 +733,13 @@ func (p *SetCPUThrottlingRateParams) Do(ctxt context.Context, h FrameHandler) (e
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandEmulationSetCPUThrottlingRate, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandEmulationSetCPUThrottlingRate, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -771,10 +751,10 @@ func (p *SetCPUThrottlingRateParams) Do(ctxt context.Context, h FrameHandler) (e
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // CanEmulateParams tells whether emulation is supported.
@@ -794,19 +774,19 @@ type CanEmulateReturns struct {
 //
 // returns:
 //   result - True if emulation is supported.
-func (p *CanEmulateParams) Do(ctxt context.Context, h FrameHandler) (result bool, err error) {
+func (p *CanEmulateParams) Do(ctxt context.Context, h cdp.FrameHandler) (result bool, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandEmulationCanEmulate, Empty)
+	ch := h.Execute(ctxt, cdp.CommandEmulationCanEmulate, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return false, ErrChannelClosed
+			return false, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -815,7 +795,7 @@ func (p *CanEmulateParams) Do(ctxt context.Context, h FrameHandler) (result bool
 			var r CanEmulateReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return false, ErrInvalidResult
+				return false, cdp.ErrInvalidResult
 			}
 
 			return r.Result, nil
@@ -825,10 +805,10 @@ func (p *CanEmulateParams) Do(ctxt context.Context, h FrameHandler) (result bool
 		}
 
 	case <-ctxt.Done():
-		return false, ErrContextDone
+		return false, cdp.ErrContextDone
 	}
 
-	return false, ErrUnknownResult
+	return false, cdp.ErrUnknownResult
 }
 
 // SetVirtualTimePolicyParams turns on virtual time for all frames (replacing
@@ -859,7 +839,7 @@ func (p SetVirtualTimePolicyParams) WithBudget(budget int64) *SetVirtualTimePoli
 }
 
 // Do executes Emulation.setVirtualTimePolicy.
-func (p *SetVirtualTimePolicyParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetVirtualTimePolicyParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -871,13 +851,13 @@ func (p *SetVirtualTimePolicyParams) Do(ctxt context.Context, h FrameHandler) (e
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandEmulationSetVirtualTimePolicy, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandEmulationSetVirtualTimePolicy, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -889,8 +869,8 @@ func (p *SetVirtualTimePolicyParams) Do(ctxt context.Context, h FrameHandler) (e
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }

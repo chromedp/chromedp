@@ -1343,7 +1343,7 @@ type FrameHandler interface {
 	Execute(context.Context, MethodType, easyjson.RawMessage) <-chan interface{}
 }
 
-// Empty is an empty JSON object message
+// Empty is an empty JSON object message.
 var Empty = easyjson.RawMessage(`{}`)
 
 // FrameID unique frame identifier.
@@ -1878,9 +1878,4 @@ func (t *NodeType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 // UnmarshalJSON satisfies json.Unmarshaler.
 func (t *NodeType) UnmarshalJSON(buf []byte) error {
 	return easyjson.Unmarshal(buf, t)
-}
-
-type ComputedProperty struct {
-	Name  string `json:"name,omitempty"`  // Computed style property name.
-	Value string `json:"value,omitempty"` // Computed style property value.
 }

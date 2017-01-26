@@ -11,28 +11,8 @@ package tethering
 import (
 	"context"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/mailru/easyjson"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // BindParams request browser port binding.
@@ -51,7 +31,7 @@ func Bind(port int64) *BindParams {
 }
 
 // Do executes Tethering.bind.
-func (p *BindParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *BindParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -63,13 +43,13 @@ func (p *BindParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandTetheringBind, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandTetheringBind, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -81,10 +61,10 @@ func (p *BindParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // UnbindParams request browser port unbinding.
@@ -103,7 +83,7 @@ func Unbind(port int64) *UnbindParams {
 }
 
 // Do executes Tethering.unbind.
-func (p *UnbindParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *UnbindParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -115,13 +95,13 @@ func (p *UnbindParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandTetheringUnbind, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandTetheringUnbind, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -133,8 +113,8 @@ func (p *UnbindParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }

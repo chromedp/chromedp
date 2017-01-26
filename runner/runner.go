@@ -187,7 +187,8 @@ func (r *Runner) Start(ctxt context.Context) error {
 	return nil
 }
 
-func (r *Runner) Shutdown(ctxt context.Context, opts ...client.ClientOption) error {
+// Shutdown shuts down and all the Chrome tabs.
+func (r *Runner) Shutdown(ctxt context.Context, opts ...client.Option) error {
 	var err error
 
 	cl := r.Client(opts...)
@@ -250,7 +251,7 @@ func (r *Runner) Wait() error {
 }
 
 // Port returns the port the process was launched with.
-func (r Runner) Port() int {
+func (r *Runner) Port() int {
 	var port interface{}
 	var ok bool
 	port, ok = r.opts["remote-debugging-port"]
@@ -272,7 +273,7 @@ func (r Runner) Port() int {
 
 // Client returns a Chrome Debugging Protocol client for the running Chrome
 // process.
-func (r *Runner) Client(opts ...client.ClientOption) *client.Client {
+func (r *Runner) Client(opts ...client.Option) *client.Client {
 	return client.New(append(opts,
 		client.URL(fmt.Sprintf("http://localhost:%d/json", r.Port())),
 	)...)
@@ -280,7 +281,7 @@ func (r *Runner) Client(opts ...client.ClientOption) *client.Client {
 
 // WatchPageTargets returns a channel that will receive new page targets as
 // they are created.
-func (r *Runner) WatchPageTargets(ctxt context.Context, opts ...client.ClientOption) <-chan client.Target {
+func (r *Runner) WatchPageTargets(ctxt context.Context, opts ...client.Option) <-chan client.Target {
 	return r.Client(opts...).WatchPageTargets(ctxt)
 }
 

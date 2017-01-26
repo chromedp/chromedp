@@ -9,28 +9,8 @@ package applicationcache
 import (
 	"context"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/mailru/easyjson"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // GetFramesWithManifestsParams returns array of frame identifiers with
@@ -54,19 +34,19 @@ type GetFramesWithManifestsReturns struct {
 //
 // returns:
 //   frameIds - Array of frame identifiers with manifest urls for each frame containing a document associated with some application cache.
-func (p *GetFramesWithManifestsParams) Do(ctxt context.Context, h FrameHandler) (frameIds []*FrameWithManifest, err error) {
+func (p *GetFramesWithManifestsParams) Do(ctxt context.Context, h cdp.FrameHandler) (frameIds []*FrameWithManifest, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandApplicationCacheGetFramesWithManifests, Empty)
+	ch := h.Execute(ctxt, cdp.CommandApplicationCacheGetFramesWithManifests, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -75,7 +55,7 @@ func (p *GetFramesWithManifestsParams) Do(ctxt context.Context, h FrameHandler) 
 			var r GetFramesWithManifestsReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.FrameIds, nil
@@ -85,10 +65,10 @@ func (p *GetFramesWithManifestsParams) Do(ctxt context.Context, h FrameHandler) 
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // EnableParams enables application cache domain notifications.
@@ -100,19 +80,19 @@ func Enable() *EnableParams {
 }
 
 // Do executes ApplicationCache.enable.
-func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandApplicationCacheEnable, Empty)
+	ch := h.Execute(ctxt, cdp.CommandApplicationCacheEnable, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -124,25 +104,25 @@ func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // GetManifestForFrameParams returns manifest URL for document in the given
 // frame.
 type GetManifestForFrameParams struct {
-	FrameID FrameID `json:"frameId"` // Identifier of the frame containing document whose manifest is retrieved.
+	FrameID cdp.FrameID `json:"frameId"` // Identifier of the frame containing document whose manifest is retrieved.
 }
 
 // GetManifestForFrame returns manifest URL for document in the given frame.
 //
 // parameters:
-//   frameId - Identifier of the frame containing document whose manifest is retrieved.
-func GetManifestForFrame(frameId FrameID) *GetManifestForFrameParams {
+//   frameID - Identifier of the frame containing document whose manifest is retrieved.
+func GetManifestForFrame(frameID cdp.FrameID) *GetManifestForFrameParams {
 	return &GetManifestForFrameParams{
-		FrameID: frameId,
+		FrameID: frameID,
 	}
 }
 
@@ -155,7 +135,7 @@ type GetManifestForFrameReturns struct {
 //
 // returns:
 //   manifestURL - Manifest URL for document in the given frame.
-func (p *GetManifestForFrameParams) Do(ctxt context.Context, h FrameHandler) (manifestURL string, err error) {
+func (p *GetManifestForFrameParams) Do(ctxt context.Context, h cdp.FrameHandler) (manifestURL string, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -167,13 +147,13 @@ func (p *GetManifestForFrameParams) Do(ctxt context.Context, h FrameHandler) (ma
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandApplicationCacheGetManifestForFrame, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandApplicationCacheGetManifestForFrame, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return "", ErrChannelClosed
+			return "", cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -182,7 +162,7 @@ func (p *GetManifestForFrameParams) Do(ctxt context.Context, h FrameHandler) (ma
 			var r GetManifestForFrameReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return "", ErrInvalidResult
+				return "", cdp.ErrInvalidResult
 			}
 
 			return r.ManifestURL, nil
@@ -192,26 +172,26 @@ func (p *GetManifestForFrameParams) Do(ctxt context.Context, h FrameHandler) (ma
 		}
 
 	case <-ctxt.Done():
-		return "", ErrContextDone
+		return "", cdp.ErrContextDone
 	}
 
-	return "", ErrUnknownResult
+	return "", cdp.ErrUnknownResult
 }
 
 // GetApplicationCacheForFrameParams returns relevant application cache data
 // for the document in given frame.
 type GetApplicationCacheForFrameParams struct {
-	FrameID FrameID `json:"frameId"` // Identifier of the frame containing document whose application cache is retrieved.
+	FrameID cdp.FrameID `json:"frameId"` // Identifier of the frame containing document whose application cache is retrieved.
 }
 
 // GetApplicationCacheForFrame returns relevant application cache data for
 // the document in given frame.
 //
 // parameters:
-//   frameId - Identifier of the frame containing document whose application cache is retrieved.
-func GetApplicationCacheForFrame(frameId FrameID) *GetApplicationCacheForFrameParams {
+//   frameID - Identifier of the frame containing document whose application cache is retrieved.
+func GetApplicationCacheForFrame(frameID cdp.FrameID) *GetApplicationCacheForFrameParams {
 	return &GetApplicationCacheForFrameParams{
-		FrameID: frameId,
+		FrameID: frameID,
 	}
 }
 
@@ -224,7 +204,7 @@ type GetApplicationCacheForFrameReturns struct {
 //
 // returns:
 //   applicationCache - Relevant application cache data for the document in given frame.
-func (p *GetApplicationCacheForFrameParams) Do(ctxt context.Context, h FrameHandler) (applicationCache *ApplicationCache, err error) {
+func (p *GetApplicationCacheForFrameParams) Do(ctxt context.Context, h cdp.FrameHandler) (applicationCache *ApplicationCache, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -236,13 +216,13 @@ func (p *GetApplicationCacheForFrameParams) Do(ctxt context.Context, h FrameHand
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandApplicationCacheGetApplicationCacheForFrame, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandApplicationCacheGetApplicationCacheForFrame, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -251,7 +231,7 @@ func (p *GetApplicationCacheForFrameParams) Do(ctxt context.Context, h FrameHand
 			var r GetApplicationCacheForFrameReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.ApplicationCache, nil
@@ -261,8 +241,8 @@ func (p *GetApplicationCacheForFrameParams) Do(ctxt context.Context, h FrameHand
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }

@@ -9,28 +9,8 @@ package indexeddb
 import (
 	"context"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/mailru/easyjson"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // EnableParams enables events from backend.
@@ -42,19 +22,19 @@ func Enable() *EnableParams {
 }
 
 // Do executes IndexedDB.enable.
-func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandIndexedDBEnable, Empty)
+	ch := h.Execute(ctxt, cdp.CommandIndexedDBEnable, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -66,10 +46,10 @@ func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // DisableParams disables events from backend.
@@ -81,19 +61,19 @@ func Disable() *DisableParams {
 }
 
 // Do executes IndexedDB.disable.
-func (p *DisableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandIndexedDBDisable, Empty)
+	ch := h.Execute(ctxt, cdp.CommandIndexedDBDisable, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -105,10 +85,10 @@ func (p *DisableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // RequestDatabaseNamesParams requests database names for given security
@@ -136,7 +116,7 @@ type RequestDatabaseNamesReturns struct {
 //
 // returns:
 //   databaseNames - Database names for origin.
-func (p *RequestDatabaseNamesParams) Do(ctxt context.Context, h FrameHandler) (databaseNames []string, err error) {
+func (p *RequestDatabaseNamesParams) Do(ctxt context.Context, h cdp.FrameHandler) (databaseNames []string, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -148,13 +128,13 @@ func (p *RequestDatabaseNamesParams) Do(ctxt context.Context, h FrameHandler) (d
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandIndexedDBRequestDatabaseNames, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandIndexedDBRequestDatabaseNames, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -163,7 +143,7 @@ func (p *RequestDatabaseNamesParams) Do(ctxt context.Context, h FrameHandler) (d
 			var r RequestDatabaseNamesReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.DatabaseNames, nil
@@ -173,10 +153,10 @@ func (p *RequestDatabaseNamesParams) Do(ctxt context.Context, h FrameHandler) (d
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // RequestDatabaseParams requests database with given name in given frame.
@@ -206,7 +186,7 @@ type RequestDatabaseReturns struct {
 //
 // returns:
 //   databaseWithObjectStores - Database with an array of object stores.
-func (p *RequestDatabaseParams) Do(ctxt context.Context, h FrameHandler) (databaseWithObjectStores *DatabaseWithObjectStores, err error) {
+func (p *RequestDatabaseParams) Do(ctxt context.Context, h cdp.FrameHandler) (databaseWithObjectStores *DatabaseWithObjectStores, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -218,13 +198,13 @@ func (p *RequestDatabaseParams) Do(ctxt context.Context, h FrameHandler) (databa
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandIndexedDBRequestDatabase, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandIndexedDBRequestDatabase, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -233,7 +213,7 @@ func (p *RequestDatabaseParams) Do(ctxt context.Context, h FrameHandler) (databa
 			var r RequestDatabaseReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.DatabaseWithObjectStores, nil
@@ -243,10 +223,10 @@ func (p *RequestDatabaseParams) Do(ctxt context.Context, h FrameHandler) (databa
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // RequestDataParams requests data from object store or index.
@@ -297,7 +277,7 @@ type RequestDataReturns struct {
 // returns:
 //   objectStoreDataEntries - Array of object store data entries.
 //   hasMore - If true, there are more entries to fetch in the given range.
-func (p *RequestDataParams) Do(ctxt context.Context, h FrameHandler) (objectStoreDataEntries []*DataEntry, hasMore bool, err error) {
+func (p *RequestDataParams) Do(ctxt context.Context, h cdp.FrameHandler) (objectStoreDataEntries []*DataEntry, hasMore bool, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -309,13 +289,13 @@ func (p *RequestDataParams) Do(ctxt context.Context, h FrameHandler) (objectStor
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandIndexedDBRequestData, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandIndexedDBRequestData, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, false, ErrChannelClosed
+			return nil, false, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -324,7 +304,7 @@ func (p *RequestDataParams) Do(ctxt context.Context, h FrameHandler) (objectStor
 			var r RequestDataReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, false, ErrInvalidResult
+				return nil, false, cdp.ErrInvalidResult
 			}
 
 			return r.ObjectStoreDataEntries, r.HasMore, nil
@@ -334,10 +314,10 @@ func (p *RequestDataParams) Do(ctxt context.Context, h FrameHandler) (objectStor
 		}
 
 	case <-ctxt.Done():
-		return nil, false, ErrContextDone
+		return nil, false, cdp.ErrContextDone
 	}
 
-	return nil, false, ErrUnknownResult
+	return nil, false, cdp.ErrUnknownResult
 }
 
 // ClearObjectStoreParams clears all entries from an object store.
@@ -362,7 +342,7 @@ func ClearObjectStore(securityOrigin string, databaseName string, objectStoreNam
 }
 
 // Do executes IndexedDB.clearObjectStore.
-func (p *ClearObjectStoreParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *ClearObjectStoreParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -374,13 +354,13 @@ func (p *ClearObjectStoreParams) Do(ctxt context.Context, h FrameHandler) (err e
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandIndexedDBClearObjectStore, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandIndexedDBClearObjectStore, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -392,8 +372,8 @@ func (p *ClearObjectStoreParams) Do(ctxt context.Context, h FrameHandler) (err e
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }

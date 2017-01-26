@@ -13,7 +13,7 @@ import (
 	"sync"
 	"time"
 
-	. "github.com/knq/chromedp/cdp"
+	"github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/client"
 	"github.com/knq/chromedp/runner"
 )
@@ -40,10 +40,10 @@ type CDP struct {
 	watch <-chan client.Target
 
 	// cur is the current active target's handler.
-	cur FrameHandler
+	cur cdp.FrameHandler
 
 	// handlers is the active handlers.
-	handlers []FrameHandler
+	handlers []cdp.FrameHandler
 
 	// handlerMap is the map of target IDs to its active handler.
 	handlerMap map[string]int
@@ -56,7 +56,7 @@ func New(ctxt context.Context, opts ...Option) (*CDP, error) {
 	var err error
 
 	c := &CDP{
-		handlers:   make([]FrameHandler, 0),
+		handlers:   make([]cdp.FrameHandler, 0),
 		handlerMap: make(map[string]int),
 	}
 
@@ -112,7 +112,7 @@ loop:
 			time.Sleep(DefaultCheckDuration)
 
 		case <-ctxt.Done():
-			return nil, ErrContextDone
+			return nil, cdp.ErrContextDone
 
 		case <-timeout:
 			break loop
@@ -163,7 +163,7 @@ func (c *CDP) Wait() error {
 }
 
 // Shutdown closes all Chrome page handlers.
-func (c *CDP) Shutdown(ctxt context.Context, opts ...client.ClientOption) error {
+func (c *CDP) Shutdown(ctxt context.Context, opts ...client.Option) error {
 	c.RLock()
 	defer c.RUnlock()
 
@@ -186,7 +186,7 @@ func (c *CDP) ListTargets() []string {
 }
 
 // GetHandlerByIndex retrieves the domains manager for the specified index.
-func (c *CDP) GetHandlerByIndex(i int) FrameHandler {
+func (c *CDP) GetHandlerByIndex(i int) cdp.FrameHandler {
 	c.RLock()
 	defer c.RUnlock()
 
@@ -198,7 +198,7 @@ func (c *CDP) GetHandlerByIndex(i int) FrameHandler {
 }
 
 // GetHandlerByID retrieves the domains manager for the specified target ID.
-func (c *CDP) GetHandlerByID(id string) FrameHandler {
+func (c *CDP) GetHandlerByID(id string) cdp.FrameHandler {
 	c.RLock()
 	defer c.RUnlock()
 
@@ -238,7 +238,7 @@ func (c *CDP) SetHandlerByID(id string) error {
 // newTarget creates a new target using supplied context and options, returning
 // the id of the created target only after the target has been started for
 // monitoring.
-func (c *CDP) newTarget(ctxt context.Context, opts ...client.ClientOption) (string, error) {
+func (c *CDP) newTarget(ctxt context.Context, opts ...client.Option) (string, error) {
 	c.RLock()
 	cl := c.r.Client(opts...)
 	c.RUnlock()
@@ -267,7 +267,7 @@ loop:
 			time.Sleep(DefaultCheckDuration)
 
 		case <-ctxt.Done():
-			return "", ErrContextDone
+			return "", cdp.ErrContextDone
 
 		case <-timeout:
 			break loop
@@ -280,7 +280,7 @@ loop:
 // SetTarget is an action that sets the active Chrome handler to the specified
 // index i.
 func (c *CDP) SetTarget(i int) Action {
-	return ActionFunc(func(context.Context, FrameHandler) error {
+	return ActionFunc(func(context.Context, cdp.FrameHandler) error {
 		return c.SetHandler(i)
 	})
 }
@@ -288,15 +288,15 @@ func (c *CDP) SetTarget(i int) Action {
 // SetTargetByID is an action that sets the active Chrome handler to the handler
 // associated with the specified id.
 func (c *CDP) SetTargetByID(id string) Action {
-	return ActionFunc(func(context.Context, FrameHandler) error {
+	return ActionFunc(func(context.Context, cdp.FrameHandler) error {
 		return c.SetHandlerByID(id)
 	})
 }
 
 // NewTarget is an action that creates a new Chrome target, and sets it as the
 // active target.
-func (c *CDP) NewTarget(id *string, opts ...client.ClientOption) Action {
-	return ActionFunc(func(ctxt context.Context, h FrameHandler) error {
+func (c *CDP) NewTarget(id *string, opts ...client.Option) Action {
+	return ActionFunc(func(ctxt context.Context, h cdp.FrameHandler) error {
 		n, err := c.newTarget(ctxt, opts...)
 		if err != nil {
 			return err
@@ -312,8 +312,8 @@ func (c *CDP) NewTarget(id *string, opts ...client.ClientOption) Action {
 
 // NewTargetWithURL creates a new Chrome target, sets it as the active target,
 // and then navigates to the specified url.
-func (c *CDP) NewTargetWithURL(urlstr string, id *string, opts ...client.ClientOption) Action {
-	return ActionFunc(func(ctxt context.Context, h FrameHandler) error {
+func (c *CDP) NewTargetWithURL(urlstr string, id *string, opts ...client.Option) Action {
+	return ActionFunc(func(ctxt context.Context, h cdp.FrameHandler) error {
 		n, err := c.newTarget(ctxt, opts...)
 		if err != nil {
 			return err
@@ -339,14 +339,14 @@ func (c *CDP) NewTargetWithURL(urlstr string, id *string, opts ...client.ClientO
 
 // CloseByIndex closes the Chrome target with specified index i.
 func (c *CDP) CloseByIndex(i int) Action {
-	return ActionFunc(func(ctxt context.Context, h FrameHandler) error {
+	return ActionFunc(func(ctxt context.Context, h cdp.FrameHandler) error {
 		return nil
 	})
 }
 
 // CloseByID closes the Chrome target with the specified id.
 func (c *CDP) CloseByID(id string) Action {
-	return ActionFunc(func(ctxt context.Context, h FrameHandler) error {
+	return ActionFunc(func(ctxt context.Context, h cdp.FrameHandler) error {
 		return nil
 	})
 }

@@ -5,33 +5,14 @@ package css
 import (
 	"errors"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/dom"
 	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"
 )
 
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
-)
-
+// StyleSheetID [no description].
 type StyleSheetID string
 
 // String returns the StyleSheetID as string value.
@@ -92,8 +73,8 @@ func (t *StyleSheetOrigin) UnmarshalJSON(buf []byte) error {
 
 // PseudoElementMatches cSS rule collection for a single pseudo style.
 type PseudoElementMatches struct {
-	PseudoType PseudoType   `json:"pseudoType,omitempty"` // Pseudo element type.
-	Matches    []*RuleMatch `json:"matches,omitempty"`    // Matches of CSS rules applicable to the pseudo style.
+	PseudoType cdp.PseudoType `json:"pseudoType,omitempty"` // Pseudo element type.
+	Matches    []*RuleMatch   `json:"matches,omitempty"`    // Matches of CSS rules applicable to the pseudo style.
 }
 
 // InheritedStyleEntry inherited CSS rule collection from ancestor node.
@@ -123,18 +104,18 @@ type SelectorList struct {
 
 // StyleSheetHeader cSS stylesheet metainformation.
 type StyleSheetHeader struct {
-	StyleSheetID StyleSheetID     `json:"styleSheetId,omitempty"` // The stylesheet identifier.
-	FrameID      FrameID          `json:"frameId,omitempty"`      // Owner frame identifier.
-	SourceURL    string           `json:"sourceURL,omitempty"`    // Stylesheet resource URL.
-	SourceMapURL string           `json:"sourceMapURL,omitempty"` // URL of source map associated with the stylesheet (if any).
-	Origin       StyleSheetOrigin `json:"origin,omitempty"`       // Stylesheet origin.
-	Title        string           `json:"title,omitempty"`        // Stylesheet title.
-	OwnerNode    BackendNodeID    `json:"ownerNode,omitempty"`    // The backend id for the owner node of the stylesheet.
-	Disabled     bool             `json:"disabled,omitempty"`     // Denotes whether the stylesheet is disabled.
-	HasSourceURL bool             `json:"hasSourceURL,omitempty"` // Whether the sourceURL field value comes from the sourceURL comment.
-	IsInline     bool             `json:"isInline,omitempty"`     // Whether this stylesheet is created for STYLE tag by parser. This flag is not set for document.written STYLE tags.
-	StartLine    float64          `json:"startLine,omitempty"`    // Line offset of the stylesheet within the resource (zero based).
-	StartColumn  float64          `json:"startColumn,omitempty"`  // Column offset of the stylesheet within the resource (zero based).
+	StyleSheetID StyleSheetID      `json:"styleSheetId,omitempty"` // The stylesheet identifier.
+	FrameID      cdp.FrameID       `json:"frameId,omitempty"`      // Owner frame identifier.
+	SourceURL    string            `json:"sourceURL,omitempty"`    // Stylesheet resource URL.
+	SourceMapURL string            `json:"sourceMapURL,omitempty"` // URL of source map associated with the stylesheet (if any).
+	Origin       StyleSheetOrigin  `json:"origin,omitempty"`       // Stylesheet origin.
+	Title        string            `json:"title,omitempty"`        // Stylesheet title.
+	OwnerNode    cdp.BackendNodeID `json:"ownerNode,omitempty"`    // The backend id for the owner node of the stylesheet.
+	Disabled     bool              `json:"disabled,omitempty"`     // Denotes whether the stylesheet is disabled.
+	HasSourceURL bool              `json:"hasSourceURL,omitempty"` // Whether the sourceURL field value comes from the sourceURL comment.
+	IsInline     bool              `json:"isInline,omitempty"`     // Whether this stylesheet is created for STYLE tag by parser. This flag is not set for document.written STYLE tags.
+	StartLine    float64           `json:"startLine,omitempty"`    // Line offset of the stylesheet within the resource (zero based).
+	StartColumn  float64           `json:"startColumn,omitempty"`  // Column offset of the stylesheet within the resource (zero based).
 }
 
 // Rule cSS rule representation.
@@ -161,10 +142,17 @@ type SourceRange struct {
 	EndColumn   int64 `json:"endColumn,omitempty"`   // End column of range (exclusive).
 }
 
+// ShorthandEntry [no description].
 type ShorthandEntry struct {
 	Name      string `json:"name,omitempty"`      // Shorthand name.
 	Value     string `json:"value,omitempty"`     // Shorthand value.
 	Important bool   `json:"important,omitempty"` // Whether the property has "!important" annotation (implies false if absent).
+}
+
+// ComputedProperty [no description].
+type ComputedProperty struct {
+	Name  string `json:"name,omitempty"`  // Computed style property name.
+	Value string `json:"value,omitempty"` // Computed style property value.
 }
 
 // Style cSS style representation.
@@ -253,7 +241,7 @@ type InlineTextBox struct {
 
 // LayoutTreeNode details of an element in the DOM tree with a LayoutObject.
 type LayoutTreeNode struct {
-	NodeID          NodeID           `json:"nodeId,omitempty"`          // The id of the related DOM node matching one from DOM.GetDocument.
+	NodeID          cdp.NodeID       `json:"nodeId,omitempty"`          // The id of the related DOM node matching one from DOM.GetDocument.
 	BoundingBox     *dom.Rect        `json:"boundingBox,omitempty"`     // The absolute position bounding box.
 	LayoutText      string           `json:"layoutText,omitempty"`      // Contents of the LayoutText if any
 	InlineTextNodes []*InlineTextBox `json:"inlineTextNodes,omitempty"` // The post layout inline text nodes, if any.
@@ -318,6 +306,7 @@ func (t *MediaSource) UnmarshalJSON(buf []byte) error {
 	return easyjson.Unmarshal(buf, t)
 }
 
+// PseudoClass [no description].
 type PseudoClass string
 
 // String returns the PseudoClass as string value.

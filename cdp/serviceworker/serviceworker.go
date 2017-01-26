@@ -9,50 +9,32 @@ package serviceworker
 import (
 	"context"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/mailru/easyjson"
 )
 
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
-)
-
+// EnableParams [no description].
 type EnableParams struct{}
 
+// Enable [no description].
 func Enable() *EnableParams {
 	return &EnableParams{}
 }
 
 // Do executes ServiceWorker.enable.
-func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandServiceWorkerEnable, Empty)
+	ch := h.Execute(ctxt, cdp.CommandServiceWorkerEnable, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -64,32 +46,34 @@ func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
+// DisableParams [no description].
 type DisableParams struct{}
 
+// Disable [no description].
 func Disable() *DisableParams {
 	return &DisableParams{}
 }
 
 // Do executes ServiceWorker.disable.
-func (p *DisableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandServiceWorkerDisable, Empty)
+	ch := h.Execute(ctxt, cdp.CommandServiceWorkerDisable, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -101,16 +85,19 @@ func (p *DisableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
+// UnregisterParams [no description].
 type UnregisterParams struct {
 	ScopeURL string `json:"scopeURL"`
 }
 
+// Unregister [no description].
+//
 // parameters:
 //   scopeURL
 func Unregister(scopeURL string) *UnregisterParams {
@@ -120,7 +107,7 @@ func Unregister(scopeURL string) *UnregisterParams {
 }
 
 // Do executes ServiceWorker.unregister.
-func (p *UnregisterParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *UnregisterParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -132,13 +119,13 @@ func (p *UnregisterParams) Do(ctxt context.Context, h FrameHandler) (err error) 
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandServiceWorkerUnregister, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandServiceWorkerUnregister, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -150,16 +137,19 @@ func (p *UnregisterParams) Do(ctxt context.Context, h FrameHandler) (err error) 
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
+// UpdateRegistrationParams [no description].
 type UpdateRegistrationParams struct {
 	ScopeURL string `json:"scopeURL"`
 }
 
+// UpdateRegistration [no description].
+//
 // parameters:
 //   scopeURL
 func UpdateRegistration(scopeURL string) *UpdateRegistrationParams {
@@ -169,7 +159,7 @@ func UpdateRegistration(scopeURL string) *UpdateRegistrationParams {
 }
 
 // Do executes ServiceWorker.updateRegistration.
-func (p *UpdateRegistrationParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *UpdateRegistrationParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -181,13 +171,13 @@ func (p *UpdateRegistrationParams) Do(ctxt context.Context, h FrameHandler) (err
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandServiceWorkerUpdateRegistration, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandServiceWorkerUpdateRegistration, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -199,16 +189,19 @@ func (p *UpdateRegistrationParams) Do(ctxt context.Context, h FrameHandler) (err
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
+// StartWorkerParams [no description].
 type StartWorkerParams struct {
 	ScopeURL string `json:"scopeURL"`
 }
 
+// StartWorker [no description].
+//
 // parameters:
 //   scopeURL
 func StartWorker(scopeURL string) *StartWorkerParams {
@@ -218,7 +211,7 @@ func StartWorker(scopeURL string) *StartWorkerParams {
 }
 
 // Do executes ServiceWorker.startWorker.
-func (p *StartWorkerParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *StartWorkerParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -230,13 +223,13 @@ func (p *StartWorkerParams) Do(ctxt context.Context, h FrameHandler) (err error)
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandServiceWorkerStartWorker, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandServiceWorkerStartWorker, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -248,16 +241,19 @@ func (p *StartWorkerParams) Do(ctxt context.Context, h FrameHandler) (err error)
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
+// SkipWaitingParams [no description].
 type SkipWaitingParams struct {
 	ScopeURL string `json:"scopeURL"`
 }
 
+// SkipWaiting [no description].
+//
 // parameters:
 //   scopeURL
 func SkipWaiting(scopeURL string) *SkipWaitingParams {
@@ -267,7 +263,7 @@ func SkipWaiting(scopeURL string) *SkipWaitingParams {
 }
 
 // Do executes ServiceWorker.skipWaiting.
-func (p *SkipWaitingParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SkipWaitingParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -279,13 +275,13 @@ func (p *SkipWaitingParams) Do(ctxt context.Context, h FrameHandler) (err error)
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandServiceWorkerSkipWaiting, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandServiceWorkerSkipWaiting, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -297,26 +293,29 @@ func (p *SkipWaitingParams) Do(ctxt context.Context, h FrameHandler) (err error)
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
+// StopWorkerParams [no description].
 type StopWorkerParams struct {
 	VersionID string `json:"versionId"`
 }
 
+// StopWorker [no description].
+//
 // parameters:
-//   versionId
-func StopWorker(versionId string) *StopWorkerParams {
+//   versionID
+func StopWorker(versionID string) *StopWorkerParams {
 	return &StopWorkerParams{
-		VersionID: versionId,
+		VersionID: versionID,
 	}
 }
 
 // Do executes ServiceWorker.stopWorker.
-func (p *StopWorkerParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *StopWorkerParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -328,13 +327,13 @@ func (p *StopWorkerParams) Do(ctxt context.Context, h FrameHandler) (err error) 
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandServiceWorkerStopWorker, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandServiceWorkerStopWorker, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -346,26 +345,29 @@ func (p *StopWorkerParams) Do(ctxt context.Context, h FrameHandler) (err error) 
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
+// InspectWorkerParams [no description].
 type InspectWorkerParams struct {
 	VersionID string `json:"versionId"`
 }
 
+// InspectWorker [no description].
+//
 // parameters:
-//   versionId
-func InspectWorker(versionId string) *InspectWorkerParams {
+//   versionID
+func InspectWorker(versionID string) *InspectWorkerParams {
 	return &InspectWorkerParams{
-		VersionID: versionId,
+		VersionID: versionID,
 	}
 }
 
 // Do executes ServiceWorker.inspectWorker.
-func (p *InspectWorkerParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *InspectWorkerParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -377,13 +379,13 @@ func (p *InspectWorkerParams) Do(ctxt context.Context, h FrameHandler) (err erro
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandServiceWorkerInspectWorker, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandServiceWorkerInspectWorker, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -395,16 +397,19 @@ func (p *InspectWorkerParams) Do(ctxt context.Context, h FrameHandler) (err erro
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
+// SetForceUpdateOnPageLoadParams [no description].
 type SetForceUpdateOnPageLoadParams struct {
 	ForceUpdateOnPageLoad bool `json:"forceUpdateOnPageLoad"`
 }
 
+// SetForceUpdateOnPageLoad [no description].
+//
 // parameters:
 //   forceUpdateOnPageLoad
 func SetForceUpdateOnPageLoad(forceUpdateOnPageLoad bool) *SetForceUpdateOnPageLoadParams {
@@ -414,7 +419,7 @@ func SetForceUpdateOnPageLoad(forceUpdateOnPageLoad bool) *SetForceUpdateOnPageL
 }
 
 // Do executes ServiceWorker.setForceUpdateOnPageLoad.
-func (p *SetForceUpdateOnPageLoadParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetForceUpdateOnPageLoadParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -426,13 +431,13 @@ func (p *SetForceUpdateOnPageLoadParams) Do(ctxt context.Context, h FrameHandler
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandServiceWorkerSetForceUpdateOnPageLoad, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandServiceWorkerSetForceUpdateOnPageLoad, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -444,32 +449,35 @@ func (p *SetForceUpdateOnPageLoadParams) Do(ctxt context.Context, h FrameHandler
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
+// DeliverPushMessageParams [no description].
 type DeliverPushMessageParams struct {
 	Origin         string `json:"origin"`
 	RegistrationID string `json:"registrationId"`
 	Data           string `json:"data"`
 }
 
+// DeliverPushMessage [no description].
+//
 // parameters:
 //   origin
-//   registrationId
+//   registrationID
 //   data
-func DeliverPushMessage(origin string, registrationId string, data string) *DeliverPushMessageParams {
+func DeliverPushMessage(origin string, registrationID string, data string) *DeliverPushMessageParams {
 	return &DeliverPushMessageParams{
 		Origin:         origin,
-		RegistrationID: registrationId,
+		RegistrationID: registrationID,
 		Data:           data,
 	}
 }
 
 // Do executes ServiceWorker.deliverPushMessage.
-func (p *DeliverPushMessageParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *DeliverPushMessageParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -481,13 +489,13 @@ func (p *DeliverPushMessageParams) Do(ctxt context.Context, h FrameHandler) (err
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandServiceWorkerDeliverPushMessage, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandServiceWorkerDeliverPushMessage, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -499,12 +507,13 @@ func (p *DeliverPushMessageParams) Do(ctxt context.Context, h FrameHandler) (err
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
+// DispatchSyncEventParams [no description].
 type DispatchSyncEventParams struct {
 	Origin         string `json:"origin"`
 	RegistrationID string `json:"registrationId"`
@@ -512,22 +521,24 @@ type DispatchSyncEventParams struct {
 	LastChance     bool   `json:"lastChance"`
 }
 
+// DispatchSyncEvent [no description].
+//
 // parameters:
 //   origin
-//   registrationId
+//   registrationID
 //   tag
 //   lastChance
-func DispatchSyncEvent(origin string, registrationId string, tag string, lastChance bool) *DispatchSyncEventParams {
+func DispatchSyncEvent(origin string, registrationID string, tag string, lastChance bool) *DispatchSyncEventParams {
 	return &DispatchSyncEventParams{
 		Origin:         origin,
-		RegistrationID: registrationId,
+		RegistrationID: registrationID,
 		Tag:            tag,
 		LastChance:     lastChance,
 	}
 }
 
 // Do executes ServiceWorker.dispatchSyncEvent.
-func (p *DispatchSyncEventParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *DispatchSyncEventParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -539,13 +550,13 @@ func (p *DispatchSyncEventParams) Do(ctxt context.Context, h FrameHandler) (err 
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandServiceWorkerDispatchSyncEvent, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandServiceWorkerDispatchSyncEvent, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -557,8 +568,8 @@ func (p *DispatchSyncEventParams) Do(ctxt context.Context, h FrameHandler) (err 
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }

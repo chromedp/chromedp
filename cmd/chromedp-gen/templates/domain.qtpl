@@ -1,20 +1,21 @@
 {% import (
-	. "github.com/knq/chromedp/cmd/chromedp-gen/internal"
+	"github.com/knq/chromedp/cmd/chromedp-gen/internal"
 ) %}
 
 // DomainTemplate is the template for a single domain.
-{% func DomainTemplate(d *Domain, domains []*Domain) %}
-{%s= FileLocalImportTemplate(*FlagPkg) %}
-{%s= FileEmptyVarTemplate(InternalTypeList()...) %}
+{% func DomainTemplate(d *internal.Domain, domains []*internal.Domain) %}
+{%s= FileImportTemplate(map[string]string{ 
+	*internal.FlagPkg: "cdp",
+}) %}
 {% for _, c := range d.Commands %}
 {%s= CommandTemplate(c, d, domains) %}
 {% endfor %}
 {% endfunc %}
 
 // CommandTemplate is the general command template.
-{% func CommandTemplate(c *Type, d *Domain, domains []*Domain) %}
+{% func CommandTemplate(c *internal.Type, d *internal.Domain, domains []*internal.Domain) %}
 {% code /* add *Param type */ %}
-{%s= TypeTemplate(c, CommandTypePrefix, CommandTypeSuffix, d, domains, nil, false, true) %}
+{%s= TypeTemplate(c, internal.CommandTypePrefix, internal.CommandTypeSuffix, d, domains, nil, false, true) %}
 
 {% code /* add Command func */ %}
 {%s= CommandFuncTemplate(c, d, domains) %}
@@ -26,12 +27,12 @@
 
 {% code /* add *Returns type */ %}
 {% if len(c.Returns) != 0 %}
-{%s= TypeTemplate(&Type{
+{%s= TypeTemplate(&internal.Type{
 	ID: c.Name,
-	Type: TypeObject,
+	Type: internal.TypeObject,
 	Description: "Return values.",
 	Properties: c.Returns,
-}, CommandReturnsPrefix, CommandReturnsSuffix, d, domains, nil, false, false) %}
+}, internal.CommandReturnsPrefix, internal.CommandReturnsSuffix, d, domains, nil, false, false) %}
 {% endif %}
 
 {% code /* add CommandParams.Do func */ %}
@@ -39,14 +40,12 @@
 {% endfunc %}
 
 // CommandFuncTemplate is the command func template.
-{% func CommandFuncTemplate(c *Type, d *Domain, domains []*Domain) %}{% code
+{% func CommandFuncTemplate(c *internal.Type, d *internal.Domain, domains []*internal.Domain) %}{% code
 	cmdName := c.CamelName()
 	typ := c.CommandType()
-
-	desc := c.GetDescription()
 %}
-{% if desc != "" %}{%s= formatComment(desc, "", cmdName + " ") %}{% end %}{% if len(c.Parameters) > 0 %}{% if desc != "" %}
-//{% endif %}
+{%s= formatComment(c.GetDescription(), "", cmdName + " ") %}{% if len(c.Parameters) > 0 %}
+//
 // parameters:{% for _, p := range c.Parameters %}{% if p.Optional %}{% continue %}{% end %}
 //   {%s= p.String() %}{% if p.Optional %} (optional){% end %}{% endfor %}{% endif %}
 func {%s= cmdName %}({%s= c.ParamList(d, domains, false) %}) *{%s= typ %}{
@@ -57,13 +56,13 @@ func {%s= cmdName %}({%s= c.ParamList(d, domains, false) %}) *{%s= typ %}{
 {% endfunc %}
 
 // CommandOptionFuncTemplate is the command option func template.
-{% func CommandOptionFuncTemplate(t *Type, c *Type, d *Domain, domains []*Domain) %}{% code
+{% func CommandOptionFuncTemplate(t *internal.Type, c *internal.Type, d *internal.Domain, domains []*internal.Domain) %}{% code
 	n := t.GoName(false)
-	optName := OptionFuncPrefix+n+OptionFuncSuffix
+	optName := internal.OptionFuncPrefix+n+internal.OptionFuncSuffix
 	typ := c.CommandType()
 	v := t.GoName(true)
 %}
-{% if desc := t.GetDescription(); desc != "" %}{%s= formatComment(desc, "", optName + " ") %}{% end %}
+{%s= formatComment(t.GetDescription(), "", optName + " ") %}
 func (p {%s= typ %}) {%s= optName %}({%s= v %} {%s= t.GoType(d, domains) %}) *{%s= typ %}{
 	p.{%s= n %} = {%s= v %}
 	return &p
@@ -71,7 +70,7 @@ func (p {%s= typ %}) {%s= optName %}({%s= v %} {%s= t.GoType(d, domains) %}) *{%
 {% endfunc %}
 
 // CommandDoFuncTemplate is the command do func template.
-{% func CommandDoFuncTemplate(c *Type, d *Domain, domains[]*Domain) %}{% code
+{% func CommandDoFuncTemplate(c *internal.Type, d *internal.Domain, domains[]*internal.Domain) %}{% code
 	typ := c.CommandType()
 
 	hasEmptyParams := len(c.Parameters) == 0
@@ -97,7 +96,7 @@ func (p {%s= typ %}) {%s= optName %}({%s= v %} {%s= t.GoType(d, domains) %}) *{%
 	// determine if there's a conditional return value with it
 	b64cond := false
 	for _, p := range c.Returns {
-		if p.Name == Base64EncodedParamName {
+		if p.Name == internal.Base64EncodedParamName {
 			b64cond = true
 			break
 		}
@@ -105,9 +104,9 @@ func (p {%s= typ %}) {%s= optName %}({%s= v %} {%s= t.GoType(d, domains) %}) *{%
 %}
 // Do executes {%s= c.ProtoName(d) %}.{% if len(c.Returns) > 0 %}
 //
-// returns:{% for _, p := range c.Returns %}{% if p.Name == Base64EncodedParamName %}{% continue %}{% end %}
+// returns:{% for _, p := range c.Returns %}{% if p.Name == internal.Base64EncodedParamName %}{% continue %}{% end %}
 //   {%s= p.String() %}{% endfor %}{% endif %}
-func (p *{%s= typ %}) Do(ctxt context.Context, h FrameHandler) ({%s= retTypeList %}err error) {
+func (p *{%s= typ %}) Do(ctxt context.Context, h cdp.FrameHandler) ({%s= retTypeList %}err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}{% if !hasEmptyParams %}
@@ -119,13 +118,13 @@ func (p *{%s= typ %}) Do(ctxt context.Context, h FrameHandler) ({%s= retTypeList
 	}{% endif %}
 
 	// execute
-	ch := h.Execute(ctxt, {%s= c.CommandMethodType(d) %}, {% if hasEmptyParams %}Empty{% else %}easyjson.RawMessage(buf){% end %})
+	ch := h.Execute(ctxt, cdp.{%s= c.CommandMethodType(d) %}, {% if hasEmptyParams %}cdp.Empty{% else %}easyjson.RawMessage(buf){% end %})
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return {%s= emptyRet %}ErrChannelClosed
+			return {%s= emptyRet %}cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -134,7 +133,7 @@ func (p *{%s= typ %}) Do(ctxt context.Context, h FrameHandler) ({%s= retTypeList
 			var r {%s= c.CommandReturnsType() %}
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return {%s= emptyRet %}ErrInvalidResult
+				return {%s= emptyRet %}cdp.ErrInvalidResult
 			}{% if b64ret != nil %}
 
 			// decode
@@ -155,9 +154,9 @@ func (p *{%s= typ %}) Do(ctxt context.Context, h FrameHandler) ({%s= retTypeList
 		}
 
 	case <-ctxt.Done():
-		return {%s= emptyRet %}ErrContextDone
+		return {%s= emptyRet %}cdp.ErrContextDone
 	}
 
-	return {%s= emptyRet %}ErrUnknownResult
+	return {%s= emptyRet %}cdp.ErrUnknownResult
 }
 {% endfunc %}

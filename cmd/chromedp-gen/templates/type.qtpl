@@ -2,22 +2,22 @@
 	"strings"
 	"strconv"
 
-	. "github.com/knq/chromedp/cmd/chromedp-gen/internal"
+	"github.com/knq/chromedp/cmd/chromedp-gen/internal"
 ) %}
 
 // TypeTemplate is a template for a Typable type.
-{% func TypeTemplate(t *Type, prefix, suffix string, d *Domain, domains []*Domain, v interface{}, noExposeOverride, omitOnlyWhenOptional bool) %}{% code
+{% func TypeTemplate(t *internal.Type, prefix, suffix string, d *internal.Domain, domains []*internal.Domain, v interface{}, noExposeOverride, omitOnlyWhenOptional bool) %}{% code
 	typ := prefix + t.CamelName() + suffix
 
-	var extra []*Type
+	var extra []*internal.Type
 	switch x := v.(type) {
-	case []*Type:
+	case []*internal.Type:
 		extra = x
 	}
 %}
-{% if desc := t.GetDescription(); desc != "" %}{%s= formatComment(desc, "", typ + " ") %}{% end %}
+{%s= formatComment(t.GetDescription(), "", typ + " ") %}
 type {%s= typ %} {%s= t.GoTypeDef(d, domains, extra, noExposeOverride, omitOnlyWhenOptional) %}
-{% if t.Parameters == nil && t.Type != TypeArray && t.Type != TypeObject && t.Type != TypeAny %}{%code
+{% if t.Parameters == nil && t.Type != internal.TypeArray && t.Type != internal.TypeObject && t.Type != internal.TypeAny %}{%code
 	gz := t.Type.GoType()
 	z := gz
 	if strings.Contains(z, ".") {
@@ -41,15 +41,15 @@ func (t {%s= typ %}) {%s= z %}() {%s= gz %} {
 const ({% for i, e := range ev %}{% code
 	n := t.EnumValueName(e)
 	val := `"` + e + `"`
-	if t.Type == TypeInteger && t.EnumBitMask {
+	if t.Type == internal.TypeInteger && t.EnumBitMask {
 		val = strconv.Itoa(1<<uint(i-1))
-	} else if t.Type == TypeInteger {
+	} else if t.Type == internal.TypeInteger {
 		val = strconv.Itoa(i+1)
 	}
 %}
 	{%s= n %} {%s= typ %} = {%s= val %}{% endfor %}
 )
-{% if t.Type != TypeString %}
+{% if t.Type != internal.TypeString %}
 // String returns the {%s= typ %} as string value.
 func (t {%s= typ %}) String() string {
 	switch t {{% for _, e := range t.EnumValues() %}

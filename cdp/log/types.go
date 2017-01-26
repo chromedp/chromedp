@@ -5,7 +5,7 @@ package log
 import (
 	"errors"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/network"
 	"github.com/knq/chromedp/cdp/runtime"
 	"github.com/mailru/easyjson"
@@ -13,32 +13,12 @@ import (
 	"github.com/mailru/easyjson/jwriter"
 )
 
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
-)
-
-// LogEntry log entry.
-type LogEntry struct {
+// Entry log entry.
+type Entry struct {
 	Source           Source              `json:"source,omitempty"`           // Log entry source.
 	Level            Level               `json:"level,omitempty"`            // Log entry severity.
 	Text             string              `json:"text,omitempty"`             // Logged text.
-	Timestamp        Timestamp           `json:"timestamp,omitempty"`        // Timestamp when this entry was added.
+	Timestamp        cdp.Timestamp       `json:"timestamp,omitempty"`        // Timestamp when this entry was added.
 	URL              string              `json:"url,omitempty"`              // URL of the resource if known.
 	LineNumber       int64               `json:"lineNumber,omitempty"`       // Line number in the resource.
 	StackTrace       *runtime.StackTrace `json:"stackTrace,omitempty"`       // JavaScript stack trace.

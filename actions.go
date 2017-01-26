@@ -4,19 +4,19 @@ import (
 	"context"
 	"time"
 
-	. "github.com/knq/chromedp/cdp"
+	"github.com/knq/chromedp/cdp"
 )
 
 // Action is a single atomic action.
 type Action interface {
-	Do(context.Context, FrameHandler) error
+	Do(context.Context, cdp.FrameHandler) error
 }
 
 // ActionFunc is a single action func.
-type ActionFunc func(context.Context, FrameHandler) error
+type ActionFunc func(context.Context, cdp.FrameHandler) error
 
 // Do executes the action using the provided context.
-func (f ActionFunc) Do(ctxt context.Context, h FrameHandler) error {
+func (f ActionFunc) Do(ctxt context.Context, h cdp.FrameHandler) error {
 	return f(ctxt, h)
 }
 
@@ -24,7 +24,7 @@ func (f ActionFunc) Do(ctxt context.Context, h FrameHandler) error {
 type Tasks []Action
 
 // Do executes the list of Tasks using the provided context.
-func (t Tasks) Do(ctxt context.Context, h FrameHandler) error {
+func (t Tasks) Do(ctxt context.Context, h cdp.FrameHandler) error {
 	var err error
 
 	// TODO: put individual task timeouts from context here
@@ -42,7 +42,7 @@ func (t Tasks) Do(ctxt context.Context, h FrameHandler) error {
 
 // Sleep is an empty action that calls time.Sleep with the specified duration.
 func Sleep(d time.Duration) Action {
-	return ActionFunc(func(context.Context, FrameHandler) error {
+	return ActionFunc(func(context.Context, cdp.FrameHandler) error {
 		time.Sleep(d)
 		return nil
 	})

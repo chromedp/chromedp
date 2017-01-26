@@ -5,30 +5,10 @@ package page
 import (
 	"errors"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // ResourceType resource type as it was perceived by the rendering engine.
@@ -108,19 +88,19 @@ func (t *ResourceType) UnmarshalJSON(buf []byte) error {
 
 // FrameResource information about the Resource on the page.
 type FrameResource struct {
-	URL          string       `json:"url,omitempty"`          // Resource URL.
-	Type         ResourceType `json:"type,omitempty"`         // Type of this resource.
-	MimeType     string       `json:"mimeType,omitempty"`     // Resource mimeType as determined by the browser.
-	LastModified Timestamp    `json:"lastModified,omitempty"` // last-modified timestamp as reported by server.
-	ContentSize  float64      `json:"contentSize,omitempty"`  // Resource content size.
-	Failed       bool         `json:"failed,omitempty"`       // True if the resource failed to load.
-	Canceled     bool         `json:"canceled,omitempty"`     // True if the resource was canceled during loading.
+	URL          string        `json:"url,omitempty"`          // Resource URL.
+	Type         ResourceType  `json:"type,omitempty"`         // Type of this resource.
+	MimeType     string        `json:"mimeType,omitempty"`     // Resource mimeType as determined by the browser.
+	LastModified cdp.Timestamp `json:"lastModified,omitempty"` // last-modified timestamp as reported by server.
+	ContentSize  float64       `json:"contentSize,omitempty"`  // Resource content size.
+	Failed       bool          `json:"failed,omitempty"`       // True if the resource failed to load.
+	Canceled     bool          `json:"canceled,omitempty"`     // True if the resource was canceled during loading.
 }
 
 // FrameResourceTree information about the Frame hierarchy along with their
 // cached resources.
 type FrameResourceTree struct {
-	Frame       *Frame               `json:"frame,omitempty"`       // Frame information for this tree item.
+	Frame       *cdp.Frame           `json:"frame,omitempty"`       // Frame information for this tree item.
 	ChildFrames []*FrameResourceTree `json:"childFrames,omitempty"` // Child frames.
 	Resources   []*FrameResource     `json:"resources,omitempty"`   // Information about frame resources.
 }
@@ -142,13 +122,13 @@ type NavigationEntry struct {
 
 // ScreencastFrameMetadata screencast frame metadata.
 type ScreencastFrameMetadata struct {
-	OffsetTop       float64   `json:"offsetTop,omitempty"`       // Top offset in DIP.
-	PageScaleFactor float64   `json:"pageScaleFactor,omitempty"` // Page scale factor.
-	DeviceWidth     float64   `json:"deviceWidth,omitempty"`     // Device screen width in DIP.
-	DeviceHeight    float64   `json:"deviceHeight,omitempty"`    // Device screen height in DIP.
-	ScrollOffsetX   float64   `json:"scrollOffsetX,omitempty"`   // Position of horizontal scroll in CSS pixels.
-	ScrollOffsetY   float64   `json:"scrollOffsetY,omitempty"`   // Position of vertical scroll in CSS pixels.
-	Timestamp       Timestamp `json:"timestamp,omitempty"`       // Frame swap timestamp.
+	OffsetTop       float64       `json:"offsetTop,omitempty"`       // Top offset in DIP.
+	PageScaleFactor float64       `json:"pageScaleFactor,omitempty"` // Page scale factor.
+	DeviceWidth     float64       `json:"deviceWidth,omitempty"`     // Device screen width in DIP.
+	DeviceHeight    float64       `json:"deviceHeight,omitempty"`    // Device screen height in DIP.
+	ScrollOffsetX   float64       `json:"scrollOffsetX,omitempty"`   // Position of horizontal scroll in CSS pixels.
+	ScrollOffsetY   float64       `json:"scrollOffsetY,omitempty"`   // Position of vertical scroll in CSS pixels.
+	Timestamp       cdp.Timestamp `json:"timestamp,omitempty"`       // Frame swap timestamp.
 }
 
 // DialogType javascript dialog type.

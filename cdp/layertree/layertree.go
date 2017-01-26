@@ -9,29 +9,9 @@ package layertree
 import (
 	"context"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/dom"
 	"github.com/mailru/easyjson"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // EnableParams enables compositing tree inspection.
@@ -43,19 +23,19 @@ func Enable() *EnableParams {
 }
 
 // Do executes LayerTree.enable.
-func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandLayerTreeEnable, Empty)
+	ch := h.Execute(ctxt, cdp.CommandLayerTreeEnable, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -67,10 +47,10 @@ func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // DisableParams disables compositing tree inspection.
@@ -82,19 +62,19 @@ func Disable() *DisableParams {
 }
 
 // Do executes LayerTree.disable.
-func (p *DisableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandLayerTreeDisable, Empty)
+	ch := h.Execute(ctxt, cdp.CommandLayerTreeDisable, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -106,10 +86,10 @@ func (p *DisableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // CompositingReasonsParams provides the reasons why the given layer was
@@ -122,10 +102,10 @@ type CompositingReasonsParams struct {
 // composited.
 //
 // parameters:
-//   layerId - The id of the layer for which we want to get the reasons it was composited.
-func CompositingReasons(layerId LayerID) *CompositingReasonsParams {
+//   layerID - The id of the layer for which we want to get the reasons it was composited.
+func CompositingReasons(layerID LayerID) *CompositingReasonsParams {
 	return &CompositingReasonsParams{
-		LayerID: layerId,
+		LayerID: layerID,
 	}
 }
 
@@ -138,7 +118,7 @@ type CompositingReasonsReturns struct {
 //
 // returns:
 //   compositingReasons - A list of strings specifying reasons for the given layer to become composited.
-func (p *CompositingReasonsParams) Do(ctxt context.Context, h FrameHandler) (compositingReasons []string, err error) {
+func (p *CompositingReasonsParams) Do(ctxt context.Context, h cdp.FrameHandler) (compositingReasons []string, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -150,13 +130,13 @@ func (p *CompositingReasonsParams) Do(ctxt context.Context, h FrameHandler) (com
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandLayerTreeCompositingReasons, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandLayerTreeCompositingReasons, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -165,7 +145,7 @@ func (p *CompositingReasonsParams) Do(ctxt context.Context, h FrameHandler) (com
 			var r CompositingReasonsReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.CompositingReasons, nil
@@ -175,10 +155,10 @@ func (p *CompositingReasonsParams) Do(ctxt context.Context, h FrameHandler) (com
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // MakeSnapshotParams returns the layer snapshot identifier.
@@ -189,10 +169,10 @@ type MakeSnapshotParams struct {
 // MakeSnapshot returns the layer snapshot identifier.
 //
 // parameters:
-//   layerId - The id of the layer.
-func MakeSnapshot(layerId LayerID) *MakeSnapshotParams {
+//   layerID - The id of the layer.
+func MakeSnapshot(layerID LayerID) *MakeSnapshotParams {
 	return &MakeSnapshotParams{
-		LayerID: layerId,
+		LayerID: layerID,
 	}
 }
 
@@ -204,8 +184,8 @@ type MakeSnapshotReturns struct {
 // Do executes LayerTree.makeSnapshot.
 //
 // returns:
-//   snapshotId - The id of the layer snapshot.
-func (p *MakeSnapshotParams) Do(ctxt context.Context, h FrameHandler) (snapshotId SnapshotID, err error) {
+//   snapshotID - The id of the layer snapshot.
+func (p *MakeSnapshotParams) Do(ctxt context.Context, h cdp.FrameHandler) (snapshotID SnapshotID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -217,13 +197,13 @@ func (p *MakeSnapshotParams) Do(ctxt context.Context, h FrameHandler) (snapshotI
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandLayerTreeMakeSnapshot, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandLayerTreeMakeSnapshot, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return "", ErrChannelClosed
+			return "", cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -232,7 +212,7 @@ func (p *MakeSnapshotParams) Do(ctxt context.Context, h FrameHandler) (snapshotI
 			var r MakeSnapshotReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return "", ErrInvalidResult
+				return "", cdp.ErrInvalidResult
 			}
 
 			return r.SnapshotID, nil
@@ -242,10 +222,10 @@ func (p *MakeSnapshotParams) Do(ctxt context.Context, h FrameHandler) (snapshotI
 		}
 
 	case <-ctxt.Done():
-		return "", ErrContextDone
+		return "", cdp.ErrContextDone
 	}
 
-	return "", ErrUnknownResult
+	return "", cdp.ErrUnknownResult
 }
 
 // LoadSnapshotParams returns the snapshot identifier.
@@ -271,8 +251,8 @@ type LoadSnapshotReturns struct {
 // Do executes LayerTree.loadSnapshot.
 //
 // returns:
-//   snapshotId - The id of the snapshot.
-func (p *LoadSnapshotParams) Do(ctxt context.Context, h FrameHandler) (snapshotId SnapshotID, err error) {
+//   snapshotID - The id of the snapshot.
+func (p *LoadSnapshotParams) Do(ctxt context.Context, h cdp.FrameHandler) (snapshotID SnapshotID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -284,13 +264,13 @@ func (p *LoadSnapshotParams) Do(ctxt context.Context, h FrameHandler) (snapshotI
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandLayerTreeLoadSnapshot, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandLayerTreeLoadSnapshot, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return "", ErrChannelClosed
+			return "", cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -299,7 +279,7 @@ func (p *LoadSnapshotParams) Do(ctxt context.Context, h FrameHandler) (snapshotI
 			var r LoadSnapshotReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return "", ErrInvalidResult
+				return "", cdp.ErrInvalidResult
 			}
 
 			return r.SnapshotID, nil
@@ -309,10 +289,10 @@ func (p *LoadSnapshotParams) Do(ctxt context.Context, h FrameHandler) (snapshotI
 		}
 
 	case <-ctxt.Done():
-		return "", ErrContextDone
+		return "", cdp.ErrContextDone
 	}
 
-	return "", ErrUnknownResult
+	return "", cdp.ErrUnknownResult
 }
 
 // ReleaseSnapshotParams releases layer snapshot captured by the back-end.
@@ -323,15 +303,15 @@ type ReleaseSnapshotParams struct {
 // ReleaseSnapshot releases layer snapshot captured by the back-end.
 //
 // parameters:
-//   snapshotId - The id of the layer snapshot.
-func ReleaseSnapshot(snapshotId SnapshotID) *ReleaseSnapshotParams {
+//   snapshotID - The id of the layer snapshot.
+func ReleaseSnapshot(snapshotID SnapshotID) *ReleaseSnapshotParams {
 	return &ReleaseSnapshotParams{
-		SnapshotID: snapshotId,
+		SnapshotID: snapshotID,
 	}
 }
 
 // Do executes LayerTree.releaseSnapshot.
-func (p *ReleaseSnapshotParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *ReleaseSnapshotParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -343,13 +323,13 @@ func (p *ReleaseSnapshotParams) Do(ctxt context.Context, h FrameHandler) (err er
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandLayerTreeReleaseSnapshot, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandLayerTreeReleaseSnapshot, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -361,12 +341,13 @@ func (p *ReleaseSnapshotParams) Do(ctxt context.Context, h FrameHandler) (err er
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
+// ProfileSnapshotParams [no description].
 type ProfileSnapshotParams struct {
 	SnapshotID     SnapshotID `json:"snapshotId"`               // The id of the layer snapshot.
 	MinRepeatCount int64      `json:"minRepeatCount,omitempty"` // The maximum number of times to replay the snapshot (1, if not specified).
@@ -374,11 +355,13 @@ type ProfileSnapshotParams struct {
 	ClipRect       *dom.Rect  `json:"clipRect,omitempty"`       // The clip rectangle to apply when replaying the snapshot.
 }
 
+// ProfileSnapshot [no description].
+//
 // parameters:
-//   snapshotId - The id of the layer snapshot.
-func ProfileSnapshot(snapshotId SnapshotID) *ProfileSnapshotParams {
+//   snapshotID - The id of the layer snapshot.
+func ProfileSnapshot(snapshotID SnapshotID) *ProfileSnapshotParams {
 	return &ProfileSnapshotParams{
-		SnapshotID: snapshotId,
+		SnapshotID: snapshotID,
 	}
 }
 
@@ -410,7 +393,7 @@ type ProfileSnapshotReturns struct {
 //
 // returns:
 //   timings - The array of paint profiles, one per run.
-func (p *ProfileSnapshotParams) Do(ctxt context.Context, h FrameHandler) (timings []PaintProfile, err error) {
+func (p *ProfileSnapshotParams) Do(ctxt context.Context, h cdp.FrameHandler) (timings []PaintProfile, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -422,13 +405,13 @@ func (p *ProfileSnapshotParams) Do(ctxt context.Context, h FrameHandler) (timing
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandLayerTreeProfileSnapshot, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandLayerTreeProfileSnapshot, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -437,7 +420,7 @@ func (p *ProfileSnapshotParams) Do(ctxt context.Context, h FrameHandler) (timing
 			var r ProfileSnapshotReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.Timings, nil
@@ -447,10 +430,10 @@ func (p *ProfileSnapshotParams) Do(ctxt context.Context, h FrameHandler) (timing
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // ReplaySnapshotParams replays the layer snapshot and returns the resulting
@@ -466,10 +449,10 @@ type ReplaySnapshotParams struct {
 // bitmap.
 //
 // parameters:
-//   snapshotId - The id of the layer snapshot.
-func ReplaySnapshot(snapshotId SnapshotID) *ReplaySnapshotParams {
+//   snapshotID - The id of the layer snapshot.
+func ReplaySnapshot(snapshotID SnapshotID) *ReplaySnapshotParams {
 	return &ReplaySnapshotParams{
-		SnapshotID: snapshotId,
+		SnapshotID: snapshotID,
 	}
 }
 
@@ -502,7 +485,7 @@ type ReplaySnapshotReturns struct {
 //
 // returns:
 //   dataURL - A data: URL for resulting image.
-func (p *ReplaySnapshotParams) Do(ctxt context.Context, h FrameHandler) (dataURL string, err error) {
+func (p *ReplaySnapshotParams) Do(ctxt context.Context, h cdp.FrameHandler) (dataURL string, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -514,13 +497,13 @@ func (p *ReplaySnapshotParams) Do(ctxt context.Context, h FrameHandler) (dataURL
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandLayerTreeReplaySnapshot, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandLayerTreeReplaySnapshot, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return "", ErrChannelClosed
+			return "", cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -529,7 +512,7 @@ func (p *ReplaySnapshotParams) Do(ctxt context.Context, h FrameHandler) (dataURL
 			var r ReplaySnapshotReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return "", ErrInvalidResult
+				return "", cdp.ErrInvalidResult
 			}
 
 			return r.DataURL, nil
@@ -539,10 +522,10 @@ func (p *ReplaySnapshotParams) Do(ctxt context.Context, h FrameHandler) (dataURL
 		}
 
 	case <-ctxt.Done():
-		return "", ErrContextDone
+		return "", cdp.ErrContextDone
 	}
 
-	return "", ErrUnknownResult
+	return "", cdp.ErrUnknownResult
 }
 
 // SnapshotCommandLogParams replays the layer snapshot and returns canvas
@@ -554,10 +537,10 @@ type SnapshotCommandLogParams struct {
 // SnapshotCommandLog replays the layer snapshot and returns canvas log.
 //
 // parameters:
-//   snapshotId - The id of the layer snapshot.
-func SnapshotCommandLog(snapshotId SnapshotID) *SnapshotCommandLogParams {
+//   snapshotID - The id of the layer snapshot.
+func SnapshotCommandLog(snapshotID SnapshotID) *SnapshotCommandLogParams {
 	return &SnapshotCommandLogParams{
-		SnapshotID: snapshotId,
+		SnapshotID: snapshotID,
 	}
 }
 
@@ -570,7 +553,7 @@ type SnapshotCommandLogReturns struct {
 //
 // returns:
 //   commandLog - The array of canvas function calls.
-func (p *SnapshotCommandLogParams) Do(ctxt context.Context, h FrameHandler) (commandLog []easyjson.RawMessage, err error) {
+func (p *SnapshotCommandLogParams) Do(ctxt context.Context, h cdp.FrameHandler) (commandLog []easyjson.RawMessage, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -582,13 +565,13 @@ func (p *SnapshotCommandLogParams) Do(ctxt context.Context, h FrameHandler) (com
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandLayerTreeSnapshotCommandLog, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandLayerTreeSnapshotCommandLog, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -597,7 +580,7 @@ func (p *SnapshotCommandLogParams) Do(ctxt context.Context, h FrameHandler) (com
 			var r SnapshotCommandLogReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.CommandLog, nil
@@ -607,8 +590,8 @@ func (p *SnapshotCommandLogParams) Do(ctxt context.Context, h FrameHandler) (com
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }

@@ -3,6 +3,7 @@ package internal
 import (
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 // ProtocolInfo holds information about the Chrome Debugging Protocol.
@@ -213,7 +214,7 @@ func (t Type) String() string {
 		desc = " - " + desc
 	}
 
-	return t.IdOrName() + desc
+	return ForceCamelWithFirstLower(t.IdOrName()) + desc
 }
 
 // GetDescription returns the cleaned description for the type.
@@ -230,9 +231,13 @@ func (t *Type) EnumValues() []string {
 func (t *Type) GoName(noExposeOverride bool) string {
 	if t.NoExpose || noExposeOverride {
 		n := t.Name
-		if goReservedNames[n] {
-			n += "_"
+		if n != "" && !unicode.IsUpper(rune(n[0])) {
+			if goReservedNames[n] {
+				n += "Val"
+			}
+			n = ForceCamelWithFirstLower(n)
 		}
+
 		return n
 	}
 
@@ -325,7 +330,7 @@ func (t *Type) RetTypeList(d *Domain, domains []*Domain) string {
 			z = "[]byte"
 		}
 
-		s += n + " " + z + ","
+		s += ForceCamelWithFirstLower(n) + " " + z + ","
 	}
 
 	return strings.TrimSuffix(s, ",")

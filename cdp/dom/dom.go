@@ -19,29 +19,9 @@ package dom
 import (
 	"context"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/runtime"
 	"github.com/mailru/easyjson"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // EnableParams enables DOM agent for the given page.
@@ -53,19 +33,19 @@ func Enable() *EnableParams {
 }
 
 // Do executes DOM.enable.
-func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMEnable, Empty)
+	ch := h.Execute(ctxt, cdp.CommandDOMEnable, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -77,10 +57,10 @@ func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // DisableParams disables DOM agent for the given page.
@@ -92,19 +72,19 @@ func Disable() *DisableParams {
 }
 
 // Do executes DOM.disable.
-func (p *DisableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMDisable, Empty)
+	ch := h.Execute(ctxt, cdp.CommandDOMDisable, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -116,10 +96,10 @@ func (p *DisableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // GetDocumentParams returns the root DOM node (and optionally the subtree)
@@ -154,14 +134,14 @@ func (p GetDocumentParams) WithPierce(pierce bool) *GetDocumentParams {
 
 // GetDocumentReturns return values.
 type GetDocumentReturns struct {
-	Root *Node `json:"root,omitempty"` // Resulting node.
+	Root *cdp.Node `json:"root,omitempty"` // Resulting node.
 }
 
 // Do executes DOM.getDocument.
 //
 // returns:
 //   root - Resulting node.
-func (p *GetDocumentParams) Do(ctxt context.Context, h FrameHandler) (root *Node, err error) {
+func (p *GetDocumentParams) Do(ctxt context.Context, h cdp.FrameHandler) (root *cdp.Node, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -173,13 +153,13 @@ func (p *GetDocumentParams) Do(ctxt context.Context, h FrameHandler) (root *Node
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMGetDocument, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMGetDocument, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -188,7 +168,7 @@ func (p *GetDocumentParams) Do(ctxt context.Context, h FrameHandler) (root *Node
 			var r GetDocumentReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.Root, nil
@@ -198,26 +178,26 @@ func (p *GetDocumentParams) Do(ctxt context.Context, h FrameHandler) (root *Node
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // CollectClassNamesFromSubtreeParams collects class names for the node with
 // given id and all of it's child nodes.
 type CollectClassNamesFromSubtreeParams struct {
-	NodeID NodeID `json:"nodeId"` // Id of the node to collect class names.
+	NodeID cdp.NodeID `json:"nodeId"` // Id of the node to collect class names.
 }
 
 // CollectClassNamesFromSubtree collects class names for the node with given
 // id and all of it's child nodes.
 //
 // parameters:
-//   nodeId - Id of the node to collect class names.
-func CollectClassNamesFromSubtree(nodeId NodeID) *CollectClassNamesFromSubtreeParams {
+//   nodeID - Id of the node to collect class names.
+func CollectClassNamesFromSubtree(nodeID cdp.NodeID) *CollectClassNamesFromSubtreeParams {
 	return &CollectClassNamesFromSubtreeParams{
-		NodeID: nodeId,
+		NodeID: nodeID,
 	}
 }
 
@@ -230,7 +210,7 @@ type CollectClassNamesFromSubtreeReturns struct {
 //
 // returns:
 //   classNames - Class name list.
-func (p *CollectClassNamesFromSubtreeParams) Do(ctxt context.Context, h FrameHandler) (classNames []string, err error) {
+func (p *CollectClassNamesFromSubtreeParams) Do(ctxt context.Context, h cdp.FrameHandler) (classNames []string, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -242,13 +222,13 @@ func (p *CollectClassNamesFromSubtreeParams) Do(ctxt context.Context, h FrameHan
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMCollectClassNamesFromSubtree, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMCollectClassNamesFromSubtree, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -257,7 +237,7 @@ func (p *CollectClassNamesFromSubtreeParams) Do(ctxt context.Context, h FrameHan
 			var r CollectClassNamesFromSubtreeReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.ClassNames, nil
@@ -267,10 +247,10 @@ func (p *CollectClassNamesFromSubtreeParams) Do(ctxt context.Context, h FrameHan
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // RequestChildNodesParams requests that children of the node with given id
@@ -278,9 +258,9 @@ func (p *CollectClassNamesFromSubtreeParams) Do(ctxt context.Context, h FrameHan
 // immediate children are retrieved, but all children down to the specified
 // depth.
 type RequestChildNodesParams struct {
-	NodeID NodeID `json:"nodeId"`           // Id of the node to get children for.
-	Depth  int64  `json:"depth,omitempty"`  // The maximum depth at which children should be retrieved, defaults to 1. Use -1 for the entire subtree or provide an integer larger than 0.
-	Pierce bool   `json:"pierce,omitempty"` // Whether or not iframes and shadow roots should be traversed when returning the sub-tree (default is false).
+	NodeID cdp.NodeID `json:"nodeId"`           // Id of the node to get children for.
+	Depth  int64      `json:"depth,omitempty"`  // The maximum depth at which children should be retrieved, defaults to 1. Use -1 for the entire subtree or provide an integer larger than 0.
+	Pierce bool       `json:"pierce,omitempty"` // Whether or not iframes and shadow roots should be traversed when returning the sub-tree (default is false).
 }
 
 // RequestChildNodes requests that children of the node with given id are
@@ -289,10 +269,10 @@ type RequestChildNodesParams struct {
 // depth.
 //
 // parameters:
-//   nodeId - Id of the node to get children for.
-func RequestChildNodes(nodeId NodeID) *RequestChildNodesParams {
+//   nodeID - Id of the node to get children for.
+func RequestChildNodes(nodeID cdp.NodeID) *RequestChildNodesParams {
 	return &RequestChildNodesParams{
-		NodeID: nodeId,
+		NodeID: nodeID,
 	}
 }
 
@@ -312,7 +292,7 @@ func (p RequestChildNodesParams) WithPierce(pierce bool) *RequestChildNodesParam
 }
 
 // Do executes DOM.requestChildNodes.
-func (p *RequestChildNodesParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *RequestChildNodesParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -324,13 +304,13 @@ func (p *RequestChildNodesParams) Do(ctxt context.Context, h FrameHandler) (err 
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMRequestChildNodes, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMRequestChildNodes, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -342,40 +322,40 @@ func (p *RequestChildNodesParams) Do(ctxt context.Context, h FrameHandler) (err 
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // QuerySelectorParams executes querySelector on a given node.
 type QuerySelectorParams struct {
-	NodeID   NodeID `json:"nodeId"`   // Id of the node to query upon.
-	Selector string `json:"selector"` // Selector string.
+	NodeID   cdp.NodeID `json:"nodeId"`   // Id of the node to query upon.
+	Selector string     `json:"selector"` // Selector string.
 }
 
 // QuerySelector executes querySelector on a given node.
 //
 // parameters:
-//   nodeId - Id of the node to query upon.
+//   nodeID - Id of the node to query upon.
 //   selector - Selector string.
-func QuerySelector(nodeId NodeID, selector string) *QuerySelectorParams {
+func QuerySelector(nodeID cdp.NodeID, selector string) *QuerySelectorParams {
 	return &QuerySelectorParams{
-		NodeID:   nodeId,
+		NodeID:   nodeID,
 		Selector: selector,
 	}
 }
 
 // QuerySelectorReturns return values.
 type QuerySelectorReturns struct {
-	NodeID NodeID `json:"nodeId,omitempty"` // Query selector result.
+	NodeID cdp.NodeID `json:"nodeId,omitempty"` // Query selector result.
 }
 
 // Do executes DOM.querySelector.
 //
 // returns:
-//   nodeId - Query selector result.
-func (p *QuerySelectorParams) Do(ctxt context.Context, h FrameHandler) (nodeId NodeID, err error) {
+//   nodeID - Query selector result.
+func (p *QuerySelectorParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodeID cdp.NodeID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -387,13 +367,13 @@ func (p *QuerySelectorParams) Do(ctxt context.Context, h FrameHandler) (nodeId N
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMQuerySelector, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMQuerySelector, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return 0, ErrChannelClosed
+			return 0, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -402,7 +382,7 @@ func (p *QuerySelectorParams) Do(ctxt context.Context, h FrameHandler) (nodeId N
 			var r QuerySelectorReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return 0, ErrInvalidResult
+				return 0, cdp.ErrInvalidResult
 			}
 
 			return r.NodeID, nil
@@ -412,40 +392,40 @@ func (p *QuerySelectorParams) Do(ctxt context.Context, h FrameHandler) (nodeId N
 		}
 
 	case <-ctxt.Done():
-		return 0, ErrContextDone
+		return 0, cdp.ErrContextDone
 	}
 
-	return 0, ErrUnknownResult
+	return 0, cdp.ErrUnknownResult
 }
 
 // QuerySelectorAllParams executes querySelectorAll on a given node.
 type QuerySelectorAllParams struct {
-	NodeID   NodeID `json:"nodeId"`   // Id of the node to query upon.
-	Selector string `json:"selector"` // Selector string.
+	NodeID   cdp.NodeID `json:"nodeId"`   // Id of the node to query upon.
+	Selector string     `json:"selector"` // Selector string.
 }
 
 // QuerySelectorAll executes querySelectorAll on a given node.
 //
 // parameters:
-//   nodeId - Id of the node to query upon.
+//   nodeID - Id of the node to query upon.
 //   selector - Selector string.
-func QuerySelectorAll(nodeId NodeID, selector string) *QuerySelectorAllParams {
+func QuerySelectorAll(nodeID cdp.NodeID, selector string) *QuerySelectorAllParams {
 	return &QuerySelectorAllParams{
-		NodeID:   nodeId,
+		NodeID:   nodeID,
 		Selector: selector,
 	}
 }
 
 // QuerySelectorAllReturns return values.
 type QuerySelectorAllReturns struct {
-	NodeIds []NodeID `json:"nodeIds,omitempty"` // Query selector result.
+	NodeIds []cdp.NodeID `json:"nodeIds,omitempty"` // Query selector result.
 }
 
 // Do executes DOM.querySelectorAll.
 //
 // returns:
 //   nodeIds - Query selector result.
-func (p *QuerySelectorAllParams) Do(ctxt context.Context, h FrameHandler) (nodeIds []NodeID, err error) {
+func (p *QuerySelectorAllParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodeIds []cdp.NodeID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -457,13 +437,13 @@ func (p *QuerySelectorAllParams) Do(ctxt context.Context, h FrameHandler) (nodeI
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMQuerySelectorAll, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMQuerySelectorAll, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -472,7 +452,7 @@ func (p *QuerySelectorAllParams) Do(ctxt context.Context, h FrameHandler) (nodeI
 			var r QuerySelectorAllReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.NodeIds, nil
@@ -482,40 +462,40 @@ func (p *QuerySelectorAllParams) Do(ctxt context.Context, h FrameHandler) (nodeI
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // SetNodeNameParams sets node name for a node with given id.
 type SetNodeNameParams struct {
-	NodeID NodeID `json:"nodeId"` // Id of the node to set name for.
-	Name   string `json:"name"`   // New node's name.
+	NodeID cdp.NodeID `json:"nodeId"` // Id of the node to set name for.
+	Name   string     `json:"name"`   // New node's name.
 }
 
 // SetNodeName sets node name for a node with given id.
 //
 // parameters:
-//   nodeId - Id of the node to set name for.
+//   nodeID - Id of the node to set name for.
 //   name - New node's name.
-func SetNodeName(nodeId NodeID, name string) *SetNodeNameParams {
+func SetNodeName(nodeID cdp.NodeID, name string) *SetNodeNameParams {
 	return &SetNodeNameParams{
-		NodeID: nodeId,
+		NodeID: nodeID,
 		Name:   name,
 	}
 }
 
 // SetNodeNameReturns return values.
 type SetNodeNameReturns struct {
-	NodeID NodeID `json:"nodeId,omitempty"` // New node's id.
+	NodeID cdp.NodeID `json:"nodeId,omitempty"` // New node's id.
 }
 
 // Do executes DOM.setNodeName.
 //
 // returns:
-//   nodeId - New node's id.
-func (p *SetNodeNameParams) Do(ctxt context.Context, h FrameHandler) (nodeId NodeID, err error) {
+//   nodeID - New node's id.
+func (p *SetNodeNameParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodeID cdp.NodeID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -527,13 +507,13 @@ func (p *SetNodeNameParams) Do(ctxt context.Context, h FrameHandler) (nodeId Nod
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMSetNodeName, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMSetNodeName, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return 0, ErrChannelClosed
+			return 0, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -542,7 +522,7 @@ func (p *SetNodeNameParams) Do(ctxt context.Context, h FrameHandler) (nodeId Nod
 			var r SetNodeNameReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return 0, ErrInvalidResult
+				return 0, cdp.ErrInvalidResult
 			}
 
 			return r.NodeID, nil
@@ -552,32 +532,32 @@ func (p *SetNodeNameParams) Do(ctxt context.Context, h FrameHandler) (nodeId Nod
 		}
 
 	case <-ctxt.Done():
-		return 0, ErrContextDone
+		return 0, cdp.ErrContextDone
 	}
 
-	return 0, ErrUnknownResult
+	return 0, cdp.ErrUnknownResult
 }
 
 // SetNodeValueParams sets node value for a node with given id.
 type SetNodeValueParams struct {
-	NodeID NodeID `json:"nodeId"` // Id of the node to set value for.
-	Value  string `json:"value"`  // New node's value.
+	NodeID cdp.NodeID `json:"nodeId"` // Id of the node to set value for.
+	Value  string     `json:"value"`  // New node's value.
 }
 
 // SetNodeValue sets node value for a node with given id.
 //
 // parameters:
-//   nodeId - Id of the node to set value for.
+//   nodeID - Id of the node to set value for.
 //   value - New node's value.
-func SetNodeValue(nodeId NodeID, value string) *SetNodeValueParams {
+func SetNodeValue(nodeID cdp.NodeID, value string) *SetNodeValueParams {
 	return &SetNodeValueParams{
-		NodeID: nodeId,
+		NodeID: nodeID,
 		Value:  value,
 	}
 }
 
 // Do executes DOM.setNodeValue.
-func (p *SetNodeValueParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetNodeValueParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -589,13 +569,13 @@ func (p *SetNodeValueParams) Do(ctxt context.Context, h FrameHandler) (err error
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMSetNodeValue, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMSetNodeValue, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -607,29 +587,29 @@ func (p *SetNodeValueParams) Do(ctxt context.Context, h FrameHandler) (err error
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // RemoveNodeParams removes node with given id.
 type RemoveNodeParams struct {
-	NodeID NodeID `json:"nodeId"` // Id of the node to remove.
+	NodeID cdp.NodeID `json:"nodeId"` // Id of the node to remove.
 }
 
 // RemoveNode removes node with given id.
 //
 // parameters:
-//   nodeId - Id of the node to remove.
-func RemoveNode(nodeId NodeID) *RemoveNodeParams {
+//   nodeID - Id of the node to remove.
+func RemoveNode(nodeID cdp.NodeID) *RemoveNodeParams {
 	return &RemoveNodeParams{
-		NodeID: nodeId,
+		NodeID: nodeID,
 	}
 }
 
 // Do executes DOM.removeNode.
-func (p *RemoveNodeParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *RemoveNodeParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -641,13 +621,13 @@ func (p *RemoveNodeParams) Do(ctxt context.Context, h FrameHandler) (err error) 
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMRemoveNode, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMRemoveNode, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -659,35 +639,35 @@ func (p *RemoveNodeParams) Do(ctxt context.Context, h FrameHandler) (err error) 
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetAttributeValueParams sets attribute for an element with given id.
 type SetAttributeValueParams struct {
-	NodeID NodeID `json:"nodeId"` // Id of the element to set attribute for.
-	Name   string `json:"name"`   // Attribute name.
-	Value  string `json:"value"`  // Attribute value.
+	NodeID cdp.NodeID `json:"nodeId"` // Id of the element to set attribute for.
+	Name   string     `json:"name"`   // Attribute name.
+	Value  string     `json:"value"`  // Attribute value.
 }
 
 // SetAttributeValue sets attribute for an element with given id.
 //
 // parameters:
-//   nodeId - Id of the element to set attribute for.
+//   nodeID - Id of the element to set attribute for.
 //   name - Attribute name.
 //   value - Attribute value.
-func SetAttributeValue(nodeId NodeID, name string, value string) *SetAttributeValueParams {
+func SetAttributeValue(nodeID cdp.NodeID, name string, value string) *SetAttributeValueParams {
 	return &SetAttributeValueParams{
-		NodeID: nodeId,
+		NodeID: nodeID,
 		Name:   name,
 		Value:  value,
 	}
 }
 
 // Do executes DOM.setAttributeValue.
-func (p *SetAttributeValueParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetAttributeValueParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -699,13 +679,13 @@ func (p *SetAttributeValueParams) Do(ctxt context.Context, h FrameHandler) (err 
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMSetAttributeValue, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMSetAttributeValue, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -717,19 +697,19 @@ func (p *SetAttributeValueParams) Do(ctxt context.Context, h FrameHandler) (err 
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetAttributesAsTextParams sets attributes on element with given id. This
 // method is useful when user edits some existing attribute value and types in
 // several attribute name/value pairs.
 type SetAttributesAsTextParams struct {
-	NodeID NodeID `json:"nodeId"`         // Id of the element to set attributes for.
-	Text   string `json:"text"`           // Text with a number of attributes. Will parse this text using HTML parser.
-	Name   string `json:"name,omitempty"` // Attribute name to replace with new attributes derived from text in case text parsed successfully.
+	NodeID cdp.NodeID `json:"nodeId"`         // Id of the element to set attributes for.
+	Text   string     `json:"text"`           // Text with a number of attributes. Will parse this text using HTML parser.
+	Name   string     `json:"name,omitempty"` // Attribute name to replace with new attributes derived from text in case text parsed successfully.
 }
 
 // SetAttributesAsText sets attributes on element with given id. This method
@@ -737,11 +717,11 @@ type SetAttributesAsTextParams struct {
 // attribute name/value pairs.
 //
 // parameters:
-//   nodeId - Id of the element to set attributes for.
+//   nodeID - Id of the element to set attributes for.
 //   text - Text with a number of attributes. Will parse this text using HTML parser.
-func SetAttributesAsText(nodeId NodeID, text string) *SetAttributesAsTextParams {
+func SetAttributesAsText(nodeID cdp.NodeID, text string) *SetAttributesAsTextParams {
 	return &SetAttributesAsTextParams{
-		NodeID: nodeId,
+		NodeID: nodeID,
 		Text:   text,
 	}
 }
@@ -754,7 +734,7 @@ func (p SetAttributesAsTextParams) WithName(name string) *SetAttributesAsTextPar
 }
 
 // Do executes DOM.setAttributesAsText.
-func (p *SetAttributesAsTextParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetAttributesAsTextParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -766,13 +746,13 @@ func (p *SetAttributesAsTextParams) Do(ctxt context.Context, h FrameHandler) (er
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMSetAttributesAsText, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMSetAttributesAsText, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -784,34 +764,34 @@ func (p *SetAttributesAsTextParams) Do(ctxt context.Context, h FrameHandler) (er
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // RemoveAttributeParams removes attribute with given name from an element
 // with given id.
 type RemoveAttributeParams struct {
-	NodeID NodeID `json:"nodeId"` // Id of the element to remove attribute from.
-	Name   string `json:"name"`   // Name of the attribute to remove.
+	NodeID cdp.NodeID `json:"nodeId"` // Id of the element to remove attribute from.
+	Name   string     `json:"name"`   // Name of the attribute to remove.
 }
 
 // RemoveAttribute removes attribute with given name from an element with
 // given id.
 //
 // parameters:
-//   nodeId - Id of the element to remove attribute from.
+//   nodeID - Id of the element to remove attribute from.
 //   name - Name of the attribute to remove.
-func RemoveAttribute(nodeId NodeID, name string) *RemoveAttributeParams {
+func RemoveAttribute(nodeID cdp.NodeID, name string) *RemoveAttributeParams {
 	return &RemoveAttributeParams{
-		NodeID: nodeId,
+		NodeID: nodeID,
 		Name:   name,
 	}
 }
 
 // Do executes DOM.removeAttribute.
-func (p *RemoveAttributeParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *RemoveAttributeParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -823,13 +803,13 @@ func (p *RemoveAttributeParams) Do(ctxt context.Context, h FrameHandler) (err er
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMRemoveAttribute, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMRemoveAttribute, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -841,24 +821,24 @@ func (p *RemoveAttributeParams) Do(ctxt context.Context, h FrameHandler) (err er
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // GetOuterHTMLParams returns node's HTML markup.
 type GetOuterHTMLParams struct {
-	NodeID NodeID `json:"nodeId"` // Id of the node to get markup for.
+	NodeID cdp.NodeID `json:"nodeId"` // Id of the node to get markup for.
 }
 
 // GetOuterHTML returns node's HTML markup.
 //
 // parameters:
-//   nodeId - Id of the node to get markup for.
-func GetOuterHTML(nodeId NodeID) *GetOuterHTMLParams {
+//   nodeID - Id of the node to get markup for.
+func GetOuterHTML(nodeID cdp.NodeID) *GetOuterHTMLParams {
 	return &GetOuterHTMLParams{
-		NodeID: nodeId,
+		NodeID: nodeID,
 	}
 }
 
@@ -871,7 +851,7 @@ type GetOuterHTMLReturns struct {
 //
 // returns:
 //   outerHTML - Outer HTML markup.
-func (p *GetOuterHTMLParams) Do(ctxt context.Context, h FrameHandler) (outerHTML string, err error) {
+func (p *GetOuterHTMLParams) Do(ctxt context.Context, h cdp.FrameHandler) (outerHTML string, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -883,13 +863,13 @@ func (p *GetOuterHTMLParams) Do(ctxt context.Context, h FrameHandler) (outerHTML
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMGetOuterHTML, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMGetOuterHTML, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return "", ErrChannelClosed
+			return "", cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -898,7 +878,7 @@ func (p *GetOuterHTMLParams) Do(ctxt context.Context, h FrameHandler) (outerHTML
 			var r GetOuterHTMLReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return "", ErrInvalidResult
+				return "", cdp.ErrInvalidResult
 			}
 
 			return r.OuterHTML, nil
@@ -908,32 +888,32 @@ func (p *GetOuterHTMLParams) Do(ctxt context.Context, h FrameHandler) (outerHTML
 		}
 
 	case <-ctxt.Done():
-		return "", ErrContextDone
+		return "", cdp.ErrContextDone
 	}
 
-	return "", ErrUnknownResult
+	return "", cdp.ErrUnknownResult
 }
 
 // SetOuterHTMLParams sets node HTML markup, returns new node id.
 type SetOuterHTMLParams struct {
-	NodeID    NodeID `json:"nodeId"`    // Id of the node to set markup for.
-	OuterHTML string `json:"outerHTML"` // Outer HTML markup to set.
+	NodeID    cdp.NodeID `json:"nodeId"`    // Id of the node to set markup for.
+	OuterHTML string     `json:"outerHTML"` // Outer HTML markup to set.
 }
 
 // SetOuterHTML sets node HTML markup, returns new node id.
 //
 // parameters:
-//   nodeId - Id of the node to set markup for.
+//   nodeID - Id of the node to set markup for.
 //   outerHTML - Outer HTML markup to set.
-func SetOuterHTML(nodeId NodeID, outerHTML string) *SetOuterHTMLParams {
+func SetOuterHTML(nodeID cdp.NodeID, outerHTML string) *SetOuterHTMLParams {
 	return &SetOuterHTMLParams{
-		NodeID:    nodeId,
+		NodeID:    nodeID,
 		OuterHTML: outerHTML,
 	}
 }
 
 // Do executes DOM.setOuterHTML.
-func (p *SetOuterHTMLParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetOuterHTMLParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -945,13 +925,13 @@ func (p *SetOuterHTMLParams) Do(ctxt context.Context, h FrameHandler) (err error
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMSetOuterHTML, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMSetOuterHTML, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -963,10 +943,10 @@ func (p *SetOuterHTMLParams) Do(ctxt context.Context, h FrameHandler) (err error
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // PerformSearchParams searches for a given string in the DOM tree. Use
@@ -1004,9 +984,9 @@ type PerformSearchReturns struct {
 // Do executes DOM.performSearch.
 //
 // returns:
-//   searchId - Unique search session identifier.
+//   searchID - Unique search session identifier.
 //   resultCount - Number of search results.
-func (p *PerformSearchParams) Do(ctxt context.Context, h FrameHandler) (searchId string, resultCount int64, err error) {
+func (p *PerformSearchParams) Do(ctxt context.Context, h cdp.FrameHandler) (searchID string, resultCount int64, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1018,13 +998,13 @@ func (p *PerformSearchParams) Do(ctxt context.Context, h FrameHandler) (searchId
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMPerformSearch, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMPerformSearch, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return "", 0, ErrChannelClosed
+			return "", 0, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1033,7 +1013,7 @@ func (p *PerformSearchParams) Do(ctxt context.Context, h FrameHandler) (searchId
 			var r PerformSearchReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return "", 0, ErrInvalidResult
+				return "", 0, cdp.ErrInvalidResult
 			}
 
 			return r.SearchID, r.ResultCount, nil
@@ -1043,10 +1023,10 @@ func (p *PerformSearchParams) Do(ctxt context.Context, h FrameHandler) (searchId
 		}
 
 	case <-ctxt.Done():
-		return "", 0, ErrContextDone
+		return "", 0, cdp.ErrContextDone
 	}
 
-	return "", 0, ErrUnknownResult
+	return "", 0, cdp.ErrUnknownResult
 }
 
 // GetSearchResultsParams returns search results from given fromIndex to
@@ -1061,12 +1041,12 @@ type GetSearchResultsParams struct {
 // toIndex from the sarch with the given identifier.
 //
 // parameters:
-//   searchId - Unique search session identifier.
+//   searchID - Unique search session identifier.
 //   fromIndex - Start index of the search result to be returned.
 //   toIndex - End index of the search result to be returned.
-func GetSearchResults(searchId string, fromIndex int64, toIndex int64) *GetSearchResultsParams {
+func GetSearchResults(searchID string, fromIndex int64, toIndex int64) *GetSearchResultsParams {
 	return &GetSearchResultsParams{
-		SearchID:  searchId,
+		SearchID:  searchID,
 		FromIndex: fromIndex,
 		ToIndex:   toIndex,
 	}
@@ -1074,14 +1054,14 @@ func GetSearchResults(searchId string, fromIndex int64, toIndex int64) *GetSearc
 
 // GetSearchResultsReturns return values.
 type GetSearchResultsReturns struct {
-	NodeIds []NodeID `json:"nodeIds,omitempty"` // Ids of the search result nodes.
+	NodeIds []cdp.NodeID `json:"nodeIds,omitempty"` // Ids of the search result nodes.
 }
 
 // Do executes DOM.getSearchResults.
 //
 // returns:
 //   nodeIds - Ids of the search result nodes.
-func (p *GetSearchResultsParams) Do(ctxt context.Context, h FrameHandler) (nodeIds []NodeID, err error) {
+func (p *GetSearchResultsParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodeIds []cdp.NodeID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1093,13 +1073,13 @@ func (p *GetSearchResultsParams) Do(ctxt context.Context, h FrameHandler) (nodeI
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMGetSearchResults, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMGetSearchResults, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1108,7 +1088,7 @@ func (p *GetSearchResultsParams) Do(ctxt context.Context, h FrameHandler) (nodeI
 			var r GetSearchResultsReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.NodeIds, nil
@@ -1118,10 +1098,10 @@ func (p *GetSearchResultsParams) Do(ctxt context.Context, h FrameHandler) (nodeI
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // DiscardSearchResultsParams discards search results from the session with
@@ -1134,15 +1114,15 @@ type DiscardSearchResultsParams struct {
 // given id. getSearchResults should no longer be called for that search.
 //
 // parameters:
-//   searchId - Unique search session identifier.
-func DiscardSearchResults(searchId string) *DiscardSearchResultsParams {
+//   searchID - Unique search session identifier.
+func DiscardSearchResults(searchID string) *DiscardSearchResultsParams {
 	return &DiscardSearchResultsParams{
-		SearchID: searchId,
+		SearchID: searchID,
 	}
 }
 
 // Do executes DOM.discardSearchResults.
-func (p *DiscardSearchResultsParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *DiscardSearchResultsParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1154,13 +1134,13 @@ func (p *DiscardSearchResultsParams) Do(ctxt context.Context, h FrameHandler) (e
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMDiscardSearchResults, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMDiscardSearchResults, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1172,10 +1152,10 @@ func (p *DiscardSearchResultsParams) Do(ctxt context.Context, h FrameHandler) (e
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // RequestNodeParams requests that the node is sent to the caller given the
@@ -1192,23 +1172,23 @@ type RequestNodeParams struct {
 // notifications.
 //
 // parameters:
-//   objectId - JavaScript object id to convert into node.
-func RequestNode(objectId runtime.RemoteObjectID) *RequestNodeParams {
+//   objectID - JavaScript object id to convert into node.
+func RequestNode(objectID runtime.RemoteObjectID) *RequestNodeParams {
 	return &RequestNodeParams{
-		ObjectID: objectId,
+		ObjectID: objectID,
 	}
 }
 
 // RequestNodeReturns return values.
 type RequestNodeReturns struct {
-	NodeID NodeID `json:"nodeId,omitempty"` // Node id for given object.
+	NodeID cdp.NodeID `json:"nodeId,omitempty"` // Node id for given object.
 }
 
 // Do executes DOM.requestNode.
 //
 // returns:
-//   nodeId - Node id for given object.
-func (p *RequestNodeParams) Do(ctxt context.Context, h FrameHandler) (nodeId NodeID, err error) {
+//   nodeID - Node id for given object.
+func (p *RequestNodeParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodeID cdp.NodeID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1220,13 +1200,13 @@ func (p *RequestNodeParams) Do(ctxt context.Context, h FrameHandler) (nodeId Nod
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMRequestNode, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMRequestNode, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return 0, ErrChannelClosed
+			return 0, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1235,7 +1215,7 @@ func (p *RequestNodeParams) Do(ctxt context.Context, h FrameHandler) (nodeId Nod
 			var r RequestNodeReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return 0, ErrInvalidResult
+				return 0, cdp.ErrInvalidResult
 			}
 
 			return r.NodeID, nil
@@ -1245,10 +1225,10 @@ func (p *RequestNodeParams) Do(ctxt context.Context, h FrameHandler) (nodeId Nod
 		}
 
 	case <-ctxt.Done():
-		return 0, ErrContextDone
+		return 0, cdp.ErrContextDone
 	}
 
-	return 0, ErrUnknownResult
+	return 0, cdp.ErrUnknownResult
 }
 
 // SetInspectModeParams enters the 'inspect' mode. In this mode, elements
@@ -1279,7 +1259,7 @@ func (p SetInspectModeParams) WithHighlightConfig(highlightConfig *HighlightConf
 }
 
 // Do executes DOM.setInspectMode.
-func (p *SetInspectModeParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetInspectModeParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1291,13 +1271,13 @@ func (p *SetInspectModeParams) Do(ctxt context.Context, h FrameHandler) (err err
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMSetInspectMode, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMSetInspectMode, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1309,21 +1289,21 @@ func (p *SetInspectModeParams) Do(ctxt context.Context, h FrameHandler) (err err
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // HighlightRectParams highlights given rectangle. Coordinates are absolute
 // with respect to the main frame viewport.
 type HighlightRectParams struct {
-	X            int64 `json:"x"`                      // X coordinate
-	Y            int64 `json:"y"`                      // Y coordinate
-	Width        int64 `json:"width"`                  // Rectangle width
-	Height       int64 `json:"height"`                 // Rectangle height
-	Color        *RGBA `json:"color,omitempty"`        // The highlight fill color (default: transparent).
-	OutlineColor *RGBA `json:"outlineColor,omitempty"` // The highlight outline color (default: transparent).
+	X            int64     `json:"x"`                      // X coordinate
+	Y            int64     `json:"y"`                      // Y coordinate
+	Width        int64     `json:"width"`                  // Rectangle width
+	Height       int64     `json:"height"`                 // Rectangle height
+	Color        *cdp.RGBA `json:"color,omitempty"`        // The highlight fill color (default: transparent).
+	OutlineColor *cdp.RGBA `json:"outlineColor,omitempty"` // The highlight outline color (default: transparent).
 }
 
 // HighlightRect highlights given rectangle. Coordinates are absolute with
@@ -1344,19 +1324,19 @@ func HighlightRect(x int64, y int64, width int64, height int64) *HighlightRectPa
 }
 
 // WithColor the highlight fill color (default: transparent).
-func (p HighlightRectParams) WithColor(color *RGBA) *HighlightRectParams {
+func (p HighlightRectParams) WithColor(color *cdp.RGBA) *HighlightRectParams {
 	p.Color = color
 	return &p
 }
 
 // WithOutlineColor the highlight outline color (default: transparent).
-func (p HighlightRectParams) WithOutlineColor(outlineColor *RGBA) *HighlightRectParams {
+func (p HighlightRectParams) WithOutlineColor(outlineColor *cdp.RGBA) *HighlightRectParams {
 	p.OutlineColor = outlineColor
 	return &p
 }
 
 // Do executes DOM.highlightRect.
-func (p *HighlightRectParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *HighlightRectParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1368,13 +1348,13 @@ func (p *HighlightRectParams) Do(ctxt context.Context, h FrameHandler) (err erro
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMHighlightRect, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMHighlightRect, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1386,18 +1366,18 @@ func (p *HighlightRectParams) Do(ctxt context.Context, h FrameHandler) (err erro
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // HighlightQuadParams highlights given quad. Coordinates are absolute with
 // respect to the main frame viewport.
 type HighlightQuadParams struct {
-	Quad         Quad  `json:"quad"`                   // Quad to highlight
-	Color        *RGBA `json:"color,omitempty"`        // The highlight fill color (default: transparent).
-	OutlineColor *RGBA `json:"outlineColor,omitempty"` // The highlight outline color (default: transparent).
+	Quad         Quad      `json:"quad"`                   // Quad to highlight
+	Color        *cdp.RGBA `json:"color,omitempty"`        // The highlight fill color (default: transparent).
+	OutlineColor *cdp.RGBA `json:"outlineColor,omitempty"` // The highlight outline color (default: transparent).
 }
 
 // HighlightQuad highlights given quad. Coordinates are absolute with respect
@@ -1412,19 +1392,19 @@ func HighlightQuad(quad Quad) *HighlightQuadParams {
 }
 
 // WithColor the highlight fill color (default: transparent).
-func (p HighlightQuadParams) WithColor(color *RGBA) *HighlightQuadParams {
+func (p HighlightQuadParams) WithColor(color *cdp.RGBA) *HighlightQuadParams {
 	p.Color = color
 	return &p
 }
 
 // WithOutlineColor the highlight outline color (default: transparent).
-func (p HighlightQuadParams) WithOutlineColor(outlineColor *RGBA) *HighlightQuadParams {
+func (p HighlightQuadParams) WithOutlineColor(outlineColor *cdp.RGBA) *HighlightQuadParams {
 	p.OutlineColor = outlineColor
 	return &p
 }
 
 // Do executes DOM.highlightQuad.
-func (p *HighlightQuadParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *HighlightQuadParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1436,13 +1416,13 @@ func (p *HighlightQuadParams) Do(ctxt context.Context, h FrameHandler) (err erro
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMHighlightQuad, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMHighlightQuad, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1454,18 +1434,18 @@ func (p *HighlightQuadParams) Do(ctxt context.Context, h FrameHandler) (err erro
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // HighlightNodeParams highlights DOM node with given id or with the given
 // JavaScript object wrapper. Either nodeId or objectId must be specified.
 type HighlightNodeParams struct {
 	HighlightConfig *HighlightConfig       `json:"highlightConfig"`         // A descriptor for the highlight appearance.
-	NodeID          NodeID                 `json:"nodeId,omitempty"`        // Identifier of the node to highlight.
-	BackendNodeID   BackendNodeID          `json:"backendNodeId,omitempty"` // Identifier of the backend node to highlight.
+	NodeID          cdp.NodeID             `json:"nodeId,omitempty"`        // Identifier of the node to highlight.
+	BackendNodeID   cdp.BackendNodeID      `json:"backendNodeId,omitempty"` // Identifier of the backend node to highlight.
 	ObjectID        runtime.RemoteObjectID `json:"objectId,omitempty"`      // JavaScript object id of the node to be highlighted.
 }
 
@@ -1481,25 +1461,25 @@ func HighlightNode(highlightConfig *HighlightConfig) *HighlightNodeParams {
 }
 
 // WithNodeID identifier of the node to highlight.
-func (p HighlightNodeParams) WithNodeID(nodeId NodeID) *HighlightNodeParams {
-	p.NodeID = nodeId
+func (p HighlightNodeParams) WithNodeID(nodeID cdp.NodeID) *HighlightNodeParams {
+	p.NodeID = nodeID
 	return &p
 }
 
 // WithBackendNodeID identifier of the backend node to highlight.
-func (p HighlightNodeParams) WithBackendNodeID(backendNodeId BackendNodeID) *HighlightNodeParams {
-	p.BackendNodeID = backendNodeId
+func (p HighlightNodeParams) WithBackendNodeID(backendNodeID cdp.BackendNodeID) *HighlightNodeParams {
+	p.BackendNodeID = backendNodeID
 	return &p
 }
 
 // WithObjectID javaScript object id of the node to be highlighted.
-func (p HighlightNodeParams) WithObjectID(objectId runtime.RemoteObjectID) *HighlightNodeParams {
-	p.ObjectID = objectId
+func (p HighlightNodeParams) WithObjectID(objectID runtime.RemoteObjectID) *HighlightNodeParams {
+	p.ObjectID = objectID
 	return &p
 }
 
 // Do executes DOM.highlightNode.
-func (p *HighlightNodeParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *HighlightNodeParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1511,13 +1491,13 @@ func (p *HighlightNodeParams) Do(ctxt context.Context, h FrameHandler) (err erro
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMHighlightNode, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMHighlightNode, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1529,10 +1509,10 @@ func (p *HighlightNodeParams) Do(ctxt context.Context, h FrameHandler) (err erro
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // HideHighlightParams hides DOM node highlight.
@@ -1544,19 +1524,19 @@ func HideHighlight() *HideHighlightParams {
 }
 
 // Do executes DOM.hideHighlight.
-func (p *HideHighlightParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *HideHighlightParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMHideHighlight, Empty)
+	ch := h.Execute(ctxt, cdp.CommandDOMHideHighlight, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1568,45 +1548,45 @@ func (p *HideHighlightParams) Do(ctxt context.Context, h FrameHandler) (err erro
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // HighlightFrameParams highlights owner element of the frame with given id.
 type HighlightFrameParams struct {
-	FrameID             FrameID `json:"frameId"`                       // Identifier of the frame to highlight.
-	ContentColor        *RGBA   `json:"contentColor,omitempty"`        // The content box highlight fill color (default: transparent).
-	ContentOutlineColor *RGBA   `json:"contentOutlineColor,omitempty"` // The content box highlight outline color (default: transparent).
+	FrameID             cdp.FrameID `json:"frameId"`                       // Identifier of the frame to highlight.
+	ContentColor        *cdp.RGBA   `json:"contentColor,omitempty"`        // The content box highlight fill color (default: transparent).
+	ContentOutlineColor *cdp.RGBA   `json:"contentOutlineColor,omitempty"` // The content box highlight outline color (default: transparent).
 }
 
 // HighlightFrame highlights owner element of the frame with given id.
 //
 // parameters:
-//   frameId - Identifier of the frame to highlight.
-func HighlightFrame(frameId FrameID) *HighlightFrameParams {
+//   frameID - Identifier of the frame to highlight.
+func HighlightFrame(frameID cdp.FrameID) *HighlightFrameParams {
 	return &HighlightFrameParams{
-		FrameID: frameId,
+		FrameID: frameID,
 	}
 }
 
 // WithContentColor the content box highlight fill color (default:
 // transparent).
-func (p HighlightFrameParams) WithContentColor(contentColor *RGBA) *HighlightFrameParams {
+func (p HighlightFrameParams) WithContentColor(contentColor *cdp.RGBA) *HighlightFrameParams {
 	p.ContentColor = contentColor
 	return &p
 }
 
 // WithContentOutlineColor the content box highlight outline color (default:
 // transparent).
-func (p HighlightFrameParams) WithContentOutlineColor(contentOutlineColor *RGBA) *HighlightFrameParams {
+func (p HighlightFrameParams) WithContentOutlineColor(contentOutlineColor *cdp.RGBA) *HighlightFrameParams {
 	p.ContentOutlineColor = contentOutlineColor
 	return &p
 }
 
 // Do executes DOM.highlightFrame.
-func (p *HighlightFrameParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *HighlightFrameParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1618,13 +1598,13 @@ func (p *HighlightFrameParams) Do(ctxt context.Context, h FrameHandler) (err err
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMHighlightFrame, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMHighlightFrame, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1636,10 +1616,10 @@ func (p *HighlightFrameParams) Do(ctxt context.Context, h FrameHandler) (err err
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // PushNodeByPathToFrontendParams requests that the node is sent to the
@@ -1661,14 +1641,14 @@ func PushNodeByPathToFrontend(path string) *PushNodeByPathToFrontendParams {
 
 // PushNodeByPathToFrontendReturns return values.
 type PushNodeByPathToFrontendReturns struct {
-	NodeID NodeID `json:"nodeId,omitempty"` // Id of the node for given path.
+	NodeID cdp.NodeID `json:"nodeId,omitempty"` // Id of the node for given path.
 }
 
 // Do executes DOM.pushNodeByPathToFrontend.
 //
 // returns:
-//   nodeId - Id of the node for given path.
-func (p *PushNodeByPathToFrontendParams) Do(ctxt context.Context, h FrameHandler) (nodeId NodeID, err error) {
+//   nodeID - Id of the node for given path.
+func (p *PushNodeByPathToFrontendParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodeID cdp.NodeID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1680,13 +1660,13 @@ func (p *PushNodeByPathToFrontendParams) Do(ctxt context.Context, h FrameHandler
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMPushNodeByPathToFrontend, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMPushNodeByPathToFrontend, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return 0, ErrChannelClosed
+			return 0, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1695,7 +1675,7 @@ func (p *PushNodeByPathToFrontendParams) Do(ctxt context.Context, h FrameHandler
 			var r PushNodeByPathToFrontendReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return 0, ErrInvalidResult
+				return 0, cdp.ErrInvalidResult
 			}
 
 			return r.NodeID, nil
@@ -1705,16 +1685,16 @@ func (p *PushNodeByPathToFrontendParams) Do(ctxt context.Context, h FrameHandler
 		}
 
 	case <-ctxt.Done():
-		return 0, ErrContextDone
+		return 0, cdp.ErrContextDone
 	}
 
-	return 0, ErrUnknownResult
+	return 0, cdp.ErrUnknownResult
 }
 
 // PushNodesByBackendIdsToFrontendParams requests that a batch of nodes is
 // sent to the caller given their backend node ids.
 type PushNodesByBackendIdsToFrontendParams struct {
-	BackendNodeIds []BackendNodeID `json:"backendNodeIds"` // The array of backend node ids.
+	BackendNodeIds []cdp.BackendNodeID `json:"backendNodeIds"` // The array of backend node ids.
 }
 
 // PushNodesByBackendIdsToFrontend requests that a batch of nodes is sent to
@@ -1722,7 +1702,7 @@ type PushNodesByBackendIdsToFrontendParams struct {
 //
 // parameters:
 //   backendNodeIds - The array of backend node ids.
-func PushNodesByBackendIdsToFrontend(backendNodeIds []BackendNodeID) *PushNodesByBackendIdsToFrontendParams {
+func PushNodesByBackendIdsToFrontend(backendNodeIds []cdp.BackendNodeID) *PushNodesByBackendIdsToFrontendParams {
 	return &PushNodesByBackendIdsToFrontendParams{
 		BackendNodeIds: backendNodeIds,
 	}
@@ -1730,14 +1710,14 @@ func PushNodesByBackendIdsToFrontend(backendNodeIds []BackendNodeID) *PushNodesB
 
 // PushNodesByBackendIdsToFrontendReturns return values.
 type PushNodesByBackendIdsToFrontendReturns struct {
-	NodeIds []NodeID `json:"nodeIds,omitempty"` // The array of ids of pushed nodes that correspond to the backend ids specified in backendNodeIds.
+	NodeIds []cdp.NodeID `json:"nodeIds,omitempty"` // The array of ids of pushed nodes that correspond to the backend ids specified in backendNodeIds.
 }
 
 // Do executes DOM.pushNodesByBackendIdsToFrontend.
 //
 // returns:
 //   nodeIds - The array of ids of pushed nodes that correspond to the backend ids specified in backendNodeIds.
-func (p *PushNodesByBackendIdsToFrontendParams) Do(ctxt context.Context, h FrameHandler) (nodeIds []NodeID, err error) {
+func (p *PushNodesByBackendIdsToFrontendParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodeIds []cdp.NodeID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1749,13 +1729,13 @@ func (p *PushNodesByBackendIdsToFrontendParams) Do(ctxt context.Context, h Frame
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMPushNodesByBackendIdsToFrontend, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMPushNodesByBackendIdsToFrontend, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1764,7 +1744,7 @@ func (p *PushNodesByBackendIdsToFrontendParams) Do(ctxt context.Context, h Frame
 			var r PushNodesByBackendIdsToFrontendReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.NodeIds, nil
@@ -1774,31 +1754,31 @@ func (p *PushNodesByBackendIdsToFrontendParams) Do(ctxt context.Context, h Frame
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // SetInspectedNodeParams enables console to refer to the node with given id
 // via $x (see Command Line API for more details $x functions).
 type SetInspectedNodeParams struct {
-	NodeID NodeID `json:"nodeId"` // DOM node id to be accessible by means of $x command line API.
+	NodeID cdp.NodeID `json:"nodeId"` // DOM node id to be accessible by means of $x command line API.
 }
 
 // SetInspectedNode enables console to refer to the node with given id via $x
 // (see Command Line API for more details $x functions).
 //
 // parameters:
-//   nodeId - DOM node id to be accessible by means of $x command line API.
-func SetInspectedNode(nodeId NodeID) *SetInspectedNodeParams {
+//   nodeID - DOM node id to be accessible by means of $x command line API.
+func SetInspectedNode(nodeID cdp.NodeID) *SetInspectedNodeParams {
 	return &SetInspectedNodeParams{
-		NodeID: nodeId,
+		NodeID: nodeID,
 	}
 }
 
 // Do executes DOM.setInspectedNode.
-func (p *SetInspectedNodeParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetInspectedNodeParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1810,13 +1790,13 @@ func (p *SetInspectedNodeParams) Do(ctxt context.Context, h FrameHandler) (err e
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMSetInspectedNode, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMSetInspectedNode, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1828,25 +1808,25 @@ func (p *SetInspectedNodeParams) Do(ctxt context.Context, h FrameHandler) (err e
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // ResolveNodeParams resolves JavaScript node object for given node id.
 type ResolveNodeParams struct {
-	NodeID      NodeID `json:"nodeId"`                // Id of the node to resolve.
-	ObjectGroup string `json:"objectGroup,omitempty"` // Symbolic group name that can be used to release multiple objects.
+	NodeID      cdp.NodeID `json:"nodeId"`                // Id of the node to resolve.
+	ObjectGroup string     `json:"objectGroup,omitempty"` // Symbolic group name that can be used to release multiple objects.
 }
 
 // ResolveNode resolves JavaScript node object for given node id.
 //
 // parameters:
-//   nodeId - Id of the node to resolve.
-func ResolveNode(nodeId NodeID) *ResolveNodeParams {
+//   nodeID - Id of the node to resolve.
+func ResolveNode(nodeID cdp.NodeID) *ResolveNodeParams {
 	return &ResolveNodeParams{
-		NodeID: nodeId,
+		NodeID: nodeID,
 	}
 }
 
@@ -1866,7 +1846,7 @@ type ResolveNodeReturns struct {
 //
 // returns:
 //   object - JavaScript object wrapper for given node.
-func (p *ResolveNodeParams) Do(ctxt context.Context, h FrameHandler) (object *runtime.RemoteObject, err error) {
+func (p *ResolveNodeParams) Do(ctxt context.Context, h cdp.FrameHandler) (object *runtime.RemoteObject, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1878,13 +1858,13 @@ func (p *ResolveNodeParams) Do(ctxt context.Context, h FrameHandler) (object *ru
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMResolveNode, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMResolveNode, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1893,7 +1873,7 @@ func (p *ResolveNodeParams) Do(ctxt context.Context, h FrameHandler) (object *ru
 			var r ResolveNodeReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.Object, nil
@@ -1903,24 +1883,24 @@ func (p *ResolveNodeParams) Do(ctxt context.Context, h FrameHandler) (object *ru
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // GetAttributesParams returns attributes for the specified node.
 type GetAttributesParams struct {
-	NodeID NodeID `json:"nodeId"` // Id of the node to retrieve attibutes for.
+	NodeID cdp.NodeID `json:"nodeId"` // Id of the node to retrieve attibutes for.
 }
 
 // GetAttributes returns attributes for the specified node.
 //
 // parameters:
-//   nodeId - Id of the node to retrieve attibutes for.
-func GetAttributes(nodeId NodeID) *GetAttributesParams {
+//   nodeID - Id of the node to retrieve attibutes for.
+func GetAttributes(nodeID cdp.NodeID) *GetAttributesParams {
 	return &GetAttributesParams{
-		NodeID: nodeId,
+		NodeID: nodeID,
 	}
 }
 
@@ -1933,7 +1913,7 @@ type GetAttributesReturns struct {
 //
 // returns:
 //   attributes - An interleaved array of node attribute names and values.
-func (p *GetAttributesParams) Do(ctxt context.Context, h FrameHandler) (attributes []string, err error) {
+func (p *GetAttributesParams) Do(ctxt context.Context, h cdp.FrameHandler) (attributes []string, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1945,13 +1925,13 @@ func (p *GetAttributesParams) Do(ctxt context.Context, h FrameHandler) (attribut
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMGetAttributes, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMGetAttributes, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1960,7 +1940,7 @@ func (p *GetAttributesParams) Do(ctxt context.Context, h FrameHandler) (attribut
 			var r GetAttributesReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.Attributes, nil
@@ -1970,50 +1950,50 @@ func (p *GetAttributesParams) Do(ctxt context.Context, h FrameHandler) (attribut
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // CopyToParams creates a deep copy of the specified node and places it into
 // the target container before the given anchor.
 type CopyToParams struct {
-	NodeID             NodeID `json:"nodeId"`                       // Id of the node to copy.
-	TargetNodeID       NodeID `json:"targetNodeId"`                 // Id of the element to drop the copy into.
-	InsertBeforeNodeID NodeID `json:"insertBeforeNodeId,omitempty"` // Drop the copy before this node (if absent, the copy becomes the last child of targetNodeId).
+	NodeID             cdp.NodeID `json:"nodeId"`                       // Id of the node to copy.
+	TargetNodeID       cdp.NodeID `json:"targetNodeId"`                 // Id of the element to drop the copy into.
+	InsertBeforeNodeID cdp.NodeID `json:"insertBeforeNodeId,omitempty"` // Drop the copy before this node (if absent, the copy becomes the last child of targetNodeId).
 }
 
 // CopyTo creates a deep copy of the specified node and places it into the
 // target container before the given anchor.
 //
 // parameters:
-//   nodeId - Id of the node to copy.
-//   targetNodeId - Id of the element to drop the copy into.
-func CopyTo(nodeId NodeID, targetNodeId NodeID) *CopyToParams {
+//   nodeID - Id of the node to copy.
+//   targetNodeID - Id of the element to drop the copy into.
+func CopyTo(nodeID cdp.NodeID, targetNodeID cdp.NodeID) *CopyToParams {
 	return &CopyToParams{
-		NodeID:       nodeId,
-		TargetNodeID: targetNodeId,
+		NodeID:       nodeID,
+		TargetNodeID: targetNodeID,
 	}
 }
 
 // WithInsertBeforeNodeID drop the copy before this node (if absent, the copy
 // becomes the last child of targetNodeId).
-func (p CopyToParams) WithInsertBeforeNodeID(insertBeforeNodeId NodeID) *CopyToParams {
-	p.InsertBeforeNodeID = insertBeforeNodeId
+func (p CopyToParams) WithInsertBeforeNodeID(insertBeforeNodeID cdp.NodeID) *CopyToParams {
+	p.InsertBeforeNodeID = insertBeforeNodeID
 	return &p
 }
 
 // CopyToReturns return values.
 type CopyToReturns struct {
-	NodeID NodeID `json:"nodeId,omitempty"` // Id of the node clone.
+	NodeID cdp.NodeID `json:"nodeId,omitempty"` // Id of the node clone.
 }
 
 // Do executes DOM.copyTo.
 //
 // returns:
-//   nodeId - Id of the node clone.
-func (p *CopyToParams) Do(ctxt context.Context, h FrameHandler) (nodeId NodeID, err error) {
+//   nodeID - Id of the node clone.
+func (p *CopyToParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodeID cdp.NodeID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -2025,13 +2005,13 @@ func (p *CopyToParams) Do(ctxt context.Context, h FrameHandler) (nodeId NodeID, 
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMCopyTo, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMCopyTo, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return 0, ErrChannelClosed
+			return 0, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -2040,7 +2020,7 @@ func (p *CopyToParams) Do(ctxt context.Context, h FrameHandler) (nodeId NodeID, 
 			var r CopyToReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return 0, ErrInvalidResult
+				return 0, cdp.ErrInvalidResult
 			}
 
 			return r.NodeID, nil
@@ -2050,50 +2030,50 @@ func (p *CopyToParams) Do(ctxt context.Context, h FrameHandler) (nodeId NodeID, 
 		}
 
 	case <-ctxt.Done():
-		return 0, ErrContextDone
+		return 0, cdp.ErrContextDone
 	}
 
-	return 0, ErrUnknownResult
+	return 0, cdp.ErrUnknownResult
 }
 
 // MoveToParams moves node into the new container, places it before the given
 // anchor.
 type MoveToParams struct {
-	NodeID             NodeID `json:"nodeId"`                       // Id of the node to move.
-	TargetNodeID       NodeID `json:"targetNodeId"`                 // Id of the element to drop the moved node into.
-	InsertBeforeNodeID NodeID `json:"insertBeforeNodeId,omitempty"` // Drop node before this one (if absent, the moved node becomes the last child of targetNodeId).
+	NodeID             cdp.NodeID `json:"nodeId"`                       // Id of the node to move.
+	TargetNodeID       cdp.NodeID `json:"targetNodeId"`                 // Id of the element to drop the moved node into.
+	InsertBeforeNodeID cdp.NodeID `json:"insertBeforeNodeId,omitempty"` // Drop node before this one (if absent, the moved node becomes the last child of targetNodeId).
 }
 
 // MoveTo moves node into the new container, places it before the given
 // anchor.
 //
 // parameters:
-//   nodeId - Id of the node to move.
-//   targetNodeId - Id of the element to drop the moved node into.
-func MoveTo(nodeId NodeID, targetNodeId NodeID) *MoveToParams {
+//   nodeID - Id of the node to move.
+//   targetNodeID - Id of the element to drop the moved node into.
+func MoveTo(nodeID cdp.NodeID, targetNodeID cdp.NodeID) *MoveToParams {
 	return &MoveToParams{
-		NodeID:       nodeId,
-		TargetNodeID: targetNodeId,
+		NodeID:       nodeID,
+		TargetNodeID: targetNodeID,
 	}
 }
 
 // WithInsertBeforeNodeID drop node before this one (if absent, the moved
 // node becomes the last child of targetNodeId).
-func (p MoveToParams) WithInsertBeforeNodeID(insertBeforeNodeId NodeID) *MoveToParams {
-	p.InsertBeforeNodeID = insertBeforeNodeId
+func (p MoveToParams) WithInsertBeforeNodeID(insertBeforeNodeID cdp.NodeID) *MoveToParams {
+	p.InsertBeforeNodeID = insertBeforeNodeID
 	return &p
 }
 
 // MoveToReturns return values.
 type MoveToReturns struct {
-	NodeID NodeID `json:"nodeId,omitempty"` // New id of the moved node.
+	NodeID cdp.NodeID `json:"nodeId,omitempty"` // New id of the moved node.
 }
 
 // Do executes DOM.moveTo.
 //
 // returns:
-//   nodeId - New id of the moved node.
-func (p *MoveToParams) Do(ctxt context.Context, h FrameHandler) (nodeId NodeID, err error) {
+//   nodeID - New id of the moved node.
+func (p *MoveToParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodeID cdp.NodeID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -2105,13 +2085,13 @@ func (p *MoveToParams) Do(ctxt context.Context, h FrameHandler) (nodeId NodeID, 
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMMoveTo, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMMoveTo, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return 0, ErrChannelClosed
+			return 0, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -2120,7 +2100,7 @@ func (p *MoveToParams) Do(ctxt context.Context, h FrameHandler) (nodeId NodeID, 
 			var r MoveToReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return 0, ErrInvalidResult
+				return 0, cdp.ErrInvalidResult
 			}
 
 			return r.NodeID, nil
@@ -2130,10 +2110,10 @@ func (p *MoveToParams) Do(ctxt context.Context, h FrameHandler) (nodeId NodeID, 
 		}
 
 	case <-ctxt.Done():
-		return 0, ErrContextDone
+		return 0, cdp.ErrContextDone
 	}
 
-	return 0, ErrUnknownResult
+	return 0, cdp.ErrUnknownResult
 }
 
 // UndoParams undoes the last performed action.
@@ -2145,19 +2125,19 @@ func Undo() *UndoParams {
 }
 
 // Do executes DOM.undo.
-func (p *UndoParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *UndoParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMUndo, Empty)
+	ch := h.Execute(ctxt, cdp.CommandDOMUndo, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -2169,10 +2149,10 @@ func (p *UndoParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // RedoParams re-does the last undone action.
@@ -2184,19 +2164,19 @@ func Redo() *RedoParams {
 }
 
 // Do executes DOM.redo.
-func (p *RedoParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *RedoParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMRedo, Empty)
+	ch := h.Execute(ctxt, cdp.CommandDOMRedo, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -2208,10 +2188,10 @@ func (p *RedoParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // MarkUndoableStateParams marks last undoable state.
@@ -2223,19 +2203,19 @@ func MarkUndoableState() *MarkUndoableStateParams {
 }
 
 // Do executes DOM.markUndoableState.
-func (p *MarkUndoableStateParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *MarkUndoableStateParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMMarkUndoableState, Empty)
+	ch := h.Execute(ctxt, cdp.CommandDOMMarkUndoableState, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -2247,29 +2227,29 @@ func (p *MarkUndoableStateParams) Do(ctxt context.Context, h FrameHandler) (err 
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // FocusParams focuses the given element.
 type FocusParams struct {
-	NodeID NodeID `json:"nodeId"` // Id of the node to focus.
+	NodeID cdp.NodeID `json:"nodeId"` // Id of the node to focus.
 }
 
 // Focus focuses the given element.
 //
 // parameters:
-//   nodeId - Id of the node to focus.
-func Focus(nodeId NodeID) *FocusParams {
+//   nodeID - Id of the node to focus.
+func Focus(nodeID cdp.NodeID) *FocusParams {
 	return &FocusParams{
-		NodeID: nodeId,
+		NodeID: nodeID,
 	}
 }
 
 // Do executes DOM.focus.
-func (p *FocusParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *FocusParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -2281,13 +2261,13 @@ func (p *FocusParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMFocus, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMFocus, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -2299,32 +2279,32 @@ func (p *FocusParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetFileInputFilesParams sets files for the given file input element.
 type SetFileInputFilesParams struct {
-	NodeID NodeID   `json:"nodeId"` // Id of the file input node to set files for.
-	Files  []string `json:"files"`  // Array of file paths to set.
+	NodeID cdp.NodeID `json:"nodeId"` // Id of the file input node to set files for.
+	Files  []string   `json:"files"`  // Array of file paths to set.
 }
 
 // SetFileInputFiles sets files for the given file input element.
 //
 // parameters:
-//   nodeId - Id of the file input node to set files for.
+//   nodeID - Id of the file input node to set files for.
 //   files - Array of file paths to set.
-func SetFileInputFiles(nodeId NodeID, files []string) *SetFileInputFilesParams {
+func SetFileInputFiles(nodeID cdp.NodeID, files []string) *SetFileInputFilesParams {
 	return &SetFileInputFilesParams{
-		NodeID: nodeId,
+		NodeID: nodeID,
 		Files:  files,
 	}
 }
 
 // Do executes DOM.setFileInputFiles.
-func (p *SetFileInputFilesParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetFileInputFilesParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -2336,13 +2316,13 @@ func (p *SetFileInputFilesParams) Do(ctxt context.Context, h FrameHandler) (err 
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMSetFileInputFiles, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMSetFileInputFiles, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -2354,24 +2334,24 @@ func (p *SetFileInputFilesParams) Do(ctxt context.Context, h FrameHandler) (err 
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // GetBoxModelParams returns boxes for the currently selected nodes.
 type GetBoxModelParams struct {
-	NodeID NodeID `json:"nodeId"` // Id of the node to get box model for.
+	NodeID cdp.NodeID `json:"nodeId"` // Id of the node to get box model for.
 }
 
 // GetBoxModel returns boxes for the currently selected nodes.
 //
 // parameters:
-//   nodeId - Id of the node to get box model for.
-func GetBoxModel(nodeId NodeID) *GetBoxModelParams {
+//   nodeID - Id of the node to get box model for.
+func GetBoxModel(nodeID cdp.NodeID) *GetBoxModelParams {
 	return &GetBoxModelParams{
-		NodeID: nodeId,
+		NodeID: nodeID,
 	}
 }
 
@@ -2384,7 +2364,7 @@ type GetBoxModelReturns struct {
 //
 // returns:
 //   model - Box model for the node.
-func (p *GetBoxModelParams) Do(ctxt context.Context, h FrameHandler) (model *BoxModel, err error) {
+func (p *GetBoxModelParams) Do(ctxt context.Context, h cdp.FrameHandler) (model *BoxModel, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -2396,13 +2376,13 @@ func (p *GetBoxModelParams) Do(ctxt context.Context, h FrameHandler) (model *Box
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMGetBoxModel, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMGetBoxModel, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -2411,7 +2391,7 @@ func (p *GetBoxModelParams) Do(ctxt context.Context, h FrameHandler) (model *Box
 			var r GetBoxModelReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.Model, nil
@@ -2421,10 +2401,10 @@ func (p *GetBoxModelParams) Do(ctxt context.Context, h FrameHandler) (model *Box
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // GetNodeForLocationParams returns node id at given location.
@@ -2447,14 +2427,14 @@ func GetNodeForLocation(x int64, y int64) *GetNodeForLocationParams {
 
 // GetNodeForLocationReturns return values.
 type GetNodeForLocationReturns struct {
-	NodeID NodeID `json:"nodeId,omitempty"` // Id of the node at given coordinates.
+	NodeID cdp.NodeID `json:"nodeId,omitempty"` // Id of the node at given coordinates.
 }
 
 // Do executes DOM.getNodeForLocation.
 //
 // returns:
-//   nodeId - Id of the node at given coordinates.
-func (p *GetNodeForLocationParams) Do(ctxt context.Context, h FrameHandler) (nodeId NodeID, err error) {
+//   nodeID - Id of the node at given coordinates.
+func (p *GetNodeForLocationParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodeID cdp.NodeID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -2466,13 +2446,13 @@ func (p *GetNodeForLocationParams) Do(ctxt context.Context, h FrameHandler) (nod
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMGetNodeForLocation, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMGetNodeForLocation, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return 0, ErrChannelClosed
+			return 0, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -2481,7 +2461,7 @@ func (p *GetNodeForLocationParams) Do(ctxt context.Context, h FrameHandler) (nod
 			var r GetNodeForLocationReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return 0, ErrInvalidResult
+				return 0, cdp.ErrInvalidResult
 			}
 
 			return r.NodeID, nil
@@ -2491,39 +2471,39 @@ func (p *GetNodeForLocationParams) Do(ctxt context.Context, h FrameHandler) (nod
 		}
 
 	case <-ctxt.Done():
-		return 0, ErrContextDone
+		return 0, cdp.ErrContextDone
 	}
 
-	return 0, ErrUnknownResult
+	return 0, cdp.ErrUnknownResult
 }
 
 // GetRelayoutBoundaryParams returns the id of the nearest ancestor that is a
 // relayout boundary.
 type GetRelayoutBoundaryParams struct {
-	NodeID NodeID `json:"nodeId"` // Id of the node.
+	NodeID cdp.NodeID `json:"nodeId"` // Id of the node.
 }
 
 // GetRelayoutBoundary returns the id of the nearest ancestor that is a
 // relayout boundary.
 //
 // parameters:
-//   nodeId - Id of the node.
-func GetRelayoutBoundary(nodeId NodeID) *GetRelayoutBoundaryParams {
+//   nodeID - Id of the node.
+func GetRelayoutBoundary(nodeID cdp.NodeID) *GetRelayoutBoundaryParams {
 	return &GetRelayoutBoundaryParams{
-		NodeID: nodeId,
+		NodeID: nodeID,
 	}
 }
 
 // GetRelayoutBoundaryReturns return values.
 type GetRelayoutBoundaryReturns struct {
-	NodeID NodeID `json:"nodeId,omitempty"` // Relayout boundary node id for the given node.
+	NodeID cdp.NodeID `json:"nodeId,omitempty"` // Relayout boundary node id for the given node.
 }
 
 // Do executes DOM.getRelayoutBoundary.
 //
 // returns:
-//   nodeId - Relayout boundary node id for the given node.
-func (p *GetRelayoutBoundaryParams) Do(ctxt context.Context, h FrameHandler) (nodeId NodeID, err error) {
+//   nodeID - Relayout boundary node id for the given node.
+func (p *GetRelayoutBoundaryParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodeID cdp.NodeID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -2535,13 +2515,13 @@ func (p *GetRelayoutBoundaryParams) Do(ctxt context.Context, h FrameHandler) (no
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMGetRelayoutBoundary, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMGetRelayoutBoundary, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return 0, ErrChannelClosed
+			return 0, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -2550,7 +2530,7 @@ func (p *GetRelayoutBoundaryParams) Do(ctxt context.Context, h FrameHandler) (no
 			var r GetRelayoutBoundaryReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return 0, ErrInvalidResult
+				return 0, cdp.ErrInvalidResult
 			}
 
 			return r.NodeID, nil
@@ -2560,24 +2540,24 @@ func (p *GetRelayoutBoundaryParams) Do(ctxt context.Context, h FrameHandler) (no
 		}
 
 	case <-ctxt.Done():
-		return 0, ErrContextDone
+		return 0, cdp.ErrContextDone
 	}
 
-	return 0, ErrUnknownResult
+	return 0, cdp.ErrUnknownResult
 }
 
 // GetHighlightObjectForTestParams for testing.
 type GetHighlightObjectForTestParams struct {
-	NodeID NodeID `json:"nodeId"` // Id of the node to get highlight object for.
+	NodeID cdp.NodeID `json:"nodeId"` // Id of the node to get highlight object for.
 }
 
 // GetHighlightObjectForTest for testing.
 //
 // parameters:
-//   nodeId - Id of the node to get highlight object for.
-func GetHighlightObjectForTest(nodeId NodeID) *GetHighlightObjectForTestParams {
+//   nodeID - Id of the node to get highlight object for.
+func GetHighlightObjectForTest(nodeID cdp.NodeID) *GetHighlightObjectForTestParams {
 	return &GetHighlightObjectForTestParams{
-		NodeID: nodeId,
+		NodeID: nodeID,
 	}
 }
 
@@ -2590,7 +2570,7 @@ type GetHighlightObjectForTestReturns struct {
 //
 // returns:
 //   highlight - Highlight data for the node.
-func (p *GetHighlightObjectForTestParams) Do(ctxt context.Context, h FrameHandler) (highlight easyjson.RawMessage, err error) {
+func (p *GetHighlightObjectForTestParams) Do(ctxt context.Context, h cdp.FrameHandler) (highlight easyjson.RawMessage, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -2602,13 +2582,13 @@ func (p *GetHighlightObjectForTestParams) Do(ctxt context.Context, h FrameHandle
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMGetHighlightObjectForTest, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMGetHighlightObjectForTest, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -2617,7 +2597,7 @@ func (p *GetHighlightObjectForTestParams) Do(ctxt context.Context, h FrameHandle
 			var r GetHighlightObjectForTestReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.Highlight, nil
@@ -2627,8 +2607,8 @@ func (p *GetHighlightObjectForTestParams) Do(ctxt context.Context, h FrameHandle
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }

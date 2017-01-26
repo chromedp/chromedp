@@ -12,7 +12,7 @@ import (
 	"sync"
 
 	"github.com/disintegration/imaging"
-	. "github.com/knq/chromedp/cdp"
+	"github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/dom"
 	"github.com/knq/chromedp/cdp/input"
 	"github.com/knq/chromedp/cdp/page"
@@ -27,7 +27,7 @@ var (
 
 // Focus focuses the first element returned by the selector.
 func Focus(sel interface{}, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h FrameHandler, nodes ...*Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -38,13 +38,13 @@ func Focus(sel interface{}, opts ...QueryOption) Action {
 
 // Clear clears input and textarea fields of their values.
 func Clear(sel interface{}, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h FrameHandler, nodes ...*Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
 		for _, n := range nodes {
-			if n.NodeType != NodeTypeElement || (n.NodeName != "INPUT" && n.NodeName != "TEXTAREA") {
+			if n.NodeType != cdp.NodeTypeElement || (n.NodeName != "INPUT" && n.NodeName != "TEXTAREA") {
 				return fmt.Errorf("selector `%s` matched node %d with name %s", sel, n.NodeID, strings.ToLower(n.NodeName))
 			}
 		}
@@ -53,7 +53,7 @@ func Clear(sel interface{}, opts ...QueryOption) Action {
 		wg := new(sync.WaitGroup)
 		for i, n := range nodes {
 			wg.Add(1)
-			go func(i int, n *Node) {
+			go func(i int, n *cdp.Node) {
 				defer wg.Done()
 
 				var a Action
@@ -78,25 +78,25 @@ func Clear(sel interface{}, opts ...QueryOption) Action {
 }
 
 // Nodes retrieves the DOM nodes matching the selector.
-func Nodes(sel interface{}, nodes *[]*Node, opts ...QueryOption) Action {
+func Nodes(sel interface{}, nodes *[]*cdp.Node, opts ...QueryOption) Action {
 	if nodes == nil {
 		panic("nodes cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctxt context.Context, h FrameHandler, n ...*Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, n ...*cdp.Node) error {
 		*nodes = n
 		return nil
 	}, opts...)
 }
 
 // NodeIDs returns the node IDs of the matching selector.
-func NodeIDs(sel interface{}, ids *[]NodeID, opts ...QueryOption) Action {
+func NodeIDs(sel interface{}, ids *[]cdp.NodeID, opts ...QueryOption) Action {
 	if ids == nil {
 		panic("nodes cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctxt context.Context, h FrameHandler, nodes ...*Node) error {
-		nodeIDs := make([]NodeID, len(nodes))
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
+		nodeIDs := make([]cdp.NodeID, len(nodes))
 		for i, n := range nodes {
 			nodeIDs[i] = n.NodeID
 		}
@@ -113,7 +113,7 @@ func Dimensions(sel interface{}, model **dom.BoxModel, opts ...QueryOption) Acti
 	if model == nil {
 		panic("model cannot be nil")
 	}
-	return QueryAfter(sel, func(ctxt context.Context, h FrameHandler, nodes ...*Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -128,7 +128,7 @@ func Value(sel interface{}, value *string, opts ...QueryOption) Action {
 	if value == nil {
 		panic("value cannot be nil")
 	}
-	return QueryAfter(sel, func(ctxt context.Context, h FrameHandler, nodes ...*Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -156,7 +156,7 @@ func Value(sel interface{}, value *string, opts ...QueryOption) Action {
 
 // SetValue sets the value of an element.
 func SetValue(sel interface{}, value string, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h FrameHandler, nodes ...*Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -185,7 +185,7 @@ func Text(sel interface{}, text *string, opts ...QueryOption) Action {
 	if text == nil {
 		panic("text cannot be nil")
 	}
-	return QueryAfter(sel, func(ctxt context.Context, h FrameHandler, nodes ...*Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -217,7 +217,7 @@ func Attributes(sel interface{}, attributes *map[string]string, opts ...QueryOpt
 		panic("attributes cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctxt context.Context, h FrameHandler, nodes ...*Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -239,7 +239,7 @@ func Attributes(sel interface{}, attributes *map[string]string, opts ...QueryOpt
 
 // SetAttributes sets the attributes for the specified element.
 func SetAttributes(sel interface{}, attributes map[string]string, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h FrameHandler, nodes ...*Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return errors.New("expected at least one element")
 		}
@@ -255,7 +255,7 @@ func AttributeValue(sel interface{}, name string, value *string, ok *bool, opts 
 		panic("value cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctxt context.Context, h FrameHandler, nodes ...*Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return errors.New("expected at least one element")
 		}
@@ -284,7 +284,7 @@ func AttributeValue(sel interface{}, name string, value *string, ok *bool, opts 
 
 // SetAttributeValue sets an element's attribute with name to value.
 func SetAttributeValue(sel interface{}, name, value string, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h FrameHandler, nodes ...*Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -295,7 +295,7 @@ func SetAttributeValue(sel interface{}, name, value string, opts ...QueryOption)
 
 // RemoveAttribute removes an element's attribute with name.
 func RemoveAttribute(sel interface{}, name string, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h FrameHandler, nodes ...*Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -306,7 +306,7 @@ func RemoveAttribute(sel interface{}, name string, opts ...QueryOption) Action {
 
 // Click sends a click to the first element returned by the selector.
 func Click(sel interface{}, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h FrameHandler, nodes ...*Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -317,7 +317,7 @@ func Click(sel interface{}, opts ...QueryOption) Action {
 
 // DoubleClick does a double click on the first element returned by selector.
 func DoubleClick(sel interface{}, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h FrameHandler, nodes ...*Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -329,7 +329,7 @@ func DoubleClick(sel interface{}, opts ...QueryOption) Action {
 // Hover hovers (moves) the mouse over the first element returned by the
 // selector.
 func Hover(sel interface{}, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h FrameHandler, nodes ...*Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -340,7 +340,7 @@ func Hover(sel interface{}, opts ...QueryOption) Action {
 
 // SendKeys sends keys to the first element returned by selector.
 func SendKeys(sel interface{}, v string, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h FrameHandler, nodes ...*Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -354,7 +354,7 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 		panic("picbuf cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctxt context.Context, h FrameHandler, nodes ...*Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -424,7 +424,7 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 
 // Submit is an action that submits whatever form the first element belongs to.
 func Submit(sel interface{}, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h FrameHandler, nodes ...*Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}

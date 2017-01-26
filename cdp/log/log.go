@@ -11,28 +11,8 @@ package log
 import (
 	"context"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/mailru/easyjson"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // EnableParams enables log domain, sends the entries collected so far to the
@@ -46,19 +26,19 @@ func Enable() *EnableParams {
 }
 
 // Do executes Log.enable.
-func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandLogEnable, Empty)
+	ch := h.Execute(ctxt, cdp.CommandLogEnable, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -70,10 +50,10 @@ func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // DisableParams disables log domain, prevents further log entries from being
@@ -87,19 +67,19 @@ func Disable() *DisableParams {
 }
 
 // Do executes Log.disable.
-func (p *DisableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandLogDisable, Empty)
+	ch := h.Execute(ctxt, cdp.CommandLogDisable, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -111,10 +91,10 @@ func (p *DisableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // ClearParams clears the log.
@@ -126,19 +106,19 @@ func Clear() *ClearParams {
 }
 
 // Do executes Log.clear.
-func (p *ClearParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *ClearParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandLogClear, Empty)
+	ch := h.Execute(ctxt, cdp.CommandLogClear, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -150,10 +130,10 @@ func (p *ClearParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // StartViolationsReportParams start violation reporting.
@@ -172,7 +152,7 @@ func StartViolationsReport(config []*ViolationSetting) *StartViolationsReportPar
 }
 
 // Do executes Log.startViolationsReport.
-func (p *StartViolationsReportParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *StartViolationsReportParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -184,13 +164,13 @@ func (p *StartViolationsReportParams) Do(ctxt context.Context, h FrameHandler) (
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandLogStartViolationsReport, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandLogStartViolationsReport, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -202,10 +182,10 @@ func (p *StartViolationsReportParams) Do(ctxt context.Context, h FrameHandler) (
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // StopViolationsReportParams stop violation reporting.
@@ -217,19 +197,19 @@ func StopViolationsReport() *StopViolationsReportParams {
 }
 
 // Do executes Log.stopViolationsReport.
-func (p *StopViolationsReportParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *StopViolationsReportParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandLogStopViolationsReport, Empty)
+	ch := h.Execute(ctxt, cdp.CommandLogStopViolationsReport, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -241,8 +221,8 @@ func (p *StopViolationsReportParams) Do(ctxt context.Context, h FrameHandler) (e
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }

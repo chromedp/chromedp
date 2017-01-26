@@ -9,28 +9,8 @@ package storage
 import (
 	"context"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/mailru/easyjson"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // ClearDataForOriginParams clears storage for origin.
@@ -52,7 +32,7 @@ func ClearDataForOrigin(origin string, storageTypes string) *ClearDataForOriginP
 }
 
 // Do executes Storage.clearDataForOrigin.
-func (p *ClearDataForOriginParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *ClearDataForOriginParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -64,13 +44,13 @@ func (p *ClearDataForOriginParams) Do(ctxt context.Context, h FrameHandler) (err
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandStorageClearDataForOrigin, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandStorageClearDataForOrigin, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -82,8 +62,8 @@ func (p *ClearDataForOriginParams) Do(ctxt context.Context, h FrameHandler) (err
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }

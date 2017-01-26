@@ -47,7 +47,7 @@ type Client struct {
 }
 
 // New creates a new Chrome Debugging Protocol client.
-func New(opts ...ClientOption) *Client {
+func New(opts ...Option) *Client {
 	c := &Client{
 		url:     DefaultURL,
 		check:   DefaultWatchInterval,
@@ -294,25 +294,25 @@ func (c *Client) WatchPageTargets(ctxt context.Context) <-chan Target {
 	return ch
 }
 
-// ClientOption is a Chrome Debugging Protocol client option.
-type ClientOption func(*Client)
+// Option is a Chrome Debugging Protocol client option.
+type Option func(*Client)
 
 // URL is a client option to specify the remote Chrome instance to connect to.
-func URL(url string) ClientOption {
+func URL(url string) Option {
 	return func(c *Client) {
 		c.url = url
 	}
 }
 
 // WatchInterval is a client option that specifies the check interval duration.
-func WatchInterval(check time.Duration) ClientOption {
+func WatchInterval(check time.Duration) Option {
 	return func(c *Client) {
 		c.check = check
 	}
 }
 
 // WatchTimeout is a client option that specifies the watch timeout duration.
-func WatchTimeout(timeout time.Duration) ClientOption {
+func WatchTimeout(timeout time.Duration) Option {
 	return func(c *Client) {
 		c.timeout = timeout
 	}

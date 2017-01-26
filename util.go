@@ -1,82 +1,82 @@
 package chromedp
 
 import (
-	. "github.com/knq/chromedp/cdp"
+	"github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/util"
 )
 
 const (
 	// emptyFrameID is the "non-existent" (ie current) frame.
-	emptyFrameID FrameID = FrameID("")
+	emptyFrameID cdp.FrameID = cdp.FrameID("")
 
 	// emptyNodeID is the "non-existent" node id.
-	emptyNodeID NodeID = NodeID(0)
+	emptyNodeID cdp.NodeID = cdp.NodeID(0)
 )
 
 // UnmarshalMessage unmarshals the message result or params.
-func UnmarshalMessage(msg *Message) (interface{}, error) {
+func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	return util.UnmarshalMessage(msg)
 }
 
 // FrameOp is a frame manipulation operation.
-type FrameOp func(*Frame)
+type FrameOp func(*cdp.Frame)
 
-/*func domContentEventFired(f *Frame) {
+/*func domContentEventFired(f *cdp.Frame) {
 }
 
-func loadEventFired(f *Frame) {
+func loadEventFired(f *cdp.Frame) {
 }*/
 
-func frameAttached(id FrameID) FrameOp {
-	return func(f *Frame) {
+func frameAttached(id cdp.FrameID) FrameOp {
+	return func(f *cdp.Frame) {
 		f.ParentID = id
-		setFrameState(f, FrameAttached)
+		setFrameState(f, cdp.FrameAttached)
 	}
 }
 
-/*func frameNavigated(f *Frame) {
-	setFrameState(f, FrameNavigated)
+/*func frameNavigated(f *cdp.Frame) {
+	setFrameState(f, cdp.FrameNavigated)
 }*/
 
-func frameDetached(f *Frame) {
+func frameDetached(f *cdp.Frame) {
 	f.ParentID = emptyFrameID
-	clearFrameState(f, FrameAttached)
+	clearFrameState(f, cdp.FrameAttached)
 }
 
-func frameStartedLoading(f *Frame) {
-	setFrameState(f, FrameLoading)
+func frameStartedLoading(f *cdp.Frame) {
+	setFrameState(f, cdp.FrameLoading)
 }
 
-func frameStoppedLoading(f *Frame) {
-	clearFrameState(f, FrameLoading)
+func frameStoppedLoading(f *cdp.Frame) {
+	clearFrameState(f, cdp.FrameLoading)
 }
 
-func frameScheduledNavigation(f *Frame) {
-	setFrameState(f, FrameScheduledNavigation)
+func frameScheduledNavigation(f *cdp.Frame) {
+	setFrameState(f, cdp.FrameScheduledNavigation)
 }
 
-func frameClearedScheduledNavigation(f *Frame) {
-	clearFrameState(f, FrameScheduledNavigation)
+func frameClearedScheduledNavigation(f *cdp.Frame) {
+	clearFrameState(f, cdp.FrameScheduledNavigation)
 }
 
-/*func frameResized(f *Frame) {
+/*func frameResized(f *cdp.Frame) {
 	// TODO
 }*/
 
 // setFrameState sets the frame state via bitwise or (|).
-func setFrameState(f *Frame, fs FrameState) {
+func setFrameState(f *cdp.Frame, fs cdp.FrameState) {
 	f.State |= fs
 }
 
 // clearFrameState clears the frame state via bit clear (&^).
-func clearFrameState(f *Frame, fs FrameState) {
+func clearFrameState(f *cdp.Frame, fs cdp.FrameState) {
 	f.State &^= fs
 }
 
 // NodeOp is a node manipulation operation.
-type NodeOp func(*Node)
+type NodeOp func(*cdp.Node)
 
-func walk(m map[NodeID]*Node, n *Node) {
+func walk(m map[cdp.NodeID]*cdp.Node, n *cdp.Node) {
 	m[n.NodeID] = n
 
 	for _, c := range n.Children {
@@ -97,7 +97,7 @@ func walk(m map[NodeID]*Node, n *Node) {
 		walk(m, c)
 	}
 
-	for _, c := range []*Node{n.ContentDocument, n.TemplateContent, n.ImportedDocument} {
+	for _, c := range []*cdp.Node{n.ContentDocument, n.TemplateContent, n.ImportedDocument} {
 		if c == nil {
 			continue
 		}
@@ -108,15 +108,15 @@ func walk(m map[NodeID]*Node, n *Node) {
 	}
 }
 
-func setChildNodes(m map[NodeID]*Node, nodes []*Node) NodeOp {
-	return func(n *Node) {
+func setChildNodes(m map[cdp.NodeID]*cdp.Node, nodes []*cdp.Node) NodeOp {
+	return func(n *cdp.Node) {
 		n.Children = nodes
 		walk(m, n)
 	}
 }
 
 func attributeModified(name, value string) NodeOp {
-	return func(n *Node) {
+	return func(n *cdp.Node) {
 		var found bool
 
 		i := 0
@@ -137,7 +137,7 @@ func attributeModified(name, value string) NodeOp {
 }
 
 func attributeRemoved(name string) NodeOp {
-	return func(n *Node) {
+	return func(n *cdp.Node) {
 		var a []string
 		for i := 0; i < len(n.Attributes); i += 2 {
 			if n.Attributes[i] == name {
@@ -149,76 +149,76 @@ func attributeRemoved(name string) NodeOp {
 	}
 }
 
-func inlineStyleInvalidated(ids []NodeID) NodeOp {
-	return func(n *Node) {
+func inlineStyleInvalidated(ids []cdp.NodeID) NodeOp {
+	return func(n *cdp.Node) {
 	}
 }
 
 func characterDataModified(characterData string) NodeOp {
-	return func(n *Node) {
+	return func(n *cdp.Node) {
 		n.Value = characterData
 	}
 }
 
 func childNodeCountUpdated(count int64) NodeOp {
-	return func(n *Node) {
+	return func(n *cdp.Node) {
 		n.ChildNodeCount = count
 	}
 }
 
-func childNodeInserted(m map[NodeID]*Node, prevID NodeID, c *Node) NodeOp {
-	return func(n *Node) {
+func childNodeInserted(m map[cdp.NodeID]*cdp.Node, prevID cdp.NodeID, c *cdp.Node) NodeOp {
+	return func(n *cdp.Node) {
 		n.Children = insertNode(n.Children, prevID, c)
 		walk(m, n)
 	}
 }
 
-func childNodeRemoved(m map[NodeID]*Node, id NodeID) NodeOp {
-	return func(n *Node) {
+func childNodeRemoved(m map[cdp.NodeID]*cdp.Node, id cdp.NodeID) NodeOp {
+	return func(n *cdp.Node) {
 		n.Children = removeNode(n.Children, id)
 		//delete(m, id)
 	}
 }
 
-func shadowRootPushed(m map[NodeID]*Node, c *Node) NodeOp {
-	return func(n *Node) {
+func shadowRootPushed(m map[cdp.NodeID]*cdp.Node, c *cdp.Node) NodeOp {
+	return func(n *cdp.Node) {
 		n.ShadowRoots = append(n.ShadowRoots, c)
 		walk(m, n)
 	}
 }
 
-func shadowRootPopped(m map[NodeID]*Node, id NodeID) NodeOp {
-	return func(n *Node) {
+func shadowRootPopped(m map[cdp.NodeID]*cdp.Node, id cdp.NodeID) NodeOp {
+	return func(n *cdp.Node) {
 		n.ShadowRoots = removeNode(n.ShadowRoots, id)
 		//delete(m, id)
 	}
 }
 
-func pseudoElementAdded(m map[NodeID]*Node, c *Node) NodeOp {
-	return func(n *Node) {
+func pseudoElementAdded(m map[cdp.NodeID]*cdp.Node, c *cdp.Node) NodeOp {
+	return func(n *cdp.Node) {
 		n.PseudoElements = append(n.PseudoElements, c)
 		walk(m, n)
 	}
 }
 
-func pseudoElementRemoved(m map[NodeID]*Node, id NodeID) NodeOp {
-	return func(n *Node) {
+func pseudoElementRemoved(m map[cdp.NodeID]*cdp.Node, id cdp.NodeID) NodeOp {
+	return func(n *cdp.Node) {
 		n.PseudoElements = removeNode(n.PseudoElements, id)
 		//delete(m, id)
 	}
 }
 
-func distributedNodesUpdated(nodes []*BackendNode) NodeOp {
-	return func(n *Node) {
+func distributedNodesUpdated(nodes []*cdp.BackendNode) NodeOp {
+	return func(n *cdp.Node) {
 		n.DistributedNodes = nodes
 	}
 }
 
-func nodeHighlightRequested(n *Node) {
+func nodeHighlightRequested(n *cdp.Node) {
 	// TODO
 }
 
-func insertNode(n []*Node, prevID NodeID, c *Node) []*Node {
+func insertNode(n []*cdp.Node, prevID cdp.NodeID, c *cdp.Node) []*cdp.Node {
 	i := 0
 	found := false
 	for ; i < len(n); i++ {
@@ -240,7 +240,7 @@ func insertNode(n []*Node, prevID NodeID, c *Node) []*Node {
 	return n
 }
 
-func removeNode(n []*Node, id NodeID) []*Node {
+func removeNode(n []*cdp.Node, id cdp.NodeID) []*cdp.Node {
 	if len(n) == 0 {
 		return n
 	}

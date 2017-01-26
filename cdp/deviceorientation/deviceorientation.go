@@ -9,28 +9,8 @@ package deviceorientation
 import (
 	"context"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/mailru/easyjson"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // SetDeviceOrientationOverrideParams overrides the Device Orientation.
@@ -55,7 +35,7 @@ func SetDeviceOrientationOverride(alpha float64, beta float64, gamma float64) *S
 }
 
 // Do executes DeviceOrientation.setDeviceOrientationOverride.
-func (p *SetDeviceOrientationOverrideParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetDeviceOrientationOverrideParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -67,13 +47,13 @@ func (p *SetDeviceOrientationOverrideParams) Do(ctxt context.Context, h FrameHan
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDeviceOrientationSetDeviceOrientationOverride, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDeviceOrientationSetDeviceOrientationOverride, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -85,10 +65,10 @@ func (p *SetDeviceOrientationOverrideParams) Do(ctxt context.Context, h FrameHan
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // ClearDeviceOrientationOverrideParams clears the overridden Device
@@ -101,19 +81,19 @@ func ClearDeviceOrientationOverride() *ClearDeviceOrientationOverrideParams {
 }
 
 // Do executes DeviceOrientation.clearDeviceOrientationOverride.
-func (p *ClearDeviceOrientationOverrideParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *ClearDeviceOrientationOverrideParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDeviceOrientationClearDeviceOrientationOverride, Empty)
+	ch := h.Execute(ctxt, cdp.CommandDeviceOrientationClearDeviceOrientationOverride, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -125,8 +105,8 @@ func (p *ClearDeviceOrientationOverrideParams) Do(ctxt context.Context, h FrameH
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }

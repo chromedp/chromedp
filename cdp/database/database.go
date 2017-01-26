@@ -9,28 +9,8 @@ package database
 import (
 	"context"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/mailru/easyjson"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // EnableParams enables database tracking, database events will now be
@@ -44,19 +24,19 @@ func Enable() *EnableParams {
 }
 
 // Do executes Database.enable.
-func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDatabaseEnable, Empty)
+	ch := h.Execute(ctxt, cdp.CommandDatabaseEnable, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -68,10 +48,10 @@ func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // DisableParams disables database tracking, prevents database events from
@@ -85,19 +65,19 @@ func Disable() *DisableParams {
 }
 
 // Do executes Database.disable.
-func (p *DisableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDatabaseDisable, Empty)
+	ch := h.Execute(ctxt, cdp.CommandDatabaseDisable, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -109,21 +89,24 @@ func (p *DisableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
+// GetDatabaseTableNamesParams [no description].
 type GetDatabaseTableNamesParams struct {
-	DatabaseID DatabaseID `json:"databaseId"`
+	DatabaseID ID `json:"databaseId"`
 }
 
+// GetDatabaseTableNames [no description].
+//
 // parameters:
-//   databaseId
-func GetDatabaseTableNames(databaseId DatabaseID) *GetDatabaseTableNamesParams {
+//   databaseID
+func GetDatabaseTableNames(databaseID ID) *GetDatabaseTableNamesParams {
 	return &GetDatabaseTableNamesParams{
-		DatabaseID: databaseId,
+		DatabaseID: databaseID,
 	}
 }
 
@@ -136,7 +119,7 @@ type GetDatabaseTableNamesReturns struct {
 //
 // returns:
 //   tableNames
-func (p *GetDatabaseTableNamesParams) Do(ctxt context.Context, h FrameHandler) (tableNames []string, err error) {
+func (p *GetDatabaseTableNamesParams) Do(ctxt context.Context, h cdp.FrameHandler) (tableNames []string, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -148,13 +131,13 @@ func (p *GetDatabaseTableNamesParams) Do(ctxt context.Context, h FrameHandler) (
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDatabaseGetDatabaseTableNames, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDatabaseGetDatabaseTableNames, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -163,7 +146,7 @@ func (p *GetDatabaseTableNamesParams) Do(ctxt context.Context, h FrameHandler) (
 			var r GetDatabaseTableNamesReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.TableNames, nil
@@ -173,23 +156,26 @@ func (p *GetDatabaseTableNamesParams) Do(ctxt context.Context, h FrameHandler) (
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
+// ExecuteSQLParams [no description].
 type ExecuteSQLParams struct {
-	DatabaseID DatabaseID `json:"databaseId"`
-	Query      string     `json:"query"`
+	DatabaseID ID     `json:"databaseId"`
+	Query      string `json:"query"`
 }
 
+// ExecuteSQL [no description].
+//
 // parameters:
-//   databaseId
+//   databaseID
 //   query
-func ExecuteSQL(databaseId DatabaseID, query string) *ExecuteSQLParams {
+func ExecuteSQL(databaseID ID, query string) *ExecuteSQLParams {
 	return &ExecuteSQLParams{
-		DatabaseID: databaseId,
+		DatabaseID: databaseID,
 		Query:      query,
 	}
 }
@@ -207,7 +193,7 @@ type ExecuteSQLReturns struct {
 //   columnNames
 //   values
 //   sqlError
-func (p *ExecuteSQLParams) Do(ctxt context.Context, h FrameHandler) (columnNames []string, values []easyjson.RawMessage, sqlError *Error, err error) {
+func (p *ExecuteSQLParams) Do(ctxt context.Context, h cdp.FrameHandler) (columnNames []string, values []easyjson.RawMessage, sqlError *Error, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -219,13 +205,13 @@ func (p *ExecuteSQLParams) Do(ctxt context.Context, h FrameHandler) (columnNames
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDatabaseExecuteSQL, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDatabaseExecuteSQL, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, nil, nil, ErrChannelClosed
+			return nil, nil, nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -234,7 +220,7 @@ func (p *ExecuteSQLParams) Do(ctxt context.Context, h FrameHandler) (columnNames
 			var r ExecuteSQLReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, nil, nil, ErrInvalidResult
+				return nil, nil, nil, cdp.ErrInvalidResult
 			}
 
 			return r.ColumnNames, r.Values, r.SQLError, nil
@@ -244,8 +230,8 @@ func (p *ExecuteSQLParams) Do(ctxt context.Context, h FrameHandler) (columnNames
 		}
 
 	case <-ctxt.Done():
-		return nil, nil, nil, ErrContextDone
+		return nil, nil, nil, cdp.ErrContextDone
 	}
 
-	return nil, nil, nil, ErrUnknownResult
+	return nil, nil, nil, cdp.ErrUnknownResult
 }

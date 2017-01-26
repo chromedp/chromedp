@@ -134,7 +134,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpDatabase1(in *jlexer.Lexer, ou
 		}
 		switch key {
 		case "databaseId":
-			out.DatabaseID = DatabaseID(in.String())
+			out.DatabaseID = ID(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -358,7 +358,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpDatabase3(in *jlexer.Lexer, ou
 		}
 		switch key {
 		case "databaseId":
-			out.DatabaseID = DatabaseID(in.String())
+			out.DatabaseID = ID(in.String())
 		case "query":
 			out.Query = string(in.String())
 		default:
@@ -711,7 +711,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpDatabase8(in *jlexer.Lexer, ou
 		}
 		switch key {
 		case "id":
-			out.ID = DatabaseID(in.String())
+			out.ID = ID(in.String())
 		case "domain":
 			out.Domain = string(in.String())
 		case "name":

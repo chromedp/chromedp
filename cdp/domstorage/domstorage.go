@@ -11,28 +11,8 @@ package domstorage
 import (
 	"context"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/mailru/easyjson"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // EnableParams enables storage tracking, storage events will now be
@@ -46,19 +26,19 @@ func Enable() *EnableParams {
 }
 
 // Do executes DOMStorage.enable.
-func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMStorageEnable, Empty)
+	ch := h.Execute(ctxt, cdp.CommandDOMStorageEnable, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -70,10 +50,10 @@ func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // DisableParams disables storage tracking, prevents storage events from
@@ -87,19 +67,19 @@ func Disable() *DisableParams {
 }
 
 // Do executes DOMStorage.disable.
-func (p *DisableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMStorageDisable, Empty)
+	ch := h.Execute(ctxt, cdp.CommandDOMStorageDisable, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -111,26 +91,29 @@ func (p *DisableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
+// ClearParams [no description].
 type ClearParams struct {
 	StorageID *StorageID `json:"storageId"`
 }
 
+// Clear [no description].
+//
 // parameters:
-//   storageId
-func Clear(storageId *StorageID) *ClearParams {
+//   storageID
+func Clear(storageID *StorageID) *ClearParams {
 	return &ClearParams{
-		StorageID: storageId,
+		StorageID: storageID,
 	}
 }
 
 // Do executes DOMStorage.clear.
-func (p *ClearParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *ClearParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -142,13 +125,13 @@ func (p *ClearParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMStorageClear, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMStorageClear, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -160,21 +143,24 @@ func (p *ClearParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
+// GetDOMStorageItemsParams [no description].
 type GetDOMStorageItemsParams struct {
 	StorageID *StorageID `json:"storageId"`
 }
 
+// GetDOMStorageItems [no description].
+//
 // parameters:
-//   storageId
-func GetDOMStorageItems(storageId *StorageID) *GetDOMStorageItemsParams {
+//   storageID
+func GetDOMStorageItems(storageID *StorageID) *GetDOMStorageItemsParams {
 	return &GetDOMStorageItemsParams{
-		StorageID: storageId,
+		StorageID: storageID,
 	}
 }
 
@@ -187,7 +173,7 @@ type GetDOMStorageItemsReturns struct {
 //
 // returns:
 //   entries
-func (p *GetDOMStorageItemsParams) Do(ctxt context.Context, h FrameHandler) (entries []Item, err error) {
+func (p *GetDOMStorageItemsParams) Do(ctxt context.Context, h cdp.FrameHandler) (entries []Item, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -199,13 +185,13 @@ func (p *GetDOMStorageItemsParams) Do(ctxt context.Context, h FrameHandler) (ent
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMStorageGetDOMStorageItems, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMStorageGetDOMStorageItems, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -214,7 +200,7 @@ func (p *GetDOMStorageItemsParams) Do(ctxt context.Context, h FrameHandler) (ent
 			var r GetDOMStorageItemsReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.Entries, nil
@@ -224,32 +210,35 @@ func (p *GetDOMStorageItemsParams) Do(ctxt context.Context, h FrameHandler) (ent
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
+// SetDOMStorageItemParams [no description].
 type SetDOMStorageItemParams struct {
 	StorageID *StorageID `json:"storageId"`
 	Key       string     `json:"key"`
 	Value     string     `json:"value"`
 }
 
+// SetDOMStorageItem [no description].
+//
 // parameters:
-//   storageId
+//   storageID
 //   key
 //   value
-func SetDOMStorageItem(storageId *StorageID, key string, value string) *SetDOMStorageItemParams {
+func SetDOMStorageItem(storageID *StorageID, key string, value string) *SetDOMStorageItemParams {
 	return &SetDOMStorageItemParams{
-		StorageID: storageId,
+		StorageID: storageID,
 		Key:       key,
 		Value:     value,
 	}
 }
 
 // Do executes DOMStorage.setDOMStorageItem.
-func (p *SetDOMStorageItemParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetDOMStorageItemParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -261,13 +250,13 @@ func (p *SetDOMStorageItemParams) Do(ctxt context.Context, h FrameHandler) (err 
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMStorageSetDOMStorageItem, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMStorageSetDOMStorageItem, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -279,29 +268,32 @@ func (p *SetDOMStorageItemParams) Do(ctxt context.Context, h FrameHandler) (err 
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
+// RemoveDOMStorageItemParams [no description].
 type RemoveDOMStorageItemParams struct {
 	StorageID *StorageID `json:"storageId"`
 	Key       string     `json:"key"`
 }
 
+// RemoveDOMStorageItem [no description].
+//
 // parameters:
-//   storageId
+//   storageID
 //   key
-func RemoveDOMStorageItem(storageId *StorageID, key string) *RemoveDOMStorageItemParams {
+func RemoveDOMStorageItem(storageID *StorageID, key string) *RemoveDOMStorageItemParams {
 	return &RemoveDOMStorageItemParams{
-		StorageID: storageId,
+		StorageID: storageID,
 		Key:       key,
 	}
 }
 
 // Do executes DOMStorage.removeDOMStorageItem.
-func (p *RemoveDOMStorageItemParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *RemoveDOMStorageItemParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -313,13 +305,13 @@ func (p *RemoveDOMStorageItemParams) Do(ctxt context.Context, h FrameHandler) (e
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMStorageRemoveDOMStorageItem, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMStorageRemoveDOMStorageItem, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -331,8 +323,8 @@ func (p *RemoveDOMStorageItemParams) Do(ctxt context.Context, h FrameHandler) (e
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }

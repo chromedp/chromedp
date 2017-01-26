@@ -12,7 +12,7 @@ import (
 
 	"github.com/mailru/easyjson"
 
-	. "github.com/knq/chromedp/cdp"
+	"github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/css"
 	"github.com/knq/chromedp/cdp/dom"
 	"github.com/knq/chromedp/cdp/inspector"
@@ -23,7 +23,7 @@ import (
 )
 
 var (
-	_ FrameHandler = &TargetHandler{}
+	_ cdp.FrameHandler = &TargetHandler{}
 )
 
 // TargetHandler manages a Chrome Debugging Protocol target.
@@ -31,19 +31,19 @@ type TargetHandler struct {
 	conn client.Transport
 
 	// frames is the set of encountered frames.
-	frames map[FrameID]*Frame
+	frames map[cdp.FrameID]*cdp.Frame
 
 	// cur is the current top level frame.
-	cur *Frame
+	cur *cdp.Frame
 
 	// qcmd is the outgoing message queue.
-	qcmd chan *Message
+	qcmd chan *cdp.Message
 
 	// qres is the incoming command result queue.
-	qres chan *Message
+	qres chan *cdp.Message
 
 	// qevents is the incoming event queue.
-	qevents chan *Message
+	qevents chan *cdp.Message
 
 	// detached is closed when the detached event is received.
 	detached chan *inspector.EventDetached
@@ -80,10 +80,10 @@ func (h *TargetHandler) Run(ctxt context.Context) error {
 
 	// reset
 	h.Lock()
-	h.frames = make(map[FrameID]*Frame)
-	h.qcmd = make(chan *Message)
-	h.qres = make(chan *Message)
-	h.qevents = make(chan *Message)
+	h.frames = make(map[cdp.FrameID]*cdp.Frame)
+	h.qcmd = make(chan *cdp.Message)
+	h.qres = make(chan *cdp.Message)
+	h.qevents = make(chan *cdp.Message)
 	h.res = make(map[int64]chan interface{})
 	h.detached = make(chan *inspector.EventDetached)
 	h.pageWaitGroup = new(sync.WaitGroup)
@@ -201,7 +201,7 @@ func (h *TargetHandler) run(ctxt context.Context) {
 }
 
 // read reads a message from the client connection.
-func (h *TargetHandler) read() (*Message, error) {
+func (h *TargetHandler) read() (*cdp.Message, error) {
 	// read
 	buf, err := h.conn.Read()
 	if err != nil {
@@ -211,7 +211,7 @@ func (h *TargetHandler) read() (*Message, error) {
 	log.Printf("-> %s", string(buf))
 
 	// unmarshal
-	msg := new(Message)
+	msg := new(cdp.Message)
 	err = easyjson.Unmarshal(buf, msg)
 	if err != nil {
 		return nil, err
@@ -221,9 +221,9 @@ func (h *TargetHandler) read() (*Message, error) {
 }
 
 // processEvent processes an incoming event.
-func (h *TargetHandler) processEvent(ctxt context.Context, msg *Message) error {
+func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdp.Message) error {
 	if msg == nil {
-		return ErrChannelClosed
+		return cdp.ErrChannelClosed
 	}
 
 	// unmarshal
@@ -280,7 +280,7 @@ func (h *TargetHandler) documentUpdated(ctxt context.Context) {
 		close(f.Root.Invalidated)
 	}
 
-	f.Nodes = make(map[NodeID]*Node)
+	f.Nodes = make(map[cdp.NodeID]*cdp.Node)
 	f.Root, err = dom.GetDocument().WithPierce(true).Do(ctxt, h)
 	if err != nil {
 		log.Printf("error could not retrieve document root for %s, got: %v", f.ID, err)
@@ -291,7 +291,7 @@ func (h *TargetHandler) documentUpdated(ctxt context.Context) {
 }
 
 // processResult processes an incoming command result.
-func (h *TargetHandler) processResult(msg *Message) error {
+func (h *TargetHandler) processResult(msg *cdp.Message) error {
 	h.resrw.Lock()
 	defer h.resrw.Unlock()
 
@@ -312,7 +312,7 @@ func (h *TargetHandler) processResult(msg *Message) error {
 }
 
 // processCommand writes a command to the client connection.
-func (h *TargetHandler) processCommand(cmd *Message) error {
+func (h *TargetHandler) processCommand(cmd *cdp.Message) error {
 	// FIXME: there are two possible error conditions here, check and
 	// do some kind of logging ...
 	buf, err := easyjson.Marshal(cmd)
@@ -337,7 +337,7 @@ func (h *TargetHandler) processCommand(cmd *Message) error {
 // Note: the returned channel will be closed after the result is read. If the
 // passed context finishes prior to receiving the command result, then
 // ErrContextDone will be sent to the channel.
-func (h *TargetHandler) Execute(ctxt context.Context, commandType MethodType, params easyjson.RawMessage) <-chan interface{} {
+func (h *TargetHandler) Execute(ctxt context.Context, commandType cdp.MethodType, params easyjson.RawMessage) <-chan interface{} {
 	ch := make(chan interface{}, 1)
 
 	go func() {
@@ -357,7 +357,7 @@ func (h *TargetHandler) Execute(ctxt context.Context, commandType MethodType, pa
 		h.res[id] = res
 		h.resrw.Unlock()
 
-		h.qcmd <- &Message{
+		h.qcmd <- &cdp.Message{
 			ID:     id,
 			Method: commandType,
 			Params: params,
@@ -368,11 +368,11 @@ func (h *TargetHandler) Execute(ctxt context.Context, commandType MethodType, pa
 			if v != nil {
 				ch <- v
 			} else {
-				ch <- ErrChannelClosed
+				ch <- cdp.ErrChannelClosed
 			}
 
 		case <-ctxt.Done():
-			ch <- ErrContextDone
+			ch <- cdp.ErrContextDone
 		}
 	}()
 
@@ -381,21 +381,21 @@ func (h *TargetHandler) Execute(ctxt context.Context, commandType MethodType, pa
 
 // Listen adds a listener for the specified event types to the appropriate
 // domain.
-func (h *TargetHandler) Listen(eventTypes ...MethodType) <-chan interface{} {
+func (h *TargetHandler) Listen(eventTypes ...cdp.MethodType) <-chan interface{} {
 	return nil
 }
 
 // GetRoot returns the current top level frame's root document node.
-func (h *TargetHandler) GetRoot(ctxt context.Context) (*Node, error) {
+func (h *TargetHandler) GetRoot(ctxt context.Context) (*cdp.Node, error) {
 	// TODO: fix this
 	ctxt, cancel := context.WithTimeout(ctxt, 10*time.Second)
 	defer cancel()
 
-	var root *Node
+	var root *cdp.Node
 
 loop:
 	for {
-		var cur *Frame
+		var cur *cdp.Frame
 		select {
 		default:
 			h.RLock()
@@ -422,7 +422,7 @@ loop:
 }
 
 // SetActive sets the currently active frame after a successful navigation.
-func (h *TargetHandler) SetActive(ctxt context.Context, id FrameID) error {
+func (h *TargetHandler) SetActive(ctxt context.Context, id cdp.FrameID) error {
 	var err error
 
 	// get frame
@@ -440,7 +440,7 @@ func (h *TargetHandler) SetActive(ctxt context.Context, id FrameID) error {
 }
 
 // WaitFrame waits for a frame to be loaded using the provided context.
-func (h *TargetHandler) WaitFrame(ctxt context.Context, id FrameID) (*Frame, error) {
+func (h *TargetHandler) WaitFrame(ctxt context.Context, id cdp.FrameID) (*cdp.Frame, error) {
 	// TODO: fix this
 	timeout := time.After(10 * time.Second)
 
@@ -448,7 +448,7 @@ loop:
 	for {
 		select {
 		default:
-			var f *Frame
+			var f *cdp.Frame
 			var ok bool
 
 			h.RLock()
@@ -466,7 +466,7 @@ loop:
 			time.Sleep(DefaultCheckDuration)
 
 		case <-ctxt.Done():
-			return nil, ErrContextDone
+			return nil, cdp.ErrContextDone
 
 		case <-timeout:
 			break loop
@@ -477,7 +477,7 @@ loop:
 }
 
 // WaitNode waits for a node to be loaded using the provided context.
-func (h *TargetHandler) WaitNode(ctxt context.Context, f *Frame, id NodeID) (*Node, error) {
+func (h *TargetHandler) WaitNode(ctxt context.Context, f *cdp.Frame, id cdp.NodeID) (*cdp.Node, error) {
 	// TODO: fix this
 	timeout := time.After(10 * time.Second)
 
@@ -485,7 +485,7 @@ loop:
 	for {
 		select {
 		default:
-			var n *Node
+			var n *cdp.Node
 			var ok bool
 
 			f.RLock()
@@ -499,7 +499,7 @@ loop:
 			time.Sleep(DefaultCheckDuration)
 
 		case <-ctxt.Done():
-			return nil, ErrContextDone
+			return nil, cdp.ErrContextDone
 
 		case <-timeout:
 			break loop
@@ -513,7 +513,7 @@ loop:
 func (h *TargetHandler) pageEvent(ctxt context.Context, ev interface{}) {
 	defer h.pageWaitGroup.Done()
 
-	var id FrameID
+	var id cdp.FrameID
 	var op FrameOp
 
 	switch e := ev.(type) {
@@ -578,7 +578,7 @@ func (h *TargetHandler) domEvent(ctxt context.Context, ev interface{}) {
 		return
 	}
 
-	var id NodeID
+	var id cdp.NodeID
 	var op NodeOp
 
 	switch e := ev.(type) {

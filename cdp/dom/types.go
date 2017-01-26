@@ -5,30 +5,10 @@ package dom
 import (
 	"errors"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // Quad an array of quad vertices, x immediately followed by y for each
@@ -63,20 +43,21 @@ type Rect struct {
 
 // HighlightConfig configuration data for the highlighting of page elements.
 type HighlightConfig struct {
-	ShowInfo           bool   `json:"showInfo,omitempty"`           // Whether the node info tooltip should be shown (default: false).
-	ShowRulers         bool   `json:"showRulers,omitempty"`         // Whether the rulers should be shown (default: false).
-	ShowExtensionLines bool   `json:"showExtensionLines,omitempty"` // Whether the extension lines from node to the rulers should be shown (default: false).
-	DisplayAsMaterial  bool   `json:"displayAsMaterial,omitempty"`
-	ContentColor       *RGBA  `json:"contentColor,omitempty"`     // The content box highlight fill color (default: transparent).
-	PaddingColor       *RGBA  `json:"paddingColor,omitempty"`     // The padding highlight fill color (default: transparent).
-	BorderColor        *RGBA  `json:"borderColor,omitempty"`      // The border highlight fill color (default: transparent).
-	MarginColor        *RGBA  `json:"marginColor,omitempty"`      // The margin highlight fill color (default: transparent).
-	EventTargetColor   *RGBA  `json:"eventTargetColor,omitempty"` // The event target element highlight fill color (default: transparent).
-	ShapeColor         *RGBA  `json:"shapeColor,omitempty"`       // The shape outside fill color (default: transparent).
-	ShapeMarginColor   *RGBA  `json:"shapeMarginColor,omitempty"` // The shape margin fill color (default: transparent).
-	SelectorList       string `json:"selectorList,omitempty"`     // Selectors to highlight relevant nodes.
+	ShowInfo           bool      `json:"showInfo,omitempty"`           // Whether the node info tooltip should be shown (default: false).
+	ShowRulers         bool      `json:"showRulers,omitempty"`         // Whether the rulers should be shown (default: false).
+	ShowExtensionLines bool      `json:"showExtensionLines,omitempty"` // Whether the extension lines from node to the rulers should be shown (default: false).
+	DisplayAsMaterial  bool      `json:"displayAsMaterial,omitempty"`
+	ContentColor       *cdp.RGBA `json:"contentColor,omitempty"`     // The content box highlight fill color (default: transparent).
+	PaddingColor       *cdp.RGBA `json:"paddingColor,omitempty"`     // The padding highlight fill color (default: transparent).
+	BorderColor        *cdp.RGBA `json:"borderColor,omitempty"`      // The border highlight fill color (default: transparent).
+	MarginColor        *cdp.RGBA `json:"marginColor,omitempty"`      // The margin highlight fill color (default: transparent).
+	EventTargetColor   *cdp.RGBA `json:"eventTargetColor,omitempty"` // The event target element highlight fill color (default: transparent).
+	ShapeColor         *cdp.RGBA `json:"shapeColor,omitempty"`       // The shape outside fill color (default: transparent).
+	ShapeMarginColor   *cdp.RGBA `json:"shapeMarginColor,omitempty"` // The shape margin fill color (default: transparent).
+	SelectorList       string    `json:"selectorList,omitempty"`     // Selectors to highlight relevant nodes.
 }
 
+// InspectMode [no description].
 type InspectMode string
 
 // String returns the InspectMode as string value.

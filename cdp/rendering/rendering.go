@@ -11,28 +11,8 @@ package rendering
 import (
 	"context"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/mailru/easyjson"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // SetShowPaintRectsParams requests that backend shows paint rectangles.
@@ -51,7 +31,7 @@ func SetShowPaintRects(result bool) *SetShowPaintRectsParams {
 }
 
 // Do executes Rendering.setShowPaintRects.
-func (p *SetShowPaintRectsParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetShowPaintRectsParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -63,13 +43,13 @@ func (p *SetShowPaintRectsParams) Do(ctxt context.Context, h FrameHandler) (err 
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandRenderingSetShowPaintRects, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandRenderingSetShowPaintRects, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -81,10 +61,10 @@ func (p *SetShowPaintRectsParams) Do(ctxt context.Context, h FrameHandler) (err 
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetShowDebugBordersParams requests that backend shows debug borders on
@@ -104,7 +84,7 @@ func SetShowDebugBorders(show bool) *SetShowDebugBordersParams {
 }
 
 // Do executes Rendering.setShowDebugBorders.
-func (p *SetShowDebugBordersParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetShowDebugBordersParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -116,13 +96,13 @@ func (p *SetShowDebugBordersParams) Do(ctxt context.Context, h FrameHandler) (er
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandRenderingSetShowDebugBorders, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandRenderingSetShowDebugBorders, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -134,10 +114,10 @@ func (p *SetShowDebugBordersParams) Do(ctxt context.Context, h FrameHandler) (er
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetShowFPSCounterParams requests that backend shows the FPS counter.
@@ -156,7 +136,7 @@ func SetShowFPSCounter(show bool) *SetShowFPSCounterParams {
 }
 
 // Do executes Rendering.setShowFPSCounter.
-func (p *SetShowFPSCounterParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetShowFPSCounterParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -168,13 +148,13 @@ func (p *SetShowFPSCounterParams) Do(ctxt context.Context, h FrameHandler) (err 
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandRenderingSetShowFPSCounter, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandRenderingSetShowFPSCounter, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -186,10 +166,10 @@ func (p *SetShowFPSCounterParams) Do(ctxt context.Context, h FrameHandler) (err 
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetShowScrollBottleneckRectsParams requests that backend shows scroll
@@ -210,7 +190,7 @@ func SetShowScrollBottleneckRects(show bool) *SetShowScrollBottleneckRectsParams
 }
 
 // Do executes Rendering.setShowScrollBottleneckRects.
-func (p *SetShowScrollBottleneckRectsParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetShowScrollBottleneckRectsParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -222,13 +202,13 @@ func (p *SetShowScrollBottleneckRectsParams) Do(ctxt context.Context, h FrameHan
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandRenderingSetShowScrollBottleneckRects, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandRenderingSetShowScrollBottleneckRects, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -240,10 +220,10 @@ func (p *SetShowScrollBottleneckRectsParams) Do(ctxt context.Context, h FrameHan
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetShowViewportSizeOnResizeParams paints viewport size upon main frame
@@ -263,7 +243,7 @@ func SetShowViewportSizeOnResize(show bool) *SetShowViewportSizeOnResizeParams {
 }
 
 // Do executes Rendering.setShowViewportSizeOnResize.
-func (p *SetShowViewportSizeOnResizeParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetShowViewportSizeOnResizeParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -275,13 +255,13 @@ func (p *SetShowViewportSizeOnResizeParams) Do(ctxt context.Context, h FrameHand
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandRenderingSetShowViewportSizeOnResize, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandRenderingSetShowViewportSizeOnResize, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -293,8 +273,8 @@ func (p *SetShowViewportSizeOnResizeParams) Do(ctxt context.Context, h FrameHand
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }

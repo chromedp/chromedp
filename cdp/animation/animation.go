@@ -9,29 +9,9 @@ package animation
 import (
 	"context"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/runtime"
 	"github.com/mailru/easyjson"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // EnableParams enables animation domain notifications.
@@ -43,19 +23,19 @@ func Enable() *EnableParams {
 }
 
 // Do executes Animation.enable.
-func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandAnimationEnable, Empty)
+	ch := h.Execute(ctxt, cdp.CommandAnimationEnable, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -67,10 +47,10 @@ func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // DisableParams disables animation domain notifications.
@@ -82,19 +62,19 @@ func Disable() *DisableParams {
 }
 
 // Do executes Animation.disable.
-func (p *DisableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandAnimationDisable, Empty)
+	ch := h.Execute(ctxt, cdp.CommandAnimationDisable, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -106,10 +86,10 @@ func (p *DisableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // GetPlaybackRateParams gets the playback rate of the document timeline.
@@ -129,19 +109,19 @@ type GetPlaybackRateReturns struct {
 //
 // returns:
 //   playbackRate - Playback rate for animations on page.
-func (p *GetPlaybackRateParams) Do(ctxt context.Context, h FrameHandler) (playbackRate float64, err error) {
+func (p *GetPlaybackRateParams) Do(ctxt context.Context, h cdp.FrameHandler) (playbackRate float64, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandAnimationGetPlaybackRate, Empty)
+	ch := h.Execute(ctxt, cdp.CommandAnimationGetPlaybackRate, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return 0, ErrChannelClosed
+			return 0, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -150,7 +130,7 @@ func (p *GetPlaybackRateParams) Do(ctxt context.Context, h FrameHandler) (playba
 			var r GetPlaybackRateReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return 0, ErrInvalidResult
+				return 0, cdp.ErrInvalidResult
 			}
 
 			return r.PlaybackRate, nil
@@ -160,10 +140,10 @@ func (p *GetPlaybackRateParams) Do(ctxt context.Context, h FrameHandler) (playba
 		}
 
 	case <-ctxt.Done():
-		return 0, ErrContextDone
+		return 0, cdp.ErrContextDone
 	}
 
-	return 0, ErrUnknownResult
+	return 0, cdp.ErrUnknownResult
 }
 
 // SetPlaybackRateParams sets the playback rate of the document timeline.
@@ -182,7 +162,7 @@ func SetPlaybackRate(playbackRate float64) *SetPlaybackRateParams {
 }
 
 // Do executes Animation.setPlaybackRate.
-func (p *SetPlaybackRateParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetPlaybackRateParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -194,13 +174,13 @@ func (p *SetPlaybackRateParams) Do(ctxt context.Context, h FrameHandler) (err er
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandAnimationSetPlaybackRate, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandAnimationSetPlaybackRate, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -212,10 +192,10 @@ func (p *SetPlaybackRateParams) Do(ctxt context.Context, h FrameHandler) (err er
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // GetCurrentTimeParams returns the current time of the an animation.
@@ -242,7 +222,7 @@ type GetCurrentTimeReturns struct {
 //
 // returns:
 //   currentTime - Current time of the page.
-func (p *GetCurrentTimeParams) Do(ctxt context.Context, h FrameHandler) (currentTime float64, err error) {
+func (p *GetCurrentTimeParams) Do(ctxt context.Context, h cdp.FrameHandler) (currentTime float64, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -254,13 +234,13 @@ func (p *GetCurrentTimeParams) Do(ctxt context.Context, h FrameHandler) (current
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandAnimationGetCurrentTime, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandAnimationGetCurrentTime, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return 0, ErrChannelClosed
+			return 0, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -269,7 +249,7 @@ func (p *GetCurrentTimeParams) Do(ctxt context.Context, h FrameHandler) (current
 			var r GetCurrentTimeReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return 0, ErrInvalidResult
+				return 0, cdp.ErrInvalidResult
 			}
 
 			return r.CurrentTime, nil
@@ -279,10 +259,10 @@ func (p *GetCurrentTimeParams) Do(ctxt context.Context, h FrameHandler) (current
 		}
 
 	case <-ctxt.Done():
-		return 0, ErrContextDone
+		return 0, cdp.ErrContextDone
 	}
 
-	return 0, ErrUnknownResult
+	return 0, cdp.ErrUnknownResult
 }
 
 // SetPausedParams sets the paused state of a set of animations.
@@ -304,7 +284,7 @@ func SetPaused(animations []string, paused bool) *SetPausedParams {
 }
 
 // Do executes Animation.setPaused.
-func (p *SetPausedParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetPausedParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -316,13 +296,13 @@ func (p *SetPausedParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandAnimationSetPaused, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandAnimationSetPaused, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -334,10 +314,10 @@ func (p *SetPausedParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetTimingParams sets the timing of an animation node.
@@ -350,19 +330,19 @@ type SetTimingParams struct {
 // SetTiming sets the timing of an animation node.
 //
 // parameters:
-//   animationId - Animation id.
+//   animationID - Animation id.
 //   duration - Duration of the animation.
 //   delay - Delay of the animation.
-func SetTiming(animationId string, duration float64, delay float64) *SetTimingParams {
+func SetTiming(animationID string, duration float64, delay float64) *SetTimingParams {
 	return &SetTimingParams{
-		AnimationID: animationId,
+		AnimationID: animationID,
 		Duration:    duration,
 		Delay:       delay,
 	}
 }
 
 // Do executes Animation.setTiming.
-func (p *SetTimingParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetTimingParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -374,13 +354,13 @@ func (p *SetTimingParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandAnimationSetTiming, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandAnimationSetTiming, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -392,10 +372,10 @@ func (p *SetTimingParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SeekAnimationsParams seek a set of animations to a particular time within
@@ -419,7 +399,7 @@ func SeekAnimations(animations []string, currentTime float64) *SeekAnimationsPar
 }
 
 // Do executes Animation.seekAnimations.
-func (p *SeekAnimationsParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SeekAnimationsParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -431,13 +411,13 @@ func (p *SeekAnimationsParams) Do(ctxt context.Context, h FrameHandler) (err err
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandAnimationSeekAnimations, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandAnimationSeekAnimations, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -449,10 +429,10 @@ func (p *SeekAnimationsParams) Do(ctxt context.Context, h FrameHandler) (err err
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // ReleaseAnimationsParams releases a set of animations to no longer be
@@ -473,7 +453,7 @@ func ReleaseAnimations(animations []string) *ReleaseAnimationsParams {
 }
 
 // Do executes Animation.releaseAnimations.
-func (p *ReleaseAnimationsParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *ReleaseAnimationsParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -485,13 +465,13 @@ func (p *ReleaseAnimationsParams) Do(ctxt context.Context, h FrameHandler) (err 
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandAnimationReleaseAnimations, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandAnimationReleaseAnimations, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -503,10 +483,10 @@ func (p *ReleaseAnimationsParams) Do(ctxt context.Context, h FrameHandler) (err 
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // ResolveAnimationParams gets the remote object of the Animation.
@@ -517,10 +497,10 @@ type ResolveAnimationParams struct {
 // ResolveAnimation gets the remote object of the Animation.
 //
 // parameters:
-//   animationId - Animation id.
-func ResolveAnimation(animationId string) *ResolveAnimationParams {
+//   animationID - Animation id.
+func ResolveAnimation(animationID string) *ResolveAnimationParams {
 	return &ResolveAnimationParams{
-		AnimationID: animationId,
+		AnimationID: animationID,
 	}
 }
 
@@ -533,7 +513,7 @@ type ResolveAnimationReturns struct {
 //
 // returns:
 //   remoteObject - Corresponding remote object.
-func (p *ResolveAnimationParams) Do(ctxt context.Context, h FrameHandler) (remoteObject *runtime.RemoteObject, err error) {
+func (p *ResolveAnimationParams) Do(ctxt context.Context, h cdp.FrameHandler) (remoteObject *runtime.RemoteObject, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -545,13 +525,13 @@ func (p *ResolveAnimationParams) Do(ctxt context.Context, h FrameHandler) (remot
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandAnimationResolveAnimation, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandAnimationResolveAnimation, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -560,7 +540,7 @@ func (p *ResolveAnimationParams) Do(ctxt context.Context, h FrameHandler) (remot
 			var r ResolveAnimationReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.RemoteObject, nil
@@ -570,8 +550,8 @@ func (p *ResolveAnimationParams) Do(ctxt context.Context, h FrameHandler) (remot
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }

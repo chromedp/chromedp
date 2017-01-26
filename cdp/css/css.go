@@ -19,28 +19,8 @@ package css
 import (
 	"context"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/mailru/easyjson"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // EnableParams enables the CSS agent for the given page. Clients should not
@@ -56,19 +36,19 @@ func Enable() *EnableParams {
 }
 
 // Do executes CSS.enable.
-func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandCSSEnable, Empty)
+	ch := h.Execute(ctxt, cdp.CommandCSSEnable, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -80,10 +60,10 @@ func (p *EnableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // DisableParams disables the CSS agent for the given page.
@@ -95,19 +75,19 @@ func Disable() *DisableParams {
 }
 
 // Do executes CSS.disable.
-func (p *DisableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandCSSDisable, Empty)
+	ch := h.Execute(ctxt, cdp.CommandCSSDisable, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -119,26 +99,26 @@ func (p *DisableParams) Do(ctxt context.Context, h FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // GetMatchedStylesForNodeParams returns requested styles for a DOM node
 // identified by nodeId.
 type GetMatchedStylesForNodeParams struct {
-	NodeID NodeID `json:"nodeId"`
+	NodeID cdp.NodeID `json:"nodeId"`
 }
 
 // GetMatchedStylesForNode returns requested styles for a DOM node identified
 // by nodeId.
 //
 // parameters:
-//   nodeId
-func GetMatchedStylesForNode(nodeId NodeID) *GetMatchedStylesForNodeParams {
+//   nodeID
+func GetMatchedStylesForNode(nodeID cdp.NodeID) *GetMatchedStylesForNodeParams {
 	return &GetMatchedStylesForNodeParams{
-		NodeID: nodeId,
+		NodeID: nodeID,
 	}
 }
 
@@ -161,7 +141,7 @@ type GetMatchedStylesForNodeReturns struct {
 //   pseudoElements - Pseudo style matches for this node.
 //   inherited - A chain of inherited styles (from the immediate node parent up to the DOM tree root).
 //   cssKeyframesRules - A list of CSS keyframed animations matching this node.
-func (p *GetMatchedStylesForNodeParams) Do(ctxt context.Context, h FrameHandler) (inlineStyle *Style, attributesStyle *Style, matchedCSSRules []*RuleMatch, pseudoElements []*PseudoElementMatches, inherited []*InheritedStyleEntry, cssKeyframesRules []*KeyframesRule, err error) {
+func (p *GetMatchedStylesForNodeParams) Do(ctxt context.Context, h cdp.FrameHandler) (inlineStyle *Style, attributesStyle *Style, matchedCSSRules []*RuleMatch, pseudoElements []*PseudoElementMatches, inherited []*InheritedStyleEntry, cssKeyframesRules []*KeyframesRule, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -173,13 +153,13 @@ func (p *GetMatchedStylesForNodeParams) Do(ctxt context.Context, h FrameHandler)
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandCSSGetMatchedStylesForNode, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandCSSGetMatchedStylesForNode, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, nil, nil, nil, nil, nil, ErrChannelClosed
+			return nil, nil, nil, nil, nil, nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -188,7 +168,7 @@ func (p *GetMatchedStylesForNodeParams) Do(ctxt context.Context, h FrameHandler)
 			var r GetMatchedStylesForNodeReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, nil, nil, nil, nil, nil, ErrInvalidResult
+				return nil, nil, nil, nil, nil, nil, cdp.ErrInvalidResult
 			}
 
 			return r.InlineStyle, r.AttributesStyle, r.MatchedCSSRules, r.PseudoElements, r.Inherited, r.CSSKeyframesRules, nil
@@ -198,17 +178,17 @@ func (p *GetMatchedStylesForNodeParams) Do(ctxt context.Context, h FrameHandler)
 		}
 
 	case <-ctxt.Done():
-		return nil, nil, nil, nil, nil, nil, ErrContextDone
+		return nil, nil, nil, nil, nil, nil, cdp.ErrContextDone
 	}
 
-	return nil, nil, nil, nil, nil, nil, ErrUnknownResult
+	return nil, nil, nil, nil, nil, nil, cdp.ErrUnknownResult
 }
 
 // GetInlineStylesForNodeParams returns the styles defined inline (explicitly
 // in the "style" attribute and implicitly, using DOM attributes) for a DOM node
 // identified by nodeId.
 type GetInlineStylesForNodeParams struct {
-	NodeID NodeID `json:"nodeId"`
+	NodeID cdp.NodeID `json:"nodeId"`
 }
 
 // GetInlineStylesForNode returns the styles defined inline (explicitly in
@@ -216,10 +196,10 @@ type GetInlineStylesForNodeParams struct {
 // identified by nodeId.
 //
 // parameters:
-//   nodeId
-func GetInlineStylesForNode(nodeId NodeID) *GetInlineStylesForNodeParams {
+//   nodeID
+func GetInlineStylesForNode(nodeID cdp.NodeID) *GetInlineStylesForNodeParams {
 	return &GetInlineStylesForNodeParams{
-		NodeID: nodeId,
+		NodeID: nodeID,
 	}
 }
 
@@ -234,7 +214,7 @@ type GetInlineStylesForNodeReturns struct {
 // returns:
 //   inlineStyle - Inline style for the specified DOM node.
 //   attributesStyle - Attribute-defined element style (e.g. resulting from "width=20 height=100%").
-func (p *GetInlineStylesForNodeParams) Do(ctxt context.Context, h FrameHandler) (inlineStyle *Style, attributesStyle *Style, err error) {
+func (p *GetInlineStylesForNodeParams) Do(ctxt context.Context, h cdp.FrameHandler) (inlineStyle *Style, attributesStyle *Style, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -246,13 +226,13 @@ func (p *GetInlineStylesForNodeParams) Do(ctxt context.Context, h FrameHandler) 
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandCSSGetInlineStylesForNode, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandCSSGetInlineStylesForNode, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, nil, ErrChannelClosed
+			return nil, nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -261,7 +241,7 @@ func (p *GetInlineStylesForNodeParams) Do(ctxt context.Context, h FrameHandler) 
 			var r GetInlineStylesForNodeReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, nil, ErrInvalidResult
+				return nil, nil, cdp.ErrInvalidResult
 			}
 
 			return r.InlineStyle, r.AttributesStyle, nil
@@ -271,26 +251,26 @@ func (p *GetInlineStylesForNodeParams) Do(ctxt context.Context, h FrameHandler) 
 		}
 
 	case <-ctxt.Done():
-		return nil, nil, ErrContextDone
+		return nil, nil, cdp.ErrContextDone
 	}
 
-	return nil, nil, ErrUnknownResult
+	return nil, nil, cdp.ErrUnknownResult
 }
 
 // GetComputedStyleForNodeParams returns the computed style for a DOM node
 // identified by nodeId.
 type GetComputedStyleForNodeParams struct {
-	NodeID NodeID `json:"nodeId"`
+	NodeID cdp.NodeID `json:"nodeId"`
 }
 
 // GetComputedStyleForNode returns the computed style for a DOM node
 // identified by nodeId.
 //
 // parameters:
-//   nodeId
-func GetComputedStyleForNode(nodeId NodeID) *GetComputedStyleForNodeParams {
+//   nodeID
+func GetComputedStyleForNode(nodeID cdp.NodeID) *GetComputedStyleForNodeParams {
 	return &GetComputedStyleForNodeParams{
-		NodeID: nodeId,
+		NodeID: nodeID,
 	}
 }
 
@@ -303,7 +283,7 @@ type GetComputedStyleForNodeReturns struct {
 //
 // returns:
 //   computedStyle - Computed style for the specified DOM node.
-func (p *GetComputedStyleForNodeParams) Do(ctxt context.Context, h FrameHandler) (computedStyle []*ComputedProperty, err error) {
+func (p *GetComputedStyleForNodeParams) Do(ctxt context.Context, h cdp.FrameHandler) (computedStyle []*ComputedProperty, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -315,13 +295,13 @@ func (p *GetComputedStyleForNodeParams) Do(ctxt context.Context, h FrameHandler)
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandCSSGetComputedStyleForNode, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandCSSGetComputedStyleForNode, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -330,7 +310,7 @@ func (p *GetComputedStyleForNodeParams) Do(ctxt context.Context, h FrameHandler)
 			var r GetComputedStyleForNodeReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.ComputedStyle, nil
@@ -340,26 +320,26 @@ func (p *GetComputedStyleForNodeParams) Do(ctxt context.Context, h FrameHandler)
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // GetPlatformFontsForNodeParams requests information about platform fonts
 // which we used to render child TextNodes in the given node.
 type GetPlatformFontsForNodeParams struct {
-	NodeID NodeID `json:"nodeId"`
+	NodeID cdp.NodeID `json:"nodeId"`
 }
 
 // GetPlatformFontsForNode requests information about platform fonts which we
 // used to render child TextNodes in the given node.
 //
 // parameters:
-//   nodeId
-func GetPlatformFontsForNode(nodeId NodeID) *GetPlatformFontsForNodeParams {
+//   nodeID
+func GetPlatformFontsForNode(nodeID cdp.NodeID) *GetPlatformFontsForNodeParams {
 	return &GetPlatformFontsForNodeParams{
-		NodeID: nodeId,
+		NodeID: nodeID,
 	}
 }
 
@@ -372,7 +352,7 @@ type GetPlatformFontsForNodeReturns struct {
 //
 // returns:
 //   fonts - Usage statistics for every employed platform font.
-func (p *GetPlatformFontsForNodeParams) Do(ctxt context.Context, h FrameHandler) (fonts []*PlatformFontUsage, err error) {
+func (p *GetPlatformFontsForNodeParams) Do(ctxt context.Context, h cdp.FrameHandler) (fonts []*PlatformFontUsage, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -384,13 +364,13 @@ func (p *GetPlatformFontsForNodeParams) Do(ctxt context.Context, h FrameHandler)
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandCSSGetPlatformFontsForNode, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandCSSGetPlatformFontsForNode, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -399,7 +379,7 @@ func (p *GetPlatformFontsForNodeParams) Do(ctxt context.Context, h FrameHandler)
 			var r GetPlatformFontsForNodeReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.Fonts, nil
@@ -409,10 +389,10 @@ func (p *GetPlatformFontsForNodeParams) Do(ctxt context.Context, h FrameHandler)
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // GetStyleSheetTextParams returns the current textual content and the URL
@@ -425,10 +405,10 @@ type GetStyleSheetTextParams struct {
 // stylesheet.
 //
 // parameters:
-//   styleSheetId
-func GetStyleSheetText(styleSheetId StyleSheetID) *GetStyleSheetTextParams {
+//   styleSheetID
+func GetStyleSheetText(styleSheetID StyleSheetID) *GetStyleSheetTextParams {
 	return &GetStyleSheetTextParams{
-		StyleSheetID: styleSheetId,
+		StyleSheetID: styleSheetID,
 	}
 }
 
@@ -441,7 +421,7 @@ type GetStyleSheetTextReturns struct {
 //
 // returns:
 //   text - The stylesheet text.
-func (p *GetStyleSheetTextParams) Do(ctxt context.Context, h FrameHandler) (text string, err error) {
+func (p *GetStyleSheetTextParams) Do(ctxt context.Context, h cdp.FrameHandler) (text string, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -453,13 +433,13 @@ func (p *GetStyleSheetTextParams) Do(ctxt context.Context, h FrameHandler) (text
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandCSSGetStyleSheetText, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandCSSGetStyleSheetText, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return "", ErrChannelClosed
+			return "", cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -468,7 +448,7 @@ func (p *GetStyleSheetTextParams) Do(ctxt context.Context, h FrameHandler) (text
 			var r GetStyleSheetTextReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return "", ErrInvalidResult
+				return "", cdp.ErrInvalidResult
 			}
 
 			return r.Text, nil
@@ -478,10 +458,10 @@ func (p *GetStyleSheetTextParams) Do(ctxt context.Context, h FrameHandler) (text
 		}
 
 	case <-ctxt.Done():
-		return "", ErrContextDone
+		return "", cdp.ErrContextDone
 	}
 
-	return "", ErrUnknownResult
+	return "", cdp.ErrUnknownResult
 }
 
 // CollectClassNamesParams returns all class names from specified stylesheet.
@@ -492,10 +472,10 @@ type CollectClassNamesParams struct {
 // CollectClassNames returns all class names from specified stylesheet.
 //
 // parameters:
-//   styleSheetId
-func CollectClassNames(styleSheetId StyleSheetID) *CollectClassNamesParams {
+//   styleSheetID
+func CollectClassNames(styleSheetID StyleSheetID) *CollectClassNamesParams {
 	return &CollectClassNamesParams{
-		StyleSheetID: styleSheetId,
+		StyleSheetID: styleSheetID,
 	}
 }
 
@@ -508,7 +488,7 @@ type CollectClassNamesReturns struct {
 //
 // returns:
 //   classNames - Class name list.
-func (p *CollectClassNamesParams) Do(ctxt context.Context, h FrameHandler) (classNames []string, err error) {
+func (p *CollectClassNamesParams) Do(ctxt context.Context, h cdp.FrameHandler) (classNames []string, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -520,13 +500,13 @@ func (p *CollectClassNamesParams) Do(ctxt context.Context, h FrameHandler) (clas
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandCSSCollectClassNames, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandCSSCollectClassNames, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -535,7 +515,7 @@ func (p *CollectClassNamesParams) Do(ctxt context.Context, h FrameHandler) (clas
 			var r CollectClassNamesReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.ClassNames, nil
@@ -545,10 +525,10 @@ func (p *CollectClassNamesParams) Do(ctxt context.Context, h FrameHandler) (clas
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // SetStyleSheetTextParams sets the new stylesheet text.
@@ -560,11 +540,11 @@ type SetStyleSheetTextParams struct {
 // SetStyleSheetText sets the new stylesheet text.
 //
 // parameters:
-//   styleSheetId
+//   styleSheetID
 //   text
-func SetStyleSheetText(styleSheetId StyleSheetID, text string) *SetStyleSheetTextParams {
+func SetStyleSheetText(styleSheetID StyleSheetID, text string) *SetStyleSheetTextParams {
 	return &SetStyleSheetTextParams{
-		StyleSheetID: styleSheetId,
+		StyleSheetID: styleSheetID,
 		Text:         text,
 	}
 }
@@ -578,7 +558,7 @@ type SetStyleSheetTextReturns struct {
 //
 // returns:
 //   sourceMapURL - URL of source map associated with script (if any).
-func (p *SetStyleSheetTextParams) Do(ctxt context.Context, h FrameHandler) (sourceMapURL string, err error) {
+func (p *SetStyleSheetTextParams) Do(ctxt context.Context, h cdp.FrameHandler) (sourceMapURL string, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -590,13 +570,13 @@ func (p *SetStyleSheetTextParams) Do(ctxt context.Context, h FrameHandler) (sour
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandCSSSetStyleSheetText, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandCSSSetStyleSheetText, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return "", ErrChannelClosed
+			return "", cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -605,7 +585,7 @@ func (p *SetStyleSheetTextParams) Do(ctxt context.Context, h FrameHandler) (sour
 			var r SetStyleSheetTextReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return "", ErrInvalidResult
+				return "", cdp.ErrInvalidResult
 			}
 
 			return r.SourceMapURL, nil
@@ -615,10 +595,10 @@ func (p *SetStyleSheetTextParams) Do(ctxt context.Context, h FrameHandler) (sour
 		}
 
 	case <-ctxt.Done():
-		return "", ErrContextDone
+		return "", cdp.ErrContextDone
 	}
 
-	return "", ErrUnknownResult
+	return "", cdp.ErrUnknownResult
 }
 
 // SetRuleSelectorParams modifies the rule selector.
@@ -631,13 +611,13 @@ type SetRuleSelectorParams struct {
 // SetRuleSelector modifies the rule selector.
 //
 // parameters:
-//   styleSheetId
+//   styleSheetID
 //   range
 //   selector
-func SetRuleSelector(styleSheetId StyleSheetID, range_ *SourceRange, selector string) *SetRuleSelectorParams {
+func SetRuleSelector(styleSheetID StyleSheetID, rangeVal *SourceRange, selector string) *SetRuleSelectorParams {
 	return &SetRuleSelectorParams{
-		StyleSheetID: styleSheetId,
-		Range:        range_,
+		StyleSheetID: styleSheetID,
+		Range:        rangeVal,
 		Selector:     selector,
 	}
 }
@@ -651,7 +631,7 @@ type SetRuleSelectorReturns struct {
 //
 // returns:
 //   selectorList - The resulting selector list after modification.
-func (p *SetRuleSelectorParams) Do(ctxt context.Context, h FrameHandler) (selectorList *SelectorList, err error) {
+func (p *SetRuleSelectorParams) Do(ctxt context.Context, h cdp.FrameHandler) (selectorList *SelectorList, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -663,13 +643,13 @@ func (p *SetRuleSelectorParams) Do(ctxt context.Context, h FrameHandler) (select
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandCSSSetRuleSelector, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandCSSSetRuleSelector, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -678,7 +658,7 @@ func (p *SetRuleSelectorParams) Do(ctxt context.Context, h FrameHandler) (select
 			var r SetRuleSelectorReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.SelectorList, nil
@@ -688,10 +668,10 @@ func (p *SetRuleSelectorParams) Do(ctxt context.Context, h FrameHandler) (select
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // SetKeyframeKeyParams modifies the keyframe rule key text.
@@ -704,13 +684,13 @@ type SetKeyframeKeyParams struct {
 // SetKeyframeKey modifies the keyframe rule key text.
 //
 // parameters:
-//   styleSheetId
+//   styleSheetID
 //   range
 //   keyText
-func SetKeyframeKey(styleSheetId StyleSheetID, range_ *SourceRange, keyText string) *SetKeyframeKeyParams {
+func SetKeyframeKey(styleSheetID StyleSheetID, rangeVal *SourceRange, keyText string) *SetKeyframeKeyParams {
 	return &SetKeyframeKeyParams{
-		StyleSheetID: styleSheetId,
-		Range:        range_,
+		StyleSheetID: styleSheetID,
+		Range:        rangeVal,
 		KeyText:      keyText,
 	}
 }
@@ -724,7 +704,7 @@ type SetKeyframeKeyReturns struct {
 //
 // returns:
 //   keyText - The resulting key text after modification.
-func (p *SetKeyframeKeyParams) Do(ctxt context.Context, h FrameHandler) (keyText *Value, err error) {
+func (p *SetKeyframeKeyParams) Do(ctxt context.Context, h cdp.FrameHandler) (keyText *Value, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -736,13 +716,13 @@ func (p *SetKeyframeKeyParams) Do(ctxt context.Context, h FrameHandler) (keyText
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandCSSSetKeyframeKey, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandCSSSetKeyframeKey, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -751,7 +731,7 @@ func (p *SetKeyframeKeyParams) Do(ctxt context.Context, h FrameHandler) (keyText
 			var r SetKeyframeKeyReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.KeyText, nil
@@ -761,10 +741,10 @@ func (p *SetKeyframeKeyParams) Do(ctxt context.Context, h FrameHandler) (keyText
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // SetStyleTextsParams applies specified style edits one after another in the
@@ -793,7 +773,7 @@ type SetStyleTextsReturns struct {
 //
 // returns:
 //   styles - The resulting styles after modification.
-func (p *SetStyleTextsParams) Do(ctxt context.Context, h FrameHandler) (styles []*Style, err error) {
+func (p *SetStyleTextsParams) Do(ctxt context.Context, h cdp.FrameHandler) (styles []*Style, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -805,13 +785,13 @@ func (p *SetStyleTextsParams) Do(ctxt context.Context, h FrameHandler) (styles [
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandCSSSetStyleTexts, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandCSSSetStyleTexts, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -820,7 +800,7 @@ func (p *SetStyleTextsParams) Do(ctxt context.Context, h FrameHandler) (styles [
 			var r SetStyleTextsReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.Styles, nil
@@ -830,10 +810,10 @@ func (p *SetStyleTextsParams) Do(ctxt context.Context, h FrameHandler) (styles [
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // SetMediaTextParams modifies the rule selector.
@@ -846,13 +826,13 @@ type SetMediaTextParams struct {
 // SetMediaText modifies the rule selector.
 //
 // parameters:
-//   styleSheetId
+//   styleSheetID
 //   range
 //   text
-func SetMediaText(styleSheetId StyleSheetID, range_ *SourceRange, text string) *SetMediaTextParams {
+func SetMediaText(styleSheetID StyleSheetID, rangeVal *SourceRange, text string) *SetMediaTextParams {
 	return &SetMediaTextParams{
-		StyleSheetID: styleSheetId,
-		Range:        range_,
+		StyleSheetID: styleSheetID,
+		Range:        rangeVal,
 		Text:         text,
 	}
 }
@@ -866,7 +846,7 @@ type SetMediaTextReturns struct {
 //
 // returns:
 //   media - The resulting CSS media rule after modification.
-func (p *SetMediaTextParams) Do(ctxt context.Context, h FrameHandler) (media *Media, err error) {
+func (p *SetMediaTextParams) Do(ctxt context.Context, h cdp.FrameHandler) (media *Media, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -878,13 +858,13 @@ func (p *SetMediaTextParams) Do(ctxt context.Context, h FrameHandler) (media *Me
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandCSSSetMediaText, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandCSSSetMediaText, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -893,7 +873,7 @@ func (p *SetMediaTextParams) Do(ctxt context.Context, h FrameHandler) (media *Me
 			var r SetMediaTextReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.Media, nil
@@ -903,26 +883,26 @@ func (p *SetMediaTextParams) Do(ctxt context.Context, h FrameHandler) (media *Me
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // CreateStyleSheetParams creates a new special "via-inspector" stylesheet in
 // the frame with given frameId.
 type CreateStyleSheetParams struct {
-	FrameID FrameID `json:"frameId"` // Identifier of the frame where "via-inspector" stylesheet should be created.
+	FrameID cdp.FrameID `json:"frameId"` // Identifier of the frame where "via-inspector" stylesheet should be created.
 }
 
 // CreateStyleSheet creates a new special "via-inspector" stylesheet in the
 // frame with given frameId.
 //
 // parameters:
-//   frameId - Identifier of the frame where "via-inspector" stylesheet should be created.
-func CreateStyleSheet(frameId FrameID) *CreateStyleSheetParams {
+//   frameID - Identifier of the frame where "via-inspector" stylesheet should be created.
+func CreateStyleSheet(frameID cdp.FrameID) *CreateStyleSheetParams {
 	return &CreateStyleSheetParams{
-		FrameID: frameId,
+		FrameID: frameID,
 	}
 }
 
@@ -934,8 +914,8 @@ type CreateStyleSheetReturns struct {
 // Do executes CSS.createStyleSheet.
 //
 // returns:
-//   styleSheetId - Identifier of the created "via-inspector" stylesheet.
-func (p *CreateStyleSheetParams) Do(ctxt context.Context, h FrameHandler) (styleSheetId StyleSheetID, err error) {
+//   styleSheetID - Identifier of the created "via-inspector" stylesheet.
+func (p *CreateStyleSheetParams) Do(ctxt context.Context, h cdp.FrameHandler) (styleSheetID StyleSheetID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -947,13 +927,13 @@ func (p *CreateStyleSheetParams) Do(ctxt context.Context, h FrameHandler) (style
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandCSSCreateStyleSheet, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandCSSCreateStyleSheet, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return "", ErrChannelClosed
+			return "", cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -962,7 +942,7 @@ func (p *CreateStyleSheetParams) Do(ctxt context.Context, h FrameHandler) (style
 			var r CreateStyleSheetReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return "", ErrInvalidResult
+				return "", cdp.ErrInvalidResult
 			}
 
 			return r.StyleSheetID, nil
@@ -972,10 +952,10 @@ func (p *CreateStyleSheetParams) Do(ctxt context.Context, h FrameHandler) (style
 		}
 
 	case <-ctxt.Done():
-		return "", ErrContextDone
+		return "", cdp.ErrContextDone
 	}
 
-	return "", ErrUnknownResult
+	return "", cdp.ErrUnknownResult
 }
 
 // AddRuleParams inserts a new rule with the given ruleText in a stylesheet
@@ -990,12 +970,12 @@ type AddRuleParams struct {
 // given styleSheetId, at the position specified by location.
 //
 // parameters:
-//   styleSheetId - The css style sheet identifier where a new rule should be inserted.
+//   styleSheetID - The css style sheet identifier where a new rule should be inserted.
 //   ruleText - The text of a new rule.
 //   location - Text position of a new rule in the target style sheet.
-func AddRule(styleSheetId StyleSheetID, ruleText string, location *SourceRange) *AddRuleParams {
+func AddRule(styleSheetID StyleSheetID, ruleText string, location *SourceRange) *AddRuleParams {
 	return &AddRuleParams{
-		StyleSheetID: styleSheetId,
+		StyleSheetID: styleSheetID,
 		RuleText:     ruleText,
 		Location:     location,
 	}
@@ -1010,7 +990,7 @@ type AddRuleReturns struct {
 //
 // returns:
 //   rule - The newly created rule.
-func (p *AddRuleParams) Do(ctxt context.Context, h FrameHandler) (rule *Rule, err error) {
+func (p *AddRuleParams) Do(ctxt context.Context, h cdp.FrameHandler) (rule *Rule, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1022,13 +1002,13 @@ func (p *AddRuleParams) Do(ctxt context.Context, h FrameHandler) (rule *Rule, er
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandCSSAddRule, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandCSSAddRule, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1037,7 +1017,7 @@ func (p *AddRuleParams) Do(ctxt context.Context, h FrameHandler) (rule *Rule, er
 			var r AddRuleReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.Rule, nil
@@ -1047,16 +1027,16 @@ func (p *AddRuleParams) Do(ctxt context.Context, h FrameHandler) (rule *Rule, er
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // ForcePseudoStateParams ensures that the given node will have specified
 // pseudo-classes whenever its style is computed by the browser.
 type ForcePseudoStateParams struct {
-	NodeID              NodeID        `json:"nodeId"`              // The element id for which to force the pseudo state.
+	NodeID              cdp.NodeID    `json:"nodeId"`              // The element id for which to force the pseudo state.
 	ForcedPseudoClasses []PseudoClass `json:"forcedPseudoClasses"` // Element pseudo classes to force when computing the element's style.
 }
 
@@ -1064,17 +1044,17 @@ type ForcePseudoStateParams struct {
 // pseudo-classes whenever its style is computed by the browser.
 //
 // parameters:
-//   nodeId - The element id for which to force the pseudo state.
+//   nodeID - The element id for which to force the pseudo state.
 //   forcedPseudoClasses - Element pseudo classes to force when computing the element's style.
-func ForcePseudoState(nodeId NodeID, forcedPseudoClasses []PseudoClass) *ForcePseudoStateParams {
+func ForcePseudoState(nodeID cdp.NodeID, forcedPseudoClasses []PseudoClass) *ForcePseudoStateParams {
 	return &ForcePseudoStateParams{
-		NodeID:              nodeId,
+		NodeID:              nodeID,
 		ForcedPseudoClasses: forcedPseudoClasses,
 	}
 }
 
 // Do executes CSS.forcePseudoState.
-func (p *ForcePseudoStateParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *ForcePseudoStateParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1086,13 +1066,13 @@ func (p *ForcePseudoStateParams) Do(ctxt context.Context, h FrameHandler) (err e
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandCSSForcePseudoState, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandCSSForcePseudoState, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1104,10 +1084,10 @@ func (p *ForcePseudoStateParams) Do(ctxt context.Context, h FrameHandler) (err e
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // GetMediaQueriesParams returns all media queries parsed by the rendering
@@ -1128,19 +1108,19 @@ type GetMediaQueriesReturns struct {
 //
 // returns:
 //   medias
-func (p *GetMediaQueriesParams) Do(ctxt context.Context, h FrameHandler) (medias []*Media, err error) {
+func (p *GetMediaQueriesParams) Do(ctxt context.Context, h cdp.FrameHandler) (medias []*Media, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandCSSGetMediaQueries, Empty)
+	ch := h.Execute(ctxt, cdp.CommandCSSGetMediaQueries, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1149,7 +1129,7 @@ func (p *GetMediaQueriesParams) Do(ctxt context.Context, h FrameHandler) (medias
 			var r GetMediaQueriesReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.Medias, nil
@@ -1159,37 +1139,37 @@ func (p *GetMediaQueriesParams) Do(ctxt context.Context, h FrameHandler) (medias
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // SetEffectivePropertyValueForNodeParams find a rule with the given active
 // property for the given node and set the new value for this property.
 type SetEffectivePropertyValueForNodeParams struct {
-	NodeID       NodeID `json:"nodeId"` // The element id for which to set property.
-	PropertyName string `json:"propertyName"`
-	Value        string `json:"value"`
+	NodeID       cdp.NodeID `json:"nodeId"` // The element id for which to set property.
+	PropertyName string     `json:"propertyName"`
+	Value        string     `json:"value"`
 }
 
 // SetEffectivePropertyValueForNode find a rule with the given active
 // property for the given node and set the new value for this property.
 //
 // parameters:
-//   nodeId - The element id for which to set property.
+//   nodeID - The element id for which to set property.
 //   propertyName
 //   value
-func SetEffectivePropertyValueForNode(nodeId NodeID, propertyName string, value string) *SetEffectivePropertyValueForNodeParams {
+func SetEffectivePropertyValueForNode(nodeID cdp.NodeID, propertyName string, value string) *SetEffectivePropertyValueForNodeParams {
 	return &SetEffectivePropertyValueForNodeParams{
-		NodeID:       nodeId,
+		NodeID:       nodeID,
 		PropertyName: propertyName,
 		Value:        value,
 	}
 }
 
 // Do executes CSS.setEffectivePropertyValueForNode.
-func (p *SetEffectivePropertyValueForNodeParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetEffectivePropertyValueForNodeParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1201,13 +1181,13 @@ func (p *SetEffectivePropertyValueForNodeParams) Do(ctxt context.Context, h Fram
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandCSSSetEffectivePropertyValueForNode, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandCSSSetEffectivePropertyValueForNode, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1219,21 +1199,24 @@ func (p *SetEffectivePropertyValueForNodeParams) Do(ctxt context.Context, h Fram
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
+// GetBackgroundColorsParams [no description].
 type GetBackgroundColorsParams struct {
-	NodeID NodeID `json:"nodeId"` // Id of the node to get background colors for.
+	NodeID cdp.NodeID `json:"nodeId"` // Id of the node to get background colors for.
 }
 
+// GetBackgroundColors [no description].
+//
 // parameters:
-//   nodeId - Id of the node to get background colors for.
-func GetBackgroundColors(nodeId NodeID) *GetBackgroundColorsParams {
+//   nodeID - Id of the node to get background colors for.
+func GetBackgroundColors(nodeID cdp.NodeID) *GetBackgroundColorsParams {
 	return &GetBackgroundColorsParams{
-		NodeID: nodeId,
+		NodeID: nodeID,
 	}
 }
 
@@ -1246,7 +1229,7 @@ type GetBackgroundColorsReturns struct {
 //
 // returns:
 //   backgroundColors - The range of background colors behind this element, if it contains any visible text. If no visible text is present, this will be undefined. In the case of a flat background color, this will consist of simply that color. In the case of a gradient, this will consist of each of the color stops. For anything more complicated, this will be an empty array. Images will be ignored (as if the image had failed to load).
-func (p *GetBackgroundColorsParams) Do(ctxt context.Context, h FrameHandler) (backgroundColors []string, err error) {
+func (p *GetBackgroundColorsParams) Do(ctxt context.Context, h cdp.FrameHandler) (backgroundColors []string, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1258,13 +1241,13 @@ func (p *GetBackgroundColorsParams) Do(ctxt context.Context, h FrameHandler) (ba
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandCSSGetBackgroundColors, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandCSSGetBackgroundColors, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1273,7 +1256,7 @@ func (p *GetBackgroundColorsParams) Do(ctxt context.Context, h FrameHandler) (ba
 			var r GetBackgroundColorsReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.BackgroundColors, nil
@@ -1283,10 +1266,10 @@ func (p *GetBackgroundColorsParams) Do(ctxt context.Context, h FrameHandler) (ba
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // GetLayoutTreeAndStylesParams for the main document and any content
@@ -1321,7 +1304,7 @@ type GetLayoutTreeAndStylesReturns struct {
 // returns:
 //   layoutTreeNodes
 //   computedStyles
-func (p *GetLayoutTreeAndStylesParams) Do(ctxt context.Context, h FrameHandler) (layoutTreeNodes []*LayoutTreeNode, computedStyles []*ComputedStyle, err error) {
+func (p *GetLayoutTreeAndStylesParams) Do(ctxt context.Context, h cdp.FrameHandler) (layoutTreeNodes []*LayoutTreeNode, computedStyles []*ComputedStyle, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1333,13 +1316,13 @@ func (p *GetLayoutTreeAndStylesParams) Do(ctxt context.Context, h FrameHandler) 
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandCSSGetLayoutTreeAndStyles, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandCSSGetLayoutTreeAndStyles, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, nil, ErrChannelClosed
+			return nil, nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1348,7 +1331,7 @@ func (p *GetLayoutTreeAndStylesParams) Do(ctxt context.Context, h FrameHandler) 
 			var r GetLayoutTreeAndStylesReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, nil, ErrInvalidResult
+				return nil, nil, cdp.ErrInvalidResult
 			}
 
 			return r.LayoutTreeNodes, r.ComputedStyles, nil
@@ -1358,10 +1341,10 @@ func (p *GetLayoutTreeAndStylesParams) Do(ctxt context.Context, h FrameHandler) 
 		}
 
 	case <-ctxt.Done():
-		return nil, nil, ErrContextDone
+		return nil, nil, cdp.ErrContextDone
 	}
 
-	return nil, nil, ErrUnknownResult
+	return nil, nil, cdp.ErrUnknownResult
 }
 
 // StartRuleUsageTrackingParams enables the selector recording.
@@ -1373,19 +1356,19 @@ func StartRuleUsageTracking() *StartRuleUsageTrackingParams {
 }
 
 // Do executes CSS.startRuleUsageTracking.
-func (p *StartRuleUsageTrackingParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *StartRuleUsageTrackingParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandCSSStartRuleUsageTracking, Empty)
+	ch := h.Execute(ctxt, cdp.CommandCSSStartRuleUsageTracking, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1397,10 +1380,10 @@ func (p *StartRuleUsageTrackingParams) Do(ctxt context.Context, h FrameHandler) 
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // StopRuleUsageTrackingParams the list of rules with an indication of
@@ -1422,19 +1405,19 @@ type StopRuleUsageTrackingReturns struct {
 //
 // returns:
 //   ruleUsage
-func (p *StopRuleUsageTrackingParams) Do(ctxt context.Context, h FrameHandler) (ruleUsage []*RuleUsage, err error) {
+func (p *StopRuleUsageTrackingParams) Do(ctxt context.Context, h cdp.FrameHandler) (ruleUsage []*RuleUsage, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandCSSStopRuleUsageTracking, Empty)
+	ch := h.Execute(ctxt, cdp.CommandCSSStopRuleUsageTracking, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -1443,7 +1426,7 @@ func (p *StopRuleUsageTrackingParams) Do(ctxt context.Context, h FrameHandler) (
 			var r StopRuleUsageTrackingReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.RuleUsage, nil
@@ -1453,8 +1436,8 @@ func (p *StopRuleUsageTrackingParams) Do(ctxt context.Context, h FrameHandler) (
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }

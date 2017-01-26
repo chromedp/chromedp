@@ -16,28 +16,28 @@ import (
 
 	"github.com/knq/chromedp/cmd/chromedp-gen/fixup"
 	"github.com/knq/chromedp/cmd/chromedp-gen/gen"
-	. "github.com/knq/chromedp/cmd/chromedp-gen/internal"
+	"github.com/knq/chromedp/cmd/chromedp-gen/internal"
 )
 
 func main() {
 	var err error
 
 	// parse flags
-	err = FlagSet.Parse(os.Args)
+	err = internal.FlagSet.Parse(os.Args)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
 	// load protocol data
-	buf, err := ioutil.ReadFile(*FlagFile)
+	buf, err := ioutil.ReadFile(*internal.FlagFile)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}
 
 	// unmarshal protocol info
-	var protoInfo ProtocolInfo
+	var protoInfo internal.ProtocolInfo
 	err = json.Unmarshal(buf, &protoInfo)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
@@ -45,7 +45,7 @@ func main() {
 	}
 
 	// remove existing directory
-	if !*FlagNoRemove {
+	if !*internal.FlagNoRemove {
 		err = os.RemoveAll(out())
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "error: %v\n", err)
@@ -55,10 +55,10 @@ func main() {
 
 	// determine what to process
 	pkgs := []string{""}
-	var processed []*Domain
+	var processed []*internal.Domain
 	for _, d := range protoInfo.Domains {
 		// skip if not processing
-		if (!*FlagDep && d.Deprecated.Bool()) || (!*FlagExp && d.Experimental.Bool()) {
+		if (!*internal.FlagDep && d.Deprecated.Bool()) || (!*internal.FlagExp && d.Experimental.Bool()) {
 			// extra info
 			var extra []string
 			if d.Deprecated.Bool() {
@@ -111,17 +111,17 @@ func main() {
 }
 
 // cleanupTypes removes deprecated types.
-func cleanupTypes(n string, dtyp string, types []*Type) []*Type {
-	var ret []*Type
+func cleanupTypes(n string, dtyp string, types []*internal.Type) []*internal.Type {
+	var ret []*internal.Type
 
 	for _, t := range types {
 		typ := dtyp + "." + t.IdOrName()
-		if !*FlagDep && t.Deprecated.Bool() {
+		if !*internal.FlagDep && t.Deprecated.Bool() {
 			log.Printf("skipping %s %s [deprecated]", n, typ)
 			continue
 		}
 
-		if !*FlagRedirect && string(t.Redirect) != "" {
+		if !*internal.FlagRedirect && string(t.Redirect) != "" {
 			log.Printf("skipping %s %s [redirect:%s]", n, typ, t.Redirect)
 			continue
 		}
@@ -145,7 +145,7 @@ func cleanupTypes(n string, dtyp string, types []*Type) []*Type {
 }
 
 // cleanup removes deprecated types, events, and commands from the domain.
-func cleanup(d *Domain) {
+func cleanup(d *internal.Domain) {
 	d.Types = cleanupTypes("type", d.String(), d.Types)
 	d.Events = cleanupTypes("event", d.String(), d.Events)
 	d.Commands = cleanupTypes("command", d.String(), d.Commands)
@@ -247,5 +247,5 @@ func easyjson(pkgs []string) error {
 
 // out returns the output path of the passed package flag.
 func out() string {
-	return os.Getenv("GOPATH") + "/src/" + *FlagPkg
+	return os.Getenv("GOPATH") + "/src/" + *internal.FlagPkg
 }

@@ -9,32 +9,14 @@ package memory
 import (
 	"context"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/mailru/easyjson"
 )
 
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
-)
-
+// GetDOMCountersParams [no description].
 type GetDOMCountersParams struct{}
 
+// GetDOMCounters [no description].
 func GetDOMCounters() *GetDOMCountersParams {
 	return &GetDOMCountersParams{}
 }
@@ -52,19 +34,19 @@ type GetDOMCountersReturns struct {
 //   documents
 //   nodes
 //   jsEventListeners
-func (p *GetDOMCountersParams) Do(ctxt context.Context, h FrameHandler) (documents int64, nodes int64, jsEventListeners int64, err error) {
+func (p *GetDOMCountersParams) Do(ctxt context.Context, h cdp.FrameHandler) (documents int64, nodes int64, jsEventListeners int64, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandMemoryGetDOMCounters, Empty)
+	ch := h.Execute(ctxt, cdp.CommandMemoryGetDOMCounters, cdp.Empty)
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return 0, 0, 0, ErrChannelClosed
+			return 0, 0, 0, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -73,7 +55,7 @@ func (p *GetDOMCountersParams) Do(ctxt context.Context, h FrameHandler) (documen
 			var r GetDOMCountersReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return 0, 0, 0, ErrInvalidResult
+				return 0, 0, 0, cdp.ErrInvalidResult
 			}
 
 			return r.Documents, r.Nodes, r.JsEventListeners, nil
@@ -83,10 +65,10 @@ func (p *GetDOMCountersParams) Do(ctxt context.Context, h FrameHandler) (documen
 		}
 
 	case <-ctxt.Done():
-		return 0, 0, 0, ErrContextDone
+		return 0, 0, 0, cdp.ErrContextDone
 	}
 
-	return 0, 0, 0, ErrUnknownResult
+	return 0, 0, 0, cdp.ErrUnknownResult
 }
 
 // SetPressureNotificationsSuppressedParams enable/disable suppressing memory
@@ -107,7 +89,7 @@ func SetPressureNotificationsSuppressed(suppressed bool) *SetPressureNotificatio
 }
 
 // Do executes Memory.setPressureNotificationsSuppressed.
-func (p *SetPressureNotificationsSuppressedParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetPressureNotificationsSuppressedParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -119,13 +101,13 @@ func (p *SetPressureNotificationsSuppressedParams) Do(ctxt context.Context, h Fr
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandMemorySetPressureNotificationsSuppressed, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandMemorySetPressureNotificationsSuppressed, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -137,10 +119,10 @@ func (p *SetPressureNotificationsSuppressedParams) Do(ctxt context.Context, h Fr
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SimulatePressureNotificationParams simulate a memory pressure notification
@@ -161,7 +143,7 @@ func SimulatePressureNotification(level PressureLevel) *SimulatePressureNotifica
 }
 
 // Do executes Memory.simulatePressureNotification.
-func (p *SimulatePressureNotificationParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SimulatePressureNotificationParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -173,13 +155,13 @@ func (p *SimulatePressureNotificationParams) Do(ctxt context.Context, h FrameHan
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandMemorySimulatePressureNotification, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandMemorySimulatePressureNotification, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -191,8 +173,8 @@ func (p *SimulatePressureNotificationParams) Do(ctxt context.Context, h FrameHan
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }

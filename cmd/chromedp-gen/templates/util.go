@@ -3,7 +3,7 @@ package templates
 import (
 	"strings"
 
-	. "github.com/knq/chromedp/cmd/chromedp-gen/internal"
+	"github.com/knq/chromedp/cmd/chromedp-gen/internal"
 )
 
 const (
@@ -12,14 +12,19 @@ const (
 )
 
 // formatComment formats a comment.
-func formatComment(s, chop, new string) string {
+func formatComment(s, chop, newstr string) string {
 	s = strings.TrimPrefix(s, chop)
-	s = CodeRE.ReplaceAllString(s, "")
+	s = internal.CodeRE.ReplaceAllString(s, "")
 
-	if new != "" {
+	l := len(s)
+	if newstr != "" && l > 0 {
 		s = strings.ToLower(s[:1]) + s[1:]
 	}
-	s = new + strings.TrimSuffix(s, ".") + "."
+	s = newstr + strings.TrimSuffix(s, ".")
+	if l < 1 {
+		s += "[no description]"
+	}
+	s += "."
 
 	return wrap(s, commentWidth-len(commentPrefix), commentPrefix)
 }

@@ -13,51 +13,31 @@ package domdebugger
 import (
 	"context"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/runtime"
 	"github.com/mailru/easyjson"
 )
 
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
-)
-
 // SetDOMBreakpointParams sets breakpoint on particular operation with DOM.
 type SetDOMBreakpointParams struct {
-	NodeID NodeID            `json:"nodeId"` // Identifier of the node to set breakpoint on.
+	NodeID cdp.NodeID        `json:"nodeId"` // Identifier of the node to set breakpoint on.
 	Type   DOMBreakpointType `json:"type"`   // Type of the operation to stop upon.
 }
 
 // SetDOMBreakpoint sets breakpoint on particular operation with DOM.
 //
 // parameters:
-//   nodeId - Identifier of the node to set breakpoint on.
+//   nodeID - Identifier of the node to set breakpoint on.
 //   type - Type of the operation to stop upon.
-func SetDOMBreakpoint(nodeId NodeID, type_ DOMBreakpointType) *SetDOMBreakpointParams {
+func SetDOMBreakpoint(nodeID cdp.NodeID, typeVal DOMBreakpointType) *SetDOMBreakpointParams {
 	return &SetDOMBreakpointParams{
-		NodeID: nodeId,
-		Type:   type_,
+		NodeID: nodeID,
+		Type:   typeVal,
 	}
 }
 
 // Do executes DOMDebugger.setDOMBreakpoint.
-func (p *SetDOMBreakpointParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetDOMBreakpointParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -69,13 +49,13 @@ func (p *SetDOMBreakpointParams) Do(ctxt context.Context, h FrameHandler) (err e
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMDebuggerSetDOMBreakpoint, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMDebuggerSetDOMBreakpoint, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -87,16 +67,16 @@ func (p *SetDOMBreakpointParams) Do(ctxt context.Context, h FrameHandler) (err e
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // RemoveDOMBreakpointParams removes DOM breakpoint that was set using
 // setDOMBreakpoint.
 type RemoveDOMBreakpointParams struct {
-	NodeID NodeID            `json:"nodeId"` // Identifier of the node to remove breakpoint from.
+	NodeID cdp.NodeID        `json:"nodeId"` // Identifier of the node to remove breakpoint from.
 	Type   DOMBreakpointType `json:"type"`   // Type of the breakpoint to remove.
 }
 
@@ -104,17 +84,17 @@ type RemoveDOMBreakpointParams struct {
 // setDOMBreakpoint.
 //
 // parameters:
-//   nodeId - Identifier of the node to remove breakpoint from.
+//   nodeID - Identifier of the node to remove breakpoint from.
 //   type - Type of the breakpoint to remove.
-func RemoveDOMBreakpoint(nodeId NodeID, type_ DOMBreakpointType) *RemoveDOMBreakpointParams {
+func RemoveDOMBreakpoint(nodeID cdp.NodeID, typeVal DOMBreakpointType) *RemoveDOMBreakpointParams {
 	return &RemoveDOMBreakpointParams{
-		NodeID: nodeId,
-		Type:   type_,
+		NodeID: nodeID,
+		Type:   typeVal,
 	}
 }
 
 // Do executes DOMDebugger.removeDOMBreakpoint.
-func (p *RemoveDOMBreakpointParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *RemoveDOMBreakpointParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -126,13 +106,13 @@ func (p *RemoveDOMBreakpointParams) Do(ctxt context.Context, h FrameHandler) (er
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMDebuggerRemoveDOMBreakpoint, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMDebuggerRemoveDOMBreakpoint, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -144,10 +124,10 @@ func (p *RemoveDOMBreakpointParams) Do(ctxt context.Context, h FrameHandler) (er
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetEventListenerBreakpointParams sets breakpoint on particular DOM event.
@@ -174,7 +154,7 @@ func (p SetEventListenerBreakpointParams) WithTargetName(targetName string) *Set
 }
 
 // Do executes DOMDebugger.setEventListenerBreakpoint.
-func (p *SetEventListenerBreakpointParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetEventListenerBreakpointParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -186,13 +166,13 @@ func (p *SetEventListenerBreakpointParams) Do(ctxt context.Context, h FrameHandl
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMDebuggerSetEventListenerBreakpoint, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMDebuggerSetEventListenerBreakpoint, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -204,10 +184,10 @@ func (p *SetEventListenerBreakpointParams) Do(ctxt context.Context, h FrameHandl
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // RemoveEventListenerBreakpointParams removes breakpoint on particular DOM
@@ -234,7 +214,7 @@ func (p RemoveEventListenerBreakpointParams) WithTargetName(targetName string) *
 }
 
 // Do executes DOMDebugger.removeEventListenerBreakpoint.
-func (p *RemoveEventListenerBreakpointParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *RemoveEventListenerBreakpointParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -246,13 +226,13 @@ func (p *RemoveEventListenerBreakpointParams) Do(ctxt context.Context, h FrameHa
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMDebuggerRemoveEventListenerBreakpoint, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMDebuggerRemoveEventListenerBreakpoint, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -264,10 +244,10 @@ func (p *RemoveEventListenerBreakpointParams) Do(ctxt context.Context, h FrameHa
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetInstrumentationBreakpointParams sets breakpoint on particular native
@@ -287,7 +267,7 @@ func SetInstrumentationBreakpoint(eventName string) *SetInstrumentationBreakpoin
 }
 
 // Do executes DOMDebugger.setInstrumentationBreakpoint.
-func (p *SetInstrumentationBreakpointParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetInstrumentationBreakpointParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -299,13 +279,13 @@ func (p *SetInstrumentationBreakpointParams) Do(ctxt context.Context, h FrameHan
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMDebuggerSetInstrumentationBreakpoint, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMDebuggerSetInstrumentationBreakpoint, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -317,10 +297,10 @@ func (p *SetInstrumentationBreakpointParams) Do(ctxt context.Context, h FrameHan
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // RemoveInstrumentationBreakpointParams removes breakpoint on particular
@@ -341,7 +321,7 @@ func RemoveInstrumentationBreakpoint(eventName string) *RemoveInstrumentationBre
 }
 
 // Do executes DOMDebugger.removeInstrumentationBreakpoint.
-func (p *RemoveInstrumentationBreakpointParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *RemoveInstrumentationBreakpointParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -353,13 +333,13 @@ func (p *RemoveInstrumentationBreakpointParams) Do(ctxt context.Context, h Frame
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMDebuggerRemoveInstrumentationBreakpoint, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMDebuggerRemoveInstrumentationBreakpoint, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -371,10 +351,10 @@ func (p *RemoveInstrumentationBreakpointParams) Do(ctxt context.Context, h Frame
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // SetXHRBreakpointParams sets breakpoint on XMLHttpRequest.
@@ -393,7 +373,7 @@ func SetXHRBreakpoint(url string) *SetXHRBreakpointParams {
 }
 
 // Do executes DOMDebugger.setXHRBreakpoint.
-func (p *SetXHRBreakpointParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *SetXHRBreakpointParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -405,13 +385,13 @@ func (p *SetXHRBreakpointParams) Do(ctxt context.Context, h FrameHandler) (err e
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMDebuggerSetXHRBreakpoint, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMDebuggerSetXHRBreakpoint, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -423,10 +403,10 @@ func (p *SetXHRBreakpointParams) Do(ctxt context.Context, h FrameHandler) (err e
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // RemoveXHRBreakpointParams removes breakpoint from XMLHttpRequest.
@@ -445,7 +425,7 @@ func RemoveXHRBreakpoint(url string) *RemoveXHRBreakpointParams {
 }
 
 // Do executes DOMDebugger.removeXHRBreakpoint.
-func (p *RemoveXHRBreakpointParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *RemoveXHRBreakpointParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -457,13 +437,13 @@ func (p *RemoveXHRBreakpointParams) Do(ctxt context.Context, h FrameHandler) (er
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMDebuggerRemoveXHRBreakpoint, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMDebuggerRemoveXHRBreakpoint, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -475,10 +455,10 @@ func (p *RemoveXHRBreakpointParams) Do(ctxt context.Context, h FrameHandler) (er
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // GetEventListenersParams returns event listeners of the given object.
@@ -489,10 +469,10 @@ type GetEventListenersParams struct {
 // GetEventListeners returns event listeners of the given object.
 //
 // parameters:
-//   objectId - Identifier of the object to return listeners for.
-func GetEventListeners(objectId runtime.RemoteObjectID) *GetEventListenersParams {
+//   objectID - Identifier of the object to return listeners for.
+func GetEventListeners(objectID runtime.RemoteObjectID) *GetEventListenersParams {
 	return &GetEventListenersParams{
-		ObjectID: objectId,
+		ObjectID: objectID,
 	}
 }
 
@@ -505,7 +485,7 @@ type GetEventListenersReturns struct {
 //
 // returns:
 //   listeners - Array of relevant listeners.
-func (p *GetEventListenersParams) Do(ctxt context.Context, h FrameHandler) (listeners []*EventListener, err error) {
+func (p *GetEventListenersParams) Do(ctxt context.Context, h cdp.FrameHandler) (listeners []*EventListener, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -517,13 +497,13 @@ func (p *GetEventListenersParams) Do(ctxt context.Context, h FrameHandler) (list
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandDOMDebuggerGetEventListeners, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandDOMDebuggerGetEventListeners, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -532,7 +512,7 @@ func (p *GetEventListenersParams) Do(ctxt context.Context, h FrameHandler) (list
 			var r GetEventListenersReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.Listeners, nil
@@ -542,8 +522,8 @@ func (p *GetEventListenersParams) Do(ctxt context.Context, h FrameHandler) (list
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }

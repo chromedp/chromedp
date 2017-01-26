@@ -9,28 +9,8 @@ package cachestorage
 import (
 	"context"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/mailru/easyjson"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // RequestCacheNamesParams requests cache names.
@@ -57,7 +37,7 @@ type RequestCacheNamesReturns struct {
 //
 // returns:
 //   caches - Caches for the security origin.
-func (p *RequestCacheNamesParams) Do(ctxt context.Context, h FrameHandler) (caches []*Cache, err error) {
+func (p *RequestCacheNamesParams) Do(ctxt context.Context, h cdp.FrameHandler) (caches []*Cache, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -69,13 +49,13 @@ func (p *RequestCacheNamesParams) Do(ctxt context.Context, h FrameHandler) (cach
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandCacheStorageRequestCacheNames, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandCacheStorageRequestCacheNames, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, ErrChannelClosed
+			return nil, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -84,7 +64,7 @@ func (p *RequestCacheNamesParams) Do(ctxt context.Context, h FrameHandler) (cach
 			var r RequestCacheNamesReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, ErrInvalidResult
+				return nil, cdp.ErrInvalidResult
 			}
 
 			return r.Caches, nil
@@ -94,10 +74,10 @@ func (p *RequestCacheNamesParams) Do(ctxt context.Context, h FrameHandler) (cach
 		}
 
 	case <-ctxt.Done():
-		return nil, ErrContextDone
+		return nil, cdp.ErrContextDone
 	}
 
-	return nil, ErrUnknownResult
+	return nil, cdp.ErrUnknownResult
 }
 
 // RequestEntriesParams requests data from cache.
@@ -110,12 +90,12 @@ type RequestEntriesParams struct {
 // RequestEntries requests data from cache.
 //
 // parameters:
-//   cacheId - ID of cache to get entries from.
+//   cacheID - ID of cache to get entries from.
 //   skipCount - Number of records to skip.
 //   pageSize - Number of records to fetch.
-func RequestEntries(cacheId CacheID, skipCount int64, pageSize int64) *RequestEntriesParams {
+func RequestEntries(cacheID CacheID, skipCount int64, pageSize int64) *RequestEntriesParams {
 	return &RequestEntriesParams{
-		CacheID:   cacheId,
+		CacheID:   cacheID,
 		SkipCount: skipCount,
 		PageSize:  pageSize,
 	}
@@ -132,7 +112,7 @@ type RequestEntriesReturns struct {
 // returns:
 //   cacheDataEntries - Array of object store data entries.
 //   hasMore - If true, there are more entries to fetch in the given range.
-func (p *RequestEntriesParams) Do(ctxt context.Context, h FrameHandler) (cacheDataEntries []*DataEntry, hasMore bool, err error) {
+func (p *RequestEntriesParams) Do(ctxt context.Context, h cdp.FrameHandler) (cacheDataEntries []*DataEntry, hasMore bool, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -144,13 +124,13 @@ func (p *RequestEntriesParams) Do(ctxt context.Context, h FrameHandler) (cacheDa
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandCacheStorageRequestEntries, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandCacheStorageRequestEntries, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return nil, false, ErrChannelClosed
+			return nil, false, cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -159,7 +139,7 @@ func (p *RequestEntriesParams) Do(ctxt context.Context, h FrameHandler) (cacheDa
 			var r RequestEntriesReturns
 			err = easyjson.Unmarshal(v, &r)
 			if err != nil {
-				return nil, false, ErrInvalidResult
+				return nil, false, cdp.ErrInvalidResult
 			}
 
 			return r.CacheDataEntries, r.HasMore, nil
@@ -169,10 +149,10 @@ func (p *RequestEntriesParams) Do(ctxt context.Context, h FrameHandler) (cacheDa
 		}
 
 	case <-ctxt.Done():
-		return nil, false, ErrContextDone
+		return nil, false, cdp.ErrContextDone
 	}
 
-	return nil, false, ErrUnknownResult
+	return nil, false, cdp.ErrUnknownResult
 }
 
 // DeleteCacheParams deletes a cache.
@@ -183,15 +163,15 @@ type DeleteCacheParams struct {
 // DeleteCache deletes a cache.
 //
 // parameters:
-//   cacheId - Id of cache for deletion.
-func DeleteCache(cacheId CacheID) *DeleteCacheParams {
+//   cacheID - Id of cache for deletion.
+func DeleteCache(cacheID CacheID) *DeleteCacheParams {
 	return &DeleteCacheParams{
-		CacheID: cacheId,
+		CacheID: cacheID,
 	}
 }
 
 // Do executes CacheStorage.deleteCache.
-func (p *DeleteCacheParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *DeleteCacheParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -203,13 +183,13 @@ func (p *DeleteCacheParams) Do(ctxt context.Context, h FrameHandler) (err error)
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandCacheStorageDeleteCache, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandCacheStorageDeleteCache, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -221,10 +201,10 @@ func (p *DeleteCacheParams) Do(ctxt context.Context, h FrameHandler) (err error)
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }
 
 // DeleteEntryParams deletes a cache entry.
@@ -236,17 +216,17 @@ type DeleteEntryParams struct {
 // DeleteEntry deletes a cache entry.
 //
 // parameters:
-//   cacheId - Id of cache where the entry will be deleted.
+//   cacheID - Id of cache where the entry will be deleted.
 //   request - URL spec of the request.
-func DeleteEntry(cacheId CacheID, request string) *DeleteEntryParams {
+func DeleteEntry(cacheID CacheID, request string) *DeleteEntryParams {
 	return &DeleteEntryParams{
-		CacheID: cacheId,
+		CacheID: cacheID,
 		Request: request,
 	}
 }
 
 // Do executes CacheStorage.deleteEntry.
-func (p *DeleteEntryParams) Do(ctxt context.Context, h FrameHandler) (err error) {
+func (p *DeleteEntryParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -258,13 +238,13 @@ func (p *DeleteEntryParams) Do(ctxt context.Context, h FrameHandler) (err error)
 	}
 
 	// execute
-	ch := h.Execute(ctxt, CommandCacheStorageDeleteEntry, easyjson.RawMessage(buf))
+	ch := h.Execute(ctxt, cdp.CommandCacheStorageDeleteEntry, easyjson.RawMessage(buf))
 
 	// read response
 	select {
 	case res := <-ch:
 		if res == nil {
-			return ErrChannelClosed
+			return cdp.ErrChannelClosed
 		}
 
 		switch v := res.(type) {
@@ -276,8 +256,8 @@ func (p *DeleteEntryParams) Do(ctxt context.Context, h FrameHandler) (err error)
 		}
 
 	case <-ctxt.Done():
-		return ErrContextDone
+		return cdp.ErrContextDone
 	}
 
-	return ErrUnknownResult
+	return cdp.ErrUnknownResult
 }

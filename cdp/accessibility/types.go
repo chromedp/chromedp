@@ -5,30 +5,10 @@ package accessibility
 import (
 	"errors"
 
-	. "github.com/knq/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"
-)
-
-var (
-	_ BackendNode
-	_ BackendNodeID
-	_ ComputedProperty
-	_ ErrorType
-	_ Frame
-	_ FrameID
-	_ LoaderID
-	_ Message
-	_ MessageError
-	_ MethodType
-	_ Node
-	_ NodeID
-	_ NodeType
-	_ PseudoType
-	_ RGBA
-	_ ShadowRootType
-	_ Timestamp
 )
 
 // AXNodeID unique accessibility node identifier.
@@ -254,12 +234,14 @@ type AXValueSource struct {
 	InvalidReason     string                  `json:"invalidReason,omitempty"`     // Reason for the value being invalid, if it is.
 }
 
+// AXRelatedNode [no description].
 type AXRelatedNode struct {
-	BackendDOMNodeID BackendNodeID `json:"backendDOMNodeId,omitempty"` // The BackendNodeId of the related DOM node.
-	Idref            string        `json:"idref,omitempty"`            // The IDRef value provided, if any.
-	Text             string        `json:"text,omitempty"`             // The text alternative of this node in the current context.
+	BackendDOMNodeID cdp.BackendNodeID `json:"backendDOMNodeId,omitempty"` // The BackendNodeId of the related DOM node.
+	Idref            string            `json:"idref,omitempty"`            // The IDRef value provided, if any.
+	Text             string            `json:"text,omitempty"`             // The text alternative of this node in the current context.
 }
 
+// AXProperty [no description].
 type AXProperty struct {
 	Name  string   `json:"name,omitempty"`  // The name of this property.
 	Value *AXValue `json:"value,omitempty"` // The value of this property.
@@ -546,14 +528,14 @@ func (t *AXRelationshipAttributes) UnmarshalJSON(buf []byte) error {
 
 // AXNode a node in the accessibility tree.
 type AXNode struct {
-	NodeID           AXNodeID      `json:"nodeId,omitempty"`           // Unique identifier for this node.
-	Ignored          bool          `json:"ignored,omitempty"`          // Whether this node is ignored for accessibility
-	IgnoredReasons   []*AXProperty `json:"ignoredReasons,omitempty"`   // Collection of reasons why this node is hidden.
-	Role             *AXValue      `json:"role,omitempty"`             // This Node's role, whether explicit or implicit.
-	Name             *AXValue      `json:"name,omitempty"`             // The accessible name for this Node.
-	Description      *AXValue      `json:"description,omitempty"`      // The accessible description for this Node.
-	Value            *AXValue      `json:"value,omitempty"`            // The value for this Node.
-	Properties       []*AXProperty `json:"properties,omitempty"`       // All other properties
-	ChildIds         []AXNodeID    `json:"childIds,omitempty"`         // IDs for each of this node's child nodes.
-	BackendDOMNodeID BackendNodeID `json:"backendDOMNodeId,omitempty"` // The backend ID for the associated DOM node, if any.
+	NodeID           AXNodeID          `json:"nodeId,omitempty"`           // Unique identifier for this node.
+	Ignored          bool              `json:"ignored,omitempty"`          // Whether this node is ignored for accessibility
+	IgnoredReasons   []*AXProperty     `json:"ignoredReasons,omitempty"`   // Collection of reasons why this node is hidden.
+	Role             *AXValue          `json:"role,omitempty"`             // This Node's role, whether explicit or implicit.
+	Name             *AXValue          `json:"name,omitempty"`             // The accessible name for this Node.
+	Description      *AXValue          `json:"description,omitempty"`      // The accessible description for this Node.
+	Value            *AXValue          `json:"value,omitempty"`            // The value for this Node.
+	Properties       []*AXProperty     `json:"properties,omitempty"`       // All other properties
+	ChildIds         []AXNodeID        `json:"childIds,omitempty"`         // IDs for each of this node's child nodes.
+	BackendDOMNodeID cdp.BackendNodeID `json:"backendDOMNodeId,omitempty"` // The backend ID for the associated DOM node, if any.
 }
