@@ -482,10 +482,9 @@ func (t InitiatorType) String() string {
 
 // InitiatorType values.
 const (
-	InitiatorTypeParser  InitiatorType = "parser"
-	InitiatorTypeScript  InitiatorType = "script"
-	InitiatorTypePreload InitiatorType = "preload"
-	InitiatorTypeOther   InitiatorType = "other"
+	InitiatorTypeParser InitiatorType = "parser"
+	InitiatorTypeScript InitiatorType = "script"
+	InitiatorTypeOther  InitiatorType = "other"
 )
 
 // MarshalEasyJSON satisfies easyjson.Marshaler.
@@ -505,8 +504,6 @@ func (t *InitiatorType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = InitiatorTypeParser
 	case InitiatorTypeScript:
 		*t = InitiatorTypeScript
-	case InitiatorTypePreload:
-		*t = InitiatorTypePreload
 	case InitiatorTypeOther:
 		*t = InitiatorTypeOther
 

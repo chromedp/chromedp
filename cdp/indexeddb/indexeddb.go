@@ -377,3 +377,58 @@ func (p *ClearObjectStoreParams) Do(ctxt context.Context, h cdp.FrameHandler) (e
 
 	return cdp.ErrUnknownResult
 }
+
+// DeleteDatabaseParams deletes a database.
+type DeleteDatabaseParams struct {
+	SecurityOrigin string `json:"securityOrigin"` // Security origin.
+	DatabaseName   string `json:"databaseName"`   // Database name.
+}
+
+// DeleteDatabase deletes a database.
+//
+// parameters:
+//   securityOrigin - Security origin.
+//   databaseName - Database name.
+func DeleteDatabase(securityOrigin string, databaseName string) *DeleteDatabaseParams {
+	return &DeleteDatabaseParams{
+		SecurityOrigin: securityOrigin,
+		DatabaseName:   databaseName,
+	}
+}
+
+// Do executes IndexedDB.deleteDatabase.
+func (p *DeleteDatabaseParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+	if ctxt == nil {
+		ctxt = context.Background()
+	}
+
+	// marshal
+	buf, err := easyjson.Marshal(p)
+	if err != nil {
+		return err
+	}
+
+	// execute
+	ch := h.Execute(ctxt, cdp.CommandIndexedDBDeleteDatabase, easyjson.RawMessage(buf))
+
+	// read response
+	select {
+	case res := <-ch:
+		if res == nil {
+			return cdp.ErrChannelClosed
+		}
+
+		switch v := res.(type) {
+		case easyjson.RawMessage:
+			return nil
+
+		case error:
+			return v
+		}
+
+	case <-ctxt.Done():
+		return cdp.ErrContextDone
+	}
+
+	return cdp.ErrUnknownResult
+}

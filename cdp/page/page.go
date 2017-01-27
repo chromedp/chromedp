@@ -830,29 +830,52 @@ func (p *SetDocumentContentParams) Do(ctxt context.Context, h cdp.FrameHandler) 
 }
 
 // CaptureScreenshotParams capture page screenshot.
-type CaptureScreenshotParams struct{}
+type CaptureScreenshotParams struct {
+	Format  CaptureScreenshotFormat `json:"format,omitempty"`  // Image compression format (defaults to png).
+	Quality int64                   `json:"quality,omitempty"` // Compression quality from range [0..100] (jpeg only).
+}
 
 // CaptureScreenshot capture page screenshot.
+//
+// parameters:
 func CaptureScreenshot() *CaptureScreenshotParams {
 	return &CaptureScreenshotParams{}
 }
 
+// WithFormat image compression format (defaults to png).
+func (p CaptureScreenshotParams) WithFormat(format CaptureScreenshotFormat) *CaptureScreenshotParams {
+	p.Format = format
+	return &p
+}
+
+// WithQuality compression quality from range [0..100] (jpeg only).
+func (p CaptureScreenshotParams) WithQuality(quality int64) *CaptureScreenshotParams {
+	p.Quality = quality
+	return &p
+}
+
 // CaptureScreenshotReturns return values.
 type CaptureScreenshotReturns struct {
-	Data string `json:"data,omitempty"` // Base64-encoded image data (PNG).
+	Data string `json:"data,omitempty"` // Base64-encoded image data.
 }
 
 // Do executes Page.captureScreenshot.
 //
 // returns:
-//   data - Base64-encoded image data (PNG).
+//   data - Base64-encoded image data.
 func (p *CaptureScreenshotParams) Do(ctxt context.Context, h cdp.FrameHandler) (data []byte, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
 
+	// marshal
+	buf, err := easyjson.Marshal(p)
+	if err != nil {
+		return nil, err
+	}
+
 	// execute
-	ch := h.Execute(ctxt, cdp.CommandPageCaptureScreenshot, cdp.Empty)
+	ch := h.Execute(ctxt, cdp.CommandPageCaptureScreenshot, easyjson.RawMessage(buf))
 
 	// read response
 	select {

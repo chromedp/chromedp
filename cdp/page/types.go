@@ -253,6 +253,48 @@ type VisualViewport struct {
 	Scale        float64 `json:"scale,omitempty"`        // Scale relative to the ideal viewport (size at width=device-width).
 }
 
+// CaptureScreenshotFormat image compression format (defaults to png).
+type CaptureScreenshotFormat string
+
+// String returns the CaptureScreenshotFormat as string value.
+func (t CaptureScreenshotFormat) String() string {
+	return string(t)
+}
+
+// CaptureScreenshotFormat values.
+const (
+	CaptureScreenshotFormatJpeg CaptureScreenshotFormat = "jpeg"
+	CaptureScreenshotFormatPng  CaptureScreenshotFormat = "png"
+)
+
+// MarshalEasyJSON satisfies easyjson.Marshaler.
+func (t CaptureScreenshotFormat) MarshalEasyJSON(out *jwriter.Writer) {
+	out.String(string(t))
+}
+
+// MarshalJSON satisfies json.Marshaler.
+func (t CaptureScreenshotFormat) MarshalJSON() ([]byte, error) {
+	return easyjson.Marshal(t)
+}
+
+// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
+func (t *CaptureScreenshotFormat) UnmarshalEasyJSON(in *jlexer.Lexer) {
+	switch CaptureScreenshotFormat(in.String()) {
+	case CaptureScreenshotFormatJpeg:
+		*t = CaptureScreenshotFormatJpeg
+	case CaptureScreenshotFormatPng:
+		*t = CaptureScreenshotFormatPng
+
+	default:
+		in.AddError(errors.New("unknown CaptureScreenshotFormat value"))
+	}
+}
+
+// UnmarshalJSON satisfies json.Unmarshaler.
+func (t *CaptureScreenshotFormat) UnmarshalJSON(buf []byte) error {
+	return easyjson.Unmarshal(buf, t)
+}
+
 // ScreencastFormat image compression format.
 type ScreencastFormat string
 

@@ -75,6 +75,16 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpRuntime(in *jlexer.Lexer, out 
 				}
 				(*out.Parent).UnmarshalEasyJSON(in)
 			}
+		case "promiseCreationFrame":
+			if in.IsNull() {
+				in.Skip()
+				out.PromiseCreationFrame = nil
+			} else {
+				if out.PromiseCreationFrame == nil {
+					out.PromiseCreationFrame = new(CallFrame)
+				}
+				(*out.PromiseCreationFrame).UnmarshalEasyJSON(in)
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -130,6 +140,18 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpRuntime(out *jwriter.Writer, i
 			out.RawString("null")
 		} else {
 			(*in.Parent).MarshalEasyJSON(out)
+		}
+	}
+	if in.PromiseCreationFrame != nil {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"promiseCreationFrame\":")
+		if in.PromiseCreationFrame == nil {
+			out.RawString("null")
+		} else {
+			(*in.PromiseCreationFrame).MarshalEasyJSON(out)
 		}
 	}
 	out.RawByte('}')

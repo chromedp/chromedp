@@ -421,6 +421,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandIndexedDBClearObjectStore:
 		return emptyVal, nil
 
+	case cdp.CommandIndexedDBDeleteDatabase:
+		return emptyVal, nil
+
 	case cdp.CommandCacheStorageRequestCacheNames:
 		v = new(cachestorage.RequestCacheNamesReturns)
 

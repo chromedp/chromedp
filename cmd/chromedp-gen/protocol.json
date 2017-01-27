@@ -879,11 +879,29 @@
         {
           "name": "captureScreenshot",
           "description": "Capture page screenshot.",
+          "parameters": [
+            {
+              "name": "format",
+              "type": "string",
+              "optional": true,
+              "enum": [
+                "jpeg",
+                "png"
+              ],
+              "description": "Image compression format (defaults to png)."
+            },
+            {
+              "name": "quality",
+              "type": "integer",
+              "optional": true,
+              "description": "Compression quality from range [0..100] (jpeg only)."
+            }
+          ],
           "returns": [
             {
               "name": "data",
               "type": "string",
-              "description": "Base64-encoded image data (PNG)."
+              "description": "Base64-encoded image data."
             }
           ],
           "experimental": true
@@ -2387,7 +2405,6 @@
               "enum": [
                 "parser",
                 "script",
-                "preload",
                 "other"
               ],
               "description": "Type of this initiator."
@@ -3738,6 +3755,23 @@
           ],
           "returns": [],
           "description": "Clears all entries from an object store."
+        },
+        {
+          "name": "deleteDatabase",
+          "parameters": [
+            {
+              "name": "securityOrigin",
+              "type": "string",
+              "description": "Security origin."
+            },
+            {
+              "name": "databaseName",
+              "type": "string",
+              "description": "Database name."
+            }
+          ],
+          "returns": [],
+          "description": "Deletes a database."
         }
       ]
     },
@@ -10575,6 +10609,13 @@
               "$ref": "StackTrace",
               "optional": true,
               "description": "Asynchronous JavaScript stack trace that preceded this stack, if available."
+            },
+            {
+              "name": "promiseCreationFrame",
+              "$ref": "CallFrame",
+              "optional": true,
+              "experimental": true,
+              "description": "Creation frame of the Promise which produced the next synchronous trace when resolved, if available."
             }
           ]
         }
@@ -11054,7 +11095,9 @@
                 "endGroup",
                 "assert",
                 "profile",
-                "profileEnd"
+                "profileEnd",
+                "count",
+                "timeEnd"
               ],
               "description": "Type of the call."
             },

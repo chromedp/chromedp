@@ -4552,6 +4552,10 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage56(in *jlexer.Lexer, out *
 			continue
 		}
 		switch key {
+		case "format":
+			(out.Format).UnmarshalEasyJSON(in)
+		case "quality":
+			out.Quality = int64(in.Int64())
 		default:
 			in.SkipRecursive()
 		}
@@ -4566,6 +4570,22 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage56(out *jwriter.Writer, in
 	out.RawByte('{')
 	first := true
 	_ = first
+	if in.Format != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"format\":")
+		(in.Format).MarshalEasyJSON(out)
+	}
+	if in.Quality != 0 {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"quality\":")
+		out.Int64(int64(in.Quality))
+	}
 	out.RawByte('}')
 }
 

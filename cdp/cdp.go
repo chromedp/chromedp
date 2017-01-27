@@ -174,6 +174,7 @@ const (
 	CommandIndexedDBRequestDatabase                        MethodType = "IndexedDB.requestDatabase"
 	CommandIndexedDBRequestData                            MethodType = "IndexedDB.requestData"
 	CommandIndexedDBClearObjectStore                       MethodType = "IndexedDB.clearObjectStore"
+	CommandIndexedDBDeleteDatabase                         MethodType = "IndexedDB.deleteDatabase"
 	CommandCacheStorageRequestCacheNames                   MethodType = "CacheStorage.requestCacheNames"
 	CommandCacheStorageRequestEntries                      MethodType = "CacheStorage.requestEntries"
 	CommandCacheStorageDeleteCache                         MethodType = "CacheStorage.deleteCache"
@@ -713,6 +714,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandIndexedDBRequestData
 	case CommandIndexedDBClearObjectStore:
 		*t = CommandIndexedDBClearObjectStore
+	case CommandIndexedDBDeleteDatabase:
+		*t = CommandIndexedDBDeleteDatabase
 	case CommandCacheStorageRequestCacheNames:
 		*t = CommandCacheStorageRequestCacheNames
 	case CommandCacheStorageRequestEntries:
