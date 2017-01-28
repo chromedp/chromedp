@@ -26,9 +26,6 @@ const (
 )
 
 var (
-	// ErrInvalidProtocolVersion is the invalid protocol version error.
-	ErrInvalidProtocolVersion = errors.New("invalid protocol version")
-
 	// ErrUnsupportedProtocolType is the unsupported protocol type error.
 	ErrUnsupportedProtocolType = errors.New("unsupported protocol type")
 
@@ -158,9 +155,9 @@ func (c *Client) loadProtocolInfo(ctxt context.Context) (string, string, error) 
 		}
 
 		if m := browserRE.FindAllStringSubmatch(v["Browser"], -1); len(m) != 0 {
-			c.ver = v["Protocol-Version"]
 			c.typ = strings.ToLower(m[0][0])
 		}
+		c.ver = v["Protocol-Version"]
 	}
 
 	return c.ver, c.typ, nil
@@ -180,7 +177,7 @@ func (c *Client) newTarget(ctxt context.Context, buf []byte) (Target, error) {
 	}
 
 	switch typ {
-	case "chrome", "chromium", "microsoft edge", "safari":
+	case "chrome", "chromium", "microsoft edge", "safari", "":
 		x := new(Chrome)
 		if buf != nil {
 			err = easyjson.Unmarshal(buf, x)

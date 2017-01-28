@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+<head>
+<title>javascript alert test</title>
+</head>
+<body>
+  <div id="div1">
+    <input id="input1" value="input value1">
+  </div>
+  <script>
+    window.onload = function(e) {
+      setTimeout(function() { alert("alert1"); }, 1000);
+      setTimeout(function() { window.confirm("confirm1"); }, 2000);
+    };
+  </script>
+</body>
+</html>
