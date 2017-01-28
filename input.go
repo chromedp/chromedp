@@ -96,11 +96,36 @@ type KeyAction struct {
 	opts []KeyOption
 }
 
-var keyNames = map[rune]string{
-	'\b': "Backspace",
-	'\t': "Tab",
-	'\r': "Enter",
-	'\n': "Enter",
+// KeyCode are known system key codes.
+type KeyCode string
+
+// KeyCode values.
+const (
+	KeyCodeBackspace = "\b"
+	KeyCodeTab       = "\t"
+	KeyCodeCR        = "\r"
+	KeyCodeLF        = "\n"
+	KeyCodeLeft      = "\x25"
+	KeyCodeUp        = "\x26"
+	KeyCodeRight     = "\x27"
+	KeyCodeDown      = "\x28"
+)
+
+const (
+	keyRuneCR = '\r'
+)
+
+// keyCodeNames is the map of key code values to their respective named
+// identifiers.
+var keyCodeNames = map[KeyCode]string{
+	KeyCodeBackspace: "Backspace",
+	KeyCodeTab:       "Tab",
+	KeyCodeCR:        "Enter",
+	KeyCodeLF:        "Enter",
+	KeyCodeLeft:      "Left",
+	KeyCodeUp:        "Up",
+	KeyCodeRight:     "Right",
+	KeyCodeDown:      "Down",
 }
 
 // Do satisfies Action interface.
@@ -117,18 +142,19 @@ func (ka *KeyAction) Do(ctxt context.Context, h cdp.FrameHandler) error {
 
 	for _, r := range ka.v {
 		s := string(r)
-		if n, ok := keyNames[r]; ok {
+		keyS := KeyCode(r)
+		if n, ok := keyCodeNames[keyS]; ok {
 			kc := int64(r)
-			if r == '\n' {
-				s = string('\r')
-				kc = int64('\r')
+			if keyS == KeyCodeLF {
+				s = string(keyRuneCR)
+				kc = int64(keyRuneCR)
 			}
 
 			err = sysP.WithKey(n).
 				WithNativeVirtualKeyCode(kc).
 				WithWindowsVirtualKeyCode(kc).
-				WithUnmodifiedText(s).
-				WithText(s).
+				WithKeyIdentifier(s).
+				WithIsSystemKey(true).
 				Do(ctxt, h)
 			if err != nil {
 				return err
@@ -141,7 +167,7 @@ func (ka *KeyAction) Do(ctxt context.Context, h cdp.FrameHandler) error {
 		}
 
 		// FIXME
-		time.Sleep(5 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 	}
 
 	return nil
