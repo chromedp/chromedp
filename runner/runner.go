@@ -219,7 +219,7 @@ func (r *Runner) Shutdown(ctxt context.Context, opts ...client.Option) error {
 	// closed, so send SIGTERM.
 	//
 	// TODO: add other behavior here for more process options on shutdown?
-	if runtime.GOOS == "darwin" {
+	if runtime.GOOS == "darwin" && r.cmd != nil && r.cmd.Process != nil {
 		return r.cmd.Process.Signal(syscall.SIGTERM)
 	}
 
@@ -319,7 +319,22 @@ func Flag(name string, value interface{}) CommandLineOption {
 	}
 }
 
-// ExecPath sets the Chrome executable path.
+// Path sets the path to the Chrome executable and sets default run options for
+// Chrome. This will also set the remote debugging port to 9222, and disable
+// the first run / default browser check.
+//
+// Note: use ExecPath if you do not want to set other options.
+func Path(path string) CommandLineOption {
+	return func(m map[string]interface{}) error {
+		m["exec-path"] = path
+		m["no-first-run"] = true
+		m["no-default-browser-check"] = true
+		m["remote-debugging-port"] = 9222
+		return nil
+	}
+}
+
+// ExecPath is a Chrome command line option to set the exec path.
 func ExecPath(path string) CommandLineOption {
 	return Flag("exec-path", path)
 }
@@ -339,7 +354,7 @@ func StartURL(urlstr string) CommandLineOption {
 	return Flag("start-url", urlstr)
 }
 
-// Proxy is the Chrome command line option to set the proxy used.
+// Proxy is the Chrome command line option to set the outbound proxy.
 func Proxy(proxy string) CommandLineOption {
 	return Flag("proxy-server", proxy)
 }
