@@ -214,6 +214,7 @@ const (
 	CommandDOMEnable                                       MethodType = "DOM.enable"
 	CommandDOMDisable                                      MethodType = "DOM.disable"
 	CommandDOMGetDocument                                  MethodType = "DOM.getDocument"
+	CommandDOMGetFlattenedDocument                         MethodType = "DOM.getFlattenedDocument"
 	CommandDOMCollectClassNamesFromSubtree                 MethodType = "DOM.collectClassNamesFromSubtree"
 	CommandDOMRequestChildNodes                            MethodType = "DOM.requestChildNodes"
 	CommandDOMQuerySelector                                MethodType = "DOM.querySelector"
@@ -794,6 +795,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandDOMDisable
 	case CommandDOMGetDocument:
 		*t = CommandDOMGetDocument
+	case CommandDOMGetFlattenedDocument:
+		*t = CommandDOMGetFlattenedDocument
 	case CommandDOMCollectClassNamesFromSubtree:
 		*t = CommandDOMCollectClassNamesFromSubtree
 	case CommandDOMRequestChildNodes:
@@ -1651,6 +1654,7 @@ func (t *ShadowRootType) UnmarshalJSON(buf []byte) error {
 // represent the actual DOM nodes. DOMNode is a base node mirror type.
 type Node struct {
 	NodeID           NodeID         `json:"nodeId,omitempty"`           // Node identifier that is passed into the rest of the DOM messages as the nodeId. Backend will only push node with given id once. It is aware of all requested nodes and will only fire DOM events for nodes known to the client.
+	ParentID         NodeID         `json:"parentId,omitempty"`         // The id of the parent node if any.
 	BackendNodeID    BackendNodeID  `json:"backendNodeId,omitempty"`    // The BackendNodeId for this node.
 	NodeType         NodeType       `json:"nodeType,omitempty"`         // Node's nodeType.
 	NodeName         string         `json:"nodeName,omitempty"`         // Node's nodeName.
@@ -1698,7 +1702,7 @@ func (n *Node) AttributeValue(name string) string {
 }
 
 // xpath builds the xpath string.
-func (n *Node) xpath(stopWhenID bool) string {
+func (n *Node) xpath(stopAtDocument, stopAtID bool) string {
 	p := ""
 	pos := ""
 	id := n.AttributeValue("id")
@@ -1706,7 +1710,10 @@ func (n *Node) xpath(stopWhenID bool) string {
 	case n.Parent == nil:
 		return n.LocalName
 
-	case stopWhenID && id != "":
+	case stopAtDocument && n.NodeType == NodeTypeDocument:
+		return ""
+
+	case stopAtID && id != "":
 		p = "/"
 		pos = `[@id='` + id + `']`
 
@@ -1723,7 +1730,7 @@ func (n *Node) xpath(stopWhenID bool) string {
 			}
 		}
 
-		p = n.Parent.xpath(stopWhenID)
+		p = n.Parent.xpath(stopAtDocument, stopAtID)
 		if found {
 			pos = "[" + strconv.Itoa(i) + "]"
 		}
@@ -1732,15 +1739,28 @@ func (n *Node) xpath(stopWhenID bool) string {
 	return p + "/" + n.LocalName + pos
 }
 
-// XPathByID returns the XPath tree for the node, stopping at the first parent
-// with an id attribute.
-func (n *Node) XPathByID() string {
-	return n.xpath(true)
+// PartialXPathByID returns the partial XPath for the node, stopping at the
+// first parent with an id attribute or at nearest parent document node.
+func (n *Node) PartialXPathByID() string {
+	return n.xpath(true, true)
 }
 
-// XPath returns the full XPath tree for the node.
-func (n *Node) XPath() string {
-	return n.xpath(false)
+// PartialXPath returns the partial XPath for the node, stopping at the nearest
+// parent document node.
+func (n *Node) PartialXPath() string {
+	return n.xpath(true, false)
+}
+
+// FullXPathByID returns the full XPath for the node, stopping at the top most
+// document root or at the closest parent node with an id attribute.
+func (n *Node) FullXPathByID() string {
+	return n.xpath(false, true)
+}
+
+// FullXPath returns the full XPath for the node, stopping only at the top most
+// document root.
+func (n *Node) FullXPath() string {
+	return n.xpath(false, false)
 }
 
 // NodeState is the state of a DOM node.

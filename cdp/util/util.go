@@ -493,6 +493,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandDOMGetDocument:
 		v = new(dom.GetDocumentReturns)
 
+	case cdp.CommandDOMGetFlattenedDocument:
+		v = new(dom.GetFlattenedDocumentReturns)
+
 	case cdp.CommandDOMCollectClassNamesFromSubtree:
 		v = new(dom.CollectClassNamesFromSubtreeReturns)
 

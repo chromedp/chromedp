@@ -82,7 +82,7 @@ func (n *Node) AttributeValue(name string) string {
 }
 
 // xpath builds the xpath string.
-func (n *Node) xpath(stopWhenID bool) string {
+func (n *Node) xpath(stopAtDocument, stopAtID bool) string {
 	p := ""
 	pos := ""
 	id := n.AttributeValue("id")
@@ -90,7 +90,10 @@ func (n *Node) xpath(stopWhenID bool) string {
 	case n.Parent == nil:
 		return n.LocalName
 
-	case stopWhenID && id != "":
+	case stopAtDocument && n.NodeType == NodeTypeDocument:
+		return ""
+
+	case stopAtID && id != "":
 		p = "/"
 		pos = `[@id='`+id+`']`
 
@@ -107,7 +110,7 @@ func (n *Node) xpath(stopWhenID bool) string {
 			}
 		}
 
-		p = n.Parent.xpath(stopWhenID)
+		p = n.Parent.xpath(stopAtDocument, stopAtID)
 		if found {
 			pos = "["+strconv.Itoa(i)+"]"
 		}
@@ -116,15 +119,28 @@ func (n *Node) xpath(stopWhenID bool) string {
 	return  p + "/" + n.LocalName + pos
 }
 
-// XPathByID returns the XPath tree for the node, stopping at the first parent
-// with an id attribute.
-func (n *Node) XPathByID() string {
-	return n.xpath(true)
+// PartialXPathByID returns the partial XPath for the node, stopping at the
+// first parent with an id attribute or at nearest parent document node.
+func (n *Node) PartialXPathByID() string {
+	return n.xpath(true, true)
 }
 
-// XPath returns the full XPath tree for the node.
-func (n *Node) XPath() string {
-	return n.xpath(false)
+// PartialXPath returns the partial XPath for the node, stopping at the nearest
+// parent document node.
+func (n *Node) PartialXPath() string {
+	return n.xpath(true, false)
+}
+
+// FullXPathByID returns the full XPath for the node, stopping at the top most
+// document root or at the closest parent node with an id attribute.
+func (n *Node) FullXPathByID() string {
+	return n.xpath(false, true)
+}
+
+// FullXPath returns the full XPath for the node, stopping only at the top most
+// document root.
+func (n *Node) FullXPath() string {
+	return n.xpath(false, false)
 }
 
 // NodeState is the state of a DOM node.

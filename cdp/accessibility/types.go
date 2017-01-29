@@ -265,10 +265,12 @@ func (t AXGlobalStates) String() string {
 
 // AXGlobalStates values.
 const (
-	AXGlobalStatesDisabled   AXGlobalStates = "disabled"
-	AXGlobalStatesHidden     AXGlobalStates = "hidden"
-	AXGlobalStatesHiddenRoot AXGlobalStates = "hiddenRoot"
-	AXGlobalStatesInvalid    AXGlobalStates = "invalid"
+	AXGlobalStatesDisabled        AXGlobalStates = "disabled"
+	AXGlobalStatesHidden          AXGlobalStates = "hidden"
+	AXGlobalStatesHiddenRoot      AXGlobalStates = "hiddenRoot"
+	AXGlobalStatesInvalid         AXGlobalStates = "invalid"
+	AXGlobalStatesKeyshortcuts    AXGlobalStates = "keyshortcuts"
+	AXGlobalStatesRoledescription AXGlobalStates = "roledescription"
 )
 
 // MarshalEasyJSON satisfies easyjson.Marshaler.
@@ -292,6 +294,10 @@ func (t *AXGlobalStates) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = AXGlobalStatesHiddenRoot
 	case AXGlobalStatesInvalid:
 		*t = AXGlobalStatesInvalid
+	case AXGlobalStatesKeyshortcuts:
+		*t = AXGlobalStatesKeyshortcuts
+	case AXGlobalStatesRoledescription:
+		*t = AXGlobalStatesRoledescription
 
 	default:
 		in.AddError(errors.New("unknown AXGlobalStates value"))
@@ -435,6 +441,7 @@ func (t AXWidgetStates) String() string {
 const (
 	AXWidgetStatesChecked  AXWidgetStates = "checked"
 	AXWidgetStatesExpanded AXWidgetStates = "expanded"
+	AXWidgetStatesModal    AXWidgetStates = "modal"
 	AXWidgetStatesPressed  AXWidgetStates = "pressed"
 	AXWidgetStatesSelected AXWidgetStates = "selected"
 )
@@ -456,6 +463,8 @@ func (t *AXWidgetStates) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = AXWidgetStatesChecked
 	case AXWidgetStatesExpanded:
 		*t = AXWidgetStatesExpanded
+	case AXWidgetStatesModal:
+		*t = AXWidgetStatesModal
 	case AXWidgetStatesPressed:
 		*t = AXWidgetStatesPressed
 	case AXWidgetStatesSelected:
@@ -483,9 +492,11 @@ func (t AXRelationshipAttributes) String() string {
 // AXRelationshipAttributes values.
 const (
 	AXRelationshipAttributesActivedescendant AXRelationshipAttributes = "activedescendant"
-	AXRelationshipAttributesFlowto           AXRelationshipAttributes = "flowto"
 	AXRelationshipAttributesControls         AXRelationshipAttributes = "controls"
 	AXRelationshipAttributesDescribedby      AXRelationshipAttributes = "describedby"
+	AXRelationshipAttributesDetails          AXRelationshipAttributes = "details"
+	AXRelationshipAttributesErrormessage     AXRelationshipAttributes = "errormessage"
+	AXRelationshipAttributesFlowto           AXRelationshipAttributes = "flowto"
 	AXRelationshipAttributesLabelledby       AXRelationshipAttributes = "labelledby"
 	AXRelationshipAttributesOwns             AXRelationshipAttributes = "owns"
 )
@@ -505,12 +516,16 @@ func (t *AXRelationshipAttributes) UnmarshalEasyJSON(in *jlexer.Lexer) {
 	switch AXRelationshipAttributes(in.String()) {
 	case AXRelationshipAttributesActivedescendant:
 		*t = AXRelationshipAttributesActivedescendant
-	case AXRelationshipAttributesFlowto:
-		*t = AXRelationshipAttributesFlowto
 	case AXRelationshipAttributesControls:
 		*t = AXRelationshipAttributesControls
 	case AXRelationshipAttributesDescribedby:
 		*t = AXRelationshipAttributesDescribedby
+	case AXRelationshipAttributesDetails:
+		*t = AXRelationshipAttributesDetails
+	case AXRelationshipAttributesErrormessage:
+		*t = AXRelationshipAttributesErrormessage
+	case AXRelationshipAttributesFlowto:
+		*t = AXRelationshipAttributesFlowto
 	case AXRelationshipAttributesLabelledby:
 		*t = AXRelationshipAttributesLabelledby
 	case AXRelationshipAttributesOwns:

@@ -137,6 +137,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdp1(in *jlexer.Lexer, out *Node)
 		switch key {
 		case "nodeId":
 			(out.NodeID).UnmarshalEasyJSON(in)
+		case "parentId":
+			(out.ParentID).UnmarshalEasyJSON(in)
 		case "backendNodeId":
 			(out.BackendNodeID).UnmarshalEasyJSON(in)
 		case "nodeType":
@@ -351,6 +353,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdp1(out *jwriter.Writer, in Node
 		first = false
 		out.RawString("\"nodeId\":")
 		out.Int64(int64(in.NodeID))
+	}
+	if in.ParentID != 0 {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"parentId\":")
+		out.Int64(int64(in.ParentID))
 	}
 	if in.BackendNodeID != 0 {
 		if !first {

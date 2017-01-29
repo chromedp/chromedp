@@ -2798,6 +2798,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpDebugger31(in *jlexer.Lexer, o
 			out.SourceMapURL = string(in.String())
 		case "hasSourceURL":
 			out.HasSourceURL = bool(in.Bool())
+		case "isModule":
+			out.IsModule = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -2908,6 +2910,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDebugger31(out *jwriter.Writer
 		out.RawString("\"hasSourceURL\":")
 		out.Bool(bool(in.HasSourceURL))
 	}
+	if in.IsModule {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"isModule\":")
+		out.Bool(bool(in.IsModule))
+	}
 	out.RawByte('}')
 }
 
@@ -2975,6 +2985,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpDebugger32(in *jlexer.Lexer, o
 			out.SourceMapURL = string(in.String())
 		case "hasSourceURL":
 			out.HasSourceURL = bool(in.Bool())
+		case "isModule":
+			out.IsModule = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -3076,6 +3088,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDebugger32(out *jwriter.Writer
 		first = false
 		out.RawString("\"hasSourceURL\":")
 		out.Bool(bool(in.HasSourceURL))
+	}
+	if in.IsModule {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"isModule\":")
+		out.Bool(bool(in.IsModule))
 	}
 	out.RawByte('}')
 }

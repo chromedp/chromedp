@@ -133,7 +133,7 @@ func Value(sel interface{}, value *string, opts ...QueryOption) Action {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
-		p := rundom.Evaluate(fmt.Sprintf(valueJS, nodes[0].XPath()))
+		p := rundom.Evaluate(fmt.Sprintf(valueJS, nodes[0].FullXPath()))
 		p.IncludeCommandLineAPI = true
 		p.ObjectGroup = "console"
 
@@ -161,7 +161,7 @@ func SetValue(sel interface{}, value string, opts ...QueryOption) Action {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
-		p := rundom.Evaluate(fmt.Sprintf(setValueJS, nodes[0].XPath(), value))
+		p := rundom.Evaluate(fmt.Sprintf(setValueJS, nodes[0].FullXPath(), value))
 		p.IncludeCommandLineAPI = true
 		p.ObjectGroup = "console"
 
@@ -190,7 +190,7 @@ func Text(sel interface{}, text *string, opts ...QueryOption) Action {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
-		p := rundom.Evaluate(fmt.Sprintf(textJS, nodes[0].XPath()))
+		p := rundom.Evaluate(fmt.Sprintf(textJS, nodes[0].FullXPath()))
 		p.IncludeCommandLineAPI = true
 		p.ObjectGroup = "console"
 
@@ -429,7 +429,7 @@ func Submit(sel interface{}, opts ...QueryOption) Action {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
-		p := rundom.Evaluate(fmt.Sprintf(submitJS, nodes[0].XPath()))
+		p := rundom.Evaluate(fmt.Sprintf(submitJS, nodes[0].FullXPath()))
 		p.IncludeCommandLineAPI = true
 		p.ObjectGroup = "console"
 

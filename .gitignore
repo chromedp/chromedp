@@ -1,6 +1,8 @@
 out.txt
 out*.txt
 old*.txt
+cdp-*.log
+cdp-*.txt
 
 # binaries
 /chromedp-gen

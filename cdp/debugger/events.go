@@ -23,6 +23,7 @@ type EventScriptParsed struct {
 	IsLiveEdit              bool                       `json:"isLiveEdit,omitempty"`   // True, if this script is generated as a result of the live edit operation.
 	SourceMapURL            string                     `json:"sourceMapURL,omitempty"` // URL of source map associated with script (if any).
 	HasSourceURL            bool                       `json:"hasSourceURL,omitempty"` // True, if this script has sourceURL.
+	IsModule                bool                       `json:"isModule,omitempty"`     // True, if this script is ES6 module.
 }
 
 // EventScriptFailedToParse fired when virtual machine fails to parse the
@@ -39,6 +40,7 @@ type EventScriptFailedToParse struct {
 	ExecutionContextAuxData easyjson.RawMessage        `json:"executionContextAuxData,omitempty"`
 	SourceMapURL            string                     `json:"sourceMapURL,omitempty"` // URL of source map associated with script (if any).
 	HasSourceURL            bool                       `json:"hasSourceURL,omitempty"` // True, if this script has sourceURL.
+	IsModule                bool                       `json:"isModule,omitempty"`     // True, if this script is ES6 module.
 }
 
 // EventBreakpointResolved fired when breakpoint is resolved to an actual

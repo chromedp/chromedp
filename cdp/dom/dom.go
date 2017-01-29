@@ -184,6 +184,88 @@ func (p *GetDocumentParams) Do(ctxt context.Context, h cdp.FrameHandler) (root *
 	return nil, cdp.ErrUnknownResult
 }
 
+// GetFlattenedDocumentParams returns the root DOM node (and optionally the
+// subtree) to the caller.
+type GetFlattenedDocumentParams struct {
+	Depth  int64 `json:"depth,omitempty"`  // The maximum depth at which children should be retrieved, defaults to 1. Use -1 for the entire subtree or provide an integer larger than 0.
+	Pierce bool  `json:"pierce,omitempty"` // Whether or not iframes and shadow roots should be traversed when returning the subtree (default is false).
+}
+
+// GetFlattenedDocument returns the root DOM node (and optionally the
+// subtree) to the caller.
+//
+// parameters:
+func GetFlattenedDocument() *GetFlattenedDocumentParams {
+	return &GetFlattenedDocumentParams{}
+}
+
+// WithDepth the maximum depth at which children should be retrieved,
+// defaults to 1. Use -1 for the entire subtree or provide an integer larger
+// than 0.
+func (p GetFlattenedDocumentParams) WithDepth(depth int64) *GetFlattenedDocumentParams {
+	p.Depth = depth
+	return &p
+}
+
+// WithPierce whether or not iframes and shadow roots should be traversed
+// when returning the subtree (default is false).
+func (p GetFlattenedDocumentParams) WithPierce(pierce bool) *GetFlattenedDocumentParams {
+	p.Pierce = pierce
+	return &p
+}
+
+// GetFlattenedDocumentReturns return values.
+type GetFlattenedDocumentReturns struct {
+	Nodes []*cdp.Node `json:"nodes,omitempty"` // Resulting node.
+}
+
+// Do executes DOM.getFlattenedDocument.
+//
+// returns:
+//   nodes - Resulting node.
+func (p *GetFlattenedDocumentParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodes []*cdp.Node, err error) {
+	if ctxt == nil {
+		ctxt = context.Background()
+	}
+
+	// marshal
+	buf, err := easyjson.Marshal(p)
+	if err != nil {
+		return nil, err
+	}
+
+	// execute
+	ch := h.Execute(ctxt, cdp.CommandDOMGetFlattenedDocument, easyjson.RawMessage(buf))
+
+	// read response
+	select {
+	case res := <-ch:
+		if res == nil {
+			return nil, cdp.ErrChannelClosed
+		}
+
+		switch v := res.(type) {
+		case easyjson.RawMessage:
+			// unmarshal
+			var r GetFlattenedDocumentReturns
+			err = easyjson.Unmarshal(v, &r)
+			if err != nil {
+				return nil, cdp.ErrInvalidResult
+			}
+
+			return r.Nodes, nil
+
+		case error:
+			return nil, v
+		}
+
+	case <-ctxt.Done():
+		return nil, cdp.ErrContextDone
+	}
+
+	return nil, cdp.ErrUnknownResult
+}
+
 // CollectClassNamesFromSubtreeParams collects class names for the node with
 // given id and all of it's child nodes.
 type CollectClassNamesFromSubtreeParams struct {

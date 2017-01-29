@@ -8,6 +8,7 @@ import (
 	"github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/dom"
 	"github.com/knq/chromedp/cdp/input"
+	"github.com/knq/chromedp/kb"
 )
 
 // Error types.
@@ -90,96 +91,42 @@ func ClickCount(n int) MouseOption {
 	}
 }
 
-// KeyAction contains information about a key action.
-type KeyAction struct {
-	v    string
-	opts []KeyOption
-}
+// KeyAction will synthesize a keyDown, char, and keyUp event for each rune
+// contained in keys along with any supplied key options. Well known KeyCode
+// runes will not synthesize the char event.
+//
+// Note: KeyCodeCR and KeyCodeLF are exceptions to the above, and a char of
+// KeyCodeCR ('\r') will be synthesized for both.
+func KeyAction(keys string, opts ...KeyOption) Action {
+	return ActionFunc(func(ctxt context.Context, h cdp.FrameHandler) error {
+		var err error
 
-// KeyCode are known system key codes.
-type KeyCode string
-
-// KeyCode values.
-const (
-	KeyCodeBackspace = "\b"
-	KeyCodeTab       = "\t"
-	KeyCodeCR        = "\r"
-	KeyCodeLF        = "\n"
-	KeyCodeLeft      = "\x25"
-	KeyCodeUp        = "\x26"
-	KeyCodeRight     = "\x27"
-	KeyCodeDown      = "\x28"
-)
-
-const (
-	keyRuneCR = '\r'
-)
-
-// keyCodeNames is the map of key code values to their respective named
-// identifiers.
-var keyCodeNames = map[KeyCode]string{
-	KeyCodeBackspace: "Backspace",
-	KeyCodeTab:       "Tab",
-	KeyCodeCR:        "Enter",
-	KeyCodeLF:        "Enter",
-	KeyCodeLeft:      "Left",
-	KeyCodeUp:        "Up",
-	KeyCodeRight:     "Right",
-	KeyCodeDown:      "Down",
-}
-
-// Do satisfies Action interface.
-func (ka *KeyAction) Do(ctxt context.Context, h cdp.FrameHandler) error {
-	var err error
-
-	// apply opts
-	sysP := input.DispatchKeyEvent(input.KeyRawDown)
-	keyP := input.DispatchKeyEvent(input.KeyChar)
-	for _, o := range ka.opts {
-		sysP = o(sysP)
-		keyP = o(keyP)
-	}
-
-	for _, r := range ka.v {
-		s := string(r)
-		keyS := KeyCode(r)
-		if n, ok := keyCodeNames[keyS]; ok {
-			kc := int64(r)
-			if keyS == KeyCodeLF {
-				s = string(keyRuneCR)
-				kc = int64(keyRuneCR)
+		for _, r := range keys {
+			for _, k := range kb.Encode(r) {
+				err = k.Do(ctxt, h)
+				if err != nil {
+					return err
+				}
 			}
 
-			err = sysP.WithKey(n).
-				WithNativeVirtualKeyCode(kc).
-				WithWindowsVirtualKeyCode(kc).
-				WithKeyIdentifier(s).
-				WithIsSystemKey(true).
-				Do(ctxt, h)
-			if err != nil {
-				return err
-			}
+			// TODO: move to context
+			time.Sleep(5 * time.Millisecond)
 		}
 
-		err = keyP.WithText(s).Do(ctxt, h)
+		return nil
+	})
+}
+
+// KeyActionNode dispatches a key event on a node.
+func KeyActionNode(n *cdp.Node, keys string, opts ...KeyOption) Action {
+	return ActionFunc(func(ctxt context.Context, h cdp.FrameHandler) error {
+		err := dom.Focus(n.NodeID).Do(ctxt, h)
 		if err != nil {
 			return err
 		}
 
-		// FIXME
-		time.Sleep(100 * time.Millisecond)
-	}
-
-	return nil
-}
-
-// KeyActionNode dispatches a key event on a node.
-func KeyActionNode(n *cdp.Node, v string, opts ...KeyOption) Action {
-	return Tasks{
-		dom.Focus(n.NodeID),
-		MouseActionNode(n),
-		&KeyAction{v, opts},
-	}
+		return KeyAction(keys, opts...).Do(ctxt, h)
+	})
 }
 
 // KeyOption is a key action option.

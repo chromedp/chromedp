@@ -1,16 +1,16 @@
 # About headless
 
 This is a version of the simple example but with the chromedp settings changed
-to use the docker [yukinying/chrome-headless](yukinying/chrome-headless) image.
+to use the docker [knqz/chrome-headless](https://hub.docker.com/r/knqz/chrome-headless/) image.
 
 ## Running
 
 ```sh
 # retrieve docker image
-docker pull yukinying/chrome-headless
+docker pull knqz/chrome-headless
 
-# start docker headless
-docker run -i -t --shm-size=256m --rm --name=chrome-headless -p=127.0.0.1:9222:9222 yukinying/chrome-headless about:blank
+# start chrome-headless
+docker run -d -p 9222:9222 --rm --name chrome-headless knqz/chrome-headless
 
 # run chromedp headless example
 go build && ./headless
