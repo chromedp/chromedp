@@ -2405,6 +2405,7 @@
               "enum": [
                 "parser",
                 "script",
+                "preload",
                 "other"
               ],
               "description": "Type of this initiator."
