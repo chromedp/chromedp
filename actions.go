@@ -25,14 +25,11 @@ type Tasks []Action
 
 // Do executes the list of Tasks using the provided context.
 func (t Tasks) Do(ctxt context.Context, h cdp.FrameHandler) error {
-	var err error
-
 	// TODO: put individual task timeouts from context here
 	for _, a := range t {
 		// ctxt, cancel = context.WithTimeout(ctxt, timeout)
 		// defer cancel()
-		err = a.Do(ctxt, h)
-		if err != nil {
+		if err := a.Do(ctxt, h); err != nil {
 			return err
 		}
 	}
