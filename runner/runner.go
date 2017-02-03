@@ -138,6 +138,10 @@ func (r *Runner) Start(ctxt context.Context) error {
 	// set user data dir, if not provided
 	_, ok = r.opts["user-data-dir"]
 	if !ok {
+		if _, err = os.Stat(DefaultUserDataTmpDir); os.IsNotExist(err) {
+			os.Mkdir(DefaultUserDataTmpDir, os.ModeDir)
+		}
+
 		r.opts["user-data-dir"], err = ioutil.TempDir(
 			DefaultUserDataTmpDir, fmt.Sprintf(DefaultUserDataDirPrefix, r.Port()),
 		)
