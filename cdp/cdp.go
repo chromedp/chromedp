@@ -121,6 +121,7 @@ const (
 	CommandEmulationSetCPUThrottlingRate                   MethodType = "Emulation.setCPUThrottlingRate"
 	CommandEmulationCanEmulate                             MethodType = "Emulation.canEmulate"
 	CommandEmulationSetVirtualTimePolicy                   MethodType = "Emulation.setVirtualTimePolicy"
+	CommandEmulationSetDefaultBackgroundColorOverride      MethodType = "Emulation.setDefaultBackgroundColorOverride"
 	EventSecuritySecurityStateChanged                      MethodType = "Security.securityStateChanged"
 	CommandSecurityEnable                                  MethodType = "Security.enable"
 	CommandSecurityDisable                                 MethodType = "Security.disable"
@@ -609,6 +610,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandEmulationCanEmulate
 	case CommandEmulationSetVirtualTimePolicy:
 		*t = CommandEmulationSetVirtualTimePolicy
+	case CommandEmulationSetDefaultBackgroundColorOverride:
+		*t = CommandEmulationSetDefaultBackgroundColorOverride
 	case EventSecuritySecurityStateChanged:
 		*t = EventSecuritySecurityStateChanged
 	case CommandSecurityEnable:

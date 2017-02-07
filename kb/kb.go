@@ -1,3 +1,5 @@
+// Package kb provides keyboard mappings for Chrome DOM Keys for use with input
+// events.
 package kb
 
 //go:generate go run gen.go -out keys.go -pkg kb

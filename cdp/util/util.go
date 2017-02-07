@@ -259,6 +259,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandEmulationSetVirtualTimePolicy:
 		return emptyVal, nil
 
+	case cdp.CommandEmulationSetDefaultBackgroundColorOverride:
+		return emptyVal, nil
+
 	case cdp.EventEmulationVirtualTimeBudgetExpired:
 		v = new(emulation.EventVirtualTimeBudgetExpired)
 

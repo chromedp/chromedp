@@ -874,3 +874,63 @@ func (p *SetVirtualTimePolicyParams) Do(ctxt context.Context, h cdp.FrameHandler
 
 	return cdp.ErrUnknownResult
 }
+
+// SetDefaultBackgroundColorOverrideParams sets or clears an override of the
+// default background color of the frame. This override is used if the content
+// does not specify one.
+type SetDefaultBackgroundColorOverrideParams struct {
+	Color *cdp.RGBA `json:"color,omitempty"` // RGBA of the default background color. If not specified, any existing override will be cleared.
+}
+
+// SetDefaultBackgroundColorOverride sets or clears an override of the
+// default background color of the frame. This override is used if the content
+// does not specify one.
+//
+// parameters:
+func SetDefaultBackgroundColorOverride() *SetDefaultBackgroundColorOverrideParams {
+	return &SetDefaultBackgroundColorOverrideParams{}
+}
+
+// WithColor rGBA of the default background color. If not specified, any
+// existing override will be cleared.
+func (p SetDefaultBackgroundColorOverrideParams) WithColor(color *cdp.RGBA) *SetDefaultBackgroundColorOverrideParams {
+	p.Color = color
+	return &p
+}
+
+// Do executes Emulation.setDefaultBackgroundColorOverride.
+func (p *SetDefaultBackgroundColorOverrideParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+	if ctxt == nil {
+		ctxt = context.Background()
+	}
+
+	// marshal
+	buf, err := easyjson.Marshal(p)
+	if err != nil {
+		return err
+	}
+
+	// execute
+	ch := h.Execute(ctxt, cdp.CommandEmulationSetDefaultBackgroundColorOverride, easyjson.RawMessage(buf))
+
+	// read response
+	select {
+	case res := <-ch:
+		if res == nil {
+			return cdp.ErrChannelClosed
+		}
+
+		switch v := res.(type) {
+		case easyjson.RawMessage:
+			return nil
+
+		case error:
+			return v
+		}
+
+	case <-ctxt.Done():
+		return cdp.ErrContextDone
+	}
+
+	return cdp.ErrUnknownResult
+}

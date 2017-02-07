@@ -1,3 +1,5 @@
+// Package client provides the low level Chrome Debugging Protocol JSON types
+// and related funcs.
 package client
 
 import (

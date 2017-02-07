@@ -1371,6 +1371,9 @@
     {
       "domain": "Emulation",
       "description": "This domain emulates different environments for the page.",
+      "dependencies": [
+        "DOM"
+      ],
       "types": [
         {
           "id": "ScreenOrientation",
@@ -1672,6 +1675,19 @@
               "type": "integer",
               "optional": true,
               "description": "If set, after this many virtual milliseconds have elapsed virtual time will be paused and a virtualTimeBudgetExpired event is sent."
+            }
+          ],
+          "experimental": true
+        },
+        {
+          "name": "setDefaultBackgroundColorOverride",
+          "description": "Sets or clears an override of the default background color of the frame. This override is used if the content does not specify one.",
+          "parameters": [
+            {
+              "name": "color",
+              "$ref": "DOM.RGBA",
+              "optional": true,
+              "description": "RGBA of the default background color. If not specified, any existing override will be cleared."
             }
           ],
           "experimental": true
