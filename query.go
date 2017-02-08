@@ -3,7 +3,6 @@ package chromedp
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"image"
@@ -16,7 +15,6 @@ import (
 	"github.com/knq/chromedp/cdp/dom"
 	"github.com/knq/chromedp/cdp/input"
 	"github.com/knq/chromedp/cdp/page"
-	rundom "github.com/knq/chromedp/cdp/runtime"
 )
 
 var (
@@ -128,29 +126,13 @@ func Value(sel interface{}, value *string, opts ...QueryOption) Action {
 	if value == nil {
 		panic("value cannot be nil")
 	}
+
 	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
-		p := rundom.Evaluate(fmt.Sprintf(valueJS, nodes[0].FullXPath()))
-		p.IncludeCommandLineAPI = true
-		p.ObjectGroup = "console"
-
-		res, exp, err := p.Do(ctxt, h)
-		if err != nil {
-			return err
-		}
-		if exp != nil {
-			return exp
-		}
-		if res.Type != rundom.TypeString || len(res.Value) < 2 {
-			return fmt.Errorf("expected string of at least length 2, got %s length %d", res.Subtype, len(res.Value))
-		}
-
-		*value = string(res.Value[1 : len(res.Value)-1])
-
-		return nil
+		return EvaluateAsDevTools(fmt.Sprintf(valueJS, nodes[0].FullXPath()), value).Do(ctxt, h)
 	}, opts...)
 }
 
@@ -161,19 +143,13 @@ func SetValue(sel interface{}, value string, opts ...QueryOption) Action {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
-		p := rundom.Evaluate(fmt.Sprintf(setValueJS, nodes[0].FullXPath(), value))
-		p.IncludeCommandLineAPI = true
-		p.ObjectGroup = "console"
-
-		res, exp, err := p.Do(ctxt, h)
+		var res string
+		err := EvaluateAsDevTools(fmt.Sprintf(setValueJS, nodes[0].FullXPath(), value), &res).Do(ctxt, h)
 		if err != nil {
 			return err
 		}
-		if exp != nil {
-			return exp
-		}
-		if res.Type != rundom.TypeString || len(res.Value) < 2 {
-			return fmt.Errorf("expected string of at least length 2, got %s length %d", res.Subtype, len(res.Value))
+		if res != value {
+			return fmt.Errorf("could not set value on node %d", nodes[0].NodeID)
 		}
 
 		return nil
@@ -190,24 +166,7 @@ func Text(sel interface{}, text *string, opts ...QueryOption) Action {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
-		p := rundom.Evaluate(fmt.Sprintf(textJS, nodes[0].FullXPath()))
-		p.IncludeCommandLineAPI = true
-		p.ObjectGroup = "console"
-
-		res, exp, err := p.Do(ctxt, h)
-		if err != nil {
-			return err
-		}
-		if exp != nil {
-			return exp
-		}
-		if res.Type != rundom.TypeString || len(res.Value) < 2 {
-			return fmt.Errorf("expected string of at least length 2, got %s length %d", res.Subtype, len(res.Value))
-		}
-
-		*text = string(res.Value[1 : len(res.Value)-1])
-
-		return nil
+		return EvaluateAsDevTools(fmt.Sprintf(textJS, nodes[0].FullXPath()), text).Do(ctxt, h)
 	}, opts...)
 }
 
@@ -372,21 +331,9 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 			return ErrInvalidBoxModel
 		}
 
-		// evaluate scroll script
-		res, exp, err := rundom.Evaluate(fmt.Sprintf(scrollJS, int64(box.Margin[0]), int64(box.Margin[1]))).Do(ctxt, h)
-		if err != nil {
-			return err
-		}
-		if exp != nil {
-			return exp
-		}
-		if res.Type != rundom.TypeString || len(res.Value) < 2 {
-			return fmt.Errorf("expected string of at least length 2, got %s length %d", res.Subtype, len(res.Value))
-		}
-
-		// parse response
-		var scroll []int
-		err = json.Unmarshal([]byte(res.Value[1:len(res.Value)-1]), &scroll)
+		// scroll to node location
+		var pos []int
+		err = EvaluateAsDevTools(fmt.Sprintf(scrollJS, int64(box.Margin[0]), int64(box.Margin[1])), &pos).Do(ctxt, h)
 		if err != nil {
 			return err
 		}
@@ -405,8 +352,8 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 
 		// crop to box model contents.
 		cropped := imaging.Crop(img, image.Rect(
-			int(box.Margin[0])-scroll[0], int(box.Margin[1])-scroll[1],
-			int(box.Margin[4])-scroll[0], int(box.Margin[5])-scroll[1],
+			int(box.Margin[0])-pos[0], int(box.Margin[1])-pos[1],
+			int(box.Margin[4])-pos[0], int(box.Margin[5])-pos[1],
 		))
 
 		// encode
@@ -429,19 +376,14 @@ func Submit(sel interface{}, opts ...QueryOption) Action {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
-		p := rundom.Evaluate(fmt.Sprintf(submitJS, nodes[0].FullXPath()))
-		p.IncludeCommandLineAPI = true
-		p.ObjectGroup = "console"
-
-		res, exp, err := p.Do(ctxt, h)
+		var res bool
+		err := EvaluateAsDevTools(fmt.Sprintf(submitJS, nodes[0].FullXPath()), &res).Do(ctxt, h)
 		if err != nil {
 			return err
 		}
-		if exp != nil {
-			return exp
-		}
-		if res.Type != rundom.TypeString || len(res.Value) < 2 {
-			return fmt.Errorf("expected string of at least length 2, got %s length %d", res.Subtype, len(res.Value))
+
+		if !res {
+			return fmt.Errorf("submit on node %d returned false", nodes[0].NodeID)
 		}
 
 		return nil
@@ -449,6 +391,8 @@ func Submit(sel interface{}, opts ...QueryOption) Action {
 }
 
 const (
+	// textJS is a javascript snippet that returns the concatenated textContent
+	// of all visible (ie, offsetParent !== null) children.
 	textJS = `(function(a) {
 		var s = '';
 		for (var i = 0; i < a.length; i++) {
@@ -459,22 +403,31 @@ const (
 		return s;
 	})($x("%s/node()"))`
 
+	// scrollJS is a javascript snippet that scrolls the window to the
+	// specified x, y coordinates and then returns the actual window x/y after
+	// execution.
 	scrollJS = `(function(x, y) {
 		window.scrollTo(x, y);
-		return '['+window.scrollX+','+window.scrollY+']';
+		return [window.scrollX, window.scrollY];
 	})(%d, %d)`
 
+	// submitJS is a javascript snippet that will call the containing form's
+	// submit function, returning true or false if the call was successful.
 	submitJS = `(function(a) {
 		if (a[0].form !== null) {
-			return "" + a[0].form.submit();
+			return a[0].form.submit();
 		}
-		return 'false';
+		return false;
 	})($x('%s'))`
 
+	// valueJS is a javascript snippet that returns the value of a specified
+	// node.
 	valueJS = `(function(a) {
 		return a[0].value;
 	})($x('%s'))`
 
+	// setValueJS is a javascript snippet that sets the value of the specified
+	// node, and returns the value.
 	setValueJS = `(function(a, val) {
 		return a[0].value = val;
 	})($x('%s'), '%s')`
