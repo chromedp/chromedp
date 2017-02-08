@@ -195,6 +195,17 @@ func (t *{%s= typ %}) UnmarshalJSON(buf []byte) error {
 }
 {% endfunc %}
 
+// ExtraExceptionDetailsTemplate is a special template for the Runtime.ExceptionDetails type that
+// defines the standard error interface.
+{% func ExtraExceptionDetailsTemplate() %}
+// Error satisfies the error interface.
+func (e *ExceptionDetails) Error() string {
+	// TODO: watch script parsed events and match the ExceptionDetails.ScriptID
+	// to the name/location of the actual code and display here
+	return fmt.Sprintf("encountered exception '%s' (%d:%d)", e.Text, e.LineNumber, e.ColumnNumber)
+}
+{% endfunc %}
+
 // ExtraCDPTypes is the template for additional internal type
 // declarations.
 {% func ExtraCDPTypes() %}

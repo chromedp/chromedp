@@ -56,6 +56,7 @@ const (
 //  - add special unmarshaler to NodeId, BackendNodeId, FrameId to handle values from older (v1.1) protocol versions. -- NOTE: this might need to be applied to more types, such as network.LoaderId
 //  - rename 'Input.GestureSourceType' -> 'Input.GestureType'.
 //  - rename CSS.CSS* types.
+//  - add Error() method to 'Runtime.ExceptionDetails' type so that it can be used as error.
 func FixupDomains(domains []*internal.Domain) {
 	// method type
 	methodType := &internal.Type{
@@ -309,9 +310,14 @@ func FixupDomains(domains []*internal.Domain) {
 		case internal.DomainRuntime:
 			var types []*internal.Type
 			for _, t := range d.Types {
-				if t.ID == "Timestamp" {
+				switch t.ID {
+				case "Timestamp":
 					continue
+
+				case "ExceptionDetails":
+					t.Extra += templates.ExtraExceptionDetailsTemplate()
 				}
+
 				types = append(types, t)
 			}
 			d.Types = types

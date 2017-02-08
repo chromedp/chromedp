@@ -142,7 +142,7 @@ func Value(sel interface{}, value *string, opts ...QueryOption) Action {
 			return err
 		}
 		if exp != nil {
-			return fmt.Errorf("got exception evaluating script: %#v", exp)
+			return exp
 		}
 		if res.Type != rundom.TypeString || len(res.Value) < 2 {
 			return fmt.Errorf("expected string of at least length 2, got %s length %d", res.Subtype, len(res.Value))
@@ -170,7 +170,7 @@ func SetValue(sel interface{}, value string, opts ...QueryOption) Action {
 			return err
 		}
 		if exp != nil {
-			return fmt.Errorf("got exception evaluating script: %#v", exp)
+			return exp
 		}
 		if res.Type != rundom.TypeString || len(res.Value) < 2 {
 			return fmt.Errorf("expected string of at least length 2, got %s length %d", res.Subtype, len(res.Value))
@@ -199,7 +199,7 @@ func Text(sel interface{}, text *string, opts ...QueryOption) Action {
 			return err
 		}
 		if exp != nil {
-			return fmt.Errorf("got exception evaluating script: %#v", exp)
+			return exp
 		}
 		if res.Type != rundom.TypeString || len(res.Value) < 2 {
 			return fmt.Errorf("expected string of at least length 2, got %s length %d", res.Subtype, len(res.Value))
@@ -378,7 +378,7 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 			return err
 		}
 		if exp != nil {
-			return fmt.Errorf("got exception evaluating script: %#v", exp)
+			return exp
 		}
 		if res.Type != rundom.TypeString || len(res.Value) < 2 {
 			return fmt.Errorf("expected string of at least length 2, got %s length %d", res.Subtype, len(res.Value))
@@ -438,7 +438,7 @@ func Submit(sel interface{}, opts ...QueryOption) Action {
 			return err
 		}
 		if exp != nil {
-			return fmt.Errorf("got exception evaluating script: %#v", exp)
+			return exp
 		}
 		if res.Type != rundom.TypeString || len(res.Value) < 2 {
 			return fmt.Errorf("expected string of at least length 2, got %s length %d", res.Subtype, len(res.Value))

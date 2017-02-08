@@ -4,7 +4,7 @@
 
 // DomainTemplate is the template for a single domain.
 {% func DomainTemplate(d *internal.Domain, domains []*internal.Domain) %}
-{%s= FileImportTemplate(map[string]string{ 
+{%s= FileImportTemplate(map[string]string{
 	*internal.FlagPkg: "cdp",
 }) %}
 {% for _, c := range d.Commands %}

@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jlexer"
@@ -179,6 +180,13 @@ type ExceptionDetails struct {
 	StackTrace         *StackTrace        `json:"stackTrace,omitempty"`         // JavaScript stack trace if available.
 	Exception          *RemoteObject      `json:"exception,omitempty"`          // Exception object if available.
 	ExecutionContextID ExecutionContextID `json:"executionContextId,omitempty"` // Identifier of the context where exception happened.
+}
+
+// Error satisfies the error interface.
+func (e *ExceptionDetails) Error() string {
+	// TODO: watch script parsed events and match the ExceptionDetails.ScriptID
+	// to the name/location of the actual code and display here
+	return fmt.Sprintf("encountered exception '%s' (%d:%d)", e.Text, e.LineNumber, e.ColumnNumber)
 }
 
 // CallFrame stack entry for runtime errors and assertions.

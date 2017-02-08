@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/page"
@@ -121,25 +120,6 @@ func Stop() Action {
 	return page.StopLoading()
 }
 
-// Evaluate evaluates a script.
-func Evaluate(expression string, res **rundom.RemoteObject) Action {
-	if res == nil {
-		panic("res cannot be nil")
-	}
-
-	return ActionFunc(func(ctxt context.Context, h cdp.FrameHandler) error {
-		v, exp, err := rundom.Evaluate(expression).Do(ctxt, h)
-		if err != nil {
-			return err
-		}
-		if exp != nil {
-			log.Printf(">>> GOT EXECPTION: %v", exp)
-		}
-		*res = v
-		return nil
-	})
-}
-
 // Location retrieves the URL location.
 func Location(urlstr *string) Action {
 	if urlstr == nil {
@@ -151,7 +131,7 @@ func Location(urlstr *string) Action {
 			return err
 		}
 		if exp != nil {
-			return fmt.Errorf("got exception evaluating script: %#v", exp)
+			return exp
 		}
 		if res.Type != rundom.TypeString || len(res.Value) < 2 {
 			return fmt.Errorf("expected string of at least length 2, got %s length %d", res.Subtype, len(res.Value))
