@@ -27,6 +27,7 @@ tagname
 // Error types.
 var (
 	ErrNoResults   = errors.New("no results")
+	ErrHasResults  = errors.New("has results")
 	ErrNotVisible  = errors.New("not visible")
 	ErrVisible     = errors.New("visible")
 	ErrDisabled    = errors.New("disabled")
@@ -483,6 +484,18 @@ func ElementSelected(s *Selector) {
 	}))(s)
 }
 
+// ElementNotPresent is a query option to wait until no elements match are
+// present matching the selector.
+func ElementNotPresent(s *Selector) {
+	s.exp = 0
+	WaitFunc(func(ctxt context.Context, h cdp.FrameHandler, n *cdp.Node, ids ...cdp.NodeID) ([]*cdp.Node, error) {
+		if len(ids) != 0 {
+			return nil, ErrHasResults
+		}
+		return []*cdp.Node{}, nil
+	})(s)
+}
+
 // AtLeast is a query option to wait until at least n elements are returned
 // from the query selector.
 func AtLeast(n int) QueryOption {
@@ -523,6 +536,11 @@ func WaitEnabled(sel interface{}, opts ...QueryOption) Action {
 // WaitSelected waits until the element is selected (has attribute 'selected').
 func WaitSelected(sel interface{}, opts ...QueryOption) Action {
 	return Query(sel, append(opts, ElementSelected)...)
+}
+
+// WaitNotPresent waits until no elements match the specified selector.
+func WaitNotPresent(sel interface{}, opts ...QueryOption) Action {
+	return Query(sel, append(opts, ElementNotPresent)...)
 }
 
 const (

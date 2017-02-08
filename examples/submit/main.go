@@ -48,6 +48,7 @@ func submit(urlstr, sel, q string, res *string) cdp.Tasks {
 		cdp.WaitVisible(sel),
 		cdp.SendKeys(sel, q),
 		cdp.Submit(sel),
+		cdp.WaitNotPresent(`//*[@id="code_search"]/h2/svg`),
 		cdp.Text(`//*[@id="js-pjax-container"]/div[2]/div/div[2]/ul/li/p`, res),
 	}
 }
