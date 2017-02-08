@@ -3,11 +3,9 @@ package chromedp
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/page"
-	rundom "github.com/knq/chromedp/cdp/runtime"
 )
 
 // Navigate navigates the current frame.
@@ -125,20 +123,6 @@ func Location(urlstr *string) Action {
 	if urlstr == nil {
 		panic("urlstr cannot be nil")
 	}
-	return ActionFunc(func(ctxt context.Context, h cdp.FrameHandler) error {
-		res, exp, err := rundom.Evaluate(`location.toString()`).Do(ctxt, h)
-		if err != nil {
-			return err
-		}
-		if exp != nil {
-			return exp
-		}
-		if res.Type != rundom.TypeString || len(res.Value) < 2 {
-			return fmt.Errorf("expected string of at least length 2, got %s length %d", res.Subtype, len(res.Value))
-		}
 
-		*urlstr = string(res.Value[1 : len(res.Value)-1])
-
-		return nil
-	})
+	return EvaluateAsDevTools(`location.toString()`, urlstr)
 }

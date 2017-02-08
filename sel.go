@@ -301,6 +301,38 @@ func ElementReady(s *Selector) {
 // ElementVisible is a query option to wait until the element is visible.
 func ElementVisible(s *Selector) {
 	WaitFunc(s.waitReady(func(ctxt context.Context, h cdp.FrameHandler, n *cdp.Node) error {
+		var res bool
+		err := EvaluateAsDevTools(fmt.Sprintf(visibleJS, n.FullXPath()), &res).Do(ctxt, h)
+		if err != nil {
+			return err
+		}
+		if !res {
+			return ErrNotVisible
+		}
+		return nil
+	}))(s)
+}
+
+// ElementNotVisible is a query option to wait until the element is not visible.
+func ElementNotVisible(s *Selector) {
+	WaitFunc(s.waitReady(func(ctxt context.Context, h cdp.FrameHandler, n *cdp.Node) error {
+		var res bool
+		err := EvaluateAsDevTools(fmt.Sprintf(visibleJS, n.FullXPath()), &res).Do(ctxt, h)
+		if err != nil {
+			return err
+		}
+		if res {
+			return ErrVisible
+		}
+		return nil
+	}))(s)
+}
+
+// ElementVisibleOld is a query option to wait until the element is visible.
+//
+// This is the old, complicated, implementation (deprecated).
+func ElementVisibleOld(s *Selector) {
+	WaitFunc(s.waitReady(func(ctxt context.Context, h cdp.FrameHandler, n *cdp.Node) error {
 		var err error
 
 		// check node has box model
@@ -344,8 +376,11 @@ func ElementVisible(s *Selector) {
 	}))(s)
 }
 
-// ElementNotVisible is a query option to wait until the element is visible.
-func ElementNotVisible(s *Selector) {
+// ElementNotVisibleOld is a query option to wait until the element is not
+// visible.
+//
+// This is the old, complicated, implementation (deprecated).
+func ElementNotVisibleOld(s *Selector) {
 	WaitFunc(s.waitReady(func(ctxt context.Context, h cdp.FrameHandler, n *cdp.Node) error {
 		var err error
 
@@ -463,3 +498,11 @@ func WaitEnabled(sel interface{}, opts ...QueryOption) Action {
 func WaitSelected(sel interface{}, opts ...QueryOption) Action {
 	return Query(sel, append(opts, ElementSelected)...)
 }
+
+const (
+	// visibleJS is a javascript snippet that returns true or false depending
+	// on if the specified node's offsetParent is not null.
+	visibleJS = `(function(a) {
+		return a[0].offsetParent !== null
+	})($x('%s'))`
+)
