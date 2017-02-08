@@ -301,8 +301,21 @@ func ElementReady(s *Selector) {
 // ElementVisible is a query option to wait until the element is visible.
 func ElementVisible(s *Selector) {
 	WaitFunc(s.waitReady(func(ctxt context.Context, h cdp.FrameHandler, n *cdp.Node) error {
+		var err error
+
+		// check box model
+		_, err = dom.GetBoxModel(n.NodeID).Do(ctxt, h)
+		if err != nil {
+			if isCouldNotComputeBoxModelError(err) {
+				return ErrNotVisible
+			}
+
+			return err
+		}
+
+		// check offsetParent
 		var res bool
-		err := EvaluateAsDevTools(fmt.Sprintf(visibleJS, n.FullXPath()), &res).Do(ctxt, h)
+		err = EvaluateAsDevTools(fmt.Sprintf(visibleJS, n.FullXPath()), &res).Do(ctxt, h)
 		if err != nil {
 			return err
 		}
@@ -316,8 +329,21 @@ func ElementVisible(s *Selector) {
 // ElementNotVisible is a query option to wait until the element is not visible.
 func ElementNotVisible(s *Selector) {
 	WaitFunc(s.waitReady(func(ctxt context.Context, h cdp.FrameHandler, n *cdp.Node) error {
+		var err error
+
+		// check box model
+		_, err = dom.GetBoxModel(n.NodeID).Do(ctxt, h)
+		if err != nil {
+			if isCouldNotComputeBoxModelError(err) {
+				return nil
+			}
+
+			return err
+		}
+
+		// check offsetParent
 		var res bool
-		err := EvaluateAsDevTools(fmt.Sprintf(visibleJS, n.FullXPath()), &res).Do(ctxt, h)
+		err = EvaluateAsDevTools(fmt.Sprintf(visibleJS, n.FullXPath()), &res).Do(ctxt, h)
 		if err != nil {
 			return err
 		}

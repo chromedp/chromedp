@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"log"
-	"time"
 
 	cdp "github.com/knq/chromedp"
 )
@@ -22,7 +21,8 @@ func main() {
 	}
 
 	// run task list
-	err = c.Run(ctxt, submit(`https://brank.as/`, `#outro-invite-form input[name="email"]`))
+	var res string
+	err = c.Run(ctxt, submit(`https://github.com/search`, `//input[@name="q"]`, `chromedp`, &res))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -38,15 +38,16 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	log.Printf("got: `%s`", res)
 }
 
-func submit(urlstr, sel string) cdp.Tasks {
+func submit(urlstr, sel, q string, res *string) cdp.Tasks {
 	return cdp.Tasks{
 		cdp.Navigate(urlstr),
-		cdp.Sleep(2 * time.Second),
-		cdp.WaitVisible(sel, cdp.ByQuery),
-		cdp.WaitNotVisible(`div.v-middle > div.la-ball-clip-rotate`, cdp.ByQuery),
-		cdp.Submit(sel, cdp.ElementVisible, cdp.ByQuery),
-		cdp.Sleep(120 * time.Second),
+		cdp.WaitVisible(sel),
+		cdp.SendKeys(sel, q),
+		cdp.Submit(sel),
+		cdp.Text(`//*[@id="js-pjax-container"]/div[2]/div/div[2]/ul/li/p`, res),
 	}
 }

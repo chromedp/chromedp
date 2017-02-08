@@ -22,6 +22,36 @@ var (
 	ErrInvalidBoxModel = errors.New("invalid box model")
 )
 
+// Nodes retrieves the DOM nodes matching the selector.
+func Nodes(sel interface{}, nodes *[]*cdp.Node, opts ...QueryOption) Action {
+	if nodes == nil {
+		panic("nodes cannot be nil")
+	}
+
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, n ...*cdp.Node) error {
+		*nodes = n
+		return nil
+	}, opts...)
+}
+
+// NodeIDs returns the node IDs of the matching selector.
+func NodeIDs(sel interface{}, ids *[]cdp.NodeID, opts ...QueryOption) Action {
+	if ids == nil {
+		panic("nodes cannot be nil")
+	}
+
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
+		nodeIDs := make([]cdp.NodeID, len(nodes))
+		for i, n := range nodes {
+			nodeIDs[i] = n.NodeID
+		}
+
+		*ids = nodeIDs
+
+		return nil
+	}, opts...)
+}
+
 // Focus focuses the first element returned by the selector.
 func Focus(sel interface{}, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
@@ -30,6 +60,40 @@ func Focus(sel interface{}, opts ...QueryOption) Action {
 		}
 
 		return dom.Focus(nodes[0].NodeID).Do(ctxt, h)
+	}, opts...)
+}
+
+// Blur unfocuses (blurs) the first element returned by the selector.
+func Blur(sel interface{}, opts ...QueryOption) Action {
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
+		if len(nodes) < 1 {
+			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+		}
+
+		var res bool
+		err := EvaluateAsDevTools(fmt.Sprintf(blurJS, nodes[0].FullXPath()), &res).Do(ctxt, h)
+		if err != nil {
+			return err
+		}
+		if !res {
+			return fmt.Errorf("could not blur node %d", nodes[0].NodeID)
+		}
+		return nil
+	}, opts...)
+}
+
+// Text retrieves the text of the first element matching the selector.
+func Text(sel interface{}, text *string, opts ...QueryOption) Action {
+	if text == nil {
+		panic("text cannot be nil")
+	}
+
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
+		if len(nodes) < 1 {
+			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+		}
+
+		return EvaluateAsDevTools(fmt.Sprintf(textJS, nodes[0].FullXPath()), text).Do(ctxt, h)
 	}, opts...)
 }
 
@@ -69,36 +133,6 @@ func Clear(sel interface{}, opts ...QueryOption) Action {
 				return err
 			}
 		}
-
-		return nil
-	}, opts...)
-}
-
-// Nodes retrieves the DOM nodes matching the selector.
-func Nodes(sel interface{}, nodes *[]*cdp.Node, opts ...QueryOption) Action {
-	if nodes == nil {
-		panic("nodes cannot be nil")
-	}
-
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, n ...*cdp.Node) error {
-		*nodes = n
-		return nil
-	}, opts...)
-}
-
-// NodeIDs returns the node IDs of the matching selector.
-func NodeIDs(sel interface{}, ids *[]cdp.NodeID, opts ...QueryOption) Action {
-	if ids == nil {
-		panic("nodes cannot be nil")
-	}
-
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
-		nodeIDs := make([]cdp.NodeID, len(nodes))
-		for i, n := range nodes {
-			nodeIDs[i] = n.NodeID
-		}
-
-		*ids = nodeIDs
 
 		return nil
 	}, opts...)
@@ -152,21 +186,6 @@ func SetValue(sel interface{}, value string, opts ...QueryOption) Action {
 		}
 
 		return nil
-	}, opts...)
-}
-
-// Text retrieves the text of the first element matching the selector.
-func Text(sel interface{}, text *string, opts ...QueryOption) Action {
-	if text == nil {
-		panic("text cannot be nil")
-	}
-
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
-		if len(nodes) < 1 {
-			return fmt.Errorf("selector `%s` did not return any nodes", sel)
-		}
-
-		return EvaluateAsDevTools(fmt.Sprintf(textJS, nodes[0].FullXPath()), text).Do(ctxt, h)
 	}, opts...)
 }
 
@@ -270,7 +289,7 @@ func Click(sel interface{}, opts ...QueryOption) Action {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
-		return MouseActionNode(nodes[0], ClickCount(1)).Do(ctxt, h)
+		return MouseClickNode(nodes[0]).Do(ctxt, h)
 	}, append(opts, ElementVisible)...)
 }
 
@@ -281,21 +300,23 @@ func DoubleClick(sel interface{}, opts ...QueryOption) Action {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
-		return MouseActionNode(nodes[0], ButtonLeft, ClickCount(2)).Do(ctxt, h)
+		return MouseClickNode(nodes[0], ClickCount(2)).Do(ctxt, h)
 	}, append(opts, ElementVisible)...)
 }
 
+// NOTE: temporarily disabling this until a proper unit test can be written.
+//
 // Hover hovers (moves) the mouse over the first element returned by the
 // selector.
-func Hover(sel interface{}, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
-		if len(nodes) < 1 {
-			return fmt.Errorf("selector `%s` did not return any nodes", sel)
-		}
-
-		return MouseActionNode(nodes[0], ButtonNone).Do(ctxt, h)
-	}, append(opts, ElementVisible)...)
-}
+//func Hover(sel interface{}, opts ...QueryOption) Action {
+//	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
+//		if len(nodes) < 1 {
+//			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+//		}
+//
+//		return MouseClickNode(nodes[0], ButtonNone).Do(ctxt, h)
+//	}, append(opts, ElementVisible)...)
+//}
 
 // SendKeys sends keys to the first element returned by selector.
 func SendKeys(sel interface{}, v string, opts ...QueryOption) Action {
@@ -369,7 +390,8 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 	}, append(opts, ElementVisible)...)
 }
 
-// Submit is an action that submits whatever form the first element belongs to.
+// Submit is an action that submits whatever form the first element matching
+// the selector belongs to.
 func Submit(sel interface{}, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
@@ -383,7 +405,29 @@ func Submit(sel interface{}, opts ...QueryOption) Action {
 		}
 
 		if !res {
-			return fmt.Errorf("submit on node %d returned false", nodes[0].NodeID)
+			return fmt.Errorf("could not call submit on node %d", nodes[0].NodeID)
+		}
+
+		return nil
+	}, opts...)
+}
+
+// Reset is an action that resets whatever form the first element matching the
+// selector belongs to.
+func Reset(sel interface{}, opts ...QueryOption) Action {
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
+		if len(nodes) < 1 {
+			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+		}
+
+		var res bool
+		err := EvaluateAsDevTools(fmt.Sprintf(resetJS, nodes[0].FullXPath()), &res).Do(ctxt, h)
+		if err != nil {
+			return err
+		}
+
+		if !res {
+			return fmt.Errorf("could not call reset on node %d", nodes[0].NodeID)
 		}
 
 		return nil
@@ -403,6 +447,12 @@ const (
 		return s;
 	})($x("%s/node()"))`
 
+	// blurJS is a javscript snippet that blurs the specified element.
+	blurJS = `(function(a) {
+		a[0].blur();
+		return true;
+	})($x('%s'))`
+
 	// scrollJS is a javascript snippet that scrolls the window to the
 	// specified x, y coordinates and then returns the actual window x/y after
 	// execution.
@@ -414,8 +464,25 @@ const (
 	// submitJS is a javascript snippet that will call the containing form's
 	// submit function, returning true or false if the call was successful.
 	submitJS = `(function(a) {
-		if (a[0].form !== null) {
-			return a[0].form.submit();
+		if (a[0].nodeName === 'FORM') {
+			a[0].submit();
+			return true;
+		} else if (a[0].form !== null) {
+			a[0].form.submit();
+			return true;
+		}
+		return false;
+	})($x('%s'))`
+
+	// resetJS is a javascript snippet that will call the containing form's
+	// reset function, returning true or false if the call was successful.
+	resetJS = `(function(a) {
+		if (a[0].nodeName === 'FORM') {
+			a[0].reset();
+			return true;
+		} else if (a[0].form !== null) {
+			a[0].form.reset();
+			return true;
 		}
 		return false;
 	})($x('%s'))`

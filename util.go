@@ -260,3 +260,10 @@ func removeNode(n []*cdp.Node, id cdp.NodeID) []*cdp.Node {
 
 	return append(n[:i], n[i+1:]...)
 }
+
+// isCouldNotComputeBoxModelError unwraps the err as a MessagError and
+// determines if it is a compute box model error.
+func isCouldNotComputeBoxModelError(err error) bool {
+	e, ok := err.(*cdp.MessageError)
+	return ok && e.Code == -32000 && e.Message == "Could not compute box model."
+}

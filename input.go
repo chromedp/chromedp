@@ -55,8 +55,9 @@ func MouseClickXY(x, y int64, opts ...MouseOption) Action {
 	})
 }
 
-// MouseActionNode dispatches a mouse event at the center of a specified node.
-func MouseActionNode(n *cdp.Node, opts ...MouseOption) Action {
+// MouseClickNode dispatches a mouse left button click event at the center of a
+// specified node.
+func MouseClickNode(n *cdp.Node, opts ...MouseOption) Action {
 	return ActionFunc(func(ctxt context.Context, h cdp.FrameHandler) error {
 		var err error
 
