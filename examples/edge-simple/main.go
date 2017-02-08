@@ -4,11 +4,14 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"io/ioutil"
 	"log"
+	"time"
 
-	"github.com/knq/chromedp"
+	cdp "github.com/knq/chromedp"
+	cdptypes "github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/client"
-	//"github.com/knq/chromedp/runner"
 )
 
 func main() {
@@ -25,40 +28,51 @@ func main() {
 
 	// create edge instance
 	watch := client.New().WatchPageTargets(ctxt)
-	if err != nil {
-		log.Fatal(err)
-	}
-	cdp, err := chromedp.New(ctxt, chromedp.WithTargets(watch))
+	c, err := chromedp.New(ctxt, chromedp.WithTargets(watch))
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// run task list
-	var res string
-	err = googleSearch(cdp, "site:brank.as", &res).Do(ctxt)
+	var site, res string
+	err = c.Run(ctxt, googleSearch("site:brank.as", "Easy Money Management", &site, &res))
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	log.Printf("got attributes: `%s`", res)
 
 	// shutdown chrome
-	return
-	err = cdp.Shutdown(ctxt)
+	err = c.Shutdown(ctxt)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = cdp.Wait()
+	// wait for chrome to finish
+	err = c.Wait()
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	log.Printf("saved screenshot of #testimonials from search result listing `%s` (%s)", res, site)
 }
 
-func googleSearch(c *chromedp.CDP, q string, res *string) chromedp.Tasks {
-	return chromedp.Tasks{
-		c.Navigate(`https://www.google.com`),
-		c.WaitVisible(`#hplogo`),
-		c.AttributeValue(`#hplogo`, "title", res, nil),
+func googleSearch(q, text string, site, res *string) cdp.Tasks {
+	var buf []byte
+	sel := fmt.Sprintf(`//a[text()[contains(., '%s')]]`, text)
+	return cdp.Tasks{
+		cdp.Navigate(`https://www.google.com`),
+		cdp.Sleep(2 * time.Second),
+		cdp.WaitVisible(`#hplogo`, cdp.ByID),
+		cdp.SendKeys(`#lst-ib`, q+"\n", cdp.ByID),
+		cdp.WaitVisible(`#res`, cdp.ByID),
+		cdp.Text(sel, res),
+		cdp.Click(sel),
+		cdp.Sleep(2 * time.Second),
+		cdp.WaitVisible(`#footer`, cdp.ByQuery),
+		cdp.WaitNotVisible(`div.v-middle > div.la-ball-clip-rotate`, cdp.ByQuery),
+		cdp.Location(site),
+		cdp.Screenshot(`#testimonials`, &buf, cdp.ByID),
+		cdp.ActionFunc(func(context.Context, cdptypes.FrameHandler) error {
+			return ioutil.WriteFile("testimonials.png", buf, 0644)
+		}),
 	}
 }
