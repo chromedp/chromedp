@@ -12023,7 +12023,8 @@
                 "debugCommand",
                 "promiseRejection",
                 "OOM",
-                "other"
+                "other",
+                "ambiguous"
               ],
               "description": "Pause reason."
             },
