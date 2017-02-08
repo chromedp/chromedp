@@ -13,7 +13,6 @@ import (
 	"github.com/disintegration/imaging"
 	"github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/dom"
-	"github.com/knq/chromedp/cdp/input"
 	"github.com/knq/chromedp/cdp/page"
 )
 
@@ -161,6 +160,7 @@ func Text(sel interface{}, text *string, opts ...QueryOption) Action {
 	if text == nil {
 		panic("text cannot be nil")
 	}
+
 	return QueryAfter(sel, func(ctxt context.Context, h cdp.FrameHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
@@ -270,7 +270,7 @@ func Click(sel interface{}, opts ...QueryOption) Action {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
-		return MouseActionNode(nodes[0], Button(input.ButtonLeft), ClickCount(1)).Do(ctxt, h)
+		return MouseActionNode(nodes[0], ClickCount(1)).Do(ctxt, h)
 	}, append(opts, ElementVisible)...)
 }
 
@@ -281,7 +281,7 @@ func DoubleClick(sel interface{}, opts ...QueryOption) Action {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
-		return MouseActionNode(nodes[0], Button(input.ButtonLeft), ClickCount(2)).Do(ctxt, h)
+		return MouseActionNode(nodes[0], ButtonLeft, ClickCount(2)).Do(ctxt, h)
 	}, append(opts, ElementVisible)...)
 }
 
@@ -293,7 +293,7 @@ func Hover(sel interface{}, opts ...QueryOption) Action {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
-		return MouseActionNode(nodes[0], Button(input.ButtonNone)).Do(ctxt, h)
+		return MouseActionNode(nodes[0], ButtonNone).Do(ctxt, h)
 	}, append(opts, ElementVisible)...)
 }
 
@@ -331,7 +331,7 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 			return ErrInvalidBoxModel
 		}
 
-		// scroll to node location
+		// scroll to node position
 		var pos []int
 		err = EvaluateAsDevTools(fmt.Sprintf(scrollJS, int64(box.Margin[0]), int64(box.Margin[1])), &pos).Do(ctxt, h)
 		if err != nil {
@@ -434,8 +434,6 @@ const (
 )
 
 /*
-
-ScrollTo
 
 Title
 SetTitle
