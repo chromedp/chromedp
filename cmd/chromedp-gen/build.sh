@@ -5,6 +5,6 @@ go generate
 
 go build
 
-time ./chromedp-gen
+time ./chromedp-gen $@
 
 go install ../../cdp/...

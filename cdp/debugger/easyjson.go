@@ -3598,6 +3598,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpDebugger37(in *jlexer.Lexer, o
 			out.ReturnByValue = bool(in.Bool())
 		case "generatePreview":
 			out.GeneratePreview = bool(in.Bool())
+		case "throwOnSideEffect":
+			out.ThrowOnSideEffect = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -3663,6 +3665,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDebugger37(out *jwriter.Writer
 		first = false
 		out.RawString("\"generatePreview\":")
 		out.Bool(bool(in.GeneratePreview))
+	}
+	if in.ThrowOnSideEffect {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"throwOnSideEffect\":")
+		out.Bool(bool(in.ThrowOnSideEffect))
 	}
 	out.RawByte('}')
 }

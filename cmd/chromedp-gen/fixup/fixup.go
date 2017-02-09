@@ -8,9 +8,8 @@ import (
 	"github.com/knq/chromedp/cmd/chromedp-gen/templates"
 )
 
-func init() {
-	// set the internal types
-	internal.SetCDPTypes(map[string]bool{
+func setup() {
+	types := map[string]bool{
 		"DOM.BackendNodeId":      true,
 		"DOM.BackendNode":        true,
 		"DOM.NodeId":             true,
@@ -27,7 +26,16 @@ func init() {
 		"Network.Timestamp":      true,
 		"Page.FrameId":           true,
 		"Page.Frame":             true,
-	})
+	}
+
+	if *internal.FlagRedirect {
+		types["Network.Cookie"] = true
+		types["Network.CookieSameSite"] = true
+		types["Page.ResourceType"] = true
+	}
+
+	// set the cdp types
+	internal.SetCDPTypes(types)
 }
 
 // if the internal type locations change above, these will also need to change:
@@ -58,6 +66,9 @@ const (
 //  - rename CSS.CSS* types.
 //  - add Error() method to 'Runtime.ExceptionDetails' type so that it can be used as error.
 func FixupDomains(domains []*internal.Domain) {
+	// set up the internal types
+	setup()
+
 	// method type
 	methodType := &internal.Type{
 		ID:               "MethodType",
@@ -512,6 +523,8 @@ func addEnumValues(d *internal.Domain, n string, p *internal.Type) {
 // enumRefMap is the fully qualified parameter name to ref.
 var enumRefMap = map[string]string{
 	"Animation.Animation.type":                         "Type",
+	"Console.ConsoleMessage.level":                     "MessageLevel",
+	"Console.ConsoleMessage.source":                    "MessageSource",
 	"CSS.CSSMedia.source":                              "MediaSource",
 	"CSS.forcePseudoState.forcedPseudoClasses":         "PseudoClass",
 	"Debugger.setPauseOnExceptions.state":              "ExceptionsState",

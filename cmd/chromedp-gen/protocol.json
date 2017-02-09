@@ -11743,6 +11743,13 @@
               "optional": true,
               "experimental": true,
               "description": "Whether preview should be generated for the result."
+            },
+            {
+              "name": "throwOnSideEffect",
+              "type": "boolean",
+              "optional": true,
+              "experimental": true,
+              "description": "Whether to throw an exception if side effect cannot be ruled out during evaluation."
             }
           ],
           "returns": [

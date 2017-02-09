@@ -1139,6 +1139,7 @@ type EvaluateOnCallFrameParams struct {
 	Silent                bool        `json:"silent,omitempty"`                // In silent mode exceptions thrown during evaluation are not reported and do not pause execution. Overrides setPauseOnException state.
 	ReturnByValue         bool        `json:"returnByValue,omitempty"`         // Whether the result is expected to be a JSON object that should be sent by value.
 	GeneratePreview       bool        `json:"generatePreview,omitempty"`       // Whether preview should be generated for the result.
+	ThrowOnSideEffect     bool        `json:"throwOnSideEffect,omitempty"`     // Whether to throw an exception if side effect cannot be ruled out during evaluation.
 }
 
 // EvaluateOnCallFrame evaluates expression on a given call frame.
@@ -1184,6 +1185,13 @@ func (p EvaluateOnCallFrameParams) WithReturnByValue(returnByValue bool) *Evalua
 // WithGeneratePreview whether preview should be generated for the result.
 func (p EvaluateOnCallFrameParams) WithGeneratePreview(generatePreview bool) *EvaluateOnCallFrameParams {
 	p.GeneratePreview = generatePreview
+	return &p
+}
+
+// WithThrowOnSideEffect whether to throw an exception if side effect cannot
+// be ruled out during evaluation.
+func (p EvaluateOnCallFrameParams) WithThrowOnSideEffect(throwOnSideEffect bool) *EvaluateOnCallFrameParams {
+	p.ThrowOnSideEffect = throwOnSideEffect
 	return &p
 }
 
