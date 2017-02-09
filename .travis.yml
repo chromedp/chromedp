@@ -2,14 +2,14 @@ language: go
 go:
   - 1.7
   - tip
-env:
-  - CHROMEDP_NO_SANDBOX=true
-  - PATH=$PATH:$HOME/hs
-before_install:
+install:
   - mkdir -p $HOME/hs
   - wget -O $HOME/hs/hs.tar.bz2 https://storage.googleapis.com/docker-chrome-headless/headless_shell.tar.bz2
   - tar -jxvf $HOME/hs/hs.tar.bz2 -C $HOME/hs
   - go get github.com/mattn/goveralls
+before_script:
+  - export CHROMEDP_NO_SANDBOX=true
+  - export PATH=$PATH:$HOME/hs
 script:
   - go test -v -coverprofile=coverage.out
   - goveralls -service=travis-ci -coverprofile=coverage.out
