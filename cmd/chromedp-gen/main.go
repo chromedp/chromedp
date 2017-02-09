@@ -23,7 +23,7 @@ func main() {
 	var err error
 
 	// parse flags
-	err = internal.FlagSet.Parse(os.Args)
+	err = internal.FlagSet.Parse(os.Args[1:])
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)

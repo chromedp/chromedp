@@ -99,10 +99,9 @@ func googleSearch(q, text string, site, res *string) cdp.Tasks {
 Please see the [examples](examples/) directory for examples.
 
 ## TODO
+* Unit tests / coverage: travis-ci + coveralls integration
 * Move timeouts to context (defaults)
 * Implement more query selector options (allow over riding context timeouts)
 * Contextual actions for "dry run" (or via an accumulator?)
 * Network loader / manager
-* More examples
 * Profiler
-* Unit tests / coverage: travis-ci + coveralls integration

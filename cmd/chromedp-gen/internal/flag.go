@@ -1,9 +1,12 @@
 package internal
 
-import "flag"
+import (
+	"flag"
+	"os"
+)
 
 // FlagSet is the set of application flags.
-var FlagSet = &flag.FlagSet{}
+var FlagSet = flag.NewFlagSet(os.Args[0], flag.ExitOnError)
 
 // The application flags.
 var (
