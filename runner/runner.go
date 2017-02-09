@@ -334,6 +334,26 @@ func Path(path string) CommandLineOption {
 	}
 }
 
+// Headless is the Chrome command line option to set the default settings for
+// running the headless_shell executable. If path is empty, then an attempt
+// will be made to find headless_shell on the path.
+func Headless(path string, port int) CommandLineOption {
+	if path == "" {
+		path, _ = exec.LookPath("headless_shell")
+	}
+
+	return func(m map[string]interface{}) error {
+		m["exec-path"] = path
+		m["remote-debugging-port"] = port
+
+		if os.Getenv("CHROMEDP_NO_SANDBOX") != "" {
+			m["no-sandbox"] = true
+		}
+
+		return nil
+	}
+}
+
 // ExecPath is a Chrome command line option to set the exec path.
 func ExecPath(path string) CommandLineOption {
 	return Flag("exec-path", path)
@@ -368,6 +388,11 @@ func WindowSize(width, height int) CommandLineOption {
 // header.
 func UserAgent(userAgent string) CommandLineOption {
 	return Flag("user-agent", userAgent)
+}
+
+// NoSandbox is the Chrome comamnd line option to disable the sandbox.
+func NoSandbox(m map[string]interface{}) error {
+	return Flag("no-sandbox", true)(m)
 }
 
 // CmdOpt is a Chrome command line option to modify the underlying exec.Cmd

@@ -1,0 +1,12 @@
+language: go
+go:
+  - 1.7
+  - tip
+before_install:
+  - mkdir -p /headless_shell
+  - wget -O /headless_shell/headless_shell.tar.bz2 https://storage.googleapis.com/docker-chrome-headless/headless_shell.tar.bz2
+  - tar -jxf /headless_shell/headless_shell.tar.bz2 -C /headless_shell
+  - go get github.com/mattn/goveralls
+script:
+  - CHROMEDP_NO_SANDBOX=true go test -v -coverprofile=coverage.out
+  - goveralls -service=travis-ci -coverprofile=coverage.out

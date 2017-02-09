@@ -68,13 +68,6 @@ func New(ctxt context.Context, opts ...Option) (*CDP, error) {
 		}
 	}
 
-	// setup context
-	if ctxt == nil {
-		var cancel func()
-		ctxt, cancel = context.WithCancel(context.Background())
-		defer cancel()
-	}
-
 	// check for supplied runner, if none then create one
 	if c.r == nil && c.watch == nil {
 		c.r, err = runner.Run(ctxt, c.opts...)
@@ -312,30 +305,30 @@ func (c *CDP) NewTarget(id *string, opts ...client.Option) Action {
 
 // NewTargetWithURL creates a new Chrome target, sets it as the active target,
 // and then navigates to the specified url.
-func (c *CDP) NewTargetWithURL(urlstr string, id *string, opts ...client.Option) Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.FrameHandler) error {
-		n, err := c.newTarget(ctxt, opts...)
-		if err != nil {
-			return err
-		}
-
-		l := c.GetHandlerByID(n)
-		if l == nil {
-			return errors.New("could not retrieve newly created target")
-		}
-
-		/*err = Navigate(l, urlstr).Do(ctxt)
-		if err != nil {
-			return err
-		}
-
-		if id != nil {
-			*id = n
-		}*/
-
-		return nil
-	})
-}
+//func (c *CDP) NewTargetWithURL(urlstr string, id *string, opts ...client.Option) Action {
+//	return ActionFunc(func(ctxt context.Context, h cdp.FrameHandler) error {
+//		n, err := c.newTarget(ctxt, opts...)
+//		if err != nil {
+//			return err
+//		}
+//
+//		l := c.GetHandlerByID(n)
+//		if l == nil {
+//			return errors.New("could not retrieve newly created target")
+//		}
+//
+//		/*err = Navigate(l, urlstr).Do(ctxt)
+//		if err != nil {
+//			return err
+//		}
+//
+//		if id != nil {
+//			*id = n
+//		}*/
+//
+//		return nil
+//	})
+//}
 
 // CloseByIndex closes the Chrome target with specified index i.
 func (c *CDP) CloseByIndex(i int) Action {
