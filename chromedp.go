@@ -145,11 +145,10 @@ func (c *CDP) AddTarget(ctxt context.Context, t client.Target) {
 // Wait waits for the Chrome runner to terminate.
 func (c *CDP) Wait() error {
 	c.RLock()
-	r := c.r
-	c.RUnlock()
+	defer c.RUnlock()
 
-	if r != nil {
-		return r.Wait()
+	if c.r != nil {
+		return c.r.Wait()
 	}
 
 	return nil
@@ -348,10 +347,9 @@ func (c *CDP) CloseByID(id string) Action {
 // context.
 func (c *CDP) Run(ctxt context.Context, a Action) error {
 	c.RLock()
-	cur := c.cur
-	c.RUnlock()
+	defer c.RUnlock()
 
-	return a.Do(ctxt, cur)
+	return a.Do(ctxt, c.cur)
 }
 
 // Option is a Chrome Debugging Protocol option.
