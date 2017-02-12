@@ -504,7 +504,7 @@ func (h *TargetHandler) pageEvent(ctxt context.Context, ev interface{}) {
 	defer h.pageWaitGroup.Done()
 
 	var id cdp.FrameID
-	var op FrameOp
+	var op frameOp
 
 	switch e := ev.(type) {
 	case *page.EventFrameNavigated:
@@ -569,7 +569,7 @@ func (h *TargetHandler) domEvent(ctxt context.Context, ev interface{}) {
 	}
 
 	var id cdp.NodeID
-	var op NodeOp
+	var op nodeOp
 
 	switch e := ev.(type) {
 	case *dom.EventSetChildNodes:

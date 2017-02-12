@@ -44,7 +44,7 @@ func click() cdp.Tasks {
 	return cdp.Tasks{
 		cdp.Navigate(`https://golang.org/pkg/time/`),
 		cdp.WaitVisible(`#footer`),
-		cdp.Click(`#pkg-overview`, cdp.ElementVisible),
+		cdp.Click(`#pkg-overview`, cdp.NodeVisible),
 		cdp.Sleep(150 * time.Second),
 	}
 }

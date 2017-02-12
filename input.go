@@ -2,18 +2,12 @@ package chromedp
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/dom"
 	"github.com/knq/chromedp/cdp/input"
 	"github.com/knq/chromedp/kb"
-)
-
-// Error types.
-var (
-	ErrInvalidDimensions = errors.New("invalid box dimensions")
 )
 
 // MouseAction is a mouse action.

@@ -45,6 +45,6 @@ func main() {
 func text(res *string) cdp.Tasks {
 	return cdp.Tasks{
 		cdp.Navigate(`https://golang.org/pkg/time/`),
-		cdp.Text(`#pkg-overview`, res, cdp.ElementVisible, cdp.ByID),
+		cdp.Text(`#pkg-overview`, res, cdp.NodeVisible, cdp.ByID),
 	}
 }

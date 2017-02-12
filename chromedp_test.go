@@ -54,9 +54,17 @@ func TestNavigate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
 	if !strings.HasPrefix(urlstr, "https://www.google.") {
-		t.Errorf("expected to be on google, got: %v", urlstr)
+		t.Errorf("expected to be on google domain, at: %s", urlstr)
+	}
+
+	var title string
+	err = c.Run(defaultContext, Title(&title))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(strings.ToLower(title), "google") {
+		t.Errorf("expected title to contain google, instead title is: %s", title)
 	}
 }
 

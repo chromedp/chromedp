@@ -2,14 +2,12 @@ package chromedp
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/knq/chromedp/cdp"
-	"github.com/knq/chromedp/cdp/css"
 	"github.com/knq/chromedp/cdp/dom"
 )
 
@@ -23,16 +21,6 @@ partiallinktext
 tagname
 
 */
-
-// Error types.
-var (
-	ErrNoResults   = errors.New("no results")
-	ErrHasResults  = errors.New("has results")
-	ErrNotVisible  = errors.New("not visible")
-	ErrVisible     = errors.New("visible")
-	ErrDisabled    = errors.New("disabled")
-	ErrNotSelected = errors.New("not selected")
-)
 
 // Selector holds information pertaining to an element query select action.
 type Selector struct {
@@ -61,7 +49,7 @@ func Query(sel interface{}, opts ...QueryOption) Action {
 	}
 
 	if s.wait == nil {
-		ElementReady(s)
+		NodeReady(s)
 	}
 
 	return s
@@ -294,13 +282,13 @@ func WaitFunc(wait func(context.Context, cdp.Handler, *cdp.Node, ...cdp.NodeID) 
 	}
 }
 
-// ElementReady is a query option to wait until the element is ready.
-func ElementReady(s *Selector) {
+// NodeReady is a query option to wait until the element is ready.
+func NodeReady(s *Selector) {
 	WaitFunc(s.waitReady(nil))(s)
 }
 
-// ElementVisible is a query option to wait until the element is visible.
-func ElementVisible(s *Selector) {
+// NodeVisible is a query option to wait until the element is visible.
+func NodeVisible(s *Selector) {
 	WaitFunc(s.waitReady(func(ctxt context.Context, h cdp.Handler, n *cdp.Node) error {
 		var err error
 
@@ -327,8 +315,8 @@ func ElementVisible(s *Selector) {
 	}))(s)
 }
 
-// ElementNotVisible is a query option to wait until the element is not visible.
-func ElementNotVisible(s *Selector) {
+// NodeNotVisible is a query option to wait until the element is not visible.
+func NodeNotVisible(s *Selector) {
 	WaitFunc(s.waitReady(func(ctxt context.Context, h cdp.Handler, n *cdp.Node) error {
 		var err error
 
@@ -355,105 +343,8 @@ func ElementNotVisible(s *Selector) {
 	}))(s)
 }
 
-// ElementVisibleOld is a query option to wait until the element is visible.
-//
-// This is the old, complicated, implementation (deprecated).
-func ElementVisibleOld(s *Selector) {
-	WaitFunc(s.waitReady(func(ctxt context.Context, h cdp.Handler, n *cdp.Node) error {
-		var err error
-
-		// check node has box model
-		_, err = dom.GetBoxModel(n.NodeID).Do(ctxt, h)
-		if err != nil {
-			return err
-		}
-
-		// check if any of the parents are not visible ...
-		var hidden bool
-		for ; n.Parent != nil; n = n.Parent {
-			// get style
-			style, err := css.GetComputedStyleForNode(n.NodeID).Do(ctxt, h)
-			if err != nil {
-				return err
-			}
-
-			// check if hidden
-			for _, c := range style {
-				switch c.Name {
-				case "display":
-					//log.Printf("%d >>>> %s=%s", n.NodeID, c.Name, c.Value)
-					hidden = c.Value == "none"
-
-				case "visibility":
-					//log.Printf("%d >>>> %s=%s", n.NodeID, c.Name, c.Value)
-					hidden = c.Value != "visible"
-
-				case "hidden":
-					//log.Printf("%d >>>> %s=%s", n.NodeID, c.Name, c.Value)
-					hidden = true
-				}
-
-				if hidden {
-					return ErrNotVisible
-				}
-			}
-		}
-
-		return nil
-	}))(s)
-}
-
-// ElementNotVisibleOld is a query option to wait until the element is not
-// visible.
-//
-// This is the old, complicated, implementation (deprecated).
-func ElementNotVisibleOld(s *Selector) {
-	WaitFunc(s.waitReady(func(ctxt context.Context, h cdp.Handler, n *cdp.Node) error {
-		var err error
-
-		// check node has box model
-		_, err = dom.GetBoxModel(n.NodeID).Do(ctxt, h)
-		if err != nil {
-			return nil
-		}
-
-		// check if any of the parents are not visible ...
-		var hidden bool
-		for ; n.Parent != nil; n = n.Parent {
-			// get style
-			style, err := css.GetComputedStyleForNode(n.NodeID).Do(ctxt, h)
-			if err != nil {
-				return err
-			}
-
-			// check if hidden
-			for _, c := range style {
-				switch c.Name {
-				case "display":
-					//log.Printf("%d >>>> %s=%s", n.NodeID, c.Name, c.Value)
-					hidden = c.Value == "none"
-
-				case "visibility":
-					//log.Printf("%d >>>> %s=%s", n.NodeID, c.Name, c.Value)
-					hidden = c.Value != "visible"
-
-				case "hidden":
-					//log.Printf("%d >>>> %s=%s", n.NodeID, c.Name, c.Value)
-					hidden = true
-				}
-
-				if hidden {
-					return nil
-				}
-			}
-		}
-
-		return ErrVisible
-	}))(s)
-}
-
-// ElementEnabled is a query option to wait until the element is enabled.
-func ElementEnabled(s *Selector) {
+// NodeEnabled is a query option to wait until the element is enabled.
+func NodeEnabled(s *Selector) {
 	WaitFunc(s.waitReady(func(ctxt context.Context, h cdp.Handler, n *cdp.Node) error {
 		n.RLock()
 		defer n.RUnlock()
@@ -468,8 +359,8 @@ func ElementEnabled(s *Selector) {
 	}))(s)
 }
 
-// ElementSelected is a query option to wait until the element is selected.
-func ElementSelected(s *Selector) {
+// NodeSelected is a query option to wait until the element is selected.
+func NodeSelected(s *Selector) {
 	WaitFunc(s.waitReady(func(ctxt context.Context, h cdp.Handler, n *cdp.Node) error {
 		n.RLock()
 		defer n.RUnlock()
@@ -484,9 +375,9 @@ func ElementSelected(s *Selector) {
 	}))(s)
 }
 
-// ElementNotPresent is a query option to wait until no elements match are
+// NodeNotPresent is a query option to wait until no elements match are
 // present matching the selector.
-func ElementNotPresent(s *Selector) {
+func NodeNotPresent(s *Selector) {
 	s.exp = 0
 	WaitFunc(func(ctxt context.Context, h cdp.Handler, n *cdp.Node, ids ...cdp.NodeID) ([]*cdp.Node, error) {
 		if len(ids) != 0 {
@@ -519,34 +410,26 @@ func WaitReady(sel interface{}, opts ...QueryOption) Action {
 
 // WaitVisible waits until the selected element is visible.
 func WaitVisible(sel interface{}, opts ...QueryOption) Action {
-	return Query(sel, append(opts, ElementVisible)...)
+	return Query(sel, append(opts, NodeVisible)...)
 }
 
 // WaitNotVisible waits until the selected element is not visible.
 func WaitNotVisible(sel interface{}, opts ...QueryOption) Action {
-	return Query(sel, append(opts, ElementNotVisible)...)
+	return Query(sel, append(opts, NodeNotVisible)...)
 }
 
 // WaitEnabled waits until the selected element is enabled (does not have
 // attribute 'disabled').
 func WaitEnabled(sel interface{}, opts ...QueryOption) Action {
-	return Query(sel, append(opts, ElementEnabled)...)
+	return Query(sel, append(opts, NodeEnabled)...)
 }
 
 // WaitSelected waits until the element is selected (has attribute 'selected').
 func WaitSelected(sel interface{}, opts ...QueryOption) Action {
-	return Query(sel, append(opts, ElementSelected)...)
+	return Query(sel, append(opts, NodeSelected)...)
 }
 
 // WaitNotPresent waits until no elements match the specified selector.
 func WaitNotPresent(sel interface{}, opts ...QueryOption) Action {
-	return Query(sel, append(opts, ElementNotPresent)...)
+	return Query(sel, append(opts, NodeNotPresent)...)
 }
-
-const (
-	// visibleJS is a javascript snippet that returns true or false depending
-	// on if the specified node's offsetParent is not null.
-	visibleJS = `(function(a) {
-		return a[0].offsetParent !== null
-	})($x('%s'))`
-)

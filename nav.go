@@ -82,6 +82,16 @@ func NavigateForward(ctxt context.Context, h cdp.Handler) error {
 	return page.NavigateToHistoryEntry(entries[i+1].ID).Do(ctxt, h)
 }
 
+// Stop stops all navigation and pending resource retrieval.
+func Stop() Action {
+	return page.StopLoading()
+}
+
+// Reload reloads the current page.
+func Reload() Action {
+	return page.Reload()
+}
+
 // CaptureScreenshot captures takes a full page screenshot.
 func CaptureScreenshot(res *[]byte) Action {
 	if res == nil {
@@ -113,16 +123,20 @@ func RemoveOnLoadScript(id page.ScriptIdentifier) Action {
 	return page.RemoveScriptToEvaluateOnLoad(id)
 }
 
-// Stop stops all navigation and pending resource retrieval.
-func Stop() Action {
-	return page.StopLoading()
-}
-
-// Location retrieves the URL location.
+// Location retrieves the document location.
 func Location(urlstr *string) Action {
 	if urlstr == nil {
 		panic("urlstr cannot be nil")
 	}
 
-	return EvaluateAsDevTools(`location.toString()`, urlstr)
+	return EvaluateAsDevTools(`document.location.toString()`, urlstr)
+}
+
+// Title retrieves the document title.
+func Title(title *string) Action {
+	if title == nil {
+		panic("title cannot be nil")
+	}
+
+	return EvaluateAsDevTools(`document.title`, title)
 }

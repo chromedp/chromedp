@@ -8,14 +8,6 @@ import (
 	"github.com/knq/chromedp/runner"
 )
 
-const (
-	// DefaultStartPort is the default start port number.
-	DefaultStartPort = 9000
-
-	// DefaultEndPort is the default end port number.
-	DefaultEndPort = 10000
-)
-
 // Pool manages a pool of running Chrome processes.
 type Pool struct {
 	// start is the start port.
@@ -35,8 +27,8 @@ func NewPool(opts ...PoolOption) (*Pool, error) {
 	var err error
 
 	p := &Pool{
-		start: DefaultStartPort,
-		end:   DefaultEndPort,
+		start: DefaultPoolStartPort,
+		end:   DefaultPoolEndPort,
 		res:   make(map[int]*Res),
 	}
 

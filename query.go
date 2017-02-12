@@ -12,17 +12,12 @@ import (
 
 	"github.com/disintegration/imaging"
 	"github.com/knq/chromedp/cdp"
+	"github.com/knq/chromedp/cdp/css"
 	"github.com/knq/chromedp/cdp/dom"
 	"github.com/knq/chromedp/cdp/page"
 )
 
-var (
-	// ErrInvalidBoxModel is the error returned when the retrieved box model is
-	// invalid.
-	ErrInvalidBoxModel = errors.New("invalid box model")
-)
-
-// Nodes retrieves the DOM nodes matching the selector.
+// Nodes retrieves the document nodes matching the selector.
 func Nodes(sel interface{}, nodes *[]*cdp.Node, opts ...QueryOption) Action {
 	if nodes == nil {
 		panic("nodes cannot be nil")
@@ -34,7 +29,7 @@ func Nodes(sel interface{}, nodes *[]*cdp.Node, opts ...QueryOption) Action {
 	}, opts...)
 }
 
-// NodeIDs returns the node IDs of the matching selector.
+// NodeIDs retrieves the node IDs matching the selector.
 func NodeIDs(sel interface{}, ids *[]cdp.NodeID, opts ...QueryOption) Action {
 	if ids == nil {
 		panic("nodes cannot be nil")
@@ -52,7 +47,7 @@ func NodeIDs(sel interface{}, ids *[]cdp.NodeID, opts ...QueryOption) Action {
 	}, opts...)
 }
 
-// Focus focuses the first element returned by the selector.
+// Focus focuses the first node matching the selector.
 func Focus(sel interface{}, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
@@ -63,7 +58,7 @@ func Focus(sel interface{}, opts ...QueryOption) Action {
 	}, opts...)
 }
 
-// Blur unfocuses (blurs) the first element returned by the selector.
+// Blur unfocuses (blurs) the first node matching the selector.
 func Blur(sel interface{}, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
@@ -75,14 +70,32 @@ func Blur(sel interface{}, opts ...QueryOption) Action {
 		if err != nil {
 			return err
 		}
+
 		if !res {
 			return fmt.Errorf("could not blur node %d", nodes[0].NodeID)
 		}
+
 		return nil
 	}, opts...)
 }
 
-// Text retrieves the text of the first element matching the selector.
+// Dimensions retrieves the box model dimensions for the first node matching
+// the selector.
+func Dimensions(sel interface{}, model **dom.BoxModel, opts ...QueryOption) Action {
+	if model == nil {
+		panic("model cannot be nil")
+	}
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+		if len(nodes) < 1 {
+			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+		}
+		var err error
+		*model, err = dom.GetBoxModel(nodes[0].NodeID).Do(ctxt, h)
+		return err
+	}, opts...)
+}
+
+// Text retrieves the visible text of the first node matching the selector.
 func Text(sel interface{}, text *string, opts ...QueryOption) Action {
 	if text == nil {
 		panic("text cannot be nil")
@@ -97,7 +110,7 @@ func Text(sel interface{}, text *string, opts ...QueryOption) Action {
 	}, opts...)
 }
 
-// Clear clears input and textarea fields of their values.
+// Clear clears the values of any input/textarea nodes matching the selector.
 func Clear(sel interface{}, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
@@ -138,23 +151,7 @@ func Clear(sel interface{}, opts ...QueryOption) Action {
 	}, opts...)
 }
 
-// Dimensions retrieves the box model dimensions for the first node matching
-// the specified selector.
-func Dimensions(sel interface{}, model **dom.BoxModel, opts ...QueryOption) Action {
-	if model == nil {
-		panic("model cannot be nil")
-	}
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
-		if len(nodes) < 1 {
-			return fmt.Errorf("selector `%s` did not return any nodes", sel)
-		}
-		var err error
-		*model, err = dom.GetBoxModel(nodes[0].NodeID).Do(ctxt, h)
-		return err
-	}, opts...)
-}
-
-// Value retrieves the value of an element.
+// Value retrieves the value of the first node matching the selector.
 func Value(sel interface{}, value *string, opts ...QueryOption) Action {
 	if value == nil {
 		panic("value cannot be nil")
@@ -189,7 +186,7 @@ func SetValue(sel interface{}, value string, opts ...QueryOption) Action {
 	}, opts...)
 }
 
-// Attributes retrieves the attributes for the specified element.
+// Attributes retrieves the attributes for the first node matching the selector.
 func Attributes(sel interface{}, attributes *map[string]string, opts ...QueryOption) Action {
 	if attributes == nil {
 		panic("attributes cannot be nil")
@@ -215,19 +212,26 @@ func Attributes(sel interface{}, attributes *map[string]string, opts ...QueryOpt
 	}, opts...)
 }
 
-// SetAttributes sets the attributes for the specified element.
+// SetAttributes sets the attributes for the first node matching the selector.
 func SetAttributes(sel interface{}, attributes map[string]string, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return errors.New("expected at least one element")
 		}
 
-		return nil
+		attrs := make([]string, len(attributes)*2)
+		i := 0
+		for k, v := range attributes {
+			attrs[i], attrs[i+1] = k, v
+			i += 2
+		}
+
+		return dom.SetAttributesAsText(nodes[0].NodeID, strings.Join(attrs, " ")).Do(ctxt, h)
 	}, opts...)
 }
 
-// AttributeValue retrieves the name'd attribute value for the specified
-// element.
+// AttributeValue retrieves the attribute value for the first node matching the
+// selector.
 func AttributeValue(sel interface{}, name string, value *string, ok *bool, opts ...QueryOption) Action {
 	if value == nil {
 		panic("value cannot be nil")
@@ -260,7 +264,8 @@ func AttributeValue(sel interface{}, name string, value *string, ok *bool, opts 
 	}, opts...)
 }
 
-// SetAttributeValue sets an element's attribute with name to value.
+// SetAttributeValue sets the attribute with name to value on the first node
+// matching the selector.
 func SetAttributeValue(sel interface{}, name, value string, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
@@ -271,7 +276,8 @@ func SetAttributeValue(sel interface{}, name, value string, opts ...QueryOption)
 	}, opts...)
 }
 
-// RemoveAttribute removes an element's attribute with name.
+// RemoveAttribute removes the attribute with name from the first node matching
+// the selector.
 func RemoveAttribute(sel interface{}, name string, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
@@ -282,7 +288,7 @@ func RemoveAttribute(sel interface{}, name string, opts ...QueryOption) Action {
 	}, opts...)
 }
 
-// Click sends a click to the first element returned by the selector.
+// Click sends a mouse click event to the first node matching the selector.
 func Click(sel interface{}, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
@@ -290,10 +296,11 @@ func Click(sel interface{}, opts ...QueryOption) Action {
 		}
 
 		return MouseClickNode(nodes[0]).Do(ctxt, h)
-	}, append(opts, ElementVisible)...)
+	}, append(opts, NodeVisible)...)
 }
 
-// DoubleClick does a double click on the first element returned by selector.
+// DoubleClick sends a mouse double click event to the first node matching the
+// selector.
 func DoubleClick(sel interface{}, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
@@ -301,34 +308,21 @@ func DoubleClick(sel interface{}, opts ...QueryOption) Action {
 		}
 
 		return MouseClickNode(nodes[0], ClickCount(2)).Do(ctxt, h)
-	}, append(opts, ElementVisible)...)
+	}, append(opts, NodeVisible)...)
 }
 
-// NOTE: temporarily disabling this until a proper unit test can be written.
-//
-// Hover hovers (moves) the mouse over the first element returned by the
-// selector.
-//func Hover(sel interface{}, opts ...QueryOption) Action {
-//	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
-//		if len(nodes) < 1 {
-//			return fmt.Errorf("selector `%s` did not return any nodes", sel)
-//		}
-//
-//		return MouseClickNode(nodes[0], ButtonNone).Do(ctxt, h)
-//	}, append(opts, ElementVisible)...)
-//}
-
-// SendKeys sends keys to the first element returned by selector.
+// SendKeys synthesizes the key up, char, and down events as needed for the
+// runes in v, sending them to the first node matching the selector.
 func SendKeys(sel interface{}, v string, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 		return KeyActionNode(nodes[0], v).Do(ctxt, h)
-	}, append(opts, ElementVisible)...)
+	}, append(opts, NodeVisible)...)
 }
 
-// Screenshot takes a screenshot of the first element matching the selector.
+// Screenshot takes a screenshot of the first node matching the selector.
 func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 	if picbuf == nil {
 		panic("picbuf cannot be nil")
@@ -387,11 +381,11 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 		*picbuf = croppedBuf.Bytes()
 
 		return nil
-	}, append(opts, ElementVisible)...)
+	}, append(opts, NodeVisible)...)
 }
 
-// Submit is an action that submits whatever form the first element matching
-// the selector belongs to.
+// Submit is an action that submits the form of the first node matching the
+// selector belongs to.
 func Submit(sel interface{}, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
@@ -412,7 +406,7 @@ func Submit(sel interface{}, opts ...QueryOption) Action {
 	}, opts...)
 }
 
-// Reset is an action that resets whatever form the first element matching the
+// Reset is an action that resets the form of the first node matching the
 // selector belongs to.
 func Reset(sel interface{}, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
@@ -434,84 +428,51 @@ func Reset(sel interface{}, opts ...QueryOption) Action {
 	}, opts...)
 }
 
-const (
-	// textJS is a javascript snippet that returns the concatenated textContent
-	// of all visible (ie, offsetParent !== null) children.
-	textJS = `(function(a) {
-		var s = '';
-		for (var i = 0; i < a.length; i++) {
-			if (a[i].offsetParent !== null) {
-				s += a[i].textContent;
-			}
+// ComputedStyle retrieves the computed style of the first node matching the selector.
+func ComputedStyle(sel interface{}, style *[]*css.ComputedProperty, opts ...QueryOption) Action {
+	if style == nil {
+		panic("style cannot be nil")
+	}
+
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+		if len(nodes) < 1 {
+			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
-		return s;
-	})($x("%s/node()"))`
 
-	// blurJS is a javscript snippet that blurs the specified element.
-	blurJS = `(function(a) {
-		a[0].blur();
-		return true;
-	})($x('%s'))`
-
-	// scrollJS is a javascript snippet that scrolls the window to the
-	// specified x, y coordinates and then returns the actual window x/y after
-	// execution.
-	scrollJS = `(function(x, y) {
-		window.scrollTo(x, y);
-		return [window.scrollX, window.scrollY];
-	})(%d, %d)`
-
-	// submitJS is a javascript snippet that will call the containing form's
-	// submit function, returning true or false if the call was successful.
-	submitJS = `(function(a) {
-		if (a[0].nodeName === 'FORM') {
-			a[0].submit();
-			return true;
-		} else if (a[0].form !== null) {
-			a[0].form.submit();
-			return true;
+		computed, err := css.GetComputedStyleForNode(nodes[0].NodeID).Do(ctxt, h)
+		if err != nil {
+			return err
 		}
-		return false;
-	})($x('%s'))`
 
-	// resetJS is a javascript snippet that will call the containing form's
-	// reset function, returning true or false if the call was successful.
-	resetJS = `(function(a) {
-		if (a[0].nodeName === 'FORM') {
-			a[0].reset();
-			return true;
-		} else if (a[0].form !== null) {
-			a[0].form.reset();
-			return true;
+		*style = computed
+
+		return nil
+	}, opts...)
+}
+
+// MatchedStyle retrieves the matched style information for the first node
+// matching the selector.
+func MatchedStyle(sel interface{}, style **css.GetMatchedStylesForNodeReturns, opts ...QueryOption) Action {
+	if style == nil {
+		panic("style cannot be nil")
+	}
+
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+		if len(nodes) < 1 {
+			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
-		return false;
-	})($x('%s'))`
 
-	// valueJS is a javascript snippet that returns the value of a specified
-	// node.
-	valueJS = `(function(a) {
-		return a[0].value;
-	})($x('%s'))`
+		var err error
+		ret := &css.GetMatchedStylesForNodeReturns{}
+		ret.InlineStyle, ret.AttributesStyle, ret.MatchedCSSRules,
+			ret.PseudoElements, ret.Inherited, ret.CSSKeyframesRules,
+			err = css.GetMatchedStylesForNode(nodes[0].NodeID).Do(ctxt, h)
+		if err != nil {
+			return err
+		}
 
-	// setValueJS is a javascript snippet that sets the value of the specified
-	// node, and returns the value.
-	setValueJS = `(function(a, val) {
-		return a[0].value = val;
-	})($x('%s'), '%s')`
-)
+		*style = ret
 
-/*
-
-Title
-SetTitle
-OuterHTML
-SetOuterHTML
-
-NodeName -- ?
-
-Style(Matched)
-Style(Computed)
-SetStyle
-GetStyle(Inline)
-
-*/
+		return nil
+	}, opts...)
+}
