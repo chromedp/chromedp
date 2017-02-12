@@ -59,3 +59,13 @@ func TestNavigate(t *testing.T) {
 		t.Errorf("expected to be on google, got: %v", urlstr)
 	}
 }
+
+func TestSendKeys(t *testing.T) {
+	var err error
+
+	c, err := pool.Allocate(defaultContext)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer c.Release()
+}

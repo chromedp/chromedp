@@ -1,3 +1,5 @@
+// Package templates contains the valyala/quicktemplate based code generation
+// templates used by chromedp-gen.
 package templates
 
 import (

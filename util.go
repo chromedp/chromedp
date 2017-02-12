@@ -1,16 +1,25 @@
 package chromedp
 
 import (
+	"time"
+
 	"github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/util"
 )
 
 const (
-	// emptyFrameID is the "non-existent" (ie current) frame.
-	emptyFrameID cdp.FrameID = cdp.FrameID("")
+	// DefaultNewTargetTimeout is the default time to wait for a new target to
+	// be started.
+	DefaultNewTargetTimeout = 3 * time.Second
 
-	// emptyNodeID is the "non-existent" node id.
-	emptyNodeID cdp.NodeID = cdp.NodeID(0)
+	// DefaultCheckDuration is the default time to sleep between a check.
+	DefaultCheckDuration = 50 * time.Millisecond
+
+	// EmptyFrameID is the "non-existent" (ie current) frame.
+	EmptyFrameID cdp.FrameID = cdp.FrameID("")
+
+	// EmptyNodeID is the "non-existent" node id.
+	EmptyNodeID cdp.NodeID = cdp.NodeID(0)
 )
 
 // UnmarshalMessage unmarshals the message result or params.
@@ -39,7 +48,7 @@ func frameAttached(id cdp.FrameID) FrameOp {
 }*/
 
 func frameDetached(f *cdp.Frame) {
-	f.ParentID = emptyFrameID
+	f.ParentID = EmptyFrameID
 	clearFrameState(f, cdp.FrameAttached)
 }
 

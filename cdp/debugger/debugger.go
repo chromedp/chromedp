@@ -1,5 +1,5 @@
 // Package debugger provides the Chrome Debugging Protocol
-// commands, types, and events for the Chrome Debugger domain.
+// commands, types, and events for the Debugger domain.
 //
 // Debugger domain exposes JavaScript debugging capabilities. It allows
 // setting and removing breakpoints, stepping through execution, exploring stack
@@ -29,8 +29,9 @@ func Enable() *EnableParams {
 	return &EnableParams{}
 }
 
-// Do executes Debugger.enable.
-func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Debugger.enable against the provided context and
+// target handler.
+func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -54,7 +55,7 @@ func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -68,8 +69,9 @@ func Disable() *DisableParams {
 	return &DisableParams{}
 }
 
-// Do executes Debugger.disable.
-func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Debugger.disable against the provided context and
+// target handler.
+func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -93,7 +95,7 @@ func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error)
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -115,8 +117,9 @@ func SetBreakpointsActive(active bool) *SetBreakpointsActiveParams {
 	}
 }
 
-// Do executes Debugger.setBreakpointsActive.
-func (p *SetBreakpointsActiveParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Debugger.setBreakpointsActive against the provided context and
+// target handler.
+func (p *SetBreakpointsActiveParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -146,7 +149,7 @@ func (p *SetBreakpointsActiveParams) Do(ctxt context.Context, h cdp.FrameHandler
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -169,8 +172,9 @@ func SetSkipAllPauses(skip bool) *SetSkipAllPausesParams {
 	}
 }
 
-// Do executes Debugger.setSkipAllPauses.
-func (p *SetSkipAllPausesParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Debugger.setSkipAllPauses against the provided context and
+// target handler.
+func (p *SetSkipAllPausesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -200,7 +204,7 @@ func (p *SetSkipAllPausesParams) Do(ctxt context.Context, h cdp.FrameHandler) (e
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -267,12 +271,13 @@ type SetBreakpointByURLReturns struct {
 	Locations    []*Location  `json:"locations,omitempty"`    // List of the locations this breakpoint resolved into upon addition.
 }
 
-// Do executes Debugger.setBreakpointByUrl.
+// Do executes Debugger.setBreakpointByUrl against the provided context and
+// target handler.
 //
 // returns:
 //   breakpointID - Id of the created breakpoint for further reference.
 //   locations - List of the locations this breakpoint resolved into upon addition.
-func (p *SetBreakpointByURLParams) Do(ctxt context.Context, h cdp.FrameHandler) (breakpointID BreakpointID, locations []*Location, err error) {
+func (p *SetBreakpointByURLParams) Do(ctxt context.Context, h cdp.Handler) (breakpointID BreakpointID, locations []*Location, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -309,7 +314,7 @@ func (p *SetBreakpointByURLParams) Do(ctxt context.Context, h cdp.FrameHandler) 
 		}
 
 	case <-ctxt.Done():
-		return "", nil, cdp.ErrContextDone
+		return "", nil, ctxt.Err()
 	}
 
 	return "", nil, cdp.ErrUnknownResult
@@ -345,12 +350,13 @@ type SetBreakpointReturns struct {
 	ActualLocation *Location    `json:"actualLocation,omitempty"` // Location this breakpoint resolved into.
 }
 
-// Do executes Debugger.setBreakpoint.
+// Do executes Debugger.setBreakpoint against the provided context and
+// target handler.
 //
 // returns:
 //   breakpointID - Id of the created breakpoint for further reference.
 //   actualLocation - Location this breakpoint resolved into.
-func (p *SetBreakpointParams) Do(ctxt context.Context, h cdp.FrameHandler) (breakpointID BreakpointID, actualLocation *Location, err error) {
+func (p *SetBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (breakpointID BreakpointID, actualLocation *Location, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -387,7 +393,7 @@ func (p *SetBreakpointParams) Do(ctxt context.Context, h cdp.FrameHandler) (brea
 		}
 
 	case <-ctxt.Done():
-		return "", nil, cdp.ErrContextDone
+		return "", nil, ctxt.Err()
 	}
 
 	return "", nil, cdp.ErrUnknownResult
@@ -408,8 +414,9 @@ func RemoveBreakpoint(breakpointID BreakpointID) *RemoveBreakpointParams {
 	}
 }
 
-// Do executes Debugger.removeBreakpoint.
-func (p *RemoveBreakpointParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Debugger.removeBreakpoint against the provided context and
+// target handler.
+func (p *RemoveBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -439,7 +446,7 @@ func (p *RemoveBreakpointParams) Do(ctxt context.Context, h cdp.FrameHandler) (e
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -475,11 +482,12 @@ type GetPossibleBreakpointsReturns struct {
 	Locations []*Location `json:"locations,omitempty"` // List of the possible breakpoint locations.
 }
 
-// Do executes Debugger.getPossibleBreakpoints.
+// Do executes Debugger.getPossibleBreakpoints against the provided context and
+// target handler.
 //
 // returns:
 //   locations - List of the possible breakpoint locations.
-func (p *GetPossibleBreakpointsParams) Do(ctxt context.Context, h cdp.FrameHandler) (locations []*Location, err error) {
+func (p *GetPossibleBreakpointsParams) Do(ctxt context.Context, h cdp.Handler) (locations []*Location, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -516,7 +524,7 @@ func (p *GetPossibleBreakpointsParams) Do(ctxt context.Context, h cdp.FrameHandl
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -538,8 +546,9 @@ func ContinueToLocation(location *Location) *ContinueToLocationParams {
 	}
 }
 
-// Do executes Debugger.continueToLocation.
-func (p *ContinueToLocationParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Debugger.continueToLocation against the provided context and
+// target handler.
+func (p *ContinueToLocationParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -569,7 +578,7 @@ func (p *ContinueToLocationParams) Do(ctxt context.Context, h cdp.FrameHandler) 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -583,8 +592,9 @@ func StepOver() *StepOverParams {
 	return &StepOverParams{}
 }
 
-// Do executes Debugger.stepOver.
-func (p *StepOverParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Debugger.stepOver against the provided context and
+// target handler.
+func (p *StepOverParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -608,7 +618,7 @@ func (p *StepOverParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -622,8 +632,9 @@ func StepInto() *StepIntoParams {
 	return &StepIntoParams{}
 }
 
-// Do executes Debugger.stepInto.
-func (p *StepIntoParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Debugger.stepInto against the provided context and
+// target handler.
+func (p *StepIntoParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -647,7 +658,7 @@ func (p *StepIntoParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -661,8 +672,9 @@ func StepOut() *StepOutParams {
 	return &StepOutParams{}
 }
 
-// Do executes Debugger.stepOut.
-func (p *StepOutParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Debugger.stepOut against the provided context and
+// target handler.
+func (p *StepOutParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -686,7 +698,7 @@ func (p *StepOutParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error)
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -700,8 +712,9 @@ func Pause() *PauseParams {
 	return &PauseParams{}
 }
 
-// Do executes Debugger.pause.
-func (p *PauseParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Debugger.pause against the provided context and
+// target handler.
+func (p *PauseParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -725,7 +738,7 @@ func (p *PauseParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -739,8 +752,9 @@ func Resume() *ResumeParams {
 	return &ResumeParams{}
 }
 
-// Do executes Debugger.resume.
-func (p *ResumeParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Debugger.resume against the provided context and
+// target handler.
+func (p *ResumeParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -764,7 +778,7 @@ func (p *ResumeParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -807,11 +821,12 @@ type SearchInContentReturns struct {
 	Result []*SearchMatch `json:"result,omitempty"` // List of search matches.
 }
 
-// Do executes Debugger.searchInContent.
+// Do executes Debugger.searchInContent against the provided context and
+// target handler.
 //
 // returns:
 //   result - List of search matches.
-func (p *SearchInContentParams) Do(ctxt context.Context, h cdp.FrameHandler) (result []*SearchMatch, err error) {
+func (p *SearchInContentParams) Do(ctxt context.Context, h cdp.Handler) (result []*SearchMatch, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -848,7 +863,7 @@ func (p *SearchInContentParams) Do(ctxt context.Context, h cdp.FrameHandler) (re
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -888,14 +903,15 @@ type SetScriptSourceReturns struct {
 	ExceptionDetails *runtime.ExceptionDetails `json:"exceptionDetails,omitempty"` // Exception details if any.
 }
 
-// Do executes Debugger.setScriptSource.
+// Do executes Debugger.setScriptSource against the provided context and
+// target handler.
 //
 // returns:
 //   callFrames - New stack trace in case editing has happened while VM was stopped.
 //   stackChanged - Whether current call stack  was modified after applying the changes.
 //   asyncStackTrace - Async stack trace, if any.
 //   exceptionDetails - Exception details if any.
-func (p *SetScriptSourceParams) Do(ctxt context.Context, h cdp.FrameHandler) (callFrames []*CallFrame, stackChanged bool, asyncStackTrace *runtime.StackTrace, exceptionDetails *runtime.ExceptionDetails, err error) {
+func (p *SetScriptSourceParams) Do(ctxt context.Context, h cdp.Handler) (callFrames []*CallFrame, stackChanged bool, asyncStackTrace *runtime.StackTrace, exceptionDetails *runtime.ExceptionDetails, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -932,7 +948,7 @@ func (p *SetScriptSourceParams) Do(ctxt context.Context, h cdp.FrameHandler) (ca
 		}
 
 	case <-ctxt.Done():
-		return nil, false, nil, nil, cdp.ErrContextDone
+		return nil, false, nil, nil, ctxt.Err()
 	}
 
 	return nil, false, nil, nil, cdp.ErrUnknownResult
@@ -959,12 +975,13 @@ type RestartFrameReturns struct {
 	AsyncStackTrace *runtime.StackTrace `json:"asyncStackTrace,omitempty"` // Async stack trace, if any.
 }
 
-// Do executes Debugger.restartFrame.
+// Do executes Debugger.restartFrame against the provided context and
+// target handler.
 //
 // returns:
 //   callFrames - New stack trace.
 //   asyncStackTrace - Async stack trace, if any.
-func (p *RestartFrameParams) Do(ctxt context.Context, h cdp.FrameHandler) (callFrames []*CallFrame, asyncStackTrace *runtime.StackTrace, err error) {
+func (p *RestartFrameParams) Do(ctxt context.Context, h cdp.Handler) (callFrames []*CallFrame, asyncStackTrace *runtime.StackTrace, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1001,7 +1018,7 @@ func (p *RestartFrameParams) Do(ctxt context.Context, h cdp.FrameHandler) (callF
 		}
 
 	case <-ctxt.Done():
-		return nil, nil, cdp.ErrContextDone
+		return nil, nil, ctxt.Err()
 	}
 
 	return nil, nil, cdp.ErrUnknownResult
@@ -1027,11 +1044,12 @@ type GetScriptSourceReturns struct {
 	ScriptSource string `json:"scriptSource,omitempty"` // Script source.
 }
 
-// Do executes Debugger.getScriptSource.
+// Do executes Debugger.getScriptSource against the provided context and
+// target handler.
 //
 // returns:
 //   scriptSource - Script source.
-func (p *GetScriptSourceParams) Do(ctxt context.Context, h cdp.FrameHandler) (scriptSource string, err error) {
+func (p *GetScriptSourceParams) Do(ctxt context.Context, h cdp.Handler) (scriptSource string, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1068,7 +1086,7 @@ func (p *GetScriptSourceParams) Do(ctxt context.Context, h cdp.FrameHandler) (sc
 		}
 
 	case <-ctxt.Done():
-		return "", cdp.ErrContextDone
+		return "", ctxt.Err()
 	}
 
 	return "", cdp.ErrUnknownResult
@@ -1093,8 +1111,9 @@ func SetPauseOnExceptions(state ExceptionsState) *SetPauseOnExceptionsParams {
 	}
 }
 
-// Do executes Debugger.setPauseOnExceptions.
-func (p *SetPauseOnExceptionsParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Debugger.setPauseOnExceptions against the provided context and
+// target handler.
+func (p *SetPauseOnExceptionsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1124,7 +1143,7 @@ func (p *SetPauseOnExceptionsParams) Do(ctxt context.Context, h cdp.FrameHandler
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1201,12 +1220,13 @@ type EvaluateOnCallFrameReturns struct {
 	ExceptionDetails *runtime.ExceptionDetails `json:"exceptionDetails,omitempty"` // Exception details.
 }
 
-// Do executes Debugger.evaluateOnCallFrame.
+// Do executes Debugger.evaluateOnCallFrame against the provided context and
+// target handler.
 //
 // returns:
 //   result - Object wrapper for the evaluation result.
 //   exceptionDetails - Exception details.
-func (p *EvaluateOnCallFrameParams) Do(ctxt context.Context, h cdp.FrameHandler) (result *runtime.RemoteObject, exceptionDetails *runtime.ExceptionDetails, err error) {
+func (p *EvaluateOnCallFrameParams) Do(ctxt context.Context, h cdp.Handler) (result *runtime.RemoteObject, exceptionDetails *runtime.ExceptionDetails, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1243,7 +1263,7 @@ func (p *EvaluateOnCallFrameParams) Do(ctxt context.Context, h cdp.FrameHandler)
 		}
 
 	case <-ctxt.Done():
-		return nil, nil, cdp.ErrContextDone
+		return nil, nil, ctxt.Err()
 	}
 
 	return nil, nil, cdp.ErrUnknownResult
@@ -1275,8 +1295,9 @@ func SetVariableValue(scopeNumber int64, variableName string, newValue *runtime.
 	}
 }
 
-// Do executes Debugger.setVariableValue.
-func (p *SetVariableValueParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Debugger.setVariableValue against the provided context and
+// target handler.
+func (p *SetVariableValueParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1306,7 +1327,7 @@ func (p *SetVariableValueParams) Do(ctxt context.Context, h cdp.FrameHandler) (e
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1328,8 +1349,9 @@ func SetAsyncCallStackDepth(maxDepth int64) *SetAsyncCallStackDepthParams {
 	}
 }
 
-// Do executes Debugger.setAsyncCallStackDepth.
-func (p *SetAsyncCallStackDepthParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Debugger.setAsyncCallStackDepth against the provided context and
+// target handler.
+func (p *SetAsyncCallStackDepthParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1359,7 +1381,7 @@ func (p *SetAsyncCallStackDepthParams) Do(ctxt context.Context, h cdp.FrameHandl
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1386,8 +1408,9 @@ func SetBlackboxPatterns(patterns []string) *SetBlackboxPatternsParams {
 	}
 }
 
-// Do executes Debugger.setBlackboxPatterns.
-func (p *SetBlackboxPatternsParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Debugger.setBlackboxPatterns against the provided context and
+// target handler.
+func (p *SetBlackboxPatternsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1417,7 +1440,7 @@ func (p *SetBlackboxPatternsParams) Do(ctxt context.Context, h cdp.FrameHandler)
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1449,8 +1472,9 @@ func SetBlackboxedRanges(scriptID runtime.ScriptID, positions []*ScriptPosition)
 	}
 }
 
-// Do executes Debugger.setBlackboxedRanges.
-func (p *SetBlackboxedRangesParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Debugger.setBlackboxedRanges against the provided context and
+// target handler.
+func (p *SetBlackboxedRangesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1480,7 +1504,7 @@ func (p *SetBlackboxedRangesParams) Do(ctxt context.Context, h cdp.FrameHandler)
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult

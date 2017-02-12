@@ -1,5 +1,5 @@
 // Package tethering provides the Chrome Debugging Protocol
-// commands, types, and events for the Chrome Tethering domain.
+// commands, types, and events for the Tethering domain.
 //
 // The Tethering domain defines methods and events for browser port binding.
 //
@@ -30,8 +30,9 @@ func Bind(port int64) *BindParams {
 	}
 }
 
-// Do executes Tethering.bind.
-func (p *BindParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Tethering.bind against the provided context and
+// target handler.
+func (p *BindParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -61,7 +62,7 @@ func (p *BindParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -82,8 +83,9 @@ func Unbind(port int64) *UnbindParams {
 	}
 }
 
-// Do executes Tethering.unbind.
-func (p *UnbindParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Tethering.unbind against the provided context and
+// target handler.
+func (p *UnbindParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -113,7 +115,7 @@ func (p *UnbindParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult

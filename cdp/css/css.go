@@ -1,5 +1,5 @@
 // Package css provides the Chrome Debugging Protocol
-// commands, types, and events for the Chrome CSS domain.
+// commands, types, and events for the CSS domain.
 //
 // This domain exposes CSS read/write operations. All CSS objects
 // (stylesheets, rules, and styles) have an associated id used in subsequent
@@ -35,8 +35,9 @@ func Enable() *EnableParams {
 	return &EnableParams{}
 }
 
-// Do executes CSS.enable.
-func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes CSS.enable against the provided context and
+// target handler.
+func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -60,7 +61,7 @@ func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -74,8 +75,9 @@ func Disable() *DisableParams {
 	return &DisableParams{}
 }
 
-// Do executes CSS.disable.
-func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes CSS.disable against the provided context and
+// target handler.
+func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -99,7 +101,7 @@ func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error)
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -132,7 +134,8 @@ type GetMatchedStylesForNodeReturns struct {
 	CSSKeyframesRules []*KeyframesRule        `json:"cssKeyframesRules,omitempty"` // A list of CSS keyframed animations matching this node.
 }
 
-// Do executes CSS.getMatchedStylesForNode.
+// Do executes CSS.getMatchedStylesForNode against the provided context and
+// target handler.
 //
 // returns:
 //   inlineStyle - Inline style for the specified DOM node.
@@ -141,7 +144,7 @@ type GetMatchedStylesForNodeReturns struct {
 //   pseudoElements - Pseudo style matches for this node.
 //   inherited - A chain of inherited styles (from the immediate node parent up to the DOM tree root).
 //   cssKeyframesRules - A list of CSS keyframed animations matching this node.
-func (p *GetMatchedStylesForNodeParams) Do(ctxt context.Context, h cdp.FrameHandler) (inlineStyle *Style, attributesStyle *Style, matchedCSSRules []*RuleMatch, pseudoElements []*PseudoElementMatches, inherited []*InheritedStyleEntry, cssKeyframesRules []*KeyframesRule, err error) {
+func (p *GetMatchedStylesForNodeParams) Do(ctxt context.Context, h cdp.Handler) (inlineStyle *Style, attributesStyle *Style, matchedCSSRules []*RuleMatch, pseudoElements []*PseudoElementMatches, inherited []*InheritedStyleEntry, cssKeyframesRules []*KeyframesRule, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -178,7 +181,7 @@ func (p *GetMatchedStylesForNodeParams) Do(ctxt context.Context, h cdp.FrameHand
 		}
 
 	case <-ctxt.Done():
-		return nil, nil, nil, nil, nil, nil, cdp.ErrContextDone
+		return nil, nil, nil, nil, nil, nil, ctxt.Err()
 	}
 
 	return nil, nil, nil, nil, nil, nil, cdp.ErrUnknownResult
@@ -209,12 +212,13 @@ type GetInlineStylesForNodeReturns struct {
 	AttributesStyle *Style `json:"attributesStyle,omitempty"` // Attribute-defined element style (e.g. resulting from "width=20 height=100%").
 }
 
-// Do executes CSS.getInlineStylesForNode.
+// Do executes CSS.getInlineStylesForNode against the provided context and
+// target handler.
 //
 // returns:
 //   inlineStyle - Inline style for the specified DOM node.
 //   attributesStyle - Attribute-defined element style (e.g. resulting from "width=20 height=100%").
-func (p *GetInlineStylesForNodeParams) Do(ctxt context.Context, h cdp.FrameHandler) (inlineStyle *Style, attributesStyle *Style, err error) {
+func (p *GetInlineStylesForNodeParams) Do(ctxt context.Context, h cdp.Handler) (inlineStyle *Style, attributesStyle *Style, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -251,7 +255,7 @@ func (p *GetInlineStylesForNodeParams) Do(ctxt context.Context, h cdp.FrameHandl
 		}
 
 	case <-ctxt.Done():
-		return nil, nil, cdp.ErrContextDone
+		return nil, nil, ctxt.Err()
 	}
 
 	return nil, nil, cdp.ErrUnknownResult
@@ -279,11 +283,12 @@ type GetComputedStyleForNodeReturns struct {
 	ComputedStyle []*ComputedProperty `json:"computedStyle,omitempty"` // Computed style for the specified DOM node.
 }
 
-// Do executes CSS.getComputedStyleForNode.
+// Do executes CSS.getComputedStyleForNode against the provided context and
+// target handler.
 //
 // returns:
 //   computedStyle - Computed style for the specified DOM node.
-func (p *GetComputedStyleForNodeParams) Do(ctxt context.Context, h cdp.FrameHandler) (computedStyle []*ComputedProperty, err error) {
+func (p *GetComputedStyleForNodeParams) Do(ctxt context.Context, h cdp.Handler) (computedStyle []*ComputedProperty, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -320,7 +325,7 @@ func (p *GetComputedStyleForNodeParams) Do(ctxt context.Context, h cdp.FrameHand
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -348,11 +353,12 @@ type GetPlatformFontsForNodeReturns struct {
 	Fonts []*PlatformFontUsage `json:"fonts,omitempty"` // Usage statistics for every employed platform font.
 }
 
-// Do executes CSS.getPlatformFontsForNode.
+// Do executes CSS.getPlatformFontsForNode against the provided context and
+// target handler.
 //
 // returns:
 //   fonts - Usage statistics for every employed platform font.
-func (p *GetPlatformFontsForNodeParams) Do(ctxt context.Context, h cdp.FrameHandler) (fonts []*PlatformFontUsage, err error) {
+func (p *GetPlatformFontsForNodeParams) Do(ctxt context.Context, h cdp.Handler) (fonts []*PlatformFontUsage, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -389,7 +395,7 @@ func (p *GetPlatformFontsForNodeParams) Do(ctxt context.Context, h cdp.FrameHand
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -417,11 +423,12 @@ type GetStyleSheetTextReturns struct {
 	Text string `json:"text,omitempty"` // The stylesheet text.
 }
 
-// Do executes CSS.getStyleSheetText.
+// Do executes CSS.getStyleSheetText against the provided context and
+// target handler.
 //
 // returns:
 //   text - The stylesheet text.
-func (p *GetStyleSheetTextParams) Do(ctxt context.Context, h cdp.FrameHandler) (text string, err error) {
+func (p *GetStyleSheetTextParams) Do(ctxt context.Context, h cdp.Handler) (text string, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -458,7 +465,7 @@ func (p *GetStyleSheetTextParams) Do(ctxt context.Context, h cdp.FrameHandler) (
 		}
 
 	case <-ctxt.Done():
-		return "", cdp.ErrContextDone
+		return "", ctxt.Err()
 	}
 
 	return "", cdp.ErrUnknownResult
@@ -484,11 +491,12 @@ type CollectClassNamesReturns struct {
 	ClassNames []string `json:"classNames,omitempty"` // Class name list.
 }
 
-// Do executes CSS.collectClassNames.
+// Do executes CSS.collectClassNames against the provided context and
+// target handler.
 //
 // returns:
 //   classNames - Class name list.
-func (p *CollectClassNamesParams) Do(ctxt context.Context, h cdp.FrameHandler) (classNames []string, err error) {
+func (p *CollectClassNamesParams) Do(ctxt context.Context, h cdp.Handler) (classNames []string, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -525,7 +533,7 @@ func (p *CollectClassNamesParams) Do(ctxt context.Context, h cdp.FrameHandler) (
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -554,11 +562,12 @@ type SetStyleSheetTextReturns struct {
 	SourceMapURL string `json:"sourceMapURL,omitempty"` // URL of source map associated with script (if any).
 }
 
-// Do executes CSS.setStyleSheetText.
+// Do executes CSS.setStyleSheetText against the provided context and
+// target handler.
 //
 // returns:
 //   sourceMapURL - URL of source map associated with script (if any).
-func (p *SetStyleSheetTextParams) Do(ctxt context.Context, h cdp.FrameHandler) (sourceMapURL string, err error) {
+func (p *SetStyleSheetTextParams) Do(ctxt context.Context, h cdp.Handler) (sourceMapURL string, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -595,7 +604,7 @@ func (p *SetStyleSheetTextParams) Do(ctxt context.Context, h cdp.FrameHandler) (
 		}
 
 	case <-ctxt.Done():
-		return "", cdp.ErrContextDone
+		return "", ctxt.Err()
 	}
 
 	return "", cdp.ErrUnknownResult
@@ -627,11 +636,12 @@ type SetRuleSelectorReturns struct {
 	SelectorList *SelectorList `json:"selectorList,omitempty"` // The resulting selector list after modification.
 }
 
-// Do executes CSS.setRuleSelector.
+// Do executes CSS.setRuleSelector against the provided context and
+// target handler.
 //
 // returns:
 //   selectorList - The resulting selector list after modification.
-func (p *SetRuleSelectorParams) Do(ctxt context.Context, h cdp.FrameHandler) (selectorList *SelectorList, err error) {
+func (p *SetRuleSelectorParams) Do(ctxt context.Context, h cdp.Handler) (selectorList *SelectorList, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -668,7 +678,7 @@ func (p *SetRuleSelectorParams) Do(ctxt context.Context, h cdp.FrameHandler) (se
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -700,11 +710,12 @@ type SetKeyframeKeyReturns struct {
 	KeyText *Value `json:"keyText,omitempty"` // The resulting key text after modification.
 }
 
-// Do executes CSS.setKeyframeKey.
+// Do executes CSS.setKeyframeKey against the provided context and
+// target handler.
 //
 // returns:
 //   keyText - The resulting key text after modification.
-func (p *SetKeyframeKeyParams) Do(ctxt context.Context, h cdp.FrameHandler) (keyText *Value, err error) {
+func (p *SetKeyframeKeyParams) Do(ctxt context.Context, h cdp.Handler) (keyText *Value, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -741,7 +752,7 @@ func (p *SetKeyframeKeyParams) Do(ctxt context.Context, h cdp.FrameHandler) (key
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -769,11 +780,12 @@ type SetStyleTextsReturns struct {
 	Styles []*Style `json:"styles,omitempty"` // The resulting styles after modification.
 }
 
-// Do executes CSS.setStyleTexts.
+// Do executes CSS.setStyleTexts against the provided context and
+// target handler.
 //
 // returns:
 //   styles - The resulting styles after modification.
-func (p *SetStyleTextsParams) Do(ctxt context.Context, h cdp.FrameHandler) (styles []*Style, err error) {
+func (p *SetStyleTextsParams) Do(ctxt context.Context, h cdp.Handler) (styles []*Style, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -810,7 +822,7 @@ func (p *SetStyleTextsParams) Do(ctxt context.Context, h cdp.FrameHandler) (styl
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -842,11 +854,12 @@ type SetMediaTextReturns struct {
 	Media *Media `json:"media,omitempty"` // The resulting CSS media rule after modification.
 }
 
-// Do executes CSS.setMediaText.
+// Do executes CSS.setMediaText against the provided context and
+// target handler.
 //
 // returns:
 //   media - The resulting CSS media rule after modification.
-func (p *SetMediaTextParams) Do(ctxt context.Context, h cdp.FrameHandler) (media *Media, err error) {
+func (p *SetMediaTextParams) Do(ctxt context.Context, h cdp.Handler) (media *Media, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -883,7 +896,7 @@ func (p *SetMediaTextParams) Do(ctxt context.Context, h cdp.FrameHandler) (media
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -911,11 +924,12 @@ type CreateStyleSheetReturns struct {
 	StyleSheetID StyleSheetID `json:"styleSheetId,omitempty"` // Identifier of the created "via-inspector" stylesheet.
 }
 
-// Do executes CSS.createStyleSheet.
+// Do executes CSS.createStyleSheet against the provided context and
+// target handler.
 //
 // returns:
 //   styleSheetID - Identifier of the created "via-inspector" stylesheet.
-func (p *CreateStyleSheetParams) Do(ctxt context.Context, h cdp.FrameHandler) (styleSheetID StyleSheetID, err error) {
+func (p *CreateStyleSheetParams) Do(ctxt context.Context, h cdp.Handler) (styleSheetID StyleSheetID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -952,7 +966,7 @@ func (p *CreateStyleSheetParams) Do(ctxt context.Context, h cdp.FrameHandler) (s
 		}
 
 	case <-ctxt.Done():
-		return "", cdp.ErrContextDone
+		return "", ctxt.Err()
 	}
 
 	return "", cdp.ErrUnknownResult
@@ -986,11 +1000,12 @@ type AddRuleReturns struct {
 	Rule *Rule `json:"rule,omitempty"` // The newly created rule.
 }
 
-// Do executes CSS.addRule.
+// Do executes CSS.addRule against the provided context and
+// target handler.
 //
 // returns:
 //   rule - The newly created rule.
-func (p *AddRuleParams) Do(ctxt context.Context, h cdp.FrameHandler) (rule *Rule, err error) {
+func (p *AddRuleParams) Do(ctxt context.Context, h cdp.Handler) (rule *Rule, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1027,7 +1042,7 @@ func (p *AddRuleParams) Do(ctxt context.Context, h cdp.FrameHandler) (rule *Rule
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -1053,8 +1068,9 @@ func ForcePseudoState(nodeID cdp.NodeID, forcedPseudoClasses []PseudoClass) *For
 	}
 }
 
-// Do executes CSS.forcePseudoState.
-func (p *ForcePseudoStateParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes CSS.forcePseudoState against the provided context and
+// target handler.
+func (p *ForcePseudoStateParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1084,7 +1100,7 @@ func (p *ForcePseudoStateParams) Do(ctxt context.Context, h cdp.FrameHandler) (e
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1104,11 +1120,12 @@ type GetMediaQueriesReturns struct {
 	Medias []*Media `json:"medias,omitempty"`
 }
 
-// Do executes CSS.getMediaQueries.
+// Do executes CSS.getMediaQueries against the provided context and
+// target handler.
 //
 // returns:
 //   medias
-func (p *GetMediaQueriesParams) Do(ctxt context.Context, h cdp.FrameHandler) (medias []*Media, err error) {
+func (p *GetMediaQueriesParams) Do(ctxt context.Context, h cdp.Handler) (medias []*Media, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1139,7 +1156,7 @@ func (p *GetMediaQueriesParams) Do(ctxt context.Context, h cdp.FrameHandler) (me
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -1168,8 +1185,9 @@ func SetEffectivePropertyValueForNode(nodeID cdp.NodeID, propertyName string, va
 	}
 }
 
-// Do executes CSS.setEffectivePropertyValueForNode.
-func (p *SetEffectivePropertyValueForNodeParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes CSS.setEffectivePropertyValueForNode against the provided context and
+// target handler.
+func (p *SetEffectivePropertyValueForNodeParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1199,7 +1217,7 @@ func (p *SetEffectivePropertyValueForNodeParams) Do(ctxt context.Context, h cdp.
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1225,11 +1243,12 @@ type GetBackgroundColorsReturns struct {
 	BackgroundColors []string `json:"backgroundColors,omitempty"` // The range of background colors behind this element, if it contains any visible text. If no visible text is present, this will be undefined. In the case of a flat background color, this will consist of simply that color. In the case of a gradient, this will consist of each of the color stops. For anything more complicated, this will be an empty array. Images will be ignored (as if the image had failed to load).
 }
 
-// Do executes CSS.getBackgroundColors.
+// Do executes CSS.getBackgroundColors against the provided context and
+// target handler.
 //
 // returns:
 //   backgroundColors - The range of background colors behind this element, if it contains any visible text. If no visible text is present, this will be undefined. In the case of a flat background color, this will consist of simply that color. In the case of a gradient, this will consist of each of the color stops. For anything more complicated, this will be an empty array. Images will be ignored (as if the image had failed to load).
-func (p *GetBackgroundColorsParams) Do(ctxt context.Context, h cdp.FrameHandler) (backgroundColors []string, err error) {
+func (p *GetBackgroundColorsParams) Do(ctxt context.Context, h cdp.Handler) (backgroundColors []string, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1266,7 +1285,7 @@ func (p *GetBackgroundColorsParams) Do(ctxt context.Context, h cdp.FrameHandler)
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -1299,12 +1318,13 @@ type GetLayoutTreeAndStylesReturns struct {
 	ComputedStyles  []*ComputedStyle  `json:"computedStyles,omitempty"`
 }
 
-// Do executes CSS.getLayoutTreeAndStyles.
+// Do executes CSS.getLayoutTreeAndStyles against the provided context and
+// target handler.
 //
 // returns:
 //   layoutTreeNodes
 //   computedStyles
-func (p *GetLayoutTreeAndStylesParams) Do(ctxt context.Context, h cdp.FrameHandler) (layoutTreeNodes []*LayoutTreeNode, computedStyles []*ComputedStyle, err error) {
+func (p *GetLayoutTreeAndStylesParams) Do(ctxt context.Context, h cdp.Handler) (layoutTreeNodes []*LayoutTreeNode, computedStyles []*ComputedStyle, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1341,7 +1361,7 @@ func (p *GetLayoutTreeAndStylesParams) Do(ctxt context.Context, h cdp.FrameHandl
 		}
 
 	case <-ctxt.Done():
-		return nil, nil, cdp.ErrContextDone
+		return nil, nil, ctxt.Err()
 	}
 
 	return nil, nil, cdp.ErrUnknownResult
@@ -1355,8 +1375,9 @@ func StartRuleUsageTracking() *StartRuleUsageTrackingParams {
 	return &StartRuleUsageTrackingParams{}
 }
 
-// Do executes CSS.startRuleUsageTracking.
-func (p *StartRuleUsageTrackingParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes CSS.startRuleUsageTracking against the provided context and
+// target handler.
+func (p *StartRuleUsageTrackingParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1380,7 +1401,7 @@ func (p *StartRuleUsageTrackingParams) Do(ctxt context.Context, h cdp.FrameHandl
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1401,11 +1422,12 @@ type StopRuleUsageTrackingReturns struct {
 	RuleUsage []*RuleUsage `json:"ruleUsage,omitempty"`
 }
 
-// Do executes CSS.stopRuleUsageTracking.
+// Do executes CSS.stopRuleUsageTracking against the provided context and
+// target handler.
 //
 // returns:
 //   ruleUsage
-func (p *StopRuleUsageTrackingParams) Do(ctxt context.Context, h cdp.FrameHandler) (ruleUsage []*RuleUsage, err error) {
+func (p *StopRuleUsageTrackingParams) Do(ctxt context.Context, h cdp.Handler) (ruleUsage []*RuleUsage, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1436,7 +1458,7 @@ func (p *StopRuleUsageTrackingParams) Do(ctxt context.Context, h cdp.FrameHandle
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult

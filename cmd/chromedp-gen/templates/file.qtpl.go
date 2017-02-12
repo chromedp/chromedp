@@ -39,7 +39,7 @@ func StreamFileHeader(qw422016 *qt422016.Writer, pkgName string, d *internal.Dom
 		qw422016.N().S(d.PackageName())
 		//line templates/file.qtpl:9
 		qw422016.N().S(` provides the Chrome Debugging Protocol
-// commands, types, and events for the Chrome `)
+// commands, types, and events for the `)
 		//line templates/file.qtpl:10
 		qw422016.N().S(d.String())
 		//line templates/file.qtpl:10

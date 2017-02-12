@@ -1,5 +1,5 @@
 // Package log provides the Chrome Debugging Protocol
-// commands, types, and events for the Chrome Log domain.
+// commands, types, and events for the Log domain.
 //
 // Provides access to log entries.
 //
@@ -25,8 +25,9 @@ func Enable() *EnableParams {
 	return &EnableParams{}
 }
 
-// Do executes Log.enable.
-func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Log.enable against the provided context and
+// target handler.
+func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -50,7 +51,7 @@ func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -66,8 +67,9 @@ func Disable() *DisableParams {
 	return &DisableParams{}
 }
 
-// Do executes Log.disable.
-func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Log.disable against the provided context and
+// target handler.
+func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -91,7 +93,7 @@ func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error)
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -105,8 +107,9 @@ func Clear() *ClearParams {
 	return &ClearParams{}
 }
 
-// Do executes Log.clear.
-func (p *ClearParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Log.clear against the provided context and
+// target handler.
+func (p *ClearParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -130,7 +133,7 @@ func (p *ClearParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -151,8 +154,9 @@ func StartViolationsReport(config []*ViolationSetting) *StartViolationsReportPar
 	}
 }
 
-// Do executes Log.startViolationsReport.
-func (p *StartViolationsReportParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Log.startViolationsReport against the provided context and
+// target handler.
+func (p *StartViolationsReportParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -182,7 +186,7 @@ func (p *StartViolationsReportParams) Do(ctxt context.Context, h cdp.FrameHandle
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -196,8 +200,9 @@ func StopViolationsReport() *StopViolationsReportParams {
 	return &StopViolationsReportParams{}
 }
 
-// Do executes Log.stopViolationsReport.
-func (p *StopViolationsReportParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Log.stopViolationsReport against the provided context and
+// target handler.
+func (p *StopViolationsReportParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -221,7 +226,7 @@ func (p *StopViolationsReportParams) Do(ctxt context.Context, h cdp.FrameHandler
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult

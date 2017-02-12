@@ -1,5 +1,5 @@
 // Package security provides the Chrome Debugging Protocol
-// commands, types, and events for the Chrome Security domain.
+// commands, types, and events for the Security domain.
 //
 // Security.
 //
@@ -23,8 +23,9 @@ func Enable() *EnableParams {
 	return &EnableParams{}
 }
 
-// Do executes Security.enable.
-func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Security.enable against the provided context and
+// target handler.
+func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -48,7 +49,7 @@ func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -62,8 +63,9 @@ func Disable() *DisableParams {
 	return &DisableParams{}
 }
 
-// Do executes Security.disable.
-func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Security.disable against the provided context and
+// target handler.
+func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -87,7 +89,7 @@ func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error)
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -102,8 +104,9 @@ func ShowCertificateViewer() *ShowCertificateViewerParams {
 	return &ShowCertificateViewerParams{}
 }
 
-// Do executes Security.showCertificateViewer.
-func (p *ShowCertificateViewerParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Security.showCertificateViewer against the provided context and
+// target handler.
+func (p *ShowCertificateViewerParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -127,7 +130,7 @@ func (p *ShowCertificateViewerParams) Do(ctxt context.Context, h cdp.FrameHandle
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult

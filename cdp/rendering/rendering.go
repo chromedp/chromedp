@@ -1,5 +1,5 @@
 // Package rendering provides the Chrome Debugging Protocol
-// commands, types, and events for the Chrome Rendering domain.
+// commands, types, and events for the Rendering domain.
 //
 // This domain allows to control rendering of the page.
 //
@@ -30,8 +30,9 @@ func SetShowPaintRects(result bool) *SetShowPaintRectsParams {
 	}
 }
 
-// Do executes Rendering.setShowPaintRects.
-func (p *SetShowPaintRectsParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Rendering.setShowPaintRects against the provided context and
+// target handler.
+func (p *SetShowPaintRectsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -61,7 +62,7 @@ func (p *SetShowPaintRectsParams) Do(ctxt context.Context, h cdp.FrameHandler) (
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -83,8 +84,9 @@ func SetShowDebugBorders(show bool) *SetShowDebugBordersParams {
 	}
 }
 
-// Do executes Rendering.setShowDebugBorders.
-func (p *SetShowDebugBordersParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Rendering.setShowDebugBorders against the provided context and
+// target handler.
+func (p *SetShowDebugBordersParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -114,7 +116,7 @@ func (p *SetShowDebugBordersParams) Do(ctxt context.Context, h cdp.FrameHandler)
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -135,8 +137,9 @@ func SetShowFPSCounter(show bool) *SetShowFPSCounterParams {
 	}
 }
 
-// Do executes Rendering.setShowFPSCounter.
-func (p *SetShowFPSCounterParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Rendering.setShowFPSCounter against the provided context and
+// target handler.
+func (p *SetShowFPSCounterParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -166,7 +169,7 @@ func (p *SetShowFPSCounterParams) Do(ctxt context.Context, h cdp.FrameHandler) (
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -189,8 +192,9 @@ func SetShowScrollBottleneckRects(show bool) *SetShowScrollBottleneckRectsParams
 	}
 }
 
-// Do executes Rendering.setShowScrollBottleneckRects.
-func (p *SetShowScrollBottleneckRectsParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Rendering.setShowScrollBottleneckRects against the provided context and
+// target handler.
+func (p *SetShowScrollBottleneckRectsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -220,7 +224,7 @@ func (p *SetShowScrollBottleneckRectsParams) Do(ctxt context.Context, h cdp.Fram
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -242,8 +246,9 @@ func SetShowViewportSizeOnResize(show bool) *SetShowViewportSizeOnResizeParams {
 	}
 }
 
-// Do executes Rendering.setShowViewportSizeOnResize.
-func (p *SetShowViewportSizeOnResizeParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Rendering.setShowViewportSizeOnResize against the provided context and
+// target handler.
+func (p *SetShowViewportSizeOnResizeParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -273,7 +278,7 @@ func (p *SetShowViewportSizeOnResizeParams) Do(ctxt context.Context, h cdp.Frame
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult

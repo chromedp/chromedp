@@ -1,6 +1,6 @@
 #!/bin/bash
 
-SRC=$GOPATH/src/github.com/knq/chromedp
+SRC=$(realpath $(cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/../)
 
 FILES=$(find $SRC/cmd/chromedp-gen -type f -iname \*.go -not -iname \*.qtpl.go -print0|wc -l --files0-from=-|head -n -1)$'\n'
 FILES+=$(find $SRC/{client,runner,contrib,examples} -type f -iname \*.go -print0|wc -l --files0-from=-|head -n -1)$'\n'

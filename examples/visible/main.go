@@ -49,21 +49,21 @@ func visible() cdp.Tasks {
 	return cdp.Tasks{
 		cdp.Navigate("file:" + os.Getenv("GOPATH") + "/src/github.com/knq/chromedp/testdata/visible.html"),
 		cdp.Evaluate(makeVisibleScript, &res),
-		cdp.ActionFunc(func(context.Context, cdptypes.FrameHandler) error {
+		cdp.ActionFunc(func(context.Context, cdptypes.Handler) error {
 			log.Printf(">>> res: %+v", res)
 			return nil
 		}),
 		cdp.WaitVisible(`#box1`),
-		cdp.ActionFunc(func(context.Context, cdptypes.FrameHandler) error {
+		cdp.ActionFunc(func(context.Context, cdptypes.Handler) error {
 			log.Printf(">>>>>>>>>>>>>>>>>>>> BOX1 IS VISIBLE")
 			return nil
 		}),
 		cdp.WaitVisible(`#box2`),
-		cdp.ActionFunc(func(context.Context, cdptypes.FrameHandler) error {
+		cdp.ActionFunc(func(context.Context, cdptypes.Handler) error {
 			log.Printf(">>>>>>>>>>>>>>>>>>>> BOX2 IS VISIBLE")
 			return nil
 		}),
-		cdp.ActionFunc(func(context.Context, cdptypes.FrameHandler) error {
+		cdp.ActionFunc(func(context.Context, cdptypes.Handler) error {
 			log.Printf(">>>>>>>>>>>>>>>>>>>> WAITING TO EXIT")
 			time.Sleep(150 * time.Second)
 			return errors.New("exiting")

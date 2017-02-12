@@ -720,6 +720,10 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpDomdebugger9(in *jlexer.Lexer,
 		switch key {
 		case "objectId":
 			out.ObjectID = runtime.RemoteObjectID(in.String())
+		case "depth":
+			out.Depth = int64(in.Int64())
+		case "pierce":
+			out.Pierce = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -740,6 +744,22 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDomdebugger9(out *jwriter.Writ
 	first = false
 	out.RawString("\"objectId\":")
 	out.String(string(in.ObjectID))
+	if in.Depth != 0 {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"depth\":")
+		out.Int64(int64(in.Depth))
+	}
+	if in.Pierce {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"pierce\":")
+		out.Bool(bool(in.Pierce))
+	}
 	out.RawByte('}')
 }
 
@@ -829,6 +849,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpDomdebugger10(in *jlexer.Lexer
 				}
 				(*out.RemoveFunction).UnmarshalEasyJSON(in)
 			}
+		case "backendNodeId":
+			(out.BackendNodeID).UnmarshalEasyJSON(in)
 		default:
 			in.SkipRecursive()
 		}
@@ -934,6 +956,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDomdebugger10(out *jwriter.Wri
 		} else {
 			(*in.RemoveFunction).MarshalEasyJSON(out)
 		}
+	}
+	if in.BackendNodeID != 0 {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"backendNodeId\":")
+		out.Int64(int64(in.BackendNodeID))
 	}
 	out.RawByte('}')
 }

@@ -8,19 +8,18 @@ import (
 	rundom "github.com/knq/chromedp/cdp/runtime"
 )
 
-// Evaluate evaluates the Javascript expression, unmarshaling the result of the
-// script evaluation to res.
+// Evaluate is an action to evaluate the Javascript expression, unmarshaling
+// the result of the script evaluation to res.
 //
-// If res is *[]byte, then the result of the script evaluation will be returned
-// "by value" (ie, JSON-encoded) and res will be set to the raw value.
+// When res is a type other than *[]byte, or **chromedp/cdp/runtime.RemoteObject,
+// then the result of the script evaluation will be returned "by value" (ie,
+// JSON-encoded), and subsequently an attempt will be made to json.Unmarshal
+// the script result to res.
 //
-// Alternatively, if res is **chromedp/cdp/runtime.RemoteObject, then it will
-// be set to the returned RemoteObject and no attempt will be made to convert
-// the value to an equivalent Go type.
-//
-// Otherwise, if res is any other Go type, the result of the script evaluation
-// will be returned "by value" (ie, JSON-encoded), and subsequently will be
-// json.Unmarshal'd into res.
+// Otherwise, when res is a *[]byte, the raw JSON-encoded value of the script
+// result will be placed in res. Similarly, if res is a *runtime.RemoteObject,
+// then res will be set to the low-level protocol type, and no attempt will be
+// made to convert the result.
 //
 // Note: any exception encountered will be returned as an error.
 func Evaluate(expression string, res interface{}, opts ...EvaluateOption) Action {
@@ -28,7 +27,7 @@ func Evaluate(expression string, res interface{}, opts ...EvaluateOption) Action
 		panic("res cannot be nil")
 	}
 
-	return ActionFunc(func(ctxt context.Context, h cdp.FrameHandler) error {
+	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
 		var err error
 
 		// set up parameters
@@ -68,16 +67,16 @@ func Evaluate(expression string, res interface{}, opts ...EvaluateOption) Action
 	})
 }
 
-// EvaluateAsDevTools is an action that evaluates a Javascript expression in
-// the same context as Chrome DevTools would, exposing the Command Line API to
-// the script evaluating the expression in the "console" context.
+// EvaluateAsDevTools is an action that evaluates a Javascript expression as
+// Chrome DevTools would, evaluating the expression in the "console" context,
+// and making the Command Line API available to the script.
 //
-// Note: this should not be used with any untrusted code.
+// Note: this should not be used with untrusted Javascript.
 func EvaluateAsDevTools(expression string, res interface{}, opts ...EvaluateOption) Action {
 	return Evaluate(expression, res, append(opts, EvalObjectGroup("console"), EvalWithCommandLineAPI)...)
 }
 
-// EvaluateOption is an Evaluate call option.
+// EvaluateOption is the type for script evaulation options.
 type EvaluateOption func(*rundom.EvaluateParams) *rundom.EvaluateParams
 
 // EvalObjectGroup is a evaluate option to set the object group.
@@ -90,19 +89,19 @@ func EvalObjectGroup(objectGroup string) EvaluateOption {
 // EvalWithCommandLineAPI is an evaluate option to make the DevTools Command
 // Line API available to the evaluated script.
 //
-// Note: this should not be used with any untrusted code.
+// Note: this should not be used with untrusted Javascript.
 func EvalWithCommandLineAPI(p *rundom.EvaluateParams) *rundom.EvaluateParams {
 	return p.WithIncludeCommandLineAPI(true)
 }
 
-// EvalSilent is a evaluate option that will cause script evaluation to ignore
-// exceptions.
-func EvalSilent(p *rundom.EvaluateParams) *rundom.EvaluateParams {
+// EvalIgnoreExceptions is a evaluate option that will cause script evaluation
+// to ignore exceptions.
+func EvalIgnoreExceptions(p *rundom.EvaluateParams) *rundom.EvaluateParams {
 	return p.WithSilent(true)
 }
 
-// EvalAsValue is a evaluate option that will case the script to encode its
-// result as a value.
+// EvalAsValue is a evaluate option that will cause the evaluated script to
+// encode the result of the expression as a JSON-encoded value.
 func EvalAsValue(p *rundom.EvaluateParams) *rundom.EvaluateParams {
 	return p.WithReturnByValue(true)
 }

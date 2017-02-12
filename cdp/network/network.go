@@ -1,5 +1,5 @@
 // Package network provides the Chrome Debugging Protocol
-// commands, types, and events for the Chrome Network domain.
+// commands, types, and events for the Network domain.
 //
 // Network domain allows tracking network activities of the page. It exposes
 // information about http, file, data and other requests and responses, their
@@ -47,8 +47,9 @@ func (p EnableParams) WithMaxResourceBufferSize(maxResourceBufferSize int64) *En
 	return &p
 }
 
-// Do executes Network.enable.
-func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Network.enable against the provided context and
+// target handler.
+func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -78,7 +79,7 @@ func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -94,8 +95,9 @@ func Disable() *DisableParams {
 	return &DisableParams{}
 }
 
-// Do executes Network.disable.
-func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Network.disable against the provided context and
+// target handler.
+func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -119,7 +121,7 @@ func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error)
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -141,8 +143,9 @@ func SetUserAgentOverride(userAgent string) *SetUserAgentOverrideParams {
 	}
 }
 
-// Do executes Network.setUserAgentOverride.
-func (p *SetUserAgentOverrideParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Network.setUserAgentOverride against the provided context and
+// target handler.
+func (p *SetUserAgentOverrideParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -172,7 +175,7 @@ func (p *SetUserAgentOverrideParams) Do(ctxt context.Context, h cdp.FrameHandler
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -195,8 +198,9 @@ func SetExtraHTTPHeaders(headers *Headers) *SetExtraHTTPHeadersParams {
 	}
 }
 
-// Do executes Network.setExtraHTTPHeaders.
-func (p *SetExtraHTTPHeadersParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Network.setExtraHTTPHeaders against the provided context and
+// target handler.
+func (p *SetExtraHTTPHeadersParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -226,7 +230,7 @@ func (p *SetExtraHTTPHeadersParams) Do(ctxt context.Context, h cdp.FrameHandler)
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -253,11 +257,12 @@ type GetResponseBodyReturns struct {
 	Base64encoded bool   `json:"base64Encoded,omitempty"` // True, if content was sent as base64.
 }
 
-// Do executes Network.getResponseBody.
+// Do executes Network.getResponseBody against the provided context and
+// target handler.
 //
 // returns:
 //   body - Response body.
-func (p *GetResponseBodyParams) Do(ctxt context.Context, h cdp.FrameHandler) (body []byte, err error) {
+func (p *GetResponseBodyParams) Do(ctxt context.Context, h cdp.Handler) (body []byte, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -305,7 +310,7 @@ func (p *GetResponseBodyParams) Do(ctxt context.Context, h cdp.FrameHandler) (bo
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -326,8 +331,9 @@ func AddBlockedURL(url string) *AddBlockedURLParams {
 	}
 }
 
-// Do executes Network.addBlockedURL.
-func (p *AddBlockedURLParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Network.addBlockedURL against the provided context and
+// target handler.
+func (p *AddBlockedURLParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -357,7 +363,7 @@ func (p *AddBlockedURLParams) Do(ctxt context.Context, h cdp.FrameHandler) (err 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -378,8 +384,9 @@ func RemoveBlockedURL(url string) *RemoveBlockedURLParams {
 	}
 }
 
-// Do executes Network.removeBlockedURL.
-func (p *RemoveBlockedURLParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Network.removeBlockedURL against the provided context and
+// target handler.
+func (p *RemoveBlockedURLParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -409,7 +416,7 @@ func (p *RemoveBlockedURLParams) Do(ctxt context.Context, h cdp.FrameHandler) (e
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -436,8 +443,9 @@ func ReplayXHR(requestID RequestID) *ReplayXHRParams {
 	}
 }
 
-// Do executes Network.replayXHR.
-func (p *ReplayXHRParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Network.replayXHR against the provided context and
+// target handler.
+func (p *ReplayXHRParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -467,7 +475,7 @@ func (p *ReplayXHRParams) Do(ctxt context.Context, h cdp.FrameHandler) (err erro
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -490,8 +498,9 @@ func SetMonitoringXHREnabled(enabled bool) *SetMonitoringXHREnabledParams {
 	}
 }
 
-// Do executes Network.setMonitoringXHREnabled.
-func (p *SetMonitoringXHREnabledParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Network.setMonitoringXHREnabled against the provided context and
+// target handler.
+func (p *SetMonitoringXHREnabledParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -521,7 +530,7 @@ func (p *SetMonitoringXHREnabledParams) Do(ctxt context.Context, h cdp.FrameHand
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -541,11 +550,12 @@ type CanClearBrowserCacheReturns struct {
 	Result bool `json:"result,omitempty"` // True if browser cache can be cleared.
 }
 
-// Do executes Network.canClearBrowserCache.
+// Do executes Network.canClearBrowserCache against the provided context and
+// target handler.
 //
 // returns:
 //   result - True if browser cache can be cleared.
-func (p *CanClearBrowserCacheParams) Do(ctxt context.Context, h cdp.FrameHandler) (result bool, err error) {
+func (p *CanClearBrowserCacheParams) Do(ctxt context.Context, h cdp.Handler) (result bool, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -576,7 +586,7 @@ func (p *CanClearBrowserCacheParams) Do(ctxt context.Context, h cdp.FrameHandler
 		}
 
 	case <-ctxt.Done():
-		return false, cdp.ErrContextDone
+		return false, ctxt.Err()
 	}
 
 	return false, cdp.ErrUnknownResult
@@ -590,8 +600,9 @@ func ClearBrowserCache() *ClearBrowserCacheParams {
 	return &ClearBrowserCacheParams{}
 }
 
-// Do executes Network.clearBrowserCache.
-func (p *ClearBrowserCacheParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Network.clearBrowserCache against the provided context and
+// target handler.
+func (p *ClearBrowserCacheParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -615,7 +626,7 @@ func (p *ClearBrowserCacheParams) Do(ctxt context.Context, h cdp.FrameHandler) (
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -636,11 +647,12 @@ type CanClearBrowserCookiesReturns struct {
 	Result bool `json:"result,omitempty"` // True if browser cookies can be cleared.
 }
 
-// Do executes Network.canClearBrowserCookies.
+// Do executes Network.canClearBrowserCookies against the provided context and
+// target handler.
 //
 // returns:
 //   result - True if browser cookies can be cleared.
-func (p *CanClearBrowserCookiesParams) Do(ctxt context.Context, h cdp.FrameHandler) (result bool, err error) {
+func (p *CanClearBrowserCookiesParams) Do(ctxt context.Context, h cdp.Handler) (result bool, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -671,7 +683,7 @@ func (p *CanClearBrowserCookiesParams) Do(ctxt context.Context, h cdp.FrameHandl
 		}
 
 	case <-ctxt.Done():
-		return false, cdp.ErrContextDone
+		return false, ctxt.Err()
 	}
 
 	return false, cdp.ErrUnknownResult
@@ -685,8 +697,9 @@ func ClearBrowserCookies() *ClearBrowserCookiesParams {
 	return &ClearBrowserCookiesParams{}
 }
 
-// Do executes Network.clearBrowserCookies.
-func (p *ClearBrowserCookiesParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Network.clearBrowserCookies against the provided context and
+// target handler.
+func (p *ClearBrowserCookiesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -710,7 +723,7 @@ func (p *ClearBrowserCookiesParams) Do(ctxt context.Context, h cdp.FrameHandler)
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -743,11 +756,12 @@ type GetCookiesReturns struct {
 	Cookies []*Cookie `json:"cookies,omitempty"` // Array of cookie objects.
 }
 
-// Do executes Network.getCookies.
+// Do executes Network.getCookies against the provided context and
+// target handler.
 //
 // returns:
 //   cookies - Array of cookie objects.
-func (p *GetCookiesParams) Do(ctxt context.Context, h cdp.FrameHandler) (cookies []*Cookie, err error) {
+func (p *GetCookiesParams) Do(ctxt context.Context, h cdp.Handler) (cookies []*Cookie, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -784,7 +798,7 @@ func (p *GetCookiesParams) Do(ctxt context.Context, h cdp.FrameHandler) (cookies
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -805,11 +819,12 @@ type GetAllCookiesReturns struct {
 	Cookies []*Cookie `json:"cookies,omitempty"` // Array of cookie objects.
 }
 
-// Do executes Network.getAllCookies.
+// Do executes Network.getAllCookies against the provided context and
+// target handler.
 //
 // returns:
 //   cookies - Array of cookie objects.
-func (p *GetAllCookiesParams) Do(ctxt context.Context, h cdp.FrameHandler) (cookies []*Cookie, err error) {
+func (p *GetAllCookiesParams) Do(ctxt context.Context, h cdp.Handler) (cookies []*Cookie, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -840,7 +855,7 @@ func (p *GetAllCookiesParams) Do(ctxt context.Context, h cdp.FrameHandler) (cook
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -865,8 +880,9 @@ func DeleteCookie(cookieName string, url string) *DeleteCookieParams {
 	}
 }
 
-// Do executes Network.deleteCookie.
-func (p *DeleteCookieParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Network.deleteCookie against the provided context and
+// target handler.
+func (p *DeleteCookieParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -896,7 +912,7 @@ func (p *DeleteCookieParams) Do(ctxt context.Context, h cdp.FrameHandler) (err e
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -972,11 +988,12 @@ type SetCookieReturns struct {
 	Success bool `json:"success,omitempty"` // True if successfully set cookie.
 }
 
-// Do executes Network.setCookie.
+// Do executes Network.setCookie against the provided context and
+// target handler.
 //
 // returns:
 //   success - True if successfully set cookie.
-func (p *SetCookieParams) Do(ctxt context.Context, h cdp.FrameHandler) (success bool, err error) {
+func (p *SetCookieParams) Do(ctxt context.Context, h cdp.Handler) (success bool, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1013,7 +1030,7 @@ func (p *SetCookieParams) Do(ctxt context.Context, h cdp.FrameHandler) (success 
 		}
 
 	case <-ctxt.Done():
-		return false, cdp.ErrContextDone
+		return false, ctxt.Err()
 	}
 
 	return false, cdp.ErrUnknownResult
@@ -1034,11 +1051,12 @@ type CanEmulateNetworkConditionsReturns struct {
 	Result bool `json:"result,omitempty"` // True if emulation of network conditions is supported.
 }
 
-// Do executes Network.canEmulateNetworkConditions.
+// Do executes Network.canEmulateNetworkConditions against the provided context and
+// target handler.
 //
 // returns:
 //   result - True if emulation of network conditions is supported.
-func (p *CanEmulateNetworkConditionsParams) Do(ctxt context.Context, h cdp.FrameHandler) (result bool, err error) {
+func (p *CanEmulateNetworkConditionsParams) Do(ctxt context.Context, h cdp.Handler) (result bool, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1069,7 +1087,7 @@ func (p *CanEmulateNetworkConditionsParams) Do(ctxt context.Context, h cdp.Frame
 		}
 
 	case <-ctxt.Done():
-		return false, cdp.ErrContextDone
+		return false, ctxt.Err()
 	}
 
 	return false, cdp.ErrUnknownResult
@@ -1106,8 +1124,9 @@ func (p EmulateNetworkConditionsParams) WithConnectionType(connectionType Connec
 	return &p
 }
 
-// Do executes Network.emulateNetworkConditions.
-func (p *EmulateNetworkConditionsParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Network.emulateNetworkConditions against the provided context and
+// target handler.
+func (p *EmulateNetworkConditionsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1137,7 +1156,7 @@ func (p *EmulateNetworkConditionsParams) Do(ctxt context.Context, h cdp.FrameHan
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1160,8 +1179,9 @@ func SetCacheDisabled(cacheDisabled bool) *SetCacheDisabledParams {
 	}
 }
 
-// Do executes Network.setCacheDisabled.
-func (p *SetCacheDisabledParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Network.setCacheDisabled against the provided context and
+// target handler.
+func (p *SetCacheDisabledParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1191,7 +1211,7 @@ func (p *SetCacheDisabledParams) Do(ctxt context.Context, h cdp.FrameHandler) (e
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1214,8 +1234,9 @@ func SetBypassServiceWorker(bypass bool) *SetBypassServiceWorkerParams {
 	}
 }
 
-// Do executes Network.setBypassServiceWorker.
-func (p *SetBypassServiceWorkerParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Network.setBypassServiceWorker against the provided context and
+// target handler.
+func (p *SetBypassServiceWorkerParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1245,7 +1266,7 @@ func (p *SetBypassServiceWorkerParams) Do(ctxt context.Context, h cdp.FrameHandl
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1269,8 +1290,9 @@ func SetDataSizeLimitsForTest(maxTotalSize int64, maxResourceSize int64) *SetDat
 	}
 }
 
-// Do executes Network.setDataSizeLimitsForTest.
-func (p *SetDataSizeLimitsForTestParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Network.setDataSizeLimitsForTest against the provided context and
+// target handler.
+func (p *SetDataSizeLimitsForTestParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1300,7 +1322,7 @@ func (p *SetDataSizeLimitsForTestParams) Do(ctxt context.Context, h cdp.FrameHan
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1326,11 +1348,12 @@ type GetCertificateReturns struct {
 	TableNames []string `json:"tableNames,omitempty"`
 }
 
-// Do executes Network.getCertificate.
+// Do executes Network.getCertificate against the provided context and
+// target handler.
 //
 // returns:
 //   tableNames
-func (p *GetCertificateParams) Do(ctxt context.Context, h cdp.FrameHandler) (tableNames []string, err error) {
+func (p *GetCertificateParams) Do(ctxt context.Context, h cdp.Handler) (tableNames []string, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1367,7 +1390,7 @@ func (p *GetCertificateParams) Do(ctxt context.Context, h cdp.FrameHandler) (tab
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult

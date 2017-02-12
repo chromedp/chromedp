@@ -1296,7 +1296,6 @@ func (t ErrorType) String() string {
 
 // ErrorType values.
 const (
-	ErrContextDone   ErrorType = "context done"
 	ErrChannelClosed ErrorType = "channel closed"
 	ErrInvalidResult ErrorType = "invalid result"
 	ErrUnknownResult ErrorType = "unknown result"
@@ -1315,8 +1314,6 @@ func (t ErrorType) MarshalJSON() ([]byte, error) {
 // UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
 func (t *ErrorType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 	switch ErrorType(in.String()) {
-	case ErrContextDone:
-		*t = ErrContextDone
 	case ErrChannelClosed:
 		*t = ErrChannelClosed
 	case ErrInvalidResult:
@@ -1339,17 +1336,30 @@ func (t ErrorType) Error() string {
 	return string(t)
 }
 
-// FrameHandler is the common interface for a frame handler.
-type FrameHandler interface {
+// Handler is the common interface for a Chrome Debugging Protocol target.
+type Handler interface {
+	// SetActive changes the top level frame id.
 	SetActive(context.Context, FrameID) error
+
+	// GetRoot returns the root document node for the top level frame.
 	GetRoot(context.Context) (*Node, error)
+
+	// WaitFrame waits for a frame to be available.
 	WaitFrame(context.Context, FrameID) (*Frame, error)
+
+	// WaitNode waits for a node to be available.
 	WaitNode(context.Context, *Frame, NodeID) (*Node, error)
-	Listen(...MethodType) <-chan interface{}
 
 	// Execute executes the specified command using the supplied context and
 	// parameters.
 	Execute(context.Context, MethodType, easyjson.RawMessage) <-chan interface{}
+
+	// Listen creates a channel that will receive an event for the types
+	// specified.
+	Listen(...MethodType) <-chan interface{}
+
+	// Release releases a channel returned from Listen.
+	Release(<-chan interface{})
 }
 
 // Empty is an empty JSON object message.

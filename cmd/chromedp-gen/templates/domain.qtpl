@@ -93,7 +93,8 @@ func (p {%s= typ %}) {%s= optName %}({%s= v %} {%s= t.GoType(d, domains) %}) *{%
 
 	b64ret := c.Base64EncodedRetParam()
 
-	// determine if there's a conditional return value with it
+	// determine if there's a conditional that indicates whether or not the
+	// returned value is b64 encoded.
 	b64cond := false
 	for _, p := range c.Returns {
 		if p.Name == internal.Base64EncodedParamName {
@@ -102,11 +103,12 @@ func (p {%s= typ %}) {%s= optName %}({%s= v %} {%s= t.GoType(d, domains) %}) *{%
 		}
 	}
 %}
-// Do executes {%s= c.ProtoName(d) %}.{% if len(c.Returns) > 0 %}
+// Do executes {%s= c.ProtoName(d) %} against the provided context and
+// target handler.{% if len(c.Returns) > 0 %}
 //
 // returns:{% for _, p := range c.Returns %}{% if p.Name == internal.Base64EncodedParamName %}{% continue %}{% end %}
 //   {%s= p.String() %}{% endfor %}{% endif %}
-func (p *{%s= typ %}) Do(ctxt context.Context, h cdp.FrameHandler) ({%s= retTypeList %}err error) {
+func (p *{%s= typ %}) Do(ctxt context.Context, h cdp.Handler) ({%s= retTypeList %}err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}{% if !hasEmptyParams %}
@@ -154,7 +156,7 @@ func (p *{%s= typ %}) Do(ctxt context.Context, h cdp.FrameHandler) ({%s= retType
 		}
 
 	case <-ctxt.Done():
-		return {%s= emptyRet %}cdp.ErrContextDone
+		return {%s= emptyRet %}ctxt.Err()
 	}
 
 	return {%s= emptyRet %}cdp.ErrUnknownResult

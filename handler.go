@@ -22,10 +22,6 @@ import (
 	"github.com/knq/chromedp/client"
 )
 
-var (
-	_ cdp.FrameHandler = &TargetHandler{}
-)
-
 // TargetHandler manages a Chrome Debugging Protocol target.
 type TargetHandler struct {
 	conn client.Transport
@@ -61,7 +57,7 @@ type TargetHandler struct {
 	sync.RWMutex
 }
 
-// NewTargetHandler creates a new manager for the specified client target.
+// NewTargetHandler creates a new handler for the specified client target.
 func NewTargetHandler(t client.Target) (*TargetHandler, error) {
 	conn, err := client.Dial(t)
 	if err != nil {
@@ -71,7 +67,7 @@ func NewTargetHandler(t client.Target) (*TargetHandler, error) {
 	return &TargetHandler{conn: conn}, nil
 }
 
-// Run starts the processing of commands and events to the client target
+// Run starts the processing of commands and events of the client target
 // provided to NewTargetHandler.
 //
 // Callers can stop Run by closing the passed context.
@@ -266,7 +262,7 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdp.Message) err
 // documentUpdated handles the document updated event, retrieving the document
 // root for the root frame.
 func (h *TargetHandler) documentUpdated(ctxt context.Context) {
-	f, err := h.WaitFrame(ctxt, emptyFrameID)
+	f, err := h.WaitFrame(ctxt, EmptyFrameID)
 	if err != nil {
 		log.Printf("could not get current frame, got: %v", err)
 		return
@@ -336,7 +332,7 @@ func (h *TargetHandler) processCommand(cmd *cdp.Message) error {
 //
 // Note: the returned channel will be closed after the result is read. If the
 // passed context finishes prior to receiving the command result, then
-// ErrContextDone will be sent to the channel.
+// ctxt.Err() will be sent to the channel.
 func (h *TargetHandler) Execute(ctxt context.Context, commandType cdp.MethodType, params easyjson.RawMessage) <-chan interface{} {
 	ch := make(chan interface{}, 1)
 
@@ -372,17 +368,11 @@ func (h *TargetHandler) Execute(ctxt context.Context, commandType cdp.MethodType
 			}
 
 		case <-ctxt.Done():
-			ch <- cdp.ErrContextDone
+			ch <- ctxt.Err()
 		}
 	}()
 
 	return ch
-}
-
-// Listen adds a listener for the specified event types to the appropriate
-// domain.
-func (h *TargetHandler) Listen(eventTypes ...cdp.MethodType) <-chan interface{} {
-	return nil
 }
 
 // GetRoot returns the current top level frame's root document node.
@@ -452,7 +442,7 @@ loop:
 			var ok bool
 
 			h.RLock()
-			if id == emptyFrameID {
+			if id == EmptyFrameID {
 				f, ok = h.cur, h.cur != nil
 			} else {
 				f, ok = h.frames[id]
@@ -466,7 +456,7 @@ loop:
 			time.Sleep(DefaultCheckDuration)
 
 		case <-ctxt.Done():
-			return nil, cdp.ErrContextDone
+			return nil, ctxt.Err()
 
 		case <-timeout:
 			break loop
@@ -499,7 +489,7 @@ loop:
 			time.Sleep(DefaultCheckDuration)
 
 		case <-ctxt.Done():
-			return nil, cdp.ErrContextDone
+			return nil, ctxt.Err()
 
 		case <-timeout:
 			break loop
@@ -572,7 +562,7 @@ func (h *TargetHandler) domEvent(ctxt context.Context, ev interface{}) {
 	defer h.domWaitGroup.Done()
 
 	// wait current frame
-	f, err := h.WaitFrame(ctxt, emptyFrameID)
+	f, err := h.WaitFrame(ctxt, EmptyFrameID)
 	if err != nil {
 		log.Printf("error processing DOM event %s: error waiting for frame, got: %v", reflect.TypeOf(ev), err)
 		return
@@ -601,7 +591,7 @@ func (h *TargetHandler) domEvent(ctxt context.Context, ev interface{}) {
 		id, op = e.NodeID, childNodeCountUpdated(e.ChildNodeCount)
 
 	case *dom.EventChildNodeInserted:
-		if e.PreviousNodeID != emptyNodeID {
+		if e.PreviousNodeID != EmptyNodeID {
 			_, err = h.WaitNode(ctxt, f, e.PreviousNodeID)
 			if err != nil {
 				return
@@ -656,4 +646,14 @@ func (h *TargetHandler) domEvent(ctxt context.Context, ev interface{}) {
 	defer n.Unlock()
 
 	op(n)
+}
+
+// Listen creates a listener for the specified event types.
+func (h *TargetHandler) Listen(eventTypes ...cdp.MethodType) <-chan interface{} {
+	return nil
+}
+
+// Release releases a channel returned from Listen.
+func (h *TargetHandler) Release(ch <-chan interface{}) {
+
 }

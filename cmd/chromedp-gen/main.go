@@ -1,3 +1,7 @@
+// chromedp-gen is a tool to generate the low-level Chrome Debugging Protocol
+// implementation types used by chromedp, based off Chrome's protocol.json.
+//
+// Please see README.md for more information on using this tool.
 package main
 
 //go:generate qtc -dir templates -ext qtpl
@@ -81,7 +85,7 @@ func main() {
 	}
 
 	// fixup
-	fixup.FixupDomains(processed)
+	fixup.FixDomains(processed)
 
 	// generate
 	files := gen.GenerateDomains(processed)
@@ -115,7 +119,7 @@ func cleanupTypes(n string, dtyp string, types []*internal.Type) []*internal.Typ
 	var ret []*internal.Type
 
 	for _, t := range types {
-		typ := dtyp + "." + t.IdOrName()
+		typ := dtyp + "." + t.IDorName()
 		if !*internal.FlagDep && t.Deprecated.Bool() {
 			log.Printf("skipping %s %s [deprecated]", n, typ)
 			continue

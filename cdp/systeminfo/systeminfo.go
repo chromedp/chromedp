@@ -1,5 +1,5 @@
 // Package systeminfo provides the Chrome Debugging Protocol
-// commands, types, and events for the Chrome SystemInfo domain.
+// commands, types, and events for the SystemInfo domain.
 //
 // The SystemInfo domain defines methods and events for querying low-level
 // system information.
@@ -31,13 +31,14 @@ type GetInfoReturns struct {
 	ModelVersion string   `json:"modelVersion,omitempty"` // A platform-dependent description of the version of the machine. On Mac OS, this is, for example, '10.1'. Will be the empty string if not supported.
 }
 
-// Do executes SystemInfo.getInfo.
+// Do executes SystemInfo.getInfo against the provided context and
+// target handler.
 //
 // returns:
 //   gpu - Information about the GPUs on the system.
 //   modelName - A platform-dependent description of the model of the machine. On Mac OS, this is, for example, 'MacBookPro'. Will be the empty string if not supported.
 //   modelVersion - A platform-dependent description of the version of the machine. On Mac OS, this is, for example, '10.1'. Will be the empty string if not supported.
-func (p *GetInfoParams) Do(ctxt context.Context, h cdp.FrameHandler) (gpu *GPUInfo, modelName string, modelVersion string, err error) {
+func (p *GetInfoParams) Do(ctxt context.Context, h cdp.Handler) (gpu *GPUInfo, modelName string, modelVersion string, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -68,7 +69,7 @@ func (p *GetInfoParams) Do(ctxt context.Context, h cdp.FrameHandler) (gpu *GPUIn
 		}
 
 	case <-ctxt.Done():
-		return nil, "", "", cdp.ErrContextDone
+		return nil, "", "", ctxt.Err()
 	}
 
 	return nil, "", "", cdp.ErrUnknownResult

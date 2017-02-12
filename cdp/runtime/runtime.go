@@ -1,5 +1,5 @@
 // Package runtime provides the Chrome Debugging Protocol
-// commands, types, and events for the Chrome Runtime domain.
+// commands, types, and events for the Runtime domain.
 //
 // Runtime domain exposes JavaScript runtime by means of remote evaluation
 // and mirror objects. Evaluation results are returned as mirror object that
@@ -105,12 +105,13 @@ type EvaluateReturns struct {
 	ExceptionDetails *ExceptionDetails `json:"exceptionDetails,omitempty"` // Exception details.
 }
 
-// Do executes Runtime.evaluate.
+// Do executes Runtime.evaluate against the provided context and
+// target handler.
 //
 // returns:
 //   result - Evaluation result.
 //   exceptionDetails - Exception details.
-func (p *EvaluateParams) Do(ctxt context.Context, h cdp.FrameHandler) (result *RemoteObject, exceptionDetails *ExceptionDetails, err error) {
+func (p *EvaluateParams) Do(ctxt context.Context, h cdp.Handler) (result *RemoteObject, exceptionDetails *ExceptionDetails, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -147,7 +148,7 @@ func (p *EvaluateParams) Do(ctxt context.Context, h cdp.FrameHandler) (result *R
 		}
 
 	case <-ctxt.Done():
-		return nil, nil, cdp.ErrContextDone
+		return nil, nil, ctxt.Err()
 	}
 
 	return nil, nil, cdp.ErrUnknownResult
@@ -189,12 +190,13 @@ type AwaitPromiseReturns struct {
 	ExceptionDetails *ExceptionDetails `json:"exceptionDetails,omitempty"` // Exception details if stack strace is available.
 }
 
-// Do executes Runtime.awaitPromise.
+// Do executes Runtime.awaitPromise against the provided context and
+// target handler.
 //
 // returns:
 //   result - Promise result. Will contain rejected value if promise was rejected.
 //   exceptionDetails - Exception details if stack strace is available.
-func (p *AwaitPromiseParams) Do(ctxt context.Context, h cdp.FrameHandler) (result *RemoteObject, exceptionDetails *ExceptionDetails, err error) {
+func (p *AwaitPromiseParams) Do(ctxt context.Context, h cdp.Handler) (result *RemoteObject, exceptionDetails *ExceptionDetails, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -231,7 +233,7 @@ func (p *AwaitPromiseParams) Do(ctxt context.Context, h cdp.FrameHandler) (resul
 		}
 
 	case <-ctxt.Done():
-		return nil, nil, cdp.ErrContextDone
+		return nil, nil, ctxt.Err()
 	}
 
 	return nil, nil, cdp.ErrUnknownResult
@@ -310,12 +312,13 @@ type CallFunctionOnReturns struct {
 	ExceptionDetails *ExceptionDetails `json:"exceptionDetails,omitempty"` // Exception details.
 }
 
-// Do executes Runtime.callFunctionOn.
+// Do executes Runtime.callFunctionOn against the provided context and
+// target handler.
 //
 // returns:
 //   result - Call result.
 //   exceptionDetails - Exception details.
-func (p *CallFunctionOnParams) Do(ctxt context.Context, h cdp.FrameHandler) (result *RemoteObject, exceptionDetails *ExceptionDetails, err error) {
+func (p *CallFunctionOnParams) Do(ctxt context.Context, h cdp.Handler) (result *RemoteObject, exceptionDetails *ExceptionDetails, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -352,7 +355,7 @@ func (p *CallFunctionOnParams) Do(ctxt context.Context, h cdp.FrameHandler) (res
 		}
 
 	case <-ctxt.Done():
-		return nil, nil, cdp.ErrContextDone
+		return nil, nil, ctxt.Err()
 	}
 
 	return nil, nil, cdp.ErrUnknownResult
@@ -405,13 +408,14 @@ type GetPropertiesReturns struct {
 	ExceptionDetails   *ExceptionDetails             `json:"exceptionDetails,omitempty"`   // Exception details.
 }
 
-// Do executes Runtime.getProperties.
+// Do executes Runtime.getProperties against the provided context and
+// target handler.
 //
 // returns:
 //   result - Object properties.
 //   internalProperties - Internal object properties (only of the element itself).
 //   exceptionDetails - Exception details.
-func (p *GetPropertiesParams) Do(ctxt context.Context, h cdp.FrameHandler) (result []*PropertyDescriptor, internalProperties []*InternalPropertyDescriptor, exceptionDetails *ExceptionDetails, err error) {
+func (p *GetPropertiesParams) Do(ctxt context.Context, h cdp.Handler) (result []*PropertyDescriptor, internalProperties []*InternalPropertyDescriptor, exceptionDetails *ExceptionDetails, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -448,7 +452,7 @@ func (p *GetPropertiesParams) Do(ctxt context.Context, h cdp.FrameHandler) (resu
 		}
 
 	case <-ctxt.Done():
-		return nil, nil, nil, cdp.ErrContextDone
+		return nil, nil, nil, ctxt.Err()
 	}
 
 	return nil, nil, nil, cdp.ErrUnknownResult
@@ -469,8 +473,9 @@ func ReleaseObject(objectID RemoteObjectID) *ReleaseObjectParams {
 	}
 }
 
-// Do executes Runtime.releaseObject.
-func (p *ReleaseObjectParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Runtime.releaseObject against the provided context and
+// target handler.
+func (p *ReleaseObjectParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -500,7 +505,7 @@ func (p *ReleaseObjectParams) Do(ctxt context.Context, h cdp.FrameHandler) (err 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -523,8 +528,9 @@ func ReleaseObjectGroup(objectGroup string) *ReleaseObjectGroupParams {
 	}
 }
 
-// Do executes Runtime.releaseObjectGroup.
-func (p *ReleaseObjectGroupParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Runtime.releaseObjectGroup against the provided context and
+// target handler.
+func (p *ReleaseObjectGroupParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -554,7 +560,7 @@ func (p *ReleaseObjectGroupParams) Do(ctxt context.Context, h cdp.FrameHandler) 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -570,8 +576,9 @@ func RunIfWaitingForDebugger() *RunIfWaitingForDebuggerParams {
 	return &RunIfWaitingForDebuggerParams{}
 }
 
-// Do executes Runtime.runIfWaitingForDebugger.
-func (p *RunIfWaitingForDebuggerParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Runtime.runIfWaitingForDebugger against the provided context and
+// target handler.
+func (p *RunIfWaitingForDebuggerParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -595,7 +602,7 @@ func (p *RunIfWaitingForDebuggerParams) Do(ctxt context.Context, h cdp.FrameHand
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -613,8 +620,9 @@ func Enable() *EnableParams {
 	return &EnableParams{}
 }
 
-// Do executes Runtime.enable.
-func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Runtime.enable against the provided context and
+// target handler.
+func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -638,7 +646,7 @@ func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -652,8 +660,9 @@ func Disable() *DisableParams {
 	return &DisableParams{}
 }
 
-// Do executes Runtime.disable.
-func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Runtime.disable against the provided context and
+// target handler.
+func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -677,7 +686,7 @@ func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error)
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -692,8 +701,9 @@ func DiscardConsoleEntries() *DiscardConsoleEntriesParams {
 	return &DiscardConsoleEntriesParams{}
 }
 
-// Do executes Runtime.discardConsoleEntries.
-func (p *DiscardConsoleEntriesParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Runtime.discardConsoleEntries against the provided context and
+// target handler.
+func (p *DiscardConsoleEntriesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -717,7 +727,7 @@ func (p *DiscardConsoleEntriesParams) Do(ctxt context.Context, h cdp.FrameHandle
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -738,8 +748,9 @@ func SetCustomObjectFormatterEnabled(enabled bool) *SetCustomObjectFormatterEnab
 	}
 }
 
-// Do executes Runtime.setCustomObjectFormatterEnabled.
-func (p *SetCustomObjectFormatterEnabledParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Runtime.setCustomObjectFormatterEnabled against the provided context and
+// target handler.
+func (p *SetCustomObjectFormatterEnabledParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -769,7 +780,7 @@ func (p *SetCustomObjectFormatterEnabledParams) Do(ctxt context.Context, h cdp.F
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -811,12 +822,13 @@ type CompileScriptReturns struct {
 	ExceptionDetails *ExceptionDetails `json:"exceptionDetails,omitempty"` // Exception details.
 }
 
-// Do executes Runtime.compileScript.
+// Do executes Runtime.compileScript against the provided context and
+// target handler.
 //
 // returns:
 //   scriptID - Id of the script.
 //   exceptionDetails - Exception details.
-func (p *CompileScriptParams) Do(ctxt context.Context, h cdp.FrameHandler) (scriptID ScriptID, exceptionDetails *ExceptionDetails, err error) {
+func (p *CompileScriptParams) Do(ctxt context.Context, h cdp.Handler) (scriptID ScriptID, exceptionDetails *ExceptionDetails, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -853,7 +865,7 @@ func (p *CompileScriptParams) Do(ctxt context.Context, h cdp.FrameHandler) (scri
 		}
 
 	case <-ctxt.Done():
-		return "", nil, cdp.ErrContextDone
+		return "", nil, ctxt.Err()
 	}
 
 	return "", nil, cdp.ErrUnknownResult
@@ -936,12 +948,13 @@ type RunScriptReturns struct {
 	ExceptionDetails *ExceptionDetails `json:"exceptionDetails,omitempty"` // Exception details.
 }
 
-// Do executes Runtime.runScript.
+// Do executes Runtime.runScript against the provided context and
+// target handler.
 //
 // returns:
 //   result - Run result.
 //   exceptionDetails - Exception details.
-func (p *RunScriptParams) Do(ctxt context.Context, h cdp.FrameHandler) (result *RemoteObject, exceptionDetails *ExceptionDetails, err error) {
+func (p *RunScriptParams) Do(ctxt context.Context, h cdp.Handler) (result *RemoteObject, exceptionDetails *ExceptionDetails, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -978,7 +991,7 @@ func (p *RunScriptParams) Do(ctxt context.Context, h cdp.FrameHandler) (result *
 		}
 
 	case <-ctxt.Done():
-		return nil, nil, cdp.ErrContextDone
+		return nil, nil, ctxt.Err()
 	}
 
 	return nil, nil, cdp.ErrUnknownResult

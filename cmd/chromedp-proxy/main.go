@@ -1,3 +1,11 @@
+// chromedp-proxy provides a cli utility that will proxy requests from a Chrome
+// Debugging Protocol client to a application instance.
+//
+// chromedp-proxy is particularly useful for recording events/data from
+// Selenium (ChromeDriver), Chrome DevTools in the browser, or for debugging
+// remote application instances compatible with the debugging protocol.
+//
+// Please see README.md for more information on using chromedp-proxy.
 package main
 
 import (
@@ -25,21 +33,21 @@ var (
 )
 
 const (
-	IncomingBufferSize = 10 * 1024 * 1024
-	OutgoingBufferSize = 25 * 1024 * 1024
+	incomingBufferSize = 10 * 1024 * 1024
+	outgoingBufferSize = 25 * 1024 * 1024
 )
 
 var wsUpgrader = &websocket.Upgrader{
-	ReadBufferSize:  IncomingBufferSize,
-	WriteBufferSize: OutgoingBufferSize,
+	ReadBufferSize:  incomingBufferSize,
+	WriteBufferSize: outgoingBufferSize,
 	CheckOrigin: func(r *http.Request) bool {
 		return true
 	},
 }
 
 var wsDialer = &websocket.Dialer{
-	ReadBufferSize:  OutgoingBufferSize,
-	WriteBufferSize: IncomingBufferSize,
+	ReadBufferSize:  outgoingBufferSize,
+	WriteBufferSize: incomingBufferSize,
 }
 
 func main() {

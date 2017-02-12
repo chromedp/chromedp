@@ -1,5 +1,5 @@
 // Package dom provides the Chrome Debugging Protocol
-// commands, types, and events for the Chrome DOM domain.
+// commands, types, and events for the DOM domain.
 //
 // This domain exposes DOM read/write operations. Each DOM Node is
 // represented with its mirror object that has an id. This id can be used to get
@@ -32,8 +32,9 @@ func Enable() *EnableParams {
 	return &EnableParams{}
 }
 
-// Do executes DOM.enable.
-func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOM.enable against the provided context and
+// target handler.
+func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -57,7 +58,7 @@ func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -71,8 +72,9 @@ func Disable() *DisableParams {
 	return &DisableParams{}
 }
 
-// Do executes DOM.disable.
-func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOM.disable against the provided context and
+// target handler.
+func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -96,7 +98,7 @@ func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error)
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -137,11 +139,12 @@ type GetDocumentReturns struct {
 	Root *cdp.Node `json:"root,omitempty"` // Resulting node.
 }
 
-// Do executes DOM.getDocument.
+// Do executes DOM.getDocument against the provided context and
+// target handler.
 //
 // returns:
 //   root - Resulting node.
-func (p *GetDocumentParams) Do(ctxt context.Context, h cdp.FrameHandler) (root *cdp.Node, err error) {
+func (p *GetDocumentParams) Do(ctxt context.Context, h cdp.Handler) (root *cdp.Node, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -178,7 +181,7 @@ func (p *GetDocumentParams) Do(ctxt context.Context, h cdp.FrameHandler) (root *
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -219,11 +222,12 @@ type GetFlattenedDocumentReturns struct {
 	Nodes []*cdp.Node `json:"nodes,omitempty"` // Resulting node.
 }
 
-// Do executes DOM.getFlattenedDocument.
+// Do executes DOM.getFlattenedDocument against the provided context and
+// target handler.
 //
 // returns:
 //   nodes - Resulting node.
-func (p *GetFlattenedDocumentParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodes []*cdp.Node, err error) {
+func (p *GetFlattenedDocumentParams) Do(ctxt context.Context, h cdp.Handler) (nodes []*cdp.Node, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -260,7 +264,7 @@ func (p *GetFlattenedDocumentParams) Do(ctxt context.Context, h cdp.FrameHandler
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -288,11 +292,12 @@ type CollectClassNamesFromSubtreeReturns struct {
 	ClassNames []string `json:"classNames,omitempty"` // Class name list.
 }
 
-// Do executes DOM.collectClassNamesFromSubtree.
+// Do executes DOM.collectClassNamesFromSubtree against the provided context and
+// target handler.
 //
 // returns:
 //   classNames - Class name list.
-func (p *CollectClassNamesFromSubtreeParams) Do(ctxt context.Context, h cdp.FrameHandler) (classNames []string, err error) {
+func (p *CollectClassNamesFromSubtreeParams) Do(ctxt context.Context, h cdp.Handler) (classNames []string, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -329,7 +334,7 @@ func (p *CollectClassNamesFromSubtreeParams) Do(ctxt context.Context, h cdp.Fram
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -373,8 +378,9 @@ func (p RequestChildNodesParams) WithPierce(pierce bool) *RequestChildNodesParam
 	return &p
 }
 
-// Do executes DOM.requestChildNodes.
-func (p *RequestChildNodesParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOM.requestChildNodes against the provided context and
+// target handler.
+func (p *RequestChildNodesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -404,7 +410,7 @@ func (p *RequestChildNodesParams) Do(ctxt context.Context, h cdp.FrameHandler) (
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -433,11 +439,12 @@ type QuerySelectorReturns struct {
 	NodeID cdp.NodeID `json:"nodeId,omitempty"` // Query selector result.
 }
 
-// Do executes DOM.querySelector.
+// Do executes DOM.querySelector against the provided context and
+// target handler.
 //
 // returns:
 //   nodeID - Query selector result.
-func (p *QuerySelectorParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodeID cdp.NodeID, err error) {
+func (p *QuerySelectorParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -474,7 +481,7 @@ func (p *QuerySelectorParams) Do(ctxt context.Context, h cdp.FrameHandler) (node
 		}
 
 	case <-ctxt.Done():
-		return 0, cdp.ErrContextDone
+		return 0, ctxt.Err()
 	}
 
 	return 0, cdp.ErrUnknownResult
@@ -503,11 +510,12 @@ type QuerySelectorAllReturns struct {
 	NodeIds []cdp.NodeID `json:"nodeIds,omitempty"` // Query selector result.
 }
 
-// Do executes DOM.querySelectorAll.
+// Do executes DOM.querySelectorAll against the provided context and
+// target handler.
 //
 // returns:
 //   nodeIds - Query selector result.
-func (p *QuerySelectorAllParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodeIds []cdp.NodeID, err error) {
+func (p *QuerySelectorAllParams) Do(ctxt context.Context, h cdp.Handler) (nodeIds []cdp.NodeID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -544,7 +552,7 @@ func (p *QuerySelectorAllParams) Do(ctxt context.Context, h cdp.FrameHandler) (n
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -573,11 +581,12 @@ type SetNodeNameReturns struct {
 	NodeID cdp.NodeID `json:"nodeId,omitempty"` // New node's id.
 }
 
-// Do executes DOM.setNodeName.
+// Do executes DOM.setNodeName against the provided context and
+// target handler.
 //
 // returns:
 //   nodeID - New node's id.
-func (p *SetNodeNameParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodeID cdp.NodeID, err error) {
+func (p *SetNodeNameParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -614,7 +623,7 @@ func (p *SetNodeNameParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodeID
 		}
 
 	case <-ctxt.Done():
-		return 0, cdp.ErrContextDone
+		return 0, ctxt.Err()
 	}
 
 	return 0, cdp.ErrUnknownResult
@@ -638,8 +647,9 @@ func SetNodeValue(nodeID cdp.NodeID, value string) *SetNodeValueParams {
 	}
 }
 
-// Do executes DOM.setNodeValue.
-func (p *SetNodeValueParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOM.setNodeValue against the provided context and
+// target handler.
+func (p *SetNodeValueParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -669,7 +679,7 @@ func (p *SetNodeValueParams) Do(ctxt context.Context, h cdp.FrameHandler) (err e
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -690,8 +700,9 @@ func RemoveNode(nodeID cdp.NodeID) *RemoveNodeParams {
 	}
 }
 
-// Do executes DOM.removeNode.
-func (p *RemoveNodeParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOM.removeNode against the provided context and
+// target handler.
+func (p *RemoveNodeParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -721,7 +732,7 @@ func (p *RemoveNodeParams) Do(ctxt context.Context, h cdp.FrameHandler) (err err
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -748,8 +759,9 @@ func SetAttributeValue(nodeID cdp.NodeID, name string, value string) *SetAttribu
 	}
 }
 
-// Do executes DOM.setAttributeValue.
-func (p *SetAttributeValueParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOM.setAttributeValue against the provided context and
+// target handler.
+func (p *SetAttributeValueParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -779,7 +791,7 @@ func (p *SetAttributeValueParams) Do(ctxt context.Context, h cdp.FrameHandler) (
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -815,8 +827,9 @@ func (p SetAttributesAsTextParams) WithName(name string) *SetAttributesAsTextPar
 	return &p
 }
 
-// Do executes DOM.setAttributesAsText.
-func (p *SetAttributesAsTextParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOM.setAttributesAsText against the provided context and
+// target handler.
+func (p *SetAttributesAsTextParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -846,7 +859,7 @@ func (p *SetAttributesAsTextParams) Do(ctxt context.Context, h cdp.FrameHandler)
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -872,8 +885,9 @@ func RemoveAttribute(nodeID cdp.NodeID, name string) *RemoveAttributeParams {
 	}
 }
 
-// Do executes DOM.removeAttribute.
-func (p *RemoveAttributeParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOM.removeAttribute against the provided context and
+// target handler.
+func (p *RemoveAttributeParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -903,7 +917,7 @@ func (p *RemoveAttributeParams) Do(ctxt context.Context, h cdp.FrameHandler) (er
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -929,11 +943,12 @@ type GetOuterHTMLReturns struct {
 	OuterHTML string `json:"outerHTML,omitempty"` // Outer HTML markup.
 }
 
-// Do executes DOM.getOuterHTML.
+// Do executes DOM.getOuterHTML against the provided context and
+// target handler.
 //
 // returns:
 //   outerHTML - Outer HTML markup.
-func (p *GetOuterHTMLParams) Do(ctxt context.Context, h cdp.FrameHandler) (outerHTML string, err error) {
+func (p *GetOuterHTMLParams) Do(ctxt context.Context, h cdp.Handler) (outerHTML string, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -970,7 +985,7 @@ func (p *GetOuterHTMLParams) Do(ctxt context.Context, h cdp.FrameHandler) (outer
 		}
 
 	case <-ctxt.Done():
-		return "", cdp.ErrContextDone
+		return "", ctxt.Err()
 	}
 
 	return "", cdp.ErrUnknownResult
@@ -994,8 +1009,9 @@ func SetOuterHTML(nodeID cdp.NodeID, outerHTML string) *SetOuterHTMLParams {
 	}
 }
 
-// Do executes DOM.setOuterHTML.
-func (p *SetOuterHTMLParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOM.setOuterHTML against the provided context and
+// target handler.
+func (p *SetOuterHTMLParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1025,7 +1041,7 @@ func (p *SetOuterHTMLParams) Do(ctxt context.Context, h cdp.FrameHandler) (err e
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1063,12 +1079,13 @@ type PerformSearchReturns struct {
 	ResultCount int64  `json:"resultCount,omitempty"` // Number of search results.
 }
 
-// Do executes DOM.performSearch.
+// Do executes DOM.performSearch against the provided context and
+// target handler.
 //
 // returns:
 //   searchID - Unique search session identifier.
 //   resultCount - Number of search results.
-func (p *PerformSearchParams) Do(ctxt context.Context, h cdp.FrameHandler) (searchID string, resultCount int64, err error) {
+func (p *PerformSearchParams) Do(ctxt context.Context, h cdp.Handler) (searchID string, resultCount int64, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1105,7 +1122,7 @@ func (p *PerformSearchParams) Do(ctxt context.Context, h cdp.FrameHandler) (sear
 		}
 
 	case <-ctxt.Done():
-		return "", 0, cdp.ErrContextDone
+		return "", 0, ctxt.Err()
 	}
 
 	return "", 0, cdp.ErrUnknownResult
@@ -1139,11 +1156,12 @@ type GetSearchResultsReturns struct {
 	NodeIds []cdp.NodeID `json:"nodeIds,omitempty"` // Ids of the search result nodes.
 }
 
-// Do executes DOM.getSearchResults.
+// Do executes DOM.getSearchResults against the provided context and
+// target handler.
 //
 // returns:
 //   nodeIds - Ids of the search result nodes.
-func (p *GetSearchResultsParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodeIds []cdp.NodeID, err error) {
+func (p *GetSearchResultsParams) Do(ctxt context.Context, h cdp.Handler) (nodeIds []cdp.NodeID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1180,7 +1198,7 @@ func (p *GetSearchResultsParams) Do(ctxt context.Context, h cdp.FrameHandler) (n
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -1203,8 +1221,9 @@ func DiscardSearchResults(searchID string) *DiscardSearchResultsParams {
 	}
 }
 
-// Do executes DOM.discardSearchResults.
-func (p *DiscardSearchResultsParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOM.discardSearchResults against the provided context and
+// target handler.
+func (p *DiscardSearchResultsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1234,7 +1253,7 @@ func (p *DiscardSearchResultsParams) Do(ctxt context.Context, h cdp.FrameHandler
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1266,11 +1285,12 @@ type RequestNodeReturns struct {
 	NodeID cdp.NodeID `json:"nodeId,omitempty"` // Node id for given object.
 }
 
-// Do executes DOM.requestNode.
+// Do executes DOM.requestNode against the provided context and
+// target handler.
 //
 // returns:
 //   nodeID - Node id for given object.
-func (p *RequestNodeParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodeID cdp.NodeID, err error) {
+func (p *RequestNodeParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1307,7 +1327,7 @@ func (p *RequestNodeParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodeID
 		}
 
 	case <-ctxt.Done():
-		return 0, cdp.ErrContextDone
+		return 0, ctxt.Err()
 	}
 
 	return 0, cdp.ErrUnknownResult
@@ -1340,8 +1360,9 @@ func (p SetInspectModeParams) WithHighlightConfig(highlightConfig *HighlightConf
 	return &p
 }
 
-// Do executes DOM.setInspectMode.
-func (p *SetInspectModeParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOM.setInspectMode against the provided context and
+// target handler.
+func (p *SetInspectModeParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1371,7 +1392,7 @@ func (p *SetInspectModeParams) Do(ctxt context.Context, h cdp.FrameHandler) (err
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1417,8 +1438,9 @@ func (p HighlightRectParams) WithOutlineColor(outlineColor *cdp.RGBA) *Highlight
 	return &p
 }
 
-// Do executes DOM.highlightRect.
-func (p *HighlightRectParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOM.highlightRect against the provided context and
+// target handler.
+func (p *HighlightRectParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1448,7 +1470,7 @@ func (p *HighlightRectParams) Do(ctxt context.Context, h cdp.FrameHandler) (err 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1485,8 +1507,9 @@ func (p HighlightQuadParams) WithOutlineColor(outlineColor *cdp.RGBA) *Highlight
 	return &p
 }
 
-// Do executes DOM.highlightQuad.
-func (p *HighlightQuadParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOM.highlightQuad against the provided context and
+// target handler.
+func (p *HighlightQuadParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1516,7 +1539,7 @@ func (p *HighlightQuadParams) Do(ctxt context.Context, h cdp.FrameHandler) (err 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1560,8 +1583,9 @@ func (p HighlightNodeParams) WithObjectID(objectID runtime.RemoteObjectID) *High
 	return &p
 }
 
-// Do executes DOM.highlightNode.
-func (p *HighlightNodeParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOM.highlightNode against the provided context and
+// target handler.
+func (p *HighlightNodeParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1591,7 +1615,7 @@ func (p *HighlightNodeParams) Do(ctxt context.Context, h cdp.FrameHandler) (err 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1605,8 +1629,9 @@ func HideHighlight() *HideHighlightParams {
 	return &HideHighlightParams{}
 }
 
-// Do executes DOM.hideHighlight.
-func (p *HideHighlightParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOM.hideHighlight against the provided context and
+// target handler.
+func (p *HideHighlightParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1630,7 +1655,7 @@ func (p *HideHighlightParams) Do(ctxt context.Context, h cdp.FrameHandler) (err 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1667,8 +1692,9 @@ func (p HighlightFrameParams) WithContentOutlineColor(contentOutlineColor *cdp.R
 	return &p
 }
 
-// Do executes DOM.highlightFrame.
-func (p *HighlightFrameParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOM.highlightFrame against the provided context and
+// target handler.
+func (p *HighlightFrameParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1698,7 +1724,7 @@ func (p *HighlightFrameParams) Do(ctxt context.Context, h cdp.FrameHandler) (err
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1726,11 +1752,12 @@ type PushNodeByPathToFrontendReturns struct {
 	NodeID cdp.NodeID `json:"nodeId,omitempty"` // Id of the node for given path.
 }
 
-// Do executes DOM.pushNodeByPathToFrontend.
+// Do executes DOM.pushNodeByPathToFrontend against the provided context and
+// target handler.
 //
 // returns:
 //   nodeID - Id of the node for given path.
-func (p *PushNodeByPathToFrontendParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodeID cdp.NodeID, err error) {
+func (p *PushNodeByPathToFrontendParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1767,7 +1794,7 @@ func (p *PushNodeByPathToFrontendParams) Do(ctxt context.Context, h cdp.FrameHan
 		}
 
 	case <-ctxt.Done():
-		return 0, cdp.ErrContextDone
+		return 0, ctxt.Err()
 	}
 
 	return 0, cdp.ErrUnknownResult
@@ -1795,11 +1822,12 @@ type PushNodesByBackendIdsToFrontendReturns struct {
 	NodeIds []cdp.NodeID `json:"nodeIds,omitempty"` // The array of ids of pushed nodes that correspond to the backend ids specified in backendNodeIds.
 }
 
-// Do executes DOM.pushNodesByBackendIdsToFrontend.
+// Do executes DOM.pushNodesByBackendIdsToFrontend against the provided context and
+// target handler.
 //
 // returns:
 //   nodeIds - The array of ids of pushed nodes that correspond to the backend ids specified in backendNodeIds.
-func (p *PushNodesByBackendIdsToFrontendParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodeIds []cdp.NodeID, err error) {
+func (p *PushNodesByBackendIdsToFrontendParams) Do(ctxt context.Context, h cdp.Handler) (nodeIds []cdp.NodeID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1836,7 +1864,7 @@ func (p *PushNodesByBackendIdsToFrontendParams) Do(ctxt context.Context, h cdp.F
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -1859,8 +1887,9 @@ func SetInspectedNode(nodeID cdp.NodeID) *SetInspectedNodeParams {
 	}
 }
 
-// Do executes DOM.setInspectedNode.
-func (p *SetInspectedNodeParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOM.setInspectedNode against the provided context and
+// target handler.
+func (p *SetInspectedNodeParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1890,7 +1919,7 @@ func (p *SetInspectedNodeParams) Do(ctxt context.Context, h cdp.FrameHandler) (e
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1924,11 +1953,12 @@ type ResolveNodeReturns struct {
 	Object *runtime.RemoteObject `json:"object,omitempty"` // JavaScript object wrapper for given node.
 }
 
-// Do executes DOM.resolveNode.
+// Do executes DOM.resolveNode against the provided context and
+// target handler.
 //
 // returns:
 //   object - JavaScript object wrapper for given node.
-func (p *ResolveNodeParams) Do(ctxt context.Context, h cdp.FrameHandler) (object *runtime.RemoteObject, err error) {
+func (p *ResolveNodeParams) Do(ctxt context.Context, h cdp.Handler) (object *runtime.RemoteObject, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1965,7 +1995,7 @@ func (p *ResolveNodeParams) Do(ctxt context.Context, h cdp.FrameHandler) (object
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -1991,11 +2021,12 @@ type GetAttributesReturns struct {
 	Attributes []string `json:"attributes,omitempty"` // An interleaved array of node attribute names and values.
 }
 
-// Do executes DOM.getAttributes.
+// Do executes DOM.getAttributes against the provided context and
+// target handler.
 //
 // returns:
 //   attributes - An interleaved array of node attribute names and values.
-func (p *GetAttributesParams) Do(ctxt context.Context, h cdp.FrameHandler) (attributes []string, err error) {
+func (p *GetAttributesParams) Do(ctxt context.Context, h cdp.Handler) (attributes []string, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -2032,7 +2063,7 @@ func (p *GetAttributesParams) Do(ctxt context.Context, h cdp.FrameHandler) (attr
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -2071,11 +2102,12 @@ type CopyToReturns struct {
 	NodeID cdp.NodeID `json:"nodeId,omitempty"` // Id of the node clone.
 }
 
-// Do executes DOM.copyTo.
+// Do executes DOM.copyTo against the provided context and
+// target handler.
 //
 // returns:
 //   nodeID - Id of the node clone.
-func (p *CopyToParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodeID cdp.NodeID, err error) {
+func (p *CopyToParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -2112,7 +2144,7 @@ func (p *CopyToParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodeID cdp.
 		}
 
 	case <-ctxt.Done():
-		return 0, cdp.ErrContextDone
+		return 0, ctxt.Err()
 	}
 
 	return 0, cdp.ErrUnknownResult
@@ -2151,11 +2183,12 @@ type MoveToReturns struct {
 	NodeID cdp.NodeID `json:"nodeId,omitempty"` // New id of the moved node.
 }
 
-// Do executes DOM.moveTo.
+// Do executes DOM.moveTo against the provided context and
+// target handler.
 //
 // returns:
 //   nodeID - New id of the moved node.
-func (p *MoveToParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodeID cdp.NodeID, err error) {
+func (p *MoveToParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -2192,7 +2225,7 @@ func (p *MoveToParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodeID cdp.
 		}
 
 	case <-ctxt.Done():
-		return 0, cdp.ErrContextDone
+		return 0, ctxt.Err()
 	}
 
 	return 0, cdp.ErrUnknownResult
@@ -2206,8 +2239,9 @@ func Undo() *UndoParams {
 	return &UndoParams{}
 }
 
-// Do executes DOM.undo.
-func (p *UndoParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOM.undo against the provided context and
+// target handler.
+func (p *UndoParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -2231,7 +2265,7 @@ func (p *UndoParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -2245,8 +2279,9 @@ func Redo() *RedoParams {
 	return &RedoParams{}
 }
 
-// Do executes DOM.redo.
-func (p *RedoParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOM.redo against the provided context and
+// target handler.
+func (p *RedoParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -2270,7 +2305,7 @@ func (p *RedoParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -2284,8 +2319,9 @@ func MarkUndoableState() *MarkUndoableStateParams {
 	return &MarkUndoableStateParams{}
 }
 
-// Do executes DOM.markUndoableState.
-func (p *MarkUndoableStateParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOM.markUndoableState against the provided context and
+// target handler.
+func (p *MarkUndoableStateParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -2309,7 +2345,7 @@ func (p *MarkUndoableStateParams) Do(ctxt context.Context, h cdp.FrameHandler) (
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -2330,8 +2366,9 @@ func Focus(nodeID cdp.NodeID) *FocusParams {
 	}
 }
 
-// Do executes DOM.focus.
-func (p *FocusParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOM.focus against the provided context and
+// target handler.
+func (p *FocusParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -2361,7 +2398,7 @@ func (p *FocusParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -2385,8 +2422,9 @@ func SetFileInputFiles(nodeID cdp.NodeID, files []string) *SetFileInputFilesPara
 	}
 }
 
-// Do executes DOM.setFileInputFiles.
-func (p *SetFileInputFilesParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOM.setFileInputFiles against the provided context and
+// target handler.
+func (p *SetFileInputFilesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -2416,7 +2454,7 @@ func (p *SetFileInputFilesParams) Do(ctxt context.Context, h cdp.FrameHandler) (
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -2442,11 +2480,12 @@ type GetBoxModelReturns struct {
 	Model *BoxModel `json:"model,omitempty"` // Box model for the node.
 }
 
-// Do executes DOM.getBoxModel.
+// Do executes DOM.getBoxModel against the provided context and
+// target handler.
 //
 // returns:
 //   model - Box model for the node.
-func (p *GetBoxModelParams) Do(ctxt context.Context, h cdp.FrameHandler) (model *BoxModel, err error) {
+func (p *GetBoxModelParams) Do(ctxt context.Context, h cdp.Handler) (model *BoxModel, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -2483,7 +2522,7 @@ func (p *GetBoxModelParams) Do(ctxt context.Context, h cdp.FrameHandler) (model 
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -2512,11 +2551,12 @@ type GetNodeForLocationReturns struct {
 	NodeID cdp.NodeID `json:"nodeId,omitempty"` // Id of the node at given coordinates.
 }
 
-// Do executes DOM.getNodeForLocation.
+// Do executes DOM.getNodeForLocation against the provided context and
+// target handler.
 //
 // returns:
 //   nodeID - Id of the node at given coordinates.
-func (p *GetNodeForLocationParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodeID cdp.NodeID, err error) {
+func (p *GetNodeForLocationParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -2553,7 +2593,7 @@ func (p *GetNodeForLocationParams) Do(ctxt context.Context, h cdp.FrameHandler) 
 		}
 
 	case <-ctxt.Done():
-		return 0, cdp.ErrContextDone
+		return 0, ctxt.Err()
 	}
 
 	return 0, cdp.ErrUnknownResult
@@ -2581,11 +2621,12 @@ type GetRelayoutBoundaryReturns struct {
 	NodeID cdp.NodeID `json:"nodeId,omitempty"` // Relayout boundary node id for the given node.
 }
 
-// Do executes DOM.getRelayoutBoundary.
+// Do executes DOM.getRelayoutBoundary against the provided context and
+// target handler.
 //
 // returns:
 //   nodeID - Relayout boundary node id for the given node.
-func (p *GetRelayoutBoundaryParams) Do(ctxt context.Context, h cdp.FrameHandler) (nodeID cdp.NodeID, err error) {
+func (p *GetRelayoutBoundaryParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -2622,7 +2663,7 @@ func (p *GetRelayoutBoundaryParams) Do(ctxt context.Context, h cdp.FrameHandler)
 		}
 
 	case <-ctxt.Done():
-		return 0, cdp.ErrContextDone
+		return 0, ctxt.Err()
 	}
 
 	return 0, cdp.ErrUnknownResult
@@ -2648,11 +2689,12 @@ type GetHighlightObjectForTestReturns struct {
 	Highlight easyjson.RawMessage `json:"highlight,omitempty"`
 }
 
-// Do executes DOM.getHighlightObjectForTest.
+// Do executes DOM.getHighlightObjectForTest against the provided context and
+// target handler.
 //
 // returns:
 //   highlight - Highlight data for the node.
-func (p *GetHighlightObjectForTestParams) Do(ctxt context.Context, h cdp.FrameHandler) (highlight easyjson.RawMessage, err error) {
+func (p *GetHighlightObjectForTestParams) Do(ctxt context.Context, h cdp.Handler) (highlight easyjson.RawMessage, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -2689,7 +2731,7 @@ func (p *GetHighlightObjectForTestParams) Do(ctxt context.Context, h cdp.FrameHa
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult

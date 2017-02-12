@@ -154,7 +154,7 @@ func CDPTypeList() []string {
 	return types
 }
 
-// goReservedNames is the list of reserved names.
+// goReservedNames is the list of reserved names in Go.
 var goReservedNames = map[string]bool{
 	// language words
 	"break":       true,

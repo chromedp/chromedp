@@ -1,5 +1,5 @@
 // Package io provides the Chrome Debugging Protocol
-// commands, types, and events for the Chrome IO domain.
+// commands, types, and events for the IO domain.
 //
 // Input/Output operations for streams produced by DevTools.
 //
@@ -52,12 +52,13 @@ type ReadReturns struct {
 	EOF  bool   `json:"eof,omitempty"`  // Set if the end-of-file condition occured while reading.
 }
 
-// Do executes IO.read.
+// Do executes IO.read against the provided context and
+// target handler.
 //
 // returns:
 //   data - Data that were read.
 //   eof - Set if the end-of-file condition occured while reading.
-func (p *ReadParams) Do(ctxt context.Context, h cdp.FrameHandler) (data string, eof bool, err error) {
+func (p *ReadParams) Do(ctxt context.Context, h cdp.Handler) (data string, eof bool, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -94,7 +95,7 @@ func (p *ReadParams) Do(ctxt context.Context, h cdp.FrameHandler) (data string, 
 		}
 
 	case <-ctxt.Done():
-		return "", false, cdp.ErrContextDone
+		return "", false, ctxt.Err()
 	}
 
 	return "", false, cdp.ErrUnknownResult
@@ -115,8 +116,9 @@ func Close(handle StreamHandle) *CloseParams {
 	}
 }
 
-// Do executes IO.close.
-func (p *CloseParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes IO.close against the provided context and
+// target handler.
+func (p *CloseParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -146,7 +148,7 @@ func (p *CloseParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult

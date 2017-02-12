@@ -31,7 +31,7 @@ func MouseAction(typ input.MouseType, x, y int64, opts ...MouseOption) Action {
 // MouseClickXY sends a left mouse button click (ie, mousePressed and
 // mouseReleased event) at the X, Y location.
 func MouseClickXY(x, y int64, opts ...MouseOption) Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.FrameHandler) error {
+	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
 		me := &input.DispatchMouseEventParams{
 			Type:       input.MousePressed,
 			X:          x,
@@ -58,7 +58,7 @@ func MouseClickXY(x, y int64, opts ...MouseOption) Action {
 // MouseClickNode dispatches a mouse left button click event at the center of a
 // specified node.
 func MouseClickNode(n *cdp.Node, opts ...MouseOption) Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.FrameHandler) error {
+	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
 		var err error
 
 		/*err = dom.Focus(n.NodeID).Do(ctxt, h)
@@ -154,7 +154,7 @@ func ClickCount(n int) MouseOption {
 // Note: only well known, "printable" characters will have "char" events
 // synthesized.
 func KeyAction(keys string, opts ...KeyOption) Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.FrameHandler) error {
+	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
 		var err error
 
 		for _, r := range keys {
@@ -175,7 +175,7 @@ func KeyAction(keys string, opts ...KeyOption) Action {
 
 // KeyActionNode dispatches a key event on a node.
 func KeyActionNode(n *cdp.Node, keys string, opts ...KeyOption) Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.FrameHandler) error {
+	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
 		err := dom.Focus(n.NodeID).Do(ctxt, h)
 		if err != nil {
 			return err

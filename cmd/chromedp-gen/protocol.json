@@ -7179,6 +7179,12 @@
               "$ref": "Runtime.RemoteObject",
               "optional": true,
               "description": "Event listener remove function."
+            },
+            {
+              "name": "backendNodeId",
+              "$ref": "DOM.BackendNodeId",
+              "optional": true,
+              "description": "Node the listener is added to (if any)."
             }
           ],
           "experimental": true
@@ -7307,6 +7313,20 @@
               "name": "objectId",
               "$ref": "Runtime.RemoteObjectId",
               "description": "Identifier of the object to return listeners for."
+            },
+            {
+              "name": "depth",
+              "type": "integer",
+              "optional": true,
+              "description": "The maximum depth at which Node children should be retrieved, defaults to 1. Use -1 for the entire subtree or provide an integer larger than 0.",
+              "experimental": true
+            },
+            {
+              "name": "pierce",
+              "type": "boolean",
+              "optional": true,
+              "description": "Whether or not iframes and shadow roots should be traversed when returning the subtree (default is false). Reports listeners for all contexts if pierce is enabled.",
+              "experimental": true
             }
           ],
           "returns": [

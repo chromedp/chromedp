@@ -1,5 +1,5 @@
 // Package page provides the Chrome Debugging Protocol
-// commands, types, and events for the Chrome Page domain.
+// commands, types, and events for the Page domain.
 //
 // Actions and events related to the inspected page belong to the page
 // domain.
@@ -26,8 +26,9 @@ func Enable() *EnableParams {
 	return &EnableParams{}
 }
 
-// Do executes Page.enable.
-func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Page.enable against the provided context and
+// target handler.
+func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -51,7 +52,7 @@ func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -65,8 +66,9 @@ func Disable() *DisableParams {
 	return &DisableParams{}
 }
 
-// Do executes Page.disable.
-func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Page.disable against the provided context and
+// target handler.
+func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -90,7 +92,7 @@ func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error)
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -116,11 +118,12 @@ type AddScriptToEvaluateOnLoadReturns struct {
 	Identifier ScriptIdentifier `json:"identifier,omitempty"` // Identifier of the added script.
 }
 
-// Do executes Page.addScriptToEvaluateOnLoad.
+// Do executes Page.addScriptToEvaluateOnLoad against the provided context and
+// target handler.
 //
 // returns:
 //   identifier - Identifier of the added script.
-func (p *AddScriptToEvaluateOnLoadParams) Do(ctxt context.Context, h cdp.FrameHandler) (identifier ScriptIdentifier, err error) {
+func (p *AddScriptToEvaluateOnLoadParams) Do(ctxt context.Context, h cdp.Handler) (identifier ScriptIdentifier, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -157,7 +160,7 @@ func (p *AddScriptToEvaluateOnLoadParams) Do(ctxt context.Context, h cdp.FrameHa
 		}
 
 	case <-ctxt.Done():
-		return "", cdp.ErrContextDone
+		return "", ctxt.Err()
 	}
 
 	return "", cdp.ErrUnknownResult
@@ -178,8 +181,9 @@ func RemoveScriptToEvaluateOnLoad(identifier ScriptIdentifier) *RemoveScriptToEv
 	}
 }
 
-// Do executes Page.removeScriptToEvaluateOnLoad.
-func (p *RemoveScriptToEvaluateOnLoadParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Page.removeScriptToEvaluateOnLoad against the provided context and
+// target handler.
+func (p *RemoveScriptToEvaluateOnLoadParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -209,7 +213,7 @@ func (p *RemoveScriptToEvaluateOnLoadParams) Do(ctxt context.Context, h cdp.Fram
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -232,8 +236,9 @@ func SetAutoAttachToCreatedPages(autoAttach bool) *SetAutoAttachToCreatedPagesPa
 	}
 }
 
-// Do executes Page.setAutoAttachToCreatedPages.
-func (p *SetAutoAttachToCreatedPagesParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Page.setAutoAttachToCreatedPages against the provided context and
+// target handler.
+func (p *SetAutoAttachToCreatedPagesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -263,7 +268,7 @@ func (p *SetAutoAttachToCreatedPagesParams) Do(ctxt context.Context, h cdp.Frame
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -296,8 +301,9 @@ func (p ReloadParams) WithScriptToEvaluateOnLoad(scriptToEvaluateOnLoad string) 
 	return &p
 }
 
-// Do executes Page.reload.
-func (p *ReloadParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Page.reload against the provided context and
+// target handler.
+func (p *ReloadParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -327,7 +333,7 @@ func (p *ReloadParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -353,11 +359,12 @@ type NavigateReturns struct {
 	FrameID cdp.FrameID `json:"frameId,omitempty"` // Frame id that will be navigated.
 }
 
-// Do executes Page.navigate.
+// Do executes Page.navigate against the provided context and
+// target handler.
 //
 // returns:
 //   frameID - Frame id that will be navigated.
-func (p *NavigateParams) Do(ctxt context.Context, h cdp.FrameHandler) (frameID cdp.FrameID, err error) {
+func (p *NavigateParams) Do(ctxt context.Context, h cdp.Handler) (frameID cdp.FrameID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -394,7 +401,7 @@ func (p *NavigateParams) Do(ctxt context.Context, h cdp.FrameHandler) (frameID c
 		}
 
 	case <-ctxt.Done():
-		return "", cdp.ErrContextDone
+		return "", ctxt.Err()
 	}
 
 	return "", cdp.ErrUnknownResult
@@ -410,8 +417,9 @@ func StopLoading() *StopLoadingParams {
 	return &StopLoadingParams{}
 }
 
-// Do executes Page.stopLoading.
-func (p *StopLoadingParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Page.stopLoading against the provided context and
+// target handler.
+func (p *StopLoadingParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -435,7 +443,7 @@ func (p *StopLoadingParams) Do(ctxt context.Context, h cdp.FrameHandler) (err er
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -456,12 +464,13 @@ type GetNavigationHistoryReturns struct {
 	Entries      []*NavigationEntry `json:"entries,omitempty"`      // Array of navigation history entries.
 }
 
-// Do executes Page.getNavigationHistory.
+// Do executes Page.getNavigationHistory against the provided context and
+// target handler.
 //
 // returns:
 //   currentIndex - Index of the current navigation history entry.
 //   entries - Array of navigation history entries.
-func (p *GetNavigationHistoryParams) Do(ctxt context.Context, h cdp.FrameHandler) (currentIndex int64, entries []*NavigationEntry, err error) {
+func (p *GetNavigationHistoryParams) Do(ctxt context.Context, h cdp.Handler) (currentIndex int64, entries []*NavigationEntry, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -492,7 +501,7 @@ func (p *GetNavigationHistoryParams) Do(ctxt context.Context, h cdp.FrameHandler
 		}
 
 	case <-ctxt.Done():
-		return 0, nil, cdp.ErrContextDone
+		return 0, nil, ctxt.Err()
 	}
 
 	return 0, nil, cdp.ErrUnknownResult
@@ -514,8 +523,9 @@ func NavigateToHistoryEntry(entryID int64) *NavigateToHistoryEntryParams {
 	}
 }
 
-// Do executes Page.navigateToHistoryEntry.
-func (p *NavigateToHistoryEntryParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Page.navigateToHistoryEntry against the provided context and
+// target handler.
+func (p *NavigateToHistoryEntryParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -545,7 +555,7 @@ func (p *NavigateToHistoryEntryParams) Do(ctxt context.Context, h cdp.FrameHandl
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -564,11 +574,12 @@ type GetResourceTreeReturns struct {
 	FrameTree *FrameResourceTree `json:"frameTree,omitempty"` // Present frame / resource tree structure.
 }
 
-// Do executes Page.getResourceTree.
+// Do executes Page.getResourceTree against the provided context and
+// target handler.
 //
 // returns:
 //   frameTree - Present frame / resource tree structure.
-func (p *GetResourceTreeParams) Do(ctxt context.Context, h cdp.FrameHandler) (frameTree *FrameResourceTree, err error) {
+func (p *GetResourceTreeParams) Do(ctxt context.Context, h cdp.Handler) (frameTree *FrameResourceTree, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -599,7 +610,7 @@ func (p *GetResourceTreeParams) Do(ctxt context.Context, h cdp.FrameHandler) (fr
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -629,11 +640,12 @@ type GetResourceContentReturns struct {
 	Base64encoded bool   `json:"base64Encoded,omitempty"` // True, if content was served as base64.
 }
 
-// Do executes Page.getResourceContent.
+// Do executes Page.getResourceContent against the provided context and
+// target handler.
 //
 // returns:
 //   content - Resource content.
-func (p *GetResourceContentParams) Do(ctxt context.Context, h cdp.FrameHandler) (content []byte, err error) {
+func (p *GetResourceContentParams) Do(ctxt context.Context, h cdp.Handler) (content []byte, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -681,7 +693,7 @@ func (p *GetResourceContentParams) Do(ctxt context.Context, h cdp.FrameHandler) 
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -727,11 +739,12 @@ type SearchInResourceReturns struct {
 	Result []*debugger.SearchMatch `json:"result,omitempty"` // List of search matches.
 }
 
-// Do executes Page.searchInResource.
+// Do executes Page.searchInResource against the provided context and
+// target handler.
 //
 // returns:
 //   result - List of search matches.
-func (p *SearchInResourceParams) Do(ctxt context.Context, h cdp.FrameHandler) (result []*debugger.SearchMatch, err error) {
+func (p *SearchInResourceParams) Do(ctxt context.Context, h cdp.Handler) (result []*debugger.SearchMatch, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -768,7 +781,7 @@ func (p *SearchInResourceParams) Do(ctxt context.Context, h cdp.FrameHandler) (r
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -792,8 +805,9 @@ func SetDocumentContent(frameID cdp.FrameID, html string) *SetDocumentContentPar
 	}
 }
 
-// Do executes Page.setDocumentContent.
-func (p *SetDocumentContentParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Page.setDocumentContent against the provided context and
+// target handler.
+func (p *SetDocumentContentParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -823,7 +837,7 @@ func (p *SetDocumentContentParams) Do(ctxt context.Context, h cdp.FrameHandler) 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -859,11 +873,12 @@ type CaptureScreenshotReturns struct {
 	Data string `json:"data,omitempty"` // Base64-encoded image data.
 }
 
-// Do executes Page.captureScreenshot.
+// Do executes Page.captureScreenshot against the provided context and
+// target handler.
 //
 // returns:
 //   data - Base64-encoded image data.
-func (p *CaptureScreenshotParams) Do(ctxt context.Context, h cdp.FrameHandler) (data []byte, err error) {
+func (p *CaptureScreenshotParams) Do(ctxt context.Context, h cdp.Handler) (data []byte, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -907,7 +922,7 @@ func (p *CaptureScreenshotParams) Do(ctxt context.Context, h cdp.FrameHandler) (
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -960,8 +975,9 @@ func (p StartScreencastParams) WithEveryNthFrame(everyNthFrame int64) *StartScre
 	return &p
 }
 
-// Do executes Page.startScreencast.
-func (p *StartScreencastParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Page.startScreencast against the provided context and
+// target handler.
+func (p *StartScreencastParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -991,7 +1007,7 @@ func (p *StartScreencastParams) Do(ctxt context.Context, h cdp.FrameHandler) (er
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1005,8 +1021,9 @@ func StopScreencast() *StopScreencastParams {
 	return &StopScreencastParams{}
 }
 
-// Do executes Page.stopScreencast.
-func (p *StopScreencastParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Page.stopScreencast against the provided context and
+// target handler.
+func (p *StopScreencastParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1030,7 +1047,7 @@ func (p *StopScreencastParams) Do(ctxt context.Context, h cdp.FrameHandler) (err
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1053,8 +1070,9 @@ func ScreencastFrameAck(sessionID int64) *ScreencastFrameAckParams {
 	}
 }
 
-// Do executes Page.screencastFrameAck.
-func (p *ScreencastFrameAckParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Page.screencastFrameAck against the provided context and
+// target handler.
+func (p *ScreencastFrameAckParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1084,7 +1102,7 @@ func (p *ScreencastFrameAckParams) Do(ctxt context.Context, h cdp.FrameHandler) 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1115,8 +1133,9 @@ func (p HandleJavaScriptDialogParams) WithPromptText(promptText string) *HandleJ
 	return &p
 }
 
-// Do executes Page.handleJavaScriptDialog.
-func (p *HandleJavaScriptDialogParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Page.handleJavaScriptDialog against the provided context and
+// target handler.
+func (p *HandleJavaScriptDialogParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1146,7 +1165,7 @@ func (p *HandleJavaScriptDialogParams) Do(ctxt context.Context, h cdp.FrameHandl
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1167,8 +1186,9 @@ func SetColorPickerEnabled(enabled bool) *SetColorPickerEnabledParams {
 	}
 }
 
-// Do executes Page.setColorPickerEnabled.
-func (p *SetColorPickerEnabledParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Page.setColorPickerEnabled against the provided context and
+// target handler.
+func (p *SetColorPickerEnabledParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1198,7 +1218,7 @@ func (p *SetColorPickerEnabledParams) Do(ctxt context.Context, h cdp.FrameHandle
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1230,8 +1250,9 @@ func (p ConfigureOverlayParams) WithMessage(message string) *ConfigureOverlayPar
 	return &p
 }
 
-// Do executes Page.configureOverlay.
-func (p *ConfigureOverlayParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Page.configureOverlay against the provided context and
+// target handler.
+func (p *ConfigureOverlayParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1261,7 +1282,7 @@ func (p *ConfigureOverlayParams) Do(ctxt context.Context, h cdp.FrameHandler) (e
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1282,13 +1303,14 @@ type GetAppManifestReturns struct {
 	Data   string              `json:"data,omitempty"` // Manifest content.
 }
 
-// Do executes Page.getAppManifest.
+// Do executes Page.getAppManifest against the provided context and
+// target handler.
 //
 // returns:
 //   url - Manifest location.
 //   errors
 //   data - Manifest content.
-func (p *GetAppManifestParams) Do(ctxt context.Context, h cdp.FrameHandler) (url string, errors []*AppManifestError, data string, err error) {
+func (p *GetAppManifestParams) Do(ctxt context.Context, h cdp.Handler) (url string, errors []*AppManifestError, data string, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1319,7 +1341,7 @@ func (p *GetAppManifestParams) Do(ctxt context.Context, h cdp.FrameHandler) (url
 		}
 
 	case <-ctxt.Done():
-		return "", nil, "", cdp.ErrContextDone
+		return "", nil, "", ctxt.Err()
 	}
 
 	return "", nil, "", cdp.ErrUnknownResult
@@ -1333,8 +1355,9 @@ func RequestAppBanner() *RequestAppBannerParams {
 	return &RequestAppBannerParams{}
 }
 
-// Do executes Page.requestAppBanner.
-func (p *RequestAppBannerParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Page.requestAppBanner against the provided context and
+// target handler.
+func (p *RequestAppBannerParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1358,7 +1381,7 @@ func (p *RequestAppBannerParams) Do(ctxt context.Context, h cdp.FrameHandler) (e
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1381,8 +1404,9 @@ func SetControlNavigations(enabled bool) *SetControlNavigationsParams {
 	}
 }
 
-// Do executes Page.setControlNavigations.
-func (p *SetControlNavigationsParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Page.setControlNavigations against the provided context and
+// target handler.
+func (p *SetControlNavigationsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1412,7 +1436,7 @@ func (p *SetControlNavigationsParams) Do(ctxt context.Context, h cdp.FrameHandle
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1439,8 +1463,9 @@ func ProcessNavigation(response NavigationResponse, navigationID int64) *Process
 	}
 }
 
-// Do executes Page.processNavigation.
-func (p *ProcessNavigationParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Page.processNavigation against the provided context and
+// target handler.
+func (p *ProcessNavigationParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1470,7 +1495,7 @@ func (p *ProcessNavigationParams) Do(ctxt context.Context, h cdp.FrameHandler) (
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -1492,12 +1517,13 @@ type GetLayoutMetricsReturns struct {
 	VisualViewport *VisualViewport `json:"visualViewport,omitempty"` // Metrics relating to the visual viewport.
 }
 
-// Do executes Page.getLayoutMetrics.
+// Do executes Page.getLayoutMetrics against the provided context and
+// target handler.
 //
 // returns:
 //   layoutViewport - Metrics relating to the layout viewport.
 //   visualViewport - Metrics relating to the visual viewport.
-func (p *GetLayoutMetricsParams) Do(ctxt context.Context, h cdp.FrameHandler) (layoutViewport *LayoutViewport, visualViewport *VisualViewport, err error) {
+func (p *GetLayoutMetricsParams) Do(ctxt context.Context, h cdp.Handler) (layoutViewport *LayoutViewport, visualViewport *VisualViewport, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -1528,7 +1554,7 @@ func (p *GetLayoutMetricsParams) Do(ctxt context.Context, h cdp.FrameHandler) (l
 		}
 
 	case <-ctxt.Done():
-		return nil, nil, cdp.ErrContextDone
+		return nil, nil, ctxt.Err()
 	}
 
 	return nil, nil, cdp.ErrUnknownResult

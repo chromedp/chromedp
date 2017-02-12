@@ -1,5 +1,5 @@
 // Package target provides the Chrome Debugging Protocol
-// commands, types, and events for the Chrome Target domain.
+// commands, types, and events for the Target domain.
 //
 // Supports additional targets discovery and allows to attach to them.
 //
@@ -32,8 +32,9 @@ func SetDiscoverTargets(discover bool) *SetDiscoverTargetsParams {
 	}
 }
 
-// Do executes Target.setDiscoverTargets.
-func (p *SetDiscoverTargetsParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Target.setDiscoverTargets against the provided context and
+// target handler.
+func (p *SetDiscoverTargetsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -63,7 +64,7 @@ func (p *SetDiscoverTargetsParams) Do(ctxt context.Context, h cdp.FrameHandler) 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -93,8 +94,9 @@ func SetAutoAttach(autoAttach bool, waitForDebuggerOnStart bool) *SetAutoAttachP
 	}
 }
 
-// Do executes Target.setAutoAttach.
-func (p *SetAutoAttachParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Target.setAutoAttach against the provided context and
+// target handler.
+func (p *SetAutoAttachParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -124,7 +126,7 @@ func (p *SetAutoAttachParams) Do(ctxt context.Context, h cdp.FrameHandler) (err 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -145,8 +147,9 @@ func SetAttachToFrames(value bool) *SetAttachToFramesParams {
 	}
 }
 
-// Do executes Target.setAttachToFrames.
-func (p *SetAttachToFramesParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Target.setAttachToFrames against the provided context and
+// target handler.
+func (p *SetAttachToFramesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -176,7 +179,7 @@ func (p *SetAttachToFramesParams) Do(ctxt context.Context, h cdp.FrameHandler) (
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -199,8 +202,9 @@ func SetRemoteLocations(locations []*RemoteLocation) *SetRemoteLocationsParams {
 	}
 }
 
-// Do executes Target.setRemoteLocations.
-func (p *SetRemoteLocationsParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Target.setRemoteLocations against the provided context and
+// target handler.
+func (p *SetRemoteLocationsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -230,7 +234,7 @@ func (p *SetRemoteLocationsParams) Do(ctxt context.Context, h cdp.FrameHandler) 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -255,8 +259,9 @@ func SendMessageToTarget(targetID string, message string) *SendMessageToTargetPa
 	}
 }
 
-// Do executes Target.sendMessageToTarget.
-func (p *SendMessageToTargetParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Target.sendMessageToTarget against the provided context and
+// target handler.
+func (p *SendMessageToTargetParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -286,7 +291,7 @@ func (p *SendMessageToTargetParams) Do(ctxt context.Context, h cdp.FrameHandler)
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -312,11 +317,12 @@ type GetTargetInfoReturns struct {
 	TargetInfo *Info `json:"targetInfo,omitempty"`
 }
 
-// Do executes Target.getTargetInfo.
+// Do executes Target.getTargetInfo against the provided context and
+// target handler.
 //
 // returns:
 //   targetInfo
-func (p *GetTargetInfoParams) Do(ctxt context.Context, h cdp.FrameHandler) (targetInfo *Info, err error) {
+func (p *GetTargetInfoParams) Do(ctxt context.Context, h cdp.Handler) (targetInfo *Info, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -353,7 +359,7 @@ func (p *GetTargetInfoParams) Do(ctxt context.Context, h cdp.FrameHandler) (targ
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -374,8 +380,9 @@ func ActivateTarget(targetID ID) *ActivateTargetParams {
 	}
 }
 
-// Do executes Target.activateTarget.
-func (p *ActivateTargetParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Target.activateTarget against the provided context and
+// target handler.
+func (p *ActivateTargetParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -405,7 +412,7 @@ func (p *ActivateTargetParams) Do(ctxt context.Context, h cdp.FrameHandler) (err
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -433,11 +440,12 @@ type CloseTargetReturns struct {
 	Success bool `json:"success,omitempty"`
 }
 
-// Do executes Target.closeTarget.
+// Do executes Target.closeTarget against the provided context and
+// target handler.
 //
 // returns:
 //   success
-func (p *CloseTargetParams) Do(ctxt context.Context, h cdp.FrameHandler) (success bool, err error) {
+func (p *CloseTargetParams) Do(ctxt context.Context, h cdp.Handler) (success bool, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -474,7 +482,7 @@ func (p *CloseTargetParams) Do(ctxt context.Context, h cdp.FrameHandler) (succes
 		}
 
 	case <-ctxt.Done():
-		return false, cdp.ErrContextDone
+		return false, ctxt.Err()
 	}
 
 	return false, cdp.ErrUnknownResult
@@ -500,11 +508,12 @@ type AttachToTargetReturns struct {
 	Success bool `json:"success,omitempty"` // Whether attach succeeded.
 }
 
-// Do executes Target.attachToTarget.
+// Do executes Target.attachToTarget against the provided context and
+// target handler.
 //
 // returns:
 //   success - Whether attach succeeded.
-func (p *AttachToTargetParams) Do(ctxt context.Context, h cdp.FrameHandler) (success bool, err error) {
+func (p *AttachToTargetParams) Do(ctxt context.Context, h cdp.Handler) (success bool, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -541,7 +550,7 @@ func (p *AttachToTargetParams) Do(ctxt context.Context, h cdp.FrameHandler) (suc
 		}
 
 	case <-ctxt.Done():
-		return false, cdp.ErrContextDone
+		return false, ctxt.Err()
 	}
 
 	return false, cdp.ErrUnknownResult
@@ -562,8 +571,9 @@ func DetachFromTarget(targetID ID) *DetachFromTargetParams {
 	}
 }
 
-// Do executes Target.detachFromTarget.
-func (p *DetachFromTargetParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Target.detachFromTarget against the provided context and
+// target handler.
+func (p *DetachFromTargetParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -593,7 +603,7 @@ func (p *DetachFromTargetParams) Do(ctxt context.Context, h cdp.FrameHandler) (e
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -614,11 +624,12 @@ type CreateBrowserContextReturns struct {
 	BrowserContextID BrowserContextID `json:"browserContextId,omitempty"` // The id of the context created.
 }
 
-// Do executes Target.createBrowserContext.
+// Do executes Target.createBrowserContext against the provided context and
+// target handler.
 //
 // returns:
 //   browserContextID - The id of the context created.
-func (p *CreateBrowserContextParams) Do(ctxt context.Context, h cdp.FrameHandler) (browserContextID BrowserContextID, err error) {
+func (p *CreateBrowserContextParams) Do(ctxt context.Context, h cdp.Handler) (browserContextID BrowserContextID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -649,7 +660,7 @@ func (p *CreateBrowserContextParams) Do(ctxt context.Context, h cdp.FrameHandler
 		}
 
 	case <-ctxt.Done():
-		return "", cdp.ErrContextDone
+		return "", ctxt.Err()
 	}
 
 	return "", cdp.ErrUnknownResult
@@ -677,11 +688,12 @@ type DisposeBrowserContextReturns struct {
 	Success bool `json:"success,omitempty"`
 }
 
-// Do executes Target.disposeBrowserContext.
+// Do executes Target.disposeBrowserContext against the provided context and
+// target handler.
 //
 // returns:
 //   success
-func (p *DisposeBrowserContextParams) Do(ctxt context.Context, h cdp.FrameHandler) (success bool, err error) {
+func (p *DisposeBrowserContextParams) Do(ctxt context.Context, h cdp.Handler) (success bool, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -718,7 +730,7 @@ func (p *DisposeBrowserContextParams) Do(ctxt context.Context, h cdp.FrameHandle
 		}
 
 	case <-ctxt.Done():
-		return false, cdp.ErrContextDone
+		return false, ctxt.Err()
 	}
 
 	return false, cdp.ErrUnknownResult
@@ -766,11 +778,12 @@ type CreateTargetReturns struct {
 	TargetID ID `json:"targetId,omitempty"` // The id of the page opened.
 }
 
-// Do executes Target.createTarget.
+// Do executes Target.createTarget against the provided context and
+// target handler.
 //
 // returns:
 //   targetID - The id of the page opened.
-func (p *CreateTargetParams) Do(ctxt context.Context, h cdp.FrameHandler) (targetID ID, err error) {
+func (p *CreateTargetParams) Do(ctxt context.Context, h cdp.Handler) (targetID ID, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -807,7 +820,7 @@ func (p *CreateTargetParams) Do(ctxt context.Context, h cdp.FrameHandler) (targe
 		}
 
 	case <-ctxt.Done():
-		return "", cdp.ErrContextDone
+		return "", ctxt.Err()
 	}
 
 	return "", cdp.ErrUnknownResult
@@ -826,11 +839,12 @@ type GetTargetsReturns struct {
 	TargetInfos []*Info `json:"targetInfos,omitempty"` // The list of targets.
 }
 
-// Do executes Target.getTargets.
+// Do executes Target.getTargets against the provided context and
+// target handler.
 //
 // returns:
 //   targetInfos - The list of targets.
-func (p *GetTargetsParams) Do(ctxt context.Context, h cdp.FrameHandler) (targetInfos []*Info, err error) {
+func (p *GetTargetsParams) Do(ctxt context.Context, h cdp.Handler) (targetInfos []*Info, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -861,7 +875,7 @@ func (p *GetTargetsParams) Do(ctxt context.Context, h cdp.FrameHandler) (targetI
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult

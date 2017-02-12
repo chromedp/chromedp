@@ -1,3 +1,34 @@
+// Package fixup modifies/alters/fixes and adds to the low level type
+// definitions for the Chrome Debugging Protocol domains, as generated from
+// protocol.json.
+//
+// The goal of package fixup is to fix the issues associated with generating Go
+// code from the existing Chrome domain definitions, and is wrapped up in one
+// high-level func, FixDomains.
+//
+// Currently, FixDomains will do the following:
+//  - add 'Inspector.MethodType' type as a string enumeration of all the event/command names.
+//  - add 'Inspector.MessageError' type as a object with code (integer), and message (string).
+//  - add 'Inspector.Message' type as a object with id (integer), method (MethodType), params (interface{}), error (MessageError).
+//  - add 'Inspector.DetachReason' type and change event 'Inspector.detached''s parameter reason's type.
+//  - add 'Inspector.ErrorType' type.
+//  - change 'Runtime.Timestamp' to 'Network.Timestamp'.
+//  - change any object property or command/event parameter named 'timestamp'
+//    or has $ref to Network/Runtime.Timestamp to type 'Network.Timestamp'.
+//  - convert object properties and event/command parameters that are enums into independent types.
+//  - change '*.modifiers' parameters to type Input.Modifier.
+//  - add 'DOM.NodeType' type and convert "nodeType" parameters to it.
+//  - change Page.Frame.id/parentID to FrameID type.
+//  - add additional properties to 'Page.Frame' and 'DOM.Node' for use by higher level packages.
+//  - add special unmarshaler to NodeId, BackendNodeId, FrameId to handle values from older (v1.1) protocol versions. -- NOTE: this might need to be applied to more types, such as network.LoaderId
+//  - rename 'Input.GestureSourceType' -> 'Input.GestureType'.
+//  - rename CSS.CSS* types.
+//  - add Error() method to 'Runtime.ExceptionDetails' type so that it can be used as error.
+//
+// Please note that the above is not an exhaustive list of all modifications
+// applied to the domains, however it does attempt to give a comprehensive
+// overview of the most important changes to the definition vs the vanilla
+// specification.
 package fixup
 
 import (
@@ -38,34 +69,22 @@ func setup() {
 	internal.SetCDPTypes(types)
 }
 
-// if the internal type locations change above, these will also need to change:
+// Specific type names to use for the applied fixes to the protocol domains.
+//
+// These need to be here in case the location of these types change (see above)
+// relative to the generated 'cdp' package.
 const (
 	domNodeIDRef = "NodeID"
 	domNodeRef   = "*Node"
 )
 
-// FixupDomains changes types in the domains, so that the generated code is
-// more type specific, and easier to use.
+// FixDomains modifies, updates, alters, fixes, and adds to the types defined
+// in the domains, so that the generated Chrome Debugging Protocol domain code
+// is more Go-like and easier to use.
 //
-// currently:
-//  - add 'Inspector.MethodType' type as a string enumeration of all the event/command names.
-//  - add 'Inspector.MessageError' type as a object with code (integer), and message (string).
-//  - add 'Inspector.Message' type as a object with id (integer), method (MethodType), params (interface{}), error (MessageError).
-//  - add 'Inspector.DetachReason' type and change event 'Inspector.detached''s parameter reason's type.
-//  - add 'Inspector.ErrorType' type.
-//  - change 'Runtime.Timestamp' to 'Network.Timestamp'.
-//  - change any object property or command/event parameter named 'timestamp'
-//    or has $ref to Network/Runtime.Timestamp to type 'Network.Timestamp'.
-//  - convert object properties and event/command parameters that are enums into independent types.
-//  - change '*.modifiers' parameters to type Input.Modifier.
-//  - add 'DOM.NodeType' type and convert "nodeType" parameters to it.
-//  - change Page.Frame.id/parentID to FrameID type.
-//  - add additional properties to 'Page.Frame' and 'DOM.Node' for use by higher level packages.
-//  - add special unmarshaler to NodeId, BackendNodeId, FrameId to handle values from older (v1.1) protocol versions. -- NOTE: this might need to be applied to more types, such as network.LoaderId
-//  - rename 'Input.GestureSourceType' -> 'Input.GestureType'.
-//  - rename CSS.CSS* types.
-//  - add Error() method to 'Runtime.ExceptionDetails' type so that it can be used as error.
-func FixupDomains(domains []*internal.Domain) {
+// Please see package-level documentation for the list of changes made to the
+// various debugging protocol domains.
+func FixDomains(domains []*internal.Domain) {
 	// set up the internal types
 	setup()
 
@@ -141,7 +160,7 @@ func FixupDomains(domains []*internal.Domain) {
 	}
 
 	// cdp error types
-	errorValues := []string{"context done", "channel closed", "invalid result", "unknown result"}
+	errorValues := []string{"channel closed", "invalid result", "unknown result"}
 	errorValueNameMap := make(map[string]string)
 	for _, e := range errorValues {
 		errorValueNameMap[e] = "Err" + internal.ForceCamel(e)

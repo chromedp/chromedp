@@ -1,3 +1,5 @@
+// Package gen takes the Chrome protocol domain definitions and applies the
+// necessary code generation templates.
 package gen
 
 import (
@@ -15,7 +17,8 @@ import (
 type fileBuffers map[string]*bytes.Buffer
 
 // GenerateDomains generates domains for the Chrome Debugging Protocol domain
-// definitions, returning generated file buffers.
+// definitions, returning a set of file buffers as a map of the file name ->
+// content.
 func GenerateDomains(domains []*internal.Domain) map[string]*bytes.Buffer {
 	fb := make(fileBuffers)
 
@@ -66,14 +69,15 @@ func GenerateDomains(domains []*internal.Domain) map[string]*bytes.Buffer {
 
 // generateCDPTypes generates the internal types for domain d.
 //
-// because there are circular package dependencies, some types need to be moved
-// to the shared internal package.
+// Because there are circular package dependencies, some types need to be moved
+// to eliminate the circular dependencies. Please see the fixup package for a
+// list of the "internal" CDP types.
 func (fb fileBuffers) generateCDPTypes(domains []*internal.Domain) {
 	var types []*internal.Type
 	for _, d := range domains {
 		// process internal types
 		for _, t := range d.Types {
-			if internal.IsCDPType(d.Domain, t.IdOrName()) {
+			if internal.IsCDPType(d.Domain, t.IDorName()) {
 				types = append(types, t)
 			}
 		}
@@ -95,10 +99,10 @@ func (fb fileBuffers) generateCDPTypes(domains []*internal.Domain) {
 
 // generateUtilPackage generates the util package.
 //
-// currently only contains the message unmarshaler: if this wasn't in a
-// separate package, there would be circular dependencies.
+// Currently only contains the low-level message unmarshaler -- if this wasn't
+// in a separate package, then there would be circular dependencies.
 func (fb fileBuffers) generateUtilPackage(domains []*internal.Domain) {
-	// generate imports
+	// generate import map data
 	importMap := map[string]string{
 		*internal.FlagPkg: "cdp",
 	}
@@ -112,7 +116,7 @@ func (fb fileBuffers) generateUtilPackage(domains []*internal.Domain) {
 	fb.release(w)
 }
 
-// generateTypes generates the types.
+// generateTypes generates the types for a domain.
 func (fb fileBuffers) generateTypes(
 	path string,
 	types []*internal.Type, prefix, suffix string, d *internal.Domain, domains []*internal.Domain,
@@ -126,7 +130,7 @@ func (fb fileBuffers) generateTypes(
 	// process type list
 	var names []string
 	for _, t := range types {
-		if internal.IsCDPType(d.Domain, t.IdOrName()) {
+		if internal.IsCDPType(d.Domain, t.IDorName()) {
 			continue
 		}
 		templates.StreamTypeTemplate(w, t, prefix, suffix, d, domains, nil, false, false)

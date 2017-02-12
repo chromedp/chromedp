@@ -62,7 +62,7 @@ func googleSearch(q, text string, site, res *string) cdp.Tasks {
 		cdp.WaitNotVisible(`div.v-middle > div.la-ball-clip-rotate`, cdp.ByQuery),
 		cdp.Location(site),
 		cdp.Screenshot(`#testimonials`, &buf, cdp.ByID),
-		cdp.ActionFunc(func(context.Context, cdptypes.FrameHandler) error {
+		cdp.ActionFunc(func(context.Context, cdptypes.Handler) error {
 			return ioutil.WriteFile("testimonials.png", buf, 0644)
 		}),
 	}

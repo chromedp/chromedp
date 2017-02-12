@@ -1,5 +1,5 @@
 // Package schema provides the Chrome Debugging Protocol
-// commands, types, and events for the Chrome Schema domain.
+// commands, types, and events for the Schema domain.
 //
 // Provides information about the protocol schema.
 //
@@ -28,11 +28,12 @@ type GetDomainsReturns struct {
 	Domains []*Domain `json:"domains,omitempty"` // List of supported domains.
 }
 
-// Do executes Schema.getDomains.
+// Do executes Schema.getDomains against the provided context and
+// target handler.
 //
 // returns:
 //   domains - List of supported domains.
-func (p *GetDomainsParams) Do(ctxt context.Context, h cdp.FrameHandler) (domains []*Domain, err error) {
+func (p *GetDomainsParams) Do(ctxt context.Context, h cdp.Handler) (domains []*Domain, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -63,7 +64,7 @@ func (p *GetDomainsParams) Do(ctxt context.Context, h cdp.FrameHandler) (domains
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult

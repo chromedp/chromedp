@@ -1,5 +1,5 @@
 // Package emulation provides the Chrome Debugging Protocol
-// commands, types, and events for the Chrome Emulation domain.
+// commands, types, and events for the Emulation domain.
 //
 // This domain emulates different environments for the page.
 //
@@ -95,8 +95,9 @@ func (p SetDeviceMetricsOverrideParams) WithScreenOrientation(screenOrientation 
 	return &p
 }
 
-// Do executes Emulation.setDeviceMetricsOverride.
-func (p *SetDeviceMetricsOverrideParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Emulation.setDeviceMetricsOverride against the provided context and
+// target handler.
+func (p *SetDeviceMetricsOverrideParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -126,7 +127,7 @@ func (p *SetDeviceMetricsOverrideParams) Do(ctxt context.Context, h cdp.FrameHan
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -140,8 +141,9 @@ func ClearDeviceMetricsOverride() *ClearDeviceMetricsOverrideParams {
 	return &ClearDeviceMetricsOverrideParams{}
 }
 
-// Do executes Emulation.clearDeviceMetricsOverride.
-func (p *ClearDeviceMetricsOverrideParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Emulation.clearDeviceMetricsOverride against the provided context and
+// target handler.
+func (p *ClearDeviceMetricsOverrideParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -165,7 +167,7 @@ func (p *ClearDeviceMetricsOverrideParams) Do(ctxt context.Context, h cdp.FrameH
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -198,8 +200,9 @@ func ForceViewport(x float64, y float64, scale float64) *ForceViewportParams {
 	}
 }
 
-// Do executes Emulation.forceViewport.
-func (p *ForceViewportParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Emulation.forceViewport against the provided context and
+// target handler.
+func (p *ForceViewportParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -229,7 +232,7 @@ func (p *ForceViewportParams) Do(ctxt context.Context, h cdp.FrameHandler) (err 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -245,8 +248,9 @@ func ResetViewport() *ResetViewportParams {
 	return &ResetViewportParams{}
 }
 
-// Do executes Emulation.resetViewport.
-func (p *ResetViewportParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Emulation.resetViewport against the provided context and
+// target handler.
+func (p *ResetViewportParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -270,7 +274,7 @@ func (p *ResetViewportParams) Do(ctxt context.Context, h cdp.FrameHandler) (err 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -286,8 +290,9 @@ func ResetPageScaleFactor() *ResetPageScaleFactorParams {
 	return &ResetPageScaleFactorParams{}
 }
 
-// Do executes Emulation.resetPageScaleFactor.
-func (p *ResetPageScaleFactorParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Emulation.resetPageScaleFactor against the provided context and
+// target handler.
+func (p *ResetPageScaleFactorParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -311,7 +316,7 @@ func (p *ResetPageScaleFactorParams) Do(ctxt context.Context, h cdp.FrameHandler
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -332,8 +337,9 @@ func SetPageScaleFactor(pageScaleFactor float64) *SetPageScaleFactorParams {
 	}
 }
 
-// Do executes Emulation.setPageScaleFactor.
-func (p *SetPageScaleFactorParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Emulation.setPageScaleFactor against the provided context and
+// target handler.
+func (p *SetPageScaleFactorParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -363,7 +369,7 @@ func (p *SetPageScaleFactorParams) Do(ctxt context.Context, h cdp.FrameHandler) 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -391,8 +397,9 @@ func SetVisibleSize(width int64, height int64) *SetVisibleSizeParams {
 	}
 }
 
-// Do executes Emulation.setVisibleSize.
-func (p *SetVisibleSizeParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Emulation.setVisibleSize against the provided context and
+// target handler.
+func (p *SetVisibleSizeParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -422,7 +429,7 @@ func (p *SetVisibleSizeParams) Do(ctxt context.Context, h cdp.FrameHandler) (err
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -443,8 +450,9 @@ func SetScriptExecutionDisabled(value bool) *SetScriptExecutionDisabledParams {
 	}
 }
 
-// Do executes Emulation.setScriptExecutionDisabled.
-func (p *SetScriptExecutionDisabledParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Emulation.setScriptExecutionDisabled against the provided context and
+// target handler.
+func (p *SetScriptExecutionDisabledParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -474,7 +482,7 @@ func (p *SetScriptExecutionDisabledParams) Do(ctxt context.Context, h cdp.FrameH
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -514,8 +522,9 @@ func (p SetGeolocationOverrideParams) WithAccuracy(accuracy float64) *SetGeoloca
 	return &p
 }
 
-// Do executes Emulation.setGeolocationOverride.
-func (p *SetGeolocationOverrideParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Emulation.setGeolocationOverride against the provided context and
+// target handler.
+func (p *SetGeolocationOverrideParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -545,7 +554,7 @@ func (p *SetGeolocationOverrideParams) Do(ctxt context.Context, h cdp.FrameHandl
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -561,8 +570,9 @@ func ClearGeolocationOverride() *ClearGeolocationOverrideParams {
 	return &ClearGeolocationOverrideParams{}
 }
 
-// Do executes Emulation.clearGeolocationOverride.
-func (p *ClearGeolocationOverrideParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Emulation.clearGeolocationOverride against the provided context and
+// target handler.
+func (p *ClearGeolocationOverrideParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -586,7 +596,7 @@ func (p *ClearGeolocationOverrideParams) Do(ctxt context.Context, h cdp.FrameHan
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -616,8 +626,9 @@ func (p SetTouchEmulationEnabledParams) WithConfiguration(configuration EnabledC
 	return &p
 }
 
-// Do executes Emulation.setTouchEmulationEnabled.
-func (p *SetTouchEmulationEnabledParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Emulation.setTouchEmulationEnabled against the provided context and
+// target handler.
+func (p *SetTouchEmulationEnabledParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -647,7 +658,7 @@ func (p *SetTouchEmulationEnabledParams) Do(ctxt context.Context, h cdp.FrameHan
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -668,8 +679,9 @@ func SetEmulatedMedia(media string) *SetEmulatedMediaParams {
 	}
 }
 
-// Do executes Emulation.setEmulatedMedia.
-func (p *SetEmulatedMediaParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Emulation.setEmulatedMedia against the provided context and
+// target handler.
+func (p *SetEmulatedMediaParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -699,7 +711,7 @@ func (p *SetEmulatedMediaParams) Do(ctxt context.Context, h cdp.FrameHandler) (e
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -720,8 +732,9 @@ func SetCPUThrottlingRate(rate float64) *SetCPUThrottlingRateParams {
 	}
 }
 
-// Do executes Emulation.setCPUThrottlingRate.
-func (p *SetCPUThrottlingRateParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Emulation.setCPUThrottlingRate against the provided context and
+// target handler.
+func (p *SetCPUThrottlingRateParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -751,7 +764,7 @@ func (p *SetCPUThrottlingRateParams) Do(ctxt context.Context, h cdp.FrameHandler
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -770,11 +783,12 @@ type CanEmulateReturns struct {
 	Result bool `json:"result,omitempty"` // True if emulation is supported.
 }
 
-// Do executes Emulation.canEmulate.
+// Do executes Emulation.canEmulate against the provided context and
+// target handler.
 //
 // returns:
 //   result - True if emulation is supported.
-func (p *CanEmulateParams) Do(ctxt context.Context, h cdp.FrameHandler) (result bool, err error) {
+func (p *CanEmulateParams) Do(ctxt context.Context, h cdp.Handler) (result bool, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -805,7 +819,7 @@ func (p *CanEmulateParams) Do(ctxt context.Context, h cdp.FrameHandler) (result 
 		}
 
 	case <-ctxt.Done():
-		return false, cdp.ErrContextDone
+		return false, ctxt.Err()
 	}
 
 	return false, cdp.ErrUnknownResult
@@ -838,8 +852,9 @@ func (p SetVirtualTimePolicyParams) WithBudget(budget int64) *SetVirtualTimePoli
 	return &p
 }
 
-// Do executes Emulation.setVirtualTimePolicy.
-func (p *SetVirtualTimePolicyParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Emulation.setVirtualTimePolicy against the provided context and
+// target handler.
+func (p *SetVirtualTimePolicyParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -869,7 +884,7 @@ func (p *SetVirtualTimePolicyParams) Do(ctxt context.Context, h cdp.FrameHandler
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -898,8 +913,9 @@ func (p SetDefaultBackgroundColorOverrideParams) WithColor(color *cdp.RGBA) *Set
 	return &p
 }
 
-// Do executes Emulation.setDefaultBackgroundColorOverride.
-func (p *SetDefaultBackgroundColorOverrideParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes Emulation.setDefaultBackgroundColorOverride against the provided context and
+// target handler.
+func (p *SetDefaultBackgroundColorOverrideParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -929,7 +945,7 @@ func (p *SetDefaultBackgroundColorOverrideParams) Do(ctxt context.Context, h cdp
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult

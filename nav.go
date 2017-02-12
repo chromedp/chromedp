@@ -10,7 +10,7 @@ import (
 
 // Navigate navigates the current frame.
 func Navigate(urlstr string) Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.FrameHandler) error {
+	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
 		frameID, err := page.Navigate(urlstr).Do(ctxt, h)
 		if err != nil {
 			return err
@@ -27,7 +27,7 @@ func NavigationEntries(currentIndex *int64, entries *[]*page.NavigationEntry) Ac
 		panic("currentIndex and entries cannot be nil")
 	}
 
-	return ActionFunc(func(ctxt context.Context, h cdp.FrameHandler) error {
+	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
 		var err error
 		*currentIndex, *entries, err = page.GetNavigationHistory().Do(ctxt, h)
 		return err
@@ -41,7 +41,7 @@ func NavigateToHistoryEntry(entryID int64) Action {
 }
 
 // NavigateBack navigates the current frame backwards in its history.
-func NavigateBack(ctxt context.Context, h cdp.FrameHandler) error {
+func NavigateBack(ctxt context.Context, h cdp.Handler) error {
 	cur, entries, err := page.GetNavigationHistory().Do(ctxt, h)
 	if err != nil {
 		return err
@@ -62,7 +62,7 @@ func NavigateBack(ctxt context.Context, h cdp.FrameHandler) error {
 }
 
 // NavigateForward navigates the current frame forwards in its history.
-func NavigateForward(ctxt context.Context, h cdp.FrameHandler) error {
+func NavigateForward(ctxt context.Context, h cdp.Handler) error {
 	cur, entries, err := page.GetNavigationHistory().Do(ctxt, h)
 	if err != nil {
 		return err
@@ -88,7 +88,7 @@ func CaptureScreenshot(res *[]byte) Action {
 		panic("res cannot be nil")
 	}
 
-	return ActionFunc(func(ctxt context.Context, h cdp.FrameHandler) error {
+	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
 		var err error
 		*res, err = page.CaptureScreenshot().Do(ctxt, h)
 		return err
@@ -101,7 +101,7 @@ func AddOnLoadScript(source string, id *page.ScriptIdentifier) Action {
 		panic("id cannot be nil")
 	}
 
-	return ActionFunc(func(ctxt context.Context, h cdp.FrameHandler) error {
+	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
 		var err error
 		*id, err = page.AddScriptToEvaluateOnLoad(source).Do(ctxt, h)
 		return err

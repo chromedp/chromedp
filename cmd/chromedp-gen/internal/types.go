@@ -1,3 +1,5 @@
+// Package internal contains the types and util funcs common to the
+// chromedp-gen command.
 package internal
 
 import (
@@ -198,8 +200,8 @@ func (t *Type) ResolveType(d *Domain, domains []*Domain) (DomainType, *Type, str
 	return d.Domain, t, t.Type.GoType()
 }
 
-// IdOrName returns either the ID or the Name for the type.
-func (t Type) IdOrName() string {
+// IDorName returns either the ID or the Name for the type.
+func (t Type) IDorName() string {
 	if t.ID != "" {
 		return t.ID
 	}
@@ -214,7 +216,7 @@ func (t Type) String() string {
 		desc = " - " + desc
 	}
 
-	return ForceCamelWithFirstLower(t.IdOrName()) + desc
+	return ForceCamelWithFirstLower(t.IDorName()) + desc
 }
 
 // GetDescription returns the cleaned description for the type.
@@ -241,7 +243,7 @@ func (t *Type) GoName(noExposeOverride bool) string {
 		return n
 	}
 
-	return ForceCamel(t.IdOrName())
+	return ForceCamel(t.IDorName())
 }
 
 // EnumValueName returns the name for a enum value.
@@ -258,7 +260,7 @@ func (t *Type) EnumValueName(v string) string {
 		neg = "Negative"
 	}
 
-	return ForceCamel(t.IdOrName()) + neg + ForceCamel(v)
+	return ForceCamel(t.IDorName()) + neg + ForceCamel(v)
 }
 
 // GoTypeDef returns the Go type definition for the type.
@@ -398,7 +400,7 @@ func (t *Type) Base64EncodedRetParam() *Type {
 
 // CamelName returns the CamelCase name of the type.
 func (t *Type) CamelName() string {
-	return ForceCamel(t.IdOrName())
+	return ForceCamel(t.IDorName())
 }
 
 // ProtoName returns the protocol name of the type.

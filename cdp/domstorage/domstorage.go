@@ -1,5 +1,5 @@
 // Package domstorage provides the Chrome Debugging Protocol
-// commands, types, and events for the Chrome DOMStorage domain.
+// commands, types, and events for the DOMStorage domain.
 //
 // Query and modify DOM storage.
 //
@@ -25,8 +25,9 @@ func Enable() *EnableParams {
 	return &EnableParams{}
 }
 
-// Do executes DOMStorage.enable.
-func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOMStorage.enable against the provided context and
+// target handler.
+func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -50,7 +51,7 @@ func (p *EnableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) 
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -66,8 +67,9 @@ func Disable() *DisableParams {
 	return &DisableParams{}
 }
 
-// Do executes DOMStorage.disable.
-func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOMStorage.disable against the provided context and
+// target handler.
+func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -91,7 +93,7 @@ func (p *DisableParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error)
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -112,8 +114,9 @@ func Clear(storageID *StorageID) *ClearParams {
 	}
 }
 
-// Do executes DOMStorage.clear.
-func (p *ClearParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOMStorage.clear against the provided context and
+// target handler.
+func (p *ClearParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -143,7 +146,7 @@ func (p *ClearParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -169,11 +172,12 @@ type GetDOMStorageItemsReturns struct {
 	Entries []Item `json:"entries,omitempty"`
 }
 
-// Do executes DOMStorage.getDOMStorageItems.
+// Do executes DOMStorage.getDOMStorageItems against the provided context and
+// target handler.
 //
 // returns:
 //   entries
-func (p *GetDOMStorageItemsParams) Do(ctxt context.Context, h cdp.FrameHandler) (entries []Item, err error) {
+func (p *GetDOMStorageItemsParams) Do(ctxt context.Context, h cdp.Handler) (entries []Item, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -210,7 +214,7 @@ func (p *GetDOMStorageItemsParams) Do(ctxt context.Context, h cdp.FrameHandler) 
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult
@@ -237,8 +241,9 @@ func SetDOMStorageItem(storageID *StorageID, key string, value string) *SetDOMSt
 	}
 }
 
-// Do executes DOMStorage.setDOMStorageItem.
-func (p *SetDOMStorageItemParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOMStorage.setDOMStorageItem against the provided context and
+// target handler.
+func (p *SetDOMStorageItemParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -268,7 +273,7 @@ func (p *SetDOMStorageItemParams) Do(ctxt context.Context, h cdp.FrameHandler) (
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -292,8 +297,9 @@ func RemoveDOMStorageItem(storageID *StorageID, key string) *RemoveDOMStorageIte
 	}
 }
 
-// Do executes DOMStorage.removeDOMStorageItem.
-func (p *RemoveDOMStorageItemParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOMStorage.removeDOMStorageItem against the provided context and
+// target handler.
+func (p *RemoveDOMStorageItemParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -323,7 +329,7 @@ func (p *RemoveDOMStorageItemParams) Do(ctxt context.Context, h cdp.FrameHandler
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult

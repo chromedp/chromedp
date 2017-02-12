@@ -16,7 +16,7 @@ const (
 	DefaultEndPort = 10000
 )
 
-// Pool provides a pool of running Chrome processes.
+// Pool manages a pool of running Chrome processes.
 type Pool struct {
 	// start is the start port.
 	start int

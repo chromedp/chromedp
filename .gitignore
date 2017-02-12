@@ -4,6 +4,8 @@ old*.txt
 cdp-*.log
 cdp-*.txt
 
+coverage.out
+
 # binaries
 /chromedp-gen
 /cmd/chromedp-gen/chromedp-gen

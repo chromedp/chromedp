@@ -1,5 +1,5 @@
 // Package domdebugger provides the Chrome Debugging Protocol
-// commands, types, and events for the Chrome DOMDebugger domain.
+// commands, types, and events for the DOMDebugger domain.
 //
 // DOM debugging allows setting breakpoints on particular DOM operations and
 // events. JavaScript execution will stop on these operations as if there was a
@@ -36,8 +36,9 @@ func SetDOMBreakpoint(nodeID cdp.NodeID, typeVal DOMBreakpointType) *SetDOMBreak
 	}
 }
 
-// Do executes DOMDebugger.setDOMBreakpoint.
-func (p *SetDOMBreakpointParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOMDebugger.setDOMBreakpoint against the provided context and
+// target handler.
+func (p *SetDOMBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -67,7 +68,7 @@ func (p *SetDOMBreakpointParams) Do(ctxt context.Context, h cdp.FrameHandler) (e
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -93,8 +94,9 @@ func RemoveDOMBreakpoint(nodeID cdp.NodeID, typeVal DOMBreakpointType) *RemoveDO
 	}
 }
 
-// Do executes DOMDebugger.removeDOMBreakpoint.
-func (p *RemoveDOMBreakpointParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOMDebugger.removeDOMBreakpoint against the provided context and
+// target handler.
+func (p *RemoveDOMBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -124,7 +126,7 @@ func (p *RemoveDOMBreakpointParams) Do(ctxt context.Context, h cdp.FrameHandler)
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -153,8 +155,9 @@ func (p SetEventListenerBreakpointParams) WithTargetName(targetName string) *Set
 	return &p
 }
 
-// Do executes DOMDebugger.setEventListenerBreakpoint.
-func (p *SetEventListenerBreakpointParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOMDebugger.setEventListenerBreakpoint against the provided context and
+// target handler.
+func (p *SetEventListenerBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -184,7 +187,7 @@ func (p *SetEventListenerBreakpointParams) Do(ctxt context.Context, h cdp.FrameH
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -213,8 +216,9 @@ func (p RemoveEventListenerBreakpointParams) WithTargetName(targetName string) *
 	return &p
 }
 
-// Do executes DOMDebugger.removeEventListenerBreakpoint.
-func (p *RemoveEventListenerBreakpointParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOMDebugger.removeEventListenerBreakpoint against the provided context and
+// target handler.
+func (p *RemoveEventListenerBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -244,7 +248,7 @@ func (p *RemoveEventListenerBreakpointParams) Do(ctxt context.Context, h cdp.Fra
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -266,8 +270,9 @@ func SetInstrumentationBreakpoint(eventName string) *SetInstrumentationBreakpoin
 	}
 }
 
-// Do executes DOMDebugger.setInstrumentationBreakpoint.
-func (p *SetInstrumentationBreakpointParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOMDebugger.setInstrumentationBreakpoint against the provided context and
+// target handler.
+func (p *SetInstrumentationBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -297,7 +302,7 @@ func (p *SetInstrumentationBreakpointParams) Do(ctxt context.Context, h cdp.Fram
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -320,8 +325,9 @@ func RemoveInstrumentationBreakpoint(eventName string) *RemoveInstrumentationBre
 	}
 }
 
-// Do executes DOMDebugger.removeInstrumentationBreakpoint.
-func (p *RemoveInstrumentationBreakpointParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOMDebugger.removeInstrumentationBreakpoint against the provided context and
+// target handler.
+func (p *RemoveInstrumentationBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -351,7 +357,7 @@ func (p *RemoveInstrumentationBreakpointParams) Do(ctxt context.Context, h cdp.F
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -372,8 +378,9 @@ func SetXHRBreakpoint(url string) *SetXHRBreakpointParams {
 	}
 }
 
-// Do executes DOMDebugger.setXHRBreakpoint.
-func (p *SetXHRBreakpointParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOMDebugger.setXHRBreakpoint against the provided context and
+// target handler.
+func (p *SetXHRBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -403,7 +410,7 @@ func (p *SetXHRBreakpointParams) Do(ctxt context.Context, h cdp.FrameHandler) (e
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -424,8 +431,9 @@ func RemoveXHRBreakpoint(url string) *RemoveXHRBreakpointParams {
 	}
 }
 
-// Do executes DOMDebugger.removeXHRBreakpoint.
-func (p *RemoveXHRBreakpointParams) Do(ctxt context.Context, h cdp.FrameHandler) (err error) {
+// Do executes DOMDebugger.removeXHRBreakpoint against the provided context and
+// target handler.
+func (p *RemoveXHRBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -455,7 +463,7 @@ func (p *RemoveXHRBreakpointParams) Do(ctxt context.Context, h cdp.FrameHandler)
 		}
 
 	case <-ctxt.Done():
-		return cdp.ErrContextDone
+		return ctxt.Err()
 	}
 
 	return cdp.ErrUnknownResult
@@ -463,7 +471,9 @@ func (p *RemoveXHRBreakpointParams) Do(ctxt context.Context, h cdp.FrameHandler)
 
 // GetEventListenersParams returns event listeners of the given object.
 type GetEventListenersParams struct {
-	ObjectID runtime.RemoteObjectID `json:"objectId"` // Identifier of the object to return listeners for.
+	ObjectID runtime.RemoteObjectID `json:"objectId"`         // Identifier of the object to return listeners for.
+	Depth    int64                  `json:"depth,omitempty"`  // The maximum depth at which Node children should be retrieved, defaults to 1. Use -1 for the entire subtree or provide an integer larger than 0.
+	Pierce   bool                   `json:"pierce,omitempty"` // Whether or not iframes and shadow roots should be traversed when returning the subtree (default is false). Reports listeners for all contexts if pierce is enabled.
 }
 
 // GetEventListeners returns event listeners of the given object.
@@ -476,16 +486,33 @@ func GetEventListeners(objectID runtime.RemoteObjectID) *GetEventListenersParams
 	}
 }
 
+// WithDepth the maximum depth at which Node children should be retrieved,
+// defaults to 1. Use -1 for the entire subtree or provide an integer larger
+// than 0.
+func (p GetEventListenersParams) WithDepth(depth int64) *GetEventListenersParams {
+	p.Depth = depth
+	return &p
+}
+
+// WithPierce whether or not iframes and shadow roots should be traversed
+// when returning the subtree (default is false). Reports listeners for all
+// contexts if pierce is enabled.
+func (p GetEventListenersParams) WithPierce(pierce bool) *GetEventListenersParams {
+	p.Pierce = pierce
+	return &p
+}
+
 // GetEventListenersReturns return values.
 type GetEventListenersReturns struct {
 	Listeners []*EventListener `json:"listeners,omitempty"` // Array of relevant listeners.
 }
 
-// Do executes DOMDebugger.getEventListeners.
+// Do executes DOMDebugger.getEventListeners against the provided context and
+// target handler.
 //
 // returns:
 //   listeners - Array of relevant listeners.
-func (p *GetEventListenersParams) Do(ctxt context.Context, h cdp.FrameHandler) (listeners []*EventListener, err error) {
+func (p *GetEventListenersParams) Do(ctxt context.Context, h cdp.Handler) (listeners []*EventListener, err error) {
 	if ctxt == nil {
 		ctxt = context.Background()
 	}
@@ -522,7 +549,7 @@ func (p *GetEventListenersParams) Do(ctxt context.Context, h cdp.FrameHandler) (
 		}
 
 	case <-ctxt.Done():
-		return nil, cdp.ErrContextDone
+		return nil, ctxt.Err()
 	}
 
 	return nil, cdp.ErrUnknownResult

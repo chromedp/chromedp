@@ -7,7 +7,7 @@
 // FileHeader is the file header template.
 {% func FileHeader(pkgName string, d *internal.Domain) %}
 {% if d != nil %}// Package {%s= d.PackageName() %} provides the Chrome Debugging Protocol
-// commands, types, and events for the Chrome {%s= d.String() %} domain.
+// commands, types, and events for the {%s= d.String() %} domain.
 // {% if desc := d.Description; desc != "" %}
 {%s= formatComment(desc, "", "") %}
 //{% endif %}
