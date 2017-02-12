@@ -53,6 +53,6 @@ func screenshot(urlstr, sel string, res *[]byte) cdp.Tasks {
 		cdp.Sleep(2 * time.Second),
 		cdp.WaitVisible(sel, cdp.ByID),
 		cdp.WaitNotVisible(`div.v-middle > div.la-ball-clip-rotate`, cdp.ByQuery),
-		cdp.Screenshot(sel, res, cdp.ElementVisible, cdp.ByID),
+		cdp.Screenshot(sel, res, cdp.NodeVisible, cdp.ByID),
 	}
 }
