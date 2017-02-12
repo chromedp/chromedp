@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
@@ -110,14 +109,14 @@ func (c *CDP) AddTarget(ctxt context.Context, t client.Target) {
 	// create target manager
 	h, err := NewTargetHandler(t)
 	if err != nil {
-		log.Printf("error: could not create handler for %s, got: %v", t, err)
+		Logger.Printf("error: could not create handler for %s, got: %v", t, err)
 		return
 	}
 
 	// run
 	err = h.Run(ctxt)
 	if err != nil {
-		log.Printf("error: could not start handler for %s, got: %v", t, err)
+		Logger.Printf("error: could not start handler for %s, got: %v", t, err)
 		return
 	}
 

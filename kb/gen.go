@@ -8,7 +8,6 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os/exec"
 	"regexp"
@@ -76,13 +75,13 @@ func main() {
 	// load keys
 	err = loadKeys(keys)
 	if err != nil {
-		log.Fatal(err)
+		Logger.Fatal(err)
 	}
 
 	// process keys
 	constBuf, mapBuf, err := processKeys(keys)
 	if err != nil {
-		log.Fatal(err)
+		Logger.Fatal(err)
 	}
 
 	// output
@@ -92,13 +91,13 @@ func main() {
 		0644,
 	)
 	if err != nil {
-		log.Fatal(err)
+		Logger.Fatal(err)
 	}
 
 	// format
 	err = exec.Command("goimports", "-w", *flagOut).Run()
 	if err != nil {
-		log.Fatal(err)
+		Logger.Fatal(err)
 	}
 }
 
