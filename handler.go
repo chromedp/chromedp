@@ -3,7 +3,6 @@ package chromedp
 import (
 	"context"
 	"fmt"
-	"log"
 	"reflect"
 	"runtime"
 	"strings"
@@ -54,17 +53,25 @@ type TargetHandler struct {
 	res   map[int64]chan interface{}
 	resrw sync.RWMutex
 
+	// logging funcs
+	logf, debugf, errorf LogFunc
+
 	sync.RWMutex
 }
 
 // NewTargetHandler creates a new handler for the specified client target.
-func NewTargetHandler(t client.Target) (*TargetHandler, error) {
+func NewTargetHandler(t client.Target, logf, debugf, errorf LogFunc) (*TargetHandler, error) {
 	conn, err := client.Dial(t)
 	if err != nil {
 		return nil, err
 	}
 
-	return &TargetHandler{conn: conn}, nil
+	return &TargetHandler{
+		conn:   conn,
+		logf:   logf,
+		debugf: debugf,
+		errorf: errorf,
+	}, nil
 }
 
 // Run starts the processing of commands and events of the client target
@@ -154,7 +161,7 @@ func (h *TargetHandler) run(ctxt context.Context) {
 					h.qres <- msg
 
 				default:
-					log.Printf("ignoring malformed incoming message (missing id or method): %#v", msg)
+					h.errorf("ignoring malformed incoming message (missing id or method): %#v", msg)
 				}
 
 			case <-h.detached:
@@ -175,19 +182,19 @@ func (h *TargetHandler) run(ctxt context.Context) {
 		case ev := <-h.qevents:
 			err = h.processEvent(ctxt, ev)
 			if err != nil {
-				log.Printf("could not process event, got: %v", err)
+				h.errorf("could not process event, got: %v", err)
 			}
 
 		case res := <-h.qres:
 			err = h.processResult(res)
 			if err != nil {
-				log.Printf("could not process command result, got: %v", err)
+				h.errorf("could not process command result, got: %v", err)
 			}
 
 		case cmd := <-h.qcmd:
 			err = h.processCommand(cmd)
 			if err != nil {
-				log.Printf("could not process command, got: %v", err)
+				h.errorf("could not process command, got: %v", err)
 			}
 
 		case <-ctxt.Done():
@@ -204,7 +211,7 @@ func (h *TargetHandler) read() (*cdp.Message, error) {
 		return nil, err
 	}
 
-	log.Printf("-> %s", string(buf))
+	h.debugf("-> %s", string(buf))
 
 	// unmarshal
 	msg := new(cdp.Message)
@@ -264,7 +271,7 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdp.Message) err
 func (h *TargetHandler) documentUpdated(ctxt context.Context) {
 	f, err := h.WaitFrame(ctxt, EmptyFrameID)
 	if err != nil {
-		log.Printf("could not get current frame, got: %v", err)
+		h.errorf("could not get current frame, got: %v", err)
 		return
 	}
 
@@ -279,7 +286,7 @@ func (h *TargetHandler) documentUpdated(ctxt context.Context) {
 	f.Nodes = make(map[cdp.NodeID]*cdp.Node)
 	f.Root, err = dom.GetDocument().WithPierce(true).Do(ctxt, h)
 	if err != nil {
-		log.Printf("error could not retrieve document root for %s, got: %v", f.ID, err)
+		h.errorf("could not retrieve document root for %s, got: %v", f.ID, err)
 		return
 	}
 	f.Root.Invalidated = make(chan struct{})
@@ -293,7 +300,9 @@ func (h *TargetHandler) processResult(msg *cdp.Message) error {
 
 	res, ok := h.res[msg.ID]
 	if !ok {
-		panic(fmt.Sprintf("expected result to be present for message id %d", msg.ID))
+		err := fmt.Errorf("expected result to be present for message id %d", msg.ID)
+		h.errorf(err.Error())
+		return err
 	}
 
 	if msg.Error != nil {
@@ -316,7 +325,7 @@ func (h *TargetHandler) processCommand(cmd *cdp.Message) error {
 		return err
 	}
 
-	log.Printf("<- %s", string(buf))
+	h.debugf("<- %s", string(buf))
 
 	// write
 	return h.conn.Write(buf)
@@ -539,12 +548,13 @@ func (h *TargetHandler) pageEvent(ctxt context.Context, ev interface{}) {
 		return
 
 	default:
-		panic(fmt.Sprintf("unhandled page event %s", reflect.TypeOf(ev)))
+		h.errorf("unhandled page event %s", reflect.TypeOf(ev))
+		return
 	}
 
 	f, err := h.WaitFrame(ctxt, id)
 	if err != nil {
-		log.Printf("error could not get frame %s, got: %v", id, err)
+		h.errorf("could not get frame %s, got: %v", id, err)
 		return
 	}
 
@@ -564,7 +574,7 @@ func (h *TargetHandler) domEvent(ctxt context.Context, ev interface{}) {
 	// wait current frame
 	f, err := h.WaitFrame(ctxt, EmptyFrameID)
 	if err != nil {
-		log.Printf("error processing DOM event %s: error waiting for frame, got: %v", reflect.TypeOf(ev), err)
+		h.errorf("error processing DOM event %s: error waiting for frame, got: %v", reflect.TypeOf(ev), err)
 		return
 	}
 
@@ -624,7 +634,8 @@ func (h *TargetHandler) domEvent(ctxt context.Context, ev interface{}) {
 		return
 
 	default:
-		panic(fmt.Sprintf("unhandled node event %s", reflect.TypeOf(ev)))
+		h.errorf("unhandled node event %s", reflect.TypeOf(ev))
+		return
 	}
 
 	s := strings.TrimPrefix(strings.TrimSuffix(runtime.FuncForPC(reflect.ValueOf(op).Pointer()).Name(), ".func1"), "github.com/knq/chromedp.")
@@ -632,7 +643,7 @@ func (h *TargetHandler) domEvent(ctxt context.Context, ev interface{}) {
 	// retrieve node
 	n, err := h.WaitNode(ctxt, f, id)
 	if err != nil {
-		log.Printf("error could not perform (%s) operation on node %d (wait node error), got: %v", s, id, err)
+		h.errorf("error could not perform (%s) operation on node %d (wait node error), got: %v", s, id, err)
 		return
 	}
 

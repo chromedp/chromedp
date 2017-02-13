@@ -3,6 +3,7 @@ package chromedp
 import (
 	"context"
 	"fmt"
+	"log"
 	"sync"
 
 	"github.com/knq/chromedp/runner"
@@ -19,6 +20,9 @@ type Pool struct {
 	// res are the running chrome resources.
 	res map[int]*Res
 
+	// logging funcs
+	logf, debugf, errorf LogFunc
+
 	rw sync.RWMutex
 }
 
@@ -27,9 +31,12 @@ func NewPool(opts ...PoolOption) (*Pool, error) {
 	var err error
 
 	p := &Pool{
-		start: DefaultPoolStartPort,
-		end:   DefaultPoolEndPort,
-		res:   make(map[int]*Res),
+		start:  DefaultPoolStartPort,
+		end:    DefaultPoolEndPort,
+		res:    make(map[int]*Res),
+		logf:   log.Printf,
+		debugf: func(string, ...interface{}) {},
+		errorf: func(s string, v ...interface{}) { log.Printf("error: "+s, v...) },
 	}
 
 	// apply opts
@@ -85,7 +92,10 @@ func (p *Pool) Allocate(ctxt context.Context, opts ...runner.CommandLineOption) 
 	}
 
 	// setup cdp
-	r.c, err = New(ctxt, WithRunner(r.r))
+	r.c, err = New(
+		ctxt, WithRunner(r.r),
+		WithLogf(p.logf), WithDebugf(p.debugf), WithErrorf(p.errorf),
+	)
 	if err != nil {
 		cancel()
 		return nil, err
@@ -170,6 +180,16 @@ func PortRange(start, end int) PoolOption {
 	return func(p *Pool) error {
 		p.start = start
 		p.end = end
+		return nil
+	}
+}
+
+// PoolLog is a pool option to set the logging to use for the pool.
+func PoolLog(logf, debugf, errorf LogFunc) PoolOption {
+	return func(p *Pool) error {
+		p.logf = logf
+		p.debugf = debugf
+		p.errorf = errorf
 		return nil
 	}
 }
