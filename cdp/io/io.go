@@ -12,7 +12,6 @@ import (
 	"context"
 
 	cdp "github.com/knq/chromedp/cdp"
-	"github.com/mailru/easyjson"
 )
 
 // ReadParams read a chunk of the stream.
@@ -59,46 +58,14 @@ type ReadReturns struct {
 //   data - Data that were read.
 //   eof - Set if the end-of-file condition occured while reading.
 func (p *ReadParams) Do(ctxt context.Context, h cdp.Handler) (data string, eof bool, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res ReadReturns
+	err = h.Execute(ctxt, cdp.CommandIORead, p, &res)
 	if err != nil {
 		return "", false, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandIORead, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return "", false, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r ReadReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return "", false, cdp.ErrInvalidResult
-			}
-
-			return r.Data, r.EOF, nil
-
-		case error:
-			return "", false, v
-		}
-
-	case <-ctxt.Done():
-		return "", false, ctxt.Err()
-	}
-
-	return "", false, cdp.ErrUnknownResult
+	return res.Data, res.EOF, nil
 }
 
 // CloseParams close the stream, discard any temporary backing storage.
@@ -119,37 +86,5 @@ func Close(handle StreamHandle) *CloseParams {
 // Do executes IO.close against the provided context and
 // target handler.
 func (p *CloseParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandIOClose, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandIOClose, p, nil)
 }

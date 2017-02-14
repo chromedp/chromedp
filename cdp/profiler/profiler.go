@@ -10,7 +10,6 @@ import (
 	"context"
 
 	cdp "github.com/knq/chromedp/cdp"
-	"github.com/mailru/easyjson"
 )
 
 // EnableParams [no description].
@@ -24,33 +23,7 @@ func Enable() *EnableParams {
 // Do executes Profiler.enable against the provided context and
 // target handler.
 func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandProfilerEnable, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandProfilerEnable, nil, nil)
 }
 
 // DisableParams [no description].
@@ -64,33 +37,7 @@ func Disable() *DisableParams {
 // Do executes Profiler.disable against the provided context and
 // target handler.
 func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandProfilerDisable, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandProfilerDisable, nil, nil)
 }
 
 // SetSamplingIntervalParams changes CPU profiler sampling interval. Must be
@@ -113,39 +60,7 @@ func SetSamplingInterval(interval int64) *SetSamplingIntervalParams {
 // Do executes Profiler.setSamplingInterval against the provided context and
 // target handler.
 func (p *SetSamplingIntervalParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandProfilerSetSamplingInterval, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandProfilerSetSamplingInterval, p, nil)
 }
 
 // StartParams [no description].
@@ -159,33 +74,7 @@ func Start() *StartParams {
 // Do executes Profiler.start against the provided context and
 // target handler.
 func (p *StartParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandProfilerStart, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandProfilerStart, nil, nil)
 }
 
 // StopParams [no description].
@@ -207,38 +96,12 @@ type StopReturns struct {
 // returns:
 //   profile - Recorded profile.
 func (p *StopParams) Do(ctxt context.Context, h cdp.Handler) (profile *Profile, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
 	// execute
-	ch := h.Execute(ctxt, cdp.CommandProfilerStop, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r StopReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, cdp.ErrInvalidResult
-			}
-
-			return r.Profile, nil
-
-		case error:
-			return nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, ctxt.Err()
+	var res StopReturns
+	err = h.Execute(ctxt, cdp.CommandProfilerStop, nil, &res)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, cdp.ErrUnknownResult
+	return res.Profile, nil
 }

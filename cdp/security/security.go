@@ -12,7 +12,6 @@ import (
 	"context"
 
 	cdp "github.com/knq/chromedp/cdp"
-	"github.com/mailru/easyjson"
 )
 
 // EnableParams enables tracking security state changes.
@@ -26,33 +25,7 @@ func Enable() *EnableParams {
 // Do executes Security.enable against the provided context and
 // target handler.
 func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandSecurityEnable, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandSecurityEnable, nil, nil)
 }
 
 // DisableParams disables tracking security state changes.
@@ -66,33 +39,7 @@ func Disable() *DisableParams {
 // Do executes Security.disable against the provided context and
 // target handler.
 func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandSecurityDisable, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandSecurityDisable, nil, nil)
 }
 
 // ShowCertificateViewerParams displays native dialog with the certificate
@@ -107,31 +54,5 @@ func ShowCertificateViewer() *ShowCertificateViewerParams {
 // Do executes Security.showCertificateViewer against the provided context and
 // target handler.
 func (p *ShowCertificateViewerParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandSecurityShowCertificateViewer, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandSecurityShowCertificateViewer, nil, nil)
 }

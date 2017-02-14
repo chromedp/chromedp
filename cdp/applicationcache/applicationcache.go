@@ -10,7 +10,6 @@ import (
 	"context"
 
 	cdp "github.com/knq/chromedp/cdp"
-	"github.com/mailru/easyjson"
 )
 
 // GetFramesWithManifestsParams returns array of frame identifiers with
@@ -36,40 +35,14 @@ type GetFramesWithManifestsReturns struct {
 // returns:
 //   frameIds - Array of frame identifiers with manifest urls for each frame containing a document associated with some application cache.
 func (p *GetFramesWithManifestsParams) Do(ctxt context.Context, h cdp.Handler) (frameIds []*FrameWithManifest, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
 	// execute
-	ch := h.Execute(ctxt, cdp.CommandApplicationCacheGetFramesWithManifests, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r GetFramesWithManifestsReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, cdp.ErrInvalidResult
-			}
-
-			return r.FrameIds, nil
-
-		case error:
-			return nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, ctxt.Err()
+	var res GetFramesWithManifestsReturns
+	err = h.Execute(ctxt, cdp.CommandApplicationCacheGetFramesWithManifests, nil, &res)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, cdp.ErrUnknownResult
+	return res.FrameIds, nil
 }
 
 // EnableParams enables application cache domain notifications.
@@ -83,33 +56,7 @@ func Enable() *EnableParams {
 // Do executes ApplicationCache.enable against the provided context and
 // target handler.
 func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandApplicationCacheEnable, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandApplicationCacheEnable, nil, nil)
 }
 
 // GetManifestForFrameParams returns manifest URL for document in the given
@@ -139,46 +86,14 @@ type GetManifestForFrameReturns struct {
 // returns:
 //   manifestURL - Manifest URL for document in the given frame.
 func (p *GetManifestForFrameParams) Do(ctxt context.Context, h cdp.Handler) (manifestURL string, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res GetManifestForFrameReturns
+	err = h.Execute(ctxt, cdp.CommandApplicationCacheGetManifestForFrame, p, &res)
 	if err != nil {
 		return "", err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandApplicationCacheGetManifestForFrame, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return "", cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r GetManifestForFrameReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return "", cdp.ErrInvalidResult
-			}
-
-			return r.ManifestURL, nil
-
-		case error:
-			return "", v
-		}
-
-	case <-ctxt.Done():
-		return "", ctxt.Err()
-	}
-
-	return "", cdp.ErrUnknownResult
+	return res.ManifestURL, nil
 }
 
 // GetApplicationCacheForFrameParams returns relevant application cache data
@@ -209,44 +124,12 @@ type GetApplicationCacheForFrameReturns struct {
 // returns:
 //   applicationCache - Relevant application cache data for the document in given frame.
 func (p *GetApplicationCacheForFrameParams) Do(ctxt context.Context, h cdp.Handler) (applicationCache *ApplicationCache, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res GetApplicationCacheForFrameReturns
+	err = h.Execute(ctxt, cdp.CommandApplicationCacheGetApplicationCacheForFrame, p, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandApplicationCacheGetApplicationCacheForFrame, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r GetApplicationCacheForFrameReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, cdp.ErrInvalidResult
-			}
-
-			return r.ApplicationCache, nil
-
-		case error:
-			return nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, ctxt.Err()
-	}
-
-	return nil, cdp.ErrUnknownResult
+	return res.ApplicationCache, nil
 }

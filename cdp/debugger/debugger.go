@@ -15,7 +15,6 @@ import (
 
 	cdp "github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/runtime"
-	"github.com/mailru/easyjson"
 )
 
 // EnableParams enables debugger for the given page. Clients should not
@@ -32,33 +31,7 @@ func Enable() *EnableParams {
 // Do executes Debugger.enable against the provided context and
 // target handler.
 func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDebuggerEnable, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDebuggerEnable, nil, nil)
 }
 
 // DisableParams disables debugger for given page.
@@ -72,33 +45,7 @@ func Disable() *DisableParams {
 // Do executes Debugger.disable against the provided context and
 // target handler.
 func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDebuggerDisable, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDebuggerDisable, nil, nil)
 }
 
 // SetBreakpointsActiveParams activates / deactivates all breakpoints on the
@@ -120,39 +67,7 @@ func SetBreakpointsActive(active bool) *SetBreakpointsActiveParams {
 // Do executes Debugger.setBreakpointsActive against the provided context and
 // target handler.
 func (p *SetBreakpointsActiveParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDebuggerSetBreakpointsActive, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDebuggerSetBreakpointsActive, p, nil)
 }
 
 // SetSkipAllPausesParams makes page not interrupt on any pauses (breakpoint,
@@ -175,39 +90,7 @@ func SetSkipAllPauses(skip bool) *SetSkipAllPausesParams {
 // Do executes Debugger.setSkipAllPauses against the provided context and
 // target handler.
 func (p *SetSkipAllPausesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDebuggerSetSkipAllPauses, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDebuggerSetSkipAllPauses, p, nil)
 }
 
 // SetBreakpointByURLParams sets JavaScript breakpoint at given location
@@ -278,46 +161,14 @@ type SetBreakpointByURLReturns struct {
 //   breakpointID - Id of the created breakpoint for further reference.
 //   locations - List of the locations this breakpoint resolved into upon addition.
 func (p *SetBreakpointByURLParams) Do(ctxt context.Context, h cdp.Handler) (breakpointID BreakpointID, locations []*Location, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res SetBreakpointByURLReturns
+	err = h.Execute(ctxt, cdp.CommandDebuggerSetBreakpointByURL, p, &res)
 	if err != nil {
 		return "", nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDebuggerSetBreakpointByURL, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return "", nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r SetBreakpointByURLReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return "", nil, cdp.ErrInvalidResult
-			}
-
-			return r.BreakpointID, r.Locations, nil
-
-		case error:
-			return "", nil, v
-		}
-
-	case <-ctxt.Done():
-		return "", nil, ctxt.Err()
-	}
-
-	return "", nil, cdp.ErrUnknownResult
+	return res.BreakpointID, res.Locations, nil
 }
 
 // SetBreakpointParams sets JavaScript breakpoint at a given location.
@@ -357,46 +208,14 @@ type SetBreakpointReturns struct {
 //   breakpointID - Id of the created breakpoint for further reference.
 //   actualLocation - Location this breakpoint resolved into.
 func (p *SetBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (breakpointID BreakpointID, actualLocation *Location, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res SetBreakpointReturns
+	err = h.Execute(ctxt, cdp.CommandDebuggerSetBreakpoint, p, &res)
 	if err != nil {
 		return "", nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDebuggerSetBreakpoint, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return "", nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r SetBreakpointReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return "", nil, cdp.ErrInvalidResult
-			}
-
-			return r.BreakpointID, r.ActualLocation, nil
-
-		case error:
-			return "", nil, v
-		}
-
-	case <-ctxt.Done():
-		return "", nil, ctxt.Err()
-	}
-
-	return "", nil, cdp.ErrUnknownResult
+	return res.BreakpointID, res.ActualLocation, nil
 }
 
 // RemoveBreakpointParams removes JavaScript breakpoint.
@@ -417,39 +236,7 @@ func RemoveBreakpoint(breakpointID BreakpointID) *RemoveBreakpointParams {
 // Do executes Debugger.removeBreakpoint against the provided context and
 // target handler.
 func (p *RemoveBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDebuggerRemoveBreakpoint, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDebuggerRemoveBreakpoint, p, nil)
 }
 
 // GetPossibleBreakpointsParams returns possible locations for breakpoint.
@@ -488,46 +275,14 @@ type GetPossibleBreakpointsReturns struct {
 // returns:
 //   locations - List of the possible breakpoint locations.
 func (p *GetPossibleBreakpointsParams) Do(ctxt context.Context, h cdp.Handler) (locations []*Location, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res GetPossibleBreakpointsReturns
+	err = h.Execute(ctxt, cdp.CommandDebuggerGetPossibleBreakpoints, p, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDebuggerGetPossibleBreakpoints, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r GetPossibleBreakpointsReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, cdp.ErrInvalidResult
-			}
-
-			return r.Locations, nil
-
-		case error:
-			return nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, ctxt.Err()
-	}
-
-	return nil, cdp.ErrUnknownResult
+	return res.Locations, nil
 }
 
 // ContinueToLocationParams continues execution until specific location is
@@ -549,39 +304,7 @@ func ContinueToLocation(location *Location) *ContinueToLocationParams {
 // Do executes Debugger.continueToLocation against the provided context and
 // target handler.
 func (p *ContinueToLocationParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDebuggerContinueToLocation, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDebuggerContinueToLocation, p, nil)
 }
 
 // StepOverParams steps over the statement.
@@ -595,33 +318,7 @@ func StepOver() *StepOverParams {
 // Do executes Debugger.stepOver against the provided context and
 // target handler.
 func (p *StepOverParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDebuggerStepOver, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDebuggerStepOver, nil, nil)
 }
 
 // StepIntoParams steps into the function call.
@@ -635,33 +332,7 @@ func StepInto() *StepIntoParams {
 // Do executes Debugger.stepInto against the provided context and
 // target handler.
 func (p *StepIntoParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDebuggerStepInto, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDebuggerStepInto, nil, nil)
 }
 
 // StepOutParams steps out of the function call.
@@ -675,33 +346,7 @@ func StepOut() *StepOutParams {
 // Do executes Debugger.stepOut against the provided context and
 // target handler.
 func (p *StepOutParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDebuggerStepOut, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDebuggerStepOut, nil, nil)
 }
 
 // PauseParams stops on the next JavaScript statement.
@@ -715,33 +360,7 @@ func Pause() *PauseParams {
 // Do executes Debugger.pause against the provided context and
 // target handler.
 func (p *PauseParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDebuggerPause, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDebuggerPause, nil, nil)
 }
 
 // ResumeParams resumes JavaScript execution.
@@ -755,33 +374,7 @@ func Resume() *ResumeParams {
 // Do executes Debugger.resume against the provided context and
 // target handler.
 func (p *ResumeParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDebuggerResume, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDebuggerResume, nil, nil)
 }
 
 // SearchInContentParams searches for given string in script content.
@@ -827,46 +420,14 @@ type SearchInContentReturns struct {
 // returns:
 //   result - List of search matches.
 func (p *SearchInContentParams) Do(ctxt context.Context, h cdp.Handler) (result []*SearchMatch, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res SearchInContentReturns
+	err = h.Execute(ctxt, cdp.CommandDebuggerSearchInContent, p, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDebuggerSearchInContent, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r SearchInContentReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, cdp.ErrInvalidResult
-			}
-
-			return r.Result, nil
-
-		case error:
-			return nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, ctxt.Err()
-	}
-
-	return nil, cdp.ErrUnknownResult
+	return res.Result, nil
 }
 
 // SetScriptSourceParams edits JavaScript source live.
@@ -912,46 +473,14 @@ type SetScriptSourceReturns struct {
 //   asyncStackTrace - Async stack trace, if any.
 //   exceptionDetails - Exception details if any.
 func (p *SetScriptSourceParams) Do(ctxt context.Context, h cdp.Handler) (callFrames []*CallFrame, stackChanged bool, asyncStackTrace *runtime.StackTrace, exceptionDetails *runtime.ExceptionDetails, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res SetScriptSourceReturns
+	err = h.Execute(ctxt, cdp.CommandDebuggerSetScriptSource, p, &res)
 	if err != nil {
 		return nil, false, nil, nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDebuggerSetScriptSource, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, false, nil, nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r SetScriptSourceReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, false, nil, nil, cdp.ErrInvalidResult
-			}
-
-			return r.CallFrames, r.StackChanged, r.AsyncStackTrace, r.ExceptionDetails, nil
-
-		case error:
-			return nil, false, nil, nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, false, nil, nil, ctxt.Err()
-	}
-
-	return nil, false, nil, nil, cdp.ErrUnknownResult
+	return res.CallFrames, res.StackChanged, res.AsyncStackTrace, res.ExceptionDetails, nil
 }
 
 // RestartFrameParams restarts particular call frame from the beginning.
@@ -982,46 +511,14 @@ type RestartFrameReturns struct {
 //   callFrames - New stack trace.
 //   asyncStackTrace - Async stack trace, if any.
 func (p *RestartFrameParams) Do(ctxt context.Context, h cdp.Handler) (callFrames []*CallFrame, asyncStackTrace *runtime.StackTrace, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res RestartFrameReturns
+	err = h.Execute(ctxt, cdp.CommandDebuggerRestartFrame, p, &res)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDebuggerRestartFrame, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r RestartFrameReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, nil, cdp.ErrInvalidResult
-			}
-
-			return r.CallFrames, r.AsyncStackTrace, nil
-
-		case error:
-			return nil, nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, nil, ctxt.Err()
-	}
-
-	return nil, nil, cdp.ErrUnknownResult
+	return res.CallFrames, res.AsyncStackTrace, nil
 }
 
 // GetScriptSourceParams returns source for the script with given id.
@@ -1050,46 +547,14 @@ type GetScriptSourceReturns struct {
 // returns:
 //   scriptSource - Script source.
 func (p *GetScriptSourceParams) Do(ctxt context.Context, h cdp.Handler) (scriptSource string, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res GetScriptSourceReturns
+	err = h.Execute(ctxt, cdp.CommandDebuggerGetScriptSource, p, &res)
 	if err != nil {
 		return "", err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDebuggerGetScriptSource, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return "", cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r GetScriptSourceReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return "", cdp.ErrInvalidResult
-			}
-
-			return r.ScriptSource, nil
-
-		case error:
-			return "", v
-		}
-
-	case <-ctxt.Done():
-		return "", ctxt.Err()
-	}
-
-	return "", cdp.ErrUnknownResult
+	return res.ScriptSource, nil
 }
 
 // SetPauseOnExceptionsParams defines pause on exceptions state. Can be set
@@ -1114,39 +579,7 @@ func SetPauseOnExceptions(state ExceptionsState) *SetPauseOnExceptionsParams {
 // Do executes Debugger.setPauseOnExceptions against the provided context and
 // target handler.
 func (p *SetPauseOnExceptionsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDebuggerSetPauseOnExceptions, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDebuggerSetPauseOnExceptions, p, nil)
 }
 
 // EvaluateOnCallFrameParams evaluates expression on a given call frame.
@@ -1227,46 +660,14 @@ type EvaluateOnCallFrameReturns struct {
 //   result - Object wrapper for the evaluation result.
 //   exceptionDetails - Exception details.
 func (p *EvaluateOnCallFrameParams) Do(ctxt context.Context, h cdp.Handler) (result *runtime.RemoteObject, exceptionDetails *runtime.ExceptionDetails, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res EvaluateOnCallFrameReturns
+	err = h.Execute(ctxt, cdp.CommandDebuggerEvaluateOnCallFrame, p, &res)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDebuggerEvaluateOnCallFrame, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r EvaluateOnCallFrameReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, nil, cdp.ErrInvalidResult
-			}
-
-			return r.Result, r.ExceptionDetails, nil
-
-		case error:
-			return nil, nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, nil, ctxt.Err()
-	}
-
-	return nil, nil, cdp.ErrUnknownResult
+	return res.Result, res.ExceptionDetails, nil
 }
 
 // SetVariableValueParams changes value of variable in a callframe.
@@ -1298,39 +699,7 @@ func SetVariableValue(scopeNumber int64, variableName string, newValue *runtime.
 // Do executes Debugger.setVariableValue against the provided context and
 // target handler.
 func (p *SetVariableValueParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDebuggerSetVariableValue, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDebuggerSetVariableValue, p, nil)
 }
 
 // SetAsyncCallStackDepthParams enables or disables async call stacks
@@ -1352,39 +721,7 @@ func SetAsyncCallStackDepth(maxDepth int64) *SetAsyncCallStackDepthParams {
 // Do executes Debugger.setAsyncCallStackDepth against the provided context and
 // target handler.
 func (p *SetAsyncCallStackDepthParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDebuggerSetAsyncCallStackDepth, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDebuggerSetAsyncCallStackDepth, p, nil)
 }
 
 // SetBlackboxPatternsParams replace previous blackbox patterns with passed
@@ -1411,39 +748,7 @@ func SetBlackboxPatterns(patterns []string) *SetBlackboxPatternsParams {
 // Do executes Debugger.setBlackboxPatterns against the provided context and
 // target handler.
 func (p *SetBlackboxPatternsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDebuggerSetBlackboxPatterns, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDebuggerSetBlackboxPatterns, p, nil)
 }
 
 // SetBlackboxedRangesParams makes backend skip steps in the script in
@@ -1475,37 +780,5 @@ func SetBlackboxedRanges(scriptID runtime.ScriptID, positions []*ScriptPosition)
 // Do executes Debugger.setBlackboxedRanges against the provided context and
 // target handler.
 func (p *SetBlackboxedRangesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDebuggerSetBlackboxedRanges, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDebuggerSetBlackboxedRanges, p, nil)
 }

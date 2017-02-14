@@ -35,33 +35,7 @@ func Enable() *EnableParams {
 // Do executes DOM.enable against the provided context and
 // target handler.
 func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMEnable, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMEnable, nil, nil)
 }
 
 // DisableParams disables DOM agent for the given page.
@@ -75,33 +49,7 @@ func Disable() *DisableParams {
 // Do executes DOM.disable against the provided context and
 // target handler.
 func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMDisable, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMDisable, nil, nil)
 }
 
 // GetDocumentParams returns the root DOM node (and optionally the subtree)
@@ -145,46 +93,14 @@ type GetDocumentReturns struct {
 // returns:
 //   root - Resulting node.
 func (p *GetDocumentParams) Do(ctxt context.Context, h cdp.Handler) (root *cdp.Node, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res GetDocumentReturns
+	err = h.Execute(ctxt, cdp.CommandDOMGetDocument, p, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMGetDocument, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r GetDocumentReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, cdp.ErrInvalidResult
-			}
-
-			return r.Root, nil
-
-		case error:
-			return nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, ctxt.Err()
-	}
-
-	return nil, cdp.ErrUnknownResult
+	return res.Root, nil
 }
 
 // GetFlattenedDocumentParams returns the root DOM node (and optionally the
@@ -228,46 +144,14 @@ type GetFlattenedDocumentReturns struct {
 // returns:
 //   nodes - Resulting node.
 func (p *GetFlattenedDocumentParams) Do(ctxt context.Context, h cdp.Handler) (nodes []*cdp.Node, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res GetFlattenedDocumentReturns
+	err = h.Execute(ctxt, cdp.CommandDOMGetFlattenedDocument, p, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMGetFlattenedDocument, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r GetFlattenedDocumentReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, cdp.ErrInvalidResult
-			}
-
-			return r.Nodes, nil
-
-		case error:
-			return nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, ctxt.Err()
-	}
-
-	return nil, cdp.ErrUnknownResult
+	return res.Nodes, nil
 }
 
 // CollectClassNamesFromSubtreeParams collects class names for the node with
@@ -298,46 +182,14 @@ type CollectClassNamesFromSubtreeReturns struct {
 // returns:
 //   classNames - Class name list.
 func (p *CollectClassNamesFromSubtreeParams) Do(ctxt context.Context, h cdp.Handler) (classNames []string, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res CollectClassNamesFromSubtreeReturns
+	err = h.Execute(ctxt, cdp.CommandDOMCollectClassNamesFromSubtree, p, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMCollectClassNamesFromSubtree, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r CollectClassNamesFromSubtreeReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, cdp.ErrInvalidResult
-			}
-
-			return r.ClassNames, nil
-
-		case error:
-			return nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, ctxt.Err()
-	}
-
-	return nil, cdp.ErrUnknownResult
+	return res.ClassNames, nil
 }
 
 // RequestChildNodesParams requests that children of the node with given id
@@ -381,39 +233,7 @@ func (p RequestChildNodesParams) WithPierce(pierce bool) *RequestChildNodesParam
 // Do executes DOM.requestChildNodes against the provided context and
 // target handler.
 func (p *RequestChildNodesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMRequestChildNodes, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMRequestChildNodes, p, nil)
 }
 
 // QuerySelectorParams executes querySelector on a given node.
@@ -445,46 +265,14 @@ type QuerySelectorReturns struct {
 // returns:
 //   nodeID - Query selector result.
 func (p *QuerySelectorParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res QuerySelectorReturns
+	err = h.Execute(ctxt, cdp.CommandDOMQuerySelector, p, &res)
 	if err != nil {
 		return 0, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMQuerySelector, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return 0, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r QuerySelectorReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return 0, cdp.ErrInvalidResult
-			}
-
-			return r.NodeID, nil
-
-		case error:
-			return 0, v
-		}
-
-	case <-ctxt.Done():
-		return 0, ctxt.Err()
-	}
-
-	return 0, cdp.ErrUnknownResult
+	return res.NodeID, nil
 }
 
 // QuerySelectorAllParams executes querySelectorAll on a given node.
@@ -516,46 +304,14 @@ type QuerySelectorAllReturns struct {
 // returns:
 //   nodeIds - Query selector result.
 func (p *QuerySelectorAllParams) Do(ctxt context.Context, h cdp.Handler) (nodeIds []cdp.NodeID, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res QuerySelectorAllReturns
+	err = h.Execute(ctxt, cdp.CommandDOMQuerySelectorAll, p, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMQuerySelectorAll, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r QuerySelectorAllReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, cdp.ErrInvalidResult
-			}
-
-			return r.NodeIds, nil
-
-		case error:
-			return nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, ctxt.Err()
-	}
-
-	return nil, cdp.ErrUnknownResult
+	return res.NodeIds, nil
 }
 
 // SetNodeNameParams sets node name for a node with given id.
@@ -587,46 +343,14 @@ type SetNodeNameReturns struct {
 // returns:
 //   nodeID - New node's id.
 func (p *SetNodeNameParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res SetNodeNameReturns
+	err = h.Execute(ctxt, cdp.CommandDOMSetNodeName, p, &res)
 	if err != nil {
 		return 0, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMSetNodeName, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return 0, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r SetNodeNameReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return 0, cdp.ErrInvalidResult
-			}
-
-			return r.NodeID, nil
-
-		case error:
-			return 0, v
-		}
-
-	case <-ctxt.Done():
-		return 0, ctxt.Err()
-	}
-
-	return 0, cdp.ErrUnknownResult
+	return res.NodeID, nil
 }
 
 // SetNodeValueParams sets node value for a node with given id.
@@ -650,39 +374,7 @@ func SetNodeValue(nodeID cdp.NodeID, value string) *SetNodeValueParams {
 // Do executes DOM.setNodeValue against the provided context and
 // target handler.
 func (p *SetNodeValueParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMSetNodeValue, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMSetNodeValue, p, nil)
 }
 
 // RemoveNodeParams removes node with given id.
@@ -703,39 +395,7 @@ func RemoveNode(nodeID cdp.NodeID) *RemoveNodeParams {
 // Do executes DOM.removeNode against the provided context and
 // target handler.
 func (p *RemoveNodeParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMRemoveNode, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMRemoveNode, p, nil)
 }
 
 // SetAttributeValueParams sets attribute for an element with given id.
@@ -762,39 +422,7 @@ func SetAttributeValue(nodeID cdp.NodeID, name string, value string) *SetAttribu
 // Do executes DOM.setAttributeValue against the provided context and
 // target handler.
 func (p *SetAttributeValueParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMSetAttributeValue, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMSetAttributeValue, p, nil)
 }
 
 // SetAttributesAsTextParams sets attributes on element with given id. This
@@ -830,39 +458,7 @@ func (p SetAttributesAsTextParams) WithName(name string) *SetAttributesAsTextPar
 // Do executes DOM.setAttributesAsText against the provided context and
 // target handler.
 func (p *SetAttributesAsTextParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMSetAttributesAsText, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMSetAttributesAsText, p, nil)
 }
 
 // RemoveAttributeParams removes attribute with given name from an element
@@ -888,39 +484,7 @@ func RemoveAttribute(nodeID cdp.NodeID, name string) *RemoveAttributeParams {
 // Do executes DOM.removeAttribute against the provided context and
 // target handler.
 func (p *RemoveAttributeParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMRemoveAttribute, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMRemoveAttribute, p, nil)
 }
 
 // GetOuterHTMLParams returns node's HTML markup.
@@ -949,46 +513,14 @@ type GetOuterHTMLReturns struct {
 // returns:
 //   outerHTML - Outer HTML markup.
 func (p *GetOuterHTMLParams) Do(ctxt context.Context, h cdp.Handler) (outerHTML string, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res GetOuterHTMLReturns
+	err = h.Execute(ctxt, cdp.CommandDOMGetOuterHTML, p, &res)
 	if err != nil {
 		return "", err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMGetOuterHTML, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return "", cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r GetOuterHTMLReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return "", cdp.ErrInvalidResult
-			}
-
-			return r.OuterHTML, nil
-
-		case error:
-			return "", v
-		}
-
-	case <-ctxt.Done():
-		return "", ctxt.Err()
-	}
-
-	return "", cdp.ErrUnknownResult
+	return res.OuterHTML, nil
 }
 
 // SetOuterHTMLParams sets node HTML markup, returns new node id.
@@ -1012,39 +544,7 @@ func SetOuterHTML(nodeID cdp.NodeID, outerHTML string) *SetOuterHTMLParams {
 // Do executes DOM.setOuterHTML against the provided context and
 // target handler.
 func (p *SetOuterHTMLParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMSetOuterHTML, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMSetOuterHTML, p, nil)
 }
 
 // PerformSearchParams searches for a given string in the DOM tree. Use
@@ -1086,46 +586,14 @@ type PerformSearchReturns struct {
 //   searchID - Unique search session identifier.
 //   resultCount - Number of search results.
 func (p *PerformSearchParams) Do(ctxt context.Context, h cdp.Handler) (searchID string, resultCount int64, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res PerformSearchReturns
+	err = h.Execute(ctxt, cdp.CommandDOMPerformSearch, p, &res)
 	if err != nil {
 		return "", 0, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMPerformSearch, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return "", 0, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r PerformSearchReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return "", 0, cdp.ErrInvalidResult
-			}
-
-			return r.SearchID, r.ResultCount, nil
-
-		case error:
-			return "", 0, v
-		}
-
-	case <-ctxt.Done():
-		return "", 0, ctxt.Err()
-	}
-
-	return "", 0, cdp.ErrUnknownResult
+	return res.SearchID, res.ResultCount, nil
 }
 
 // GetSearchResultsParams returns search results from given fromIndex to
@@ -1162,46 +630,14 @@ type GetSearchResultsReturns struct {
 // returns:
 //   nodeIds - Ids of the search result nodes.
 func (p *GetSearchResultsParams) Do(ctxt context.Context, h cdp.Handler) (nodeIds []cdp.NodeID, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res GetSearchResultsReturns
+	err = h.Execute(ctxt, cdp.CommandDOMGetSearchResults, p, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMGetSearchResults, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r GetSearchResultsReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, cdp.ErrInvalidResult
-			}
-
-			return r.NodeIds, nil
-
-		case error:
-			return nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, ctxt.Err()
-	}
-
-	return nil, cdp.ErrUnknownResult
+	return res.NodeIds, nil
 }
 
 // DiscardSearchResultsParams discards search results from the session with
@@ -1224,39 +660,7 @@ func DiscardSearchResults(searchID string) *DiscardSearchResultsParams {
 // Do executes DOM.discardSearchResults against the provided context and
 // target handler.
 func (p *DiscardSearchResultsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMDiscardSearchResults, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMDiscardSearchResults, p, nil)
 }
 
 // RequestNodeParams requests that the node is sent to the caller given the
@@ -1291,46 +695,14 @@ type RequestNodeReturns struct {
 // returns:
 //   nodeID - Node id for given object.
 func (p *RequestNodeParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res RequestNodeReturns
+	err = h.Execute(ctxt, cdp.CommandDOMRequestNode, p, &res)
 	if err != nil {
 		return 0, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMRequestNode, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return 0, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r RequestNodeReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return 0, cdp.ErrInvalidResult
-			}
-
-			return r.NodeID, nil
-
-		case error:
-			return 0, v
-		}
-
-	case <-ctxt.Done():
-		return 0, ctxt.Err()
-	}
-
-	return 0, cdp.ErrUnknownResult
+	return res.NodeID, nil
 }
 
 // SetInspectModeParams enters the 'inspect' mode. In this mode, elements
@@ -1363,39 +735,7 @@ func (p SetInspectModeParams) WithHighlightConfig(highlightConfig *HighlightConf
 // Do executes DOM.setInspectMode against the provided context and
 // target handler.
 func (p *SetInspectModeParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMSetInspectMode, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMSetInspectMode, p, nil)
 }
 
 // HighlightRectParams highlights given rectangle. Coordinates are absolute
@@ -1441,39 +781,7 @@ func (p HighlightRectParams) WithOutlineColor(outlineColor *cdp.RGBA) *Highlight
 // Do executes DOM.highlightRect against the provided context and
 // target handler.
 func (p *HighlightRectParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMHighlightRect, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMHighlightRect, p, nil)
 }
 
 // HighlightQuadParams highlights given quad. Coordinates are absolute with
@@ -1510,39 +818,7 @@ func (p HighlightQuadParams) WithOutlineColor(outlineColor *cdp.RGBA) *Highlight
 // Do executes DOM.highlightQuad against the provided context and
 // target handler.
 func (p *HighlightQuadParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMHighlightQuad, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMHighlightQuad, p, nil)
 }
 
 // HighlightNodeParams highlights DOM node with given id or with the given
@@ -1586,39 +862,7 @@ func (p HighlightNodeParams) WithObjectID(objectID runtime.RemoteObjectID) *High
 // Do executes DOM.highlightNode against the provided context and
 // target handler.
 func (p *HighlightNodeParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMHighlightNode, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMHighlightNode, p, nil)
 }
 
 // HideHighlightParams hides DOM node highlight.
@@ -1632,33 +876,7 @@ func HideHighlight() *HideHighlightParams {
 // Do executes DOM.hideHighlight against the provided context and
 // target handler.
 func (p *HideHighlightParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMHideHighlight, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMHideHighlight, nil, nil)
 }
 
 // HighlightFrameParams highlights owner element of the frame with given id.
@@ -1695,39 +913,7 @@ func (p HighlightFrameParams) WithContentOutlineColor(contentOutlineColor *cdp.R
 // Do executes DOM.highlightFrame against the provided context and
 // target handler.
 func (p *HighlightFrameParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMHighlightFrame, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMHighlightFrame, p, nil)
 }
 
 // PushNodeByPathToFrontendParams requests that the node is sent to the
@@ -1758,46 +944,14 @@ type PushNodeByPathToFrontendReturns struct {
 // returns:
 //   nodeID - Id of the node for given path.
 func (p *PushNodeByPathToFrontendParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res PushNodeByPathToFrontendReturns
+	err = h.Execute(ctxt, cdp.CommandDOMPushNodeByPathToFrontend, p, &res)
 	if err != nil {
 		return 0, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMPushNodeByPathToFrontend, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return 0, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r PushNodeByPathToFrontendReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return 0, cdp.ErrInvalidResult
-			}
-
-			return r.NodeID, nil
-
-		case error:
-			return 0, v
-		}
-
-	case <-ctxt.Done():
-		return 0, ctxt.Err()
-	}
-
-	return 0, cdp.ErrUnknownResult
+	return res.NodeID, nil
 }
 
 // PushNodesByBackendIdsToFrontendParams requests that a batch of nodes is
@@ -1828,46 +982,14 @@ type PushNodesByBackendIdsToFrontendReturns struct {
 // returns:
 //   nodeIds - The array of ids of pushed nodes that correspond to the backend ids specified in backendNodeIds.
 func (p *PushNodesByBackendIdsToFrontendParams) Do(ctxt context.Context, h cdp.Handler) (nodeIds []cdp.NodeID, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res PushNodesByBackendIdsToFrontendReturns
+	err = h.Execute(ctxt, cdp.CommandDOMPushNodesByBackendIdsToFrontend, p, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMPushNodesByBackendIdsToFrontend, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r PushNodesByBackendIdsToFrontendReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, cdp.ErrInvalidResult
-			}
-
-			return r.NodeIds, nil
-
-		case error:
-			return nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, ctxt.Err()
-	}
-
-	return nil, cdp.ErrUnknownResult
+	return res.NodeIds, nil
 }
 
 // SetInspectedNodeParams enables console to refer to the node with given id
@@ -1890,39 +1012,7 @@ func SetInspectedNode(nodeID cdp.NodeID) *SetInspectedNodeParams {
 // Do executes DOM.setInspectedNode against the provided context and
 // target handler.
 func (p *SetInspectedNodeParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMSetInspectedNode, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMSetInspectedNode, p, nil)
 }
 
 // ResolveNodeParams resolves JavaScript node object for given node id.
@@ -1959,46 +1049,14 @@ type ResolveNodeReturns struct {
 // returns:
 //   object - JavaScript object wrapper for given node.
 func (p *ResolveNodeParams) Do(ctxt context.Context, h cdp.Handler) (object *runtime.RemoteObject, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res ResolveNodeReturns
+	err = h.Execute(ctxt, cdp.CommandDOMResolveNode, p, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMResolveNode, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r ResolveNodeReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, cdp.ErrInvalidResult
-			}
-
-			return r.Object, nil
-
-		case error:
-			return nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, ctxt.Err()
-	}
-
-	return nil, cdp.ErrUnknownResult
+	return res.Object, nil
 }
 
 // GetAttributesParams returns attributes for the specified node.
@@ -2027,46 +1085,14 @@ type GetAttributesReturns struct {
 // returns:
 //   attributes - An interleaved array of node attribute names and values.
 func (p *GetAttributesParams) Do(ctxt context.Context, h cdp.Handler) (attributes []string, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res GetAttributesReturns
+	err = h.Execute(ctxt, cdp.CommandDOMGetAttributes, p, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMGetAttributes, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r GetAttributesReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, cdp.ErrInvalidResult
-			}
-
-			return r.Attributes, nil
-
-		case error:
-			return nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, ctxt.Err()
-	}
-
-	return nil, cdp.ErrUnknownResult
+	return res.Attributes, nil
 }
 
 // CopyToParams creates a deep copy of the specified node and places it into
@@ -2108,46 +1134,14 @@ type CopyToReturns struct {
 // returns:
 //   nodeID - Id of the node clone.
 func (p *CopyToParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res CopyToReturns
+	err = h.Execute(ctxt, cdp.CommandDOMCopyTo, p, &res)
 	if err != nil {
 		return 0, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMCopyTo, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return 0, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r CopyToReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return 0, cdp.ErrInvalidResult
-			}
-
-			return r.NodeID, nil
-
-		case error:
-			return 0, v
-		}
-
-	case <-ctxt.Done():
-		return 0, ctxt.Err()
-	}
-
-	return 0, cdp.ErrUnknownResult
+	return res.NodeID, nil
 }
 
 // MoveToParams moves node into the new container, places it before the given
@@ -2189,46 +1183,14 @@ type MoveToReturns struct {
 // returns:
 //   nodeID - New id of the moved node.
 func (p *MoveToParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res MoveToReturns
+	err = h.Execute(ctxt, cdp.CommandDOMMoveTo, p, &res)
 	if err != nil {
 		return 0, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMMoveTo, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return 0, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r MoveToReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return 0, cdp.ErrInvalidResult
-			}
-
-			return r.NodeID, nil
-
-		case error:
-			return 0, v
-		}
-
-	case <-ctxt.Done():
-		return 0, ctxt.Err()
-	}
-
-	return 0, cdp.ErrUnknownResult
+	return res.NodeID, nil
 }
 
 // UndoParams undoes the last performed action.
@@ -2242,33 +1204,7 @@ func Undo() *UndoParams {
 // Do executes DOM.undo against the provided context and
 // target handler.
 func (p *UndoParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMUndo, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMUndo, nil, nil)
 }
 
 // RedoParams re-does the last undone action.
@@ -2282,33 +1218,7 @@ func Redo() *RedoParams {
 // Do executes DOM.redo against the provided context and
 // target handler.
 func (p *RedoParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMRedo, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMRedo, nil, nil)
 }
 
 // MarkUndoableStateParams marks last undoable state.
@@ -2322,33 +1232,7 @@ func MarkUndoableState() *MarkUndoableStateParams {
 // Do executes DOM.markUndoableState against the provided context and
 // target handler.
 func (p *MarkUndoableStateParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMMarkUndoableState, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMMarkUndoableState, nil, nil)
 }
 
 // FocusParams focuses the given element.
@@ -2369,39 +1253,7 @@ func Focus(nodeID cdp.NodeID) *FocusParams {
 // Do executes DOM.focus against the provided context and
 // target handler.
 func (p *FocusParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMFocus, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMFocus, p, nil)
 }
 
 // SetFileInputFilesParams sets files for the given file input element.
@@ -2425,39 +1277,7 @@ func SetFileInputFiles(nodeID cdp.NodeID, files []string) *SetFileInputFilesPara
 // Do executes DOM.setFileInputFiles against the provided context and
 // target handler.
 func (p *SetFileInputFilesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMSetFileInputFiles, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMSetFileInputFiles, p, nil)
 }
 
 // GetBoxModelParams returns boxes for the currently selected nodes.
@@ -2486,46 +1306,14 @@ type GetBoxModelReturns struct {
 // returns:
 //   model - Box model for the node.
 func (p *GetBoxModelParams) Do(ctxt context.Context, h cdp.Handler) (model *BoxModel, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res GetBoxModelReturns
+	err = h.Execute(ctxt, cdp.CommandDOMGetBoxModel, p, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMGetBoxModel, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r GetBoxModelReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, cdp.ErrInvalidResult
-			}
-
-			return r.Model, nil
-
-		case error:
-			return nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, ctxt.Err()
-	}
-
-	return nil, cdp.ErrUnknownResult
+	return res.Model, nil
 }
 
 // GetNodeForLocationParams returns node id at given location.
@@ -2557,46 +1345,14 @@ type GetNodeForLocationReturns struct {
 // returns:
 //   nodeID - Id of the node at given coordinates.
 func (p *GetNodeForLocationParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res GetNodeForLocationReturns
+	err = h.Execute(ctxt, cdp.CommandDOMGetNodeForLocation, p, &res)
 	if err != nil {
 		return 0, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMGetNodeForLocation, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return 0, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r GetNodeForLocationReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return 0, cdp.ErrInvalidResult
-			}
-
-			return r.NodeID, nil
-
-		case error:
-			return 0, v
-		}
-
-	case <-ctxt.Done():
-		return 0, ctxt.Err()
-	}
-
-	return 0, cdp.ErrUnknownResult
+	return res.NodeID, nil
 }
 
 // GetRelayoutBoundaryParams returns the id of the nearest ancestor that is a
@@ -2627,46 +1383,14 @@ type GetRelayoutBoundaryReturns struct {
 // returns:
 //   nodeID - Relayout boundary node id for the given node.
 func (p *GetRelayoutBoundaryParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res GetRelayoutBoundaryReturns
+	err = h.Execute(ctxt, cdp.CommandDOMGetRelayoutBoundary, p, &res)
 	if err != nil {
 		return 0, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMGetRelayoutBoundary, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return 0, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r GetRelayoutBoundaryReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return 0, cdp.ErrInvalidResult
-			}
-
-			return r.NodeID, nil
-
-		case error:
-			return 0, v
-		}
-
-	case <-ctxt.Done():
-		return 0, ctxt.Err()
-	}
-
-	return 0, cdp.ErrUnknownResult
+	return res.NodeID, nil
 }
 
 // GetHighlightObjectForTestParams for testing.
@@ -2695,44 +1419,12 @@ type GetHighlightObjectForTestReturns struct {
 // returns:
 //   highlight - Highlight data for the node.
 func (p *GetHighlightObjectForTestParams) Do(ctxt context.Context, h cdp.Handler) (highlight easyjson.RawMessage, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res GetHighlightObjectForTestReturns
+	err = h.Execute(ctxt, cdp.CommandDOMGetHighlightObjectForTest, p, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMGetHighlightObjectForTest, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r GetHighlightObjectForTestReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, cdp.ErrInvalidResult
-			}
-
-			return r.Highlight, nil
-
-		case error:
-			return nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, ctxt.Err()
-	}
-
-	return nil, cdp.ErrUnknownResult
+	return res.Highlight, nil
 }

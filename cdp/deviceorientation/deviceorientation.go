@@ -10,7 +10,6 @@ import (
 	"context"
 
 	cdp "github.com/knq/chromedp/cdp"
-	"github.com/mailru/easyjson"
 )
 
 // SetDeviceOrientationOverrideParams overrides the Device Orientation.
@@ -37,39 +36,7 @@ func SetDeviceOrientationOverride(alpha float64, beta float64, gamma float64) *S
 // Do executes DeviceOrientation.setDeviceOrientationOverride against the provided context and
 // target handler.
 func (p *SetDeviceOrientationOverrideParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDeviceOrientationSetDeviceOrientationOverride, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDeviceOrientationSetDeviceOrientationOverride, p, nil)
 }
 
 // ClearDeviceOrientationOverrideParams clears the overridden Device
@@ -84,31 +51,5 @@ func ClearDeviceOrientationOverride() *ClearDeviceOrientationOverrideParams {
 // Do executes DeviceOrientation.clearDeviceOrientationOverride against the provided context and
 // target handler.
 func (p *ClearDeviceOrientationOverrideParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDeviceOrientationClearDeviceOrientationOverride, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDeviceOrientationClearDeviceOrientationOverride, nil, nil)
 }

@@ -50,7 +50,7 @@ type TargetHandler struct {
 	lastm sync.Mutex
 
 	// res is the id->result channel map.
-	res   map[int64]chan interface{}
+	res   map[int64]chan easyjson.RawMessage
 	resrw sync.RWMutex
 
 	// logging funcs
@@ -87,7 +87,7 @@ func (h *TargetHandler) Run(ctxt context.Context) error {
 	h.qcmd = make(chan *cdp.Message)
 	h.qres = make(chan *cdp.Message)
 	h.qevents = make(chan *cdp.Message)
-	h.res = make(map[int64]chan interface{})
+	h.res = make(map[int64]chan easyjson.RawMessage)
 	h.detached = make(chan *inspector.EventDetached)
 	h.pageWaitGroup = new(sync.WaitGroup)
 	h.domWaitGroup = new(sync.WaitGroup)
@@ -182,19 +182,19 @@ func (h *TargetHandler) run(ctxt context.Context) {
 		case ev := <-h.qevents:
 			err = h.processEvent(ctxt, ev)
 			if err != nil {
-				h.errorf("could not process event, got: %v", err)
+				h.errorf("could not process event %s, got: %v", ev.Method, err)
 			}
 
 		case res := <-h.qres:
 			err = h.processResult(res)
 			if err != nil {
-				h.errorf("could not process command result, got: %v", err)
+				h.errorf("could not process result for message %d, got: %v", res.ID, err)
 			}
 
 		case cmd := <-h.qcmd:
 			err = h.processCommand(cmd)
 			if err != nil {
-				h.errorf("could not process command, got: %v", err)
+				h.errorf("could not process command message %d, got: %v", cmd.ID, err)
 			}
 
 		case <-ctxt.Done():
@@ -295,31 +295,27 @@ func (h *TargetHandler) documentUpdated(ctxt context.Context) {
 
 // processResult processes an incoming command result.
 func (h *TargetHandler) processResult(msg *cdp.Message) error {
-	h.resrw.Lock()
-	defer h.resrw.Unlock()
+	h.resrw.RLock()
+	defer h.resrw.RUnlock()
 
-	res, ok := h.res[msg.ID]
+	ch, ok := h.res[msg.ID]
 	if !ok {
-		err := fmt.Errorf("expected result to be present for message id %d", msg.ID)
-		h.errorf(err.Error())
-		return err
+		return fmt.Errorf("id %d not present in res map", msg.ID)
 	}
+	defer close(ch)
 
 	if msg.Error != nil {
-		res <- msg.Error
-	} else {
-		res <- msg.Result
+		return msg.Error
 	}
 
-	delete(h.res, msg.ID)
+	ch <- msg.Result
 
 	return nil
 }
 
 // processCommand writes a command to the client connection.
 func (h *TargetHandler) processCommand(cmd *cdp.Message) error {
-	// FIXME: there are two possible error conditions here, check and
-	// do some kind of logging ...
+	// marshal
 	buf, err := easyjson.Marshal(cmd)
 	if err != nil {
 		return err
@@ -327,61 +323,70 @@ func (h *TargetHandler) processCommand(cmd *cdp.Message) error {
 
 	h.debugf("<- %s", string(buf))
 
-	// write
 	return h.conn.Write(buf)
 }
 
+// emptyObj is an empty JSON object message.
+var emptyObj = easyjson.RawMessage([]byte(`{}`))
+
 // Execute executes commandType against the endpoint passed to Run, using the
-// provided context and the raw JSON encoded params.
-//
-// Returns a result channel that will receive AT MOST ONE result. A result is
-// either the command's result value (as a raw JSON encoded value), or any
-// error encountered during operation. After the result (or an error) is passed
-// to the returned channel, the channel will be closed.
-//
-// Note: the returned channel will be closed after the result is read. If the
-// passed context finishes prior to receiving the command result, then
-// ctxt.Err() will be sent to the channel.
-func (h *TargetHandler) Execute(ctxt context.Context, commandType cdp.MethodType, params easyjson.RawMessage) <-chan interface{} {
-	ch := make(chan interface{}, 1)
-
-	go func() {
-		defer close(ch)
-
-		res := make(chan interface{}, 1)
-		defer close(res)
-
-		// get next id
-		h.lastm.Lock()
-		h.last++
-		id := h.last
-		h.lastm.Unlock()
-
-		// save channel
-		h.resrw.Lock()
-		h.res[id] = res
-		h.resrw.Unlock()
-
-		h.qcmd <- &cdp.Message{
-			ID:     id,
-			Method: commandType,
-			Params: params,
+// provided context and params, decoding the result of the command to res.
+func (h *TargetHandler) Execute(ctxt context.Context, commandType cdp.MethodType, params easyjson.Marshaler, res easyjson.Unmarshaler) error {
+	var paramsBuf easyjson.RawMessage
+	if params == nil {
+		paramsBuf = emptyObj
+	} else {
+		var err error
+		paramsBuf, err = easyjson.Marshal(params)
+		if err != nil {
+			return err
 		}
+	}
+
+	id := h.next()
+
+	// save channel
+	ch := make(chan easyjson.RawMessage, 1)
+	h.resrw.Lock()
+	h.res[id] = ch
+	h.resrw.Unlock()
+
+	// queue message
+	h.qcmd <- &cdp.Message{
+		ID:     id,
+		Method: commandType,
+		Params: paramsBuf,
+	}
+
+	errch := make(chan error, 1)
+	go func() {
+		defer close(errch)
 
 		select {
-		case v := <-res:
-			if v != nil {
-				ch <- v
-			} else {
-				ch <- cdp.ErrChannelClosed
+		case msg := <-ch:
+			if res != nil {
+				errch <- easyjson.Unmarshal(msg, res)
 			}
 
 		case <-ctxt.Done():
-			ch <- ctxt.Err()
+			errch <- ctxt.Err()
 		}
+
+		h.resrw.Lock()
+		defer h.resrw.Unlock()
+
+		delete(h.res, id)
 	}()
 
-	return ch
+	return <-errch
+}
+
+// next returns the next message id.
+func (h *TargetHandler) next() int64 {
+	h.lastm.Lock()
+	defer h.lastm.Unlock()
+	h.last++
+	return h.last
 }
 
 // GetRoot returns the current top level frame's root document node.

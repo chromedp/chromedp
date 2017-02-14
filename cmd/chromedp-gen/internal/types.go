@@ -360,8 +360,8 @@ func (t *Type) EmptyRetList(d *Domain, domains []*Domain) string {
 	return strings.TrimSuffix(s, ", ")
 }
 
-// RetValueList returns the return value list for a command.
-func (t *Type) RetValueList(d *Domain, domains []*Domain) string {
+// RetNameList returns a <valname>.<name> list for a command's return list.
+func (t *Type) RetNameList(valname string, d *Domain, domains []*Domain) string {
 	var s string
 	b64ret := t.Base64EncodedRetParam()
 	for _, p := range t.Returns {
@@ -369,7 +369,7 @@ func (t *Type) RetValueList(d *Domain, domains []*Domain) string {
 			continue
 		}
 
-		n := "r." + p.GoName(false)
+		n := valname + "." + p.GoName(false)
 		if b64ret != nil && b64ret.Name == p.Name {
 			n = "dec"
 		}

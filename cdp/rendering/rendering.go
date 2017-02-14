@@ -12,7 +12,6 @@ import (
 	"context"
 
 	cdp "github.com/knq/chromedp/cdp"
-	"github.com/mailru/easyjson"
 )
 
 // SetShowPaintRectsParams requests that backend shows paint rectangles.
@@ -33,39 +32,7 @@ func SetShowPaintRects(result bool) *SetShowPaintRectsParams {
 // Do executes Rendering.setShowPaintRects against the provided context and
 // target handler.
 func (p *SetShowPaintRectsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandRenderingSetShowPaintRects, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandRenderingSetShowPaintRects, p, nil)
 }
 
 // SetShowDebugBordersParams requests that backend shows debug borders on
@@ -87,39 +54,7 @@ func SetShowDebugBorders(show bool) *SetShowDebugBordersParams {
 // Do executes Rendering.setShowDebugBorders against the provided context and
 // target handler.
 func (p *SetShowDebugBordersParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandRenderingSetShowDebugBorders, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandRenderingSetShowDebugBorders, p, nil)
 }
 
 // SetShowFPSCounterParams requests that backend shows the FPS counter.
@@ -140,39 +75,7 @@ func SetShowFPSCounter(show bool) *SetShowFPSCounterParams {
 // Do executes Rendering.setShowFPSCounter against the provided context and
 // target handler.
 func (p *SetShowFPSCounterParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandRenderingSetShowFPSCounter, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandRenderingSetShowFPSCounter, p, nil)
 }
 
 // SetShowScrollBottleneckRectsParams requests that backend shows scroll
@@ -195,39 +98,7 @@ func SetShowScrollBottleneckRects(show bool) *SetShowScrollBottleneckRectsParams
 // Do executes Rendering.setShowScrollBottleneckRects against the provided context and
 // target handler.
 func (p *SetShowScrollBottleneckRectsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandRenderingSetShowScrollBottleneckRects, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandRenderingSetShowScrollBottleneckRects, p, nil)
 }
 
 // SetShowViewportSizeOnResizeParams paints viewport size upon main frame
@@ -249,37 +120,5 @@ func SetShowViewportSizeOnResize(show bool) *SetShowViewportSizeOnResizeParams {
 // Do executes Rendering.setShowViewportSizeOnResize against the provided context and
 // target handler.
 func (p *SetShowViewportSizeOnResizeParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandRenderingSetShowViewportSizeOnResize, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandRenderingSetShowViewportSizeOnResize, p, nil)
 }

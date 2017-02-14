@@ -26,33 +26,7 @@ func Enable() *EnableParams {
 // Do executes Database.enable against the provided context and
 // target handler.
 func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDatabaseEnable, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDatabaseEnable, nil, nil)
 }
 
 // DisableParams disables database tracking, prevents database events from
@@ -68,33 +42,7 @@ func Disable() *DisableParams {
 // Do executes Database.disable against the provided context and
 // target handler.
 func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDatabaseDisable, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDatabaseDisable, nil, nil)
 }
 
 // GetDatabaseTableNamesParams [no description].
@@ -123,46 +71,14 @@ type GetDatabaseTableNamesReturns struct {
 // returns:
 //   tableNames
 func (p *GetDatabaseTableNamesParams) Do(ctxt context.Context, h cdp.Handler) (tableNames []string, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res GetDatabaseTableNamesReturns
+	err = h.Execute(ctxt, cdp.CommandDatabaseGetDatabaseTableNames, p, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDatabaseGetDatabaseTableNames, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r GetDatabaseTableNamesReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, cdp.ErrInvalidResult
-			}
-
-			return r.TableNames, nil
-
-		case error:
-			return nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, ctxt.Err()
-	}
-
-	return nil, cdp.ErrUnknownResult
+	return res.TableNames, nil
 }
 
 // ExecuteSQLParams [no description].
@@ -198,44 +114,12 @@ type ExecuteSQLReturns struct {
 //   values
 //   sqlError
 func (p *ExecuteSQLParams) Do(ctxt context.Context, h cdp.Handler) (columnNames []string, values []easyjson.RawMessage, sqlError *Error, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res ExecuteSQLReturns
+	err = h.Execute(ctxt, cdp.CommandDatabaseExecuteSQL, p, &res)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDatabaseExecuteSQL, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, nil, nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r ExecuteSQLReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, nil, nil, cdp.ErrInvalidResult
-			}
-
-			return r.ColumnNames, r.Values, r.SQLError, nil
-
-		case error:
-			return nil, nil, nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, nil, nil, ctxt.Err()
-	}
-
-	return nil, nil, nil, cdp.ErrUnknownResult
+	return res.ColumnNames, res.Values, res.SQLError, nil
 }

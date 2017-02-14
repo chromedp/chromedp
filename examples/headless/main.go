@@ -20,7 +20,7 @@ func main() {
 	defer cancel()
 
 	// create chrome
-	c, err := cdp.New(ctxt, cdp.WithTargets(client.New().WatchPageTargets(ctxt)))
+	c, err := cdp.New(ctxt, cdp.WithTargets(client.New().WatchPageTargets(ctxt)), cdp.WithLog(log.Printf))
 	if err != nil {
 		log.Fatal(err)
 	}

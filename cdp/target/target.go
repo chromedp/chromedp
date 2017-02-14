@@ -12,7 +12,6 @@ import (
 	"context"
 
 	cdp "github.com/knq/chromedp/cdp"
-	"github.com/mailru/easyjson"
 )
 
 // SetDiscoverTargetsParams controls whether to discover available targets
@@ -35,39 +34,7 @@ func SetDiscoverTargets(discover bool) *SetDiscoverTargetsParams {
 // Do executes Target.setDiscoverTargets against the provided context and
 // target handler.
 func (p *SetDiscoverTargetsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandTargetSetDiscoverTargets, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandTargetSetDiscoverTargets, p, nil)
 }
 
 // SetAutoAttachParams controls whether to automatically attach to new
@@ -97,39 +64,7 @@ func SetAutoAttach(autoAttach bool, waitForDebuggerOnStart bool) *SetAutoAttachP
 // Do executes Target.setAutoAttach against the provided context and
 // target handler.
 func (p *SetAutoAttachParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandTargetSetAutoAttach, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandTargetSetAutoAttach, p, nil)
 }
 
 // SetAttachToFramesParams [no description].
@@ -150,39 +85,7 @@ func SetAttachToFrames(value bool) *SetAttachToFramesParams {
 // Do executes Target.setAttachToFrames against the provided context and
 // target handler.
 func (p *SetAttachToFramesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandTargetSetAttachToFrames, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandTargetSetAttachToFrames, p, nil)
 }
 
 // SetRemoteLocationsParams enables target discovery for the specified
@@ -205,39 +108,7 @@ func SetRemoteLocations(locations []*RemoteLocation) *SetRemoteLocationsParams {
 // Do executes Target.setRemoteLocations against the provided context and
 // target handler.
 func (p *SetRemoteLocationsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandTargetSetRemoteLocations, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandTargetSetRemoteLocations, p, nil)
 }
 
 // SendMessageToTargetParams sends protocol message to the target with given
@@ -262,39 +133,7 @@ func SendMessageToTarget(targetID string, message string) *SendMessageToTargetPa
 // Do executes Target.sendMessageToTarget against the provided context and
 // target handler.
 func (p *SendMessageToTargetParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandTargetSendMessageToTarget, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandTargetSendMessageToTarget, p, nil)
 }
 
 // GetTargetInfoParams returns information about a target.
@@ -323,46 +162,14 @@ type GetTargetInfoReturns struct {
 // returns:
 //   targetInfo
 func (p *GetTargetInfoParams) Do(ctxt context.Context, h cdp.Handler) (targetInfo *Info, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res GetTargetInfoReturns
+	err = h.Execute(ctxt, cdp.CommandTargetGetTargetInfo, p, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandTargetGetTargetInfo, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r GetTargetInfoReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, cdp.ErrInvalidResult
-			}
-
-			return r.TargetInfo, nil
-
-		case error:
-			return nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, ctxt.Err()
-	}
-
-	return nil, cdp.ErrUnknownResult
+	return res.TargetInfo, nil
 }
 
 // ActivateTargetParams activates (focuses) the target.
@@ -383,39 +190,7 @@ func ActivateTarget(targetID ID) *ActivateTargetParams {
 // Do executes Target.activateTarget against the provided context and
 // target handler.
 func (p *ActivateTargetParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandTargetActivateTarget, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandTargetActivateTarget, p, nil)
 }
 
 // CloseTargetParams closes the target. If the target is a page that gets
@@ -446,46 +221,14 @@ type CloseTargetReturns struct {
 // returns:
 //   success
 func (p *CloseTargetParams) Do(ctxt context.Context, h cdp.Handler) (success bool, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res CloseTargetReturns
+	err = h.Execute(ctxt, cdp.CommandTargetCloseTarget, p, &res)
 	if err != nil {
 		return false, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandTargetCloseTarget, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return false, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r CloseTargetReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return false, cdp.ErrInvalidResult
-			}
-
-			return r.Success, nil
-
-		case error:
-			return false, v
-		}
-
-	case <-ctxt.Done():
-		return false, ctxt.Err()
-	}
-
-	return false, cdp.ErrUnknownResult
+	return res.Success, nil
 }
 
 // AttachToTargetParams attaches to the target with given id.
@@ -514,46 +257,14 @@ type AttachToTargetReturns struct {
 // returns:
 //   success - Whether attach succeeded.
 func (p *AttachToTargetParams) Do(ctxt context.Context, h cdp.Handler) (success bool, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res AttachToTargetReturns
+	err = h.Execute(ctxt, cdp.CommandTargetAttachToTarget, p, &res)
 	if err != nil {
 		return false, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandTargetAttachToTarget, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return false, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r AttachToTargetReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return false, cdp.ErrInvalidResult
-			}
-
-			return r.Success, nil
-
-		case error:
-			return false, v
-		}
-
-	case <-ctxt.Done():
-		return false, ctxt.Err()
-	}
-
-	return false, cdp.ErrUnknownResult
+	return res.Success, nil
 }
 
 // DetachFromTargetParams detaches from the target with given id.
@@ -574,39 +285,7 @@ func DetachFromTarget(targetID ID) *DetachFromTargetParams {
 // Do executes Target.detachFromTarget against the provided context and
 // target handler.
 func (p *DetachFromTargetParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandTargetDetachFromTarget, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandTargetDetachFromTarget, p, nil)
 }
 
 // CreateBrowserContextParams creates a new empty BrowserContext. Similar to
@@ -630,40 +309,14 @@ type CreateBrowserContextReturns struct {
 // returns:
 //   browserContextID - The id of the context created.
 func (p *CreateBrowserContextParams) Do(ctxt context.Context, h cdp.Handler) (browserContextID BrowserContextID, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
 	// execute
-	ch := h.Execute(ctxt, cdp.CommandTargetCreateBrowserContext, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return "", cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r CreateBrowserContextReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return "", cdp.ErrInvalidResult
-			}
-
-			return r.BrowserContextID, nil
-
-		case error:
-			return "", v
-		}
-
-	case <-ctxt.Done():
-		return "", ctxt.Err()
+	var res CreateBrowserContextReturns
+	err = h.Execute(ctxt, cdp.CommandTargetCreateBrowserContext, nil, &res)
+	if err != nil {
+		return "", err
 	}
 
-	return "", cdp.ErrUnknownResult
+	return res.BrowserContextID, nil
 }
 
 // DisposeBrowserContextParams deletes a BrowserContext, will fail of any
@@ -694,46 +347,14 @@ type DisposeBrowserContextReturns struct {
 // returns:
 //   success
 func (p *DisposeBrowserContextParams) Do(ctxt context.Context, h cdp.Handler) (success bool, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res DisposeBrowserContextReturns
+	err = h.Execute(ctxt, cdp.CommandTargetDisposeBrowserContext, p, &res)
 	if err != nil {
 		return false, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandTargetDisposeBrowserContext, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return false, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r DisposeBrowserContextReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return false, cdp.ErrInvalidResult
-			}
-
-			return r.Success, nil
-
-		case error:
-			return false, v
-		}
-
-	case <-ctxt.Done():
-		return false, ctxt.Err()
-	}
-
-	return false, cdp.ErrUnknownResult
+	return res.Success, nil
 }
 
 // CreateTargetParams creates a new page.
@@ -784,46 +405,14 @@ type CreateTargetReturns struct {
 // returns:
 //   targetID - The id of the page opened.
 func (p *CreateTargetParams) Do(ctxt context.Context, h cdp.Handler) (targetID ID, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res CreateTargetReturns
+	err = h.Execute(ctxt, cdp.CommandTargetCreateTarget, p, &res)
 	if err != nil {
 		return "", err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandTargetCreateTarget, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return "", cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r CreateTargetReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return "", cdp.ErrInvalidResult
-			}
-
-			return r.TargetID, nil
-
-		case error:
-			return "", v
-		}
-
-	case <-ctxt.Done():
-		return "", ctxt.Err()
-	}
-
-	return "", cdp.ErrUnknownResult
+	return res.TargetID, nil
 }
 
 // GetTargetsParams retrieves a list of available targets.
@@ -845,38 +434,12 @@ type GetTargetsReturns struct {
 // returns:
 //   targetInfos - The list of targets.
 func (p *GetTargetsParams) Do(ctxt context.Context, h cdp.Handler) (targetInfos []*Info, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
 	// execute
-	ch := h.Execute(ctxt, cdp.CommandTargetGetTargets, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r GetTargetsReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, cdp.ErrInvalidResult
-			}
-
-			return r.TargetInfos, nil
-
-		case error:
-			return nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, ctxt.Err()
+	var res GetTargetsReturns
+	err = h.Execute(ctxt, cdp.CommandTargetGetTargets, nil, &res)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, cdp.ErrUnknownResult
+	return res.TargetInfos, nil
 }

@@ -68,6 +68,5 @@ type EventListener struct {
 	ColumnNumber    int64                 `json:"columnNumber,omitempty"`    // Column number in the script (0-based).
 	Handler         *runtime.RemoteObject `json:"handler,omitempty"`         // Event handler function value.
 	OriginalHandler *runtime.RemoteObject `json:"originalHandler,omitempty"` // Event original handler function value.
-	RemoveFunction  *runtime.RemoteObject `json:"removeFunction,omitempty"`  // Event listener remove function.
 	BackendNodeID   cdp.BackendNodeID     `json:"backendNodeId,omitempty"`   // Node the listener is added to (if any).
 }

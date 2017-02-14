@@ -7175,12 +7175,6 @@
               "description": "Event original handler function value."
             },
             {
-              "name": "removeFunction",
-              "$ref": "Runtime.RemoteObject",
-              "optional": true,
-              "description": "Event listener remove function."
-            },
-            {
               "name": "backendNodeId",
               "$ref": "DOM.BackendNodeId",
               "optional": true,

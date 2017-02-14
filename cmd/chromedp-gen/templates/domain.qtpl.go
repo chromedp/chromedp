@@ -424,7 +424,7 @@ func StreamCommandDoFuncTemplate(qw422016 *qt422016.Writer, c *internal.Type, d 
 		retTypeList += ", "
 	}
 
-	retValueList := c.RetValueList(d, domains)
+	retValueList := c.RetNameList("res", d, domains)
 	if retValueList != "" {
 		retValueList += ", "
 	}
@@ -441,220 +441,169 @@ func StreamCommandDoFuncTemplate(qw422016 *qt422016.Writer, c *internal.Type, d 
 		}
 	}
 
-	//line templates/domain.qtpl:105
+	pval := "p"
+	if hasEmptyParams {
+		pval = "nil"
+	}
+
+	//line templates/domain.qtpl:110
 	qw422016.N().S(`
 // Do executes `)
-	//line templates/domain.qtpl:106
+	//line templates/domain.qtpl:111
 	qw422016.N().S(c.ProtoName(d))
-	//line templates/domain.qtpl:106
+	//line templates/domain.qtpl:111
 	qw422016.N().S(` against the provided context and
 // target handler.`)
-	//line templates/domain.qtpl:107
-	if len(c.Returns) > 0 {
-		//line templates/domain.qtpl:107
+	//line templates/domain.qtpl:112
+	if !hasEmptyRet {
+		//line templates/domain.qtpl:112
 		qw422016.N().S(`
 //
 // returns:`)
-		//line templates/domain.qtpl:109
+		//line templates/domain.qtpl:114
 		for _, p := range c.Returns {
-			//line templates/domain.qtpl:109
+			//line templates/domain.qtpl:114
 			if p.Name == internal.Base64EncodedParamName {
-				//line templates/domain.qtpl:109
+				//line templates/domain.qtpl:114
 				continue
-				//line templates/domain.qtpl:109
+				//line templates/domain.qtpl:114
 			}
-			//line templates/domain.qtpl:109
+			//line templates/domain.qtpl:114
 			qw422016.N().S(`
 //   `)
-			//line templates/domain.qtpl:110
+			//line templates/domain.qtpl:115
 			qw422016.N().S(p.String())
-			//line templates/domain.qtpl:110
+			//line templates/domain.qtpl:115
 		}
-		//line templates/domain.qtpl:110
+		//line templates/domain.qtpl:115
 	}
-	//line templates/domain.qtpl:110
+	//line templates/domain.qtpl:115
 	qw422016.N().S(`
 func (p *`)
-	//line templates/domain.qtpl:111
+	//line templates/domain.qtpl:116
 	qw422016.N().S(typ)
-	//line templates/domain.qtpl:111
+	//line templates/domain.qtpl:116
 	qw422016.N().S(`) Do(ctxt context.Context, h cdp.Handler) (`)
-	//line templates/domain.qtpl:111
+	//line templates/domain.qtpl:116
 	qw422016.N().S(retTypeList)
-	//line templates/domain.qtpl:111
-	qw422016.N().S(`err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}`)
-	//line templates/domain.qtpl:114
-	if !hasEmptyParams {
-		//line templates/domain.qtpl:114
+	//line templates/domain.qtpl:116
+	qw422016.N().S(`err error) {`)
+	//line templates/domain.qtpl:116
+	if hasEmptyRet {
+		//line templates/domain.qtpl:116
 		qw422016.N().S(`
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	return h.Execute(ctxt, cdp.`)
+		//line templates/domain.qtpl:117
+		qw422016.N().S(c.CommandMethodType(d))
+		//line templates/domain.qtpl:117
+		qw422016.N().S(`, `)
+		//line templates/domain.qtpl:117
+		qw422016.N().S(pval)
+		//line templates/domain.qtpl:117
+		qw422016.N().S(`, nil)`)
+		//line templates/domain.qtpl:117
+	} else {
+		//line templates/domain.qtpl:117
+		qw422016.N().S(`
+	// execute
+	var res `)
+		//line templates/domain.qtpl:119
+		qw422016.N().S(c.CommandReturnsType())
+		//line templates/domain.qtpl:119
+		qw422016.N().S(`
+	err = h.Execute(ctxt, cdp.`)
+		//line templates/domain.qtpl:120
+		qw422016.N().S(c.CommandMethodType(d))
+		//line templates/domain.qtpl:120
+		qw422016.N().S(`, `)
+		//line templates/domain.qtpl:120
+		qw422016.N().S(pval)
+		//line templates/domain.qtpl:120
+		qw422016.N().S(`, &res)
 	if err != nil {
 		return `)
-		//line templates/domain.qtpl:119
+		//line templates/domain.qtpl:122
 		qw422016.N().S(emptyRet)
-		//line templates/domain.qtpl:119
+		//line templates/domain.qtpl:122
 		qw422016.N().S(`err
-	}`)
-		//line templates/domain.qtpl:120
 	}
-	//line templates/domain.qtpl:120
-	qw422016.N().S(`
-
-	// execute
-	ch := h.Execute(ctxt, cdp.`)
-	//line templates/domain.qtpl:123
-	qw422016.N().S(c.CommandMethodType(d))
-	//line templates/domain.qtpl:123
-	qw422016.N().S(`, `)
-	//line templates/domain.qtpl:123
-	if hasEmptyParams {
-		//line templates/domain.qtpl:123
-		qw422016.N().S(`cdp.Empty`)
-		//line templates/domain.qtpl:123
-	} else {
-		//line templates/domain.qtpl:123
-		qw422016.N().S(`easyjson.RawMessage(buf)`)
-		//line templates/domain.qtpl:123
-	}
-	//line templates/domain.qtpl:123
-	qw422016.N().S(`)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return `)
-	//line templates/domain.qtpl:129
-	qw422016.N().S(emptyRet)
-	//line templates/domain.qtpl:129
-	qw422016.N().S(`cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:`)
-	//line templates/domain.qtpl:133
-	if !hasEmptyRet {
-		//line templates/domain.qtpl:133
-		qw422016.N().S(`
-			// unmarshal
-			var r `)
-		//line templates/domain.qtpl:135
-		qw422016.N().S(c.CommandReturnsType())
-		//line templates/domain.qtpl:135
-		qw422016.N().S(`
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return `)
-		//line templates/domain.qtpl:138
-		qw422016.N().S(emptyRet)
-		//line templates/domain.qtpl:138
-		qw422016.N().S(`cdp.ErrInvalidResult
-			}`)
-		//line templates/domain.qtpl:139
+	`)
+		//line templates/domain.qtpl:124
 		if b64ret != nil {
-			//line templates/domain.qtpl:139
+			//line templates/domain.qtpl:124
 			qw422016.N().S(`
-
-			// decode
-			var dec []byte`)
-			//line templates/domain.qtpl:142
+	// decode
+	var dec []byte`)
+			//line templates/domain.qtpl:126
 			if b64cond {
-				//line templates/domain.qtpl:142
+				//line templates/domain.qtpl:126
 				qw422016.N().S(`
-			if r.Base64encoded {`)
-				//line templates/domain.qtpl:143
+	if res.Base64encoded {`)
+				//line templates/domain.qtpl:127
 			}
-			//line templates/domain.qtpl:143
+			//line templates/domain.qtpl:127
 			qw422016.N().S(`
-				dec, err = base64.StdEncoding.DecodeString(r.`)
-			//line templates/domain.qtpl:144
+		dec, err = base64.StdEncoding.DecodeString(res.`)
+			//line templates/domain.qtpl:128
 			qw422016.N().S(b64ret.GoName(false))
-			//line templates/domain.qtpl:144
+			//line templates/domain.qtpl:128
 			qw422016.N().S(`)
-				if err != nil {
-					return nil, err
-				}`)
-			//line templates/domain.qtpl:147
+		if err != nil {
+			return nil, err
+		}`)
+			//line templates/domain.qtpl:131
 			if b64cond {
-				//line templates/domain.qtpl:147
+				//line templates/domain.qtpl:131
 				qw422016.N().S(`
-			} else {
-				dec = []byte(r.`)
-				//line templates/domain.qtpl:149
+	} else {
+		dec = []byte(res.`)
+				//line templates/domain.qtpl:133
 				qw422016.N().S(b64ret.GoName(false))
-				//line templates/domain.qtpl:149
+				//line templates/domain.qtpl:133
 				qw422016.N().S(`)
-			}`)
-				//line templates/domain.qtpl:150
+	}`)
+				//line templates/domain.qtpl:134
 			}
-			//line templates/domain.qtpl:150
+			//line templates/domain.qtpl:134
 		}
-		//line templates/domain.qtpl:150
+		//line templates/domain.qtpl:134
 		qw422016.N().S(`
-			`)
-		//line templates/domain.qtpl:151
-	}
-	//line templates/domain.qtpl:151
-	qw422016.N().S(`
-			return `)
-	//line templates/domain.qtpl:152
-	qw422016.N().S(retValueList)
-	//line templates/domain.qtpl:152
-	qw422016.N().S(`nil
-
-		case error:
-			return `)
-	//line templates/domain.qtpl:155
-	qw422016.N().S(emptyRet)
-	//line templates/domain.qtpl:155
-	qw422016.N().S(`v
-		}
-
-	case <-ctxt.Done():
-		return `)
-	//line templates/domain.qtpl:159
-	qw422016.N().S(emptyRet)
-	//line templates/domain.qtpl:159
-	qw422016.N().S(`ctxt.Err()
-	}
-
 	return `)
-	//line templates/domain.qtpl:162
-	qw422016.N().S(emptyRet)
-	//line templates/domain.qtpl:162
-	qw422016.N().S(`cdp.ErrUnknownResult
+		//line templates/domain.qtpl:135
+		qw422016.N().S(retValueList)
+		//line templates/domain.qtpl:135
+		qw422016.N().S(`nil`)
+		//line templates/domain.qtpl:135
+	}
+	//line templates/domain.qtpl:135
+	qw422016.N().S(`
 }
 `)
-//line templates/domain.qtpl:164
+//line templates/domain.qtpl:137
 }
 
-//line templates/domain.qtpl:164
+//line templates/domain.qtpl:137
 func WriteCommandDoFuncTemplate(qq422016 qtio422016.Writer, c *internal.Type, d *internal.Domain, domains []*internal.Domain) {
-	//line templates/domain.qtpl:164
+	//line templates/domain.qtpl:137
 	qw422016 := qt422016.AcquireWriter(qq422016)
-	//line templates/domain.qtpl:164
+	//line templates/domain.qtpl:137
 	StreamCommandDoFuncTemplate(qw422016, c, d, domains)
-	//line templates/domain.qtpl:164
+	//line templates/domain.qtpl:137
 	qt422016.ReleaseWriter(qw422016)
-//line templates/domain.qtpl:164
+//line templates/domain.qtpl:137
 }
 
-//line templates/domain.qtpl:164
+//line templates/domain.qtpl:137
 func CommandDoFuncTemplate(c *internal.Type, d *internal.Domain, domains []*internal.Domain) string {
-	//line templates/domain.qtpl:164
+	//line templates/domain.qtpl:137
 	qb422016 := qt422016.AcquireByteBuffer()
-	//line templates/domain.qtpl:164
+	//line templates/domain.qtpl:137
 	WriteCommandDoFuncTemplate(qb422016, c, d, domains)
-	//line templates/domain.qtpl:164
+	//line templates/domain.qtpl:137
 	qs422016 := string(qb422016.B)
-	//line templates/domain.qtpl:164
+	//line templates/domain.qtpl:137
 	qt422016.ReleaseByteBuffer(qb422016)
-	//line templates/domain.qtpl:164
+	//line templates/domain.qtpl:137
 	return qs422016
-//line templates/domain.qtpl:164
+//line templates/domain.qtpl:137
 }

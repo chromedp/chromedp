@@ -11,7 +11,6 @@ import (
 
 	cdp "github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/runtime"
-	"github.com/mailru/easyjson"
 )
 
 // EnableParams [no description].
@@ -25,33 +24,7 @@ func Enable() *EnableParams {
 // Do executes HeapProfiler.enable against the provided context and
 // target handler.
 func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandHeapProfilerEnable, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandHeapProfilerEnable, nil, nil)
 }
 
 // DisableParams [no description].
@@ -65,33 +38,7 @@ func Disable() *DisableParams {
 // Do executes HeapProfiler.disable against the provided context and
 // target handler.
 func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandHeapProfilerDisable, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandHeapProfilerDisable, nil, nil)
 }
 
 // StartTrackingHeapObjectsParams [no description].
@@ -115,39 +62,7 @@ func (p StartTrackingHeapObjectsParams) WithTrackAllocations(trackAllocations bo
 // Do executes HeapProfiler.startTrackingHeapObjects against the provided context and
 // target handler.
 func (p *StartTrackingHeapObjectsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandHeapProfilerStartTrackingHeapObjects, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandHeapProfilerStartTrackingHeapObjects, p, nil)
 }
 
 // StopTrackingHeapObjectsParams [no description].
@@ -172,39 +87,7 @@ func (p StopTrackingHeapObjectsParams) WithReportProgress(reportProgress bool) *
 // Do executes HeapProfiler.stopTrackingHeapObjects against the provided context and
 // target handler.
 func (p *StopTrackingHeapObjectsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandHeapProfilerStopTrackingHeapObjects, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandHeapProfilerStopTrackingHeapObjects, p, nil)
 }
 
 // TakeHeapSnapshotParams [no description].
@@ -229,39 +112,7 @@ func (p TakeHeapSnapshotParams) WithReportProgress(reportProgress bool) *TakeHea
 // Do executes HeapProfiler.takeHeapSnapshot against the provided context and
 // target handler.
 func (p *TakeHeapSnapshotParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandHeapProfilerTakeHeapSnapshot, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandHeapProfilerTakeHeapSnapshot, p, nil)
 }
 
 // CollectGarbageParams [no description].
@@ -275,33 +126,7 @@ func CollectGarbage() *CollectGarbageParams {
 // Do executes HeapProfiler.collectGarbage against the provided context and
 // target handler.
 func (p *CollectGarbageParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandHeapProfilerCollectGarbage, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandHeapProfilerCollectGarbage, nil, nil)
 }
 
 // GetObjectByHeapObjectIDParams [no description].
@@ -338,46 +163,14 @@ type GetObjectByHeapObjectIDReturns struct {
 // returns:
 //   result - Evaluation result.
 func (p *GetObjectByHeapObjectIDParams) Do(ctxt context.Context, h cdp.Handler) (result *runtime.RemoteObject, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res GetObjectByHeapObjectIDReturns
+	err = h.Execute(ctxt, cdp.CommandHeapProfilerGetObjectByHeapObjectID, p, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandHeapProfilerGetObjectByHeapObjectID, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r GetObjectByHeapObjectIDReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, cdp.ErrInvalidResult
-			}
-
-			return r.Result, nil
-
-		case error:
-			return nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, ctxt.Err()
-	}
-
-	return nil, cdp.ErrUnknownResult
+	return res.Result, nil
 }
 
 // AddInspectedHeapObjectParams enables console to refer to the node with
@@ -400,39 +193,7 @@ func AddInspectedHeapObject(heapObjectID HeapSnapshotObjectID) *AddInspectedHeap
 // Do executes HeapProfiler.addInspectedHeapObject against the provided context and
 // target handler.
 func (p *AddInspectedHeapObjectParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandHeapProfilerAddInspectedHeapObject, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandHeapProfilerAddInspectedHeapObject, p, nil)
 }
 
 // GetHeapObjectIDParams [no description].
@@ -461,46 +222,14 @@ type GetHeapObjectIDReturns struct {
 // returns:
 //   heapSnapshotObjectID - Id of the heap snapshot object corresponding to the passed remote object id.
 func (p *GetHeapObjectIDParams) Do(ctxt context.Context, h cdp.Handler) (heapSnapshotObjectID HeapSnapshotObjectID, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res GetHeapObjectIDReturns
+	err = h.Execute(ctxt, cdp.CommandHeapProfilerGetHeapObjectID, p, &res)
 	if err != nil {
 		return "", err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandHeapProfilerGetHeapObjectID, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return "", cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r GetHeapObjectIDReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return "", cdp.ErrInvalidResult
-			}
-
-			return r.HeapSnapshotObjectID, nil
-
-		case error:
-			return "", v
-		}
-
-	case <-ctxt.Done():
-		return "", ctxt.Err()
-	}
-
-	return "", cdp.ErrUnknownResult
+	return res.HeapSnapshotObjectID, nil
 }
 
 // StartSamplingParams [no description].
@@ -525,39 +254,7 @@ func (p StartSamplingParams) WithSamplingInterval(samplingInterval float64) *Sta
 // Do executes HeapProfiler.startSampling against the provided context and
 // target handler.
 func (p *StartSamplingParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandHeapProfilerStartSampling, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandHeapProfilerStartSampling, p, nil)
 }
 
 // StopSamplingParams [no description].
@@ -579,38 +276,12 @@ type StopSamplingReturns struct {
 // returns:
 //   profile - Recorded sampling heap profile.
 func (p *StopSamplingParams) Do(ctxt context.Context, h cdp.Handler) (profile *SamplingHeapProfile, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
 	// execute
-	ch := h.Execute(ctxt, cdp.CommandHeapProfilerStopSampling, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r StopSamplingReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, cdp.ErrInvalidResult
-			}
-
-			return r.Profile, nil
-
-		case error:
-			return nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, ctxt.Err()
+	var res StopSamplingReturns
+	err = h.Execute(ctxt, cdp.CommandHeapProfilerStopSampling, nil, &res)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, cdp.ErrUnknownResult
+	return res.Profile, nil
 }

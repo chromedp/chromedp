@@ -12,7 +12,6 @@ import (
 	"context"
 
 	cdp "github.com/knq/chromedp/cdp"
-	"github.com/mailru/easyjson"
 )
 
 // GetDomainsParams returns supported domains.
@@ -34,38 +33,12 @@ type GetDomainsReturns struct {
 // returns:
 //   domains - List of supported domains.
 func (p *GetDomainsParams) Do(ctxt context.Context, h cdp.Handler) (domains []*Domain, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
 	// execute
-	ch := h.Execute(ctxt, cdp.CommandSchemaGetDomains, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r GetDomainsReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, cdp.ErrInvalidResult
-			}
-
-			return r.Domains, nil
-
-		case error:
-			return nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, ctxt.Err()
+	var res GetDomainsReturns
+	err = h.Execute(ctxt, cdp.CommandSchemaGetDomains, nil, &res)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, cdp.ErrUnknownResult
+	return res.Domains, nil
 }

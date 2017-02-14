@@ -10,7 +10,6 @@ import (
 	"context"
 
 	cdp "github.com/knq/chromedp/cdp"
-	"github.com/mailru/easyjson"
 )
 
 // GetDOMCountersParams [no description].
@@ -36,40 +35,14 @@ type GetDOMCountersReturns struct {
 //   nodes
 //   jsEventListeners
 func (p *GetDOMCountersParams) Do(ctxt context.Context, h cdp.Handler) (documents int64, nodes int64, jsEventListeners int64, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
 	// execute
-	ch := h.Execute(ctxt, cdp.CommandMemoryGetDOMCounters, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return 0, 0, 0, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r GetDOMCountersReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return 0, 0, 0, cdp.ErrInvalidResult
-			}
-
-			return r.Documents, r.Nodes, r.JsEventListeners, nil
-
-		case error:
-			return 0, 0, 0, v
-		}
-
-	case <-ctxt.Done():
-		return 0, 0, 0, ctxt.Err()
+	var res GetDOMCountersReturns
+	err = h.Execute(ctxt, cdp.CommandMemoryGetDOMCounters, nil, &res)
+	if err != nil {
+		return 0, 0, 0, err
 	}
 
-	return 0, 0, 0, cdp.ErrUnknownResult
+	return res.Documents, res.Nodes, res.JsEventListeners, nil
 }
 
 // SetPressureNotificationsSuppressedParams enable/disable suppressing memory
@@ -92,39 +65,7 @@ func SetPressureNotificationsSuppressed(suppressed bool) *SetPressureNotificatio
 // Do executes Memory.setPressureNotificationsSuppressed against the provided context and
 // target handler.
 func (p *SetPressureNotificationsSuppressedParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandMemorySetPressureNotificationsSuppressed, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandMemorySetPressureNotificationsSuppressed, p, nil)
 }
 
 // SimulatePressureNotificationParams simulate a memory pressure notification
@@ -147,37 +88,5 @@ func SimulatePressureNotification(level PressureLevel) *SimulatePressureNotifica
 // Do executes Memory.simulatePressureNotification against the provided context and
 // target handler.
 func (p *SimulatePressureNotificationParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandMemorySimulatePressureNotification, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandMemorySimulatePressureNotification, p, nil)
 }

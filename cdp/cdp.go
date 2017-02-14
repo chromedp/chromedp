@@ -1352,7 +1352,7 @@ type Handler interface {
 
 	// Execute executes the specified command using the supplied context and
 	// parameters.
-	Execute(context.Context, MethodType, easyjson.RawMessage) <-chan interface{}
+	Execute(context.Context, MethodType, easyjson.Marshaler, easyjson.Unmarshaler) error
 
 	// Listen creates a channel that will receive an event for the types
 	// specified.
@@ -1361,9 +1361,6 @@ type Handler interface {
 	// Release releases a channel returned from Listen.
 	Release(<-chan interface{})
 }
-
-// Empty is an empty JSON object message.
-var Empty = easyjson.RawMessage(`{}`)
 
 // FrameID unique frame identifier.
 type FrameID string

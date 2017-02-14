@@ -86,7 +86,7 @@ func (p {%s= typ %}) {%s= optName %}({%s= v %} {%s= t.GoType(d, domains) %}) *{%
 		retTypeList += ", "
 	}
 
-	retValueList := c.RetValueList(d, domains)
+	retValueList := c.RetNameList("res", d, domains)
 	if retValueList != "" {
 		retValueList += ", "
 	}
@@ -102,63 +102,36 @@ func (p {%s= typ %}) {%s= optName %}({%s= v %} {%s= t.GoType(d, domains) %}) *{%
 			break
 		}
 	}
+
+	pval := "p"
+	if hasEmptyParams {
+		pval = "nil"
+	}
 %}
 // Do executes {%s= c.ProtoName(d) %} against the provided context and
-// target handler.{% if len(c.Returns) > 0 %}
+// target handler.{% if !hasEmptyRet %}
 //
 // returns:{% for _, p := range c.Returns %}{% if p.Name == internal.Base64EncodedParamName %}{% continue %}{% end %}
 //   {%s= p.String() %}{% endfor %}{% endif %}
-func (p *{%s= typ %}) Do(ctxt context.Context, h cdp.Handler) ({%s= retTypeList %}err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}{% if !hasEmptyParams %}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+func (p *{%s= typ %}) Do(ctxt context.Context, h cdp.Handler) ({%s= retTypeList %}err error) {{% if hasEmptyRet %}
+	return h.Execute(ctxt, cdp.{%s= c.CommandMethodType(d) %}, {%s= pval %}, nil){% else %}
+	// execute
+	var res {%s= c.CommandReturnsType() %}
+	err = h.Execute(ctxt, cdp.{%s= c.CommandMethodType(d) %}, {%s= pval %}, &res)
 	if err != nil {
 		return {%s= emptyRet %}err
-	}{% endif %}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.{%s= c.CommandMethodType(d) %}, {% if hasEmptyParams %}cdp.Empty{% else %}easyjson.RawMessage(buf){% end %})
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return {%s= emptyRet %}cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:{% if !hasEmptyRet %}
-			// unmarshal
-			var r {%s= c.CommandReturnsType() %}
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return {%s= emptyRet %}cdp.ErrInvalidResult
-			}{% if b64ret != nil %}
-
-			// decode
-			var dec []byte{% if b64cond %}
-			if r.Base64encoded {{% endif %}
-				dec, err = base64.StdEncoding.DecodeString(r.{%s= b64ret.GoName(false) %})
-				if err != nil {
-					return nil, err
-				}{% if b64cond %}
-			} else {
-				dec = []byte(r.{%s= b64ret.GoName(false) %})
-			}{% endif %}{% endif %}
-			{% endif %}
-			return {%s= retValueList %}nil
-
-		case error:
-			return {%s= emptyRet %}v
-		}
-
-	case <-ctxt.Done():
-		return {%s= emptyRet %}ctxt.Err()
 	}
-
-	return {%s= emptyRet %}cdp.ErrUnknownResult
+	{% if b64ret != nil %}
+	// decode
+	var dec []byte{% if b64cond %}
+	if res.Base64encoded {{% endif %}
+		dec, err = base64.StdEncoding.DecodeString(res.{%s= b64ret.GoName(false) %})
+		if err != nil {
+			return nil, err
+		}{% if b64cond %}
+	} else {
+		dec = []byte(res.{%s= b64ret.GoName(false) %})
+	}{% endif %}{% endif %}
+	return {%s= retValueList %}nil{% endif %}
 }
 {% endfunc %}

@@ -9,9 +9,9 @@ import (
 	"log"
 	"time"
 
-	cdp "github.com/knq/chromedp"
-	cdptypes "github.com/knq/chromedp/cdp"
-	"github.com/knq/chromedp/client"
+	cdp "github.com/knq/cdp"
+	cdptypes "github.com/knq/cdp/cdp"
+	"github.com/knq/cdp/client"
 )
 
 func main() {
@@ -22,13 +22,13 @@ func main() {
 	defer cancel()
 
 	// create edge instance -- FIXME: not able to launch separate process (yet)
-	/*cdp, err := chromedp.New(ctxt, chromedp.WithRunnerOptions(
+	/*cdp, err := cdp.New(ctxt, cdp.WithRunnerOptions(
 		runner.EdgeDiagnosticsAdapter(),
 	))*/
 
 	// create edge instance
 	watch := client.New().WatchPageTargets(ctxt)
-	c, err := chromedp.New(ctxt, chromedp.WithTargets(watch))
+	c, err := cdp.New(ctxt, cdp.WithTargets(watch), cdp.WithLog(log.Printf))
 	if err != nil {
 		log.Fatal(err)
 	}

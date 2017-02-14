@@ -20,7 +20,7 @@ func main() {
 	defer cancel()
 
 	// create chrome instance
-	c, err := cdp.New(ctxt)
+	c, err := cdp.New(ctxt, cdp.WithLog(log.Printf))
 	if err != nil {
 		log.Fatal(err)
 	}

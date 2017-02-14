@@ -15,7 +15,7 @@ var defaultContext = context.Background()
 func TestMain(m *testing.M) {
 	var err error
 
-	pool, err = NewPool()
+	pool, err = NewPool(PoolLog(log.Printf, log.Printf, log.Printf))
 	if err != nil {
 		log.Fatal(err)
 	}

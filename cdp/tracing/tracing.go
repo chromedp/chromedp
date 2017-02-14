@@ -10,7 +10,6 @@ import (
 	"context"
 
 	cdp "github.com/knq/chromedp/cdp"
-	"github.com/mailru/easyjson"
 )
 
 // StartParams start trace events collection.
@@ -50,39 +49,7 @@ func (p StartParams) WithTraceConfig(traceConfig *TraceConfig) *StartParams {
 // Do executes Tracing.start against the provided context and
 // target handler.
 func (p *StartParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandTracingStart, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandTracingStart, p, nil)
 }
 
 // EndParams stop trace events collection.
@@ -96,33 +63,7 @@ func End() *EndParams {
 // Do executes Tracing.end against the provided context and
 // target handler.
 func (p *EndParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandTracingEnd, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandTracingEnd, nil, nil)
 }
 
 // GetCategoriesParams gets supported tracing categories.
@@ -144,40 +85,14 @@ type GetCategoriesReturns struct {
 // returns:
 //   categories - A list of supported tracing categories.
 func (p *GetCategoriesParams) Do(ctxt context.Context, h cdp.Handler) (categories []string, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
 	// execute
-	ch := h.Execute(ctxt, cdp.CommandTracingGetCategories, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r GetCategoriesReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, cdp.ErrInvalidResult
-			}
-
-			return r.Categories, nil
-
-		case error:
-			return nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, ctxt.Err()
+	var res GetCategoriesReturns
+	err = h.Execute(ctxt, cdp.CommandTracingGetCategories, nil, &res)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, cdp.ErrUnknownResult
+	return res.Categories, nil
 }
 
 // RequestMemoryDumpParams request a global memory dump.
@@ -201,40 +116,14 @@ type RequestMemoryDumpReturns struct {
 //   dumpGUID - GUID of the resulting global memory dump.
 //   success - True iff the global memory dump succeeded.
 func (p *RequestMemoryDumpParams) Do(ctxt context.Context, h cdp.Handler) (dumpGUID string, success bool, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
 	// execute
-	ch := h.Execute(ctxt, cdp.CommandTracingRequestMemoryDump, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return "", false, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r RequestMemoryDumpReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return "", false, cdp.ErrInvalidResult
-			}
-
-			return r.DumpGUID, r.Success, nil
-
-		case error:
-			return "", false, v
-		}
-
-	case <-ctxt.Done():
-		return "", false, ctxt.Err()
+	var res RequestMemoryDumpReturns
+	err = h.Execute(ctxt, cdp.CommandTracingRequestMemoryDump, nil, &res)
+	if err != nil {
+		return "", false, err
 	}
 
-	return "", false, cdp.ErrUnknownResult
+	return res.DumpGUID, res.Success, nil
 }
 
 // RecordClockSyncMarkerParams record a clock sync marker in the trace.
@@ -255,37 +144,5 @@ func RecordClockSyncMarker(syncID string) *RecordClockSyncMarkerParams {
 // Do executes Tracing.recordClockSyncMarker against the provided context and
 // target handler.
 func (p *RecordClockSyncMarkerParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandTracingRecordClockSyncMarker, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandTracingRecordClockSyncMarker, p, nil)
 }

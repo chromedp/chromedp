@@ -13,7 +13,6 @@ import (
 	"context"
 
 	cdp "github.com/knq/chromedp/cdp"
-	"github.com/mailru/easyjson"
 )
 
 // GetInfoParams returns information about the system.
@@ -39,38 +38,12 @@ type GetInfoReturns struct {
 //   modelName - A platform-dependent description of the model of the machine. On Mac OS, this is, for example, 'MacBookPro'. Will be the empty string if not supported.
 //   modelVersion - A platform-dependent description of the version of the machine. On Mac OS, this is, for example, '10.1'. Will be the empty string if not supported.
 func (p *GetInfoParams) Do(ctxt context.Context, h cdp.Handler) (gpu *GPUInfo, modelName string, modelVersion string, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
 	// execute
-	ch := h.Execute(ctxt, cdp.CommandSystemInfoGetInfo, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, "", "", cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r GetInfoReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, "", "", cdp.ErrInvalidResult
-			}
-
-			return r.Gpu, r.ModelName, r.ModelVersion, nil
-
-		case error:
-			return nil, "", "", v
-		}
-
-	case <-ctxt.Done():
-		return nil, "", "", ctxt.Err()
+	var res GetInfoReturns
+	err = h.Execute(ctxt, cdp.CommandSystemInfoGetInfo, nil, &res)
+	if err != nil {
+		return nil, "", "", err
 	}
 
-	return nil, "", "", cdp.ErrUnknownResult
+	return res.Gpu, res.ModelName, res.ModelVersion, nil
 }

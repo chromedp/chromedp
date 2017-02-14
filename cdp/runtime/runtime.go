@@ -17,7 +17,6 @@ import (
 	"context"
 
 	cdp "github.com/knq/chromedp/cdp"
-	"github.com/mailru/easyjson"
 )
 
 // EvaluateParams evaluates expression on global object.
@@ -112,46 +111,14 @@ type EvaluateReturns struct {
 //   result - Evaluation result.
 //   exceptionDetails - Exception details.
 func (p *EvaluateParams) Do(ctxt context.Context, h cdp.Handler) (result *RemoteObject, exceptionDetails *ExceptionDetails, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res EvaluateReturns
+	err = h.Execute(ctxt, cdp.CommandRuntimeEvaluate, p, &res)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandRuntimeEvaluate, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r EvaluateReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, nil, cdp.ErrInvalidResult
-			}
-
-			return r.Result, r.ExceptionDetails, nil
-
-		case error:
-			return nil, nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, nil, ctxt.Err()
-	}
-
-	return nil, nil, cdp.ErrUnknownResult
+	return res.Result, res.ExceptionDetails, nil
 }
 
 // AwaitPromiseParams add handler to promise with given promise object id.
@@ -197,46 +164,14 @@ type AwaitPromiseReturns struct {
 //   result - Promise result. Will contain rejected value if promise was rejected.
 //   exceptionDetails - Exception details if stack strace is available.
 func (p *AwaitPromiseParams) Do(ctxt context.Context, h cdp.Handler) (result *RemoteObject, exceptionDetails *ExceptionDetails, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res AwaitPromiseReturns
+	err = h.Execute(ctxt, cdp.CommandRuntimeAwaitPromise, p, &res)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandRuntimeAwaitPromise, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r AwaitPromiseReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, nil, cdp.ErrInvalidResult
-			}
-
-			return r.Result, r.ExceptionDetails, nil
-
-		case error:
-			return nil, nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, nil, ctxt.Err()
-	}
-
-	return nil, nil, cdp.ErrUnknownResult
+	return res.Result, res.ExceptionDetails, nil
 }
 
 // CallFunctionOnParams calls function with given declaration on the given
@@ -319,46 +254,14 @@ type CallFunctionOnReturns struct {
 //   result - Call result.
 //   exceptionDetails - Exception details.
 func (p *CallFunctionOnParams) Do(ctxt context.Context, h cdp.Handler) (result *RemoteObject, exceptionDetails *ExceptionDetails, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res CallFunctionOnReturns
+	err = h.Execute(ctxt, cdp.CommandRuntimeCallFunctionOn, p, &res)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandRuntimeCallFunctionOn, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r CallFunctionOnReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, nil, cdp.ErrInvalidResult
-			}
-
-			return r.Result, r.ExceptionDetails, nil
-
-		case error:
-			return nil, nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, nil, ctxt.Err()
-	}
-
-	return nil, nil, cdp.ErrUnknownResult
+	return res.Result, res.ExceptionDetails, nil
 }
 
 // GetPropertiesParams returns properties of a given object. Object group of
@@ -416,46 +319,14 @@ type GetPropertiesReturns struct {
 //   internalProperties - Internal object properties (only of the element itself).
 //   exceptionDetails - Exception details.
 func (p *GetPropertiesParams) Do(ctxt context.Context, h cdp.Handler) (result []*PropertyDescriptor, internalProperties []*InternalPropertyDescriptor, exceptionDetails *ExceptionDetails, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res GetPropertiesReturns
+	err = h.Execute(ctxt, cdp.CommandRuntimeGetProperties, p, &res)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandRuntimeGetProperties, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, nil, nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r GetPropertiesReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, nil, nil, cdp.ErrInvalidResult
-			}
-
-			return r.Result, r.InternalProperties, r.ExceptionDetails, nil
-
-		case error:
-			return nil, nil, nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, nil, nil, ctxt.Err()
-	}
-
-	return nil, nil, nil, cdp.ErrUnknownResult
+	return res.Result, res.InternalProperties, res.ExceptionDetails, nil
 }
 
 // ReleaseObjectParams releases remote object with given id.
@@ -476,39 +347,7 @@ func ReleaseObject(objectID RemoteObjectID) *ReleaseObjectParams {
 // Do executes Runtime.releaseObject against the provided context and
 // target handler.
 func (p *ReleaseObjectParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandRuntimeReleaseObject, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandRuntimeReleaseObject, p, nil)
 }
 
 // ReleaseObjectGroupParams releases all remote objects that belong to a
@@ -531,39 +370,7 @@ func ReleaseObjectGroup(objectGroup string) *ReleaseObjectGroupParams {
 // Do executes Runtime.releaseObjectGroup against the provided context and
 // target handler.
 func (p *ReleaseObjectGroupParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandRuntimeReleaseObjectGroup, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandRuntimeReleaseObjectGroup, p, nil)
 }
 
 // RunIfWaitingForDebuggerParams tells inspected instance to run if it was
@@ -579,33 +386,7 @@ func RunIfWaitingForDebugger() *RunIfWaitingForDebuggerParams {
 // Do executes Runtime.runIfWaitingForDebugger against the provided context and
 // target handler.
 func (p *RunIfWaitingForDebuggerParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandRuntimeRunIfWaitingForDebugger, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandRuntimeRunIfWaitingForDebugger, nil, nil)
 }
 
 // EnableParams enables reporting of execution contexts creation by means of
@@ -623,33 +404,7 @@ func Enable() *EnableParams {
 // Do executes Runtime.enable against the provided context and
 // target handler.
 func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandRuntimeEnable, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandRuntimeEnable, nil, nil)
 }
 
 // DisableParams disables reporting of execution contexts creation.
@@ -663,33 +418,7 @@ func Disable() *DisableParams {
 // Do executes Runtime.disable against the provided context and
 // target handler.
 func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandRuntimeDisable, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandRuntimeDisable, nil, nil)
 }
 
 // DiscardConsoleEntriesParams discards collected exceptions and console API
@@ -704,33 +433,7 @@ func DiscardConsoleEntries() *DiscardConsoleEntriesParams {
 // Do executes Runtime.discardConsoleEntries against the provided context and
 // target handler.
 func (p *DiscardConsoleEntriesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandRuntimeDiscardConsoleEntries, cdp.Empty)
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandRuntimeDiscardConsoleEntries, nil, nil)
 }
 
 // SetCustomObjectFormatterEnabledParams [no description].
@@ -751,39 +454,7 @@ func SetCustomObjectFormatterEnabled(enabled bool) *SetCustomObjectFormatterEnab
 // Do executes Runtime.setCustomObjectFormatterEnabled against the provided context and
 // target handler.
 func (p *SetCustomObjectFormatterEnabledParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandRuntimeSetCustomObjectFormatterEnabled, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandRuntimeSetCustomObjectFormatterEnabled, p, nil)
 }
 
 // CompileScriptParams compiles expression.
@@ -829,46 +500,14 @@ type CompileScriptReturns struct {
 //   scriptID - Id of the script.
 //   exceptionDetails - Exception details.
 func (p *CompileScriptParams) Do(ctxt context.Context, h cdp.Handler) (scriptID ScriptID, exceptionDetails *ExceptionDetails, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res CompileScriptReturns
+	err = h.Execute(ctxt, cdp.CommandRuntimeCompileScript, p, &res)
 	if err != nil {
 		return "", nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandRuntimeCompileScript, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return "", nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r CompileScriptReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return "", nil, cdp.ErrInvalidResult
-			}
-
-			return r.ScriptID, r.ExceptionDetails, nil
-
-		case error:
-			return "", nil, v
-		}
-
-	case <-ctxt.Done():
-		return "", nil, ctxt.Err()
-	}
-
-	return "", nil, cdp.ErrUnknownResult
+	return res.ScriptID, res.ExceptionDetails, nil
 }
 
 // RunScriptParams runs script with given id in a given context.
@@ -955,44 +594,12 @@ type RunScriptReturns struct {
 //   result - Run result.
 //   exceptionDetails - Exception details.
 func (p *RunScriptParams) Do(ctxt context.Context, h cdp.Handler) (result *RemoteObject, exceptionDetails *ExceptionDetails, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res RunScriptReturns
+	err = h.Execute(ctxt, cdp.CommandRuntimeRunScript, p, &res)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandRuntimeRunScript, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r RunScriptReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, nil, cdp.ErrInvalidResult
-			}
-
-			return r.Result, r.ExceptionDetails, nil
-
-		case error:
-			return nil, nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, nil, ctxt.Err()
-	}
-
-	return nil, nil, cdp.ErrUnknownResult
+	return res.Result, res.ExceptionDetails, nil
 }

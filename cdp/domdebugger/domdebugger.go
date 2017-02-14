@@ -15,7 +15,6 @@ import (
 
 	cdp "github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/runtime"
-	"github.com/mailru/easyjson"
 )
 
 // SetDOMBreakpointParams sets breakpoint on particular operation with DOM.
@@ -39,39 +38,7 @@ func SetDOMBreakpoint(nodeID cdp.NodeID, typeVal DOMBreakpointType) *SetDOMBreak
 // Do executes DOMDebugger.setDOMBreakpoint against the provided context and
 // target handler.
 func (p *SetDOMBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMDebuggerSetDOMBreakpoint, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMDebuggerSetDOMBreakpoint, p, nil)
 }
 
 // RemoveDOMBreakpointParams removes DOM breakpoint that was set using
@@ -97,39 +64,7 @@ func RemoveDOMBreakpoint(nodeID cdp.NodeID, typeVal DOMBreakpointType) *RemoveDO
 // Do executes DOMDebugger.removeDOMBreakpoint against the provided context and
 // target handler.
 func (p *RemoveDOMBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMDebuggerRemoveDOMBreakpoint, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMDebuggerRemoveDOMBreakpoint, p, nil)
 }
 
 // SetEventListenerBreakpointParams sets breakpoint on particular DOM event.
@@ -158,39 +93,7 @@ func (p SetEventListenerBreakpointParams) WithTargetName(targetName string) *Set
 // Do executes DOMDebugger.setEventListenerBreakpoint against the provided context and
 // target handler.
 func (p *SetEventListenerBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMDebuggerSetEventListenerBreakpoint, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMDebuggerSetEventListenerBreakpoint, p, nil)
 }
 
 // RemoveEventListenerBreakpointParams removes breakpoint on particular DOM
@@ -219,39 +122,7 @@ func (p RemoveEventListenerBreakpointParams) WithTargetName(targetName string) *
 // Do executes DOMDebugger.removeEventListenerBreakpoint against the provided context and
 // target handler.
 func (p *RemoveEventListenerBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMDebuggerRemoveEventListenerBreakpoint, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMDebuggerRemoveEventListenerBreakpoint, p, nil)
 }
 
 // SetInstrumentationBreakpointParams sets breakpoint on particular native
@@ -273,39 +144,7 @@ func SetInstrumentationBreakpoint(eventName string) *SetInstrumentationBreakpoin
 // Do executes DOMDebugger.setInstrumentationBreakpoint against the provided context and
 // target handler.
 func (p *SetInstrumentationBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMDebuggerSetInstrumentationBreakpoint, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMDebuggerSetInstrumentationBreakpoint, p, nil)
 }
 
 // RemoveInstrumentationBreakpointParams removes breakpoint on particular
@@ -328,39 +167,7 @@ func RemoveInstrumentationBreakpoint(eventName string) *RemoveInstrumentationBre
 // Do executes DOMDebugger.removeInstrumentationBreakpoint against the provided context and
 // target handler.
 func (p *RemoveInstrumentationBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMDebuggerRemoveInstrumentationBreakpoint, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMDebuggerRemoveInstrumentationBreakpoint, p, nil)
 }
 
 // SetXHRBreakpointParams sets breakpoint on XMLHttpRequest.
@@ -381,39 +188,7 @@ func SetXHRBreakpoint(url string) *SetXHRBreakpointParams {
 // Do executes DOMDebugger.setXHRBreakpoint against the provided context and
 // target handler.
 func (p *SetXHRBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMDebuggerSetXHRBreakpoint, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMDebuggerSetXHRBreakpoint, p, nil)
 }
 
 // RemoveXHRBreakpointParams removes breakpoint from XMLHttpRequest.
@@ -434,39 +209,7 @@ func RemoveXHRBreakpoint(url string) *RemoveXHRBreakpointParams {
 // Do executes DOMDebugger.removeXHRBreakpoint against the provided context and
 // target handler.
 func (p *RemoveXHRBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
-	if err != nil {
-		return err
-	}
-
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMDebuggerRemoveXHRBreakpoint, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			return nil
-
-		case error:
-			return v
-		}
-
-	case <-ctxt.Done():
-		return ctxt.Err()
-	}
-
-	return cdp.ErrUnknownResult
+	return h.Execute(ctxt, cdp.CommandDOMDebuggerRemoveXHRBreakpoint, p, nil)
 }
 
 // GetEventListenersParams returns event listeners of the given object.
@@ -513,44 +256,12 @@ type GetEventListenersReturns struct {
 // returns:
 //   listeners - Array of relevant listeners.
 func (p *GetEventListenersParams) Do(ctxt context.Context, h cdp.Handler) (listeners []*EventListener, err error) {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
-	// marshal
-	buf, err := easyjson.Marshal(p)
+	// execute
+	var res GetEventListenersReturns
+	err = h.Execute(ctxt, cdp.CommandDOMDebuggerGetEventListeners, p, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	// execute
-	ch := h.Execute(ctxt, cdp.CommandDOMDebuggerGetEventListeners, easyjson.RawMessage(buf))
-
-	// read response
-	select {
-	case res := <-ch:
-		if res == nil {
-			return nil, cdp.ErrChannelClosed
-		}
-
-		switch v := res.(type) {
-		case easyjson.RawMessage:
-			// unmarshal
-			var r GetEventListenersReturns
-			err = easyjson.Unmarshal(v, &r)
-			if err != nil {
-				return nil, cdp.ErrInvalidResult
-			}
-
-			return r.Listeners, nil
-
-		case error:
-			return nil, v
-		}
-
-	case <-ctxt.Done():
-		return nil, ctxt.Err()
-	}
-
-	return nil, cdp.ErrUnknownResult
+	return res.Listeners, nil
 }
