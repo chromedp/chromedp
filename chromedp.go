@@ -34,6 +34,9 @@ type CDP struct {
 	// handlerMap is the map of target IDs to its active handler.
 	handlerMap map[string]int
 
+	// how long to wait for the target before timing out
+	newTargetTimeout time.Duration
+
 	// logging funcs
 	logf, debugf, errorf LogFunc
 
@@ -45,11 +48,12 @@ func New(ctxt context.Context, opts ...Option) (*CDP, error) {
 	var err error
 
 	c := &CDP{
-		handlers:   make([]*TargetHandler, 0),
-		handlerMap: make(map[string]int),
-		logf:       log.Printf,
-		debugf:     func(string, ...interface{}) {},
-		errorf:     func(s string, v ...interface{}) { log.Printf("error: "+s, v...) },
+		handlers:         make([]*TargetHandler, 0),
+		handlerMap:       make(map[string]int),
+		newTargetTimeout: DefaultNewTargetTimeout,
+		logf:             log.Printf,
+		debugf:           func(string, ...interface{}) {},
+		errorf:           func(s string, v ...interface{}) { log.Printf("error: "+s, v...) },
 	}
 
 	// apply options
@@ -79,8 +83,7 @@ func New(ctxt context.Context, opts ...Option) (*CDP, error) {
 		}
 	}()
 
-	// TODO: fix this
-	timeout := time.After(DefaultNewTargetTimeout)
+	timeout := time.After(c.newTargetTimeout)
 
 loop:
 	// wait until at least one target active
@@ -235,7 +238,7 @@ func (c *CDP) newTarget(ctxt context.Context, opts ...client.Option) (string, er
 		return "", err
 	}
 
-	timeout := time.After(DefaultNewTargetTimeout)
+	timeout := time.After(c.newTargetTimeout)
 
 loop:
 	for {
@@ -421,6 +424,15 @@ func WithLog(f LogFunc) Option {
 // Note: NOT YET IMPLEMENTED.
 func WithConsolef(f LogFunc) Option {
 	return func(c *CDP) error {
+		return nil
+	}
+}
+
+// WithNewTargetTimeout is a CDP option to specify the duration to wait for
+// new targets
+func WithNewTargetTimeout(d time.Duration) Option {
+	return func(c *CDP) error {
+		c.newTargetTimeout = d
 		return nil
 	}
 }
