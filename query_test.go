@@ -1,0 +1,602 @@
+package chromedp
+
+import (
+	"reflect"
+	"testing"
+	"time"
+
+	"github.com/knq/chromedp/cdp"
+	"github.com/knq/chromedp/cdp/dom"
+	"github.com/knq/chromedp/kb"
+)
+
+func TestNodes(t *testing.T) {
+	c := testAllocate(t, "table.html")
+	defer c.Release()
+
+	tests := []struct {
+		sel string
+		by  QueryOption
+		len int
+	}{
+		{"/html/body/table/tbody[1]/tr[2]/td", BySearch, 3},
+		{"body > table > tbody:nth-child(2) > tr:nth-child(2) > td:not(:last-child)", ByQueryAll, 2},
+		{"body > table > tbody:nth-child(2) > tr:nth-child(2) > td", ByQuery, 1},
+		{"#footer", ByID, 1},
+	}
+
+	var err error
+	for i, test := range tests {
+		var nodes []*cdp.Node
+		err = c.Run(defaultContext, Nodes(test.sel, &nodes, test.by))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+		if len(nodes) != test.len {
+			t.Errorf("test %d expected to have %d nodes: got %d", i, test.len, len(nodes))
+		}
+	}
+}
+
+// TODO:
+// NodeIDs
+// Focus
+// Blur
+
+func TestDimensions(t *testing.T) {
+	c := testAllocate(t, "image.html")
+	defer c.Release()
+
+	tests := []struct {
+		sel    string
+		by     QueryOption
+		width  int64
+		height int64
+	}{
+		{"/html/body/img", BySearch, 239, 239},
+		{"img", ByQueryAll, 239, 239},
+		{"img", ByQuery, 239, 239},
+		{"#icon-github", ByID, 120, 120},
+	}
+
+	var err error
+	for i, test := range tests {
+		var model *dom.BoxModel
+		err = c.Run(defaultContext, Dimensions(test.sel, &model))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+		if model.Height != test.height || model.Width != test.width {
+			t.Errorf("test %d expected %dx%d, got: %dx%d", i, test.width, test.height, model.Height, model.Width)
+		}
+	}
+}
+
+func TestText(t *testing.T) {
+	c := testAllocate(t, "form.html")
+	defer c.Release()
+
+	tests := []struct {
+		sel string
+		by  QueryOption
+		exp string
+	}{
+		{"#foo", ByID, "insert"},
+		{"body > form > span", ByQueryAll, "insert"},
+		{"body > form > span:nth-child(2)", ByQuery, "keyword"},
+		{"/html/body/form/span[2]", BySearch, "keyword"},
+	}
+
+	var err error
+	for i, test := range tests {
+		var text string
+		err = c.Run(defaultContext, Text(test.sel, &text, test.by))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+		if text != test.exp {
+			t.Errorf("test %d expected `%s`, got: %s", i, test.exp, text)
+		}
+	}
+}
+
+func TestClear(t *testing.T) {
+	tests := []struct {
+		sel string
+		by  QueryOption
+	}{
+		// input fields
+		{`//*[@id="form"]/input[1]`, BySearch},
+		{`#form > input[type="text"]:nth-child(4)`, ByQuery},
+		{`#form > input[type="text"]`, ByQueryAll},
+		{`#keyword`, ByID},
+
+		// textarea fields
+		{`//*[@id="bar"]`, BySearch},
+		{`#form > textarea`, ByQuery},
+		{`#form > textarea`, ByQueryAll},
+		{`#bar`, ByID},
+
+		// input + textarea fields
+		{`//*[@id="form"]/input`, BySearch},
+		{`#form > input[type="text"]`, ByQueryAll},
+	}
+
+	var err error
+	for i, test := range tests {
+		c := testAllocate(t, "form.html")
+		defer c.Release()
+
+		var val string
+		err = c.Run(defaultContext, Value(test.sel, &val, test.by))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+		if val == "" {
+			t.Errorf("test %d expected `%s` to have non empty value", i, test.sel)
+		}
+
+		err = c.Run(defaultContext, Clear(test.sel, test.by))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+
+		err = c.Run(defaultContext, Value(test.sel, &val, test.by))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+		if val != "" {
+			t.Errorf("test %d expected empty value for `%s`, got: %s", i, test.sel, val)
+		}
+	}
+}
+
+func TestReset(t *testing.T) {
+	tests := []struct {
+		sel   string
+		by    QueryOption
+		value string
+		exp   string
+	}{
+		{`//*[@id="keyword"]`, BySearch, "foobar", "chromedp"},
+		{`#form > input[type="text"]:nth-child(6)`, ByQuery, "foobar", "foo"},
+		{`#form > input[type="text"]`, ByQueryAll, "foobar", "chromedp"},
+		{"#bar", ByID, "foobar", "bar"},
+	}
+
+	var err error
+	for i, test := range tests {
+		c := testAllocate(t, "form.html")
+		defer c.Release()
+
+		err = c.Run(defaultContext, SetValue(test.sel, test.value, test.by))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+
+		err = c.Run(defaultContext, Reset(test.sel, test.by))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+
+		var value string
+		err = c.Run(defaultContext, Value(test.sel, &value, test.by))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+		if value != test.exp {
+			t.Errorf("test %d expected value after reset is %s, got: '%s'", i, test.exp, value)
+		}
+	}
+}
+
+func TestValue(t *testing.T) {
+	c := testAllocate(t, "form.html")
+	defer c.Release()
+
+	tests := []struct {
+		sel string
+		by  QueryOption
+	}{
+		{`//*[@id="form"]/input[1]`, BySearch},
+		{`#form > input[type="text"]:nth-child(4)`, ByQuery},
+		{`#form > input[type="text"]`, ByQueryAll},
+		{`#keyword`, ByID},
+	}
+
+	var err error
+	for i, test := range tests {
+		var value string
+		err = c.Run(defaultContext, Value(test.sel, &value, test.by))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+		if value != "chromedp" {
+			t.Errorf("test %d expected `chromedp`, got: %s", i, value)
+		}
+	}
+}
+
+func TestSetValue(t *testing.T) {
+	c := testAllocate(t, "form.html")
+	defer c.Release()
+
+	tests := []struct {
+		sel string
+		by  QueryOption
+	}{
+		{`//*[@id="form"]/input[1]`, BySearch},
+		{`#form > input[type="text"]:nth-child(4)`, ByQuery},
+		{`#form > input[type="text"]`, ByQueryAll},
+		{`#bar`, ByID},
+	}
+
+	var err error
+	for i, test := range tests {
+		if i != 0 {
+			err = c.Run(defaultContext, Reload())
+			if err != nil {
+				t.Fatalf("test %d got error: %v", i, err)
+			}
+			time.Sleep(50 * time.Millisecond)
+		}
+
+		err = c.Run(defaultContext, SetValue(test.sel, "FOOBAR", test.by))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+
+		var value string
+		err = c.Run(defaultContext, Value(test.sel, &value, test.by))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+		if value != "FOOBAR" {
+			t.Errorf("test %d expected `FOOBAR`, got: %s", i, value)
+		}
+	}
+}
+
+func TestAttributes(t *testing.T) {
+	c := testAllocate(t, "image.html")
+	defer c.Release()
+
+	tests := []struct {
+		sel string
+		by  QueryOption
+		exp map[string]string
+	}{
+		{`//*[@id="icon-brankas"]`, BySearch,
+			map[string]string{
+				"alt": "Brankas - Easy Money Management",
+				"id":  "icon-brankas",
+				"src": "images/brankas.png",
+			}},
+		{"body > img:first-child", ByQuery,
+			map[string]string{
+				"alt": "Brankas - Easy Money Management",
+				"id":  "icon-brankas",
+				"src": "images/brankas.png",
+			}},
+		{"body > img:nth-child(2)", ByQueryAll,
+			map[string]string{
+				"alt": `How people build software`,
+				"id":  "icon-github",
+				"src": "images/github.png",
+			}},
+		{"#icon-github", ByID,
+			map[string]string{
+				"alt": "How people build software",
+				"id":  "icon-github",
+				"src": "images/github.png",
+			}},
+	}
+
+	var err error
+	for i, test := range tests {
+		var attrs map[string]string
+		err = c.Run(defaultContext, Attributes(test.sel, &attrs, test.by))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+
+		if !reflect.DeepEqual(test.exp, attrs) {
+			t.Errorf("test %d expected %v, got: %v", i, test.exp, attrs)
+		}
+	}
+}
+
+func TestSetAttributes(t *testing.T) {
+	tests := []struct {
+		sel   string
+		by    QueryOption
+		attrs map[string]string
+		exp   map[string]string
+	}{
+		{`//*[@id="icon-brankas"]`, BySearch,
+			map[string]string{"data-url": "brankas"},
+			map[string]string{
+				"alt":      "Brankas - Easy Money Management",
+				"id":       "icon-brankas",
+				"src":      "images/brankas.png",
+				"data-url": "brankas"}},
+		{"body > img:first-child", ByQuery,
+			map[string]string{"data-url": "brankas"},
+			map[string]string{
+				"alt":      "Brankas - Easy Money Management",
+				"id":       "icon-brankas",
+				"src":      "images/brankas.png",
+				"data-url": "brankas",
+			}},
+		{"body > img:nth-child(2)", ByQueryAll,
+			map[string]string{"width": "100", "height": "200"},
+			map[string]string{
+				"alt":    `How people build software`,
+				"id":     "icon-github",
+				"src":    "images/github.png",
+				"width":  "100",
+				"height": "200",
+			}},
+		{"#icon-github", ByID,
+			map[string]string{"width": "100", "height": "200"},
+			map[string]string{
+				"alt":    "How people build software",
+				"id":     "icon-github",
+				"src":    "images/github.png",
+				"width":  "100",
+				"height": "200",
+			}},
+	}
+
+	var err error
+	for i, test := range tests {
+		c := testAllocate(t, "image.html")
+		defer c.Release()
+
+		err = c.Run(defaultContext, SetAttributes(test.sel, test.attrs, test.by))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+
+		var attrs map[string]string
+		err = c.Run(defaultContext, Attributes(test.sel, &attrs, test.by))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+
+		if !reflect.DeepEqual(test.exp, attrs) {
+			t.Errorf("test %d expected %v, got: %v", i, test.exp, attrs)
+		}
+	}
+}
+
+func TestAttributeValue(t *testing.T) {
+	c := testAllocate(t, "image.html")
+	defer c.Release()
+
+	tests := []struct {
+		sel  string
+		by   QueryOption
+		attr string
+		exp  string
+	}{
+		{`//*[@id="icon-brankas"]`, BySearch, "alt", "Brankas - Easy Money Management"},
+		{"body > img:first-child", ByQuery, "alt", "Brankas - Easy Money Management"},
+		{"body > img:nth-child(2)", ByQueryAll, "alt", "How people build software"},
+		{"#icon-github", ByID, "alt", "How people build software"},
+	}
+
+	var err error
+	for i, test := range tests {
+		var value string
+		var ok bool
+
+		err = c.Run(defaultContext, AttributeValue(test.sel, test.attr, &value, &ok, test.by))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+
+		if !ok {
+			t.Fatalf("test %d failed to get attribute %s on %s", i, test.attr, test.sel)
+		}
+
+		if value != test.exp {
+			t.Errorf("test %d expected %s to be %s, got: %s", i, test.attr, test.exp, value)
+		}
+	}
+}
+
+func TestSetAttributeValue(t *testing.T) {
+	tests := []struct {
+		sel  string
+		by   QueryOption
+		attr string
+		exp  string
+	}{
+		{`//*[@id="keyword"]`, BySearch, "foo", "bar"},
+		{`#form > input[type="text"]:nth-child(6)`, ByQuery, "foo", "bar"},
+		{`#form > input[type="text"]`, ByQueryAll, "foo", "bar"},
+		{"#bar", ByID, "foo", "bar"},
+	}
+
+	var err error
+	for i, test := range tests {
+		c := testAllocate(t, "form.html")
+		defer c.Release()
+
+		err = c.Run(defaultContext, SetAttributeValue(test.sel, test.attr, test.exp, test.by))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+
+		var value string
+		var ok bool
+		err = c.Run(defaultContext, AttributeValue(test.sel, test.attr, &value, &ok, test.by))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+		if !ok {
+			t.Fatalf("test %d failed to get attribute %s on %s", i, test.attr, test.sel)
+		}
+		if value != test.exp {
+			t.Errorf("test %d expected %s to be %s, got: %s", i, test.attr, test.exp, value)
+		}
+	}
+}
+
+func TestRemoveAttribute(t *testing.T) {
+	c := testAllocate(t, "image.html")
+	defer c.Release()
+
+	tests := []struct {
+		sel  string
+		by   QueryOption
+		attr string
+	}{
+		{"/html/body/img", BySearch, "alt"},
+		{"img", ByQueryAll, "alt"},
+		{"img", ByQuery, "alt"},
+		{"#icon-github", ByID, "alt"},
+	}
+
+	var err error
+	for i, test := range tests {
+		if i != 0 {
+			err = c.Run(defaultContext, Reload())
+			if err != nil {
+				t.Fatalf("test %d got error: %v", i, err)
+			}
+			time.Sleep(50 * time.Millisecond)
+		}
+
+		err = c.Run(defaultContext, RemoveAttribute(test.sel, test.attr))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+
+		var value string
+		var ok bool
+		err = c.Run(defaultContext, AttributeValue(test.sel, test.attr, &value, &ok, test.by))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+		if ok || value != "" {
+			t.Fatalf("test %d expected attribute %s removed from element %s", i, test.attr, test.sel)
+		}
+	}
+}
+
+func TestClick(t *testing.T) {
+	tests := []struct {
+		sel string
+		by  QueryOption
+	}{
+		{`//*[@id="form"]/input[4]`, BySearch},
+		{`#form > input[type="submit"]:nth-child(11)`, ByQuery},
+		{`#form > input[type="submit"]:nth-child(11)`, ByQueryAll},
+		{"#btn2", ByID},
+	}
+
+	var err error
+	for i, test := range tests {
+		c := testAllocate(t, "form.html")
+		defer c.Release()
+
+		err = c.Run(defaultContext, Click(test.sel, test.by))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+
+		err = c.Run(defaultContext, Sleep(time.Second*2))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+
+		var title string
+		err = c.Run(defaultContext, Title(&title))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+		if title != "chromedp - Google Search" {
+			t.Errorf("test %d expected title to be 'chromedp - Google Search', got: '%s'", i, title)
+		}
+	}
+}
+
+// DoubleClick
+
+func TestSendKeys(t *testing.T) {
+	tests := []struct {
+		sel  string
+		by   QueryOption
+		keys string
+		exp  string
+	}{
+		{`//*[@id="input1"]`, BySearch, "INSERT ", "INSERT some value"},
+		{`#box4 > input:nth-child(1)`, ByQuery, "insert ", "insert some value"},
+		{`#box4 > textarea`, ByQueryAll, "prefix " + kb.End + "\b\b SUFFIX\n", "prefix textar SUFFIX\n"},
+		{"#textarea1", ByID, "insert ", "insert textarea"},
+		{"#textarea1", ByID, kb.End + "\b\b\n\naoeu\n\nfoo\n\nbar\n\n", "textar\n\naoeu\n\nfoo\n\nbar\n\n"},
+		{"#select1", ByID, kb.ArrowDown + kb.ArrowDown, "three"},
+	}
+
+	var err error
+	for i, test := range tests {
+		c := testAllocate(t, "visible.html")
+		defer c.Release()
+
+		err = c.Run(defaultContext, SendKeys(test.sel, test.keys, test.by))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+
+		var val string
+		err = c.Run(defaultContext, Value(test.sel, &val, test.by))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+		if val != test.exp {
+			t.Errorf("test %d expected value %s, got: %s", i, test.exp, val)
+		}
+	}
+}
+
+func TestSubmit(t *testing.T) {
+	tests := []struct {
+		sel string
+		by  QueryOption
+	}{
+		{`//*[@id="keyword"]`, BySearch},
+		{`#form > input[type="text"]:nth-child(4)`, ByQuery},
+		{`#form > input[type="text"]`, ByQueryAll},
+		{"#form", ByID},
+	}
+
+	var err error
+	for i, test := range tests {
+		c := testAllocate(t, "form.html")
+		defer c.Release()
+
+		err = c.Run(defaultContext, Submit(test.sel, test.by))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+
+		err = c.Run(defaultContext, Sleep(time.Second*2))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+
+		var title string
+		err = c.Run(defaultContext, Title(&title))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+		if title != "chromedp - Google Search" {
+			t.Errorf("test %d expected title to be 'chromedp - Google Search', got: '%s'", i, title)
+		}
+	}
+}
+
+// ComputedStyle
+// MatchedStyle

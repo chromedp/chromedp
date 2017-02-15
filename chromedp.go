@@ -116,14 +116,14 @@ func (c *CDP) AddTarget(ctxt context.Context, t client.Target) {
 	// create target manager
 	h, err := NewTargetHandler(t, c.logf, c.debugf, c.errorf)
 	if err != nil {
-		c.errorf("could not create handler for %s, got: %v", t, err)
+		c.errorf("could not create handler for %s: %v", t, err)
 		return
 	}
 
 	// run
 	err = h.Run(ctxt)
 	if err != nil {
-		c.errorf("could not start handler for %s, got: %v", t, err)
+		c.errorf("could not start handler for %s: %v", t, err)
 		return
 	}
 

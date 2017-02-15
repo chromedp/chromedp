@@ -50,7 +50,7 @@ type TargetHandler struct {
 	lastm sync.Mutex
 
 	// res is the id->result channel map.
-	res   map[int64]chan easyjson.RawMessage
+	res   map[int64]chan *cdp.Message
 	resrw sync.RWMutex
 
 	// logging funcs
@@ -87,7 +87,7 @@ func (h *TargetHandler) Run(ctxt context.Context) error {
 	h.qcmd = make(chan *cdp.Message)
 	h.qres = make(chan *cdp.Message)
 	h.qevents = make(chan *cdp.Message)
-	h.res = make(map[int64]chan easyjson.RawMessage)
+	h.res = make(map[int64]chan *cdp.Message)
 	h.detached = make(chan *inspector.EventDetached)
 	h.pageWaitGroup = new(sync.WaitGroup)
 	h.domWaitGroup = new(sync.WaitGroup)
@@ -108,7 +108,7 @@ func (h *TargetHandler) Run(ctxt context.Context) error {
 	} {
 		err = a.Do(ctxt, h)
 		if err != nil {
-			return fmt.Errorf("unable to execute %s, got: %v", reflect.TypeOf(a), err)
+			return fmt.Errorf("unable to execute %s: %v", reflect.TypeOf(a), err)
 		}
 	}
 
@@ -117,7 +117,7 @@ func (h *TargetHandler) Run(ctxt context.Context) error {
 	// get page resources
 	tree, err := page.GetResourceTree().Do(ctxt, h)
 	if err != nil {
-		return fmt.Errorf("unable to get resource tree, got: %v", err)
+		return fmt.Errorf("unable to get resource tree: %v", err)
 	}
 
 	h.frames[tree.Frame.ID] = tree.Frame
@@ -182,19 +182,19 @@ func (h *TargetHandler) run(ctxt context.Context) {
 		case ev := <-h.qevents:
 			err = h.processEvent(ctxt, ev)
 			if err != nil {
-				h.errorf("could not process event %s, got: %v", ev.Method, err)
+				h.errorf("could not process event %s: %v", ev.Method, err)
 			}
 
 		case res := <-h.qres:
 			err = h.processResult(res)
 			if err != nil {
-				h.errorf("could not process result for message %d, got: %v", res.ID, err)
+				h.errorf("could not process result for message %d: %v", res.ID, err)
 			}
 
 		case cmd := <-h.qcmd:
 			err = h.processCommand(cmd)
 			if err != nil {
-				h.errorf("could not process command message %d, got: %v", cmd.ID, err)
+				h.errorf("could not process command message %d: %v", cmd.ID, err)
 			}
 
 		case <-ctxt.Done():
@@ -271,7 +271,7 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdp.Message) err
 func (h *TargetHandler) documentUpdated(ctxt context.Context) {
 	f, err := h.WaitFrame(ctxt, EmptyFrameID)
 	if err != nil {
-		h.errorf("could not get current frame, got: %v", err)
+		h.errorf("could not get current frame: %v", err)
 		return
 	}
 
@@ -286,7 +286,7 @@ func (h *TargetHandler) documentUpdated(ctxt context.Context) {
 	f.Nodes = make(map[cdp.NodeID]*cdp.Node)
 	f.Root, err = dom.GetDocument().WithPierce(true).Do(ctxt, h)
 	if err != nil {
-		h.errorf("could not retrieve document root for %s, got: %v", f.ID, err)
+		h.errorf("could not retrieve document root for %s: %v", f.ID, err)
 		return
 	}
 	f.Root.Invalidated = make(chan struct{})
@@ -304,11 +304,7 @@ func (h *TargetHandler) processResult(msg *cdp.Message) error {
 	}
 	defer close(ch)
 
-	if msg.Error != nil {
-		return msg.Error
-	}
-
-	ch <- msg.Result
+	ch <- msg
 
 	return nil
 }
@@ -346,7 +342,7 @@ func (h *TargetHandler) Execute(ctxt context.Context, commandType cdp.MethodType
 	id := h.next()
 
 	// save channel
-	ch := make(chan easyjson.RawMessage, 1)
+	ch := make(chan *cdp.Message, 1)
 	h.resrw.Lock()
 	h.res[id] = ch
 	h.resrw.Unlock()
@@ -364,8 +360,15 @@ func (h *TargetHandler) Execute(ctxt context.Context, commandType cdp.MethodType
 
 		select {
 		case msg := <-ch:
-			if res != nil {
-				errch <- easyjson.Unmarshal(msg, res)
+			switch {
+			case msg == nil:
+				errch <- cdp.ErrChannelClosed
+
+			case msg.Error != nil:
+				errch <- msg.Error
+
+			case res != nil:
+				errch <- easyjson.Unmarshal(msg.Result, res)
 			}
 
 		case <-ctxt.Done():
@@ -559,7 +562,7 @@ func (h *TargetHandler) pageEvent(ctxt context.Context, ev interface{}) {
 
 	f, err := h.WaitFrame(ctxt, id)
 	if err != nil {
-		h.errorf("could not get frame %s, got: %v", id, err)
+		h.errorf("could not get frame %s: %v", id, err)
 		return
 	}
 
@@ -579,7 +582,7 @@ func (h *TargetHandler) domEvent(ctxt context.Context, ev interface{}) {
 	// wait current frame
 	f, err := h.WaitFrame(ctxt, EmptyFrameID)
 	if err != nil {
-		h.errorf("error processing DOM event %s: error waiting for frame, got: %v", reflect.TypeOf(ev), err)
+		h.errorf("could not process DOM event %s: %v", reflect.TypeOf(ev), err)
 		return
 	}
 
@@ -643,12 +646,15 @@ func (h *TargetHandler) domEvent(ctxt context.Context, ev interface{}) {
 		return
 	}
 
-	s := strings.TrimPrefix(strings.TrimSuffix(runtime.FuncForPC(reflect.ValueOf(op).Pointer()).Name(), ".func1"), "github.com/knq/chromedp.")
-
 	// retrieve node
 	n, err := h.WaitNode(ctxt, f, id)
 	if err != nil {
-		h.errorf("error could not perform (%s) operation on node %d (wait node error), got: %v", s, id, err)
+		s := strings.TrimSuffix(runtime.FuncForPC(reflect.ValueOf(op).Pointer()).Name(), ".func1")
+		i := strings.LastIndex(s, ".")
+		if i != -1 {
+			s = s[i+1:]
+		}
+		h.errorf("could not perform (%s) operation on node %d (wait node): %v", s, id, err)
 		return
 	}
 

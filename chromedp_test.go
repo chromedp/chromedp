@@ -4,18 +4,46 @@ import (
 	"context"
 	"log"
 	"os"
-	"strings"
 	"testing"
 )
 
 var pool *Pool
-
 var defaultContext = context.Background()
+var testdataDir string
+
+func testAllocate(t *testing.T, path string) *Res {
+	c, err := pool.Allocate(defaultContext)
+	if err != nil {
+		t.Fatalf("could not allocate from pool: %v", err)
+	}
+
+	if path != "" {
+		err = c.Run(defaultContext, Navigate(testdataDir+"/"+path))
+		if err != nil {
+			t.Fatalf("could not navigate to testdata/%s: %v", path, err)
+		}
+	}
+
+	err = WithLogf(t.Logf)(c.c)
+	if err != nil {
+		t.Fatalf("could not set logf: %v", err)
+	}
+
+	err = WithErrorf(t.Errorf)(c.c)
+	if err != nil {
+		t.Fatalf("could not set errorf: %v", err)
+	}
+
+	return c
+}
 
 func TestMain(m *testing.M) {
 	var err error
 
-	pool, err = NewPool(PoolLog(log.Printf, log.Printf, log.Printf))
+	testdataDir = "file:" + os.Getenv("GOPATH") + "/src/github.com/knq/chromedp/testdata"
+
+	//pool, err = NewPool(PoolLog(log.Printf, log.Printf, log.Printf))
+	pool, err = NewPool()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -28,52 +56,4 @@ func TestMain(m *testing.M) {
 	}
 
 	os.Exit(code)
-}
-
-func TestNavigate(t *testing.T) {
-	var err error
-
-	c, err := pool.Allocate(defaultContext)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer c.Release()
-
-	err = c.Run(defaultContext, Navigate("https://www.google.com/"))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = c.Run(defaultContext, WaitVisible(`#hplogo`, ByID))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var urlstr string
-	err = c.Run(defaultContext, Location(&urlstr))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !strings.HasPrefix(urlstr, "https://www.google.") {
-		t.Errorf("expected to be on google domain, at: %s", urlstr)
-	}
-
-	var title string
-	err = c.Run(defaultContext, Title(&title))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !strings.Contains(strings.ToLower(title), "google") {
-		t.Errorf("expected title to contain google, instead title is: %s", title)
-	}
-}
-
-func TestSendKeys(t *testing.T) {
-	var err error
-
-	c, err := pool.Allocate(defaultContext)
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer c.Release()
 }
