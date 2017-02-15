@@ -432,7 +432,6 @@ func WithConsolef(f LogFunc) Option {
 // new targets
 func WithNewTargetTimeout(d time.Duration) Option {
 	return func(c *CDP) error {
-		c.debugf("newTargetTimeout: %s", d.String())
 		c.newTargetTimeout = d
 		return nil
 	}
