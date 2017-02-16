@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"image"
 	"image/png"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -219,11 +220,11 @@ func SetAttributes(sel interface{}, attributes map[string]string, opts ...QueryO
 			return errors.New("expected at least one element")
 		}
 
-		attrs := make([]string, len(attributes)*2)
+		attrs := make([]string, len(attributes))
 		i := 0
 		for k, v := range attributes {
-			attrs[i], attrs[i+1] = k, v
-			i += 2
+			attrs[i] = fmt.Sprintf(`%s=%s`, k, strconv.Quote(v))
+			i++
 		}
 
 		return dom.SetAttributesAsText(nodes[0].NodeID, strings.Join(attrs, " ")).Do(ctxt, h)
