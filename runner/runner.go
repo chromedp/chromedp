@@ -13,6 +13,8 @@ import (
 	"sync"
 	"syscall"
 
+	"net/url"
+
 	"github.com/knq/chromedp/client"
 )
 
@@ -377,6 +379,11 @@ func StartURL(urlstr string) CommandLineOption {
 // Proxy is the Chrome command line option to set the outbound proxy.
 func Proxy(proxy string) CommandLineOption {
 	return Flag("proxy-server", proxy)
+}
+
+// ProxyPacURL is the Chrome command line option to set the URL of a proxy PAC file.
+func ProxyPacURL(pacURL url.URL) CommandLineOption {
+	return Flag("proxy-pac-url", pacURL.String())
 }
 
 // WindowSize is the Chrome command line option to set the initial window size.
