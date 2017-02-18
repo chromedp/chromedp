@@ -1434,6 +1434,9 @@ func (fs FrameState) String() string {
 	return "[" + strings.Join(s, " ") + "]"
 }
 
+// EmptyFrameID is the "non-existent" frame id.
+const EmptyFrameID = FrameID("")
+
 // LoaderID unique loader identifier.
 type LoaderID string
 
@@ -1807,6 +1810,9 @@ func (ns NodeState) String() string {
 	}
 	return "[" + strings.Join(s, " ") + "]"
 }
+
+// EmptyNodeID is the "non-existent" node id.
+const EmptyNodeID = NodeID(0)
 
 // RGBA a structure holding an RGBA color.
 type RGBA struct {

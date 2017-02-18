@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/knq/chromedp/cdp"
-	"github.com/knq/chromedp/cdp/util"
 )
 
 const (
@@ -20,12 +19,6 @@ const (
 
 	// DefaultPoolEndPort is the default end port number.
 	DefaultPoolEndPort = 10000
-
-	// EmptyFrameID is the "non-existent" (ie current) frame.
-	EmptyFrameID cdp.FrameID = cdp.FrameID("")
-
-	// EmptyNodeID is the "non-existent" node id.
-	EmptyNodeID cdp.NodeID = cdp.NodeID(0)
 
 	// textJS is a javascript snippet that returns the concatenated textContent
 	// of all visible (ie, offsetParent !== null) children.
@@ -98,11 +91,6 @@ const (
 	})($x('%s'))`
 )
 
-// UnmarshalMessage unmarshals the message result or params.
-func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
-	return util.UnmarshalMessage(msg)
-}
-
 // frameOp is a frame manipulation operation.
 type frameOp func(*cdp.Frame)
 
@@ -124,7 +112,7 @@ func frameAttached(id cdp.FrameID) frameOp {
 }*/
 
 func frameDetached(f *cdp.Frame) {
-	f.ParentID = EmptyFrameID
+	f.ParentID = cdp.EmptyFrameID
 	clearFrameState(f, cdp.FrameAttached)
 }
 
@@ -353,8 +341,8 @@ func nodeHighlightRequested(n *cdp.Node) {
 }
 
 func insertNode(n []*cdp.Node, prevID cdp.NodeID, c *cdp.Node) []*cdp.Node {
-	i := 0
-	found := false
+	var i int
+	var found bool
 	for ; i < len(n); i++ {
 		if n[i].NodeID == prevID {
 			found = true
@@ -380,7 +368,7 @@ func removeNode(n []*cdp.Node, id cdp.NodeID) []*cdp.Node {
 	}
 
 	var found bool
-	i := 0
+	var i int
 	for ; i < len(n); i++ {
 		if n[i].NodeID == id {
 			found = true

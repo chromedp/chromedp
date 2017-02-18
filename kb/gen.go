@@ -343,7 +343,7 @@ var nameRE = regexp.MustCompile(`[A-Z][a-z]+:`)
 func processKeys(keys map[rune]kb.Key) ([]byte, []byte, error) {
 	// order rune keys
 	idx := make([]rune, len(keys))
-	i := 0
+	var i int
 	for c := range keys {
 		idx[i] = c
 		i++

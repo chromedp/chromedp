@@ -236,8 +236,7 @@ func SetAttributes(sel interface{}, attributes map[string]string, opts ...QueryO
 			return errors.New("expected at least one element")
 		}
 
-		attrs := make([]string, len(attributes))
-		i := 0
+		i, attrs := 0, make([]string, len(attributes))
 		for k, v := range attributes {
 			attrs[i] = fmt.Sprintf(`%s=%s`, k, strconv.Quote(v))
 			i++

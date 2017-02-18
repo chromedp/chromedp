@@ -110,7 +110,7 @@ func (fb fileBuffers) generateUtilPackage(domains []*internal.Domain) {
 		importMap[*internal.FlagPkg+"/"+d.PackageName()] = d.PackageImportAlias()
 	}
 
-	w := fb.get("util/util.go", "util", nil)
+	w := fb.get("cdputil/cdputil.go", "cdputil", nil)
 	templates.StreamFileImportTemplate(w, importMap)
 	templates.StreamExtraUtilTemplate(w, domains)
 	fb.release(w)

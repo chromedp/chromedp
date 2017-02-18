@@ -12,6 +12,7 @@ import (
 	"github.com/mailru/easyjson"
 
 	"github.com/knq/chromedp/cdp"
+	"github.com/knq/chromedp/cdp/cdputil"
 	"github.com/knq/chromedp/cdp/css"
 	"github.com/knq/chromedp/cdp/dom"
 	"github.com/knq/chromedp/cdp/inspector"
@@ -230,7 +231,7 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdp.Message) err
 	}
 
 	// unmarshal
-	ev, err := UnmarshalMessage(msg)
+	ev, err := cdputil.UnmarshalMessage(msg)
 	if err != nil {
 		return err
 	}
@@ -269,7 +270,7 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdp.Message) err
 // documentUpdated handles the document updated event, retrieving the document
 // root for the root frame.
 func (h *TargetHandler) documentUpdated(ctxt context.Context) {
-	f, err := h.WaitFrame(ctxt, EmptyFrameID)
+	f, err := h.WaitFrame(ctxt, cdp.EmptyFrameID)
 	if err != nil {
 		h.errorf("could not get current frame: %v", err)
 		return
@@ -459,7 +460,7 @@ loop:
 			var ok bool
 
 			h.RLock()
-			if id == EmptyFrameID {
+			if id == cdp.EmptyFrameID {
 				f, ok = h.cur, h.cur != nil
 			} else {
 				f, ok = h.frames[id]
@@ -580,7 +581,7 @@ func (h *TargetHandler) domEvent(ctxt context.Context, ev interface{}) {
 	defer h.domWaitGroup.Done()
 
 	// wait current frame
-	f, err := h.WaitFrame(ctxt, EmptyFrameID)
+	f, err := h.WaitFrame(ctxt, cdp.EmptyFrameID)
 	if err != nil {
 		h.errorf("could not process DOM event %s: %v", reflect.TypeOf(ev), err)
 		return
@@ -609,7 +610,7 @@ func (h *TargetHandler) domEvent(ctxt context.Context, ev interface{}) {
 		id, op = e.NodeID, childNodeCountUpdated(e.ChildNodeCount)
 
 	case *dom.EventChildNodeInserted:
-		if e.PreviousNodeID != EmptyNodeID {
+		if e.PreviousNodeID != cdp.EmptyNodeID {
 			_, err = h.WaitNode(ctxt, f, e.PreviousNodeID)
 			if err != nil {
 				return

@@ -47,7 +47,7 @@ func NavigateBack(ctxt context.Context, h cdp.Handler) error {
 		return err
 	}
 
-	i := 0
+	var i int
 	for ; i < len(entries); i++ {
 		if entries[i].ID == cur {
 			break

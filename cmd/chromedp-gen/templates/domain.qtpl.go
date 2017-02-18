@@ -433,7 +433,7 @@ func StreamCommandDoFuncTemplate(qw422016 *qt422016.Writer, c *internal.Type, d 
 
 	// determine if there's a conditional that indicates whether or not the
 	// returned value is b64 encoded.
-	b64cond := false
+	var b64cond bool
 	for _, p := range c.Returns {
 		if p.Name == internal.Base64EncodedParamName {
 			b64cond = true

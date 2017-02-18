@@ -528,7 +528,7 @@ func addEnumValues(d *internal.Domain, n string, p *internal.Type) {
 		v[z] = false
 	}
 
-	i := 0
+	var i int
 	typ.Enum = make([]string, len(v))
 	for _, z := range all {
 		if !v[z] {

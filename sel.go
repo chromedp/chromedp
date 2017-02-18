@@ -164,7 +164,7 @@ func ByQuery(s *Selector) {
 			return nil, err
 		}
 
-		if nodeID == EmptyNodeID {
+		if nodeID == cdp.EmptyNodeID {
 			return []cdp.NodeID{}, nil
 		}
 
@@ -230,7 +230,7 @@ func ByNodeID(s *Selector) {
 // waitReady waits for the specified nodes to be ready.
 func (s *Selector) waitReady(check func(context.Context, cdp.Handler, *cdp.Node) error) func(context.Context, cdp.Handler, *cdp.Node, ...cdp.NodeID) ([]*cdp.Node, error) {
 	return func(ctxt context.Context, h cdp.Handler, n *cdp.Node, ids ...cdp.NodeID) ([]*cdp.Node, error) {
-		f, err := h.WaitFrame(ctxt, EmptyFrameID)
+		f, err := h.WaitFrame(ctxt, cdp.EmptyFrameID)
 		if err != nil {
 			return nil, err
 		}

@@ -161,8 +161,7 @@ func (c *CDP) ListTargets() []string {
 	c.RLock()
 	defer c.RUnlock()
 
-	targets := make([]string, len(c.handlers))
-	i := 0
+	i, targets := 0, make([]string, len(c.handlers))
 	for k := range c.handlerMap {
 		targets[i] = k
 		i++

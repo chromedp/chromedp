@@ -63,6 +63,9 @@ func (fs FrameState) String() string {
     }
     return "[" + strings.Join(s, " ") + "]"
 }
+
+// EmptyFrameID is the "non-existent" frame id.
+const EmptyFrameID = FrameID("")
 {% endfunc %}
 
 // ExtraNodeTemplate is a special template for the DOM.Node type, adding NodeState.
@@ -177,6 +180,9 @@ func (ns NodeState) String() string {
     }
     return "[" + strings.Join(s, " ") + "]"
 }
+
+// EmptyNodeID is the "non-existent" node id.
+const EmptyNodeID = NodeID(0)
 {% endfunc %}
 
 // ExtraFixStringUnmarshaler is a template that forces values to be parsed properly.
