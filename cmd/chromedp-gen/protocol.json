@@ -9902,6 +9902,7 @@
                 "longLayout",
                 "blockedEvent",
                 "blockedParser",
+                "discouragedAPIUse",
                 "handler",
                 "recurringHandler"
               ],

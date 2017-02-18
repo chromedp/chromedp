@@ -186,7 +186,7 @@ func (t *{%s= typ %}) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		in.AddError(err)
 	}
 {% endif %}
-	*t = {%s= typ %}({% if parseFunc != "" %}v{% else %}buf{% end %})
+	*t = {%s= typ %}({% if parseFunc != "" %}v{% else %}buf{% endif %})
 }
 
 // UnmarshalJSON satisfies json.Unmarshaler.

@@ -42,10 +42,14 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpSchema(in *jlexer.Lexer, out *
 				out.Domains = nil
 			} else {
 				in.Delim('[')
-				if !in.IsDelim(']') {
-					out.Domains = make([]*Domain, 0, 8)
+				if out.Domains == nil {
+					if !in.IsDelim(']') {
+						out.Domains = make([]*Domain, 0, 8)
+					} else {
+						out.Domains = []*Domain{}
+					}
 				} else {
-					out.Domains = []*Domain{}
+					out.Domains = (out.Domains)[:0]
 				}
 				for !in.IsDelim(']') {
 					var v1 *Domain

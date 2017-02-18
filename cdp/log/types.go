@@ -162,12 +162,13 @@ func (t Violation) String() string {
 
 // Violation values.
 const (
-	ViolationLongTask         Violation = "longTask"
-	ViolationLongLayout       Violation = "longLayout"
-	ViolationBlockedEvent     Violation = "blockedEvent"
-	ViolationBlockedParser    Violation = "blockedParser"
-	ViolationHandler          Violation = "handler"
-	ViolationRecurringHandler Violation = "recurringHandler"
+	ViolationLongTask          Violation = "longTask"
+	ViolationLongLayout        Violation = "longLayout"
+	ViolationBlockedEvent      Violation = "blockedEvent"
+	ViolationBlockedParser     Violation = "blockedParser"
+	ViolationDiscouragedAPIUse Violation = "discouragedAPIUse"
+	ViolationHandler           Violation = "handler"
+	ViolationRecurringHandler  Violation = "recurringHandler"
 )
 
 // MarshalEasyJSON satisfies easyjson.Marshaler.
@@ -191,6 +192,8 @@ func (t *Violation) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = ViolationBlockedEvent
 	case ViolationBlockedParser:
 		*t = ViolationBlockedParser
+	case ViolationDiscouragedAPIUse:
+		*t = ViolationDiscouragedAPIUse
 	case ViolationHandler:
 		*t = ViolationHandler
 	case ViolationRecurringHandler:

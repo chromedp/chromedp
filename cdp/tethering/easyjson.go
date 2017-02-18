@@ -17,7 +17,74 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpTethering(in *jlexer.Lexer, out *EventAccepted) {
+func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpTethering(in *jlexer.Lexer, out *UnbindParams) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeString()
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "port":
+			out.Port = int64(in.Int64())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpTethering(out *jwriter.Writer, in UnbindParams) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	if !first {
+		out.RawByte(',')
+	}
+	first = false
+	out.RawString("\"port\":")
+	out.Int64(int64(in.Port))
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v UnbindParams) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpTethering(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v UnbindParams) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpTethering(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *UnbindParams) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpTethering(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *UnbindParams) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpTethering(l, v)
+}
+func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpTethering1(in *jlexer.Lexer, out *EventAccepted) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -50,7 +117,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpTethering(in *jlexer.Lexer, ou
 		in.Consumed()
 	}
 }
-func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpTethering(out *jwriter.Writer, in EventAccepted) {
+func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpTethering1(out *jwriter.Writer, in EventAccepted) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -76,91 +143,24 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpTethering(out *jwriter.Writer,
 // MarshalJSON supports json.Marshaler interface
 func (v EventAccepted) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpTethering(&w, v)
-	return w.Buffer.BuildBytes(), w.Error
-}
-
-// MarshalEasyJSON supports easyjson.Marshaler interface
-func (v EventAccepted) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpTethering(w, v)
-}
-
-// UnmarshalJSON supports json.Unmarshaler interface
-func (v *EventAccepted) UnmarshalJSON(data []byte) error {
-	r := jlexer.Lexer{Data: data}
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpTethering(&r, v)
-	return r.Error()
-}
-
-// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *EventAccepted) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpTethering(l, v)
-}
-func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpTethering1(in *jlexer.Lexer, out *UnbindParams) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeString()
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "port":
-			out.Port = int64(in.Int64())
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpTethering1(out *jwriter.Writer, in UnbindParams) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"port\":")
-	out.Int64(int64(in.Port))
-	out.RawByte('}')
-}
-
-// MarshalJSON supports json.Marshaler interface
-func (v UnbindParams) MarshalJSON() ([]byte, error) {
-	w := jwriter.Writer{}
 	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpTethering1(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
-func (v UnbindParams) MarshalEasyJSON(w *jwriter.Writer) {
+func (v EventAccepted) MarshalEasyJSON(w *jwriter.Writer) {
 	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpTethering1(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
-func (v *UnbindParams) UnmarshalJSON(data []byte) error {
+func (v *EventAccepted) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
 	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpTethering1(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *UnbindParams) UnmarshalEasyJSON(l *jlexer.Lexer) {
+func (v *EventAccepted) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpTethering1(l, v)
 }
 func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpTethering2(in *jlexer.Lexer, out *BindParams) {

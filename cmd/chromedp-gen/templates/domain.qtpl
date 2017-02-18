@@ -21,7 +21,7 @@
 {%s= CommandFuncTemplate(c, d, domains) %}
 
 {% code /* add param funcs (only if it has parameters and a returns). */ %}
-{% if len(c.Parameters) != 0 %}{% for _, p := range c.Parameters %}{% if !p.Optional %}{% continue %}{% end %}
+{% if len(c.Parameters) != 0 %}{% for _, p := range c.Parameters %}{% if !p.Optional %}{% continue %}{% endif %}
 {%s= CommandOptionFuncTemplate(p, c, d, domains) %}
 {% endfor %}{% endif %}
 
@@ -46,8 +46,8 @@
 %}
 {%s= formatComment(c.GetDescription(), "", cmdName + " ") %}{% if len(c.Parameters) > 0 %}
 //
-// parameters:{% for _, p := range c.Parameters %}{% if p.Optional %}{% continue %}{% end %}
-//   {%s= p.String() %}{% if p.Optional %} (optional){% end %}{% endfor %}{% endif %}
+// parameters:{% for _, p := range c.Parameters %}{% if p.Optional %}{% continue %}{% endif %}
+//   {%s= p.String() %}{% if p.Optional %} (optional){% endif %}{% endfor %}{% endif %}
 func {%s= cmdName %}({%s= c.ParamList(d, domains, false) %}) *{%s= typ %}{
 	return &{%s= typ %}{{% for _, t := range c.Parameters %}{% if !t.Optional %}
 		{%s= t.GoName(false) %}: {%s= t.GoName(true) %},{% endif %}{% endfor %}
@@ -111,7 +111,7 @@ func (p {%s= typ %}) {%s= optName %}({%s= v %} {%s= t.GoType(d, domains) %}) *{%
 // Do executes {%s= c.ProtoName(d) %} against the provided context and
 // target handler.{% if !hasEmptyRet %}
 //
-// returns:{% for _, p := range c.Returns %}{% if p.Name == internal.Base64EncodedParamName %}{% continue %}{% end %}
+// returns:{% for _, p := range c.Returns %}{% if p.Name == internal.Base64EncodedParamName %}{% continue %}{% endif %}
 //   {%s= p.String() %}{% endfor %}{% endif %}
 func (p *{%s= typ %}) Do(ctxt context.Context, h cdp.Handler) ({%s= retTypeList %}err error) {{% if hasEmptyRet %}
 	return h.Execute(ctxt, cdp.{%s= c.CommandMethodType(d) %}, {%s= pval %}, nil){% else %}

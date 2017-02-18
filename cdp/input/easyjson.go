@@ -705,10 +705,14 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpInput5(in *jlexer.Lexer, out *
 				out.TouchPoints = nil
 			} else {
 				in.Delim('[')
-				if !in.IsDelim(']') {
-					out.TouchPoints = make([]*TouchPoint, 0, 8)
+				if out.TouchPoints == nil {
+					if !in.IsDelim(']') {
+						out.TouchPoints = make([]*TouchPoint, 0, 8)
+					} else {
+						out.TouchPoints = []*TouchPoint{}
+					}
 				} else {
-					out.TouchPoints = []*TouchPoint{}
+					out.TouchPoints = (out.TouchPoints)[:0]
 				}
 				for !in.IsDelim(']') {
 					var v1 *TouchPoint

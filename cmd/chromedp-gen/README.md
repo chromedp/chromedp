@@ -11,46 +11,28 @@ Run [`update.sh`](update.sh) to retrieve and combine the latest
 [`js_protocol.json`](https://chromium.googlesource.com/v8/v8/+/master/src/inspector/js_protocol.json)
 from the [Chromium source tree](https://chromium.googlesource.com/) into [`protocol.json`](protocol.json).
 
-## Installing quicktemplate and easyjson
+## Installing dependencies
 
-`chromedp-gen` uses [quicktemplate](https://github.com/valyala/quicktemplate) for
-code generation templates, and uses [easyjson](https://github.com/mailru/easyjson)
-for JSON marshaling/unmarshaling.
+`chromedp-gen` uses the cli tools [qtc](https://github.com/valyala/quicktemplate) for
+code generation templates, [easyjson](https://github.com/mailru/easyjson) for
+JSON marshaling/unmarshaling, and [goimports](https://golang.org/x/tools/cmd/goimports)
+for formatting generated code (and fixing import statements).
 
-Unfortunately, both of these projects cannot be used directly out of the box,
-as the versions used by `chromedp-gen` make use of a couple minor modifications:
-
-1. quicktemplate has been modified to recognize '{% end %}' templates
-2. easyjson has been modified to always output generated code in the same order
-   (previously, the mailru version did not always generate the same output, as
-   a couple points in the code were being affected by the Go map/key order
-   issue).
-
-I ([kenshaw](https://github.com/kenshaw)) have put in issues/pull requests to
-both projects in the hope that the changes I've made get merged and/or fixed
-otherwise.
-
-For now, the exact versions that are in use with `chromedp-gen` can be obtained
-on my personal Github account:
-
-* [github.com/kenshaw/quicktemplate](https://github.com/kenshaw/quicktemplate)
-* [github.com/kenshaw/easyjson](https://github.com/kenshaw/easyjson)
-
-The commands (and their associated dependencies) can be installed in the usual
-Go way:
+The cli commands (and their associated dependencies) can be installed in the
+usual Go way:
 
 ```sh
-go get -u github.com/kenshaw/quicktemplate/qtc github.com/kenshaw/easyjson/easyjson
+go get -u github.com/valyala/quicktemplate/qtc github.com/mailru/easyjson/easyjson golang.org/x/tools/cmd/goimports
 ```
 
-Each package provides a command (`qtc` and `easyjson`, respectively) that need
-to be available on the path for the `chromedp-gen` command to work.
+Please make sure that `$GOPATH/bin` is somewhere on your `$PATH`.
 
 ## Generating types for chromedp
 
-Assuming the `qtc` and `easyjson` commands are available (see above), one can
-then run the [`build.sh`](build.sh) which will handle generating template
-files, and building/invoking the `chromedp-gen` command.
+Assuming the `qtc`, `easyjson`, and `goimports` commands are available on
+`$PATH` (see above), one can then run the [`build.sh`](build.sh) which will
+handle generating template files, and building/invoking the `chromedp-gen`
+command.
 
 ## Reference Output
 
