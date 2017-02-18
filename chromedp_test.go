@@ -8,7 +8,7 @@ import (
 )
 
 var pool *Pool
-var defaultContext = context.Background()
+var defaultContext, defaultCancel = context.WithCancel(context.Background())
 var testdataDir string
 
 func testAllocate(t *testing.T, path string) *Res {
@@ -66,6 +66,8 @@ func TestMain(m *testing.M) {
 	}
 
 	code := m.Run()
+
+	defaultCancel()
 
 	err = pool.Shutdown()
 	if err != nil {

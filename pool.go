@@ -66,51 +66,44 @@ func (p *Pool) Shutdown() error {
 func (p *Pool) Allocate(ctxt context.Context, opts ...runner.CommandLineOption) (*Res, error) {
 	var err error
 
-	ctxt, cancel := context.WithCancel(ctxt)
+	r := p.next(ctxt)
 
-	r := &Res{
-		p:      p,
-		ctxt:   ctxt,
-		cancel: cancel,
-		port:   p.next(),
-	}
+	p.debugf("pool allocating %d", r.port)
 
 	// create runner
 	r.r, err = runner.New(append([]runner.CommandLineOption{
 		runner.Headless("", r.port),
 	}, opts...)...)
 	if err != nil {
-		cancel()
+		defer r.Release()
+		p.errorf("pool could not allocate runner on port %d: %v", r.port, err)
 		return nil, err
 	}
 
 	// start runner
-	err = r.r.Start(ctxt)
+	err = r.r.Start(r.ctxt)
 	if err != nil {
-		cancel()
+		defer r.Release()
+		p.errorf("pool could not start runner on port %d: %v", r.port, err)
 		return nil, err
 	}
 
 	// setup cdp
 	r.c, err = New(
-		ctxt, WithRunner(r.r),
+		r.ctxt, WithRunner(r.r),
 		WithLogf(p.logf), WithDebugf(p.debugf), WithErrorf(p.errorf),
 	)
 	if err != nil {
-		cancel()
+		defer r.Release()
+		p.errorf("pool could not connect to %d: %v", r.port, err)
 		return nil, err
 	}
-
-	p.rw.Lock()
-	defer p.rw.Unlock()
-
-	p.res[r.port] = r
 
 	return r, nil
 }
 
-// next returns the next available port number.
-func (p *Pool) next() int {
+// next returns the next available res.
+func (p *Pool) next(ctxt context.Context) *Res {
 	p.rw.Lock()
 	defer p.rw.Unlock()
 
@@ -127,7 +120,15 @@ func (p *Pool) next() int {
 		panic("no ports available")
 	}
 
-	return i
+	r := &Res{
+		p:    p,
+		port: i,
+	}
+	r.ctxt, r.cancel = context.WithCancel(ctxt)
+
+	p.res[i] = r
+
+	return r
 }
 
 // Res is a pool resource.
@@ -146,9 +147,10 @@ func (r *Res) Release() error {
 
 	err := r.c.Wait()
 
+	defer r.p.debugf("pool released %d", r.port)
+
 	r.p.rw.Lock()
 	defer r.p.rw.Unlock()
-
 	delete(r.p.res, r.port)
 
 	return err

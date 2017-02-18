@@ -1,9 +1,9 @@
 package chromedp
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/css"
@@ -12,6 +12,8 @@ import (
 )
 
 func TestNodes(t *testing.T) {
+	t.Parallel()
+
 	c := testAllocate(t, "table.html")
 	defer c.Release()
 
@@ -40,13 +42,15 @@ func TestNodes(t *testing.T) {
 }
 
 func TestNodeIDs(t *testing.T) {
+	t.Parallel()
+
 	c := testAllocate(t, "table.html")
 	defer c.Release()
 
 	tests := []struct {
-		sel    string
-		option QueryOption
-		len    int
+		sel string
+		by  QueryOption
+		len int
 	}{
 		{"/html/body/table/tbody[1]/tr[2]/td", BySearch, 3},
 		{"body > table > tbody:nth-child(2) > tr:nth-child(2) > td:not(:last-child)", ByQueryAll, 2},
@@ -57,7 +61,7 @@ func TestNodeIDs(t *testing.T) {
 	var err error
 	for i, test := range tests {
 		var ids []cdp.NodeID
-		err = c.Run(defaultContext, NodeIDs(test.sel, &ids, test.option))
+		err = c.Run(defaultContext, NodeIDs(test.sel, &ids, test.by))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -68,12 +72,14 @@ func TestNodeIDs(t *testing.T) {
 }
 
 func TestFocusBlur(t *testing.T) {
+	t.Parallel()
+
 	c := testAllocate(t, "js.html")
 	defer c.Release()
 
 	tests := []struct {
-		sel    string
-		option QueryOption
+		sel string
+		by  QueryOption
 	}{
 		{`//*[@id="input1"]`, BySearch},
 		{`body > input[type="number"]:nth-child(1)`, ByQueryAll},
@@ -87,13 +93,13 @@ func TestFocusBlur(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		err = c.Run(defaultContext, Focus(test.sel, test.option))
+		err = c.Run(defaultContext, Focus(test.sel, test.by))
 		if err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
 
 		var value string
-		err = c.Run(defaultContext, Value(test.sel, &value, test.option))
+		err = c.Run(defaultContext, Value(test.sel, &value, test.by))
 		if err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
@@ -101,12 +107,12 @@ func TestFocusBlur(t *testing.T) {
 			t.Errorf("test %d expected value is '9999', got: '%s'", i, value)
 		}
 
-		err = c.Run(defaultContext, Blur(test.sel, test.option))
+		err = c.Run(defaultContext, Blur(test.sel, test.by))
 		if err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
 
-		err = c.Run(defaultContext, Value(test.sel, &value, test.option))
+		err = c.Run(defaultContext, Value(test.sel, &value, test.by))
 		if err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
@@ -117,6 +123,8 @@ func TestFocusBlur(t *testing.T) {
 }
 
 func TestDimensions(t *testing.T) {
+	t.Parallel()
+
 	c := testAllocate(t, "image.html")
 	defer c.Release()
 
@@ -146,6 +154,8 @@ func TestDimensions(t *testing.T) {
 }
 
 func TestText(t *testing.T) {
+	t.Parallel()
+
 	c := testAllocate(t, "form.html")
 	defer c.Release()
 
@@ -195,32 +205,35 @@ func TestClear(t *testing.T) {
 		{`#form > input[type="text"]`, ByQueryAll},
 	}
 
-	var err error
 	for i, test := range tests {
-		c := testAllocate(t, "form.html")
-		defer c.Release()
+		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			t.Parallel()
 
-		var val string
-		err = c.Run(defaultContext, Value(test.sel, &val, test.by))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
-		if val == "" {
-			t.Errorf("test %d expected `%s` to have non empty value", i, test.sel)
-		}
+			c := testAllocate(t, "form.html")
+			defer c.Release()
 
-		err = c.Run(defaultContext, Clear(test.sel, test.by))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
+			var val string
+			err := c.Run(defaultContext, Value(test.sel, &val, test.by))
+			if err != nil {
+				t.Fatalf("got error: %v", err)
+			}
+			if val == "" {
+				t.Errorf("expected `%s` to have non empty value", test.sel)
+			}
 
-		err = c.Run(defaultContext, Value(test.sel, &val, test.by))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
-		if val != "" {
-			t.Errorf("test %d expected empty value for `%s`, got: %s", i, test.sel, val)
-		}
+			err = c.Run(defaultContext, Clear(test.sel, test.by))
+			if err != nil {
+				t.Fatalf("got error: %v", err)
+			}
+
+			err = c.Run(defaultContext, Value(test.sel, &val, test.by))
+			if err != nil {
+				t.Fatalf("got error: %v", err)
+			}
+			if val != "" {
+				t.Errorf("expected empty value for `%s`, got: %s", test.sel, val)
+			}
+		})
 	}
 }
 
@@ -237,33 +250,38 @@ func TestReset(t *testing.T) {
 		{"#bar", ByID, "foobar", "bar"},
 	}
 
-	var err error
 	for i, test := range tests {
-		c := testAllocate(t, "form.html")
-		defer c.Release()
+		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			t.Parallel()
 
-		err = c.Run(defaultContext, SetValue(test.sel, test.value, test.by))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
+			c := testAllocate(t, "form.html")
+			defer c.Release()
 
-		err = c.Run(defaultContext, Reset(test.sel, test.by))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
+			err := c.Run(defaultContext, SetValue(test.sel, test.value, test.by))
+			if err != nil {
+				t.Fatalf("got error: %v", err)
+			}
 
-		var value string
-		err = c.Run(defaultContext, Value(test.sel, &value, test.by))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
-		if value != test.exp {
-			t.Errorf("test %d expected value after reset is %s, got: '%s'", i, test.exp, value)
-		}
+			err = c.Run(defaultContext, Reset(test.sel, test.by))
+			if err != nil {
+				t.Fatalf("got error: %v", err)
+			}
+
+			var value string
+			err = c.Run(defaultContext, Value(test.sel, &value, test.by))
+			if err != nil {
+				t.Fatalf("got error: %v", err)
+			}
+			if value != test.exp {
+				t.Errorf("expected value after reset is %s, got: '%s'", test.exp, value)
+			}
+		})
 	}
 }
 
 func TestValue(t *testing.T) {
+	t.Parallel()
+
 	c := testAllocate(t, "form.html")
 	defer c.Release()
 
@@ -291,9 +309,6 @@ func TestValue(t *testing.T) {
 }
 
 func TestSetValue(t *testing.T) {
-	c := testAllocate(t, "form.html")
-	defer c.Release()
-
 	tests := []struct {
 		sel string
 		by  QueryOption
@@ -304,33 +319,33 @@ func TestSetValue(t *testing.T) {
 		{`#bar`, ByID},
 	}
 
-	var err error
 	for i, test := range tests {
-		if i != 0 {
-			err = c.Run(defaultContext, Reload())
+		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			t.Parallel()
+
+			c := testAllocate(t, "form.html")
+			defer c.Release()
+
+			err := c.Run(defaultContext, SetValue(test.sel, "FOOBAR", test.by))
 			if err != nil {
 				t.Fatalf("test %d got error: %v", i, err)
 			}
-			time.Sleep(50 * time.Millisecond)
-		}
 
-		err = c.Run(defaultContext, SetValue(test.sel, "FOOBAR", test.by))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
-
-		var value string
-		err = c.Run(defaultContext, Value(test.sel, &value, test.by))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
-		if value != "FOOBAR" {
-			t.Errorf("test %d expected `FOOBAR`, got: %s", i, value)
-		}
+			var value string
+			err = c.Run(defaultContext, Value(test.sel, &value, test.by))
+			if err != nil {
+				t.Fatalf("test %d got error: %v", i, err)
+			}
+			if value != "FOOBAR" {
+				t.Errorf("test %d expected `FOOBAR`, got: %s", i, value)
+			}
+		})
 	}
 }
 
 func TestAttributes(t *testing.T) {
+	t.Parallel()
+
 	c := testAllocate(t, "image.html")
 	defer c.Release()
 
@@ -421,29 +436,34 @@ func TestSetAttributes(t *testing.T) {
 			}},
 	}
 
-	var err error
 	for i, test := range tests {
-		c := testAllocate(t, "image.html")
-		defer c.Release()
+		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			t.Parallel()
 
-		err = c.Run(defaultContext, SetAttributes(test.sel, test.attrs, test.by))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
+			c := testAllocate(t, "image.html")
+			defer c.Release()
 
-		var attrs map[string]string
-		err = c.Run(defaultContext, Attributes(test.sel, &attrs, test.by))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
+			err := c.Run(defaultContext, SetAttributes(test.sel, test.attrs, test.by))
+			if err != nil {
+				t.Fatalf("got error: %v", err)
+			}
 
-		if !reflect.DeepEqual(test.exp, attrs) {
-			t.Errorf("test %d expected %v, got: %v", i, test.exp, attrs)
-		}
+			var attrs map[string]string
+			err = c.Run(defaultContext, Attributes(test.sel, &attrs, test.by))
+			if err != nil {
+				t.Fatalf("got error: %v", err)
+			}
+
+			if !reflect.DeepEqual(test.exp, attrs) {
+				t.Errorf("expected %v, got: %v", test.exp, attrs)
+			}
+		})
 	}
 }
 
 func TestAttributeValue(t *testing.T) {
+	t.Parallel()
+
 	c := testAllocate(t, "image.html")
 	defer c.Release()
 
@@ -492,35 +512,36 @@ func TestSetAttributeValue(t *testing.T) {
 		{"#bar", ByID, "foo", "bar"},
 	}
 
-	var err error
 	for i, test := range tests {
-		c := testAllocate(t, "form.html")
-		defer c.Release()
+		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			t.Parallel()
 
-		err = c.Run(defaultContext, SetAttributeValue(test.sel, test.attr, test.exp, test.by))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
+			c := testAllocate(t, "form.html")
+			defer c.Release()
 
-		var value string
-		var ok bool
-		err = c.Run(defaultContext, AttributeValue(test.sel, test.attr, &value, &ok, test.by))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
-		if !ok {
-			t.Fatalf("test %d failed to get attribute %s on %s", i, test.attr, test.sel)
-		}
-		if value != test.exp {
-			t.Errorf("test %d expected %s to be %s, got: %s", i, test.attr, test.exp, value)
-		}
+			err := c.Run(defaultContext, SetAttributeValue(test.sel, test.attr, test.exp, test.by))
+			if err != nil {
+				t.Fatalf("test %d got error: %v", i, err)
+			}
+
+			var value string
+			var ok bool
+			err = c.Run(defaultContext, AttributeValue(test.sel, test.attr, &value, &ok, test.by))
+			if err != nil {
+				t.Fatalf("test %d got error: %v", i, err)
+			}
+			if !ok {
+				t.Fatalf("test %d failed to get attribute %s on %s", i, test.attr, test.sel)
+			}
+
+			if value != test.exp {
+				t.Errorf("test %d expected %s to be %s, got: %s", i, test.attr, test.exp, value)
+			}
+		})
 	}
 }
 
 func TestRemoveAttribute(t *testing.T) {
-	c := testAllocate(t, "image.html")
-	defer c.Release()
-
 	tests := []struct {
 		sel  string
 		by   QueryOption
@@ -532,30 +553,28 @@ func TestRemoveAttribute(t *testing.T) {
 		{"#icon-github", ByID, "alt"},
 	}
 
-	var err error
 	for i, test := range tests {
-		if i != 0 {
-			err = c.Run(defaultContext, Reload())
+		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			t.Parallel()
+
+			c := testAllocate(t, "image.html")
+			defer c.Release()
+
+			err := c.Run(defaultContext, RemoveAttribute(test.sel, test.attr))
 			if err != nil {
-				t.Fatalf("test %d got error: %v", i, err)
+				t.Fatalf("got error: %v", err)
 			}
-			time.Sleep(50 * time.Millisecond)
-		}
 
-		err = c.Run(defaultContext, RemoveAttribute(test.sel, test.attr))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
-
-		var value string
-		var ok bool
-		err = c.Run(defaultContext, AttributeValue(test.sel, test.attr, &value, &ok, test.by))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
-		if ok || value != "" {
-			t.Fatalf("test %d expected attribute %s removed from element %s", i, test.attr, test.sel)
-		}
+			var value string
+			var ok bool
+			err = c.Run(defaultContext, AttributeValue(test.sel, test.attr, &value, &ok, test.by))
+			if err != nil {
+				t.Fatalf("got error: %v", err)
+			}
+			if ok || value != "" {
+				t.Fatalf("expected attribute %s removed from element %s", test.attr, test.sel)
+			}
+		})
 	}
 }
 
@@ -570,39 +589,39 @@ func TestClick(t *testing.T) {
 		{"#btn2", ByID},
 	}
 
-	var err error
 	for i, test := range tests {
-		c := testAllocate(t, "form.html")
-		defer c.Release()
+		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			t.Parallel()
 
-		err = c.Run(defaultContext, Click(test.sel, test.by))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
+			c := testAllocate(t, "form.html")
+			defer c.Release()
 
-		err = c.Run(defaultContext, WaitVisible("#logo > img", ByQuery))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
+			err := c.Run(defaultContext, Click(test.sel, test.by))
+			if err != nil {
+				t.Fatalf("test %d got error: %v", i, err)
+			}
 
-		var title string
-		err = c.Run(defaultContext, Title(&title))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
-		if title != "chromedp - Google Search" {
-			t.Errorf("test %d expected title to be 'chromedp - Google Search', got: '%s'", i, title)
-		}
+			err = c.Run(defaultContext, WaitVisible("#logo > img", ByQuery))
+			if err != nil {
+				t.Fatalf("test %d got error: %v", i, err)
+			}
+
+			var title string
+			err = c.Run(defaultContext, Title(&title))
+			if err != nil {
+				t.Fatalf("test %d got error: %v", i, err)
+			}
+			if title != "chromedp - Google Search" {
+				t.Errorf("test %d expected title to be 'chromedp - Google Search', got: '%s'", i, title)
+			}
+		})
 	}
 }
 
 func TestDoubleClick(t *testing.T) {
-	c := testAllocate(t, "js.html")
-	defer c.Release()
-
 	tests := []struct {
-		sel    string
-		option QueryOption
+		sel string
+		by  QueryOption
 	}{
 		{`/html/body/input[2]`, BySearch},
 		{`body > input[type="button"]:nth-child(2)`, ByQueryAll},
@@ -610,29 +629,27 @@ func TestDoubleClick(t *testing.T) {
 		{`#button1`, ByID},
 	}
 
-	var err error
 	for i, test := range tests {
-		if i != 0 {
-			err = c.Run(defaultContext, Reload())
+		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			t.Parallel()
+
+			c := testAllocate(t, "js.html")
+			defer c.Release()
+
+			err := c.Run(defaultContext, DoubleClick(test.sel, test.by))
 			if err != nil {
-				t.Fatalf("test %d got error: %v", i, err)
+				t.Fatalf("got error: %v", err)
 			}
-			time.Sleep(50 * time.Millisecond)
-		}
 
-		err = c.Run(defaultContext, DoubleClick(test.sel, test.option))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
-
-		var value string
-		err = c.Run(defaultContext, Value("#input1", &value, ByID))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
-		if value != "1" {
-			t.Errorf("test %d expected value to be '1', got: '%s'", i, value)
-		}
+			var value string
+			err = c.Run(defaultContext, Value("#input1", &value, ByID))
+			if err != nil {
+				t.Fatalf("got error: %v", err)
+			}
+			if value != "1" {
+				t.Errorf("expected value to be '1', got: '%s'", value)
+			}
+		})
 	}
 }
 
@@ -651,34 +668,39 @@ func TestSendKeys(t *testing.T) {
 		{"#select1", ByID, kb.ArrowDown + kb.ArrowDown, "three"},
 	}
 
-	var err error
 	for i, test := range tests {
-		c := testAllocate(t, "visible.html")
-		defer c.Release()
+		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			t.Parallel()
 
-		err = c.Run(defaultContext, SendKeys(test.sel, test.keys, test.by))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
+			c := testAllocate(t, "visible.html")
+			defer c.Release()
 
-		var val string
-		err = c.Run(defaultContext, Value(test.sel, &val, test.by))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
-		if val != test.exp {
-			t.Errorf("test %d expected value %s, got: %s", i, test.exp, val)
-		}
+			err := c.Run(defaultContext, SendKeys(test.sel, test.keys, test.by))
+			if err != nil {
+				t.Fatalf("test %d got error: %v", i, err)
+			}
+
+			var val string
+			err = c.Run(defaultContext, Value(test.sel, &val, test.by))
+			if err != nil {
+				t.Fatalf("test %d got error: %v", i, err)
+			}
+			if val != test.exp {
+				t.Errorf("test %d expected value %s, got: %s", i, test.exp, val)
+			}
+		})
 	}
 }
 
 func TestScreenshoot(t *testing.T) {
+	t.Parallel()
+
 	c := testAllocate(t, "image.html")
 	defer c.Release()
 
 	tests := []struct {
-		sel    string
-		option QueryOption
+		sel string
+		by  QueryOption
 	}{
 		{"/html/body/img", BySearch},
 		{"img", ByQueryAll},
@@ -712,39 +734,39 @@ func TestSubmit(t *testing.T) {
 		{"#form", ByID},
 	}
 
-	var err error
 	for i, test := range tests {
-		c := testAllocate(t, "form.html")
-		defer c.Release()
+		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			t.Parallel()
 
-		err = c.Run(defaultContext, Submit(test.sel, test.by))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
+			c := testAllocate(t, "form.html")
+			defer c.Release()
 
-		err = c.Run(defaultContext, WaitVisible("#logo > img", ByQuery))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
+			err := c.Run(defaultContext, Submit(test.sel, test.by))
+			if err != nil {
+				t.Fatalf("test %d got error: %v", i, err)
+			}
 
-		var title string
-		err = c.Run(defaultContext, Title(&title))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
-		if title != "chromedp - Google Search" {
-			t.Errorf("test %d expected title to be 'chromedp - Google Search', got: '%s'", i, title)
-		}
+			err = c.Run(defaultContext, WaitVisible("#logo > img", ByQuery))
+			if err != nil {
+				t.Fatalf("test %d got error: %v", i, err)
+			}
+
+			var title string
+			err = c.Run(defaultContext, Title(&title))
+			if err != nil {
+				t.Fatalf("test %d got error: %v", i, err)
+			}
+			if title != "chromedp - Google Search" {
+				t.Errorf("test %d expected title to be 'chromedp - Google Search', got: '%s'", i, title)
+			}
+		})
 	}
 }
 
 func TestComputedStyle(t *testing.T) {
-	c := testAllocate(t, "js.html")
-	defer c.Release()
-
 	tests := []struct {
-		sel    string
-		option QueryOption
+		sel string
+		by  QueryOption
 	}{
 		{`//*[@id="input1"]`, BySearch},
 		{`body > input[type="number"]:nth-child(1)`, ByQueryAll},
@@ -752,47 +774,45 @@ func TestComputedStyle(t *testing.T) {
 		{"#input1", ByID},
 	}
 
-	var err error
 	for i, test := range tests {
-		if i != 0 {
-			err = c.Run(defaultContext, Reload())
+		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			t.Parallel()
+
+			c := testAllocate(t, "js.html")
+			defer c.Release()
+
+			var styles []*css.ComputedProperty
+			err := c.Run(defaultContext, ComputedStyle(test.sel, &styles, test.by))
 			if err != nil {
-				t.Fatalf("test %d got error: %v", i, err)
+				t.Fatalf("got error: %v", err)
 			}
-			time.Sleep(50 * time.Millisecond)
-		}
 
-		var styles []*css.ComputedProperty
-		err = c.Run(defaultContext, ComputedStyle(test.sel, &styles, test.option))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
-
-		for _, style := range styles {
-			if style.Name == "background-color" {
-				if style.Value != "rgb(255, 0, 0)" {
-					t.Logf("test %d expected style 'rgb(255, 0, 0)' got: %s", i, style.Value)
+			for _, style := range styles {
+				if style.Name == "background-color" {
+					if style.Value != "rgb(255, 0, 0)" {
+						t.Logf("expected style 'rgb(255, 0, 0)' got: %s", style.Value)
+					}
 				}
 			}
-		}
 
-		err = c.Run(defaultContext, Click("#input1", ByID))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
+			err = c.Run(defaultContext, Click("#input1", ByID))
+			if err != nil {
+				t.Fatalf("got error: %v", err)
+			}
 
-		err = c.Run(defaultContext, ComputedStyle(test.sel, &styles, test.option))
-		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
+			err = c.Run(defaultContext, ComputedStyle(test.sel, &styles, test.by))
+			if err != nil {
+				t.Fatalf("got error: %v", err)
+			}
 
-		for _, style := range styles {
-			if style.Name == "background-color" {
-				if style.Value != "rgb(255, 255, 0)" {
-					t.Fatalf("test %d expected style 'rgb(255, 255, 0)' got: %s", i, style.Value)
+			for _, style := range styles {
+				if style.Name == "background-color" {
+					if style.Value != "rgb(255, 255, 0)" {
+						t.Fatalf("expected style 'rgb(255, 255, 0)' got: %s", style.Value)
+					}
 				}
 			}
-		}
+		})
 	}
 }
 

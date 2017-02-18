@@ -6,6 +6,8 @@ import (
 )
 
 func TestNavigate(t *testing.T) {
+	t.Parallel()
+
 	var err error
 
 	c := testAllocate(t, "")
