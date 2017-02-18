@@ -328,16 +328,16 @@ func TestSetValue(t *testing.T) {
 
 			err := c.Run(defaultContext, SetValue(test.sel, "FOOBAR", test.by))
 			if err != nil {
-				t.Fatalf("test %d got error: %v", i, err)
+				t.Fatalf("got error: %v", err)
 			}
 
 			var value string
 			err = c.Run(defaultContext, Value(test.sel, &value, test.by))
 			if err != nil {
-				t.Fatalf("test %d got error: %v", i, err)
+				t.Fatalf("got error: %v", err)
 			}
 			if value != "FOOBAR" {
-				t.Errorf("test %d expected `FOOBAR`, got: %s", i, value)
+				t.Errorf("expected `FOOBAR`, got: %s", value)
 			}
 		})
 	}
@@ -521,21 +521,21 @@ func TestSetAttributeValue(t *testing.T) {
 
 			err := c.Run(defaultContext, SetAttributeValue(test.sel, test.attr, test.exp, test.by))
 			if err != nil {
-				t.Fatalf("test %d got error: %v", i, err)
+				t.Fatalf("got error: %v", err)
 			}
 
 			var value string
 			var ok bool
 			err = c.Run(defaultContext, AttributeValue(test.sel, test.attr, &value, &ok, test.by))
 			if err != nil {
-				t.Fatalf("test %d got error: %v", i, err)
+				t.Fatalf("got error: %v", err)
 			}
 			if !ok {
-				t.Fatalf("test %d failed to get attribute %s on %s", i, test.attr, test.sel)
+				t.Fatalf("failed to get attribute %s on %s", test.attr, test.sel)
 			}
 
 			if value != test.exp {
-				t.Errorf("test %d expected %s to be %s, got: %s", i, test.attr, test.exp, value)
+				t.Errorf("expected %s to be %s, got: %s", test.attr, test.exp, value)
 			}
 		})
 	}
@@ -598,21 +598,21 @@ func TestClick(t *testing.T) {
 
 			err := c.Run(defaultContext, Click(test.sel, test.by))
 			if err != nil {
-				t.Fatalf("test %d got error: %v", i, err)
+				t.Fatalf("got error: %v", err)
 			}
 
 			err = c.Run(defaultContext, WaitVisible("#logo > img", ByQuery))
 			if err != nil {
-				t.Fatalf("test %d got error: %v", i, err)
+				t.Fatalf("got error: %v", err)
 			}
 
 			var title string
 			err = c.Run(defaultContext, Title(&title))
 			if err != nil {
-				t.Fatalf("test %d got error: %v", i, err)
+				t.Fatalf("got error: %v", err)
 			}
 			if title != "chromedp - Google Search" {
-				t.Errorf("test %d expected title to be 'chromedp - Google Search', got: '%s'", i, title)
+				t.Errorf("expected title to be 'chromedp - Google Search', got: '%s'", title)
 			}
 		})
 	}
@@ -677,16 +677,16 @@ func TestSendKeys(t *testing.T) {
 
 			err := c.Run(defaultContext, SendKeys(test.sel, test.keys, test.by))
 			if err != nil {
-				t.Fatalf("test %d got error: %v", i, err)
+				t.Fatalf("got error: %v", err)
 			}
 
 			var val string
 			err = c.Run(defaultContext, Value(test.sel, &val, test.by))
 			if err != nil {
-				t.Fatalf("test %d got error: %v", i, err)
+				t.Fatalf("got error: %v", err)
 			}
 			if val != test.exp {
-				t.Errorf("test %d expected value %s, got: %s", i, test.exp, val)
+				t.Errorf("expected value %s, got: %s", test.exp, val)
 			}
 		})
 	}
@@ -743,21 +743,21 @@ func TestSubmit(t *testing.T) {
 
 			err := c.Run(defaultContext, Submit(test.sel, test.by))
 			if err != nil {
-				t.Fatalf("test %d got error: %v", i, err)
+				t.Fatalf("got error: %v", err)
 			}
 
 			err = c.Run(defaultContext, WaitVisible("#logo > img", ByQuery))
 			if err != nil {
-				t.Fatalf("test %d got error: %v", i, err)
+				t.Fatalf("got error: %v", err)
 			}
 
 			var title string
 			err = c.Run(defaultContext, Title(&title))
 			if err != nil {
-				t.Fatalf("test %d got error: %v", i, err)
+				t.Fatalf("got error: %v", err)
 			}
 			if title != "chromedp - Google Search" {
-				t.Errorf("test %d expected title to be 'chromedp - Google Search', got: '%s'", i, title)
+				t.Errorf("expected title to be 'chromedp - Google Search', got: '%s'", title)
 			}
 		})
 	}
