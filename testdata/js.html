@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+<head>
+  <style>
+    body {
+        background-color: antiquewhite;
+    }
+    input[type="number"] {
+        background-color: red;
+        color: white;
+    }
+    input[type="number"]:focus {
+      background-color: yellow;
+      color: red;
+    }
+  </style>
+</head>
+<body style="background-color: white">
+  <input id="input1" type="number" value="0"/>
+  <input id="button1" type="button" value="Click me" ondblclick="increment()"> 
+  <script>
+    document.getElementById('input1').onfocus = function() {
+      this.value = '9999'
+    };
+    document.getElementById('input1').onblur = function() {
+      this.value = '0'
+    };
+    function increment() {
+      document.getElementById('input1').value = parseInt(document.getElementById('input1').value) + 1;
+    }
+  </script>
+</body>
+</html>

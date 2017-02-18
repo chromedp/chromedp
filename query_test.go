@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/knq/chromedp/cdp"
+	"github.com/knq/chromedp/cdp/css"
 	"github.com/knq/chromedp/cdp/dom"
 	"github.com/knq/chromedp/kb"
 )
@@ -38,10 +39,82 @@ func TestNodes(t *testing.T) {
 	}
 }
 
-// TODO:
-// NodeIDs
-// Focus
-// Blur
+func TestNodeIDs(t *testing.T) {
+	c := testAllocate(t, "table.html")
+	defer c.Release()
+
+	tests := []struct {
+		sel    string
+		option QueryOption
+		len    int
+	}{
+		{"/html/body/table/tbody[1]/tr[2]/td", BySearch, 3},
+		{"body > table > tbody:nth-child(2) > tr:nth-child(2) > td:not(:last-child)", ByQueryAll, 2},
+		{"body > table > tbody:nth-child(2) > tr:nth-child(2) > td", ByQuery, 1},
+		{"#footer", ByID, 1},
+	}
+
+	var err error
+	for i, test := range tests {
+		var ids []cdp.NodeID
+		err = c.Run(defaultContext, NodeIDs(test.sel, &ids, test.option))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(ids) != test.len {
+			t.Errorf("test %d expected to have %d node id's: got %d", i, test.len, len(ids))
+		}
+	}
+}
+
+func TestFocusBlur(t *testing.T) {
+	c := testAllocate(t, "js.html")
+	defer c.Release()
+
+	tests := []struct {
+		sel    string
+		option QueryOption
+	}{
+		{`//*[@id="input1"]`, BySearch},
+		{`body > input[type="number"]:nth-child(1)`, ByQueryAll},
+		{`body > input[type="number"]:nth-child(1)`, ByQuery},
+		{"#input1", ByID},
+	}
+
+	err := c.Run(defaultContext, Click("#input1", ByID))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i, test := range tests {
+		err = c.Run(defaultContext, Focus(test.sel, test.option))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+
+		var value string
+		err = c.Run(defaultContext, Value(test.sel, &value, test.option))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+		if value != "9999" {
+			t.Errorf("test %d expected value is '9999', got: '%s'", i, value)
+		}
+
+		err = c.Run(defaultContext, Blur(test.sel, test.option))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+
+		err = c.Run(defaultContext, Value(test.sel, &value, test.option))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+		if value != "0" {
+			t.Errorf("test %d expected value is '0', got: '%s'", i, value)
+		}
+	}
+}
 
 func TestDimensions(t *testing.T) {
 	c := testAllocate(t, "image.html")
@@ -507,7 +580,7 @@ func TestClick(t *testing.T) {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
 
-		err = c.Run(defaultContext, Sleep(time.Second*2))
+		err = c.Run(defaultContext, WaitVisible("#logo > img", ByQuery))
 		if err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
@@ -523,7 +596,45 @@ func TestClick(t *testing.T) {
 	}
 }
 
-// DoubleClick
+func TestDoubleClick(t *testing.T) {
+	c := testAllocate(t, "js.html")
+	defer c.Release()
+
+	tests := []struct {
+		sel    string
+		option QueryOption
+	}{
+		{`/html/body/input[2]`, BySearch},
+		{`body > input[type="button"]:nth-child(2)`, ByQueryAll},
+		{`body > input[type="button"]:nth-child(2)`, ByQuery},
+		{`#button1`, ByID},
+	}
+
+	var err error
+	for i, test := range tests {
+		if i != 0 {
+			err = c.Run(defaultContext, Reload())
+			if err != nil {
+				t.Fatalf("test %d got error: %v", i, err)
+			}
+			time.Sleep(50 * time.Millisecond)
+		}
+
+		err = c.Run(defaultContext, DoubleClick(test.sel, test.option))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+
+		var value string
+		err = c.Run(defaultContext, Value("#input1", &value, ByID))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+		if value != "1" {
+			t.Errorf("test %d expected value to be '1', got: '%s'", i, value)
+		}
+	}
+}
 
 func TestSendKeys(t *testing.T) {
 	tests := []struct {
@@ -561,6 +672,35 @@ func TestSendKeys(t *testing.T) {
 	}
 }
 
+func TestScreenshoot(t *testing.T) {
+	c := testAllocate(t, "image.html")
+	defer c.Release()
+
+	tests := []struct {
+		sel    string
+		option QueryOption
+	}{
+		{"/html/body/img", BySearch},
+		{"img", ByQueryAll},
+		{"img", ByQuery},
+		{"#icon-github", ByID},
+	}
+
+	var err error
+	for i, test := range tests {
+		var buf []byte
+		err = c.Run(defaultContext, Screenshot(test.sel, &buf))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+
+		if len(buf) == 0 {
+			t.Fatalf("test %d failed to capture screenshoot", i)
+		}
+		//TODO: test image
+	}
+}
+
 func TestSubmit(t *testing.T) {
 	tests := []struct {
 		sel string
@@ -582,7 +722,7 @@ func TestSubmit(t *testing.T) {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
 
-		err = c.Run(defaultContext, Sleep(time.Second*2))
+		err = c.Run(defaultContext, WaitVisible("#logo > img", ByQuery))
 		if err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
@@ -598,5 +738,62 @@ func TestSubmit(t *testing.T) {
 	}
 }
 
-// ComputedStyle
+func TestComputedStyle(t *testing.T) {
+	c := testAllocate(t, "js.html")
+	defer c.Release()
+
+	tests := []struct {
+		sel    string
+		option QueryOption
+	}{
+		{`//*[@id="input1"]`, BySearch},
+		{`body > input[type="number"]:nth-child(1)`, ByQueryAll},
+		{`body > input[type="number"]:nth-child(1)`, ByQuery},
+		{"#input1", ByID},
+	}
+
+	var err error
+	for i, test := range tests {
+		if i != 0 {
+			err = c.Run(defaultContext, Reload())
+			if err != nil {
+				t.Fatalf("test %d got error: %v", i, err)
+			}
+			time.Sleep(50 * time.Millisecond)
+		}
+
+		var styles []*css.ComputedProperty
+		err = c.Run(defaultContext, ComputedStyle(test.sel, &styles, test.option))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+
+		for _, style := range styles {
+			if style.Name == "background-color" {
+				if style.Value != "rgb(255, 0, 0)" {
+					t.Logf("test %d expected style 'rgb(255, 0, 0)' got: %s", i, style.Value)
+				}
+			}
+		}
+
+		err = c.Run(defaultContext, Click("#input1", ByID))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+
+		err = c.Run(defaultContext, ComputedStyle(test.sel, &styles, test.option))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+
+		for _, style := range styles {
+			if style.Name == "background-color" {
+				if style.Value != "rgb(255, 255, 0)" {
+					t.Fatalf("test %d expected style 'rgb(255, 255, 0)' got: %s", i, style.Value)
+				}
+			}
+		}
+	}
+}
+
 // MatchedStyle
