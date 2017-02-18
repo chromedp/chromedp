@@ -1713,6 +1713,9 @@ func (n *Node) AttributeValue(name string) string {
 
 // xpath builds the xpath string.
 func (n *Node) xpath(stopAtDocument, stopAtID bool) string {
+	n.RLock()
+	defer n.RUnlock()
+
 	p := ""
 	pos := ""
 	id := n.AttributeValue("id")
@@ -1728,8 +1731,10 @@ func (n *Node) xpath(stopAtDocument, stopAtID bool) string {
 		pos = `[@id='` + id + `']`
 
 	case n.Parent != nil:
-		i := 0
+		var i int
 		var found bool
+
+		n.Parent.RLock()
 		for j := 0; j < len(n.Parent.Children); j++ {
 			if n.Parent.Children[j].LocalName == n.LocalName {
 				i++
@@ -1739,11 +1744,13 @@ func (n *Node) xpath(stopAtDocument, stopAtID bool) string {
 				break
 			}
 		}
+		n.Parent.RUnlock()
 
-		p = n.Parent.xpath(stopAtDocument, stopAtID)
 		if found {
 			pos = "[" + strconv.Itoa(i) + "]"
 		}
+
+		p = n.Parent.xpath(stopAtDocument, stopAtID)
 	}
 
 	return p + "/" + n.LocalName + pos

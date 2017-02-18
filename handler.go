@@ -664,9 +664,6 @@ func (h *TargetHandler) domEvent(ctxt context.Context, ev interface{}) {
 	f.Lock()
 	defer f.Unlock()
 
-	n.Lock()
-	defer n.Unlock()
-
 	op(n)
 }
 

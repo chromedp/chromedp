@@ -10,5 +10,5 @@ before_install:
 script:
   - export CHROMEDP_NO_SANDBOX=true
   - export PATH=$PATH:$HOME/hs
-  - go test -v -coverprofile=coverage.out
+  - go test -v -race -coverprofile=coverage.out
   - goveralls -service=travis-ci -coverprofile=coverage.out

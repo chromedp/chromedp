@@ -162,23 +162,34 @@ func clearFrameState(f *cdp.Frame, fs cdp.FrameState) {
 type nodeOp func(*cdp.Node)
 
 func walk(m map[cdp.NodeID]*cdp.Node, n *cdp.Node) {
+	n.RLock()
+	defer n.RUnlock()
 	m[n.NodeID] = n
 
 	for _, c := range n.Children {
+		c.Lock()
 		c.Parent = n
 		c.Invalidated = n.Invalidated
+		c.Unlock()
+
 		walk(m, c)
 	}
 
 	for _, c := range n.ShadowRoots {
+		c.Lock()
 		c.Parent = n
 		c.Invalidated = n.Invalidated
+		c.Unlock()
+
 		walk(m, c)
 	}
 
 	for _, c := range n.PseudoElements {
+		c.Lock()
 		c.Parent = n
 		c.Invalidated = n.Invalidated
+		c.Unlock()
+
 		walk(m, c)
 	}
 
@@ -187,24 +198,32 @@ func walk(m map[cdp.NodeID]*cdp.Node, n *cdp.Node) {
 			continue
 		}
 
+		c.Lock()
 		c.Parent = n
 		c.Invalidated = n.Invalidated
+		c.Unlock()
+
 		walk(m, c)
 	}
 }
 
 func setChildNodes(m map[cdp.NodeID]*cdp.Node, nodes []*cdp.Node) nodeOp {
 	return func(n *cdp.Node) {
+		n.Lock()
 		n.Children = nodes
+		n.Unlock()
+
 		walk(m, n)
 	}
 }
 
 func attributeModified(name, value string) nodeOp {
 	return func(n *cdp.Node) {
-		var found bool
+		n.Lock()
+		defer n.Unlock()
 
-		i := 0
+		var found bool
+		var i int
 		for ; i < len(n.Attributes); i += 2 {
 			if n.Attributes[i] == name {
 				found = true
@@ -223,6 +242,9 @@ func attributeModified(name, value string) nodeOp {
 
 func attributeRemoved(name string) nodeOp {
 	return func(n *cdp.Node) {
+		n.Lock()
+		defer n.Unlock()
+
 		var a []string
 		for i := 0; i < len(n.Attributes); i += 2 {
 			if n.Attributes[i] == name {
@@ -241,60 +263,87 @@ func inlineStyleInvalidated(ids []cdp.NodeID) nodeOp {
 
 func characterDataModified(characterData string) nodeOp {
 	return func(n *cdp.Node) {
+		n.Lock()
+		defer n.Unlock()
+
 		n.Value = characterData
 	}
 }
 
 func childNodeCountUpdated(count int64) nodeOp {
 	return func(n *cdp.Node) {
+		n.Lock()
+		defer n.Unlock()
+
 		n.ChildNodeCount = count
 	}
 }
 
 func childNodeInserted(m map[cdp.NodeID]*cdp.Node, prevID cdp.NodeID, c *cdp.Node) nodeOp {
 	return func(n *cdp.Node) {
+		n.Lock()
 		n.Children = insertNode(n.Children, prevID, c)
+		n.Unlock()
+
 		walk(m, n)
 	}
 }
 
 func childNodeRemoved(m map[cdp.NodeID]*cdp.Node, id cdp.NodeID) nodeOp {
 	return func(n *cdp.Node) {
+		n.Lock()
+		defer n.Unlock()
+
 		n.Children = removeNode(n.Children, id)
-		//delete(m, id)
+		delete(m, id)
 	}
 }
 
 func shadowRootPushed(m map[cdp.NodeID]*cdp.Node, c *cdp.Node) nodeOp {
 	return func(n *cdp.Node) {
+		n.Lock()
 		n.ShadowRoots = append(n.ShadowRoots, c)
+		n.Unlock()
+
 		walk(m, n)
 	}
 }
 
 func shadowRootPopped(m map[cdp.NodeID]*cdp.Node, id cdp.NodeID) nodeOp {
 	return func(n *cdp.Node) {
+		n.Lock()
+		defer n.Unlock()
+
 		n.ShadowRoots = removeNode(n.ShadowRoots, id)
-		//delete(m, id)
+		delete(m, id)
 	}
 }
 
 func pseudoElementAdded(m map[cdp.NodeID]*cdp.Node, c *cdp.Node) nodeOp {
 	return func(n *cdp.Node) {
+		n.Lock()
 		n.PseudoElements = append(n.PseudoElements, c)
+		n.Unlock()
+
 		walk(m, n)
 	}
 }
 
 func pseudoElementRemoved(m map[cdp.NodeID]*cdp.Node, id cdp.NodeID) nodeOp {
 	return func(n *cdp.Node) {
+		n.Lock()
+		defer n.Unlock()
+
 		n.PseudoElements = removeNode(n.PseudoElements, id)
-		//delete(m, id)
+		delete(m, id)
 	}
 }
 
 func distributedNodesUpdated(nodes []*cdp.BackendNode) nodeOp {
 	return func(n *cdp.Node) {
+		n.Lock()
+		defer n.Unlock()
+
 		n.DistributedNodes = nodes
 	}
 }
