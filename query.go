@@ -131,13 +131,16 @@ func Clear(sel interface{}, opts ...QueryOption) Action {
 			go func(i int, n *cdp.Node) {
 				defer wg.Done()
 
-				var a Action
-				if n.NodeName == "INPUT" {
-					a = dom.SetAttributeValue(n.NodeID, "value", "")
-				} else {
-					a = dom.SetNodeValue(n.NodeID, "")
+				var res string
+				err := EvaluateAsDevTools(fmt.Sprintf(setValueJS, nodes[0].FullXPath(), ""), &res).Do(ctxt, h)
+				if err != nil {
+					errs[i] = err
+					return
 				}
-				errs[i] = a.Do(ctxt, h)
+				if res != "" {
+					errs[i] = fmt.Errorf("could not clear value on node %d", nodes[0].NodeID)
+					return
+				}
 			}(i, n)
 		}
 		wg.Wait()
