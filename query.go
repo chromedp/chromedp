@@ -135,7 +135,23 @@ func Clear(sel interface{}, opts ...QueryOption) Action {
 				if n.NodeName == "INPUT" {
 					a = dom.SetAttributeValue(n.NodeID, "value", "")
 				} else {
-					a = dom.SetNodeValue(n.NodeID, "")
+					// find textarea's child #text node
+					var textID cdp.NodeID
+					var found bool
+					for _, c := range n.Children {
+						if c.NodeType == cdp.NodeTypeText {
+							textID = c.NodeID
+							found = true
+							break
+						}
+					}
+
+					if !found {
+						errs[i] = fmt.Errorf("textarea node %d does not have child #text node", n.NodeID)
+						return
+					}
+
+					a = dom.SetNodeValue(textID, "")
 				}
 				errs[i] = a.Do(ctxt, h)
 			}(i, n)
