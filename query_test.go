@@ -692,7 +692,7 @@ func TestSendKeys(t *testing.T) {
 	}
 }
 
-func TestScreenshoot(t *testing.T) {
+func TestScreenshot(t *testing.T) {
 	t.Parallel()
 
 	c := testAllocate(t, "image.html")
