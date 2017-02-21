@@ -1,12 +1,10 @@
 package chromedp
 
 import (
-	"context"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/page"
 )
 
@@ -193,9 +191,7 @@ func TestNavigateBack(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = c.Run(defaultContext, ActionFunc(func(c context.Context, h cdp.Handler) error {
-		return NavigateBack(c, h)
-	}))
+	err = c.Run(defaultContext, NavigateBack())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -249,9 +245,7 @@ func TestNavigateForward(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = c.Run(defaultContext, ActionFunc(func(c context.Context, h cdp.Handler) error {
-		return NavigateBack(c, h)
-	}))
+	err = c.Run(defaultContext, NavigateBack())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -261,9 +255,7 @@ func TestNavigateForward(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = c.Run(defaultContext, ActionFunc(func(c context.Context, h cdp.Handler) error {
-		return NavigateForward(c, h)
-	}))
+	err = c.Run(defaultContext, NavigateForward())
 	if err != nil {
 		t.Fatal(err)
 	}
