@@ -47,18 +47,11 @@ func NavigateBack(ctxt context.Context, h cdp.Handler) error {
 		return err
 	}
 
-	var i int
-	for ; i < len(entries); i++ {
-		if entries[i].ID == cur {
-			break
-		}
+	if cur <= 0 || cur > int64(len(entries)-1) {
+		return errors.New("invalid navigation entry")
 	}
 
-	if i == 0 {
-		return errors.New("already on oldest navigation entry")
-	}
-
-	return page.NavigateToHistoryEntry(entries[i-1].ID).Do(ctxt, h)
+	return page.NavigateToHistoryEntry(entries[cur-1].ID).Do(ctxt, h)
 }
 
 // NavigateForward navigates the current frame forwards in its history.
@@ -68,18 +61,11 @@ func NavigateForward(ctxt context.Context, h cdp.Handler) error {
 		return err
 	}
 
-	i := len(entries) - 1
-	for ; i > 0; i-- {
-		if entries[i].ID == cur {
-			break
-		}
+	if cur < 0 || cur >= int64(len(entries)-1) {
+		return errors.New("invalid navigation entry")
 	}
 
-	if i == len(entries)-1 {
-		return errors.New("already on newest navigation entry")
-	}
-
-	return page.NavigateToHistoryEntry(entries[i+1].ID).Do(ctxt, h)
+	return page.NavigateToHistoryEntry(entries[cur+1].ID).Do(ctxt, h)
 }
 
 // Stop stops all navigation and pending resource retrieval.
