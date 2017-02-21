@@ -276,6 +276,7 @@ func TestNavigateForward(t *testing.T) {
 }
 
 func TestStop(t *testing.T) {
+	t.Skip("Page.stopLoading not available")
 	t.Parallel()
 
 	var err error
