@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/css"
@@ -601,7 +602,7 @@ func TestClick(t *testing.T) {
 				t.Fatalf("got error: %v", err)
 			}
 
-			err = c.Run(defaultContext, WaitVisible("#logo", ByID))
+			err = c.Run(defaultContext, WaitVisible("#icon-brankas", ByID))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -611,7 +612,7 @@ func TestClick(t *testing.T) {
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
-			if title != "chromedp - Google Search" {
+			if title != "this is title" {
 				t.Errorf("expected title to be 'chromedp - Google Search', got: '%s'", title)
 			}
 		})
@@ -746,7 +747,7 @@ func TestSubmit(t *testing.T) {
 				t.Fatalf("got error: %v", err)
 			}
 
-			err = c.Run(defaultContext, WaitVisible("#logo > img", ByQuery))
+			err = c.Run(defaultContext, WaitVisible("#icon-brankas", ByID))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -756,7 +757,7 @@ func TestSubmit(t *testing.T) {
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
-			if title != "chromedp - Google Search" {
+			if title != "this is title" {
 				t.Errorf("expected title to be 'chromedp - Google Search', got: '%s'", title)
 			}
 		})
@@ -781,8 +782,13 @@ func TestComputedStyle(t *testing.T) {
 			c := testAllocate(t, "js.html")
 			defer c.Release()
 
+			err := c.Run(defaultContext, Sleep(time.Millisecond*50))
+			if err != nil {
+				t.Fatalf("got error: %v", err)
+			}
+
 			var styles []*css.ComputedProperty
-			err := c.Run(defaultContext, ComputedStyle(test.sel, &styles, test.by))
+			err = c.Run(defaultContext, ComputedStyle(test.sel, &styles, test.by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -796,6 +802,11 @@ func TestComputedStyle(t *testing.T) {
 			}
 
 			err = c.Run(defaultContext, Click("#input1", ByID))
+			if err != nil {
+				t.Fatalf("got error: %v", err)
+			}
+
+			err = c.Run(defaultContext, Sleep(time.Millisecond*50))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
