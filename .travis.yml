@@ -8,5 +8,5 @@ before_install:
   - ./contrib/grab-headless_shell.sh $HOME/hs
 script:
   - export PATH=$PATH:$HOME/hs
-  - CHROMEDP_NO_SANDBOX=true go test -coverprofile=coverage.out
+  - CHROMEDP_NO_SANDBOX=true go test -v -coverprofile=coverage.out
   - goveralls -service=travis-ci -coverprofile=coverage.out
