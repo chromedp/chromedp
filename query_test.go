@@ -601,7 +601,7 @@ func TestClick(t *testing.T) {
 				t.Fatalf("got error: %v", err)
 			}
 
-			err = c.Run(defaultContext, WaitVisible("#logo > img", ByQuery))
+			err = c.Run(defaultContext, WaitVisible("#logo", ByID))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
