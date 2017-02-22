@@ -145,7 +145,10 @@ type Res struct {
 func (r *Res) Release() error {
 	r.cancel()
 
-	err := r.c.Wait()
+	var err error
+	if r.c != nil {
+		err = r.c.Wait()
+	}
 
 	defer r.p.debugf("pool released %d", r.port)
 
