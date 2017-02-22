@@ -41,35 +41,31 @@ func NavigateToHistoryEntry(entryID int64) Action {
 }
 
 // NavigateBack navigates the current frame backwards in its history.
-func NavigateBack() Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
-		cur, entries, err := page.GetNavigationHistory().Do(ctxt, h)
-		if err != nil {
-			return err
-		}
+func NavigateBack(ctxt context.Context, h cdp.Handler) error {
+	cur, entries, err := page.GetNavigationHistory().Do(ctxt, h)
+	if err != nil {
+		return err
+	}
 
-		if cur == 0 {
-			return errors.New("already on oldest navigation entry")
-		}
+	if cur <= 0 || cur > int64(len(entries)-1) {
+		return errors.New("invalid navigation entry")
+	}
 
-		return page.NavigateToHistoryEntry(entries[cur-1].ID).Do(ctxt, h)
-	})
+	return page.NavigateToHistoryEntry(entries[cur-1].ID).Do(ctxt, h)
 }
 
 // NavigateForward navigates the current frame forwards in its history.
-func NavigateForward() Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
-		cur, entries, err := page.GetNavigationHistory().Do(ctxt, h)
-		if err != nil {
-			return err
-		}
+func NavigateForward(ctxt context.Context, h cdp.Handler) error {
+	cur, entries, err := page.GetNavigationHistory().Do(ctxt, h)
+	if err != nil {
+		return err
+	}
 
-		if cur == int64(len(entries)-1) {
-			return errors.New("already on newest navigation entry")
-		}
+	if cur < 0 || cur >= int64(len(entries)-1) {
+		return errors.New("invalid navigation entry")
+	}
 
-		return page.NavigateToHistoryEntry(entries[cur+1].ID).Do(ctxt, h)
-	})
+	return page.NavigateToHistoryEntry(entries[cur+1].ID).Do(ctxt, h)
 }
 
 // Stop stops all navigation and pending resource retrieval.
