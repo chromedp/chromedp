@@ -3,10 +3,8 @@ go:
   - 1.7
   - tip
 before_install:
-  - mkdir -p $HOME/hs
-  - wget -O $HOME/hs/hs.tar.bz2 https://storage.googleapis.com/docker-chrome-headless/headless_shell.tar.bz2
-  - tar -jxvf $HOME/hs/hs.tar.bz2 -C $HOME/hs
   - go get github.com/mattn/goveralls
+  - ./contrib/grab-headless_shell.sh $HOME/hs
 script:
   - export CHROMEDP_NO_SANDBOX=true
   - export PATH=$PATH:$HOME/hs
