@@ -1,4 +1,4 @@
-# About chromedp
+# About chromedp [![Build Status](https://travis-ci.org/knq/chromedp.svg)](https://travis-ci.org/knq/chromedp) [![Coverage Status](https://coveralls.io/repos/knq/chromedp/badge.svg?branch=master&service=github)](https://coveralls.io/github/knq/chromedp?branch=master) #
 
 Package chromedp is a faster, simpler way to drive browsers in Go using the
 [Chrome Debugging Protocol](https://developer.chrome.com/devtools/docs/debugger-protocol)
