@@ -112,6 +112,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandPageCaptureScreenshot:
 		v = new(page.CaptureScreenshotReturns)
 
+	case cdp.CommandPagePrintToPDF:
+		v = new(page.PrintToPDFReturns)
+
 	case cdp.CommandPageStartScreencast:
 		return emptyVal, nil
 
@@ -1074,6 +1077,18 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 
 	case cdp.CommandRuntimeRunScript:
 		v = new(runtime.RunScriptReturns)
+
+	case cdp.CommandRuntimeStartPreciseCoverage:
+		return emptyVal, nil
+
+	case cdp.CommandRuntimeStopPreciseCoverage:
+		return emptyVal, nil
+
+	case cdp.CommandRuntimeTakePreciseCoverage:
+		v = new(runtime.TakePreciseCoverageReturns)
+
+	case cdp.CommandRuntimeGetBestEffortCoverage:
+		v = new(runtime.GetBestEffortCoverageReturns)
 
 	case cdp.EventRuntimeExecutionContextCreated:
 		v = new(runtime.EventExecutionContextCreated)

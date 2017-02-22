@@ -206,6 +206,28 @@ type StackTrace struct {
 	PromiseCreationFrame *CallFrame   `json:"promiseCreationFrame,omitempty"` // Creation frame of the Promise which produced the next synchronous trace when resolved, if available.
 }
 
+// CoverageRange coverage data for a source range.
+type CoverageRange struct {
+	StartLineNumber   int64 `json:"startLineNumber,omitempty"`   // JavaScript script line number (0-based) for the range start.
+	StartColumnNumber int64 `json:"startColumnNumber,omitempty"` // JavaScript script column number (0-based) for the range start.
+	EndLineNumber     int64 `json:"endLineNumber,omitempty"`     // JavaScript script line number (0-based) for the range end.
+	EndColumnNumber   int64 `json:"endColumnNumber,omitempty"`   // JavaScript script column number (0-based) for the range end.
+	Count             int64 `json:"count,omitempty"`             // Collected execution count of the source range.
+}
+
+// FunctionCoverage coverage data for a JavaScript function.
+type FunctionCoverage struct {
+	FunctionName string           `json:"functionName,omitempty"` // JavaScript function name.
+	Ranges       []*CoverageRange `json:"ranges,omitempty"`       // Source ranges inside the function with coverage data.
+}
+
+// ScriptCoverage coverage data for a JavaScript script.
+type ScriptCoverage struct {
+	ScriptID  ScriptID            `json:"scriptId,omitempty"`  // JavaScript script id.
+	URL       string              `json:"url,omitempty"`       // JavaScript script name or url.
+	Functions []*FunctionCoverage `json:"functions,omitempty"` // Functions contained in the script that has coverage data.
+}
+
 // Type object type.
 type Type string
 

@@ -603,3 +603,100 @@ func (p *RunScriptParams) Do(ctxt context.Context, h cdp.Handler) (result *Remot
 
 	return res.Result, res.ExceptionDetails, nil
 }
+
+// StartPreciseCoverageParams enable precise code coverage. Coverage data for
+// JavaScript executed before enabling precise code coverage may be incomplete.
+// Enabling prevents running optimized code and resets execution counters.
+type StartPreciseCoverageParams struct{}
+
+// StartPreciseCoverage enable precise code coverage. Coverage data for
+// JavaScript executed before enabling precise code coverage may be incomplete.
+// Enabling prevents running optimized code and resets execution counters.
+func StartPreciseCoverage() *StartPreciseCoverageParams {
+	return &StartPreciseCoverageParams{}
+}
+
+// Do executes Runtime.startPreciseCoverage against the provided context and
+// target handler.
+func (p *StartPreciseCoverageParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandRuntimeStartPreciseCoverage, nil, nil)
+}
+
+// StopPreciseCoverageParams disable precise code coverage. Disabling
+// releases unnecessary execution count records and allows executing optimized
+// code.
+type StopPreciseCoverageParams struct{}
+
+// StopPreciseCoverage disable precise code coverage. Disabling releases
+// unnecessary execution count records and allows executing optimized code.
+func StopPreciseCoverage() *StopPreciseCoverageParams {
+	return &StopPreciseCoverageParams{}
+}
+
+// Do executes Runtime.stopPreciseCoverage against the provided context and
+// target handler.
+func (p *StopPreciseCoverageParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandRuntimeStopPreciseCoverage, nil, nil)
+}
+
+// TakePreciseCoverageParams collect coverage data for the current isolate,
+// and resets execution counters. Precise code coverage needs to have started.
+type TakePreciseCoverageParams struct{}
+
+// TakePreciseCoverage collect coverage data for the current isolate, and
+// resets execution counters. Precise code coverage needs to have started.
+func TakePreciseCoverage() *TakePreciseCoverageParams {
+	return &TakePreciseCoverageParams{}
+}
+
+// TakePreciseCoverageReturns return values.
+type TakePreciseCoverageReturns struct {
+	Result []*ScriptCoverage `json:"result,omitempty"` // Coverage data for the current isolate.
+}
+
+// Do executes Runtime.takePreciseCoverage against the provided context and
+// target handler.
+//
+// returns:
+//   result - Coverage data for the current isolate.
+func (p *TakePreciseCoverageParams) Do(ctxt context.Context, h cdp.Handler) (result []*ScriptCoverage, err error) {
+	// execute
+	var res TakePreciseCoverageReturns
+	err = h.Execute(ctxt, cdp.CommandRuntimeTakePreciseCoverage, nil, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Result, nil
+}
+
+// GetBestEffortCoverageParams collect coverage data for the current isolate.
+// The coverage data may be incomplete due to garbage collection.
+type GetBestEffortCoverageParams struct{}
+
+// GetBestEffortCoverage collect coverage data for the current isolate. The
+// coverage data may be incomplete due to garbage collection.
+func GetBestEffortCoverage() *GetBestEffortCoverageParams {
+	return &GetBestEffortCoverageParams{}
+}
+
+// GetBestEffortCoverageReturns return values.
+type GetBestEffortCoverageReturns struct {
+	Result []*ScriptCoverage `json:"result,omitempty"` // Coverage data for the current isolate.
+}
+
+// Do executes Runtime.getBestEffortCoverage against the provided context and
+// target handler.
+//
+// returns:
+//   result - Coverage data for the current isolate.
+func (p *GetBestEffortCoverageParams) Do(ctxt context.Context, h cdp.Handler) (result []*ScriptCoverage, err error) {
+	// execute
+	var res GetBestEffortCoverageReturns
+	err = h.Execute(ctxt, cdp.CommandRuntimeGetBestEffortCoverage, nil, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Result, nil
+}

@@ -475,6 +475,41 @@ func (p *CaptureScreenshotParams) Do(ctxt context.Context, h cdp.Handler) (data 
 	return dec, nil
 }
 
+// PrintToPDFParams print page as pdf.
+type PrintToPDFParams struct{}
+
+// PrintToPDF print page as pdf.
+func PrintToPDF() *PrintToPDFParams {
+	return &PrintToPDFParams{}
+}
+
+// PrintToPDFReturns return values.
+type PrintToPDFReturns struct {
+	Data string `json:"data,omitempty"` // Base64-encoded pdf data.
+}
+
+// Do executes Page.printToPDF against the provided context and
+// target handler.
+//
+// returns:
+//   data - Base64-encoded pdf data.
+func (p *PrintToPDFParams) Do(ctxt context.Context, h cdp.Handler) (data []byte, err error) {
+	// execute
+	var res PrintToPDFReturns
+	err = h.Execute(ctxt, cdp.CommandPagePrintToPDF, nil, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	// decode
+	var dec []byte
+	dec, err = base64.StdEncoding.DecodeString(res.Data)
+	if err != nil {
+		return nil, err
+	}
+	return dec, nil
+}
+
 // StartScreencastParams starts sending each frame using the screencastFrame
 // event.
 type StartScreencastParams struct {

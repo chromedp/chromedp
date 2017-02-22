@@ -89,6 +89,7 @@ const (
 	CommandPageSearchInResource                            MethodType = "Page.searchInResource"
 	CommandPageSetDocumentContent                          MethodType = "Page.setDocumentContent"
 	CommandPageCaptureScreenshot                           MethodType = "Page.captureScreenshot"
+	CommandPagePrintToPDF                                  MethodType = "Page.printToPDF"
 	CommandPageStartScreencast                             MethodType = "Page.startScreencast"
 	CommandPageStopScreencast                              MethodType = "Page.stopScreencast"
 	CommandPageScreencastFrameAck                          MethodType = "Page.screencastFrameAck"
@@ -399,6 +400,10 @@ const (
 	CommandRuntimeSetCustomObjectFormatterEnabled          MethodType = "Runtime.setCustomObjectFormatterEnabled"
 	CommandRuntimeCompileScript                            MethodType = "Runtime.compileScript"
 	CommandRuntimeRunScript                                MethodType = "Runtime.runScript"
+	CommandRuntimeStartPreciseCoverage                     MethodType = "Runtime.startPreciseCoverage"
+	CommandRuntimeStopPreciseCoverage                      MethodType = "Runtime.stopPreciseCoverage"
+	CommandRuntimeTakePreciseCoverage                      MethodType = "Runtime.takePreciseCoverage"
+	CommandRuntimeGetBestEffortCoverage                    MethodType = "Runtime.getBestEffortCoverage"
 	EventDebuggerScriptParsed                              MethodType = "Debugger.scriptParsed"
 	EventDebuggerScriptFailedToParse                       MethodType = "Debugger.scriptFailedToParse"
 	EventDebuggerBreakpointResolved                        MethodType = "Debugger.breakpointResolved"
@@ -546,6 +551,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandPageSetDocumentContent
 	case CommandPageCaptureScreenshot:
 		*t = CommandPageCaptureScreenshot
+	case CommandPagePrintToPDF:
+		*t = CommandPagePrintToPDF
 	case CommandPageStartScreencast:
 		*t = CommandPageStartScreencast
 	case CommandPageStopScreencast:
@@ -1166,6 +1173,14 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandRuntimeCompileScript
 	case CommandRuntimeRunScript:
 		*t = CommandRuntimeRunScript
+	case CommandRuntimeStartPreciseCoverage:
+		*t = CommandRuntimeStartPreciseCoverage
+	case CommandRuntimeStopPreciseCoverage:
+		*t = CommandRuntimeStopPreciseCoverage
+	case CommandRuntimeTakePreciseCoverage:
+		*t = CommandRuntimeTakePreciseCoverage
+	case CommandRuntimeGetBestEffortCoverage:
+		*t = CommandRuntimeGetBestEffortCoverage
 	case EventDebuggerScriptParsed:
 		*t = EventDebuggerScriptParsed
 	case EventDebuggerScriptFailedToParse:
