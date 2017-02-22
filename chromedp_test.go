@@ -57,7 +57,7 @@ func testAllocate(t *testing.T, path string) *Res {
 func TestMain(m *testing.M) {
 	var err error
 
-	testdataDir = "file:" + os.Getenv("GOPATH") + "/src/github.com/knq/chromedp/testdata"
+	testdataDir = "file://" + os.Getenv("GOPATH") + "/src/github.com/knq/chromedp/testdata"
 
 	//pool, err = NewPool(PoolLog(log.Printf, log.Printf, log.Printf))
 	pool, err = NewPool()

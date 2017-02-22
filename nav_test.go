@@ -16,12 +16,14 @@ func TestNavigate(t *testing.T) {
 	c := testAllocate(t, "")
 	defer c.Release()
 
-	err = c.Run(defaultContext, Navigate("https://www.google.com/"))
+	expurl, exptitle := testdataDir+"/image.html", "this is title"
+
+	err = c.Run(defaultContext, Navigate(expurl))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = c.Run(defaultContext, WaitVisible(`#hplogo`, ByID))
+	err = c.Run(defaultContext, WaitVisible(`#icon-brankas`, ByID))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,8 +33,8 @@ func TestNavigate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.HasPrefix(urlstr, "https://www.google.") {
-		t.Errorf("expected to be on google domain, at: %s", urlstr)
+	if !strings.HasPrefix(urlstr, expurl) {
+		t.Errorf("expected to be on image.html, at: %s", urlstr)
 	}
 
 	var title string
@@ -40,7 +42,7 @@ func TestNavigate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(strings.ToLower(title), "google") {
+	if title != exptitle {
 		t.Errorf("expected title to contain google, instead title is: %s", title)
 	}
 }
@@ -54,8 +56,8 @@ func TestNavigationEntries(t *testing.T) {
 	defer c.Release()
 
 	tests := []string{
-		"https://godoc.org/",
-		"https://golang.org/",
+		"form.html",
+		"image.html",
 	}
 
 	var entries []*page.NavigationEntry
@@ -75,7 +77,7 @@ func TestNavigationEntries(t *testing.T) {
 
 	expIdx, expEntries := 1, 2
 	for i, url := range tests {
-		err = c.Run(defaultContext, Navigate(url))
+		err = c.Run(defaultContext, Navigate(testdataDir+"/"+url))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -112,7 +114,7 @@ func TestNavigateToHistoryEntry(t *testing.T) {
 
 	var entries []*page.NavigationEntry
 	var index int64
-	err = c.Run(defaultContext, Navigate("https://godoc.org/"))
+	err = c.Run(defaultContext, Navigate(testdataDir+"/"+"image.html"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -127,7 +129,7 @@ func TestNavigateToHistoryEntry(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = c.Run(defaultContext, Navigate("https://golang.org/"))
+	err = c.Run(defaultContext, Navigate(testdataDir+"/"+"form.html"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -165,7 +167,7 @@ func TestNavigateBack(t *testing.T) {
 	c := testAllocate(t, "")
 	defer c.Release()
 
-	err = c.Run(defaultContext, Navigate("https://godoc.org/"))
+	err = c.Run(defaultContext, Navigate(testdataDir+"/"+"form.html"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -175,13 +177,13 @@ func TestNavigateBack(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var expTitle string
-	err = c.Run(defaultContext, Title(&expTitle))
+	var exptitle string
+	err = c.Run(defaultContext, Title(&exptitle))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = c.Run(defaultContext, Navigate("https://golang.org/"))
+	err = c.Run(defaultContext, Navigate(testdataDir+"/"+"image.html"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -206,8 +208,8 @@ func TestNavigateBack(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if title != expTitle {
-		t.Errorf("expected title to be %s, instead title is: %s", expTitle, title)
+	if title != exptitle {
+		t.Errorf("expected title to be %s, instead title is: %s", exptitle, title)
 	}
 }
 
@@ -219,7 +221,7 @@ func TestNavigateForward(t *testing.T) {
 	c := testAllocate(t, "")
 	defer c.Release()
 
-	err = c.Run(defaultContext, Navigate("https://godoc.org/"))
+	err = c.Run(defaultContext, Navigate(testdataDir+"/"+"form.html"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -229,7 +231,7 @@ func TestNavigateForward(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = c.Run(defaultContext, Navigate("https://golang.org/"))
+	err = c.Run(defaultContext, Navigate(testdataDir+"/"+"image.html"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -239,8 +241,8 @@ func TestNavigateForward(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var expTitle string
-	err = c.Run(defaultContext, Title(&expTitle))
+	var exptitle string
+	err = c.Run(defaultContext, Title(&exptitle))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -270,8 +272,8 @@ func TestNavigateForward(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if title != expTitle {
-		t.Errorf("expected title to be %s, instead title is: %s", expTitle, title)
+	if title != exptitle {
+		t.Errorf("expected title to be %s, instead title is: %s", exptitle, title)
 	}
 }
 
@@ -283,7 +285,7 @@ func TestStop(t *testing.T) {
 	c := testAllocate(t, "")
 	defer c.Release()
 
-	err = c.Run(defaultContext, Navigate("https://godoc.org/"))
+	err = c.Run(defaultContext, Navigate(testdataDir+"/"+"form.html"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -302,7 +304,7 @@ func TestReload(t *testing.T) {
 	c := testAllocate(t, "")
 	defer c.Release()
 
-	err = c.Run(defaultContext, Navigate("https://godoc.org/"))
+	err = c.Run(defaultContext, Navigate(testdataDir+"/"+"form.html"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -312,8 +314,8 @@ func TestReload(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var expTitle string
-	err = c.Run(defaultContext, Title(&expTitle))
+	var exptitle string
+	err = c.Run(defaultContext, Title(&exptitle))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -333,8 +335,8 @@ func TestReload(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if title != expTitle {
-		t.Errorf("expected title to be %s, instead title is: %s", expTitle, title)
+	if title != exptitle {
+		t.Errorf("expected title to be %s, instead title is: %s", exptitle, title)
 	}
 }
 
@@ -346,7 +348,7 @@ func TestCaptureScreenshot(t *testing.T) {
 	c := testAllocate(t, "")
 	defer c.Release()
 
-	err = c.Run(defaultContext, Navigate("https://godoc.org/"))
+	err = c.Run(defaultContext, Navigate(testdataDir+"/"+"image.html"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -382,7 +384,7 @@ func TestAddOnLoadScript(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = c.Run(defaultContext, Navigate("https://godoc.org/"))
+	err = c.Run(defaultContext, Navigate(testdataDir+"/"+"form.html"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -421,7 +423,7 @@ func TestRemoveOnLoadScript(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = c.Run(defaultContext, Navigate("https://godoc.org/"))
+	err = c.Run(defaultContext, Navigate(testdataDir+"/"+"form.html"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -436,11 +438,12 @@ func TestLocation(t *testing.T) {
 	t.Parallel()
 
 	var err error
+	expurl := testdataDir + "/" + "form.html"
 
 	c := testAllocate(t, "")
 	defer c.Release()
 
-	err = c.Run(defaultContext, Navigate("https://godoc.org/"))
+	err = c.Run(defaultContext, Navigate(expurl))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -450,14 +453,14 @@ func TestLocation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var url string
-	err = c.Run(defaultContext, Location(&url))
+	var urlstr string
+	err = c.Run(defaultContext, Location(&urlstr))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if url != "https://godoc.org/" {
-		t.Fatalf("expected url to be https://godoc.org/ ,got: %s", url)
+	if urlstr != expurl {
+		t.Fatalf("expected to be on form.html,got: %s", urlstr)
 	}
 }
 
@@ -465,11 +468,12 @@ func TestTitle(t *testing.T) {
 	t.Parallel()
 
 	var err error
+	expurl, exptitle := testdataDir+"/image.html", "this is title"
 
 	c := testAllocate(t, "")
 	defer c.Release()
 
-	err = c.Run(defaultContext, Navigate("https://godoc.org/"))
+	err = c.Run(defaultContext, Navigate(expurl))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -485,7 +489,7 @@ func TestTitle(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if title != "GoDoc" {
-		t.Fatalf("expected title to be GoDoc, got: %s", title)
+	if title != exptitle {
+		t.Fatalf("expected title to be %s, got: %s", exptitle, title)
 	}
 }
