@@ -7,8 +7,6 @@ before_install:
   - go get github.com/mattn/goveralls
   - ./contrib/grab-headless_shell.sh $HOME/hs
 script:
-  - export CHROMEDP_NO_SANDBOX=true
   - export PATH=$PATH:$HOME/hs
-  - export GOMAXPROCS=1
-  - go test -v -race -coverprofile=coverage.out
+  - GOMAXPROCS=1 CHROMEDP_NO_SANDBOX=true go test -race -coverprofile=coverage.out
   - goveralls -service=travis-ci -coverprofile=coverage.out
