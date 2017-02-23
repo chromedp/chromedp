@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+<body style="background-color: white">
+  <script>
+    window.document.test_i = 0
+  </script>
+  <input id="input1" type="number" value="0"/>
+  <input id="input2" type="number" value="0"/>
+  <input id="button1" type="button" value="button 1"> 
+  <hr>
+  <input id="input3" type="text" value="foo"/>
+  <textarea id="input4"/></textarea>
+  <input id="button2" type="button" value="button 2"/> 
+  <input id="button3" type="button" style="float: right;margin-left: 500px;" value="offscreen button" onclick="javascript:window.document.test_i++;return false;"/>
+  <script>
+    document.addEventListener("click", function(){
+      document.getElementById('input1').value = event.clientX;
+      document.getElementById('input2').value = event.clientY;
+    });
+
+    document.getElementById('button2').addEventListener('click', function(e) {
+      e.preventDefault();
+      document.getElementById('input3').value = 'bar';return false;
+    }, false);
+    document.getElementById('button2').addEventListener('dblclick', function(e) {
+      e.preventDefault();
+      document.getElementById('input3').value = 'bar2';return false;
+    }, false);
+    document.getElementById('button2').addEventListener('contextmenu', function(e) {
+      e.preventDefault();
+      document.getElementById('input3').value = 'bar-right';return false;
+    }, false);
+    document.getElementById('button2').addEventListener('auxclick', function(e) {
+      e.preventDefault();
+      document.getElementById('input3').value = 'bar-middle';return false;
+    }, false);
+  </script>
+</body>
+</html>

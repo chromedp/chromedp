@@ -782,13 +782,10 @@ func TestComputedStyle(t *testing.T) {
 			c := testAllocate(t, "js.html")
 			defer c.Release()
 
-			err := c.Run(defaultContext, Sleep(time.Millisecond*50))
-			if err != nil {
-				t.Fatalf("got error: %v", err)
-			}
+			time.Sleep(time.Millisecond * 50)
 
 			var styles []*css.ComputedProperty
-			err = c.Run(defaultContext, ComputedStyle(test.sel, &styles, test.by))
+			err := c.Run(defaultContext, ComputedStyle(test.sel, &styles, test.by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -806,10 +803,7 @@ func TestComputedStyle(t *testing.T) {
 				t.Fatalf("got error: %v", err)
 			}
 
-			err = c.Run(defaultContext, Sleep(time.Millisecond*50))
-			if err != nil {
-				t.Fatalf("got error: %v", err)
-			}
+			time.Sleep(time.Millisecond * 50)
 
 			err = c.Run(defaultContext, ComputedStyle(test.sel, &styles, test.by))
 			if err != nil {
