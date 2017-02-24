@@ -17,7 +17,19 @@
 </head>
 <body style="background-color: white">
   <input id="input1" type="number" value="0"/>
-  <input id="button1" type="button" value="Click me" ondblclick="increment()"> 
+  <input id="button1" type="button" value="Click me" ondblclick="increment()">
+  <hr>
+  <input id="input2" type="text" value="foo"/>
+  <input id="button2" type="button" value="Click me" onclick="show()">
+  <hr>
+  <input id="button3" type="button" value="Click me" onclick="enable()">
+  <select id="select1" disabled>
+    <option value="foo">foo</option>
+    <option value="bar" selected>bar</option>
+  </select>
+  <hr>
+  <input id="input3" type="text" value=""/>
+  <input id="button4" type="button" value="Click me" onclick="remove()">
   <script>
     document.getElementById('input1').onfocus = function() {
       this.value = '9999'
@@ -26,7 +38,20 @@
       this.value = '0'
     };
     function increment() {
-      document.getElementById('input1').value = parseInt(document.getElementById('input1').value) + 1;
+      document.getElementById('input1').value++;
+      return false;
+    }
+    function show() {
+      document.getElementById('input2').style.display = 'none';
+      return false;
+    }
+    function enable() {
+      document.getElementById('select1').disabled = false;
+      return false;
+    }
+    function remove() {
+      document.body.removeChild(document.getElementById('input3'));
+      return false;
     }
   </script>
 </body>
