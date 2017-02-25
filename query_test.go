@@ -821,4 +821,33 @@ func TestComputedStyle(t *testing.T) {
 	}
 }
 
-// MatchedStyle
+func TestMatchedStyle(t *testing.T) {
+	tests := []struct {
+		sel string
+		by  QueryOption
+	}{
+		{`//*[@id="input1"]`, BySearch},
+		{`body > input[type="number"]:nth-child(1)`, ByQueryAll},
+		{`body > input[type="number"]:nth-child(1)`, ByQuery},
+		{"#input1", ByID},
+	}
+
+	for i, test := range tests {
+		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			t.Parallel()
+
+			c := testAllocate(t, "js.html")
+			defer c.Release()
+
+			time.Sleep(time.Millisecond * 50)
+
+			var styles *css.GetMatchedStylesForNodeReturns
+			err := c.Run(defaultContext, MatchedStyle(test.sel, &styles, test.by))
+			if err != nil {
+				t.Fatalf("got error: %v", err)
+			}
+
+			// TODO: Add logic to check if the style returned is true and valid.
+		})
+	}
+}

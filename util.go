@@ -38,6 +38,26 @@ const (
 		return true;
 	})($x('%s'))`
 
+	// isOnViewJS is a javascript snippet that will get the specified node
+	// position relative to the viewport and returns true or false depending
+	// on if the specified node is on view port.
+	isOnViewJS = `(function(a) {
+		var rect = a[0].getBoundingClientRect();
+		return (
+			rect.top >= 0 &&
+			rect.left >= 0 &&
+			rect.bottom <= window.innerHeight &&
+			rect.right <= window.innerWidth
+		);
+	})($x('%s'))`
+
+	// scrollIntoViewJS is a javascript snippet that scrolls the window to the
+	// specified node.
+	scrollIntoViewJS = `(function(a) {
+		a[0].scrollIntoView(true);
+		return true
+	})($x('%s'))`
+
 	// scrollJS is a javascript snippet that scrolls the window to the
 	// specified x, y coordinates and then returns the actual window x/y after
 	// execution.

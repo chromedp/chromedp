@@ -17,7 +17,7 @@ func TestMouseClickXY(t *testing.T) {
 	defer c.Release()
 
 	var err error
-	err = c.Run(defaultContext, Sleep(time.Millisecond*50))
+	err = c.Run(defaultContext, Sleep(time.Millisecond*100))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,12 +37,14 @@ func TestMouseClickXY(t *testing.T) {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
 
-		var value string
-		err = c.Run(defaultContext, Value("#input1", &value, ByID))
+		time.Sleep(time.Millisecond * 100)
+
+		var xstr, ystr string
+		err = c.Run(defaultContext, Value("#input1", &xstr, ByID))
 		if err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
-		x, err := strconv.ParseInt(value, 10, 64)
+		x, err := strconv.ParseInt(xstr, 10, 64)
 		if err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
@@ -50,11 +52,11 @@ func TestMouseClickXY(t *testing.T) {
 			t.Fatalf("test %d expected x to be: %d, got: %d", i, test.x, x)
 		}
 
-		err = c.Run(defaultContext, Value("#input2", &value, ByID))
+		err = c.Run(defaultContext, Value("#input2", &ystr, ByID))
 		if err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
-		y, err := strconv.ParseInt(value, 10, 64)
+		y, err := strconv.ParseInt(ystr, 10, 64)
 		if err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
@@ -66,18 +68,18 @@ func TestMouseClickXY(t *testing.T) {
 
 func TestMouseClickNode(t *testing.T) {
 	tests := []struct {
-		exp string
-		opt MouseOption
-		by  QueryOption
+		sel, exp string
+		opt      MouseOption
+		by       QueryOption
 	}{
-		{"foo", ButtonType(input.ButtonNone), ByID},
-		{"bar", ButtonType(input.ButtonLeft), ByID},
-		{"bar-middle", ButtonType(input.ButtonMiddle), ByID},
-		{"bar-right", ButtonType(input.ButtonRight), ByID},
-		{"bar2", ClickCount(2), ByID},
+		{"button2", "foo", ButtonType(input.ButtonNone), ByID},
+		{"button2", "bar", ButtonType(input.ButtonLeft), ByID},
+		{"button2", "bar-middle", ButtonType(input.ButtonMiddle), ByID},
+		{"input3", "bar-right", ButtonType(input.ButtonRight), ByID},
+		{"input3", "bar-right", ButtonModifiers(input.ModifierNone), ByID},
+		{"input3", "bar-right", Button("right"), ByID},
 	}
 
-	var err error
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
 			t.Parallel()
@@ -85,8 +87,9 @@ func TestMouseClickNode(t *testing.T) {
 			c := testAllocate(t, "input.html")
 			defer c.Release()
 
+			var err error
 			var nodes []*cdp.Node
-			err = c.Run(defaultContext, Nodes("#button2", &nodes, test.by))
+			err = c.Run(defaultContext, Nodes(test.sel, &nodes, test.by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -124,7 +127,6 @@ func TestMouseClickOffscreenNode(t *testing.T) {
 		{"#button3", 10, ByID},
 	}
 
-	var err error
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
 			t.Parallel()
@@ -132,6 +134,7 @@ func TestMouseClickOffscreenNode(t *testing.T) {
 			c := testAllocate(t, "input.html")
 			defer c.Release()
 
+			var err error
 			var nodes []*cdp.Node
 			err = c.Run(defaultContext, Nodes(test.sel, &nodes, test.by))
 			if err != nil {
@@ -141,6 +144,15 @@ func TestMouseClickOffscreenNode(t *testing.T) {
 				t.Fatalf("expected nodes to have exactly 1 element, got: %d", len(nodes))
 			}
 
+			var ok bool
+			err = c.Run(defaultContext, EvaluateAsDevTools(fmt.Sprintf(isOnViewJS, nodes[0].FullXPath()), &ok))
+			if err != nil {
+				t.Fatalf("got error: %v", err)
+			}
+			if ok {
+				t.Fatal("expected node to be offscreen")
+			}
+
 			for i := test.exp; i > 0; i-- {
 				err = c.Run(defaultContext, MouseClickNode(nodes[0]))
 				if err != nil {
@@ -148,7 +160,7 @@ func TestMouseClickOffscreenNode(t *testing.T) {
 				}
 			}
 
-			time.Sleep(time.Millisecond * 50)
+			time.Sleep(time.Millisecond * 100)
 
 			var value int
 			err = c.Run(defaultContext, Evaluate("window.document.test_i", &value))
@@ -175,7 +187,6 @@ func TestKeyAction(t *testing.T) {
 		{"#input4", "\n\nfoo\n\nbar\n\n", ByID},
 	}
 
-	var err error
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
 			t.Parallel()
@@ -183,6 +194,7 @@ func TestKeyAction(t *testing.T) {
 			c := testAllocate(t, "input.html")
 			defer c.Release()
 
+			var err error
 			var nodes []*cdp.Node
 			err = c.Run(defaultContext, Nodes(test.sel, &nodes, test.by))
 			if err != nil {
@@ -227,7 +239,6 @@ func TestKeyActionNode(t *testing.T) {
 		{"#input4", "\n\nfoo\n\nbar\n\n", ByID},
 	}
 
-	var err error
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
 			t.Parallel()
@@ -235,6 +246,7 @@ func TestKeyActionNode(t *testing.T) {
 			c := testAllocate(t, "input.html")
 			defer c.Release()
 
+			var err error
 			var nodes []*cdp.Node
 			err = c.Run(defaultContext, Nodes(test.sel, &nodes, test.by))
 			if err != nil {

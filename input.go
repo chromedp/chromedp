@@ -55,10 +55,10 @@ func MouseClickNode(n *cdp.Node, opts ...MouseOption) Action {
 	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
 		var err error
 
-		/*err = dom.Focus(n.NodeID).Do(ctxt, h)
+		err = ScrollIntoNode(n).Do(ctxt, h)
 		if err != nil {
 			return err
-		}*/
+		}
 
 		box, err := dom.GetBoxModel(n.NodeID).Do(ctxt, h)
 		if err != nil {
@@ -77,9 +77,6 @@ func MouseClickNode(n *cdp.Node, opts ...MouseOption) Action {
 		}
 		x /= int64(c / 2)
 		y /= int64(c / 2)
-
-		/*var pos []int64
-		err = EvaluateAsDevTools(fmt.Sprintf(scrollJS, x, y), &pos).Do(ctxt, h)*/
 
 		return MouseClickXY(x, y, opts...).Do(ctxt, h)
 	})
