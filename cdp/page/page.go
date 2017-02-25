@@ -15,6 +15,7 @@ import (
 
 	cdp "github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/debugger"
+	"github.com/knq/chromedp/cdp/dom"
 )
 
 // EnableParams enables page domain notifications.
@@ -160,7 +161,8 @@ func (p *ReloadParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 
 // NavigateParams navigates current page to the given URL.
 type NavigateParams struct {
-	URL string `json:"url"` // URL to navigate the page to.
+	URL      string `json:"url"`                // URL to navigate the page to.
+	Referrer string `json:"referrer,omitempty"` // Referrer URL.
 }
 
 // Navigate navigates current page to the given URL.
@@ -171,6 +173,12 @@ func Navigate(url string) *NavigateParams {
 	return &NavigateParams{
 		URL: url,
 	}
+}
+
+// WithReferrer referrer URL.
+func (p NavigateParams) WithReferrer(referrer string) *NavigateParams {
+	p.Referrer = referrer
+	return &p
 }
 
 // NavigateReturns return values.
@@ -795,6 +803,7 @@ func GetLayoutMetrics() *GetLayoutMetricsParams {
 type GetLayoutMetricsReturns struct {
 	LayoutViewport *LayoutViewport `json:"layoutViewport,omitempty"` // Metrics relating to the layout viewport.
 	VisualViewport *VisualViewport `json:"visualViewport,omitempty"` // Metrics relating to the visual viewport.
+	ContentSize    *dom.Rect       `json:"contentSize,omitempty"`    // Size of scrollable area.
 }
 
 // Do executes Page.getLayoutMetrics against the provided context and
@@ -803,13 +812,14 @@ type GetLayoutMetricsReturns struct {
 // returns:
 //   layoutViewport - Metrics relating to the layout viewport.
 //   visualViewport - Metrics relating to the visual viewport.
-func (p *GetLayoutMetricsParams) Do(ctxt context.Context, h cdp.Handler) (layoutViewport *LayoutViewport, visualViewport *VisualViewport, err error) {
+//   contentSize - Size of scrollable area.
+func (p *GetLayoutMetricsParams) Do(ctxt context.Context, h cdp.Handler) (layoutViewport *LayoutViewport, visualViewport *VisualViewport, contentSize *dom.Rect, err error) {
 	// execute
 	var res GetLayoutMetricsReturns
 	err = h.Execute(ctxt, cdp.CommandPageGetLayoutMetrics, nil, &res)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
-	return res.LayoutViewport, res.VisualViewport, nil
+	return res.LayoutViewport, res.VisualViewport, res.ContentSize, nil
 }

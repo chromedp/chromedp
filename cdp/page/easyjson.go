@@ -6,6 +6,7 @@ import (
 	json "encoding/json"
 	cdp "github.com/knq/chromedp/cdp"
 	debugger "github.com/knq/chromedp/cdp/debugger"
+	dom "github.com/knq/chromedp/cdp/dom"
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"
@@ -1717,6 +1718,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage21(in *jlexer.Lexer, out *
 		switch key {
 		case "url":
 			out.URL = string(in.String())
+		case "referrer":
+			out.Referrer = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -1737,6 +1740,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage21(out *jwriter.Writer, in
 	first = false
 	out.RawString("\"url\":")
 	out.String(string(in.URL))
+	if in.Referrer != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"referrer\":")
+		out.String(string(in.Referrer))
+	}
 	out.RawByte('}')
 }
 
@@ -2454,6 +2465,16 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage30(in *jlexer.Lexer, out *
 				}
 				(*out.VisualViewport).UnmarshalEasyJSON(in)
 			}
+		case "contentSize":
+			if in.IsNull() {
+				in.Skip()
+				out.ContentSize = nil
+			} else {
+				if out.ContentSize == nil {
+					out.ContentSize = new(dom.Rect)
+				}
+				(*out.ContentSize).UnmarshalEasyJSON(in)
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -2490,6 +2511,18 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage30(out *jwriter.Writer, in
 			out.RawString("null")
 		} else {
 			(*in.VisualViewport).MarshalEasyJSON(out)
+		}
+	}
+	if in.ContentSize != nil {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"contentSize\":")
+		if in.ContentSize == nil {
+			out.RawString("null")
+		} else {
+			(*in.ContentSize).MarshalEasyJSON(out)
 		}
 	}
 	out.RawByte('}')

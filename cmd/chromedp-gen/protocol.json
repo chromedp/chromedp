@@ -522,6 +522,13 @@
               "name": "url",
               "type": "string",
               "description": "URL to navigate the page to."
+            },
+            {
+              "name": "referrer",
+              "type": "string",
+              "optional": true,
+              "experimental": true,
+              "description": "Referrer URL."
             }
           ],
           "returns": [
@@ -1092,6 +1099,11 @@
               "name": "visualViewport",
               "$ref": "VisualViewport",
               "description": "Metrics relating to the visual viewport."
+            },
+            {
+              "name": "contentSize",
+              "$ref": "DOM.Rect",
+              "description": "Size of scrollable area."
             }
           ]
         }
