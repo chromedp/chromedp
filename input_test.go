@@ -10,6 +10,16 @@ import (
 	"github.com/knq/chromedp/cdp/input"
 )
 
+const (
+	// inViewportJS is a javascript snippet that will get the specified node
+	// position relative to the viewport and returns true if the specified node
+	// is within the window's viewport.
+	inViewportJS = `(function(a) {
+		var r = a[0].getBoundingClientRect();
+		return r.top >= 0 && r.left >= 0 && r.bottom <= window.innerHeight && r.right <= window.innerWidth;
+	})($x('%s'))`
+)
+
 func TestMouseClickXY(t *testing.T) {
 	t.Parallel()
 
@@ -145,7 +155,7 @@ func TestMouseClickOffscreenNode(t *testing.T) {
 			}
 
 			var ok bool
-			err = c.Run(defaultContext, EvaluateAsDevTools(fmt.Sprintf(isOnViewJS, nodes[0].FullXPath()), &ok))
+			err = c.Run(defaultContext, EvaluateAsDevTools(fmt.Sprintf(inViewportJS, nodes[0].FullXPath()), &ok))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}

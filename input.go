@@ -2,6 +2,7 @@ package chromedp
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/knq/chromedp/cdp"
@@ -51,11 +52,15 @@ func MouseClickXY(x, y int64, opts ...MouseOption) Action {
 
 // MouseClickNode dispatches a mouse left button click event at the center of a
 // specified node.
+//
+// Note that the window will be scrolled if the node is not within the window's
+// viewport.
 func MouseClickNode(n *cdp.Node, opts ...MouseOption) Action {
 	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
 		var err error
 
-		err = ScrollIntoNode(n).Do(ctxt, h)
+		var pos []int
+		err = EvaluateAsDevTools(fmt.Sprintf(scrollIntoViewJS, n.FullXPath()), &pos).Do(ctxt, h)
 		if err != nil {
 			return err
 		}

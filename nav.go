@@ -3,7 +3,6 @@ package chromedp
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/page"
@@ -130,28 +129,4 @@ func Title(title *string) Action {
 	}
 
 	return EvaluateAsDevTools(`document.title`, title)
-}
-
-// ScrollIntoNode scrolls the window to the specified node.
-func ScrollIntoNode(n *cdp.Node, opts ...QueryOption) Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
-		var res bool
-		err := EvaluateAsDevTools(fmt.Sprintf(isOnViewJS, n.FullXPath()), &res).Do(ctxt, h)
-		if err != nil {
-			return err
-		}
-		if res {
-			return nil
-		}
-
-		err = EvaluateAsDevTools(fmt.Sprintf(scrollIntoViewJS, n.FullXPath()), &res).Do(ctxt, h)
-		if err != nil {
-			return err
-		}
-		if !res {
-			return fmt.Errorf("could not scroll into node %d", n.NodeID)
-		}
-
-		return nil
-	})
 }

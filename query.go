@@ -492,3 +492,25 @@ func MatchedStyle(sel interface{}, style **css.GetMatchedStylesForNodeReturns, o
 		return nil
 	}, opts...)
 }
+
+// ScrollIntoView scrolls the window to the first node matching the selector.
+func ScrollIntoView(sel interface{}, opts ...QueryOption) Action {
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+		if len(nodes) < 1 {
+			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+		}
+
+		var err error
+		var pos []int
+		err = EvaluateAsDevTools(fmt.Sprintf(scrollIntoViewJS, nodes[0].FullXPath()), &pos).Do(ctxt, h)
+		if err != nil {
+			return err
+		}
+
+		if pos == nil {
+			return fmt.Errorf("could not scroll into node %d", nodes[0].NodeID)
+		}
+
+		return nil
+	}, opts...)
+}

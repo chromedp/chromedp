@@ -30,32 +30,12 @@ const (
 			}
 		}
 		return s;
-	})($x("%s/node()"))`
+	})($x('%s/node()'))`
 
 	// blurJS is a javscript snippet that blurs the specified element.
 	blurJS = `(function(a) {
 		a[0].blur();
 		return true;
-	})($x('%s'))`
-
-	// isOnViewJS is a javascript snippet that will get the specified node
-	// position relative to the viewport and returns true or false depending
-	// on if the specified node is on view port.
-	isOnViewJS = `(function(a) {
-		var rect = a[0].getBoundingClientRect();
-		return (
-			rect.top >= 0 &&
-			rect.left >= 0 &&
-			rect.bottom <= window.innerHeight &&
-			rect.right <= window.innerWidth
-		);
-	})($x('%s'))`
-
-	// scrollIntoViewJS is a javascript snippet that scrolls the window to the
-	// specified node.
-	scrollIntoViewJS = `(function(a) {
-		a[0].scrollIntoView(true);
-		return true
 	})($x('%s'))`
 
 	// scrollJS is a javascript snippet that scrolls the window to the
@@ -65,6 +45,14 @@ const (
 		window.scrollTo(x, y);
 		return [window.scrollX, window.scrollY];
 	})(%d, %d)`
+
+	// scrollIntoViewJS is a javascript snippet that scrolls the specified node
+	// into the window's viewport (if needed), returning the actual window x/y
+	// after execution.
+	scrollIntoViewJS = `(function(a) {
+		a[0].scrollIntoViewIfNeeded(true);
+		return [window.scrollX, window.scrollY];
+	})($x('%s'))`
 
 	// submitJS is a javascript snippet that will call the containing form's
 	// submit function, returning true or false if the call was successful.
