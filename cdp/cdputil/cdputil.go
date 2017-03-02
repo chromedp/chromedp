@@ -1078,18 +1078,6 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandRuntimeRunScript:
 		v = new(runtime.RunScriptReturns)
 
-	case cdp.CommandRuntimeStartPreciseCoverage:
-		return emptyVal, nil
-
-	case cdp.CommandRuntimeStopPreciseCoverage:
-		return emptyVal, nil
-
-	case cdp.CommandRuntimeTakePreciseCoverage:
-		v = new(runtime.TakePreciseCoverageReturns)
-
-	case cdp.CommandRuntimeGetBestEffortCoverage:
-		v = new(runtime.GetBestEffortCoverageReturns)
-
 	case cdp.EventRuntimeExecutionContextCreated:
 		v = new(runtime.EventExecutionContextCreated)
 
@@ -1212,6 +1200,18 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 
 	case cdp.CommandProfilerStop:
 		v = new(profiler.StopReturns)
+
+	case cdp.CommandProfilerStartPreciseCoverage:
+		return emptyVal, nil
+
+	case cdp.CommandProfilerStopPreciseCoverage:
+		return emptyVal, nil
+
+	case cdp.CommandProfilerTakePreciseCoverage:
+		v = new(profiler.TakePreciseCoverageReturns)
+
+	case cdp.CommandProfilerGetBestEffortCoverage:
+		v = new(profiler.GetBestEffortCoverageReturns)
 
 	case cdp.EventProfilerConsoleProfileStarted:
 		v = new(profiler.EventConsoleProfileStarted)

@@ -400,10 +400,6 @@ const (
 	CommandRuntimeSetCustomObjectFormatterEnabled          MethodType = "Runtime.setCustomObjectFormatterEnabled"
 	CommandRuntimeCompileScript                            MethodType = "Runtime.compileScript"
 	CommandRuntimeRunScript                                MethodType = "Runtime.runScript"
-	CommandRuntimeStartPreciseCoverage                     MethodType = "Runtime.startPreciseCoverage"
-	CommandRuntimeStopPreciseCoverage                      MethodType = "Runtime.stopPreciseCoverage"
-	CommandRuntimeTakePreciseCoverage                      MethodType = "Runtime.takePreciseCoverage"
-	CommandRuntimeGetBestEffortCoverage                    MethodType = "Runtime.getBestEffortCoverage"
 	EventDebuggerScriptParsed                              MethodType = "Debugger.scriptParsed"
 	EventDebuggerScriptFailedToParse                       MethodType = "Debugger.scriptFailedToParse"
 	EventDebuggerBreakpointResolved                        MethodType = "Debugger.breakpointResolved"
@@ -440,6 +436,10 @@ const (
 	CommandProfilerSetSamplingInterval                     MethodType = "Profiler.setSamplingInterval"
 	CommandProfilerStart                                   MethodType = "Profiler.start"
 	CommandProfilerStop                                    MethodType = "Profiler.stop"
+	CommandProfilerStartPreciseCoverage                    MethodType = "Profiler.startPreciseCoverage"
+	CommandProfilerStopPreciseCoverage                     MethodType = "Profiler.stopPreciseCoverage"
+	CommandProfilerTakePreciseCoverage                     MethodType = "Profiler.takePreciseCoverage"
+	CommandProfilerGetBestEffortCoverage                   MethodType = "Profiler.getBestEffortCoverage"
 	EventHeapProfilerAddHeapSnapshotChunk                  MethodType = "HeapProfiler.addHeapSnapshotChunk"
 	EventHeapProfilerResetProfiles                         MethodType = "HeapProfiler.resetProfiles"
 	EventHeapProfilerReportHeapSnapshotProgress            MethodType = "HeapProfiler.reportHeapSnapshotProgress"
@@ -1173,14 +1173,6 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandRuntimeCompileScript
 	case CommandRuntimeRunScript:
 		*t = CommandRuntimeRunScript
-	case CommandRuntimeStartPreciseCoverage:
-		*t = CommandRuntimeStartPreciseCoverage
-	case CommandRuntimeStopPreciseCoverage:
-		*t = CommandRuntimeStopPreciseCoverage
-	case CommandRuntimeTakePreciseCoverage:
-		*t = CommandRuntimeTakePreciseCoverage
-	case CommandRuntimeGetBestEffortCoverage:
-		*t = CommandRuntimeGetBestEffortCoverage
 	case EventDebuggerScriptParsed:
 		*t = EventDebuggerScriptParsed
 	case EventDebuggerScriptFailedToParse:
@@ -1253,6 +1245,14 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandProfilerStart
 	case CommandProfilerStop:
 		*t = CommandProfilerStop
+	case CommandProfilerStartPreciseCoverage:
+		*t = CommandProfilerStartPreciseCoverage
+	case CommandProfilerStopPreciseCoverage:
+		*t = CommandProfilerStopPreciseCoverage
+	case CommandProfilerTakePreciseCoverage:
+		*t = CommandProfilerTakePreciseCoverage
+	case CommandProfilerGetBestEffortCoverage:
+		*t = CommandProfilerGetBestEffortCoverage
 	case EventHeapProfilerAddHeapSnapshotChunk:
 		*t = EventHeapProfilerAddHeapSnapshotChunk
 	case EventHeapProfilerResetProfiles:

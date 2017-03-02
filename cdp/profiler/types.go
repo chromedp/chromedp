@@ -30,3 +30,25 @@ type PositionTickInfo struct {
 	Line  int64 `json:"line,omitempty"`  // Source line number (1-based).
 	Ticks int64 `json:"ticks,omitempty"` // Number of samples attributed to the source line.
 }
+
+// CoverageRange coverage data for a source range.
+type CoverageRange struct {
+	StartLineNumber   int64 `json:"startLineNumber,omitempty"`   // JavaScript script line number (0-based) for the range start.
+	StartColumnNumber int64 `json:"startColumnNumber,omitempty"` // JavaScript script column number (0-based) for the range start.
+	EndLineNumber     int64 `json:"endLineNumber,omitempty"`     // JavaScript script line number (0-based) for the range end.
+	EndColumnNumber   int64 `json:"endColumnNumber,omitempty"`   // JavaScript script column number (0-based) for the range end.
+	Count             int64 `json:"count,omitempty"`             // Collected execution count of the source range.
+}
+
+// FunctionCoverage coverage data for a JavaScript function.
+type FunctionCoverage struct {
+	FunctionName string           `json:"functionName,omitempty"` // JavaScript function name.
+	Ranges       []*CoverageRange `json:"ranges,omitempty"`       // Source ranges inside the function with coverage data.
+}
+
+// ScriptCoverage coverage data for a JavaScript script.
+type ScriptCoverage struct {
+	ScriptID  runtime.ScriptID    `json:"scriptId,omitempty"`  // JavaScript script id.
+	URL       string              `json:"url,omitempty"`       // JavaScript script name or url.
+	Functions []*FunctionCoverage `json:"functions,omitempty"` // Functions contained in the script that has coverage data.
+}

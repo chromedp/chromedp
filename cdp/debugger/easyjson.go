@@ -2721,6 +2721,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpDebugger30(in *jlexer.Lexer, o
 				}
 				(*out.End).UnmarshalEasyJSON(in)
 			}
+		case "restrictToFunction":
+			out.RestrictToFunction = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -2756,6 +2758,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDebugger30(out *jwriter.Writer
 		} else {
 			(*in.End).MarshalEasyJSON(out)
 		}
+	}
+	if in.RestrictToFunction {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"restrictToFunction\":")
+		out.Bool(bool(in.RestrictToFunction))
 	}
 	out.RawByte('}')
 }
