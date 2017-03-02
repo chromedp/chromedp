@@ -103,12 +103,12 @@ func FixDomains(domains []*internal.Domain) {
 		Type:        internal.TypeObject,
 		Description: "Message error type.",
 		Properties: []*internal.Type{
-			&internal.Type{
+			{
 				Name:        "code",
 				Type:        internal.TypeInteger,
 				Description: "Error code.",
 			},
-			&internal.Type{
+			{
 				Name:        "message",
 				Type:        internal.TypeString,
 				Description: "Error message.",
@@ -123,27 +123,27 @@ func FixDomains(domains []*internal.Domain) {
 		Type:        internal.TypeObject,
 		Description: "Chrome Debugging Protocol message sent to/read over websocket connection.",
 		Properties: []*internal.Type{
-			&internal.Type{
+			{
 				Name:        "id",
 				Type:        internal.TypeInteger,
 				Description: "Unique message identifier.",
 			},
-			&internal.Type{
+			{
 				Name:        "method",
 				Ref:         "Inspector.MethodType",
 				Description: "Event or command type.",
 			},
-			&internal.Type{
+			{
 				Name:        "params",
 				Type:        internal.TypeAny,
 				Description: "Event or command parameters.",
 			},
-			&internal.Type{
+			{
 				Name:        "result",
 				Type:        internal.TypeAny,
 				Description: "Command return values.",
 			},
-			&internal.Type{
+			{
 				Name:        "error",
 				Ref:         "MessageError",
 				Description: "Error message.",
