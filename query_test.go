@@ -718,7 +718,7 @@ func TestScreenshot(t *testing.T) {
 		}
 
 		if len(buf) == 0 {
-			t.Fatalf("test %d failed to capture screenshoot", i)
+			t.Fatalf("test %d failed to capture screenshot", i)
 		}
 		//TODO: test image
 	}

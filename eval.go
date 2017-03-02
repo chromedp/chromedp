@@ -76,7 +76,7 @@ func EvaluateAsDevTools(expression string, res interface{}, opts ...EvaluateOpti
 	return Evaluate(expression, res, append(opts, EvalObjectGroup("console"), EvalWithCommandLineAPI)...)
 }
 
-// EvaluateOption is the type for script evaulation options.
+// EvaluateOption is the type for script evaluation options.
 type EvaluateOption func(*rundom.EvaluateParams) *rundom.EvaluateParams
 
 // EvalObjectGroup is a evaluate option to set the object group.
