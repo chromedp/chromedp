@@ -107,7 +107,7 @@ func FileHeader(pkgName string, d *internal.Domain) string {
 func StreamFileImportTemplate(qw422016 *qt422016.Writer, m map[string]string) {
 	//line templates/file.qtpl:22
 	var keys []string
-	for k, _ := range m {
+	for k := range m {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)

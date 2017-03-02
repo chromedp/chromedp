@@ -243,7 +243,7 @@ func (p *RemoveBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err er
 // scriptId in start and end range locations should be the same.
 type GetPossibleBreakpointsParams struct {
 	Start              *Location `json:"start"`                        // Start of range to search possible breakpoint locations in.
-	End                *Location `json:"end,omitempty"`                // End of range to search possible breakpoint locations in (excluding). When not specifed, end of scripts is used as end of range.
+	End                *Location `json:"end,omitempty"`                // End of range to search possible breakpoint locations in (excluding). When not specified, end of scripts is used as end of range.
 	RestrictToFunction bool      `json:"restrictToFunction,omitempty"` // Only consider locations which are in the same (non-nested) function as start.
 }
 
@@ -259,7 +259,7 @@ func GetPossibleBreakpoints(start *Location) *GetPossibleBreakpointsParams {
 }
 
 // WithEnd end of range to search possible breakpoint locations in
-// (excluding). When not specifed, end of scripts is used as end of range.
+// (excluding). When not specified, end of scripts is used as end of range.
 func (p GetPossibleBreakpointsParams) WithEnd(end *Location) *GetPossibleBreakpointsParams {
 	p.End = end
 	return &p

@@ -28,6 +28,8 @@ func formatComment(s, chop, newstr string) string {
 	}
 	s += "."
 
+	s, _ = internal.MisspellReplacer.Replace(s)
+
 	return wrap(s, commentWidth-len(commentPrefix), commentPrefix)
 }
 

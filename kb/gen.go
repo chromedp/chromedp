@@ -68,9 +68,9 @@ func main() {
 
 	// special characters
 	keys := map[rune]kb.Key{
-		'\b': kb.Key{"Backspace", "Backspace", "", "", int64('\b'), int64('\b'), false, false},
-		'\t': kb.Key{"Tab", "Tab", "", "", int64('\t'), int64('\t'), false, false},
-		'\r': kb.Key{"Enter", "Enter", "\r", "\r", int64('\r'), int64('\r'), false, true},
+		'\b': {"Backspace", "Backspace", "", "", int64('\b'), int64('\b'), false, false},
+		'\t': {"Tab", "Tab", "", "", int64('\t'), int64('\t'), false, false},
+		'\r': {"Enter", "Enter", "\r", "\r", int64('\r'), int64('\r'), false, true},
 	}
 
 	// load keys
@@ -97,6 +97,12 @@ func main() {
 
 	// format
 	err = exec.Command("goimports", "-w", *flagOut).Run()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// format
+	err = exec.Command("gofmt", "-s", "-w", *flagOut).Run()
 	if err != nil {
 		log.Fatal(err)
 	}

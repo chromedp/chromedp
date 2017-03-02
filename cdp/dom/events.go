@@ -95,9 +95,9 @@ type EventPseudoElementRemoved struct {
 	PseudoElementID cdp.NodeID `json:"pseudoElementId,omitempty"` // The removed pseudo element id.
 }
 
-// EventDistributedNodesUpdated called when distrubution is changed.
+// EventDistributedNodesUpdated called when distribution is changed.
 type EventDistributedNodesUpdated struct {
-	InsertionPointID cdp.NodeID         `json:"insertionPointId,omitempty"` // Insertion point where distrubuted nodes were updated.
+	InsertionPointID cdp.NodeID         `json:"insertionPointId,omitempty"` // Insertion point where distributed nodes were updated.
 	DistributedNodes []*cdp.BackendNode `json:"distributedNodes,omitempty"` // Distributed nodes for given insertion point.
 }
 

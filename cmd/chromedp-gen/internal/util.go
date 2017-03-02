@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/client9/misspell"
 	"github.com/knq/snaker"
 )
 
@@ -17,6 +18,14 @@ const (
 	// description prefix when base64 encoded.
 	Base64EncodedDescriptionPrefix = "Base64-encoded"
 )
+
+// MisspellReplacer is the misspelling replacer
+var MisspellReplacer *misspell.Replacer
+
+func init() {
+	MisspellReplacer = misspell.New()
+	MisspellReplacer.Compile()
+}
 
 // ForceCamel forces camel case specific to go.
 func ForceCamel(s string) string {
@@ -114,7 +123,9 @@ func structDef(types []*Type, d *Domain, domains []*Domain, noExposeOverride, om
 
 		// add comment
 		if v.Type != TypeObject && v.Description != "" {
-			s += " // " + CodeRE.ReplaceAllString(v.Description, "")
+			comment := CodeRE.ReplaceAllString(v.Description, "")
+			comment, _ = MisspellReplacer.Replace(comment)
+			s += " // " + comment
 		}
 	}
 	if len(types) > 0 {

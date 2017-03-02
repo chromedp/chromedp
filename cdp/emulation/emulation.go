@@ -100,10 +100,10 @@ func (p *SetDeviceMetricsOverrideParams) Do(ctxt context.Context, h cdp.Handler)
 	return h.Execute(ctxt, cdp.CommandEmulationSetDeviceMetricsOverride, p, nil)
 }
 
-// ClearDeviceMetricsOverrideParams clears the overriden device metrics.
+// ClearDeviceMetricsOverrideParams clears the overridden device metrics.
 type ClearDeviceMetricsOverrideParams struct{}
 
-// ClearDeviceMetricsOverride clears the overriden device metrics.
+// ClearDeviceMetricsOverride clears the overridden device metrics.
 func ClearDeviceMetricsOverride() *ClearDeviceMetricsOverrideParams {
 	return &ClearDeviceMetricsOverrideParams{}
 }
@@ -289,11 +289,11 @@ func (p *SetGeolocationOverrideParams) Do(ctxt context.Context, h cdp.Handler) (
 	return h.Execute(ctxt, cdp.CommandEmulationSetGeolocationOverride, p, nil)
 }
 
-// ClearGeolocationOverrideParams clears the overriden Geolocation Position
+// ClearGeolocationOverrideParams clears the overridden Geolocation Position
 // and Error.
 type ClearGeolocationOverrideParams struct{}
 
-// ClearGeolocationOverride clears the overriden Geolocation Position and
+// ClearGeolocationOverride clears the overridden Geolocation Position and
 // Error.
 func ClearGeolocationOverride() *ClearGeolocationOverrideParams {
 	return &ClearGeolocationOverrideParams{}

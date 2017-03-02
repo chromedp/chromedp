@@ -48,7 +48,7 @@ func (p ReadParams) WithSize(size int64) *ReadParams {
 // ReadReturns return values.
 type ReadReturns struct {
 	Data string `json:"data,omitempty"` // Data that were read.
-	EOF  bool   `json:"eof,omitempty"`  // Set if the end-of-file condition occured while reading.
+	EOF  bool   `json:"eof,omitempty"`  // Set if the end-of-file condition occurred while reading.
 }
 
 // Do executes IO.read against the provided context and
@@ -56,7 +56,7 @@ type ReadReturns struct {
 //
 // returns:
 //   data - Data that were read.
-//   eof - Set if the end-of-file condition occured while reading.
+//   eof - Set if the end-of-file condition occurred while reading.
 func (p *ReadParams) Do(ctxt context.Context, h cdp.Handler) (data string, eof bool, err error) {
 	// execute
 	var res ReadReturns

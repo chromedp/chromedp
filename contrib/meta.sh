@@ -6,6 +6,8 @@ pushd $SRC &> /dev/null
 
 gometalinter \
   --disable=aligncheck \
+  --enable=misspell \
+  --enable=gofmt \
   --deadline=100s \
   --cyclo-over=25 \
   --sort=path \

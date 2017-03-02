@@ -213,6 +213,7 @@ func (t Type) IDorName() string {
 func (t Type) String() string {
 	desc := t.GetDescription()
 	if desc != "" {
+		desc, _ = MisspellReplacer.Replace(desc)
 		desc = " - " + desc
 	}
 

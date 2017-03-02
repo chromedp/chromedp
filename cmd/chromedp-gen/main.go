@@ -111,6 +111,13 @@ func main() {
 		os.Exit(1)
 	}
 
+	// gofmt
+	err = gofmt(files)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		os.Exit(1)
+	}
+
 	log.Printf("done.")
 }
 
@@ -241,6 +248,32 @@ func easyjson(pkgs []string) error {
 			buf, err := cmd.CombinedOutput()
 			if err != nil {
 				log.Fatalf("could not easyjson %s, got:\n%s", cmd.Dir, string(buf))
+			}
+		}(&wg, n)
+	}
+	wg.Wait()
+
+	return nil
+}
+
+// gofmt formats all the output file buffers on disk using gofmt.
+func gofmt(fileBuffers map[string]*bytes.Buffer) error {
+	log.Printf("running gofmt")
+
+	var keys []string
+	for k := range fileBuffers {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	var wg sync.WaitGroup
+	for _, n := range keys {
+		wg.Add(1)
+		go func(wg *sync.WaitGroup, n string) {
+			defer wg.Done()
+			buf, err := exec.Command("gofmt", "-w", "-s", out()+"/"+n).CombinedOutput()
+			if err != nil {
+				log.Fatalf("error: could not format %s, got:\n%s", n, string(buf))
 			}
 		}(&wg, n)
 	}
