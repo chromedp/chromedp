@@ -75,6 +75,9 @@ func New(ctxt context.Context, opts ...Option) (*CDP, error) {
 
 	go func() {
 		for t := range c.watch {
+			if t == nil {
+				return
+			}
 			go c.AddTarget(ctxt, t)
 		}
 	}()
@@ -153,7 +156,11 @@ func (c *CDP) Shutdown(ctxt context.Context, opts ...client.Option) error {
 	c.RLock()
 	defer c.RUnlock()
 
-	return c.r.Shutdown(ctxt, opts...)
+	if c.r != nil {
+		return c.r.Shutdown(ctxt, opts...)
+	}
+
+	return nil
 }
 
 // ListTargets returns the target IDs of the managed targets.
