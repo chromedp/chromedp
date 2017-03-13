@@ -433,8 +433,9 @@ func (p *SetDocumentContentParams) Do(ctxt context.Context, h cdp.Handler) (err 
 
 // CaptureScreenshotParams capture page screenshot.
 type CaptureScreenshotParams struct {
-	Format  CaptureScreenshotFormat `json:"format,omitempty"`  // Image compression format (defaults to png).
-	Quality int64                   `json:"quality,omitempty"` // Compression quality from range [0..100] (jpeg only).
+	Format      CaptureScreenshotFormat `json:"format,omitempty"`      // Image compression format (defaults to png).
+	Quality     int64                   `json:"quality,omitempty"`     // Compression quality from range [0..100] (jpeg only).
+	FromSurface bool                    `json:"fromSurface,omitempty"` // Capture the screenshot from the surface, rather than the view. Defaults to false.
 }
 
 // CaptureScreenshot capture page screenshot.
@@ -453,6 +454,13 @@ func (p CaptureScreenshotParams) WithFormat(format CaptureScreenshotFormat) *Cap
 // WithQuality compression quality from range [0..100] (jpeg only).
 func (p CaptureScreenshotParams) WithQuality(quality int64) *CaptureScreenshotParams {
 	p.Quality = quality
+	return &p
+}
+
+// WithFromSurface capture the screenshot from the surface, rather than the
+// view. Defaults to false.
+func (p CaptureScreenshotParams) WithFromSurface(fromSurface bool) *CaptureScreenshotParams {
+	p.FromSurface = fromSurface
 	return &p
 }
 

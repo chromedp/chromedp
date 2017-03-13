@@ -274,7 +274,7 @@ func (p GetPossibleBreakpointsParams) WithRestrictToFunction(restrictToFunction 
 
 // GetPossibleBreakpointsReturns return values.
 type GetPossibleBreakpointsReturns struct {
-	Locations []*Location `json:"locations,omitempty"` // List of the possible breakpoint locations.
+	Locations []*BreakLocation `json:"locations,omitempty"` // List of the possible breakpoint locations.
 }
 
 // Do executes Debugger.getPossibleBreakpoints against the provided context and
@@ -282,7 +282,7 @@ type GetPossibleBreakpointsReturns struct {
 //
 // returns:
 //   locations - List of the possible breakpoint locations.
-func (p *GetPossibleBreakpointsParams) Do(ctxt context.Context, h cdp.Handler) (locations []*Location, err error) {
+func (p *GetPossibleBreakpointsParams) Do(ctxt context.Context, h cdp.Handler) (locations []*BreakLocation, err error) {
 	// execute
 	var res GetPossibleBreakpointsReturns
 	err = h.Execute(ctxt, cdp.CommandDebuggerGetPossibleBreakpoints, p, &res)
@@ -369,6 +369,26 @@ func Pause() *PauseParams {
 // target handler.
 func (p *PauseParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandDebuggerPause, nil, nil)
+}
+
+// ScheduleStepIntoAsyncParams steps into next scheduled async task if any is
+// scheduled before next pause. Returns success when async task is actually
+// scheduled, returns error if no task were scheduled or another
+// scheduleStepIntoAsync was called.
+type ScheduleStepIntoAsyncParams struct{}
+
+// ScheduleStepIntoAsync steps into next scheduled async task if any is
+// scheduled before next pause. Returns success when async task is actually
+// scheduled, returns error if no task were scheduled or another
+// scheduleStepIntoAsync was called.
+func ScheduleStepIntoAsync() *ScheduleStepIntoAsyncParams {
+	return &ScheduleStepIntoAsyncParams{}
+}
+
+// Do executes Debugger.scheduleStepIntoAsync against the provided context and
+// target handler.
+func (p *ScheduleStepIntoAsyncParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDebuggerScheduleStepIntoAsync, nil, nil)
 }
 
 // ResumeParams resumes JavaScript execution.

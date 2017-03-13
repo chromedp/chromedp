@@ -24,6 +24,7 @@ type EventScriptParsed struct {
 	SourceMapURL            string                     `json:"sourceMapURL,omitempty"` // URL of source map associated with script (if any).
 	HasSourceURL            bool                       `json:"hasSourceURL,omitempty"` // True, if this script has sourceURL.
 	IsModule                bool                       `json:"isModule,omitempty"`     // True, if this script is ES6 module.
+	Length                  int64                      `json:"length,omitempty"`       // This script length.
 }
 
 // EventScriptFailedToParse fired when virtual machine fails to parse the
@@ -41,6 +42,7 @@ type EventScriptFailedToParse struct {
 	SourceMapURL            string                     `json:"sourceMapURL,omitempty"` // URL of source map associated with script (if any).
 	HasSourceURL            bool                       `json:"hasSourceURL,omitempty"` // True, if this script has sourceURL.
 	IsModule                bool                       `json:"isModule,omitempty"`     // True, if this script is ES6 module.
+	Length                  int64                      `json:"length,omitempty"`       // This script length.
 }
 
 // EventBreakpointResolved fired when breakpoint is resolved to an actual

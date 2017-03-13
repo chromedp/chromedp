@@ -1867,14 +1867,10 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpProfiler19(in *jlexer.Lexer, o
 			continue
 		}
 		switch key {
-		case "startLineNumber":
-			out.StartLineNumber = int64(in.Int64())
-		case "startColumnNumber":
-			out.StartColumnNumber = int64(in.Int64())
-		case "endLineNumber":
-			out.EndLineNumber = int64(in.Int64())
-		case "endColumnNumber":
-			out.EndColumnNumber = int64(in.Int64())
+		case "startOffset":
+			out.StartOffset = int64(in.Int64())
+		case "endOffset":
+			out.EndOffset = int64(in.Int64())
 		case "count":
 			out.Count = int64(in.Int64())
 		default:
@@ -1891,37 +1887,21 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpProfiler19(out *jwriter.Writer
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.StartLineNumber != 0 {
+	if in.StartOffset != 0 {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
-		out.RawString("\"startLineNumber\":")
-		out.Int64(int64(in.StartLineNumber))
+		out.RawString("\"startOffset\":")
+		out.Int64(int64(in.StartOffset))
 	}
-	if in.StartColumnNumber != 0 {
+	if in.EndOffset != 0 {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
-		out.RawString("\"startColumnNumber\":")
-		out.Int64(int64(in.StartColumnNumber))
-	}
-	if in.EndLineNumber != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"endLineNumber\":")
-		out.Int64(int64(in.EndLineNumber))
-	}
-	if in.EndColumnNumber != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"endColumnNumber\":")
-		out.Int64(int64(in.EndColumnNumber))
+		out.RawString("\"endOffset\":")
+		out.Int64(int64(in.EndOffset))
 	}
 	if in.Count != 0 {
 		if !first {

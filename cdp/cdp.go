@@ -147,8 +147,7 @@ const (
 	CommandNetworkSetUserAgentOverride                     MethodType = "Network.setUserAgentOverride"
 	CommandNetworkSetExtraHTTPHeaders                      MethodType = "Network.setExtraHTTPHeaders"
 	CommandNetworkGetResponseBody                          MethodType = "Network.getResponseBody"
-	CommandNetworkAddBlockedURL                            MethodType = "Network.addBlockedURL"
-	CommandNetworkRemoveBlockedURL                         MethodType = "Network.removeBlockedURL"
+	CommandNetworkSetBlockedURLS                           MethodType = "Network.setBlockedURLs"
 	CommandNetworkReplayXHR                                MethodType = "Network.replayXHR"
 	CommandNetworkSetMonitoringXHREnabled                  MethodType = "Network.setMonitoringXHREnabled"
 	CommandNetworkCanClearBrowserCache                     MethodType = "Network.canClearBrowserCache"
@@ -418,6 +417,7 @@ const (
 	CommandDebuggerStepInto                                MethodType = "Debugger.stepInto"
 	CommandDebuggerStepOut                                 MethodType = "Debugger.stepOut"
 	CommandDebuggerPause                                   MethodType = "Debugger.pause"
+	CommandDebuggerScheduleStepIntoAsync                   MethodType = "Debugger.scheduleStepIntoAsync"
 	CommandDebuggerResume                                  MethodType = "Debugger.resume"
 	CommandDebuggerSearchInContent                         MethodType = "Debugger.searchInContent"
 	CommandDebuggerSetScriptSource                         MethodType = "Debugger.setScriptSource"
@@ -667,10 +667,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandNetworkSetExtraHTTPHeaders
 	case CommandNetworkGetResponseBody:
 		*t = CommandNetworkGetResponseBody
-	case CommandNetworkAddBlockedURL:
-		*t = CommandNetworkAddBlockedURL
-	case CommandNetworkRemoveBlockedURL:
-		*t = CommandNetworkRemoveBlockedURL
+	case CommandNetworkSetBlockedURLS:
+		*t = CommandNetworkSetBlockedURLS
 	case CommandNetworkReplayXHR:
 		*t = CommandNetworkReplayXHR
 	case CommandNetworkSetMonitoringXHREnabled:
@@ -1209,6 +1207,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandDebuggerStepOut
 	case CommandDebuggerPause:
 		*t = CommandDebuggerPause
+	case CommandDebuggerScheduleStepIntoAsync:
+		*t = CommandDebuggerScheduleStepIntoAsync
 	case CommandDebuggerResume:
 		*t = CommandDebuggerResume
 	case CommandDebuggerSearchInContent:

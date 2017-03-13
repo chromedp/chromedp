@@ -160,46 +160,25 @@ func (p *GetResponseBodyParams) Do(ctxt context.Context, h cdp.Handler) (body []
 	return dec, nil
 }
 
-// AddBlockedURLParams blocks specific URL from loading.
-type AddBlockedURLParams struct {
-	URL string `json:"url"` // URL to block.
+// SetBlockedURLSParams blocks specific URL from loading.
+type SetBlockedURLSParams struct {
+	Urls []string `json:"urls"` // URLs to block.
 }
 
-// AddBlockedURL blocks specific URL from loading.
+// SetBlockedURLS blocks specific URL from loading.
 //
 // parameters:
-//   url - URL to block.
-func AddBlockedURL(url string) *AddBlockedURLParams {
-	return &AddBlockedURLParams{
-		URL: url,
+//   urls - URLs to block.
+func SetBlockedURLS(urls []string) *SetBlockedURLSParams {
+	return &SetBlockedURLSParams{
+		Urls: urls,
 	}
 }
 
-// Do executes Network.addBlockedURL against the provided context and
+// Do executes Network.setBlockedURLs against the provided context and
 // target handler.
-func (p *AddBlockedURLParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandNetworkAddBlockedURL, p, nil)
-}
-
-// RemoveBlockedURLParams cancels blocking of a specific URL from loading.
-type RemoveBlockedURLParams struct {
-	URL string `json:"url"` // URL to stop blocking.
-}
-
-// RemoveBlockedURL cancels blocking of a specific URL from loading.
-//
-// parameters:
-//   url - URL to stop blocking.
-func RemoveBlockedURL(url string) *RemoveBlockedURLParams {
-	return &RemoveBlockedURLParams{
-		URL: url,
-	}
-}
-
-// Do executes Network.removeBlockedURL against the provided context and
-// target handler.
-func (p *RemoveBlockedURLParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandNetworkRemoveBlockedURL, p, nil)
+func (p *SetBlockedURLSParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandNetworkSetBlockedURLS, p, nil)
 }
 
 // ReplayXHRParams this method sends a new XMLHttpRequest which is identical

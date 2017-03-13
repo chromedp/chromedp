@@ -33,11 +33,9 @@ type PositionTickInfo struct {
 
 // CoverageRange coverage data for a source range.
 type CoverageRange struct {
-	StartLineNumber   int64 `json:"startLineNumber,omitempty"`   // JavaScript script line number (0-based) for the range start.
-	StartColumnNumber int64 `json:"startColumnNumber,omitempty"` // JavaScript script column number (0-based) for the range start.
-	EndLineNumber     int64 `json:"endLineNumber,omitempty"`     // JavaScript script line number (0-based) for the range end.
-	EndColumnNumber   int64 `json:"endColumnNumber,omitempty"`   // JavaScript script column number (0-based) for the range end.
-	Count             int64 `json:"count,omitempty"`             // Collected execution count of the source range.
+	StartOffset int64 `json:"startOffset,omitempty"` // JavaScript script source offset for the range start.
+	EndOffset   int64 `json:"endOffset,omitempty"`   // JavaScript script source offset for the range end.
+	Count       int64 `json:"count,omitempty"`       // Collected execution count of the source range.
 }
 
 // FunctionCoverage coverage data for a JavaScript function.

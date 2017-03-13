@@ -295,10 +295,7 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandNetworkGetResponseBody:
 		v = new(network.GetResponseBodyReturns)
 
-	case cdp.CommandNetworkAddBlockedURL:
-		return emptyVal, nil
-
-	case cdp.CommandNetworkRemoveBlockedURL:
+	case cdp.CommandNetworkSetBlockedURLS:
 		return emptyVal, nil
 
 	case cdp.CommandNetworkReplayXHR:
@@ -1136,6 +1133,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 		return emptyVal, nil
 
 	case cdp.CommandDebuggerPause:
+		return emptyVal, nil
+
+	case cdp.CommandDebuggerScheduleStepIntoAsync:
 		return emptyVal, nil
 
 	case cdp.CommandDebuggerResume:

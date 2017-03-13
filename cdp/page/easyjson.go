@@ -4737,6 +4737,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage58(in *jlexer.Lexer, out *
 			(out.Format).UnmarshalEasyJSON(in)
 		case "quality":
 			out.Quality = int64(in.Int64())
+		case "fromSurface":
+			out.FromSurface = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -4766,6 +4768,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage58(out *jwriter.Writer, in
 		first = false
 		out.RawString("\"quality\":")
 		out.Int64(int64(in.Quality))
+	}
+	if in.FromSurface {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"fromSurface\":")
+		out.Bool(bool(in.FromSurface))
 	}
 	out.RawByte('}')
 }

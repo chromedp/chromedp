@@ -152,6 +152,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpCss1(in *jlexer.Lexer, out *St
 			out.StartLine = float64(in.Float64())
 		case "startColumn":
 			out.StartColumn = float64(in.Float64())
+		case "length":
+			out.Length = float64(in.Float64())
 		default:
 			in.SkipRecursive()
 		}
@@ -261,6 +263,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpCss1(out *jwriter.Writer, in S
 		first = false
 		out.RawString("\"startColumn\":")
 		out.Float64(float64(in.StartColumn))
+	}
+	if in.Length != 0 {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"length\":")
+		out.Float64(float64(in.Length))
 	}
 	out.RawByte('}')
 }
@@ -2140,16 +2150,10 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpCss21(in *jlexer.Lexer, out *R
 		switch key {
 		case "styleSheetId":
 			out.StyleSheetID = StyleSheetID(in.String())
-		case "range":
-			if in.IsNull() {
-				in.Skip()
-				out.Range = nil
-			} else {
-				if out.Range == nil {
-					out.Range = new(SourceRange)
-				}
-				(*out.Range).UnmarshalEasyJSON(in)
-			}
+		case "startOffset":
+			out.StartOffset = float64(in.Float64())
+		case "endOffset":
+			out.EndOffset = float64(in.Float64())
 		case "used":
 			out.Used = bool(in.Bool())
 		default:
@@ -2174,17 +2178,21 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpCss21(out *jwriter.Writer, in 
 		out.RawString("\"styleSheetId\":")
 		out.String(string(in.StyleSheetID))
 	}
-	if in.Range != nil {
+	if in.StartOffset != 0 {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
-		out.RawString("\"range\":")
-		if in.Range == nil {
-			out.RawString("null")
-		} else {
-			(*in.Range).MarshalEasyJSON(out)
+		out.RawString("\"startOffset\":")
+		out.Float64(float64(in.StartOffset))
+	}
+	if in.EndOffset != 0 {
+		if !first {
+			out.RawByte(',')
 		}
+		first = false
+		out.RawString("\"endOffset\":")
+		out.Float64(float64(in.EndOffset))
 	}
 	if in.Used {
 		if !first {

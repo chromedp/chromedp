@@ -116,6 +116,7 @@ type StyleSheetHeader struct {
 	IsInline     bool              `json:"isInline,omitempty"`     // Whether this stylesheet is created for STYLE tag by parser. This flag is not set for document.written STYLE tags.
 	StartLine    float64           `json:"startLine,omitempty"`    // Line offset of the stylesheet within the resource (zero based).
 	StartColumn  float64           `json:"startColumn,omitempty"`  // Column offset of the stylesheet within the resource (zero based).
+	Length       float64           `json:"length,omitempty"`       // Size of the content (in characters).
 }
 
 // Rule cSS rule representation.
@@ -130,7 +131,8 @@ type Rule struct {
 // RuleUsage cSS rule usage information.
 type RuleUsage struct {
 	StyleSheetID StyleSheetID `json:"styleSheetId,omitempty"` // The css style sheet identifier (absent for user agent stylesheet and user-specified stylesheet rules) this rule came from.
-	Range        *SourceRange `json:"range,omitempty"`        // Style declaration range in the enclosing stylesheet (if available).
+	StartOffset  float64      `json:"startOffset,omitempty"`  // Offset of the start of the rule (including selector) from the beginning of the stylesheet.
+	EndOffset    float64      `json:"endOffset,omitempty"`    // Offset of the end of the rule body from the beginning of the stylesheet.
 	Used         bool         `json:"used,omitempty"`         // Indicates whether the rule was actually used by some element in the page.
 }
 

@@ -66,6 +66,14 @@ type SearchMatch struct {
 	LineContent string  `json:"lineContent,omitempty"` // Line with match content.
 }
 
+// BreakLocation [no description].
+type BreakLocation struct {
+	ScriptID     runtime.ScriptID  `json:"scriptId,omitempty"`     // Script identifier as reported in the Debugger.scriptParsed.
+	LineNumber   int64             `json:"lineNumber,omitempty"`   // Line number in the script (0-based).
+	ColumnNumber int64             `json:"columnNumber,omitempty"` // Column number in the script (0-based).
+	Type         BreakLocationType `json:"type,omitempty"`
+}
+
 // ScopeType scope type.
 type ScopeType string
 
@@ -126,6 +134,51 @@ func (t *ScopeType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 
 // UnmarshalJSON satisfies json.Unmarshaler.
 func (t *ScopeType) UnmarshalJSON(buf []byte) error {
+	return easyjson.Unmarshal(buf, t)
+}
+
+// BreakLocationType [no description].
+type BreakLocationType string
+
+// String returns the BreakLocationType as string value.
+func (t BreakLocationType) String() string {
+	return string(t)
+}
+
+// BreakLocationType values.
+const (
+	BreakLocationTypeDebuggerStatement BreakLocationType = "debuggerStatement"
+	BreakLocationTypeCall              BreakLocationType = "call"
+	BreakLocationTypeReturn            BreakLocationType = "return"
+)
+
+// MarshalEasyJSON satisfies easyjson.Marshaler.
+func (t BreakLocationType) MarshalEasyJSON(out *jwriter.Writer) {
+	out.String(string(t))
+}
+
+// MarshalJSON satisfies json.Marshaler.
+func (t BreakLocationType) MarshalJSON() ([]byte, error) {
+	return easyjson.Marshal(t)
+}
+
+// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
+func (t *BreakLocationType) UnmarshalEasyJSON(in *jlexer.Lexer) {
+	switch BreakLocationType(in.String()) {
+	case BreakLocationTypeDebuggerStatement:
+		*t = BreakLocationTypeDebuggerStatement
+	case BreakLocationTypeCall:
+		*t = BreakLocationTypeCall
+	case BreakLocationTypeReturn:
+		*t = BreakLocationTypeReturn
+
+	default:
+		in.AddError(errors.New("unknown BreakLocationType value"))
+	}
+}
+
+// UnmarshalJSON satisfies json.Unmarshaler.
+func (t *BreakLocationType) UnmarshalJSON(buf []byte) error {
 	return easyjson.Unmarshal(buf, t)
 }
 
