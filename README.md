@@ -101,7 +101,6 @@ please refer to the [GoDoc API listing](https://godoc.org/github.com/knq/chromed
 for a summary of the API and Actions.
 
 ## TODO
-* Unit tests / coverage: travis-ci + coveralls integration
 * Move timeouts to context (defaults)
 * Implement more query selector options (allow over riding context timeouts)
 * Contextual actions for "dry run" (or via an accumulator?)
