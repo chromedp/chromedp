@@ -96,7 +96,9 @@ func googleSearch(q, text string, site, res *string) cdp.Tasks {
 }
 ```
 
-Please see the [examples](examples/) directory for examples.
+Please see the [examples](examples/) directory for some more examples, and
+please refer to the [GoDoc API listing](https://godoc.org/github.com/knq/chromedp)
+for a summary of the API and Actions.
 
 ## TODO
 * Unit tests / coverage: travis-ci + coveralls integration
