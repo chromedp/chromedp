@@ -2899,6 +2899,16 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpDebugger32(in *jlexer.Lexer, o
 			out.IsModule = bool(in.Bool())
 		case "length":
 			out.Length = int64(in.Int64())
+		case "stackTrace":
+			if in.IsNull() {
+				in.Skip()
+				out.StackTrace = nil
+			} else {
+				if out.StackTrace == nil {
+					out.StackTrace = new(runtime.StackTrace)
+				}
+				(*out.StackTrace).UnmarshalEasyJSON(in)
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -3025,6 +3035,18 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDebugger32(out *jwriter.Writer
 		out.RawString("\"length\":")
 		out.Int64(int64(in.Length))
 	}
+	if in.StackTrace != nil {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"stackTrace\":")
+		if in.StackTrace == nil {
+			out.RawString("null")
+		} else {
+			(*in.StackTrace).MarshalEasyJSON(out)
+		}
+	}
 	out.RawByte('}')
 }
 
@@ -3096,6 +3118,16 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpDebugger33(in *jlexer.Lexer, o
 			out.IsModule = bool(in.Bool())
 		case "length":
 			out.Length = int64(in.Int64())
+		case "stackTrace":
+			if in.IsNull() {
+				in.Skip()
+				out.StackTrace = nil
+			} else {
+				if out.StackTrace == nil {
+					out.StackTrace = new(runtime.StackTrace)
+				}
+				(*out.StackTrace).UnmarshalEasyJSON(in)
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -3213,6 +3245,18 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDebugger33(out *jwriter.Writer
 		first = false
 		out.RawString("\"length\":")
 		out.Int64(int64(in.Length))
+	}
+	if in.StackTrace != nil {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"stackTrace\":")
+		if in.StackTrace == nil {
+			out.RawString("null")
+		} else {
+			(*in.StackTrace).MarshalEasyJSON(out)
+		}
 	}
 	out.RawByte('}')
 }

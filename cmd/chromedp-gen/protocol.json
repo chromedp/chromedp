@@ -12014,6 +12014,13 @@
               "optional": true,
               "description": "This script length.",
               "experimental": true
+            },
+            {
+              "name": "stackTrace",
+              "$ref": "Runtime.StackTrace",
+              "optional": true,
+              "description": "JavaScript top stack frame of where the script parsed event was triggered if available.",
+              "experimental": true
             }
           ],
           "description": "Fired when virtual machine parses script. This event is also fired for all known and uncollected scripts upon enabling debugger."
@@ -12092,6 +12099,13 @@
               "type": "integer",
               "optional": true,
               "description": "This script length.",
+              "experimental": true
+            },
+            {
+              "name": "stackTrace",
+              "$ref": "Runtime.StackTrace",
+              "optional": true,
+              "description": "JavaScript top stack frame of where the script parsed event was triggered if available.",
               "experimental": true
             }
           ],
