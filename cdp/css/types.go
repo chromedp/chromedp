@@ -128,7 +128,7 @@ type Rule struct {
 	Media        []*Media         `json:"media,omitempty"`        // Media list array (for rules involving media queries). The array enumerates media queries starting with the innermost one, going outwards.
 }
 
-// RuleUsage cSS rule usage information.
+// RuleUsage cSS coverage information.
 type RuleUsage struct {
 	StyleSheetID StyleSheetID `json:"styleSheetId,omitempty"` // The css style sheet identifier (absent for user agent stylesheet and user-specified stylesheet rules) this rule came from.
 	StartOffset  float64      `json:"startOffset,omitempty"`  // Offset of the start of the rule (including selector) from the beginning of the stylesheet.

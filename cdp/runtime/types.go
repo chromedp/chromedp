@@ -283,6 +283,8 @@ const (
 	SubtypeDate       Subtype = "date"
 	SubtypeMap        Subtype = "map"
 	SubtypeSet        Subtype = "set"
+	SubtypeWeakmap    Subtype = "weakmap"
+	SubtypeWeakset    Subtype = "weakset"
 	SubtypeIterator   Subtype = "iterator"
 	SubtypeGenerator  Subtype = "generator"
 	SubtypeError      Subtype = "error"
@@ -318,6 +320,10 @@ func (t *Subtype) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = SubtypeMap
 	case SubtypeSet:
 		*t = SubtypeSet
+	case SubtypeWeakmap:
+		*t = SubtypeWeakmap
+	case SubtypeWeakset:
+		*t = SubtypeWeakset
 	case SubtypeIterator:
 		*t = SubtypeIterator
 	case SubtypeGenerator:

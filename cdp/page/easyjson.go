@@ -7,6 +7,7 @@ import (
 	cdp "github.com/knq/chromedp/cdp"
 	debugger "github.com/knq/chromedp/cdp/debugger"
 	dom "github.com/knq/chromedp/cdp/dom"
+	runtime "github.com/knq/chromedp/cdp/runtime"
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"
@@ -4242,6 +4243,16 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage51(in *jlexer.Lexer, out *
 			(out.FrameID).UnmarshalEasyJSON(in)
 		case "parentFrameId":
 			(out.ParentFrameID).UnmarshalEasyJSON(in)
+		case "stack":
+			if in.IsNull() {
+				in.Skip()
+				out.Stack = nil
+			} else {
+				if out.Stack == nil {
+					out.Stack = new(runtime.StackTrace)
+				}
+				(*out.Stack).UnmarshalEasyJSON(in)
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -4271,6 +4282,18 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage51(out *jwriter.Writer, in
 		first = false
 		out.RawString("\"parentFrameId\":")
 		out.String(string(in.ParentFrameID))
+	}
+	if in.Stack != nil {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"stack\":")
+		if in.Stack == nil {
+			out.RawString("null")
+		} else {
+			(*in.Stack).MarshalEasyJSON(out)
+		}
 	}
 	out.RawByte('}')
 }

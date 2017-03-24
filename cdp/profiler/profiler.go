@@ -109,19 +109,30 @@ func (p *StopParams) Do(ctxt context.Context, h cdp.Handler) (profile *Profile, 
 // StartPreciseCoverageParams enable precise code coverage. Coverage data for
 // JavaScript executed before enabling precise code coverage may be incomplete.
 // Enabling prevents running optimized code and resets execution counters.
-type StartPreciseCoverageParams struct{}
+type StartPreciseCoverageParams struct {
+	CallCount bool `json:"callCount,omitempty"` // Collect accurate call counts beyond simple 'covered' or 'not covered'.
+}
 
 // StartPreciseCoverage enable precise code coverage. Coverage data for
 // JavaScript executed before enabling precise code coverage may be incomplete.
 // Enabling prevents running optimized code and resets execution counters.
+//
+// parameters:
 func StartPreciseCoverage() *StartPreciseCoverageParams {
 	return &StartPreciseCoverageParams{}
+}
+
+// WithCallCount collect accurate call counts beyond simple 'covered' or 'not
+// covered'.
+func (p StartPreciseCoverageParams) WithCallCount(callCount bool) *StartPreciseCoverageParams {
+	p.CallCount = callCount
+	return &p
 }
 
 // Do executes Profiler.startPreciseCoverage against the provided context and
 // target handler.
 func (p *StartPreciseCoverageParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandProfilerStartPreciseCoverage, nil, nil)
+	return h.Execute(ctxt, cdp.CommandProfilerStartPreciseCoverage, p, nil)
 }
 
 // StopPreciseCoverageParams disable precise code coverage. Disabling

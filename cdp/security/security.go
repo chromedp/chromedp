@@ -56,3 +56,54 @@ func ShowCertificateViewer() *ShowCertificateViewerParams {
 func (p *ShowCertificateViewerParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandSecurityShowCertificateViewer, nil, nil)
 }
+
+// HandleCertificateErrorParams handles a certificate error that fired a
+// certificateError event.
+type HandleCertificateErrorParams struct {
+	EventID int64                  `json:"eventId"` // The ID of the event.
+	Action  CertificateErrorAction `json:"action"`  // The action to take on the certificate error.
+}
+
+// HandleCertificateError handles a certificate error that fired a
+// certificateError event.
+//
+// parameters:
+//   eventID - The ID of the event.
+//   action - The action to take on the certificate error.
+func HandleCertificateError(eventID int64, action CertificateErrorAction) *HandleCertificateErrorParams {
+	return &HandleCertificateErrorParams{
+		EventID: eventID,
+		Action:  action,
+	}
+}
+
+// Do executes Security.handleCertificateError against the provided context and
+// target handler.
+func (p *HandleCertificateErrorParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandSecurityHandleCertificateError, p, nil)
+}
+
+// SetOverrideCertificateErrorsParams enable/disable overriding certificate
+// errors. If enabled, all certificate error events need to be handled by the
+// DevTools client and should be answered with handleCertificateError commands.
+type SetOverrideCertificateErrorsParams struct {
+	Override bool `json:"override"` // If true, certificate errors will be overridden.
+}
+
+// SetOverrideCertificateErrors enable/disable overriding certificate errors.
+// If enabled, all certificate error events need to be handled by the DevTools
+// client and should be answered with handleCertificateError commands.
+//
+// parameters:
+//   override - If true, certificate errors will be overridden.
+func SetOverrideCertificateErrors(override bool) *SetOverrideCertificateErrorsParams {
+	return &SetOverrideCertificateErrorsParams{
+		Override: override,
+	}
+}
+
+// Do executes Security.setOverrideCertificateErrors against the provided context and
+// target handler.
+func (p *SetOverrideCertificateErrorsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandSecuritySetOverrideCertificateErrors, p, nil)
+}

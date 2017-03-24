@@ -90,3 +90,47 @@ type InsecureContentStatus struct {
 	RanInsecureContentStyle        State `json:"ranInsecureContentStyle,omitempty"`        // Security state representing a page that ran insecure content.
 	DisplayedInsecureContentStyle  State `json:"displayedInsecureContentStyle,omitempty"`  // Security state representing a page that displayed insecure content.
 }
+
+// CertificateErrorAction the action to take when a certificate error occurs.
+// continue will continue processing the request and cancel will cancel the
+// request.
+type CertificateErrorAction string
+
+// String returns the CertificateErrorAction as string value.
+func (t CertificateErrorAction) String() string {
+	return string(t)
+}
+
+// CertificateErrorAction values.
+const (
+	CertificateErrorActionContinue CertificateErrorAction = "continue"
+	CertificateErrorActionCancel   CertificateErrorAction = "cancel"
+)
+
+// MarshalEasyJSON satisfies easyjson.Marshaler.
+func (t CertificateErrorAction) MarshalEasyJSON(out *jwriter.Writer) {
+	out.String(string(t))
+}
+
+// MarshalJSON satisfies json.Marshaler.
+func (t CertificateErrorAction) MarshalJSON() ([]byte, error) {
+	return easyjson.Marshal(t)
+}
+
+// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
+func (t *CertificateErrorAction) UnmarshalEasyJSON(in *jlexer.Lexer) {
+	switch CertificateErrorAction(in.String()) {
+	case CertificateErrorActionContinue:
+		*t = CertificateErrorActionContinue
+	case CertificateErrorActionCancel:
+		*t = CertificateErrorActionCancel
+
+	default:
+		in.AddError(errors.New("unknown CertificateErrorAction value"))
+	}
+}
+
+// UnmarshalJSON satisfies json.Unmarshaler.
+func (t *CertificateErrorAction) UnmarshalJSON(buf []byte) error {
+	return easyjson.Unmarshal(buf, t)
+}

@@ -15,7 +15,18 @@ type EventSecurityStateChanged struct {
 	Summary               string                 `json:"summary,omitempty"`               // Overrides user-visible description of the state.
 }
 
+// EventCertificateError there is a certificate error. If overriding
+// certificate errors is enabled, then it should be handled with the
+// handleCertificateError command. Note: this event does not fire if the
+// certificate error has been allowed internally.
+type EventCertificateError struct {
+	EventID    int64  `json:"eventId,omitempty"`    // The ID of the event.
+	ErrorType  string `json:"errorType,omitempty"`  // The type of the error.
+	RequestURL string `json:"requestURL,omitempty"` // The url that was requested.
+}
+
 // EventTypes all event types in the domain.
 var EventTypes = []cdp.MethodType{
 	cdp.EventSecuritySecurityStateChanged,
+	cdp.EventSecurityCertificateError,
 }

@@ -124,9 +124,12 @@ const (
 	CommandEmulationSetVirtualTimePolicy                   MethodType = "Emulation.setVirtualTimePolicy"
 	CommandEmulationSetDefaultBackgroundColorOverride      MethodType = "Emulation.setDefaultBackgroundColorOverride"
 	EventSecuritySecurityStateChanged                      MethodType = "Security.securityStateChanged"
+	EventSecurityCertificateError                          MethodType = "Security.certificateError"
 	CommandSecurityEnable                                  MethodType = "Security.enable"
 	CommandSecurityDisable                                 MethodType = "Security.disable"
 	CommandSecurityShowCertificateViewer                   MethodType = "Security.showCertificateViewer"
+	CommandSecurityHandleCertificateError                  MethodType = "Security.handleCertificateError"
+	CommandSecuritySetOverrideCertificateErrors            MethodType = "Security.setOverrideCertificateErrors"
 	EventNetworkResourceChangedPriority                    MethodType = "Network.resourceChangedPriority"
 	EventNetworkRequestWillBeSent                          MethodType = "Network.requestWillBeSent"
 	EventNetworkRequestServedFromCache                     MethodType = "Network.requestServedFromCache"
@@ -280,6 +283,7 @@ const (
 	CommandCSSGetBackgroundColors                          MethodType = "CSS.getBackgroundColors"
 	CommandCSSGetLayoutTreeAndStyles                       MethodType = "CSS.getLayoutTreeAndStyles"
 	CommandCSSStartRuleUsageTracking                       MethodType = "CSS.startRuleUsageTracking"
+	CommandCSSTakeCoverageDelta                            MethodType = "CSS.takeCoverageDelta"
 	CommandCSSStopRuleUsageTracking                        MethodType = "CSS.stopRuleUsageTracking"
 	CommandIORead                                          MethodType = "IO.read"
 	CommandIOClose                                         MethodType = "IO.close"
@@ -621,12 +625,18 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandEmulationSetDefaultBackgroundColorOverride
 	case EventSecuritySecurityStateChanged:
 		*t = EventSecuritySecurityStateChanged
+	case EventSecurityCertificateError:
+		*t = EventSecurityCertificateError
 	case CommandSecurityEnable:
 		*t = CommandSecurityEnable
 	case CommandSecurityDisable:
 		*t = CommandSecurityDisable
 	case CommandSecurityShowCertificateViewer:
 		*t = CommandSecurityShowCertificateViewer
+	case CommandSecurityHandleCertificateError:
+		*t = CommandSecurityHandleCertificateError
+	case CommandSecuritySetOverrideCertificateErrors:
+		*t = CommandSecuritySetOverrideCertificateErrors
 	case EventNetworkResourceChangedPriority:
 		*t = EventNetworkResourceChangedPriority
 	case EventNetworkRequestWillBeSent:
@@ -933,6 +943,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandCSSGetLayoutTreeAndStyles
 	case CommandCSSStartRuleUsageTracking:
 		*t = CommandCSSStartRuleUsageTracking
+	case CommandCSSTakeCoverageDelta:
+		*t = CommandCSSTakeCoverageDelta
 	case CommandCSSStopRuleUsageTracking:
 		*t = CommandCSSStopRuleUsageTracking
 	case CommandIORead:

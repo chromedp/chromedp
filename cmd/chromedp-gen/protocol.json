@@ -1147,6 +1147,13 @@
               "name": "parentFrameId",
               "$ref": "FrameId",
               "description": "Parent frame identifier."
+            },
+            {
+              "name": "stack",
+              "$ref": "Runtime.StackTrace",
+              "optional": true,
+              "description": "JavaScript stack trace of when frame was attached, only set if frame initiated from script.",
+              "experimental": true
             }
           ]
         },
@@ -1818,6 +1825,15 @@
             }
           ],
           "description": "Information about insecure content on the page."
+        },
+        {
+          "id": "CertificateErrorAction",
+          "type": "string",
+          "enum": [
+            "continue",
+            "cancel"
+          ],
+          "description": "The action to take when a certificate error occurs. continue will continue processing the request and cancel will cancel the request."
         }
       ],
       "commands": [
@@ -1832,6 +1848,33 @@
         {
           "name": "showCertificateViewer",
           "description": "Displays native dialog with the certificate details."
+        },
+        {
+          "name": "handleCertificateError",
+          "description": "Handles a certificate error that fired a certificateError event.",
+          "parameters": [
+            {
+              "name": "eventId",
+              "type": "integer",
+              "description": "The ID of the event."
+            },
+            {
+              "name": "action",
+              "$ref": "CertificateErrorAction",
+              "description": "The action to take on the certificate error."
+            }
+          ]
+        },
+        {
+          "name": "setOverrideCertificateErrors",
+          "description": "Enable/disable overriding certificate errors. If enabled, all certificate error events need to be handled by the DevTools client and should be answered with handleCertificateError commands.",
+          "parameters": [
+            {
+              "name": "override",
+              "type": "boolean",
+              "description": "If true, certificate errors will be overridden."
+            }
+          ]
         }
       ],
       "events": [
@@ -1867,6 +1910,27 @@
               "type": "string",
               "description": "Overrides user-visible description of the state.",
               "optional": true
+            }
+          ]
+        },
+        {
+          "name": "certificateError",
+          "description": "There is a certificate error. If overriding certificate errors is enabled, then it should be handled with the handleCertificateError command. Note: this event does not fire if the certificate error has been allowed internally.",
+          "parameters": [
+            {
+              "name": "eventId",
+              "type": "integer",
+              "description": "The ID of the event."
+            },
+            {
+              "name": "errorType",
+              "type": "string",
+              "description": "The type of the error."
+            },
+            {
+              "name": "requestURL",
+              "type": "string",
+              "description": "The url that was requested."
             }
           ]
         }
@@ -5557,6 +5621,12 @@
               "name": "y",
               "type": "integer",
               "description": "Y coordinate."
+            },
+            {
+              "name": "includeUserAgentShadowDOM",
+              "type": "boolean",
+              "optional": true,
+              "description": "False to skip to the nearest non-UA shadow root ancestor (default: false)."
             }
           ],
           "returns": [
@@ -6125,7 +6195,7 @@
               "description": "Indicates whether the rule was actually used by some element in the page."
             }
           ],
-          "description": "CSS rule usage information.",
+          "description": "CSS coverage information.",
           "experimental": true
         },
         {
@@ -7018,6 +7088,20 @@
         {
           "name": "startRuleUsageTracking",
           "description": "Enables the selector recording.",
+          "experimental": true
+        },
+        {
+          "name": "takeCoverageDelta",
+          "description": "Obtain list of rules that became used since last call to this method (or since start of coverage instrumentation)",
+          "returns": [
+            {
+              "name": "coverage",
+              "type": "array",
+              "items": {
+                "$ref": "RuleUsage"
+              }
+            }
+          ],
           "experimental": true
         },
         {
@@ -10233,6 +10317,8 @@
                 "date",
                 "map",
                 "set",
+                "weakmap",
+                "weakset",
                 "iterator",
                 "generator",
                 "error",
@@ -10347,6 +10433,8 @@
                 "date",
                 "map",
                 "set",
+                "weakmap",
+                "weakset",
                 "iterator",
                 "generator",
                 "error"
@@ -10432,6 +10520,8 @@
                 "date",
                 "map",
                 "set",
+                "weakmap",
+                "weakset",
                 "iterator",
                 "generator",
                 "error"
@@ -12503,6 +12593,14 @@
         },
         {
           "name": "startPreciseCoverage",
+          "parameters": [
+            {
+              "name": "callCount",
+              "type": "boolean",
+              "optional": true,
+              "description": "Collect accurate call counts beyond simple 'covered' or 'not covered'."
+            }
+          ],
           "description": "Enable precise code coverage. Coverage data for JavaScript executed before enabling precise code coverage may be incomplete. Enabling prevents running optimized code and resets execution counters.",
           "experimental": true
         },

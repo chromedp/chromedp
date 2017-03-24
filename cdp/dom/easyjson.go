@@ -4062,6 +4062,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpDom46(in *jlexer.Lexer, out *G
 			out.X = int64(in.Int64())
 		case "y":
 			out.Y = int64(in.Int64())
+		case "includeUserAgentShadowDOM":
+			out.IncludeUserAgentShadowDOM = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -4088,6 +4090,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDom46(out *jwriter.Writer, in 
 	first = false
 	out.RawString("\"y\":")
 	out.Int64(int64(in.Y))
+	if in.IncludeUserAgentShadowDOM {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"includeUserAgentShadowDOM\":")
+		out.Bool(bool(in.IncludeUserAgentShadowDOM))
+	}
 	out.RawByte('}')
 }
 

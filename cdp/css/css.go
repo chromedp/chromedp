@@ -758,6 +758,37 @@ func (p *StartRuleUsageTrackingParams) Do(ctxt context.Context, h cdp.Handler) (
 	return h.Execute(ctxt, cdp.CommandCSSStartRuleUsageTracking, nil, nil)
 }
 
+// TakeCoverageDeltaParams obtain list of rules that became used since last
+// call to this method (or since start of coverage instrumentation).
+type TakeCoverageDeltaParams struct{}
+
+// TakeCoverageDelta obtain list of rules that became used since last call to
+// this method (or since start of coverage instrumentation).
+func TakeCoverageDelta() *TakeCoverageDeltaParams {
+	return &TakeCoverageDeltaParams{}
+}
+
+// TakeCoverageDeltaReturns return values.
+type TakeCoverageDeltaReturns struct {
+	Coverage []*RuleUsage `json:"coverage,omitempty"`
+}
+
+// Do executes CSS.takeCoverageDelta against the provided context and
+// target handler.
+//
+// returns:
+//   coverage
+func (p *TakeCoverageDeltaParams) Do(ctxt context.Context, h cdp.Handler) (coverage []*RuleUsage, err error) {
+	// execute
+	var res TakeCoverageDeltaReturns
+	err = h.Execute(ctxt, cdp.CommandCSSTakeCoverageDelta, nil, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Coverage, nil
+}
+
 // StopRuleUsageTrackingParams the list of rules with an indication of
 // whether these were used.
 type StopRuleUsageTrackingParams struct{}

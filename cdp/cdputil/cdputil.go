@@ -277,8 +277,17 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandSecurityShowCertificateViewer:
 		return emptyVal, nil
 
+	case cdp.CommandSecurityHandleCertificateError:
+		return emptyVal, nil
+
+	case cdp.CommandSecuritySetOverrideCertificateErrors:
+		return emptyVal, nil
+
 	case cdp.EventSecuritySecurityStateChanged:
 		v = new(security.EventSecurityStateChanged)
+
+	case cdp.EventSecurityCertificateError:
+		v = new(security.EventCertificateError)
 
 	case cdp.CommandNetworkEnable:
 		return emptyVal, nil
@@ -723,6 +732,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 
 	case cdp.CommandCSSStartRuleUsageTracking:
 		return emptyVal, nil
+
+	case cdp.CommandCSSTakeCoverageDelta:
+		v = new(css.TakeCoverageDeltaReturns)
 
 	case cdp.CommandCSSStopRuleUsageTracking:
 		v = new(css.StopRuleUsageTrackingReturns)

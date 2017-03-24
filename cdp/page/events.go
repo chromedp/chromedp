@@ -4,6 +4,7 @@ package page
 
 import (
 	cdp "github.com/knq/chromedp/cdp"
+	"github.com/knq/chromedp/cdp/runtime"
 )
 
 // EventDomContentEventFired [no description].
@@ -18,8 +19,9 @@ type EventLoadEventFired struct {
 
 // EventFrameAttached fired when frame has been attached to its parent.
 type EventFrameAttached struct {
-	FrameID       cdp.FrameID `json:"frameId,omitempty"`       // Id of the frame that has been attached.
-	ParentFrameID cdp.FrameID `json:"parentFrameId,omitempty"` // Parent frame identifier.
+	FrameID       cdp.FrameID         `json:"frameId,omitempty"`       // Id of the frame that has been attached.
+	ParentFrameID cdp.FrameID         `json:"parentFrameId,omitempty"` // Parent frame identifier.
+	Stack         *runtime.StackTrace `json:"stack,omitempty"`         // JavaScript stack trace of when frame was attached, only set if frame initiated from script.
 }
 
 // EventFrameNavigated fired once navigation of the frame has completed.

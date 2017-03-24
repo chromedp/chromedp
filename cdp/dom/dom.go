@@ -1318,8 +1318,9 @@ func (p *GetBoxModelParams) Do(ctxt context.Context, h cdp.Handler) (model *BoxM
 
 // GetNodeForLocationParams returns node id at given location.
 type GetNodeForLocationParams struct {
-	X int64 `json:"x"` // X coordinate.
-	Y int64 `json:"y"` // Y coordinate.
+	X                         int64 `json:"x"`                                   // X coordinate.
+	Y                         int64 `json:"y"`                                   // Y coordinate.
+	IncludeUserAgentShadowDOM bool  `json:"includeUserAgentShadowDOM,omitempty"` // False to skip to the nearest non-UA shadow root ancestor (default: false).
 }
 
 // GetNodeForLocation returns node id at given location.
@@ -1332,6 +1333,13 @@ func GetNodeForLocation(x int64, y int64) *GetNodeForLocationParams {
 		X: x,
 		Y: y,
 	}
+}
+
+// WithIncludeUserAgentShadowDOM false to skip to the nearest non-UA shadow
+// root ancestor (default: false).
+func (p GetNodeForLocationParams) WithIncludeUserAgentShadowDOM(includeUserAgentShadowDOM bool) *GetNodeForLocationParams {
+	p.IncludeUserAgentShadowDOM = includeUserAgentShadowDOM
+	return &p
 }
 
 // GetNodeForLocationReturns return values.
