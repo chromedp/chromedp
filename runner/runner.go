@@ -391,6 +391,11 @@ func WindowSize(width, height int) CommandLineOption {
 	return Flag("window-size", fmt.Sprintf("%d,%d", width, height))
 }
 
+// StartMaximized is the Chrome command line option to start with maximized window size.
+func StartMaximized() CommandLineOption {
+	return Flag("start-maximized", true)
+}
+
 // UserAgent is the Chrome command line option to set the default User-Agent
 // header.
 func UserAgent(userAgent string) CommandLineOption {
