@@ -211,6 +211,7 @@ type Request struct {
 	MixedContentType MixedContentType `json:"mixedContentType,omitempty"` // The mixed content status of the request, as defined in http://www.w3.org/TR/mixed-content/
 	InitialPriority  ResourcePriority `json:"initialPriority,omitempty"`  // Priority of the resource request at the time request is sent.
 	ReferrerPolicy   ReferrerPolicy   `json:"referrerPolicy,omitempty"`   // The referrer policy of the request, as defined in https://www.w3.org/TR/referrer-policy/
+	IsLinkPreload    bool             `json:"isLinkPreload,omitempty"`    // Whether is loaded via link preload.
 }
 
 // SignedCertificateTimestamp details of a signed certificate timestamp

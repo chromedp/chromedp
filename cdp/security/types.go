@@ -85,6 +85,7 @@ type StateExplanation struct {
 type InsecureContentStatus struct {
 	RanMixedContent                bool  `json:"ranMixedContent,omitempty"`                // True if the page was loaded over HTTPS and ran mixed (HTTP) content such as scripts.
 	DisplayedMixedContent          bool  `json:"displayedMixedContent,omitempty"`          // True if the page was loaded over HTTPS and displayed mixed (HTTP) content such as images.
+	ContainedMixedForm             bool  `json:"containedMixedForm,omitempty"`             // True if the page was loaded over HTTPS and contained a form targeting an insecure url.
 	RanContentWithCertErrors       bool  `json:"ranContentWithCertErrors,omitempty"`       // True if the page was loaded over HTTPS without certificate errors, and ran content such as scripts that were loaded with certificate errors.
 	DisplayedContentWithCertErrors bool  `json:"displayedContentWithCertErrors,omitempty"` // True if the page was loaded over HTTPS without certificate errors, and displayed content such as images that were loaded with certificate errors.
 	RanInsecureContentStyle        State `json:"ranInsecureContentStyle,omitempty"`        // Security state representing a page that ran insecure content.

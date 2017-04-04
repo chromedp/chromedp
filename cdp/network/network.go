@@ -160,15 +160,15 @@ func (p *GetResponseBodyParams) Do(ctxt context.Context, h cdp.Handler) (body []
 	return dec, nil
 }
 
-// SetBlockedURLSParams blocks specific URL from loading.
+// SetBlockedURLSParams blocks URLs from loading.
 type SetBlockedURLSParams struct {
-	Urls []string `json:"urls"` // URLs to block.
+	Urls []string `json:"urls"` // URL patterns to block. Wildcards ('*') are allowed.
 }
 
-// SetBlockedURLS blocks specific URL from loading.
+// SetBlockedURLS blocks URLs from loading.
 //
 // parameters:
-//   urls - URLs to block.
+//   urls - URL patterns to block. Wildcards ('*') are allowed.
 func SetBlockedURLS(urls []string) *SetBlockedURLSParams {
 	return &SetBlockedURLSParams{
 		Urls: urls,

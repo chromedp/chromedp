@@ -2017,6 +2017,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork16(in *jlexer.Lexer, ou
 			(out.InitialPriority).UnmarshalEasyJSON(in)
 		case "referrerPolicy":
 			(out.ReferrerPolicy).UnmarshalEasyJSON(in)
+		case "isLinkPreload":
+			out.IsLinkPreload = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -2090,6 +2092,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork16(out *jwriter.Writer,
 		first = false
 		out.RawString("\"referrerPolicy\":")
 		(in.ReferrerPolicy).MarshalEasyJSON(out)
+	}
+	if in.IsLinkPreload {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"isLinkPreload\":")
+		out.Bool(bool(in.IsLinkPreload))
 	}
 	out.RawByte('}')
 }

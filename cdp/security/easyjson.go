@@ -265,6 +265,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpSecurity3(in *jlexer.Lexer, ou
 			out.RanMixedContent = bool(in.Bool())
 		case "displayedMixedContent":
 			out.DisplayedMixedContent = bool(in.Bool())
+		case "containedMixedForm":
+			out.ContainedMixedForm = bool(in.Bool())
 		case "ranContentWithCertErrors":
 			out.RanContentWithCertErrors = bool(in.Bool())
 		case "displayedContentWithCertErrors":
@@ -302,6 +304,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpSecurity3(out *jwriter.Writer,
 		first = false
 		out.RawString("\"displayedMixedContent\":")
 		out.Bool(bool(in.DisplayedMixedContent))
+	}
+	if in.ContainedMixedForm {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"containedMixedForm\":")
+		out.Bool(bool(in.ContainedMixedForm))
 	}
 	if in.RanContentWithCertErrors {
 		if !first {

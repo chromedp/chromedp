@@ -1804,6 +1804,11 @@
               "description": "True if the page was loaded over HTTPS and displayed mixed (HTTP) content such as images."
             },
             {
+              "name": "containedMixedForm",
+              "type": "boolean",
+              "description": "True if the page was loaded over HTTPS and contained a form targeting an insecure url."
+            },
+            {
               "name": "ranContentWithCertErrors",
               "type": "boolean",
               "description": "True if the page was loaded over HTTPS without certificate errors, and ran content such as scripts that were loaded with certificate errors."
@@ -2146,6 +2151,12 @@
                 "no-referrer-when-downgrade-origin-when-cross-origin"
               ],
               "description": "The referrer policy of the request, as defined in https://www.w3.org/TR/referrer-policy/"
+            },
+            {
+              "name": "isLinkPreload",
+              "type": "boolean",
+              "optional": true,
+              "description": "Whether is loaded via link preload."
             }
           ]
         },
@@ -2673,7 +2684,7 @@
         },
         {
           "name": "setBlockedURLs",
-          "description": "Blocks specific URL from loading.",
+          "description": "Blocks URLs from loading.",
           "parameters": [
             {
               "name": "urls",
@@ -2681,7 +2692,7 @@
               "items": {
                 "type": "string"
               },
-              "description": "URLs to block."
+              "description": "URL patterns to block. Wildcards ('*') are allowed."
             }
           ],
           "experimental": true
