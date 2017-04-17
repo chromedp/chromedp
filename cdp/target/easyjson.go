@@ -357,7 +357,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpTarget4(in *jlexer.Lexer, out 
 		}
 		switch key {
 		case "targetId":
-			out.TargetID = string(in.String())
+			out.TargetID = ID(in.String())
 		case "message":
 			out.Message = string(in.String())
 		default:

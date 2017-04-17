@@ -9,6 +9,7 @@ import (
 	"github.com/knq/chromedp/cdp/accessibility"
 	"github.com/knq/chromedp/cdp/animation"
 	"github.com/knq/chromedp/cdp/applicationcache"
+	"github.com/knq/chromedp/cdp/browser"
 	"github.com/knq/chromedp/cdp/cachestorage"
 	"github.com/knq/chromedp/cdp/css"
 	"github.com/knq/chromedp/cdp/database"
@@ -308,9 +309,6 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 		return emptyVal, nil
 
 	case cdp.CommandNetworkReplayXHR:
-		return emptyVal, nil
-
-	case cdp.CommandNetworkSetMonitoringXHREnabled:
 		return emptyVal, nil
 
 	case cdp.CommandNetworkCanClearBrowserCache:
@@ -1044,6 +1042,15 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 
 	case cdp.EventTetheringAccepted:
 		v = new(tethering.EventAccepted)
+
+	case cdp.CommandBrowserGetWindowForTarget:
+		v = new(browser.GetWindowForTargetReturns)
+
+	case cdp.CommandBrowserSetWindowBounds:
+		return emptyVal, nil
+
+	case cdp.CommandBrowserGetWindowBounds:
+		v = new(browser.GetWindowBoundsReturns)
 
 	case cdp.CommandSchemaGetDomains:
 		v = new(schema.GetDomainsReturns)

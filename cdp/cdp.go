@@ -152,7 +152,6 @@ const (
 	CommandNetworkGetResponseBody                          MethodType = "Network.getResponseBody"
 	CommandNetworkSetBlockedURLS                           MethodType = "Network.setBlockedURLs"
 	CommandNetworkReplayXHR                                MethodType = "Network.replayXHR"
-	CommandNetworkSetMonitoringXHREnabled                  MethodType = "Network.setMonitoringXHREnabled"
 	CommandNetworkCanClearBrowserCache                     MethodType = "Network.canClearBrowserCache"
 	CommandNetworkClearBrowserCache                        MethodType = "Network.clearBrowserCache"
 	CommandNetworkCanClearBrowserCookies                   MethodType = "Network.canClearBrowserCookies"
@@ -382,6 +381,9 @@ const (
 	EventTetheringAccepted                                 MethodType = "Tethering.accepted"
 	CommandTetheringBind                                   MethodType = "Tethering.bind"
 	CommandTetheringUnbind                                 MethodType = "Tethering.unbind"
+	CommandBrowserGetWindowForTarget                       MethodType = "Browser.getWindowForTarget"
+	CommandBrowserSetWindowBounds                          MethodType = "Browser.setWindowBounds"
+	CommandBrowserGetWindowBounds                          MethodType = "Browser.getWindowBounds"
 	CommandSchemaGetDomains                                MethodType = "Schema.getDomains"
 	EventRuntimeExecutionContextCreated                    MethodType = "Runtime.executionContextCreated"
 	EventRuntimeExecutionContextDestroyed                  MethodType = "Runtime.executionContextDestroyed"
@@ -681,8 +683,6 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandNetworkSetBlockedURLS
 	case CommandNetworkReplayXHR:
 		*t = CommandNetworkReplayXHR
-	case CommandNetworkSetMonitoringXHREnabled:
-		*t = CommandNetworkSetMonitoringXHREnabled
 	case CommandNetworkCanClearBrowserCache:
 		*t = CommandNetworkCanClearBrowserCache
 	case CommandNetworkClearBrowserCache:
@@ -1141,6 +1141,12 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandTetheringBind
 	case CommandTetheringUnbind:
 		*t = CommandTetheringUnbind
+	case CommandBrowserGetWindowForTarget:
+		*t = CommandBrowserGetWindowForTarget
+	case CommandBrowserSetWindowBounds:
+		*t = CommandBrowserSetWindowBounds
+	case CommandBrowserGetWindowBounds:
+		*t = CommandBrowserGetWindowBounds
 	case CommandSchemaGetDomains:
 		*t = CommandSchemaGetDomains
 	case EventRuntimeExecutionContextCreated:

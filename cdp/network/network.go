@@ -208,29 +208,6 @@ func (p *ReplayXHRParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandNetworkReplayXHR, p, nil)
 }
 
-// SetMonitoringXHREnabledParams toggles monitoring of XMLHttpRequest. If
-// true, console will receive messages upon each XHR issued.
-type SetMonitoringXHREnabledParams struct {
-	Enabled bool `json:"enabled"` // Monitoring enabled state.
-}
-
-// SetMonitoringXHREnabled toggles monitoring of XMLHttpRequest. If true,
-// console will receive messages upon each XHR issued.
-//
-// parameters:
-//   enabled - Monitoring enabled state.
-func SetMonitoringXHREnabled(enabled bool) *SetMonitoringXHREnabledParams {
-	return &SetMonitoringXHREnabledParams{
-		Enabled: enabled,
-	}
-}
-
-// Do executes Network.setMonitoringXHREnabled against the provided context and
-// target handler.
-func (p *SetMonitoringXHREnabledParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandNetworkSetMonitoringXHREnabled, p, nil)
-}
-
 // CanClearBrowserCacheParams tells whether clearing browser cache is
 // supported.
 type CanClearBrowserCacheParams struct{}

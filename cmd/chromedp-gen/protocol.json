@@ -2710,18 +2710,6 @@
           "experimental": true
         },
         {
-          "name": "setMonitoringXHREnabled",
-          "parameters": [
-            {
-              "name": "enabled",
-              "type": "boolean",
-              "description": "Monitoring enabled state."
-            }
-          ],
-          "description": "Toggles monitoring of XMLHttpRequest. If <code>true</code>, console will receive messages upon each XHR issued.",
-          "experimental": true
-        },
-        {
           "name": "canClearBrowserCache",
           "description": "Tells whether clearing browser cache is supported.",
           "returns": [
@@ -7573,7 +7561,7 @@
           "parameters": [
             {
               "name": "targetId",
-              "type": "string"
+              "$ref": "TargetID"
             },
             {
               "name": "message",
@@ -10224,6 +10212,124 @@
               "name": "connectionId",
               "type": "string",
               "description": "Connection id to be used."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "domain": "Browser",
+      "description": "The Browser domain defines methods and events for browser managing.",
+      "experimental": true,
+      "types": [
+        {
+          "id": "WindowID",
+          "type": "integer"
+        },
+        {
+          "id": "WindowState",
+          "type": "string",
+          "enum": [
+            "normal",
+            "minimized",
+            "maximized",
+            "fullscreen"
+          ],
+          "description": "The state of the browser window."
+        },
+        {
+          "id": "Bounds",
+          "type": "object",
+          "description": "Browser window bounds information",
+          "properties": [
+            {
+              "name": "left",
+              "type": "integer",
+              "optional": true,
+              "description": "The offset from the left edge of the screen to the window in pixels."
+            },
+            {
+              "name": "top",
+              "type": "integer",
+              "optional": true,
+              "description": "The offset from the top edge of the screen to the window in pixels."
+            },
+            {
+              "name": "width",
+              "type": "integer",
+              "optional": true,
+              "description": "The window width in pixels."
+            },
+            {
+              "name": "height",
+              "type": "integer",
+              "optional": true,
+              "description": "The window height in pixels."
+            },
+            {
+              "name": "windowState",
+              "$ref": "WindowState",
+              "optional": true,
+              "description": "The window state. Default to normal."
+            }
+          ]
+        }
+      ],
+      "commands": [
+        {
+          "name": "getWindowForTarget",
+          "description": "Get the browser window that contains the devtools target.",
+          "parameters": [
+            {
+              "name": "targetId",
+              "$ref": "Target.TargetID",
+              "description": "Devtools agent host id."
+            }
+          ],
+          "returns": [
+            {
+              "name": "windowId",
+              "$ref": "WindowID",
+              "description": "Browser window id."
+            },
+            {
+              "name": "bounds",
+              "$ref": "Bounds",
+              "description": "Bounds information of the window. When window state is 'minimized', the restored window position and size are returned."
+            }
+          ]
+        },
+        {
+          "name": "setWindowBounds",
+          "description": "Set position and/or size of the browser window.",
+          "parameters": [
+            {
+              "name": "windowId",
+              "$ref": "WindowID",
+              "description": "Browser window id."
+            },
+            {
+              "name": "bounds",
+              "$ref": "Bounds",
+              "description": "New window bounds. The 'minimized', 'maximized' and 'fullscreen' states cannot be combined with 'left', 'top', 'width' or 'height'. Leaves unspecified fields unchanged."
+            }
+          ]
+        },
+        {
+          "name": "getWindowBounds",
+          "description": "Get position and size of the browser window.",
+          "parameters": [
+            {
+              "name": "windowId",
+              "$ref": "WindowID",
+              "description": "Browser window id."
+            }
+          ],
+          "returns": [
+            {
+              "name": "bounds",
+              "$ref": "Bounds",
+              "description": "Bounds information of the window. When window state is 'minimized', the restored window position and size are returned."
             }
           ]
         }

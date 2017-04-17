@@ -114,7 +114,7 @@ func (p *SetRemoteLocationsParams) Do(ctxt context.Context, h cdp.Handler) (err 
 // SendMessageToTargetParams sends protocol message to the target with given
 // id.
 type SendMessageToTargetParams struct {
-	TargetID string `json:"targetId"`
+	TargetID ID     `json:"targetId"`
 	Message  string `json:"message"`
 }
 
@@ -123,7 +123,7 @@ type SendMessageToTargetParams struct {
 // parameters:
 //   targetID
 //   message
-func SendMessageToTarget(targetID string, message string) *SendMessageToTargetParams {
+func SendMessageToTarget(targetID ID, message string) *SendMessageToTargetParams {
 	return &SendMessageToTargetParams{
 		TargetID: targetID,
 		Message:  message,
