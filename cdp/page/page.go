@@ -647,27 +647,6 @@ func (p *HandleJavaScriptDialogParams) Do(ctxt context.Context, h cdp.Handler) (
 	return h.Execute(ctxt, cdp.CommandPageHandleJavaScriptDialog, p, nil)
 }
 
-// SetColorPickerEnabledParams shows / hides color picker.
-type SetColorPickerEnabledParams struct {
-	Enabled bool `json:"enabled"` // Shows / hides color picker
-}
-
-// SetColorPickerEnabled shows / hides color picker.
-//
-// parameters:
-//   enabled - Shows / hides color picker
-func SetColorPickerEnabled(enabled bool) *SetColorPickerEnabledParams {
-	return &SetColorPickerEnabledParams{
-		Enabled: enabled,
-	}
-}
-
-// Do executes Page.setColorPickerEnabled against the provided context and
-// target handler.
-func (p *SetColorPickerEnabledParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandPageSetColorPickerEnabled, p, nil)
-}
-
 // ConfigureOverlayParams configures overlay.
 type ConfigureOverlayParams struct {
 	Suspended bool   `json:"suspended,omitempty"` // Whether overlay should be suspended and not consume any resources.

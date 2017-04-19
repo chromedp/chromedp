@@ -88,11 +88,6 @@ type EventScreencastVisibilityChanged struct {
 	Visible bool `json:"visible,omitempty"` // True if the page is visible.
 }
 
-// EventColorPicked fired when a color has been picked.
-type EventColorPicked struct {
-	Color *cdp.RGBA `json:"color,omitempty"` // RGBA of the picked color.
-}
-
 // EventInterstitialShown fired when interstitial page was shown.
 type EventInterstitialShown struct{}
 
@@ -125,7 +120,6 @@ var EventTypes = []cdp.MethodType{
 	cdp.EventPageJavascriptDialogClosed,
 	cdp.EventPageScreencastFrame,
 	cdp.EventPageScreencastVisibilityChanged,
-	cdp.EventPageColorPicked,
 	cdp.EventPageInterstitialShown,
 	cdp.EventPageInterstitialHidden,
 	cdp.EventPageNavigationRequested,

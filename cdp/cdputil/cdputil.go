@@ -128,9 +128,6 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandPageHandleJavaScriptDialog:
 		return emptyVal, nil
 
-	case cdp.CommandPageSetColorPickerEnabled:
-		return emptyVal, nil
-
 	case cdp.CommandPageConfigureOverlay:
 		return emptyVal, nil
 
@@ -190,9 +187,6 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 
 	case cdp.EventPageScreencastVisibilityChanged:
 		v = new(page.EventScreencastVisibilityChanged)
-
-	case cdp.EventPageColorPicked:
-		v = new(page.EventColorPicked)
 
 	case cdp.EventPageInterstitialShown:
 		v = new(page.EventInterstitialShown)

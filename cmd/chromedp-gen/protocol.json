@@ -1008,18 +1008,6 @@
           ]
         },
         {
-          "name": "setColorPickerEnabled",
-          "parameters": [
-            {
-              "name": "enabled",
-              "type": "boolean",
-              "description": "Shows / hides color picker"
-            }
-          ],
-          "description": "Shows / hides color picker",
-          "experimental": true
-        },
-        {
           "name": "configureOverlay",
           "parameters": [
             {
@@ -1293,18 +1281,6 @@
               "name": "visible",
               "type": "boolean",
               "description": "True if the page is visible."
-            }
-          ],
-          "experimental": true
-        },
-        {
-          "name": "colorPicked",
-          "description": "Fired when a color has been picked.",
-          "parameters": [
-            {
-              "name": "color",
-              "$ref": "DOM.RGBA",
-              "description": "RGBA of the picked color."
             }
           ],
           "experimental": true

@@ -70,7 +70,6 @@ const (
 	EventPageJavascriptDialogClosed                        MethodType = "Page.javascriptDialogClosed"
 	EventPageScreencastFrame                               MethodType = "Page.screencastFrame"
 	EventPageScreencastVisibilityChanged                   MethodType = "Page.screencastVisibilityChanged"
-	EventPageColorPicked                                   MethodType = "Page.colorPicked"
 	EventPageInterstitialShown                             MethodType = "Page.interstitialShown"
 	EventPageInterstitialHidden                            MethodType = "Page.interstitialHidden"
 	EventPageNavigationRequested                           MethodType = "Page.navigationRequested"
@@ -94,7 +93,6 @@ const (
 	CommandPageStopScreencast                              MethodType = "Page.stopScreencast"
 	CommandPageScreencastFrameAck                          MethodType = "Page.screencastFrameAck"
 	CommandPageHandleJavaScriptDialog                      MethodType = "Page.handleJavaScriptDialog"
-	CommandPageSetColorPickerEnabled                       MethodType = "Page.setColorPickerEnabled"
 	CommandPageConfigureOverlay                            MethodType = "Page.configureOverlay"
 	CommandPageGetAppManifest                              MethodType = "Page.getAppManifest"
 	CommandPageRequestAppBanner                            MethodType = "Page.requestAppBanner"
@@ -519,8 +517,6 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = EventPageScreencastFrame
 	case EventPageScreencastVisibilityChanged:
 		*t = EventPageScreencastVisibilityChanged
-	case EventPageColorPicked:
-		*t = EventPageColorPicked
 	case EventPageInterstitialShown:
 		*t = EventPageInterstitialShown
 	case EventPageInterstitialHidden:
@@ -567,8 +563,6 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandPageScreencastFrameAck
 	case CommandPageHandleJavaScriptDialog:
 		*t = CommandPageHandleJavaScriptDialog
-	case CommandPageSetColorPickerEnabled:
-		*t = CommandPageSetColorPickerEnabled
 	case CommandPageConfigureOverlay:
 		*t = CommandPageConfigureOverlay
 	case CommandPageGetAppManifest:
