@@ -274,8 +274,6 @@ func FixDomains(domains []*internal.Domain) {
 						},
 					)
 					t.Extra += templates.ExtraNodeTemplate()
-
-					break
 				}
 			}
 

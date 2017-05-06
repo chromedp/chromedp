@@ -26,6 +26,7 @@ import (
 	logdom "github.com/knq/chromedp/cdp/log"
 	"github.com/knq/chromedp/cdp/memory"
 	"github.com/knq/chromedp/cdp/network"
+	"github.com/knq/chromedp/cdp/overlay"
 	"github.com/knq/chromedp/cdp/page"
 	"github.com/knq/chromedp/cdp/profiler"
 	"github.com/knq/chromedp/cdp/runtime"
@@ -128,9 +129,6 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandPageHandleJavaScriptDialog:
 		return emptyVal, nil
 
-	case cdp.CommandPageConfigureOverlay:
-		return emptyVal, nil
-
 	case cdp.CommandPageGetAppManifest:
 		v = new(page.GetAppManifestReturns)
 
@@ -197,20 +195,59 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.EventPageNavigationRequested:
 		v = new(page.EventNavigationRequested)
 
-	case cdp.CommandRenderingSetShowPaintRects:
+	case cdp.CommandOverlayEnable:
 		return emptyVal, nil
 
-	case cdp.CommandRenderingSetShowDebugBorders:
+	case cdp.CommandOverlayDisable:
 		return emptyVal, nil
 
-	case cdp.CommandRenderingSetShowFPSCounter:
+	case cdp.CommandOverlaySetShowPaintRects:
 		return emptyVal, nil
 
-	case cdp.CommandRenderingSetShowScrollBottleneckRects:
+	case cdp.CommandOverlaySetShowDebugBorders:
 		return emptyVal, nil
 
-	case cdp.CommandRenderingSetShowViewportSizeOnResize:
+	case cdp.CommandOverlaySetShowFPSCounter:
 		return emptyVal, nil
+
+	case cdp.CommandOverlaySetShowScrollBottleneckRects:
+		return emptyVal, nil
+
+	case cdp.CommandOverlaySetShowViewportSizeOnResize:
+		return emptyVal, nil
+
+	case cdp.CommandOverlaySetPausedInDebuggerMessage:
+		return emptyVal, nil
+
+	case cdp.CommandOverlaySetSuspended:
+		return emptyVal, nil
+
+	case cdp.CommandOverlaySetInspectMode:
+		return emptyVal, nil
+
+	case cdp.CommandOverlayHighlightRect:
+		return emptyVal, nil
+
+	case cdp.CommandOverlayHighlightQuad:
+		return emptyVal, nil
+
+	case cdp.CommandOverlayHighlightNode:
+		return emptyVal, nil
+
+	case cdp.CommandOverlayHighlightFrame:
+		return emptyVal, nil
+
+	case cdp.CommandOverlayHideHighlight:
+		return emptyVal, nil
+
+	case cdp.CommandOverlayGetHighlightObjectForTest:
+		v = new(overlay.GetHighlightObjectForTestReturns)
+
+	case cdp.EventOverlayNodeHighlightRequested:
+		v = new(overlay.EventNodeHighlightRequested)
+
+	case cdp.EventOverlayInspectNodeRequested:
+		v = new(overlay.EventInspectNodeRequested)
 
 	case cdp.CommandEmulationSetDeviceMetricsOverride:
 		return emptyVal, nil
@@ -548,24 +585,6 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandDOMRequestNode:
 		v = new(dom.RequestNodeReturns)
 
-	case cdp.CommandDOMSetInspectMode:
-		return emptyVal, nil
-
-	case cdp.CommandDOMHighlightRect:
-		return emptyVal, nil
-
-	case cdp.CommandDOMHighlightQuad:
-		return emptyVal, nil
-
-	case cdp.CommandDOMHighlightNode:
-		return emptyVal, nil
-
-	case cdp.CommandDOMHideHighlight:
-		return emptyVal, nil
-
-	case cdp.CommandDOMHighlightFrame:
-		return emptyVal, nil
-
 	case cdp.CommandDOMPushNodeByPathToFrontend:
 		v = new(dom.PushNodeByPathToFrontendReturns)
 
@@ -611,14 +630,8 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandDOMGetRelayoutBoundary:
 		v = new(dom.GetRelayoutBoundaryReturns)
 
-	case cdp.CommandDOMGetHighlightObjectForTest:
-		v = new(dom.GetHighlightObjectForTestReturns)
-
 	case cdp.EventDOMDocumentUpdated:
 		v = new(dom.EventDocumentUpdated)
-
-	case cdp.EventDOMInspectNodeRequested:
-		v = new(dom.EventInspectNodeRequested)
 
 	case cdp.EventDOMSetChildNodes:
 		v = new(dom.EventSetChildNodes)
@@ -658,9 +671,6 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 
 	case cdp.EventDOMDistributedNodesUpdated:
 		v = new(dom.EventDistributedNodesUpdated)
-
-	case cdp.EventDOMNodeHighlightRequested:
-		v = new(dom.EventNodeHighlightRequested)
 
 	case cdp.CommandCSSEnable:
 		return emptyVal, nil

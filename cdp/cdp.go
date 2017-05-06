@@ -93,17 +93,29 @@ const (
 	CommandPageStopScreencast                              MethodType = "Page.stopScreencast"
 	CommandPageScreencastFrameAck                          MethodType = "Page.screencastFrameAck"
 	CommandPageHandleJavaScriptDialog                      MethodType = "Page.handleJavaScriptDialog"
-	CommandPageConfigureOverlay                            MethodType = "Page.configureOverlay"
 	CommandPageGetAppManifest                              MethodType = "Page.getAppManifest"
 	CommandPageRequestAppBanner                            MethodType = "Page.requestAppBanner"
 	CommandPageSetControlNavigations                       MethodType = "Page.setControlNavigations"
 	CommandPageProcessNavigation                           MethodType = "Page.processNavigation"
 	CommandPageGetLayoutMetrics                            MethodType = "Page.getLayoutMetrics"
-	CommandRenderingSetShowPaintRects                      MethodType = "Rendering.setShowPaintRects"
-	CommandRenderingSetShowDebugBorders                    MethodType = "Rendering.setShowDebugBorders"
-	CommandRenderingSetShowFPSCounter                      MethodType = "Rendering.setShowFPSCounter"
-	CommandRenderingSetShowScrollBottleneckRects           MethodType = "Rendering.setShowScrollBottleneckRects"
-	CommandRenderingSetShowViewportSizeOnResize            MethodType = "Rendering.setShowViewportSizeOnResize"
+	EventOverlayNodeHighlightRequested                     MethodType = "Overlay.nodeHighlightRequested"
+	EventOverlayInspectNodeRequested                       MethodType = "Overlay.inspectNodeRequested"
+	CommandOverlayEnable                                   MethodType = "Overlay.enable"
+	CommandOverlayDisable                                  MethodType = "Overlay.disable"
+	CommandOverlaySetShowPaintRects                        MethodType = "Overlay.setShowPaintRects"
+	CommandOverlaySetShowDebugBorders                      MethodType = "Overlay.setShowDebugBorders"
+	CommandOverlaySetShowFPSCounter                        MethodType = "Overlay.setShowFPSCounter"
+	CommandOverlaySetShowScrollBottleneckRects             MethodType = "Overlay.setShowScrollBottleneckRects"
+	CommandOverlaySetShowViewportSizeOnResize              MethodType = "Overlay.setShowViewportSizeOnResize"
+	CommandOverlaySetPausedInDebuggerMessage               MethodType = "Overlay.setPausedInDebuggerMessage"
+	CommandOverlaySetSuspended                             MethodType = "Overlay.setSuspended"
+	CommandOverlaySetInspectMode                           MethodType = "Overlay.setInspectMode"
+	CommandOverlayHighlightRect                            MethodType = "Overlay.highlightRect"
+	CommandOverlayHighlightQuad                            MethodType = "Overlay.highlightQuad"
+	CommandOverlayHighlightNode                            MethodType = "Overlay.highlightNode"
+	CommandOverlayHighlightFrame                           MethodType = "Overlay.highlightFrame"
+	CommandOverlayHideHighlight                            MethodType = "Overlay.hideHighlight"
+	CommandOverlayGetHighlightObjectForTest                MethodType = "Overlay.getHighlightObjectForTest"
 	EventEmulationVirtualTimeBudgetExpired                 MethodType = "Emulation.virtualTimeBudgetExpired"
 	CommandEmulationSetDeviceMetricsOverride               MethodType = "Emulation.setDeviceMetricsOverride"
 	CommandEmulationClearDeviceMetricsOverride             MethodType = "Emulation.clearDeviceMetricsOverride"
@@ -197,7 +209,6 @@ const (
 	CommandApplicationCacheGetManifestForFrame             MethodType = "ApplicationCache.getManifestForFrame"
 	CommandApplicationCacheGetApplicationCacheForFrame     MethodType = "ApplicationCache.getApplicationCacheForFrame"
 	EventDOMDocumentUpdated                                MethodType = "DOM.documentUpdated"
-	EventDOMInspectNodeRequested                           MethodType = "DOM.inspectNodeRequested"
 	EventDOMSetChildNodes                                  MethodType = "DOM.setChildNodes"
 	EventDOMAttributeModified                              MethodType = "DOM.attributeModified"
 	EventDOMAttributeRemoved                               MethodType = "DOM.attributeRemoved"
@@ -211,7 +222,6 @@ const (
 	EventDOMPseudoElementAdded                             MethodType = "DOM.pseudoElementAdded"
 	EventDOMPseudoElementRemoved                           MethodType = "DOM.pseudoElementRemoved"
 	EventDOMDistributedNodesUpdated                        MethodType = "DOM.distributedNodesUpdated"
-	EventDOMNodeHighlightRequested                         MethodType = "DOM.nodeHighlightRequested"
 	CommandDOMEnable                                       MethodType = "DOM.enable"
 	CommandDOMDisable                                      MethodType = "DOM.disable"
 	CommandDOMGetDocument                                  MethodType = "DOM.getDocument"
@@ -232,12 +242,6 @@ const (
 	CommandDOMGetSearchResults                             MethodType = "DOM.getSearchResults"
 	CommandDOMDiscardSearchResults                         MethodType = "DOM.discardSearchResults"
 	CommandDOMRequestNode                                  MethodType = "DOM.requestNode"
-	CommandDOMSetInspectMode                               MethodType = "DOM.setInspectMode"
-	CommandDOMHighlightRect                                MethodType = "DOM.highlightRect"
-	CommandDOMHighlightQuad                                MethodType = "DOM.highlightQuad"
-	CommandDOMHighlightNode                                MethodType = "DOM.highlightNode"
-	CommandDOMHideHighlight                                MethodType = "DOM.hideHighlight"
-	CommandDOMHighlightFrame                               MethodType = "DOM.highlightFrame"
 	CommandDOMPushNodeByPathToFrontend                     MethodType = "DOM.pushNodeByPathToFrontend"
 	CommandDOMPushNodesByBackendIdsToFrontend              MethodType = "DOM.pushNodesByBackendIdsToFrontend"
 	CommandDOMSetInspectedNode                             MethodType = "DOM.setInspectedNode"
@@ -253,7 +257,6 @@ const (
 	CommandDOMGetBoxModel                                  MethodType = "DOM.getBoxModel"
 	CommandDOMGetNodeForLocation                           MethodType = "DOM.getNodeForLocation"
 	CommandDOMGetRelayoutBoundary                          MethodType = "DOM.getRelayoutBoundary"
-	CommandDOMGetHighlightObjectForTest                    MethodType = "DOM.getHighlightObjectForTest"
 	EventCSSMediaQueryResultChanged                        MethodType = "CSS.mediaQueryResultChanged"
 	EventCSSFontsUpdated                                   MethodType = "CSS.fontsUpdated"
 	EventCSSStyleSheetChanged                              MethodType = "CSS.styleSheetChanged"
@@ -563,8 +566,6 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandPageScreencastFrameAck
 	case CommandPageHandleJavaScriptDialog:
 		*t = CommandPageHandleJavaScriptDialog
-	case CommandPageConfigureOverlay:
-		*t = CommandPageConfigureOverlay
 	case CommandPageGetAppManifest:
 		*t = CommandPageGetAppManifest
 	case CommandPageRequestAppBanner:
@@ -575,16 +576,42 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandPageProcessNavigation
 	case CommandPageGetLayoutMetrics:
 		*t = CommandPageGetLayoutMetrics
-	case CommandRenderingSetShowPaintRects:
-		*t = CommandRenderingSetShowPaintRects
-	case CommandRenderingSetShowDebugBorders:
-		*t = CommandRenderingSetShowDebugBorders
-	case CommandRenderingSetShowFPSCounter:
-		*t = CommandRenderingSetShowFPSCounter
-	case CommandRenderingSetShowScrollBottleneckRects:
-		*t = CommandRenderingSetShowScrollBottleneckRects
-	case CommandRenderingSetShowViewportSizeOnResize:
-		*t = CommandRenderingSetShowViewportSizeOnResize
+	case EventOverlayNodeHighlightRequested:
+		*t = EventOverlayNodeHighlightRequested
+	case EventOverlayInspectNodeRequested:
+		*t = EventOverlayInspectNodeRequested
+	case CommandOverlayEnable:
+		*t = CommandOverlayEnable
+	case CommandOverlayDisable:
+		*t = CommandOverlayDisable
+	case CommandOverlaySetShowPaintRects:
+		*t = CommandOverlaySetShowPaintRects
+	case CommandOverlaySetShowDebugBorders:
+		*t = CommandOverlaySetShowDebugBorders
+	case CommandOverlaySetShowFPSCounter:
+		*t = CommandOverlaySetShowFPSCounter
+	case CommandOverlaySetShowScrollBottleneckRects:
+		*t = CommandOverlaySetShowScrollBottleneckRects
+	case CommandOverlaySetShowViewportSizeOnResize:
+		*t = CommandOverlaySetShowViewportSizeOnResize
+	case CommandOverlaySetPausedInDebuggerMessage:
+		*t = CommandOverlaySetPausedInDebuggerMessage
+	case CommandOverlaySetSuspended:
+		*t = CommandOverlaySetSuspended
+	case CommandOverlaySetInspectMode:
+		*t = CommandOverlaySetInspectMode
+	case CommandOverlayHighlightRect:
+		*t = CommandOverlayHighlightRect
+	case CommandOverlayHighlightQuad:
+		*t = CommandOverlayHighlightQuad
+	case CommandOverlayHighlightNode:
+		*t = CommandOverlayHighlightNode
+	case CommandOverlayHighlightFrame:
+		*t = CommandOverlayHighlightFrame
+	case CommandOverlayHideHighlight:
+		*t = CommandOverlayHideHighlight
+	case CommandOverlayGetHighlightObjectForTest:
+		*t = CommandOverlayGetHighlightObjectForTest
 	case EventEmulationVirtualTimeBudgetExpired:
 		*t = EventEmulationVirtualTimeBudgetExpired
 	case CommandEmulationSetDeviceMetricsOverride:
@@ -771,8 +798,6 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandApplicationCacheGetApplicationCacheForFrame
 	case EventDOMDocumentUpdated:
 		*t = EventDOMDocumentUpdated
-	case EventDOMInspectNodeRequested:
-		*t = EventDOMInspectNodeRequested
 	case EventDOMSetChildNodes:
 		*t = EventDOMSetChildNodes
 	case EventDOMAttributeModified:
@@ -799,8 +824,6 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = EventDOMPseudoElementRemoved
 	case EventDOMDistributedNodesUpdated:
 		*t = EventDOMDistributedNodesUpdated
-	case EventDOMNodeHighlightRequested:
-		*t = EventDOMNodeHighlightRequested
 	case CommandDOMEnable:
 		*t = CommandDOMEnable
 	case CommandDOMDisable:
@@ -841,18 +864,6 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandDOMDiscardSearchResults
 	case CommandDOMRequestNode:
 		*t = CommandDOMRequestNode
-	case CommandDOMSetInspectMode:
-		*t = CommandDOMSetInspectMode
-	case CommandDOMHighlightRect:
-		*t = CommandDOMHighlightRect
-	case CommandDOMHighlightQuad:
-		*t = CommandDOMHighlightQuad
-	case CommandDOMHighlightNode:
-		*t = CommandDOMHighlightNode
-	case CommandDOMHideHighlight:
-		*t = CommandDOMHideHighlight
-	case CommandDOMHighlightFrame:
-		*t = CommandDOMHighlightFrame
 	case CommandDOMPushNodeByPathToFrontend:
 		*t = CommandDOMPushNodeByPathToFrontend
 	case CommandDOMPushNodesByBackendIdsToFrontend:
@@ -883,8 +894,6 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandDOMGetNodeForLocation
 	case CommandDOMGetRelayoutBoundary:
 		*t = CommandDOMGetRelayoutBoundary
-	case CommandDOMGetHighlightObjectForTest:
-		*t = CommandDOMGetHighlightObjectForTest
 	case EventCSSMediaQueryResultChanged:
 		*t = EventCSSMediaQueryResultChanged
 	case EventCSSFontsUpdated:

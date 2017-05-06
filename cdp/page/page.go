@@ -647,38 +647,6 @@ func (p *HandleJavaScriptDialogParams) Do(ctxt context.Context, h cdp.Handler) (
 	return h.Execute(ctxt, cdp.CommandPageHandleJavaScriptDialog, p, nil)
 }
 
-// ConfigureOverlayParams configures overlay.
-type ConfigureOverlayParams struct {
-	Suspended bool   `json:"suspended,omitempty"` // Whether overlay should be suspended and not consume any resources.
-	Message   string `json:"message,omitempty"`   // Overlay message to display.
-}
-
-// ConfigureOverlay configures overlay.
-//
-// parameters:
-func ConfigureOverlay() *ConfigureOverlayParams {
-	return &ConfigureOverlayParams{}
-}
-
-// WithSuspended whether overlay should be suspended and not consume any
-// resources.
-func (p ConfigureOverlayParams) WithSuspended(suspended bool) *ConfigureOverlayParams {
-	p.Suspended = suspended
-	return &p
-}
-
-// WithMessage overlay message to display.
-func (p ConfigureOverlayParams) WithMessage(message string) *ConfigureOverlayParams {
-	p.Message = message
-	return &p
-}
-
-// Do executes Page.configureOverlay against the provided context and
-// target handler.
-func (p *ConfigureOverlayParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandPageConfigureOverlay, p, nil)
-}
-
 // GetAppManifestParams [no description].
 type GetAppManifestParams struct{}
 

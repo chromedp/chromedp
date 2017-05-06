@@ -21,12 +21,13 @@ const (
 )
 
 func TestMouseClickXY(t *testing.T) {
+	var err error
+
 	t.Parallel()
 
 	c := testAllocate(t, "input.html")
 	defer c.Release()
 
-	var err error
 	err = c.Run(defaultContext, Sleep(time.Millisecond*100))
 	if err != nil {
 		t.Fatal(err)

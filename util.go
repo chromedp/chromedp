@@ -344,10 +344,6 @@ func distributedNodesUpdated(nodes []*cdp.BackendNode) nodeOp {
 	}
 }
 
-func nodeHighlightRequested(n *cdp.Node) {
-	// TODO
-}
-
 func insertNode(n []*cdp.Node, prevID cdp.NodeID, c *cdp.Node) []*cdp.Node {
 	var i int
 	var found bool

@@ -9,7 +9,7 @@ import (
 
 // EventExecutionContextCreated issued when new execution context is created.
 type EventExecutionContextCreated struct {
-	Context *ExecutionContextDescription `json:"context,omitempty"` // A newly created execution contex.
+	Context *ExecutionContextDescription `json:"context,omitempty"` // A newly created execution context.
 }
 
 // EventExecutionContextDestroyed issued when execution context is destroyed.

@@ -4,6 +4,7 @@
 // Please see README.md for more information on using this tool.
 package main
 
+//go:generate go run domain-gen.go
 //go:generate qtc -dir templates -ext qtpl
 
 import (
@@ -24,10 +25,8 @@ import (
 )
 
 func main() {
-	var err error
-
 	// parse flags
-	err = internal.FlagSet.Parse(os.Args[1:])
+	err := internal.FlagSet.Parse(os.Args[1:])
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)

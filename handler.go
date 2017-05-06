@@ -640,12 +640,6 @@ func (h *TargetHandler) domEvent(ctxt context.Context, ev interface{}) {
 	case *dom.EventDistributedNodesUpdated:
 		id, op = e.InsertionPointID, distributedNodesUpdated(e.DistributedNodes)
 
-	case *dom.EventNodeHighlightRequested:
-		id, op = e.NodeID, nodeHighlightRequested
-
-	case *dom.EventInspectNodeRequested:
-		return
-
 	default:
 		h.errorf("unhandled node event %s", reflect.TypeOf(ev))
 		return

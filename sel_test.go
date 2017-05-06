@@ -12,9 +12,8 @@ func TestWaitReady(t *testing.T) {
 	c := testAllocate(t, "js.html")
 	defer c.Release()
 
-	var err error
 	var nodeIDs []cdp.NodeID
-	err = c.Run(defaultContext, NodeIDs("#input2", &nodeIDs, ByID))
+	err := c.Run(defaultContext, NodeIDs("#input2", &nodeIDs, ByID))
 	if err != nil {
 		t.Fatalf("got error: %v", err)
 	}
@@ -41,9 +40,8 @@ func TestWaitVisible(t *testing.T) {
 	c := testAllocate(t, "js.html")
 	defer c.Release()
 
-	var err error
 	var nodeIDs []cdp.NodeID
-	err = c.Run(defaultContext, NodeIDs("#input2", &nodeIDs, ByID))
+	err := c.Run(defaultContext, NodeIDs("#input2", &nodeIDs, ByID))
 	if err != nil {
 		t.Fatalf("got error: %v", err)
 	}
@@ -70,9 +68,8 @@ func TestWaitNotVisible(t *testing.T) {
 	c := testAllocate(t, "js.html")
 	defer c.Release()
 
-	var err error
 	var nodeIDs []cdp.NodeID
-	err = c.Run(defaultContext, NodeIDs("#input2", &nodeIDs, ByID))
+	err := c.Run(defaultContext, NodeIDs("#input2", &nodeIDs, ByID))
 	if err != nil {
 		t.Fatalf("got error: %v", err)
 	}
@@ -104,11 +101,9 @@ func TestWaitEnabled(t *testing.T) {
 	c := testAllocate(t, "js.html")
 	defer c.Release()
 
-	var err error
-
 	var attr string
-	ok := false
-	err = c.Run(defaultContext, AttributeValue("#select1", "disabled", &attr, &ok, ByID))
+	var ok bool
+	err := c.Run(defaultContext, AttributeValue("#select1", "disabled", &attr, &ok, ByID))
 	if err != nil {
 		t.Fatalf("got error: %v", err)
 	}
@@ -155,9 +150,7 @@ func TestWaitSelected(t *testing.T) {
 	c := testAllocate(t, "js.html")
 	defer c.Release()
 
-	var err error
-
-	err = c.Run(defaultContext, Click("#button3", ByID))
+	err := c.Run(defaultContext, Click("#button3", ByID))
 	if err != nil {
 		t.Fatalf("got error: %v", err)
 	}
@@ -202,9 +195,7 @@ func TestWaitNotPresent(t *testing.T) {
 	c := testAllocate(t, "js.html")
 	defer c.Release()
 
-	var err error
-
-	err = c.Run(defaultContext, WaitVisible("#input3", ByID))
+	err := c.Run(defaultContext, WaitVisible("#input3", ByID))
 	if err != nil {
 		t.Fatalf("got error: %v", err)
 	}
@@ -226,9 +217,8 @@ func TestAtLeast(t *testing.T) {
 	c := testAllocate(t, "js.html")
 	defer c.Release()
 
-	var err error
 	var nodes []*cdp.Node
-	err = c.Run(defaultContext, Nodes("//input", &nodes, AtLeast(3)))
+	err := c.Run(defaultContext, Nodes("//input", &nodes, AtLeast(3)))
 	if err != nil {
 		t.Fatalf("got error: %v", err)
 	}

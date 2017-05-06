@@ -10,12 +10,6 @@ import (
 // ids are no longer valid.
 type EventDocumentUpdated struct{}
 
-// EventInspectNodeRequested fired when the node should be inspected. This
-// happens after call to setInspectMode.
-type EventInspectNodeRequested struct {
-	BackendNodeID cdp.BackendNodeID `json:"backendNodeId,omitempty"` // Id of the node to inspect.
-}
-
 // EventSetChildNodes fired when backend wants to provide client with the
 // missing DOM structure. This happens upon most of the calls requesting node
 // ids.
@@ -101,15 +95,9 @@ type EventDistributedNodesUpdated struct {
 	DistributedNodes []*cdp.BackendNode `json:"distributedNodes,omitempty"` // Distributed nodes for given insertion point.
 }
 
-// EventNodeHighlightRequested [no description].
-type EventNodeHighlightRequested struct {
-	NodeID cdp.NodeID `json:"nodeId,omitempty"`
-}
-
 // EventTypes all event types in the domain.
 var EventTypes = []cdp.MethodType{
 	cdp.EventDOMDocumentUpdated,
-	cdp.EventDOMInspectNodeRequested,
 	cdp.EventDOMSetChildNodes,
 	cdp.EventDOMAttributeModified,
 	cdp.EventDOMAttributeRemoved,
@@ -123,5 +111,4 @@ var EventTypes = []cdp.MethodType{
 	cdp.EventDOMPseudoElementAdded,
 	cdp.EventDOMPseudoElementRemoved,
 	cdp.EventDOMDistributedNodesUpdated,
-	cdp.EventDOMNodeHighlightRequested,
 }

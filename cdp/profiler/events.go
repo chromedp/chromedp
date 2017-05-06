@@ -7,7 +7,7 @@ import (
 	"github.com/knq/chromedp/cdp/debugger"
 )
 
-// EventConsoleProfileStarted sent when new profile recodring is started
+// EventConsoleProfileStarted sent when new profile recording is started
 // using console.profile() call.
 type EventConsoleProfileStarted struct {
 	ID       string             `json:"id,omitempty"`
