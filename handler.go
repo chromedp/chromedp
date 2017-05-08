@@ -528,6 +528,9 @@ func (h *TargetHandler) pageEvent(ctxt context.Context, ev interface{}) {
 	case *page.EventFrameNavigated:
 		h.Lock()
 		h.frames[e.Frame.ID] = e.Frame
+		if h.cur != nil && h.cur.ID == e.Frame.ID {
+			h.cur = e.Frame
+		}
 		h.Unlock()
 		return
 
