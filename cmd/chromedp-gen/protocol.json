@@ -922,7 +922,75 @@
         },
         {
           "name": "printToPDF",
-          "description": "Print page as pdf.",
+          "description": "Print page as PDF.",
+          "parameters": [
+            {
+              "name": "landscape",
+              "type": "boolean",
+              "optional": true,
+              "description": "Paper orientation. Defaults to false."
+            },
+            {
+              "name": "displayHeaderFooter",
+              "type": "boolean",
+              "optional": true,
+              "description": "Display header and footer. Defaults to false."
+            },
+            {
+              "name": "printBackground",
+              "type": "boolean",
+              "optional": true,
+              "description": "Print background graphics. Defaults to false."
+            },
+            {
+              "name": "scale",
+              "type": "number",
+              "optional": true,
+              "description": "Scale of the webpage rendering. Defaults to 1."
+            },
+            {
+              "name": "paperWidth",
+              "type": "number",
+              "optional": true,
+              "description": "Paper width in inches. Defaults to 8.5 inches."
+            },
+            {
+              "name": "paperHeight",
+              "type": "number",
+              "optional": true,
+              "description": "Paper height in inches. Defaults to 11 inches."
+            },
+            {
+              "name": "marginTop",
+              "type": "number",
+              "optional": true,
+              "description": "Top margin in inches. Defaults to 1cm (~0.4 inches)."
+            },
+            {
+              "name": "marginBottom",
+              "type": "number",
+              "optional": true,
+              "description": "Bottom margin in inches. Defaults to 1cm (~0.4 inches)."
+            },
+            {
+              "name": "marginLeft",
+              "type": "number",
+              "optional": true,
+              "description": "Left margin in inches. Defaults to 1cm (~0.4 inches)."
+            },
+            {
+              "name": "marginRight",
+              "type": "number",
+              "optional": true,
+              "description": "Right margin in inches. Defaults to 1cm (~0.4 inches)."
+            },
+            {
+              "name": "pageRanges",
+              "type": "string",
+              "optional": true,
+              "description": "Paper ranges to print, e.g., '1-5, 8, 11-13'. Defaults to the empty string, which means print all pages."
+            }
+          ],
           "returns": [
             {
               "name": "data",
@@ -1080,6 +1148,30 @@
               "name": "contentSize",
               "$ref": "DOM.Rect",
               "description": "Size of scrollable area."
+            }
+          ]
+        },
+        {
+          "name": "createIsolatedWorld",
+          "description": "Creates an isolated world for the given frame.",
+          "experimental": true,
+          "parameters": [
+            {
+              "name": "frameId",
+              "$ref": "FrameId",
+              "description": "Id of the frame in which the isolated world should be created."
+            },
+            {
+              "name": "worldName",
+              "type": "string",
+              "optional": true,
+              "description": "An optional name which is reported in the Execution Context."
+            },
+            {
+              "name": "grantUniveralAccess",
+              "type": "boolean",
+              "optional": true,
+              "description": "Whether or not universal access should be granted to the isolated world. This is a powerful option, use with caution."
             }
           ]
         }

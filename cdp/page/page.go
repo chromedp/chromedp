@@ -491,12 +491,93 @@ func (p *CaptureScreenshotParams) Do(ctxt context.Context, h cdp.Handler) (data 
 	return dec, nil
 }
 
-// PrintToPDFParams print page as pdf.
-type PrintToPDFParams struct{}
+// PrintToPDFParams print page as PDF.
+type PrintToPDFParams struct {
+	Landscape           bool    `json:"landscape,omitempty"`           // Paper orientation. Defaults to false.
+	DisplayHeaderFooter bool    `json:"displayHeaderFooter,omitempty"` // Display header and footer. Defaults to false.
+	PrintBackground     bool    `json:"printBackground,omitempty"`     // Print background graphics. Defaults to false.
+	Scale               float64 `json:"scale,omitempty"`               // Scale of the webpage rendering. Defaults to 1.
+	PaperWidth          float64 `json:"paperWidth,omitempty"`          // Paper width in inches. Defaults to 8.5 inches.
+	PaperHeight         float64 `json:"paperHeight,omitempty"`         // Paper height in inches. Defaults to 11 inches.
+	MarginTop           float64 `json:"marginTop,omitempty"`           // Top margin in inches. Defaults to 1cm (~0.4 inches).
+	MarginBottom        float64 `json:"marginBottom,omitempty"`        // Bottom margin in inches. Defaults to 1cm (~0.4 inches).
+	MarginLeft          float64 `json:"marginLeft,omitempty"`          // Left margin in inches. Defaults to 1cm (~0.4 inches).
+	MarginRight         float64 `json:"marginRight,omitempty"`         // Right margin in inches. Defaults to 1cm (~0.4 inches).
+	PageRanges          string  `json:"pageRanges,omitempty"`          // Paper ranges to print, e.g., '1-5, 8, 11-13'. Defaults to the empty string, which means print all pages.
+}
 
-// PrintToPDF print page as pdf.
+// PrintToPDF print page as PDF.
+//
+// parameters:
 func PrintToPDF() *PrintToPDFParams {
 	return &PrintToPDFParams{}
+}
+
+// WithLandscape paper orientation. Defaults to false.
+func (p PrintToPDFParams) WithLandscape(landscape bool) *PrintToPDFParams {
+	p.Landscape = landscape
+	return &p
+}
+
+// WithDisplayHeaderFooter display header and footer. Defaults to false.
+func (p PrintToPDFParams) WithDisplayHeaderFooter(displayHeaderFooter bool) *PrintToPDFParams {
+	p.DisplayHeaderFooter = displayHeaderFooter
+	return &p
+}
+
+// WithPrintBackground print background graphics. Defaults to false.
+func (p PrintToPDFParams) WithPrintBackground(printBackground bool) *PrintToPDFParams {
+	p.PrintBackground = printBackground
+	return &p
+}
+
+// WithScale scale of the webpage rendering. Defaults to 1.
+func (p PrintToPDFParams) WithScale(scale float64) *PrintToPDFParams {
+	p.Scale = scale
+	return &p
+}
+
+// WithPaperWidth paper width in inches. Defaults to 8.5 inches.
+func (p PrintToPDFParams) WithPaperWidth(paperWidth float64) *PrintToPDFParams {
+	p.PaperWidth = paperWidth
+	return &p
+}
+
+// WithPaperHeight paper height in inches. Defaults to 11 inches.
+func (p PrintToPDFParams) WithPaperHeight(paperHeight float64) *PrintToPDFParams {
+	p.PaperHeight = paperHeight
+	return &p
+}
+
+// WithMarginTop top margin in inches. Defaults to 1cm (~0.4 inches).
+func (p PrintToPDFParams) WithMarginTop(marginTop float64) *PrintToPDFParams {
+	p.MarginTop = marginTop
+	return &p
+}
+
+// WithMarginBottom bottom margin in inches. Defaults to 1cm (~0.4 inches).
+func (p PrintToPDFParams) WithMarginBottom(marginBottom float64) *PrintToPDFParams {
+	p.MarginBottom = marginBottom
+	return &p
+}
+
+// WithMarginLeft left margin in inches. Defaults to 1cm (~0.4 inches).
+func (p PrintToPDFParams) WithMarginLeft(marginLeft float64) *PrintToPDFParams {
+	p.MarginLeft = marginLeft
+	return &p
+}
+
+// WithMarginRight right margin in inches. Defaults to 1cm (~0.4 inches).
+func (p PrintToPDFParams) WithMarginRight(marginRight float64) *PrintToPDFParams {
+	p.MarginRight = marginRight
+	return &p
+}
+
+// WithPageRanges paper ranges to print, e.g., '1-5, 8, 11-13'. Defaults to
+// the empty string, which means print all pages.
+func (p PrintToPDFParams) WithPageRanges(pageRanges string) *PrintToPDFParams {
+	p.PageRanges = pageRanges
+	return &p
 }
 
 // PrintToPDFReturns return values.
@@ -512,7 +593,7 @@ type PrintToPDFReturns struct {
 func (p *PrintToPDFParams) Do(ctxt context.Context, h cdp.Handler) (data []byte, err error) {
 	// execute
 	var res PrintToPDFReturns
-	err = h.Execute(ctxt, cdp.CommandPagePrintToPDF, nil, &res)
+	err = h.Execute(ctxt, cdp.CommandPagePrintToPDF, p, &res)
 	if err != nil {
 		return nil, err
 	}
@@ -777,4 +858,40 @@ func (p *GetLayoutMetricsParams) Do(ctxt context.Context, h cdp.Handler) (layout
 	}
 
 	return res.LayoutViewport, res.VisualViewport, res.ContentSize, nil
+}
+
+// CreateIsolatedWorldParams creates an isolated world for the given frame.
+type CreateIsolatedWorldParams struct {
+	FrameID             cdp.FrameID `json:"frameId"`                       // Id of the frame in which the isolated world should be created.
+	WorldName           string      `json:"worldName,omitempty"`           // An optional name which is reported in the Execution Context.
+	GrantUniveralAccess bool        `json:"grantUniveralAccess,omitempty"` // Whether or not universal access should be granted to the isolated world. This is a powerful option, use with caution.
+}
+
+// CreateIsolatedWorld creates an isolated world for the given frame.
+//
+// parameters:
+//   frameID - Id of the frame in which the isolated world should be created.
+func CreateIsolatedWorld(frameID cdp.FrameID) *CreateIsolatedWorldParams {
+	return &CreateIsolatedWorldParams{
+		FrameID: frameID,
+	}
+}
+
+// WithWorldName an optional name which is reported in the Execution Context.
+func (p CreateIsolatedWorldParams) WithWorldName(worldName string) *CreateIsolatedWorldParams {
+	p.WorldName = worldName
+	return &p
+}
+
+// WithGrantUniveralAccess whether or not universal access should be granted
+// to the isolated world. This is a powerful option, use with caution.
+func (p CreateIsolatedWorldParams) WithGrantUniveralAccess(grantUniveralAccess bool) *CreateIsolatedWorldParams {
+	p.GrantUniveralAccess = grantUniveralAccess
+	return &p
+}
+
+// Do executes Page.createIsolatedWorld against the provided context and
+// target handler.
+func (p *CreateIsolatedWorldParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandPageCreateIsolatedWorld, p, nil)
 }

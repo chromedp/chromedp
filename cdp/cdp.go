@@ -98,6 +98,7 @@ const (
 	CommandPageSetControlNavigations                       MethodType = "Page.setControlNavigations"
 	CommandPageProcessNavigation                           MethodType = "Page.processNavigation"
 	CommandPageGetLayoutMetrics                            MethodType = "Page.getLayoutMetrics"
+	CommandPageCreateIsolatedWorld                         MethodType = "Page.createIsolatedWorld"
 	EventOverlayNodeHighlightRequested                     MethodType = "Overlay.nodeHighlightRequested"
 	EventOverlayInspectNodeRequested                       MethodType = "Overlay.inspectNodeRequested"
 	CommandOverlayEnable                                   MethodType = "Overlay.enable"
@@ -576,6 +577,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandPageProcessNavigation
 	case CommandPageGetLayoutMetrics:
 		*t = CommandPageGetLayoutMetrics
+	case CommandPageCreateIsolatedWorld:
+		*t = CommandPageCreateIsolatedWorld
 	case EventOverlayNodeHighlightRequested:
 		*t = EventOverlayNodeHighlightRequested
 	case EventOverlayInspectNodeRequested:

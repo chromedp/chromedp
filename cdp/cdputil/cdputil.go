@@ -144,6 +144,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandPageGetLayoutMetrics:
 		v = new(page.GetLayoutMetricsReturns)
 
+	case cdp.CommandPageCreateIsolatedWorld:
+		return emptyVal, nil
+
 	case cdp.EventPageDomContentEventFired:
 		v = new(page.EventDomContentEventFired)
 
