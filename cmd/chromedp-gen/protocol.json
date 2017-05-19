@@ -10256,6 +10256,11 @@
               "name": "modelVersion",
               "type": "string",
               "description": "A platform-dependent description of the version of the machine. On Mac OS, this is, for example, '10.1'. Will be the empty string if not supported."
+            },
+            {
+              "name": "commandLine",
+              "type": "string",
+              "description": "The command line string used to launch the browser. Will be the empty string if not supported."
             }
           ]
         }
@@ -11910,6 +11915,16 @@
               "name": "location",
               "$ref": "Location",
               "description": "Location to continue to."
+            },
+            {
+              "name": "targetCallFrames",
+              "type": "string",
+              "enum": [
+                "any",
+                "current"
+              ],
+              "optional": true,
+              "experimental": true
             }
           ],
           "description": "Continues execution until specific location is reached."

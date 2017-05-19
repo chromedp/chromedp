@@ -50,6 +50,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpSysteminfo(in *jlexer.Lexer, o
 			out.ModelName = string(in.String())
 		case "modelVersion":
 			out.ModelVersion = string(in.String())
+		case "commandLine":
+			out.CommandLine = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -91,6 +93,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpSysteminfo(out *jwriter.Writer
 		first = false
 		out.RawString("\"modelVersion\":")
 		out.String(string(in.ModelVersion))
+	}
+	if in.CommandLine != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"commandLine\":")
+		out.String(string(in.CommandLine))
 	}
 	out.RawByte('}')
 }

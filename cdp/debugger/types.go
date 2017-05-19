@@ -248,6 +248,48 @@ func (t *PausedReason) UnmarshalJSON(buf []byte) error {
 	return easyjson.Unmarshal(buf, t)
 }
 
+// ContinueToLocationTargetCallFrames [no description].
+type ContinueToLocationTargetCallFrames string
+
+// String returns the ContinueToLocationTargetCallFrames as string value.
+func (t ContinueToLocationTargetCallFrames) String() string {
+	return string(t)
+}
+
+// ContinueToLocationTargetCallFrames values.
+const (
+	ContinueToLocationTargetCallFramesAny     ContinueToLocationTargetCallFrames = "any"
+	ContinueToLocationTargetCallFramesCurrent ContinueToLocationTargetCallFrames = "current"
+)
+
+// MarshalEasyJSON satisfies easyjson.Marshaler.
+func (t ContinueToLocationTargetCallFrames) MarshalEasyJSON(out *jwriter.Writer) {
+	out.String(string(t))
+}
+
+// MarshalJSON satisfies json.Marshaler.
+func (t ContinueToLocationTargetCallFrames) MarshalJSON() ([]byte, error) {
+	return easyjson.Marshal(t)
+}
+
+// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
+func (t *ContinueToLocationTargetCallFrames) UnmarshalEasyJSON(in *jlexer.Lexer) {
+	switch ContinueToLocationTargetCallFrames(in.String()) {
+	case ContinueToLocationTargetCallFramesAny:
+		*t = ContinueToLocationTargetCallFramesAny
+	case ContinueToLocationTargetCallFramesCurrent:
+		*t = ContinueToLocationTargetCallFramesCurrent
+
+	default:
+		in.AddError(errors.New("unknown ContinueToLocationTargetCallFrames value"))
+	}
+}
+
+// UnmarshalJSON satisfies json.Unmarshaler.
+func (t *ContinueToLocationTargetCallFrames) UnmarshalJSON(buf []byte) error {
+	return easyjson.Unmarshal(buf, t)
+}
+
 // ExceptionsState pause on exceptions mode.
 type ExceptionsState string
 

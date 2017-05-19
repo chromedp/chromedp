@@ -4016,6 +4016,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpDebugger41(in *jlexer.Lexer, o
 				}
 				(*out.Location).UnmarshalEasyJSON(in)
 			}
+		case "targetCallFrames":
+			(out.TargetCallFrames).UnmarshalEasyJSON(in)
 		default:
 			in.SkipRecursive()
 		}
@@ -4039,6 +4041,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDebugger41(out *jwriter.Writer
 		out.RawString("null")
 	} else {
 		(*in.Location).MarshalEasyJSON(out)
+	}
+	if in.TargetCallFrames != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"targetCallFrames\":")
+		(in.TargetCallFrames).MarshalEasyJSON(out)
 	}
 	out.RawByte('}')
 }

@@ -28,6 +28,7 @@ type GetInfoReturns struct {
 	Gpu          *GPUInfo `json:"gpu,omitempty"`          // Information about the GPUs on the system.
 	ModelName    string   `json:"modelName,omitempty"`    // A platform-dependent description of the model of the machine. On Mac OS, this is, for example, 'MacBookPro'. Will be the empty string if not supported.
 	ModelVersion string   `json:"modelVersion,omitempty"` // A platform-dependent description of the version of the machine. On Mac OS, this is, for example, '10.1'. Will be the empty string if not supported.
+	CommandLine  string   `json:"commandLine,omitempty"`  // The command line string used to launch the browser. Will be the empty string if not supported.
 }
 
 // Do executes SystemInfo.getInfo against the provided context and
@@ -37,13 +38,14 @@ type GetInfoReturns struct {
 //   gpu - Information about the GPUs on the system.
 //   modelName - A platform-dependent description of the model of the machine. On Mac OS, this is, for example, 'MacBookPro'. Will be the empty string if not supported.
 //   modelVersion - A platform-dependent description of the version of the machine. On Mac OS, this is, for example, '10.1'. Will be the empty string if not supported.
-func (p *GetInfoParams) Do(ctxt context.Context, h cdp.Handler) (gpu *GPUInfo, modelName string, modelVersion string, err error) {
+//   commandLine - The command line string used to launch the browser. Will be the empty string if not supported.
+func (p *GetInfoParams) Do(ctxt context.Context, h cdp.Handler) (gpu *GPUInfo, modelName string, modelVersion string, commandLine string, err error) {
 	// execute
 	var res GetInfoReturns
 	err = h.Execute(ctxt, cdp.CommandSystemInfoGetInfo, nil, &res)
 	if err != nil {
-		return nil, "", "", err
+		return nil, "", "", "", err
 	}
 
-	return res.Gpu, res.ModelName, res.ModelVersion, nil
+	return res.Gpu, res.ModelName, res.ModelVersion, res.CommandLine, nil
 }

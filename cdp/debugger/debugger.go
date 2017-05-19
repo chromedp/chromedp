@@ -296,7 +296,8 @@ func (p *GetPossibleBreakpointsParams) Do(ctxt context.Context, h cdp.Handler) (
 // ContinueToLocationParams continues execution until specific location is
 // reached.
 type ContinueToLocationParams struct {
-	Location *Location `json:"location"` // Location to continue to.
+	Location         *Location                          `json:"location"` // Location to continue to.
+	TargetCallFrames ContinueToLocationTargetCallFrames `json:"targetCallFrames,omitempty"`
 }
 
 // ContinueToLocation continues execution until specific location is reached.
@@ -307,6 +308,12 @@ func ContinueToLocation(location *Location) *ContinueToLocationParams {
 	return &ContinueToLocationParams{
 		Location: location,
 	}
+}
+
+// WithTargetCallFrames [no description].
+func (p ContinueToLocationParams) WithTargetCallFrames(targetCallFrames ContinueToLocationTargetCallFrames) *ContinueToLocationParams {
+	p.TargetCallFrames = targetCallFrames
+	return &p
 }
 
 // Do executes Debugger.continueToLocation against the provided context and
