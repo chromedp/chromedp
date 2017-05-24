@@ -161,8 +161,9 @@ func (p *ReloadParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 
 // NavigateParams navigates current page to the given URL.
 type NavigateParams struct {
-	URL      string `json:"url"`                // URL to navigate the page to.
-	Referrer string `json:"referrer,omitempty"` // Referrer URL.
+	URL            string         `json:"url"`                      // URL to navigate the page to.
+	Referrer       string         `json:"referrer,omitempty"`       // Referrer URL.
+	TransitionType TransitionType `json:"transitionType,omitempty"` // Intended transition type.
 }
 
 // Navigate navigates current page to the given URL.
@@ -178,6 +179,12 @@ func Navigate(url string) *NavigateParams {
 // WithReferrer referrer URL.
 func (p NavigateParams) WithReferrer(referrer string) *NavigateParams {
 	p.Referrer = referrer
+	return &p
+}
+
+// WithTransitionType intended transition type.
+func (p NavigateParams) WithTransitionType(transitionType TransitionType) *NavigateParams {
+	p.TransitionType = transitionType
 	return &p
 }
 

@@ -891,6 +891,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.EventServiceWorkerWorkerErrorReported:
 		v = new(serviceworker.EventWorkerErrorReported)
 
+	case cdp.CommandInputSetIgnoreInputEvents:
+		return emptyVal, nil
+
 	case cdp.CommandInputDispatchKeyEvent:
 		return emptyVal, nil
 

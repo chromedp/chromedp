@@ -113,11 +113,85 @@ func (t ScriptIdentifier) String() string {
 	return string(t)
 }
 
+// TransitionType transition type.
+type TransitionType string
+
+// String returns the TransitionType as string value.
+func (t TransitionType) String() string {
+	return string(t)
+}
+
+// TransitionType values.
+const (
+	TransitionTypeLink             TransitionType = "link"
+	TransitionTypeTyped            TransitionType = "typed"
+	TransitionTypeAutoBookmark     TransitionType = "auto_bookmark"
+	TransitionTypeAutoSubframe     TransitionType = "auto_subframe"
+	TransitionTypeManualSubframe   TransitionType = "manual_subframe"
+	TransitionTypeGenerated        TransitionType = "generated"
+	TransitionTypeAutoToplevel     TransitionType = "auto_toplevel"
+	TransitionTypeFormSubmit       TransitionType = "form_submit"
+	TransitionTypeReload           TransitionType = "reload"
+	TransitionTypeKeyword          TransitionType = "keyword"
+	TransitionTypeKeywordGenerated TransitionType = "keyword_generated"
+	TransitionTypeOther            TransitionType = "other"
+)
+
+// MarshalEasyJSON satisfies easyjson.Marshaler.
+func (t TransitionType) MarshalEasyJSON(out *jwriter.Writer) {
+	out.String(string(t))
+}
+
+// MarshalJSON satisfies json.Marshaler.
+func (t TransitionType) MarshalJSON() ([]byte, error) {
+	return easyjson.Marshal(t)
+}
+
+// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
+func (t *TransitionType) UnmarshalEasyJSON(in *jlexer.Lexer) {
+	switch TransitionType(in.String()) {
+	case TransitionTypeLink:
+		*t = TransitionTypeLink
+	case TransitionTypeTyped:
+		*t = TransitionTypeTyped
+	case TransitionTypeAutoBookmark:
+		*t = TransitionTypeAutoBookmark
+	case TransitionTypeAutoSubframe:
+		*t = TransitionTypeAutoSubframe
+	case TransitionTypeManualSubframe:
+		*t = TransitionTypeManualSubframe
+	case TransitionTypeGenerated:
+		*t = TransitionTypeGenerated
+	case TransitionTypeAutoToplevel:
+		*t = TransitionTypeAutoToplevel
+	case TransitionTypeFormSubmit:
+		*t = TransitionTypeFormSubmit
+	case TransitionTypeReload:
+		*t = TransitionTypeReload
+	case TransitionTypeKeyword:
+		*t = TransitionTypeKeyword
+	case TransitionTypeKeywordGenerated:
+		*t = TransitionTypeKeywordGenerated
+	case TransitionTypeOther:
+		*t = TransitionTypeOther
+
+	default:
+		in.AddError(errors.New("unknown TransitionType value"))
+	}
+}
+
+// UnmarshalJSON satisfies json.Unmarshaler.
+func (t *TransitionType) UnmarshalJSON(buf []byte) error {
+	return easyjson.Unmarshal(buf, t)
+}
+
 // NavigationEntry navigation history entry.
 type NavigationEntry struct {
-	ID    int64  `json:"id,omitempty"`    // Unique id of the navigation history entry.
-	URL   string `json:"url,omitempty"`   // URL of the navigation history entry.
-	Title string `json:"title,omitempty"` // Title of the navigation history entry.
+	ID             int64          `json:"id,omitempty"`             // Unique id of the navigation history entry.
+	URL            string         `json:"url,omitempty"`            // URL of the navigation history entry.
+	UserTypedURL   string         `json:"userTypedURL,omitempty"`   // URL that the user typed in the url bar.
+	Title          string         `json:"title,omitempty"`          // Title of the navigation history entry.
+	TransitionType TransitionType `json:"transitionType,omitempty"` // Transition type.
 }
 
 // ScreencastFrameMetadata screencast frame metadata.

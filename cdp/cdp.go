@@ -330,6 +330,7 @@ const (
 	CommandServiceWorkerSetForceUpdateOnPageLoad           MethodType = "ServiceWorker.setForceUpdateOnPageLoad"
 	CommandServiceWorkerDeliverPushMessage                 MethodType = "ServiceWorker.deliverPushMessage"
 	CommandServiceWorkerDispatchSyncEvent                  MethodType = "ServiceWorker.dispatchSyncEvent"
+	CommandInputSetIgnoreInputEvents                       MethodType = "Input.setIgnoreInputEvents"
 	CommandInputDispatchKeyEvent                           MethodType = "Input.dispatchKeyEvent"
 	CommandInputDispatchMouseEvent                         MethodType = "Input.dispatchMouseEvent"
 	CommandInputDispatchTouchEvent                         MethodType = "Input.dispatchTouchEvent"
@@ -1041,6 +1042,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandServiceWorkerDeliverPushMessage
 	case CommandServiceWorkerDispatchSyncEvent:
 		*t = CommandServiceWorkerDispatchSyncEvent
+	case CommandInputSetIgnoreInputEvents:
+		*t = CommandInputSetIgnoreInputEvents
 	case CommandInputDispatchKeyEvent:
 		*t = CommandInputDispatchKeyEvent
 	case CommandInputDispatchMouseEvent:
