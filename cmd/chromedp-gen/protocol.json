@@ -944,7 +944,7 @@
               "name": "fromSurface",
               "type": "boolean",
               "optional": true,
-              "description": "Capture the screenshot from the surface, rather than the view. Defaults to false.",
+              "description": "Capture the screenshot from the surface, rather than the view. Defaults to true.",
               "experimental": true
             }
           ],
