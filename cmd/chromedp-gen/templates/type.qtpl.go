@@ -6,13 +6,6 @@ package templates
 
 //line templates/type.qtpl:1
 import (
-	qtio422016 "io"
-
-	qt422016 "github.com/valyala/quicktemplate"
-)
-
-//line templates/type.qtpl:1
-import (
 	"strconv"
 	"strings"
 
@@ -20,6 +13,13 @@ import (
 )
 
 // TypeTemplate is a template for a Typable type.
+
+//line templates/type.qtpl:9
+import (
+	qtio422016 "io"
+
+	qt422016 "github.com/valyala/quicktemplate"
+)
 
 //line templates/type.qtpl:9
 var (

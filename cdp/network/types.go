@@ -22,6 +22,86 @@ func (t RequestID) String() string {
 	return string(t)
 }
 
+// InterceptionID unique intercepted request identifier.
+type InterceptionID string
+
+// String returns the InterceptionID as string value.
+func (t InterceptionID) String() string {
+	return string(t)
+}
+
+// ErrorReason network level fetch failure reason.
+type ErrorReason string
+
+// String returns the ErrorReason as string value.
+func (t ErrorReason) String() string {
+	return string(t)
+}
+
+// ErrorReason values.
+const (
+	ErrorReasonFailed               ErrorReason = "Failed"
+	ErrorReasonAborted              ErrorReason = "Aborted"
+	ErrorReasonTimedOut             ErrorReason = "TimedOut"
+	ErrorReasonAccessDenied         ErrorReason = "AccessDenied"
+	ErrorReasonConnectionClosed     ErrorReason = "ConnectionClosed"
+	ErrorReasonConnectionReset      ErrorReason = "ConnectionReset"
+	ErrorReasonConnectionRefused    ErrorReason = "ConnectionRefused"
+	ErrorReasonConnectionAborted    ErrorReason = "ConnectionAborted"
+	ErrorReasonConnectionFailed     ErrorReason = "ConnectionFailed"
+	ErrorReasonNameNotResolved      ErrorReason = "NameNotResolved"
+	ErrorReasonInternetDisconnected ErrorReason = "InternetDisconnected"
+	ErrorReasonAddressUnreachable   ErrorReason = "AddressUnreachable"
+)
+
+// MarshalEasyJSON satisfies easyjson.Marshaler.
+func (t ErrorReason) MarshalEasyJSON(out *jwriter.Writer) {
+	out.String(string(t))
+}
+
+// MarshalJSON satisfies json.Marshaler.
+func (t ErrorReason) MarshalJSON() ([]byte, error) {
+	return easyjson.Marshal(t)
+}
+
+// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
+func (t *ErrorReason) UnmarshalEasyJSON(in *jlexer.Lexer) {
+	switch ErrorReason(in.String()) {
+	case ErrorReasonFailed:
+		*t = ErrorReasonFailed
+	case ErrorReasonAborted:
+		*t = ErrorReasonAborted
+	case ErrorReasonTimedOut:
+		*t = ErrorReasonTimedOut
+	case ErrorReasonAccessDenied:
+		*t = ErrorReasonAccessDenied
+	case ErrorReasonConnectionClosed:
+		*t = ErrorReasonConnectionClosed
+	case ErrorReasonConnectionReset:
+		*t = ErrorReasonConnectionReset
+	case ErrorReasonConnectionRefused:
+		*t = ErrorReasonConnectionRefused
+	case ErrorReasonConnectionAborted:
+		*t = ErrorReasonConnectionAborted
+	case ErrorReasonConnectionFailed:
+		*t = ErrorReasonConnectionFailed
+	case ErrorReasonNameNotResolved:
+		*t = ErrorReasonNameNotResolved
+	case ErrorReasonInternetDisconnected:
+		*t = ErrorReasonInternetDisconnected
+	case ErrorReasonAddressUnreachable:
+		*t = ErrorReasonAddressUnreachable
+
+	default:
+		in.AddError(errors.New("unknown ErrorReason value"))
+	}
+}
+
+// UnmarshalJSON satisfies json.Unmarshaler.
+func (t *ErrorReason) UnmarshalJSON(buf []byte) error {
+	return easyjson.Unmarshal(buf, t)
+}
+
 // Headers request / response headers as keys / values of JSON object.
 type Headers struct{}
 

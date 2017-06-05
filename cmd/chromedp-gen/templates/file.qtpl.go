@@ -6,19 +6,19 @@ package templates
 
 //line templates/file.qtpl:1
 import (
-	qtio422016 "io"
-
-	qt422016 "github.com/valyala/quicktemplate"
-)
-
-//line templates/file.qtpl:1
-import (
 	"sort"
 
 	"github.com/knq/chromedp/cmd/chromedp-gen/internal"
 )
 
 // FileHeader is the file header template.
+
+//line templates/file.qtpl:8
+import (
+	qtio422016 "io"
+
+	qt422016 "github.com/valyala/quicktemplate"
+)
 
 //line templates/file.qtpl:8
 var (

@@ -6,18 +6,18 @@ package templates
 
 //line templates/extra.qtpl:1
 import (
-	qtio422016 "io"
-
-	qt422016 "github.com/valyala/quicktemplate"
-)
-
-//line templates/extra.qtpl:1
-import (
 	"github.com/knq/chromedp/cmd/chromedp-gen/internal"
 )
 
 // ExtraTimestampTemplate is a special template for the Timestamp type that
 // defines its JSON unmarshaling.
+
+//line templates/extra.qtpl:7
+import (
+	qtio422016 "io"
+
+	qt422016 "github.com/valyala/quicktemplate"
+)
 
 //line templates/extra.qtpl:7
 var (

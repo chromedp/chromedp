@@ -655,3 +655,98 @@ func (p *GetCertificateParams) Do(ctxt context.Context, h cdp.Handler) (tableNam
 
 	return res.TableNames, nil
 }
+
+// EnableRequestInterceptionParams [no description].
+type EnableRequestInterceptionParams struct {
+	Enabled bool `json:"enabled"` // Whether or not HTTP requests should be intercepted and Network.requestIntercepted events sent.
+}
+
+// EnableRequestInterception [no description].
+//
+// parameters:
+//   enabled - Whether or not HTTP requests should be intercepted and Network.requestIntercepted events sent.
+func EnableRequestInterception(enabled bool) *EnableRequestInterceptionParams {
+	return &EnableRequestInterceptionParams{
+		Enabled: enabled,
+	}
+}
+
+// Do executes Network.enableRequestInterception against the provided context and
+// target handler.
+func (p *EnableRequestInterceptionParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandNetworkEnableRequestInterception, p, nil)
+}
+
+// ContinueInterceptedRequestParams response to Network.requestIntercepted
+// which either modifies the request to continue with any modifications, or
+// blocks it, or completes it with the provided response bytes. If a network
+// fetch occurs as a result which encounters a redirect an additional
+// Network.requestIntercepted event will be sent with the same InterceptionId.
+type ContinueInterceptedRequestParams struct {
+	InterceptionID InterceptionID `json:"interceptionId"`
+	ErrorReason    ErrorReason    `json:"errorReason,omitempty"` // If set this causes the request to fail with the given reason.
+	RawResponse    string         `json:"rawResponse,omitempty"` // If set the requests completes using with the provided base64 encoded raw response, including HTTP status line and headers etc...
+	URL            string         `json:"url,omitempty"`         // If set the request url will be modified in a way that's not observable by page.
+	Method         string         `json:"method,omitempty"`      // If set this allows the request method to be overridden.
+	PostData       string         `json:"postData,omitempty"`    // If set this allows postData to be set.
+	Headers        *Headers       `json:"headers,omitempty"`     // If set this allows the request headers to be changed.
+}
+
+// ContinueInterceptedRequest response to Network.requestIntercepted which
+// either modifies the request to continue with any modifications, or blocks it,
+// or completes it with the provided response bytes. If a network fetch occurs
+// as a result which encounters a redirect an additional
+// Network.requestIntercepted event will be sent with the same InterceptionId.
+//
+// parameters:
+//   interceptionID
+func ContinueInterceptedRequest(interceptionID InterceptionID) *ContinueInterceptedRequestParams {
+	return &ContinueInterceptedRequestParams{
+		InterceptionID: interceptionID,
+	}
+}
+
+// WithErrorReason if set this causes the request to fail with the given
+// reason.
+func (p ContinueInterceptedRequestParams) WithErrorReason(errorReason ErrorReason) *ContinueInterceptedRequestParams {
+	p.ErrorReason = errorReason
+	return &p
+}
+
+// WithRawResponse if set the requests completes using with the provided
+// base64 encoded raw response, including HTTP status line and headers etc...
+func (p ContinueInterceptedRequestParams) WithRawResponse(rawResponse string) *ContinueInterceptedRequestParams {
+	p.RawResponse = rawResponse
+	return &p
+}
+
+// WithURL if set the request url will be modified in a way that's not
+// observable by page.
+func (p ContinueInterceptedRequestParams) WithURL(url string) *ContinueInterceptedRequestParams {
+	p.URL = url
+	return &p
+}
+
+// WithMethod if set this allows the request method to be overridden.
+func (p ContinueInterceptedRequestParams) WithMethod(method string) *ContinueInterceptedRequestParams {
+	p.Method = method
+	return &p
+}
+
+// WithPostData if set this allows postData to be set.
+func (p ContinueInterceptedRequestParams) WithPostData(postData string) *ContinueInterceptedRequestParams {
+	p.PostData = postData
+	return &p
+}
+
+// WithHeaders if set this allows the request headers to be changed.
+func (p ContinueInterceptedRequestParams) WithHeaders(headers *Headers) *ContinueInterceptedRequestParams {
+	p.Headers = headers
+	return &p
+}
+
+// Do executes Network.continueInterceptedRequest against the provided context and
+// target handler.
+func (p *ContinueInterceptedRequestParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandNetworkContinueInterceptedRequest, p, nil)
+}

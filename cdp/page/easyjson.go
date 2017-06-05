@@ -1539,8 +1539,12 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage17(in *jlexer.Lexer, out *
 			out.ID = int64(in.Int64())
 		case "url":
 			out.URL = string(in.String())
+		case "userTypedURL":
+			out.UserTypedURL = string(in.String())
 		case "title":
 			out.Title = string(in.String())
+		case "transitionType":
+			(out.TransitionType).UnmarshalEasyJSON(in)
 		default:
 			in.SkipRecursive()
 		}
@@ -1571,6 +1575,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage17(out *jwriter.Writer, in
 		out.RawString("\"url\":")
 		out.String(string(in.URL))
 	}
+	if in.UserTypedURL != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"userTypedURL\":")
+		out.String(string(in.UserTypedURL))
+	}
 	if in.Title != "" {
 		if !first {
 			out.RawByte(',')
@@ -1578,6 +1590,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage17(out *jwriter.Writer, in
 		first = false
 		out.RawString("\"title\":")
 		out.String(string(in.Title))
+	}
+	if in.TransitionType != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"transitionType\":")
+		(in.TransitionType).MarshalEasyJSON(out)
 	}
 	out.RawByte('}')
 }
@@ -1764,6 +1784,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage20(in *jlexer.Lexer, out *
 			out.URL = string(in.String())
 		case "referrer":
 			out.Referrer = string(in.String())
+		case "transitionType":
+			(out.TransitionType).UnmarshalEasyJSON(in)
 		default:
 			in.SkipRecursive()
 		}
@@ -1791,6 +1813,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage20(out *jwriter.Writer, in
 		first = false
 		out.RawString("\"referrer\":")
 		out.String(string(in.Referrer))
+	}
+	if in.TransitionType != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"transitionType\":")
+		(in.TransitionType).MarshalEasyJSON(out)
 	}
 	out.RawByte('}')
 }

@@ -387,6 +387,12 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandNetworkGetCertificate:
 		v = new(network.GetCertificateReturns)
 
+	case cdp.CommandNetworkEnableRequestInterception:
+		return emptyVal, nil
+
+	case cdp.CommandNetworkContinueInterceptedRequest:
+		return emptyVal, nil
+
 	case cdp.EventNetworkResourceChangedPriority:
 		v = new(network.EventResourceChangedPriority)
 
@@ -431,6 +437,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 
 	case cdp.EventNetworkEventSourceMessageReceived:
 		v = new(network.EventEventSourceMessageReceived)
+
+	case cdp.EventNetworkRequestIntercepted:
+		v = new(network.EventRequestIntercepted)
 
 	case cdp.CommandDatabaseEnable:
 		return emptyVal, nil
@@ -890,6 +899,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 
 	case cdp.EventServiceWorkerWorkerErrorReported:
 		v = new(serviceworker.EventWorkerErrorReported)
+
+	case cdp.CommandInputSetIgnoreInputEvents:
+		return emptyVal, nil
 
 	case cdp.CommandInputDispatchKeyEvent:
 		return emptyVal, nil
