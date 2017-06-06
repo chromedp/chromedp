@@ -12,7 +12,7 @@ import (
 
 // MemoryDumpConfig configuration for memory dump. Used only when
 // "memory-infra" category is enabled.
-type MemoryDumpConfig struct{}
+type MemoryDumpConfig map[string]interface{}
 
 // TraceConfig [no description].
 type TraceConfig struct {
