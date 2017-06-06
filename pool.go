@@ -6,6 +6,8 @@ import (
 	"log"
 	"sync"
 
+	"time"
+
 	"github.com/knq/chromedp/runner"
 )
 
@@ -23,6 +25,9 @@ type Pool struct {
 	// logging funcs
 	logf, debugf, errorf LogFunc
 
+	// how long to wait for the target before timing out
+	newTargetTimeout time.Duration
+
 	rw sync.RWMutex
 }
 
@@ -31,12 +36,13 @@ func NewPool(opts ...PoolOption) (*Pool, error) {
 	var err error
 
 	p := &Pool{
-		start:  DefaultPoolStartPort,
-		end:    DefaultPoolEndPort,
-		res:    make(map[int]*Res),
-		logf:   log.Printf,
-		debugf: func(string, ...interface{}) {},
-		errorf: func(s string, v ...interface{}) { log.Printf("error: "+s, v...) },
+		start:            DefaultPoolStartPort,
+		end:              DefaultPoolEndPort,
+		res:              make(map[int]*Res),
+		newTargetTimeout: DefaultNewTargetTimeout,
+		logf:             log.Printf,
+		debugf:           func(string, ...interface{}) {},
+		errorf:           func(s string, v ...interface{}) { log.Printf("error: "+s, v...) },
 	}
 
 	// apply opts
@@ -92,6 +98,7 @@ func (p *Pool) Allocate(ctxt context.Context, opts ...runner.CommandLineOption) 
 	r.c, err = New(
 		r.ctxt, WithRunner(r.r),
 		WithLogf(p.logf), WithDebugf(p.debugf), WithErrorf(p.errorf),
+		WithNewTargetTimeout(p.newTargetTimeout),
 	)
 	if err != nil {
 		defer r.Release()
@@ -197,6 +204,15 @@ func PoolLog(logf, debugf, errorf LogFunc) PoolOption {
 		p.logf = logf
 		p.debugf = debugf
 		p.errorf = errorf
+		return nil
+	}
+}
+
+// NewTargetTimeout is a CDP option to specify the duration to wait for
+// new targets
+func NewTargetTimeout(d time.Duration) PoolOption {
+	return func(p *Pool) error {
+		p.newTargetTimeout = d
 		return nil
 	}
 }
