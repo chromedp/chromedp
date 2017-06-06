@@ -6,17 +6,17 @@ package templates
 
 //line templates/domain.qtpl:1
 import (
-	qtio422016 "io"
-
-	qt422016 "github.com/valyala/quicktemplate"
-)
-
-//line templates/domain.qtpl:1
-import (
 	"github.com/knq/chromedp/cmd/chromedp-gen/internal"
 )
 
 // DomainTemplate is the template for a single domain.
+
+//line templates/domain.qtpl:6
+import (
+	qtio422016 "io"
+
+	qt422016 "github.com/valyala/quicktemplate"
+)
 
 //line templates/domain.qtpl:6
 var (

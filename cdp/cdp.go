@@ -156,6 +156,7 @@ const (
 	EventNetworkWebSocketFrameError                        MethodType = "Network.webSocketFrameError"
 	EventNetworkWebSocketFrameSent                         MethodType = "Network.webSocketFrameSent"
 	EventNetworkEventSourceMessageReceived                 MethodType = "Network.eventSourceMessageReceived"
+	EventNetworkRequestIntercepted                         MethodType = "Network.requestIntercepted"
 	CommandNetworkEnable                                   MethodType = "Network.enable"
 	CommandNetworkDisable                                  MethodType = "Network.disable"
 	CommandNetworkSetUserAgentOverride                     MethodType = "Network.setUserAgentOverride"
@@ -177,6 +178,8 @@ const (
 	CommandNetworkSetBypassServiceWorker                   MethodType = "Network.setBypassServiceWorker"
 	CommandNetworkSetDataSizeLimitsForTest                 MethodType = "Network.setDataSizeLimitsForTest"
 	CommandNetworkGetCertificate                           MethodType = "Network.getCertificate"
+	CommandNetworkEnableRequestInterception                MethodType = "Network.enableRequestInterception"
+	CommandNetworkContinueInterceptedRequest               MethodType = "Network.continueInterceptedRequest"
 	EventDatabaseAddDatabase                               MethodType = "Database.addDatabase"
 	CommandDatabaseEnable                                  MethodType = "Database.enable"
 	CommandDatabaseDisable                                 MethodType = "Database.disable"
@@ -694,6 +697,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = EventNetworkWebSocketFrameSent
 	case EventNetworkEventSourceMessageReceived:
 		*t = EventNetworkEventSourceMessageReceived
+	case EventNetworkRequestIntercepted:
+		*t = EventNetworkRequestIntercepted
 	case CommandNetworkEnable:
 		*t = CommandNetworkEnable
 	case CommandNetworkDisable:
@@ -736,6 +741,10 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandNetworkSetDataSizeLimitsForTest
 	case CommandNetworkGetCertificate:
 		*t = CommandNetworkGetCertificate
+	case CommandNetworkEnableRequestInterception:
+		*t = CommandNetworkEnableRequestInterception
+	case CommandNetworkContinueInterceptedRequest:
+		*t = CommandNetworkContinueInterceptedRequest
 	case EventDatabaseAddDatabase:
 		*t = EventDatabaseAddDatabase
 	case CommandDatabaseEnable:

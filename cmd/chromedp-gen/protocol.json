@@ -2344,6 +2344,30 @@
           "description": "Unique request identifier."
         },
         {
+          "id": "InterceptionId",
+          "type": "string",
+          "description": "Unique intercepted request identifier."
+        },
+        {
+          "id": "ErrorReason",
+          "type": "string",
+          "enum": [
+            "Failed",
+            "Aborted",
+            "TimedOut",
+            "AccessDenied",
+            "ConnectionClosed",
+            "ConnectionReset",
+            "ConnectionRefused",
+            "ConnectionAborted",
+            "ConnectionFailed",
+            "NameNotResolved",
+            "InternetDisconnected",
+            "AddressUnreachable"
+          ],
+          "description": "Network level fetch failure reason."
+        },
+        {
           "id": "Timestamp",
           "type": "number",
           "description": "Number of seconds since epoch."
@@ -3350,6 +3374,64 @@
             }
           ],
           "experimental": true
+        },
+        {
+          "name": "enableRequestInterception",
+          "parameters": [
+            {
+              "name": "enabled",
+              "type": "boolean",
+              "description": "Whether or not HTTP requests should be intercepted and Network.requestIntercepted events sent."
+            }
+          ],
+          "experimental": true
+        },
+        {
+          "name": "continueInterceptedRequest",
+          "description": "Response to Network.requestIntercepted which either modifies the request to continue with any modifications, or blocks it, or completes it with the provided response bytes. If a network fetch occurs as a result which encounters a redirect an additional Network.requestIntercepted event will be sent with the same InterceptionId.",
+          "parameters": [
+            {
+              "name": "interceptionId",
+              "$ref": "InterceptionId"
+            },
+            {
+              "name": "errorReason",
+              "$ref": "ErrorReason",
+              "optional": true,
+              "description": "If set this causes the request to fail with the given reason."
+            },
+            {
+              "name": "rawResponse",
+              "type": "string",
+              "optional": true,
+              "description": "If set the requests completes using with the provided base64 encoded raw response, including HTTP status line and headers etc..."
+            },
+            {
+              "name": "url",
+              "type": "string",
+              "optional": true,
+              "description": "If set the request url will be modified in a way that's not observable by page."
+            },
+            {
+              "name": "method",
+              "type": "string",
+              "optional": true,
+              "description": "If set this allows the request method to be overridden."
+            },
+            {
+              "name": "postData",
+              "type": "string",
+              "optional": true,
+              "description": "If set this allows postData to be set."
+            },
+            {
+              "name": "headers",
+              "$ref": "Headers",
+              "optional": true,
+              "description": "If set this allows the request headers to be changed."
+            }
+          ],
+          "experimental": true
         }
       ],
       "events": [
@@ -3754,6 +3836,40 @@
               "name": "data",
               "type": "string",
               "description": "Message content."
+            }
+          ],
+          "experimental": true
+        },
+        {
+          "name": "requestIntercepted",
+          "description": "Details of an intercepted HTTP request, which must be either allowed, blocked, modified or mocked.",
+          "parameters": [
+            {
+              "name": "InterceptionId",
+              "$ref": "InterceptionId",
+              "description": "Each request the page makes will have a unique id, however if any redirects are encountered while processing that fetch, they will be reported with the same id as the original fetch."
+            },
+            {
+              "name": "request",
+              "$ref": "Request"
+            },
+            {
+              "name": "redirectHeaders",
+              "$ref": "Headers",
+              "optional": true,
+              "description": "HTTP response headers, only sent if a redirect was intercepted."
+            },
+            {
+              "name": "redirectStatusCode",
+              "type": "integer",
+              "optional": true,
+              "description": "HTTP response code, only sent if a redirect was intercepted."
+            },
+            {
+              "name": "redirectUrl",
+              "optional": true,
+              "type": "string",
+              "description": "Redirect location, only sent if a redirect was intercepted."
             }
           ],
           "experimental": true
