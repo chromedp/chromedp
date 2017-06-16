@@ -592,22 +592,30 @@ func (h *TargetHandler) pageEvent(ctxt context.Context, ev interface{}) {
 		return
 
 	case *page.EventFrameAttached:
-		id, op = e.FrameID, frameAttached(e.ParentFrameID)
+		// NOTE(pwaller):
+		//   This happens before we have the frame object for
+		//   e.FrameID - that only occurs in EventFrameNavigated.
+		//   so there isn't a frame to update yet.
+		//   I'm not sure of the use of this state - see #75.
+
+		//   Another issue is that events like EventFrameStoppedLoading
+		//   can happen even though EventFrameNavigated *never fires*,
+		//   so these events can end up calling WaitFrame on a frame
+		//   that never comes into existence.
+
+		// id, op = e.FrameID, frameAttached(e.ParentFrameID)
+		return
 
 	case *page.EventFrameDetached:
-		id, op = e.FrameID, frameDetached
-
+		return // See note above.
 	case *page.EventFrameStartedLoading:
-		id, op = e.FrameID, frameStartedLoading
-
+		return // See note above.
 	case *page.EventFrameStoppedLoading:
-		id, op = e.FrameID, frameStoppedLoading
-
+		return // See note above.
 	case *page.EventFrameScheduledNavigation:
-		id, op = e.FrameID, frameScheduledNavigation
-
+		return // See note above.
 	case *page.EventFrameClearedScheduledNavigation:
-		id, op = e.FrameID, frameClearedScheduledNavigation
+		return // See note above.
 
 	case *page.EventDomContentEventFired:
 		return
