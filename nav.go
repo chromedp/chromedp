@@ -16,6 +16,14 @@ func Navigate(urlstr string) Action {
 			return ErrInvalidHandler
 		}
 
+		// Immediately trigger anyone waiting on previous page loads,
+		// and reset the event pipeline. This ensures that previous
+		// waits don't get fired because of the page load coming in the
+		// future due to this Navigate() call - AND it ensures that
+		// future calls to WaitEventLoad won't fire due to previous
+		// navigations.
+		th.ResetEventLoad()
+
 		frameID, _, _, err := page.Navigate(urlstr).Do(ctxt, th)
 		if err != nil {
 			return err
