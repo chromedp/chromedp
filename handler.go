@@ -90,7 +90,15 @@ func (h *TargetHandler) Run(ctxt context.Context) error {
 	h.frames = make(map[cdp.FrameID]*cdp.Frame)
 	h.qcmd = make(chan *cdp.Message)
 	h.qres = make(chan *cdp.Message)
-	h.qevents = make(chan *cdp.Message)
+	// The events channel needs to be big enough to buffer as many events as
+	// we might recieve at once while processing one event. This is
+	// necessary because the event handling may do requests which require
+	// reading from the qmsg channel. This can't happen if the network
+	// handler is blocked writing to qevents. See discussion in #75. In
+	// practice I haven't seen the buffer get bigger than one or two. But we
+	// make it large just to be safe, and panic if it is ever full, rather
+	// than deadlocking.
+	h.qevents = make(chan *cdp.Message, 1024)
 	h.res = make(map[int64]chan *cdp.Message)
 	h.detached = make(chan *inspector.EventDetached)
 	h.pageWaitGroup = new(sync.WaitGroup)
@@ -159,7 +167,12 @@ func (h *TargetHandler) run(ctxt context.Context) {
 
 				switch {
 				case msg.Method != "":
-					h.qevents <- msg
+					select {
+					case h.qevents <- msg:
+					default:
+						// See discussion in #75.
+						panic("h.qevents is blocked!")
+					}
 
 				case msg.ID != 0:
 					h.qres <- msg
