@@ -11,6 +11,14 @@ import (
 // Navigate navigates the current frame.
 func Navigate(urlstr string) Action {
 	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
+		// Immediately trigger anyone waiting on previous page loads,
+		// and reset the event pipeline. This ensures that previous
+		// waits don't get fired because of the page load coming in the
+		// future due to this Navigate() call - AND it ensures that
+		// future calls to WaitEventLoad won't fire due to previous
+		// navigations.
+		h.ResetEventLoad()
+
 		frameID, err := page.Navigate(urlstr).Do(ctxt, h)
 		if err != nil {
 			return err

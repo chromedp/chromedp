@@ -44,6 +44,9 @@ type TargetHandler struct {
 	// detached is closed when the detached event is received.
 	detached chan *inspector.EventDetached
 
+	// loaded is fired when the page load event is received.
+	loaded chan struct{}
+
 	pageWaitGroup, domWaitGroup *sync.WaitGroup
 
 	// last is the last sent message identifier.
@@ -222,6 +225,39 @@ func (h *TargetHandler) read() (*cdp.Message, error) {
 	}
 
 	return msg, nil
+}
+
+// WaitEventLoad returns a channel which is closed when the page load event is
+// fired, or the next TargetHandler.Run takes place.
+func (h *TargetHandler) WaitEventLoad() <-chan struct{} {
+	h.Lock()
+	defer h.Unlock()
+	return h.loaded
+}
+
+// ResetEventLoad resets the event load trigger returned by WaitEventLoad.
+// It is called when a navigation is requested, so that the next load can take
+// place.
+func (h *TargetHandler) ResetEventLoad() {
+	h.Lock()
+	defer h.Unlock()
+
+	if h.loaded != nil {
+		select {
+		case <-h.loaded: // already closed
+		default:
+			// Before replacing h.loaded with a new pipeline,
+			// unblock previous waiters if they are still blocked.
+			// This prevents them staying deadlocked for a load
+			// event which will never come, however it means that
+			// they get a phantom load event.
+			close(h.loaded)
+			h.loaded = nil
+		}
+	}
+
+	// Make a new channel for signalling the next page load event.
+	h.loaded = make(chan struct{})
 }
 
 // processEvent processes an incoming event.
@@ -551,6 +587,11 @@ func (h *TargetHandler) pageEvent(ctxt context.Context, ev interface{}) {
 	case *page.EventDomContentEventFired:
 		return
 	case *page.EventLoadEventFired:
+		if h.loaded != nil {
+			// If anyone is listening for loaded, notify them now.
+			close(h.loaded)
+			h.loaded = nil
+		}
 		return
 	case *page.EventFrameResized:
 		return
