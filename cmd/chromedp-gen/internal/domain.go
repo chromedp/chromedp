@@ -19,6 +19,7 @@ const (
 	DomainConsole           DomainType = "Console"
 	DomainDOM               DomainType = "DOM"
 	DomainDOMDebugger       DomainType = "DOMDebugger"
+	DomainDOMSnapshot       DomainType = "DOMSnapshot"
 	DomainDOMStorage        DomainType = "DOMStorage"
 	DomainDatabase          DomainType = "Database"
 	DomainDebugger          DomainType = "Debugger"
@@ -83,6 +84,8 @@ func (dt *DomainType) UnmarshalJSON(buf []byte) error {
 		*dt = DomainDOM
 	case DomainDOMDebugger:
 		*dt = DomainDOMDebugger
+	case DomainDOMSnapshot:
+		*dt = DomainDOMSnapshot
 	case DomainDOMStorage:
 		*dt = DomainDOMStorage
 	case DomainDatabase:
