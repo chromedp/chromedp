@@ -642,6 +642,8 @@ func TestDoubleClick(t *testing.T) {
 				t.Fatalf("got error: %v", err)
 			}
 
+			time.Sleep(50 * time.Millisecond)
+
 			var value string
 			err = c.Run(defaultContext, Value("#input1", &value, ByID))
 			if err != nil {
@@ -782,7 +784,7 @@ func TestComputedStyle(t *testing.T) {
 			c := testAllocate(t, "js.html")
 			defer c.Release()
 
-			time.Sleep(time.Millisecond * 50)
+			time.Sleep(50 * time.Millisecond)
 
 			var styles []*css.ComputedProperty
 			err := c.Run(defaultContext, ComputedStyle(test.sel, &styles, test.by))
@@ -803,7 +805,7 @@ func TestComputedStyle(t *testing.T) {
 				t.Fatalf("got error: %v", err)
 			}
 
-			time.Sleep(time.Millisecond * 50)
+			time.Sleep(50 * time.Millisecond)
 
 			err = c.Run(defaultContext, ComputedStyle(test.sel, &styles, test.by))
 			if err != nil {
@@ -839,7 +841,7 @@ func TestMatchedStyle(t *testing.T) {
 			c := testAllocate(t, "js.html")
 			defer c.Release()
 
-			time.Sleep(time.Millisecond * 50)
+			time.Sleep(50 * time.Millisecond)
 
 			var styles *css.GetMatchedStylesForNodeReturns
 			err := c.Run(defaultContext, MatchedStyle(test.sel, &styles, test.by))

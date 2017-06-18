@@ -28,7 +28,7 @@ func TestMouseClickXY(t *testing.T) {
 	c := testAllocate(t, "input.html")
 	defer c.Release()
 
-	err = c.Run(defaultContext, Sleep(time.Millisecond*100))
+	err = c.Run(defaultContext, Sleep(100*time.Millisecond))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -48,7 +48,7 @@ func TestMouseClickXY(t *testing.T) {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
 
-		time.Sleep(time.Millisecond * 100)
+		time.Sleep(50 * time.Millisecond)
 
 		var xstr, ystr string
 		err = c.Run(defaultContext, Value("#input1", &xstr, ByID))
@@ -113,7 +113,7 @@ func TestMouseClickNode(t *testing.T) {
 				t.Fatalf("got error: %v", err)
 			}
 
-			time.Sleep(time.Millisecond * 50)
+			time.Sleep(50 * time.Millisecond)
 
 			var value string
 			err = c.Run(defaultContext, Value("#input3", &value, ByID))
@@ -171,7 +171,7 @@ func TestMouseClickOffscreenNode(t *testing.T) {
 				}
 			}
 
-			time.Sleep(time.Millisecond * 100)
+			time.Sleep(100 * time.Millisecond)
 
 			var value int
 			err = c.Run(defaultContext, Evaluate("window.document.test_i", &value))

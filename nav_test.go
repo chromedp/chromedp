@@ -82,7 +82,7 @@ func TestNavigationEntries(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		time.Sleep(time.Millisecond * 50)
+		time.Sleep(50 * time.Millisecond)
 
 		err = c.Run(defaultContext, NavigationEntries(&index, &entries))
 		if err != nil {
@@ -116,7 +116,7 @@ func TestNavigateToHistoryEntry(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	time.Sleep(time.Millisecond * 50)
+	time.Sleep(50 * time.Millisecond)
 
 	err = c.Run(defaultContext, NavigationEntries(&index, &entries))
 	if err != nil {
@@ -128,14 +128,14 @@ func TestNavigateToHistoryEntry(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	time.Sleep(time.Millisecond * 50)
+	time.Sleep(50 * time.Millisecond)
 
 	err = c.Run(defaultContext, NavigateToHistoryEntry(entries[index].ID))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	time.Sleep(time.Millisecond * 50)
+	time.Sleep(50 * time.Millisecond)
 
 	var title string
 	err = c.Run(defaultContext, Title(&title))
@@ -160,7 +160,7 @@ func TestNavigateBack(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	time.Sleep(time.Millisecond * 50)
+	time.Sleep(50 * time.Millisecond)
 
 	var exptitle string
 	err = c.Run(defaultContext, Title(&exptitle))
@@ -173,14 +173,14 @@ func TestNavigateBack(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	time.Sleep(time.Millisecond * 50)
+	time.Sleep(50 * time.Millisecond)
 
 	err = c.Run(defaultContext, NavigateBack())
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	time.Sleep(time.Millisecond * 50)
+	time.Sleep(50 * time.Millisecond)
 
 	var title string
 	err = c.Run(defaultContext, Title(&title))
@@ -205,14 +205,14 @@ func TestNavigateForward(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	time.Sleep(time.Millisecond * 50)
+	time.Sleep(50 * time.Millisecond)
 
 	err = c.Run(defaultContext, Navigate(testdataDir+"/"+"image.html"))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	time.Sleep(time.Millisecond * 50)
+	time.Sleep(50 * time.Millisecond)
 
 	var exptitle string
 	err = c.Run(defaultContext, Title(&exptitle))
@@ -225,14 +225,14 @@ func TestNavigateForward(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	time.Sleep(time.Millisecond * 50)
+	time.Sleep(50 * time.Millisecond)
 
 	err = c.Run(defaultContext, NavigateForward())
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	time.Sleep(time.Millisecond * 50)
+	time.Sleep(50 * time.Millisecond)
 
 	var title string
 	err = c.Run(defaultContext, Title(&title))
@@ -276,7 +276,7 @@ func TestReload(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	time.Sleep(time.Millisecond * 50)
+	time.Sleep(50 * time.Millisecond)
 
 	var exptitle string
 	err = c.Run(defaultContext, Title(&exptitle))
@@ -289,7 +289,7 @@ func TestReload(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	time.Sleep(time.Millisecond * 50)
+	time.Sleep(50 * time.Millisecond)
 
 	var title string
 	err = c.Run(defaultContext, Title(&title))
@@ -314,7 +314,7 @@ func TestCaptureScreenshot(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	time.Sleep(time.Millisecond * 50)
+	time.Sleep(50 * time.Millisecond)
 
 	var buf []byte
 	err = c.Run(defaultContext, CaptureScreenshot(&buf))
@@ -347,7 +347,7 @@ func TestAddOnLoadScript(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	time.Sleep(time.Millisecond * 50)
+	time.Sleep(50 * time.Millisecond)
 
 	if scriptID == "" {
 		t.Fatal("got empty script ID")
@@ -383,7 +383,7 @@ func TestRemoveOnLoadScript(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	time.Sleep(time.Millisecond * 50)
+	time.Sleep(50 * time.Millisecond)
 }
 
 func TestLocation(t *testing.T) {
@@ -400,7 +400,7 @@ func TestLocation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	time.Sleep(time.Millisecond * 50)
+	time.Sleep(50 * time.Millisecond)
 
 	var urlstr string
 	err = c.Run(defaultContext, Location(&urlstr))
@@ -427,7 +427,7 @@ func TestTitle(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	time.Sleep(time.Millisecond * 50)
+	time.Sleep(50 * time.Millisecond)
 
 	var title string
 	err = c.Run(defaultContext, Title(&title))
