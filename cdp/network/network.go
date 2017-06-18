@@ -683,13 +683,14 @@ func (p *EnableRequestInterceptionParams) Do(ctxt context.Context, h cdp.Handler
 // fetch occurs as a result which encounters a redirect an additional
 // Network.requestIntercepted event will be sent with the same InterceptionId.
 type ContinueInterceptedRequestParams struct {
-	InterceptionID InterceptionID `json:"interceptionId"`
-	ErrorReason    ErrorReason    `json:"errorReason,omitempty"` // If set this causes the request to fail with the given reason.
-	RawResponse    string         `json:"rawResponse,omitempty"` // If set the requests completes using with the provided base64 encoded raw response, including HTTP status line and headers etc...
-	URL            string         `json:"url,omitempty"`         // If set the request url will be modified in a way that's not observable by page.
-	Method         string         `json:"method,omitempty"`      // If set this allows the request method to be overridden.
-	PostData       string         `json:"postData,omitempty"`    // If set this allows postData to be set.
-	Headers        *Headers       `json:"headers,omitempty"`     // If set this allows the request headers to be changed.
+	InterceptionID        InterceptionID         `json:"interceptionId"`
+	ErrorReason           ErrorReason            `json:"errorReason,omitempty"`           // If set this causes the request to fail with the given reason. Must not be set in response to an authChallenge.
+	RawResponse           string                 `json:"rawResponse,omitempty"`           // If set the requests completes using with the provided base64 encoded raw response, including HTTP status line and headers etc... Must not be set in response to an authChallenge.
+	URL                   string                 `json:"url,omitempty"`                   // If set the request url will be modified in a way that's not observable by page. Must not be set in response to an authChallenge.
+	Method                string                 `json:"method,omitempty"`                // If set this allows the request method to be overridden. Must not be set in response to an authChallenge.
+	PostData              string                 `json:"postData,omitempty"`              // If set this allows postData to be set. Must not be set in response to an authChallenge.
+	Headers               *Headers               `json:"headers,omitempty"`               // If set this allows the request headers to be changed. Must not be set in response to an authChallenge.
+	AuthChallengeResponse *AuthChallengeResponse `json:"authChallengeResponse,omitempty"` // Response to a requestIntercepted with an authChallenge. Must not be set otherwise.
 }
 
 // ContinueInterceptedRequest response to Network.requestIntercepted which
@@ -707,7 +708,7 @@ func ContinueInterceptedRequest(interceptionID InterceptionID) *ContinueIntercep
 }
 
 // WithErrorReason if set this causes the request to fail with the given
-// reason.
+// reason. Must not be set in response to an authChallenge.
 func (p ContinueInterceptedRequestParams) WithErrorReason(errorReason ErrorReason) *ContinueInterceptedRequestParams {
 	p.ErrorReason = errorReason
 	return &p
@@ -715,33 +716,44 @@ func (p ContinueInterceptedRequestParams) WithErrorReason(errorReason ErrorReaso
 
 // WithRawResponse if set the requests completes using with the provided
 // base64 encoded raw response, including HTTP status line and headers etc...
+// Must not be set in response to an authChallenge.
 func (p ContinueInterceptedRequestParams) WithRawResponse(rawResponse string) *ContinueInterceptedRequestParams {
 	p.RawResponse = rawResponse
 	return &p
 }
 
 // WithURL if set the request url will be modified in a way that's not
-// observable by page.
+// observable by page. Must not be set in response to an authChallenge.
 func (p ContinueInterceptedRequestParams) WithURL(url string) *ContinueInterceptedRequestParams {
 	p.URL = url
 	return &p
 }
 
-// WithMethod if set this allows the request method to be overridden.
+// WithMethod if set this allows the request method to be overridden. Must
+// not be set in response to an authChallenge.
 func (p ContinueInterceptedRequestParams) WithMethod(method string) *ContinueInterceptedRequestParams {
 	p.Method = method
 	return &p
 }
 
-// WithPostData if set this allows postData to be set.
+// WithPostData if set this allows postData to be set. Must not be set in
+// response to an authChallenge.
 func (p ContinueInterceptedRequestParams) WithPostData(postData string) *ContinueInterceptedRequestParams {
 	p.PostData = postData
 	return &p
 }
 
-// WithHeaders if set this allows the request headers to be changed.
+// WithHeaders if set this allows the request headers to be changed. Must not
+// be set in response to an authChallenge.
 func (p ContinueInterceptedRequestParams) WithHeaders(headers *Headers) *ContinueInterceptedRequestParams {
 	p.Headers = headers
+	return &p
+}
+
+// WithAuthChallengeResponse response to a requestIntercepted with an
+// authChallenge. Must not be set otherwise.
+func (p ContinueInterceptedRequestParams) WithAuthChallengeResponse(authChallengeResponse *AuthChallengeResponse) *ContinueInterceptedRequestParams {
+	p.AuthChallengeResponse = authChallengeResponse
 	return &p
 }
 

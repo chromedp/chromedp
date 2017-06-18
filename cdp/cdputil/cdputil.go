@@ -16,6 +16,7 @@ import (
 	"github.com/knq/chromedp/cdp/debugger"
 	"github.com/knq/chromedp/cdp/dom"
 	"github.com/knq/chromedp/cdp/domdebugger"
+	"github.com/knq/chromedp/cdp/domsnapshot"
 	"github.com/knq/chromedp/cdp/domstorage"
 	"github.com/knq/chromedp/cdp/emulation"
 	"github.com/knq/chromedp/cdp/heapprofiler"
@@ -33,6 +34,7 @@ import (
 	"github.com/knq/chromedp/cdp/schema"
 	"github.com/knq/chromedp/cdp/security"
 	"github.com/knq/chromedp/cdp/serviceworker"
+	"github.com/knq/chromedp/cdp/storage"
 	"github.com/knq/chromedp/cdp/systeminfo"
 	"github.com/knq/chromedp/cdp/target"
 	"github.com/knq/chromedp/cdp/tethering"
@@ -741,9 +743,6 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandCSSGetBackgroundColors:
 		v = new(css.GetBackgroundColorsReturns)
 
-	case cdp.CommandCSSGetLayoutTreeAndStyles:
-		v = new(css.GetLayoutTreeAndStylesReturns)
-
 	case cdp.CommandCSSStartRuleUsageTracking:
 		return emptyVal, nil
 
@@ -767,6 +766,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 
 	case cdp.EventCSSStyleSheetRemoved:
 		v = new(css.EventStyleSheetRemoved)
+
+	case cdp.CommandDOMSnapshotGetSnapshot:
+		v = new(domsnapshot.GetSnapshotReturns)
 
 	case cdp.CommandIORead:
 		v = new(iodom.ReadReturns)
@@ -1031,6 +1033,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 
 	case cdp.CommandStorageClearDataForOrigin:
 		return emptyVal, nil
+
+	case cdp.CommandStorageGetUsageAndQuota:
+		v = new(storage.GetUsageAndQuotaReturns)
 
 	case cdp.CommandLogEnable:
 		return emptyVal, nil

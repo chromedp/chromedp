@@ -12,8 +12,9 @@ func (t CacheID) String() string {
 
 // DataEntry data entry.
 type DataEntry struct {
-	Request  string `json:"request,omitempty"`  // Request url spec.
-	Response string `json:"response,omitempty"` // Response stataus text.
+	Request      string  `json:"request,omitempty"`      // Request url spec.
+	Response     string  `json:"response,omitempty"`     // Response status text.
+	ResponseTime float64 `json:"responseTime,omitempty"` // Number of seconds since epoch.
 }
 
 // Cache cache identifier.

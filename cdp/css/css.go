@@ -700,50 +700,6 @@ func (p *GetBackgroundColorsParams) Do(ctxt context.Context, h cdp.Handler) (bac
 	return res.BackgroundColors, nil
 }
 
-// GetLayoutTreeAndStylesParams for the main document and any content
-// documents, return the LayoutTreeNodes and a whitelisted subset of the
-// computed style. It only returns pushed nodes, on way to pull all nodes is to
-// call DOM.getDocument with a depth of -1.
-type GetLayoutTreeAndStylesParams struct {
-	ComputedStyleWhitelist []string `json:"computedStyleWhitelist"` // Whitelist of computed styles to return.
-}
-
-// GetLayoutTreeAndStyles for the main document and any content documents,
-// return the LayoutTreeNodes and a whitelisted subset of the computed style. It
-// only returns pushed nodes, on way to pull all nodes is to call
-// DOM.getDocument with a depth of -1.
-//
-// parameters:
-//   computedStyleWhitelist - Whitelist of computed styles to return.
-func GetLayoutTreeAndStyles(computedStyleWhitelist []string) *GetLayoutTreeAndStylesParams {
-	return &GetLayoutTreeAndStylesParams{
-		ComputedStyleWhitelist: computedStyleWhitelist,
-	}
-}
-
-// GetLayoutTreeAndStylesReturns return values.
-type GetLayoutTreeAndStylesReturns struct {
-	LayoutTreeNodes []*LayoutTreeNode `json:"layoutTreeNodes,omitempty"`
-	ComputedStyles  []*ComputedStyle  `json:"computedStyles,omitempty"`
-}
-
-// Do executes CSS.getLayoutTreeAndStyles against the provided context and
-// target handler.
-//
-// returns:
-//   layoutTreeNodes
-//   computedStyles
-func (p *GetLayoutTreeAndStylesParams) Do(ctxt context.Context, h cdp.Handler) (layoutTreeNodes []*LayoutTreeNode, computedStyles []*ComputedStyle, err error) {
-	// execute
-	var res GetLayoutTreeAndStylesReturns
-	err = h.Execute(ctxt, cdp.CommandCSSGetLayoutTreeAndStyles, p, &res)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return res.LayoutTreeNodes, res.ComputedStyles, nil
-}
-
 // StartRuleUsageTrackingParams enables the selector recording.
 type StartRuleUsageTrackingParams struct{}
 

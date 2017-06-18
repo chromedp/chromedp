@@ -285,10 +285,10 @@ const (
 	CommandCSSGetMediaQueries                              MethodType = "CSS.getMediaQueries"
 	CommandCSSSetEffectivePropertyValueForNode             MethodType = "CSS.setEffectivePropertyValueForNode"
 	CommandCSSGetBackgroundColors                          MethodType = "CSS.getBackgroundColors"
-	CommandCSSGetLayoutTreeAndStyles                       MethodType = "CSS.getLayoutTreeAndStyles"
 	CommandCSSStartRuleUsageTracking                       MethodType = "CSS.startRuleUsageTracking"
 	CommandCSSTakeCoverageDelta                            MethodType = "CSS.takeCoverageDelta"
 	CommandCSSStopRuleUsageTracking                        MethodType = "CSS.stopRuleUsageTracking"
+	CommandDOMSnapshotGetSnapshot                          MethodType = "DOMSnapshot.getSnapshot"
 	CommandIORead                                          MethodType = "IO.read"
 	CommandIOClose                                         MethodType = "IO.close"
 	CommandDOMDebuggerSetDOMBreakpoint                     MethodType = "DOMDebugger.setDOMBreakpoint"
@@ -377,6 +377,7 @@ const (
 	CommandAnimationResolveAnimation                       MethodType = "Animation.resolveAnimation"
 	CommandAccessibilityGetPartialAXTree                   MethodType = "Accessibility.getPartialAXTree"
 	CommandStorageClearDataForOrigin                       MethodType = "Storage.clearDataForOrigin"
+	CommandStorageGetUsageAndQuota                         MethodType = "Storage.getUsageAndQuota"
 	EventLogEntryAdded                                     MethodType = "Log.entryAdded"
 	CommandLogEnable                                       MethodType = "Log.enable"
 	CommandLogDisable                                      MethodType = "Log.disable"
@@ -955,14 +956,14 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandCSSSetEffectivePropertyValueForNode
 	case CommandCSSGetBackgroundColors:
 		*t = CommandCSSGetBackgroundColors
-	case CommandCSSGetLayoutTreeAndStyles:
-		*t = CommandCSSGetLayoutTreeAndStyles
 	case CommandCSSStartRuleUsageTracking:
 		*t = CommandCSSStartRuleUsageTracking
 	case CommandCSSTakeCoverageDelta:
 		*t = CommandCSSTakeCoverageDelta
 	case CommandCSSStopRuleUsageTracking:
 		*t = CommandCSSStopRuleUsageTracking
+	case CommandDOMSnapshotGetSnapshot:
+		*t = CommandDOMSnapshotGetSnapshot
 	case CommandIORead:
 		*t = CommandIORead
 	case CommandIOClose:
@@ -1139,6 +1140,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandAccessibilityGetPartialAXTree
 	case CommandStorageClearDataForOrigin:
 		*t = CommandStorageClearDataForOrigin
+	case CommandStorageGetUsageAndQuota:
+		*t = CommandStorageGetUsageAndQuota
 	case EventLogEntryAdded:
 		*t = EventLogEntryAdded
 	case CommandLogEnable:

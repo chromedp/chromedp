@@ -2577,6 +2577,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpRuntime22(in *jlexer.Lexer, ou
 				}
 				(*out.StackTrace).UnmarshalEasyJSON(in)
 			}
+		case "context":
+			out.Context = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -2649,6 +2651,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpRuntime22(out *jwriter.Writer,
 		} else {
 			(*in.StackTrace).MarshalEasyJSON(out)
 		}
+	}
+	if in.Context != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"context\":")
+		out.String(string(in.Context))
 	}
 	out.RawByte('}')
 }

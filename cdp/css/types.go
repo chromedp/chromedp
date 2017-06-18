@@ -241,21 +241,6 @@ type InlineTextBox struct {
 	NumCharacters       int64     `json:"numCharacters,omitempty"`       // The number of characters in this post layout textbox substring.
 }
 
-// LayoutTreeNode details of an element in the DOM tree with a LayoutObject.
-type LayoutTreeNode struct {
-	NodeID          cdp.NodeID       `json:"nodeId,omitempty"`          // The id of the related DOM node matching one from DOM.GetDocument.
-	BoundingBox     *dom.Rect        `json:"boundingBox,omitempty"`     // The absolute position bounding box.
-	LayoutText      string           `json:"layoutText,omitempty"`      // Contents of the LayoutText if any
-	InlineTextNodes []*InlineTextBox `json:"inlineTextNodes,omitempty"` // The post layout inline text nodes, if any.
-	StyleIndex      int64            `json:"styleIndex,omitempty"`      // Index into the computedStyles array returned by getLayoutTreeAndStyles.
-}
-
-// ComputedStyle a subset of the full ComputedStyle as defined by the request
-// whitelist.
-type ComputedStyle struct {
-	Properties []*ComputedProperty `json:"properties,omitempty"`
-}
-
 // MediaSource source of the media query: "mediaRule" if specified by a
 // @media rule, "importRule" if specified by an @import rule, "linkedSheet" if
 // specified by a "media" attribute in a linked stylesheet's LINK tag,

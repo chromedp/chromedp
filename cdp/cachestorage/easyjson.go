@@ -568,6 +568,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpCachestorage6(in *jlexer.Lexer
 			out.Request = string(in.String())
 		case "response":
 			out.Response = string(in.String())
+		case "responseTime":
+			out.ResponseTime = float64(in.Float64())
 		default:
 			in.SkipRecursive()
 		}
@@ -597,6 +599,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpCachestorage6(out *jwriter.Wri
 		first = false
 		out.RawString("\"response\":")
 		out.String(string(in.Response))
+	}
+	if in.ResponseTime != 0 {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"responseTime\":")
+		out.Float64(float64(in.ResponseTime))
 	}
 	out.RawByte('}')
 }

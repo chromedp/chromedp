@@ -450,7 +450,7 @@ func convertObjectProperties(params []*internal.Type, d *internal.Domain, name s
 		case p.Name == "nodeType":
 			r = append(r, &internal.Type{
 				Name:        p.Name,
-				Ref:         "NodeType",
+				Ref:         "DOM.NodeType",
 				Description: p.Description,
 				Optional:    p.Optional,
 			})

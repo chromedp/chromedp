@@ -2556,7 +2556,9 @@
                 "no-referrer",
                 "origin",
                 "origin-when-cross-origin",
-                "no-referrer-when-downgrade-origin-when-cross-origin"
+                "same-origin",
+                "strict-origin",
+                "strict-origin-when-cross-origin"
               ],
               "description": "The referrer policy of the request, as defined in https://www.w3.org/TR/referrer-policy/"
             },
@@ -3018,6 +3020,69 @@
             }
           ],
           "experimental": true
+        },
+        {
+          "id": "AuthChallenge",
+          "type": "object",
+          "description": "Authorization challenge for HTTP status code 401 or 407.",
+          "properties": [
+            {
+              "name": "source",
+              "type": "string",
+              "optional": true,
+              "enum": [
+                "Server",
+                "Proxy"
+              ],
+              "description": "Source of the authentication challenge."
+            },
+            {
+              "name": "origin",
+              "type": "string",
+              "description": "Origin of the challenger."
+            },
+            {
+              "name": "scheme",
+              "type": "string",
+              "description": "The authentication scheme used, such as basic or digest"
+            },
+            {
+              "name": "realm",
+              "type": "string",
+              "description": "The realm of the challenge. May be empty."
+            }
+          ],
+          "experimental": true
+        },
+        {
+          "id": "AuthChallengeResponse",
+          "type": "object",
+          "description": "Response to an AuthChallenge.",
+          "properties": [
+            {
+              "name": "response",
+              "type": "string",
+              "enum": [
+                "Default",
+                "CancelAuth",
+                "ProvideCredentials"
+              ],
+              "description": "The decision on what to do in response to the authorization challenge.  Default means deferring to the default behavior of the net stack, which will likely either the Cancel authentication or display a popup dialog box."
+            },
+            {
+              "name": "username",
+              "type": "string",
+              "optional": true,
+              "description": "The username to provide, possibly empty. Should only be set if response is ProvideCredentials."
+            },
+            {
+              "name": "password",
+              "type": "string",
+              "optional": true,
+              "description": "The password to provide, possibly empty. Should only be set if response is ProvideCredentials."
+            }
+          ],
+          "experimental": true
         }
       ],
       "commands": [
@@ -3398,37 +3463,43 @@
               "name": "errorReason",
               "$ref": "ErrorReason",
               "optional": true,
-              "description": "If set this causes the request to fail with the given reason."
+              "description": "If set this causes the request to fail with the given reason. Must not be set in response to an authChallenge."
             },
             {
               "name": "rawResponse",
               "type": "string",
               "optional": true,
-              "description": "If set the requests completes using with the provided base64 encoded raw response, including HTTP status line and headers etc..."
+              "description": "If set the requests completes using with the provided base64 encoded raw response, including HTTP status line and headers etc... Must not be set in response to an authChallenge."
             },
             {
               "name": "url",
               "type": "string",
               "optional": true,
-              "description": "If set the request url will be modified in a way that's not observable by page."
+              "description": "If set the request url will be modified in a way that's not observable by page. Must not be set in response to an authChallenge."
             },
             {
               "name": "method",
               "type": "string",
               "optional": true,
-              "description": "If set this allows the request method to be overridden."
+              "description": "If set this allows the request method to be overridden. Must not be set in response to an authChallenge."
             },
             {
               "name": "postData",
               "type": "string",
               "optional": true,
-              "description": "If set this allows postData to be set."
+              "description": "If set this allows postData to be set. Must not be set in response to an authChallenge."
             },
             {
               "name": "headers",
               "$ref": "Headers",
               "optional": true,
-              "description": "If set this allows the request headers to be changed."
+              "description": "If set this allows the request headers to be changed. Must not be set in response to an authChallenge."
+            },
+            {
+              "name": "authChallengeResponse",
+              "$ref": "AuthChallengeResponse",
+              "optional": true,
+              "description": "Response to a requestIntercepted with an authChallenge. Must not be set otherwise."
             }
           ],
           "experimental": true
@@ -3845,13 +3916,18 @@
           "description": "Details of an intercepted HTTP request, which must be either allowed, blocked, modified or mocked.",
           "parameters": [
             {
-              "name": "InterceptionId",
+              "name": "interceptionId",
               "$ref": "InterceptionId",
-              "description": "Each request the page makes will have a unique id, however if any redirects are encountered while processing that fetch, they will be reported with the same id as the original fetch."
+              "description": "Each request the page makes will have a unique id, however if any redirects are encountered while processing that fetch, they will be reported with the same id as the original fetch. Likewise if HTTP authentication is needed then the same fetch id will be used."
             },
             {
               "name": "request",
               "$ref": "Request"
+            },
+            {
+              "name": "resourceType",
+              "$ref": "Page.ResourceType",
+              "description": "How the requested resource will be used."
             },
             {
               "name": "redirectHeaders",
@@ -3870,6 +3946,12 @@
               "optional": true,
               "type": "string",
               "description": "Redirect location, only sent if a redirect was intercepted."
+            },
+            {
+              "name": "authChallenge",
+              "$ref": "AuthChallenge",
+              "optional": true,
+              "description": "Details of the Authorization Challenge encountered. If this is set then continueInterceptedRequest must contain an authChallengeResponse."
             }
           ],
           "experimental": true
@@ -4399,7 +4481,12 @@
             {
               "name": "response",
               "type": "string",
-              "description": "Response stataus text."
+              "description": "Response status text."
+            },
+            {
+              "name": "responseTime",
+              "type": "number",
+              "description": "Number of seconds since epoch."
             }
           ]
         },
@@ -6822,60 +6909,6 @@
           ],
           "description": "Details of post layout rendered text positions. The exact layout should not be regarded as stable and may change between versions.",
           "experimental": true
-        },
-        {
-          "id": "LayoutTreeNode",
-          "type": "object",
-          "properties": [
-            {
-              "name": "nodeId",
-              "$ref": "DOM.NodeId",
-              "description": "The id of the related DOM node matching one from DOM.GetDocument."
-            },
-            {
-              "name": "boundingBox",
-              "$ref": "DOM.Rect",
-              "description": "The absolute position bounding box."
-            },
-            {
-              "name": "layoutText",
-              "type": "string",
-              "optional": true,
-              "description": "Contents of the LayoutText if any"
-            },
-            {
-              "name": "inlineTextNodes",
-              "type": "array",
-              "optional": true,
-              "items": {
-                "$ref": "InlineTextBox"
-              },
-              "description": "The post layout inline text nodes, if any."
-            },
-            {
-              "name": "styleIndex",
-              "type": "integer",
-              "optional": true,
-              "description": "Index into the computedStyles array returned by getLayoutTreeAndStyles."
-            }
-          ],
-          "description": "Details of an element in the DOM tree with a LayoutObject.",
-          "experimental": true
-        },
-        {
-          "id": "ComputedStyle",
-          "type": "object",
-          "properties": [
-            {
-              "name": "properties",
-              "type": "array",
-              "items": {
-                "$ref": "CSSComputedStyleProperty"
-              }
-            }
-          ],
-          "description": "A subset of the full ComputedStyle as defined by the request whitelist.",
-          "experimental": true
         }
       ],
       "commands": [
@@ -7298,37 +7331,6 @@
           "experimental": true
         },
         {
-          "name": "getLayoutTreeAndStyles",
-          "parameters": [
-            {
-              "name": "computedStyleWhitelist",
-              "type": "array",
-              "items": {
-                "type": "string"
-              },
-              "description": "Whitelist of computed styles to return."
-            }
-          ],
-          "returns": [
-            {
-              "name": "layoutTreeNodes",
-              "type": "array",
-              "items": {
-                "$ref": "LayoutTreeNode"
-              }
-            },
-            {
-              "name": "computedStyles",
-              "type": "array",
-              "items": {
-                "$ref": "ComputedStyle"
-              }
-            }
-          ],
-          "description": "For the main document and any content documents, return the LayoutTreeNodes and a whitelisted subset of the computed style. It only returns pushed nodes, on way to pull all nodes is to call DOM.getDocument with a depth of -1.",
-          "experimental": true
-        },
-        {
           "name": "startRuleUsageTracking",
           "description": "Enables the selector recording.",
           "experimental": true
@@ -7402,6 +7404,244 @@
             }
           ],
           "description": "Fired whenever an active document stylesheet is removed."
+        }
+      ]
+    },
+    {
+      "domain": "DOMSnapshot",
+      "experimental": true,
+      "description": "This domain facilitates obtaining document snapshots with DOM, layout, and style information.",
+      "dependencies": [
+        "CSS",
+        "DOM",
+        "Page"
+      ],
+      "types": [
+        {
+          "id": "DOMNode",
+          "type": "object",
+          "properties": [
+            {
+              "name": "nodeType",
+              "type": "integer",
+              "description": "<code>Node</code>'s nodeType."
+            },
+            {
+              "name": "nodeName",
+              "type": "string",
+              "description": "<code>Node</code>'s nodeName."
+            },
+            {
+              "name": "nodeValue",
+              "type": "string",
+              "description": "<code>Node</code>'s nodeValue."
+            },
+            {
+              "name": "backendNodeId",
+              "$ref": "DOM.BackendNodeId",
+              "description": "<code>Node</code>'s id, corresponds to DOM.Node.backendNodeId."
+            },
+            {
+              "name": "childNodeIndexes",
+              "type": "array",
+              "items": {
+                "type": "integer"
+              },
+              "optional": true,
+              "description": "The indexes of the node's child nodes in the <code>domNodes</code> array returned by <code>getSnapshot</code>, if any."
+            },
+            {
+              "name": "attributes",
+              "type": "array",
+              "items": {
+                "$ref": "NameValue"
+              },
+              "optional": true,
+              "description": "Attributes of an <code>Element</code> node."
+            },
+            {
+              "name": "pseudoElementIndexes",
+              "type": "array",
+              "items": {
+                "type": "integer"
+              },
+              "optional": true,
+              "description": "Indexes of pseudo elements associated with this node in the <code>domNodes</code> array returned by <code>getSnapshot</code>, if any."
+            },
+            {
+              "name": "layoutNodeIndex",
+              "type": "integer",
+              "optional": true,
+              "description": "The index of the node's related layout tree node in the <code>layoutTreeNodes</code> array returned by <code>getSnapshot</code>, if any."
+            },
+            {
+              "name": "documentURL",
+              "type": "string",
+              "optional": true,
+              "description": "Document URL that <code>Document</code> or <code>FrameOwner</code> node points to."
+            },
+            {
+              "name": "baseURL",
+              "type": "string",
+              "optional": true,
+              "description": "Base URL that <code>Document</code> or <code>FrameOwner</code> node uses for URL completion."
+            },
+            {
+              "name": "publicId",
+              "type": "string",
+              "optional": true,
+              "description": "<code>DocumentType</code> node's publicId."
+            },
+            {
+              "name": "systemId",
+              "type": "string",
+              "optional": true,
+              "description": "<code>DocumentType</code> node's systemId."
+            },
+            {
+              "name": "frameId",
+              "$ref": "Page.FrameId",
+              "optional": true,
+              "description": "Frame ID for frame owner elements."
+            },
+            {
+              "name": "contentDocumentIndex",
+              "type": "integer",
+              "optional": true,
+              "description": "The index of a frame owner element's content document in the <code>domNodes</code> array returned by <code>getSnapshot</code>, if any."
+            },
+            {
+              "name": "importedDocumentIndex",
+              "type": "integer",
+              "optional": true,
+              "description": "Index of the imported document's node of a link element in the <code>domNodes</code> array returned by <code>getSnapshot</code>, if any."
+            },
+            {
+              "name": "templateContentIndex",
+              "type": "integer",
+              "optional": true,
+              "description": "Index of the content node of a template element in the <code>domNodes</code> array returned by <code>getSnapshot</code>."
+            },
+            {
+              "name": "pseudoType",
+              "$ref": "DOM.PseudoType",
+              "optional": true,
+              "description": "Type of a pseudo element node."
+            }
+          ],
+          "description": "A Node in the DOM tree."
+        },
+        {
+          "id": "LayoutTreeNode",
+          "type": "object",
+          "properties": [
+            {
+              "name": "domNodeIndex",
+              "type": "integer",
+              "description": "The index of the related DOM node in the <code>domNodes</code> array returned by <code>getSnapshot</code>."
+            },
+            {
+              "name": "boundingBox",
+              "$ref": "DOM.Rect",
+              "description": "The absolute position bounding box."
+            },
+            {
+              "name": "layoutText",
+              "type": "string",
+              "optional": true,
+              "description": "Contents of the LayoutText, if any."
+            },
+            {
+              "name": "inlineTextNodes",
+              "type": "array",
+              "optional": true,
+              "items": {
+                "$ref": "CSS.InlineTextBox"
+              },
+              "description": "The post-layout inline text nodes, if any."
+            },
+            {
+              "name": "styleIndex",
+              "type": "integer",
+              "optional": true,
+              "description": "Index into the <code>computedStyles</code> array returned by <code>getSnapshot</code>."
+            }
+          ],
+          "description": "Details of an element in the DOM tree with a LayoutObject."
+        },
+        {
+          "id": "ComputedStyle",
+          "type": "object",
+          "properties": [
+            {
+              "name": "properties",
+              "type": "array",
+              "items": {
+                "$ref": "NameValue"
+              },
+              "description": "Name/value pairs of computed style properties."
+            }
+          ],
+          "description": "A subset of the full ComputedStyle as defined by the request whitelist."
+        },
+        {
+          "id": "NameValue",
+          "type": "object",
+          "properties": [
+            {
+              "name": "name",
+              "type": "string",
+              "description": "Attribute/property name."
+            },
+            {
+              "name": "value",
+              "type": "string",
+              "description": "Attribute/property value."
+            }
+          ],
+          "description": "A name/value pair."
+        }
+      ],
+      "commands": [
+        {
+          "name": "getSnapshot",
+          "parameters": [
+            {
+              "name": "computedStyleWhitelist",
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Whitelist of computed styles to return."
+            }
+          ],
+          "returns": [
+            {
+              "name": "domNodes",
+              "type": "array",
+              "items": {
+                "$ref": "DOMNode"
+              },
+              "description": "The nodes in the DOM tree. The DOMNode at index 0 corresponds to the root document."
+            },
+            {
+              "name": "layoutTreeNodes",
+              "type": "array",
+              "items": {
+                "$ref": "LayoutTreeNode"
+              },
+              "description": "The nodes in the layout tree."
+            },
+            {
+              "name": "computedStyles",
+              "type": "array",
+              "items": {
+                "$ref": "ComputedStyle"
+              },
+              "description": "Whitelisted ComputedStyle properties for each node in the layout tree."
+            }
+          ],
+          "description": "Returns a document snapshot, including the full DOM tree of the root node (including iframes, template contents, and imported documents) in a flattened array, as well as layout and white-listed computed style information for the nodes. Shadow DOM in the returned DOM tree is flattened. "
         }
       ]
     },
@@ -10171,6 +10411,29 @@
             }
           ],
           "description": "Clears storage for origin."
+        },
+        {
+          "name": "getUsageAndQuota",
+          "parameters": [
+            {
+              "name": "origin",
+              "type": "string",
+              "description": "Security origin."
+            }
+          ],
+          "returns": [
+            {
+              "name": "usage",
+              "type": "number",
+              "description": "Storage usage (bytes)."
+            },
+            {
+              "name": "quota",
+              "type": "number",
+              "description": "Storage quota (bytes)."
+            }
+          ],
+          "description": "Returns usage and quota in bytes."
         }
       ]
     },
@@ -11698,6 +11961,13 @@
               "$ref": "StackTrace",
               "optional": true,
               "description": "Stack trace captured when the call was made."
+            },
+            {
+              "name": "context",
+              "type": "string",
+              "optional": true,
+              "experimental": true,
+              "description": "Console context descriptor for calls on non-default console context (not console.*): 'anonymous#unique-logger-id' for call on unnamed context, 'name#unique-logger-id' for call on named context."
             }
           ]
         },

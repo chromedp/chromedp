@@ -4183,7 +4183,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork38(in *jlexer.Lexer, ou
 			continue
 		}
 		switch key {
-		case "InterceptionId":
+		case "interceptionId":
 			out.InterceptionID = InterceptionID(in.String())
 		case "request":
 			if in.IsNull() {
@@ -4195,6 +4195,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork38(in *jlexer.Lexer, ou
 				}
 				(*out.Request).UnmarshalEasyJSON(in)
 			}
+		case "resourceType":
+			(out.ResourceType).UnmarshalEasyJSON(in)
 		case "redirectHeaders":
 			if in.IsNull() {
 				in.Skip()
@@ -4209,6 +4211,16 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork38(in *jlexer.Lexer, ou
 			out.RedirectStatusCode = int64(in.Int64())
 		case "redirectUrl":
 			out.RedirectURL = string(in.String())
+		case "authChallenge":
+			if in.IsNull() {
+				in.Skip()
+				out.AuthChallenge = nil
+			} else {
+				if out.AuthChallenge == nil {
+					out.AuthChallenge = new(AuthChallenge)
+				}
+				(*out.AuthChallenge).UnmarshalEasyJSON(in)
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -4228,7 +4240,7 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork38(out *jwriter.Writer,
 			out.RawByte(',')
 		}
 		first = false
-		out.RawString("\"InterceptionId\":")
+		out.RawString("\"interceptionId\":")
 		out.String(string(in.InterceptionID))
 	}
 	if in.Request != nil {
@@ -4242,6 +4254,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork38(out *jwriter.Writer,
 		} else {
 			(*in.Request).MarshalEasyJSON(out)
 		}
+	}
+	if in.ResourceType != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"resourceType\":")
+		(in.ResourceType).MarshalEasyJSON(out)
 	}
 	if in.RedirectHeaders != nil {
 		if !first {
@@ -4270,6 +4290,18 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork38(out *jwriter.Writer,
 		first = false
 		out.RawString("\"redirectUrl\":")
 		out.String(string(in.RedirectURL))
+	}
+	if in.AuthChallenge != nil {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"authChallenge\":")
+		if in.AuthChallenge == nil {
+			out.RawString("null")
+		} else {
+			(*in.AuthChallenge).MarshalEasyJSON(out)
+		}
 	}
 	out.RawByte('}')
 }
@@ -5294,6 +5326,16 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork49(in *jlexer.Lexer, ou
 				}
 				(*out.Headers).UnmarshalEasyJSON(in)
 			}
+		case "authChallengeResponse":
+			if in.IsNull() {
+				in.Skip()
+				out.AuthChallengeResponse = nil
+			} else {
+				if out.AuthChallengeResponse == nil {
+					out.AuthChallengeResponse = new(AuthChallengeResponse)
+				}
+				(*out.AuthChallengeResponse).UnmarshalEasyJSON(in)
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -5364,6 +5406,18 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork49(out *jwriter.Writer,
 			out.RawString("null")
 		} else {
 			(*in.Headers).MarshalEasyJSON(out)
+		}
+	}
+	if in.AuthChallengeResponse != nil {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"authChallengeResponse\":")
+		if in.AuthChallengeResponse == nil {
+			out.RawString("null")
+		} else {
+			(*in.AuthChallengeResponse).MarshalEasyJSON(out)
 		}
 	}
 	out.RawByte('}')
@@ -6004,4 +6058,192 @@ func (v *CachedResource) UnmarshalJSON(data []byte) error {
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *CachedResource) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork58(l, v)
+}
+func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork59(in *jlexer.Lexer, out *AuthChallengeResponse) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeString()
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "response":
+			(out.Response).UnmarshalEasyJSON(in)
+		case "username":
+			out.Username = string(in.String())
+		case "password":
+			out.Password = string(in.String())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork59(out *jwriter.Writer, in AuthChallengeResponse) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	if in.Response != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"response\":")
+		(in.Response).MarshalEasyJSON(out)
+	}
+	if in.Username != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"username\":")
+		out.String(string(in.Username))
+	}
+	if in.Password != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"password\":")
+		out.String(string(in.Password))
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v AuthChallengeResponse) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork59(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v AuthChallengeResponse) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork59(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *AuthChallengeResponse) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork59(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *AuthChallengeResponse) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork59(l, v)
+}
+func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork60(in *jlexer.Lexer, out *AuthChallenge) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeString()
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "source":
+			(out.Source).UnmarshalEasyJSON(in)
+		case "origin":
+			out.Origin = string(in.String())
+		case "scheme":
+			out.Scheme = string(in.String())
+		case "realm":
+			out.Realm = string(in.String())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork60(out *jwriter.Writer, in AuthChallenge) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	if in.Source != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"source\":")
+		(in.Source).MarshalEasyJSON(out)
+	}
+	if in.Origin != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"origin\":")
+		out.String(string(in.Origin))
+	}
+	if in.Scheme != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"scheme\":")
+		out.String(string(in.Scheme))
+	}
+	if in.Realm != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"realm\":")
+		out.String(string(in.Realm))
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v AuthChallenge) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork60(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v AuthChallenge) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork60(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *AuthChallenge) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork60(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *AuthChallenge) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork60(l, v)
 }

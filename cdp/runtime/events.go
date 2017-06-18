@@ -40,6 +40,7 @@ type EventConsoleAPICalled struct {
 	ExecutionContextID ExecutionContextID `json:"executionContextId,omitempty"` // Identifier of the context where the call was made.
 	Timestamp          cdp.Timestamp      `json:"timestamp,omitempty"`          // Call timestamp.
 	StackTrace         *StackTrace        `json:"stackTrace,omitempty"`         // Stack trace captured when the call was made.
+	Context            string             `json:"context,omitempty"`            // Console context descriptor for calls on non-default console context (not console.*): 'anonymous#unique-logger-id' for call on unnamed context, 'name#unique-logger-id' for call on named context.
 }
 
 // EventInspectRequested issued when object should be inspected (for example,

@@ -452,6 +452,21 @@ type Cookie struct {
 	SameSite CookieSameSite `json:"sameSite,omitempty"` // Cookie SameSite type.
 }
 
+// AuthChallenge authorization challenge for HTTP status code 401 or 407.
+type AuthChallenge struct {
+	Source AuthChallengeSource `json:"source,omitempty"` // Source of the authentication challenge.
+	Origin string              `json:"origin,omitempty"` // Origin of the challenger.
+	Scheme string              `json:"scheme,omitempty"` // The authentication scheme used, such as basic or digest
+	Realm  string              `json:"realm,omitempty"`  // The realm of the challenge. May be empty.
+}
+
+// AuthChallengeResponse response to an AuthChallenge.
+type AuthChallengeResponse struct {
+	Response AuthChallengeResponseResponse `json:"response,omitempty"` // The decision on what to do in response to the authorization challenge.  Default means deferring to the default behavior of the net stack, which will likely either the Cancel authentication or display a popup dialog box.
+	Username string                        `json:"username,omitempty"` // The username to provide, possibly empty. Should only be set if response is ProvideCredentials.
+	Password string                        `json:"password,omitempty"` // The password to provide, possibly empty. Should only be set if response is ProvideCredentials.
+}
+
 // MixedContentType the mixed content status of the request, as defined in
 // http://www.w3.org/TR/mixed-content/.
 type MixedContentType string
@@ -509,12 +524,14 @@ func (t ReferrerPolicy) String() string {
 
 // ReferrerPolicy values.
 const (
-	ReferrerPolicyUnsafeURL                                    ReferrerPolicy = "unsafe-url"
-	ReferrerPolicyNoReferrerWhenDowngrade                      ReferrerPolicy = "no-referrer-when-downgrade"
-	ReferrerPolicyNoReferrer                                   ReferrerPolicy = "no-referrer"
-	ReferrerPolicyOrigin                                       ReferrerPolicy = "origin"
-	ReferrerPolicyOriginWhenCrossOrigin                        ReferrerPolicy = "origin-when-cross-origin"
-	ReferrerPolicyNoReferrerWhenDowngradeOriginWhenCrossOrigin ReferrerPolicy = "no-referrer-when-downgrade-origin-when-cross-origin"
+	ReferrerPolicyUnsafeURL                   ReferrerPolicy = "unsafe-url"
+	ReferrerPolicyNoReferrerWhenDowngrade     ReferrerPolicy = "no-referrer-when-downgrade"
+	ReferrerPolicyNoReferrer                  ReferrerPolicy = "no-referrer"
+	ReferrerPolicyOrigin                      ReferrerPolicy = "origin"
+	ReferrerPolicyOriginWhenCrossOrigin       ReferrerPolicy = "origin-when-cross-origin"
+	ReferrerPolicySameOrigin                  ReferrerPolicy = "same-origin"
+	ReferrerPolicyStrictOrigin                ReferrerPolicy = "strict-origin"
+	ReferrerPolicyStrictOriginWhenCrossOrigin ReferrerPolicy = "strict-origin-when-cross-origin"
 )
 
 // MarshalEasyJSON satisfies easyjson.Marshaler.
@@ -540,8 +557,12 @@ func (t *ReferrerPolicy) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = ReferrerPolicyOrigin
 	case ReferrerPolicyOriginWhenCrossOrigin:
 		*t = ReferrerPolicyOriginWhenCrossOrigin
-	case ReferrerPolicyNoReferrerWhenDowngradeOriginWhenCrossOrigin:
-		*t = ReferrerPolicyNoReferrerWhenDowngradeOriginWhenCrossOrigin
+	case ReferrerPolicySameOrigin:
+		*t = ReferrerPolicySameOrigin
+	case ReferrerPolicyStrictOrigin:
+		*t = ReferrerPolicyStrictOrigin
+	case ReferrerPolicyStrictOriginWhenCrossOrigin:
+		*t = ReferrerPolicyStrictOriginWhenCrossOrigin
 
 	default:
 		in.AddError(errors.New("unknown ReferrerPolicy value"))
@@ -598,5 +619,95 @@ func (t *InitiatorType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 
 // UnmarshalJSON satisfies json.Unmarshaler.
 func (t *InitiatorType) UnmarshalJSON(buf []byte) error {
+	return easyjson.Unmarshal(buf, t)
+}
+
+// AuthChallengeSource source of the authentication challenge.
+type AuthChallengeSource string
+
+// String returns the AuthChallengeSource as string value.
+func (t AuthChallengeSource) String() string {
+	return string(t)
+}
+
+// AuthChallengeSource values.
+const (
+	AuthChallengeSourceServer AuthChallengeSource = "Server"
+	AuthChallengeSourceProxy  AuthChallengeSource = "Proxy"
+)
+
+// MarshalEasyJSON satisfies easyjson.Marshaler.
+func (t AuthChallengeSource) MarshalEasyJSON(out *jwriter.Writer) {
+	out.String(string(t))
+}
+
+// MarshalJSON satisfies json.Marshaler.
+func (t AuthChallengeSource) MarshalJSON() ([]byte, error) {
+	return easyjson.Marshal(t)
+}
+
+// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
+func (t *AuthChallengeSource) UnmarshalEasyJSON(in *jlexer.Lexer) {
+	switch AuthChallengeSource(in.String()) {
+	case AuthChallengeSourceServer:
+		*t = AuthChallengeSourceServer
+	case AuthChallengeSourceProxy:
+		*t = AuthChallengeSourceProxy
+
+	default:
+		in.AddError(errors.New("unknown AuthChallengeSource value"))
+	}
+}
+
+// UnmarshalJSON satisfies json.Unmarshaler.
+func (t *AuthChallengeSource) UnmarshalJSON(buf []byte) error {
+	return easyjson.Unmarshal(buf, t)
+}
+
+// AuthChallengeResponseResponse the decision on what to do in response to
+// the authorization challenge. Default means deferring to the default behavior
+// of the net stack, which will likely either the Cancel authentication or
+// display a popup dialog box.
+type AuthChallengeResponseResponse string
+
+// String returns the AuthChallengeResponseResponse as string value.
+func (t AuthChallengeResponseResponse) String() string {
+	return string(t)
+}
+
+// AuthChallengeResponseResponse values.
+const (
+	AuthChallengeResponseResponseDefault            AuthChallengeResponseResponse = "Default"
+	AuthChallengeResponseResponseCancelAuth         AuthChallengeResponseResponse = "CancelAuth"
+	AuthChallengeResponseResponseProvideCredentials AuthChallengeResponseResponse = "ProvideCredentials"
+)
+
+// MarshalEasyJSON satisfies easyjson.Marshaler.
+func (t AuthChallengeResponseResponse) MarshalEasyJSON(out *jwriter.Writer) {
+	out.String(string(t))
+}
+
+// MarshalJSON satisfies json.Marshaler.
+func (t AuthChallengeResponseResponse) MarshalJSON() ([]byte, error) {
+	return easyjson.Marshal(t)
+}
+
+// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
+func (t *AuthChallengeResponseResponse) UnmarshalEasyJSON(in *jlexer.Lexer) {
+	switch AuthChallengeResponseResponse(in.String()) {
+	case AuthChallengeResponseResponseDefault:
+		*t = AuthChallengeResponseResponseDefault
+	case AuthChallengeResponseResponseCancelAuth:
+		*t = AuthChallengeResponseResponseCancelAuth
+	case AuthChallengeResponseResponseProvideCredentials:
+		*t = AuthChallengeResponseResponseProvideCredentials
+
+	default:
+		in.AddError(errors.New("unknown AuthChallengeResponseResponse value"))
+	}
+}
+
+// UnmarshalJSON satisfies json.Unmarshaler.
+func (t *AuthChallengeResponseResponse) UnmarshalJSON(buf []byte) error {
 	return easyjson.Unmarshal(buf, t)
 }
