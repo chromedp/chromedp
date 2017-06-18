@@ -276,7 +276,11 @@ func (t *Type) GoTypeDef(d *Domain, domains []*Domain, extra []*Type, noExposeOv
 		return "[]" + o.GoTypeDef(d, domains, nil, false, false)
 
 	case TypeObject:
-		return structDef(append(extra, t.Properties...), d, domains, noExposeOverride, omitOnlyWhenOptional)
+		if t.Properties != nil {
+			return structDef(append(extra, t.Properties...), d, domains, noExposeOverride, omitOnlyWhenOptional)
+		} else {
+			return "map[string]interface{}"
+		}
 	}
 
 	return t.Type.GoType()
