@@ -6,6 +6,7 @@ package main
 
 //go:generate go run domain-gen.go
 //go:generate qtc -dir templates -ext qtpl
+//go:generate gofmt -w -s templates/
 
 import (
 	"bytes"
