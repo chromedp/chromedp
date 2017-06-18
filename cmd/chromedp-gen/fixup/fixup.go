@@ -24,6 +24,7 @@
 //  - rename 'Input.GestureSourceType' -> 'Input.GestureType'.
 //  - rename CSS.CSS* types.
 //  - add Error() method to 'Runtime.ExceptionDetails' type so that it can be used as error.
+//  - change 'Network.Headers' type to map[string]interface{}.
 //
 // Please note that the above is not an exhaustive list of all modifications
 // applied to the domains, however it does attempt to give a comprehensive
@@ -332,6 +333,12 @@ func FixDomains(domains []*internal.Domain) {
 				if t.ID == "Timestamp" {
 					t.Type = internal.TypeTimestamp
 					t.Extra += templates.ExtraTimestampTemplate(t, d)
+				}
+
+				// change Headers to be a map[string]interface{}
+				if t.ID == "Headers" {
+					t.Type = internal.TypeAny
+					t.Ref = "map[string]interface{}"
 				}
 			}
 

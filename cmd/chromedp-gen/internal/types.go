@@ -266,17 +266,19 @@ func (t *Type) EnumValueName(v string) string {
 
 // GoTypeDef returns the Go type definition for the type.
 func (t *Type) GoTypeDef(d *Domain, domains []*Domain, extra []*Type, noExposeOverride, omitOnlyWhenOptional bool) string {
-	if t.Parameters != nil {
+	switch {
+	case t.Parameters != nil:
 		return structDef(append(extra, t.Parameters...), d, domains, noExposeOverride, omitOnlyWhenOptional)
-	}
 
-	switch t.Type {
-	case TypeArray:
+	case t.Type == TypeArray:
 		_, o, _ := t.Items.ResolveType(d, domains)
 		return "[]" + o.GoTypeDef(d, domains, nil, false, false)
 
-	case TypeObject:
+	case t.Type == TypeObject:
 		return structDef(append(extra, t.Properties...), d, domains, noExposeOverride, omitOnlyWhenOptional)
+
+	case t.Type == TypeAny && t.Ref != "":
+		return t.Ref
 	}
 
 	return t.Type.GoType()

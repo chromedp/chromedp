@@ -93,7 +93,7 @@ func (p *SetUserAgentOverrideParams) Do(ctxt context.Context, h cdp.Handler) (er
 // SetExtraHTTPHeadersParams specifies whether to always send extra HTTP
 // headers with the requests from this page.
 type SetExtraHTTPHeadersParams struct {
-	Headers *Headers `json:"headers"` // Map with extra HTTP headers.
+	Headers Headers `json:"headers"` // Map with extra HTTP headers.
 }
 
 // SetExtraHTTPHeaders specifies whether to always send extra HTTP headers
@@ -101,7 +101,7 @@ type SetExtraHTTPHeadersParams struct {
 //
 // parameters:
 //   headers - Map with extra HTTP headers.
-func SetExtraHTTPHeaders(headers *Headers) *SetExtraHTTPHeadersParams {
+func SetExtraHTTPHeaders(headers Headers) *SetExtraHTTPHeadersParams {
 	return &SetExtraHTTPHeadersParams{
 		Headers: headers,
 	}
@@ -689,7 +689,7 @@ type ContinueInterceptedRequestParams struct {
 	URL                   string                 `json:"url,omitempty"`                   // If set the request url will be modified in a way that's not observable by page. Must not be set in response to an authChallenge.
 	Method                string                 `json:"method,omitempty"`                // If set this allows the request method to be overridden. Must not be set in response to an authChallenge.
 	PostData              string                 `json:"postData,omitempty"`              // If set this allows postData to be set. Must not be set in response to an authChallenge.
-	Headers               *Headers               `json:"headers,omitempty"`               // If set this allows the request headers to be changed. Must not be set in response to an authChallenge.
+	Headers               Headers                `json:"headers,omitempty"`               // If set this allows the request headers to be changed. Must not be set in response to an authChallenge.
 	AuthChallengeResponse *AuthChallengeResponse `json:"authChallengeResponse,omitempty"` // Response to a requestIntercepted with an authChallenge. Must not be set otherwise.
 }
 
@@ -745,7 +745,7 @@ func (p ContinueInterceptedRequestParams) WithPostData(postData string) *Continu
 
 // WithHeaders if set this allows the request headers to be changed. Must not
 // be set in response to an authChallenge.
-func (p ContinueInterceptedRequestParams) WithHeaders(headers *Headers) *ContinueInterceptedRequestParams {
+func (p ContinueInterceptedRequestParams) WithHeaders(headers Headers) *ContinueInterceptedRequestParams {
 	p.Headers = headers
 	return &p
 }

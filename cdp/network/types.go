@@ -103,7 +103,7 @@ func (t *ErrorReason) UnmarshalJSON(buf []byte) error {
 }
 
 // Headers request / response headers as keys / values of JSON object.
-type Headers struct{}
+type Headers map[string]interface{}
 
 // ConnectionType loading priority of a resource request.
 type ConnectionType string
@@ -286,7 +286,7 @@ func (t *ResourcePriority) UnmarshalJSON(buf []byte) error {
 type Request struct {
 	URL              string           `json:"url,omitempty"`              // Request URL.
 	Method           string           `json:"method,omitempty"`           // HTTP request method.
-	Headers          *Headers         `json:"headers,omitempty"`          // HTTP request headers.
+	Headers          Headers          `json:"headers,omitempty"`          // HTTP request headers.
 	PostData         string           `json:"postData,omitempty"`         // HTTP POST request data.
 	MixedContentType MixedContentType `json:"mixedContentType,omitempty"` // The mixed content status of the request, as defined in http://www.w3.org/TR/mixed-content/
 	InitialPriority  ResourcePriority `json:"initialPriority,omitempty"`  // Priority of the resource request at the time request is sent.
@@ -382,10 +382,10 @@ type Response struct {
 	URL                string           `json:"url,omitempty"`                // Response URL. This URL can be different from CachedResource.url in case of redirect.
 	Status             float64          `json:"status,omitempty"`             // HTTP response status code.
 	StatusText         string           `json:"statusText,omitempty"`         // HTTP response status text.
-	Headers            *Headers         `json:"headers,omitempty"`            // HTTP response headers.
+	Headers            Headers          `json:"headers,omitempty"`            // HTTP response headers.
 	HeadersText        string           `json:"headersText,omitempty"`        // HTTP response headers text.
 	MimeType           string           `json:"mimeType,omitempty"`           // Resource mimeType as determined by the browser.
-	RequestHeaders     *Headers         `json:"requestHeaders,omitempty"`     // Refined HTTP request headers that were actually transmitted over the network.
+	RequestHeaders     Headers          `json:"requestHeaders,omitempty"`     // Refined HTTP request headers that were actually transmitted over the network.
 	RequestHeadersText string           `json:"requestHeadersText,omitempty"` // HTTP request headers text.
 	ConnectionReused   bool             `json:"connectionReused,omitempty"`   // Specifies whether physical connection was actually reused for this request.
 	ConnectionID       float64          `json:"connectionId,omitempty"`       // Physical connection id that was actually used for this request.
@@ -402,17 +402,17 @@ type Response struct {
 
 // WebSocketRequest webSocket request data.
 type WebSocketRequest struct {
-	Headers *Headers `json:"headers,omitempty"` // HTTP request headers.
+	Headers Headers `json:"headers,omitempty"` // HTTP request headers.
 }
 
 // WebSocketResponse webSocket response data.
 type WebSocketResponse struct {
-	Status             float64  `json:"status,omitempty"`             // HTTP response status code.
-	StatusText         string   `json:"statusText,omitempty"`         // HTTP response status text.
-	Headers            *Headers `json:"headers,omitempty"`            // HTTP response headers.
-	HeadersText        string   `json:"headersText,omitempty"`        // HTTP response headers text.
-	RequestHeaders     *Headers `json:"requestHeaders,omitempty"`     // HTTP request headers.
-	RequestHeadersText string   `json:"requestHeadersText,omitempty"` // HTTP request headers text.
+	Status             float64 `json:"status,omitempty"`             // HTTP response status code.
+	StatusText         string  `json:"statusText,omitempty"`         // HTTP response status text.
+	Headers            Headers `json:"headers,omitempty"`            // HTTP response headers.
+	HeadersText        string  `json:"headersText,omitempty"`        // HTTP response headers text.
+	RequestHeaders     Headers `json:"requestHeaders,omitempty"`     // HTTP request headers.
+	RequestHeadersText string  `json:"requestHeadersText,omitempty"` // HTTP request headers text.
 }
 
 // WebSocketFrame webSocket frame data.
