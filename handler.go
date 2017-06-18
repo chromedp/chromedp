@@ -395,10 +395,6 @@ func (h *TargetHandler) next() int64 {
 
 // GetRoot returns the current top level frame's root document node.
 func (h *TargetHandler) GetRoot(ctxt context.Context) (*cdp.Node, error) {
-	// TODO: fix this
-	ctxt, cancel := context.WithTimeout(ctxt, 10*time.Second)
-	defer cancel()
-
 	var root *cdp.Node
 
 loop:
