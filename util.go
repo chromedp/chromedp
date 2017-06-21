@@ -46,6 +46,10 @@ const (
 		return [window.scrollX, window.scrollY];
 	})(%d, %d)`
 
+	getWindowDevicePixelRatioJS = `(function(x, y) {
+		return window.devicePixelRatio;
+	})()`
+
 	// scrollIntoViewJS is a javascript snippet that scrolls the specified node
 	// into the window's viewport (if needed), returning the actual window x/y
 	// after execution.
