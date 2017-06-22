@@ -83,7 +83,13 @@ func (s *Selector) run(ctxt context.Context, h cdp.Handler) chan error {
 		for {
 			root, err := h.GetRoot(ctxt)
 			if err != nil {
-				continue
+				select {
+				case <-ctxt.Done():
+					ch <- ctxt.Err()
+					return
+				default:
+					continue
+				}
 			}
 
 			select {
