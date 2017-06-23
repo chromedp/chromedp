@@ -10390,9 +10390,27 @@
             "websql",
             "service_workers",
             "cache_storage",
-            "all"
+            "all",
+            "other"
           ],
           "description": "Enum of possible storage types."
+        },
+        {
+          "id": "UsageForType",
+          "type": "object",
+          "description": "Usage for a storage type.",
+          "properties": [
+            {
+              "name": "storageType",
+              "$ref": "StorageType",
+              "description": "Name of storage type."
+            },
+            {
+              "name": "usage",
+              "type": "number",
+              "description": "Storage usage (bytes)."
+            }
+          ]
         }
       ],
       "commands": [
@@ -10431,6 +10449,14 @@
               "name": "quota",
               "type": "number",
               "description": "Storage quota (bytes)."
+            },
+            {
+              "name": "usageBreakdown",
+              "type": "array",
+              "items": {
+                "$ref": "UsageForType"
+              },
+              "description": "Storage usage per type (bytes)."
             }
           ],
           "description": "Returns usage and quota in bytes."

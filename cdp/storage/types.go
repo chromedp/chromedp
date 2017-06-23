@@ -30,6 +30,7 @@ const (
 	TypeServiceWorkers Type = "service_workers"
 	TypeCacheStorage   Type = "cache_storage"
 	TypeAll            Type = "all"
+	TypeOther          Type = "other"
 )
 
 // MarshalEasyJSON satisfies easyjson.Marshaler.
@@ -65,6 +66,8 @@ func (t *Type) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = TypeCacheStorage
 	case TypeAll:
 		*t = TypeAll
+	case TypeOther:
+		*t = TypeOther
 
 	default:
 		in.AddError(errors.New("unknown Type value"))
@@ -74,4 +77,10 @@ func (t *Type) UnmarshalEasyJSON(in *jlexer.Lexer) {
 // UnmarshalJSON satisfies json.Unmarshaler.
 func (t *Type) UnmarshalJSON(buf []byte) error {
 	return easyjson.Unmarshal(buf, t)
+}
+
+// UsageForType usage for a storage type.
+type UsageForType struct {
+	StorageType Type    `json:"storageType,omitempty"` // Name of storage type.
+	Usage       float64 `json:"usage,omitempty"`       // Storage usage (bytes).
 }

@@ -53,8 +53,9 @@ func GetUsageAndQuota(origin string) *GetUsageAndQuotaParams {
 
 // GetUsageAndQuotaReturns return values.
 type GetUsageAndQuotaReturns struct {
-	Usage float64 `json:"usage,omitempty"` // Storage usage (bytes).
-	Quota float64 `json:"quota,omitempty"` // Storage quota (bytes).
+	Usage          float64         `json:"usage,omitempty"`          // Storage usage (bytes).
+	Quota          float64         `json:"quota,omitempty"`          // Storage quota (bytes).
+	UsageBreakdown []*UsageForType `json:"usageBreakdown,omitempty"` // Storage usage per type (bytes).
 }
 
 // Do executes Storage.getUsageAndQuota against the provided context and
@@ -63,13 +64,14 @@ type GetUsageAndQuotaReturns struct {
 // returns:
 //   usage - Storage usage (bytes).
 //   quota - Storage quota (bytes).
-func (p *GetUsageAndQuotaParams) Do(ctxt context.Context, h cdp.Handler) (usage float64, quota float64, err error) {
+//   usageBreakdown - Storage usage per type (bytes).
+func (p *GetUsageAndQuotaParams) Do(ctxt context.Context, h cdp.Handler) (usage float64, quota float64, usageBreakdown []*UsageForType, err error) {
 	// execute
 	var res GetUsageAndQuotaReturns
 	err = h.Execute(ctxt, cdp.CommandStorageGetUsageAndQuota, p, &res)
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, nil, err
 	}
 
-	return res.Usage, res.Quota, nil
+	return res.Usage, res.Quota, res.UsageBreakdown, nil
 }
