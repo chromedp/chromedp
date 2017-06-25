@@ -60,7 +60,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork(in *jlexer.Lexer, out 
 					if m, ok := v1.(easyjson.Unmarshaler); ok {
 						m.UnmarshalEasyJSON(in)
 					} else if m, ok := v1.(json.Unmarshaler); ok {
-						m.UnmarshalJSON(in.Raw())
+						_ = m.UnmarshalJSON(in.Raw())
 					} else {
 						v1 = in.Interface()
 					}
@@ -88,7 +88,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork(in *jlexer.Lexer, out 
 					if m, ok := v2.(easyjson.Unmarshaler); ok {
 						m.UnmarshalEasyJSON(in)
 					} else if m, ok := v2.(json.Unmarshaler); ok {
-						m.UnmarshalJSON(in.Raw())
+						_ = m.UnmarshalJSON(in.Raw())
 					} else {
 						v2 = in.Interface()
 					}
@@ -265,7 +265,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork1(in *jlexer.Lexer, out
 					if m, ok := v5.(easyjson.Unmarshaler); ok {
 						m.UnmarshalEasyJSON(in)
 					} else if m, ok := v5.(json.Unmarshaler); ok {
-						m.UnmarshalJSON(in.Raw())
+						_ = m.UnmarshalJSON(in.Raw())
 					} else {
 						v5 = in.Interface()
 					}
@@ -674,7 +674,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork5(in *jlexer.Lexer, out
 					if m, ok := v7.(easyjson.Unmarshaler); ok {
 						m.UnmarshalEasyJSON(in)
 					} else if m, ok := v7.(json.Unmarshaler); ok {
-						m.UnmarshalJSON(in.Raw())
+						_ = m.UnmarshalJSON(in.Raw())
 					} else {
 						v7 = in.Interface()
 					}
@@ -1567,7 +1567,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork13(in *jlexer.Lexer, ou
 					if m, ok := v18.(easyjson.Unmarshaler); ok {
 						m.UnmarshalEasyJSON(in)
 					} else if m, ok := v18.(json.Unmarshaler); ok {
-						m.UnmarshalJSON(in.Raw())
+						_ = m.UnmarshalJSON(in.Raw())
 					} else {
 						v18 = in.Interface()
 					}
@@ -1597,7 +1597,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork13(in *jlexer.Lexer, ou
 					if m, ok := v19.(easyjson.Unmarshaler); ok {
 						m.UnmarshalEasyJSON(in)
 					} else if m, ok := v19.(json.Unmarshaler); ok {
-						m.UnmarshalJSON(in.Raw())
+						_ = m.UnmarshalJSON(in.Raw())
 					} else {
 						v19 = in.Interface()
 					}
@@ -2147,7 +2147,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork15(in *jlexer.Lexer, ou
 					if m, ok := v22.(easyjson.Unmarshaler); ok {
 						m.UnmarshalEasyJSON(in)
 					} else if m, ok := v22.(json.Unmarshaler); ok {
-						m.UnmarshalJSON(in.Raw())
+						_ = m.UnmarshalJSON(in.Raw())
 					} else {
 						v22 = in.Interface()
 					}
@@ -4386,7 +4386,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork37(in *jlexer.Lexer, ou
 					if m, ok := v36.(easyjson.Unmarshaler); ok {
 						m.UnmarshalEasyJSON(in)
 					} else if m, ok := v36.(json.Unmarshaler); ok {
-						m.UnmarshalJSON(in.Raw())
+						_ = m.UnmarshalJSON(in.Raw())
 					} else {
 						v36 = in.Interface()
 					}
@@ -5538,7 +5538,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork48(in *jlexer.Lexer, ou
 					if m, ok := v38.(easyjson.Unmarshaler); ok {
 						m.UnmarshalEasyJSON(in)
 					} else if m, ok := v38.(json.Unmarshaler); ok {
-						m.UnmarshalJSON(in.Raw())
+						_ = m.UnmarshalJSON(in.Raw())
 					} else {
 						v38 = in.Interface()
 					}

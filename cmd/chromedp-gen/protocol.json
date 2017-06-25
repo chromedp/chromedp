@@ -1210,6 +1210,13 @@
               "optional": true,
               "description": "Whether or not universal access should be granted to the isolated world. This is a powerful option, use with caution."
             }
+          ],
+          "returns": [
+            {
+              "name": "executionContextId",
+              "$ref": "Runtime.ExecutionContextId",
+              "description": "Execution context of the isolated world."
+            }
           ]
         }
       ],
@@ -13212,6 +13219,11 @@
                 "$ref": "CoverageRange"
               },
               "description": "Source ranges inside the function with coverage data."
+            },
+            {
+              "name": "isBlockCoverage",
+              "type": "boolean",
+              "description": "Whether coverage data for this function has block granularity."
             }
           ],
           "experimental": true

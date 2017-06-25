@@ -16,6 +16,7 @@ import (
 	cdp "github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/debugger"
 	"github.com/knq/chromedp/cdp/dom"
+	"github.com/knq/chromedp/cdp/runtime"
 )
 
 // EnableParams enables page domain notifications.
@@ -897,8 +898,23 @@ func (p CreateIsolatedWorldParams) WithGrantUniveralAccess(grantUniveralAccess b
 	return &p
 }
 
+// CreateIsolatedWorldReturns return values.
+type CreateIsolatedWorldReturns struct {
+	ExecutionContextID runtime.ExecutionContextID `json:"executionContextId,omitempty"` // Execution context of the isolated world.
+}
+
 // Do executes Page.createIsolatedWorld against the provided context and
 // target handler.
-func (p *CreateIsolatedWorldParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandPageCreateIsolatedWorld, p, nil)
+//
+// returns:
+//   executionContextID - Execution context of the isolated world.
+func (p *CreateIsolatedWorldParams) Do(ctxt context.Context, h cdp.Handler) (executionContextID runtime.ExecutionContextID, err error) {
+	// execute
+	var res CreateIsolatedWorldReturns
+	err = h.Execute(ctxt, cdp.CommandPageCreateIsolatedWorld, p, &res)
+	if err != nil {
+		return 0, err
+	}
+
+	return res.ExecutionContextID, nil
 }

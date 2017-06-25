@@ -1445,6 +1445,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpProfiler14(in *jlexer.Lexer, o
 				}
 				in.Delim(']')
 			}
+		case "isBlockCoverage":
+			out.IsBlockCoverage = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -1489,6 +1491,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpProfiler14(out *jwriter.Writer
 			}
 			out.RawByte(']')
 		}
+	}
+	if in.IsBlockCoverage {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"isBlockCoverage\":")
+		out.Bool(bool(in.IsBlockCoverage))
 	}
 	out.RawByte('}')
 }

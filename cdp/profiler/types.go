@@ -40,8 +40,9 @@ type CoverageRange struct {
 
 // FunctionCoverage coverage data for a JavaScript function.
 type FunctionCoverage struct {
-	FunctionName string           `json:"functionName,omitempty"` // JavaScript function name.
-	Ranges       []*CoverageRange `json:"ranges,omitempty"`       // Source ranges inside the function with coverage data.
+	FunctionName    string           `json:"functionName,omitempty"`    // JavaScript function name.
+	Ranges          []*CoverageRange `json:"ranges,omitempty"`          // Source ranges inside the function with coverage data.
+	IsBlockCoverage bool             `json:"isBlockCoverage,omitempty"` // Whether coverage data for this function has block granularity.
 }
 
 // ScriptCoverage coverage data for a JavaScript script.

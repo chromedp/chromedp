@@ -34,8 +34,8 @@ if (( "$NOW" >= $(($LASTUPDATE + 86400*5)) )); then
 fi
 
 if [[ "$UPDATE" == 1 ]]; then
-  go get -u -d \
-    github.com/knq/chromedp/cmd/chromedp-gen
+  #go get -u -d \
+  #  github.com/knq/chromedp/cmd/chromedp-gen
 
   go get -u \
     golang.org/x/tools/cmd/goimports \
