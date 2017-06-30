@@ -15,13 +15,13 @@ import (
 )
 
 // SetDiscoverTargetsParams controls whether to discover available targets
-// and notify via targetCreated/targetDestroyed events.
+// and notify via targetCreated/targetInfoChanged/targetDestroyed events.
 type SetDiscoverTargetsParams struct {
 	Discover bool `json:"discover"` // Whether to discover available targets.
 }
 
 // SetDiscoverTargets controls whether to discover available targets and
-// notify via targetCreated/targetDestroyed events.
+// notify via targetCreated/targetInfoChanged/targetDestroyed events.
 //
 // parameters:
 //   discover - Whether to discover available targets.

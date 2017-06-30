@@ -301,6 +301,7 @@ const (
 	CommandDOMDebuggerRemoveXHRBreakpoint                  MethodType = "DOMDebugger.removeXHRBreakpoint"
 	CommandDOMDebuggerGetEventListeners                    MethodType = "DOMDebugger.getEventListeners"
 	EventTargetTargetCreated                               MethodType = "Target.targetCreated"
+	EventTargetTargetInfoChanged                           MethodType = "Target.targetInfoChanged"
 	EventTargetTargetDestroyed                             MethodType = "Target.targetDestroyed"
 	EventTargetAttachedToTarget                            MethodType = "Target.attachedToTarget"
 	EventTargetDetachedFromTarget                          MethodType = "Target.detachedFromTarget"
@@ -988,6 +989,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandDOMDebuggerGetEventListeners
 	case EventTargetTargetCreated:
 		*t = EventTargetTargetCreated
+	case EventTargetTargetInfoChanged:
+		*t = EventTargetTargetInfoChanged
 	case EventTargetTargetDestroyed:
 		*t = EventTargetTargetDestroyed
 	case EventTargetAttachedToTarget:

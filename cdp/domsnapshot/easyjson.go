@@ -693,6 +693,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpDomsnapshot4(in *jlexer.Lexer,
 			out.DocumentURL = string(in.String())
 		case "baseURL":
 			out.BaseURL = string(in.String())
+		case "contentLanguage":
+			out.ContentLanguage = string(in.String())
 		case "publicId":
 			out.PublicID = string(in.String())
 		case "systemId":
@@ -707,6 +709,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpDomsnapshot4(in *jlexer.Lexer,
 			out.TemplateContentIndex = int64(in.Int64())
 		case "pseudoType":
 			(out.PseudoType).UnmarshalEasyJSON(in)
+		case "isClickable":
+			out.IsClickable = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -838,6 +842,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDomsnapshot4(out *jwriter.Writ
 		out.RawString("\"baseURL\":")
 		out.String(string(in.BaseURL))
 	}
+	if in.ContentLanguage != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"contentLanguage\":")
+		out.String(string(in.ContentLanguage))
+	}
 	if in.PublicID != "" {
 		if !first {
 			out.RawByte(',')
@@ -893,6 +905,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDomsnapshot4(out *jwriter.Writ
 		first = false
 		out.RawString("\"pseudoType\":")
 		(in.PseudoType).MarshalEasyJSON(out)
+	}
+	if in.IsClickable {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"isClickable\":")
+		out.Bool(bool(in.IsClickable))
 	}
 	out.RawByte('}')
 }

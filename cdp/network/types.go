@@ -434,8 +434,8 @@ type CachedResource struct {
 type Initiator struct {
 	Type       InitiatorType       `json:"type,omitempty"`       // Type of this initiator.
 	Stack      *runtime.StackTrace `json:"stack,omitempty"`      // Initiator JavaScript stack trace, set for Script only.
-	URL        string              `json:"url,omitempty"`        // Initiator URL, set for Parser type only.
-	LineNumber float64             `json:"lineNumber,omitempty"` // Initiator line number, set for Parser type only (0-based).
+	URL        string              `json:"url,omitempty"`        // Initiator URL, set for Parser type or for Script type (when script is importing module).
+	LineNumber float64             `json:"lineNumber,omitempty"` // Initiator line number, set for Parser type or for Script type (when script is importing module) (0-based).
 }
 
 // Cookie cookie object.

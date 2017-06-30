@@ -20,6 +20,7 @@ type DOMNode struct {
 	LayoutNodeIndex       int64             `json:"layoutNodeIndex,omitempty"`       // The index of the node's related layout tree node in the layoutTreeNodes array returned by getSnapshot, if any.
 	DocumentURL           string            `json:"documentURL,omitempty"`           // Document URL that Document or FrameOwner node points to.
 	BaseURL               string            `json:"baseURL,omitempty"`               // Base URL that Document or FrameOwner node uses for URL completion.
+	ContentLanguage       string            `json:"contentLanguage,omitempty"`       // Only set for documents, contains the document's content language.
 	PublicID              string            `json:"publicId,omitempty"`              // DocumentType node's publicId.
 	SystemID              string            `json:"systemId,omitempty"`              // DocumentType node's systemId.
 	FrameID               cdp.FrameID       `json:"frameId,omitempty"`               // Frame ID for frame owner elements.
@@ -27,6 +28,7 @@ type DOMNode struct {
 	ImportedDocumentIndex int64             `json:"importedDocumentIndex,omitempty"` // Index of the imported document's node of a link element in the domNodes array returned by getSnapshot, if any.
 	TemplateContentIndex  int64             `json:"templateContentIndex,omitempty"`  // Index of the content node of a template element in the domNodes array returned by getSnapshot.
 	PseudoType            cdp.PseudoType    `json:"pseudoType,omitempty"`            // Type of a pseudo element node.
+	IsClickable           bool              `json:"isClickable,omitempty"`           // Whether this DOM node responds to mouse clicks. This includes nodes that have had click event listeners attached via JavaScript as well as anchor tags that naturally navigate when clicked.
 }
 
 // LayoutTreeNode details of an element in the DOM tree with a LayoutObject.

@@ -11,6 +11,12 @@ type EventTargetCreated struct {
 	TargetInfo *Info `json:"targetInfo,omitempty"`
 }
 
+// EventTargetInfoChanged issued when some information about a target has
+// changed. This only happens between targetCreated and targetDestroyed.
+type EventTargetInfoChanged struct {
+	TargetInfo *Info `json:"targetInfo,omitempty"`
+}
+
 // EventTargetDestroyed issued when a target is destroyed.
 type EventTargetDestroyed struct {
 	TargetID ID `json:"targetId,omitempty"`
@@ -39,6 +45,7 @@ type EventReceivedMessageFromTarget struct {
 // EventTypes all event types in the domain.
 var EventTypes = []cdp.MethodType{
 	cdp.EventTargetTargetCreated,
+	cdp.EventTargetTargetInfoChanged,
 	cdp.EventTargetTargetDestroyed,
 	cdp.EventTargetAttachedToTarget,
 	cdp.EventTargetDetachedFromTarget,

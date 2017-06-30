@@ -848,6 +848,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.EventTargetTargetCreated:
 		v = new(target.EventTargetCreated)
 
+	case cdp.EventTargetTargetInfoChanged:
+		v = new(target.EventTargetInfoChanged)
+
 	case cdp.EventTargetTargetDestroyed:
 		v = new(target.EventTargetDestroyed)
 

@@ -24,6 +24,7 @@ type Info struct {
 	Type     string `json:"type,omitempty"`
 	Title    string `json:"title,omitempty"`
 	URL      string `json:"url,omitempty"`
+	Attached bool   `json:"attached,omitempty"` // Whether the target has an attached client.
 }
 
 // RemoteLocation [no description].

@@ -2959,13 +2959,13 @@
               "name": "url",
               "type": "string",
               "optional": true,
-              "description": "Initiator URL, set for Parser type only."
+              "description": "Initiator URL, set for Parser type or for Script type (when script is importing module)."
             },
             {
               "name": "lineNumber",
               "type": "number",
               "optional": true,
-              "description": "Initiator line number, set for Parser type only (0-based)."
+              "description": "Initiator line number, set for Parser type or for Script type (when script is importing module) (0-based)."
             }
           ]
         },
@@ -6275,7 +6275,7 @@
     {
       "domain": "CSS",
       "experimental": true,
-      "description": "This domain exposes CSS read/write operations. All CSS objects (stylesheets, rules, and styles) have an associated <code>id</code> used in subsequent operations on the related object. Each object type has a specific <code>id</code> structure, and those are not interchangeable between objects of different kinds. CSS objects can be loaded using the <code>get*ForNode()</code> calls (which accept a DOM node id). A client can also discover all the existing stylesheets with the <code>getAllStyleSheets()</code> method (or keeping track of the <code>styleSheetAdded</code>/<code>styleSheetRemoved</code> events) and subsequently load the required stylesheet contents using the <code>getStyleSheet[Text]()</code> methods.",
+      "description": "This domain exposes CSS read/write operations. All CSS objects (stylesheets, rules, and styles) have an associated <code>id</code> used in subsequent operations on the related object. Each object type has a specific <code>id</code> structure, and those are not interchangeable between objects of different kinds. CSS objects can be loaded using the <code>get*ForNode()</code> calls (which accept a DOM node id). A client can also keep track of stylesheets via the <code>styleSheetAdded</code>/<code>styleSheetRemoved</code> events and subsequently load the required stylesheet contents using the <code>getStyleSheet[Text]()</code> methods.",
       "dependencies": [
         "DOM"
       ],
@@ -7494,6 +7494,12 @@
               "description": "Base URL that <code>Document</code> or <code>FrameOwner</code> node uses for URL completion."
             },
             {
+              "name": "contentLanguage",
+              "type": "string",
+              "optional": true,
+              "description": "Only set for documents, contains the document's content language."
+            },
+            {
               "name": "publicId",
               "type": "string",
               "optional": true,
@@ -7534,6 +7540,12 @@
               "$ref": "DOM.PseudoType",
               "optional": true,
               "description": "Type of a pseudo element node."
+            },
+            {
+              "name": "isClickable",
+              "type": "boolean",
+              "optional": true,
+              "description": "Whether this DOM node responds to mouse clicks. This includes nodes that have had click event listeners attached via JavaScript as well as anchor tags that naturally navigate when clicked."
             }
           ],
           "description": "A Node in the DOM tree."
@@ -7976,6 +7988,11 @@
             {
               "name": "url",
               "type": "string"
+            },
+            {
+              "name": "attached",
+              "type": "boolean",
+              "description": "Whether the target has an attached client."
             }
           ]
         },
@@ -7997,7 +8014,7 @@
       "commands": [
         {
           "name": "setDiscoverTargets",
-          "description": "Controls whether to discover available targets and notify via <code>targetCreated/targetDestroyed</code> events.",
+          "description": "Controls whether to discover available targets and notify via <code>targetCreated/targetInfoChanged/targetDestroyed</code> events.",
           "parameters": [
             {
               "name": "discover",
@@ -8211,6 +8228,16 @@
         {
           "name": "targetCreated",
           "description": "Issued when a possible inspection target is created.",
+          "parameters": [
+            {
+              "name": "targetInfo",
+              "$ref": "TargetInfo"
+            }
+          ]
+        },
+        {
+          "name": "targetInfoChanged",
+          "description": "Issued when some information about a target has changed. This only happens between <code>targetCreated</code> and <code>targetDestroyed</code>.",
           "parameters": [
             {
               "name": "targetInfo",
