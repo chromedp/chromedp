@@ -3,6 +3,8 @@ package runtime
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"time"
 
 	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jlexer"
@@ -190,11 +192,34 @@ func (e *ExceptionDetails) Error() string {
 }
 
 // Timestamp number of milliseconds since epoch.
-type Timestamp float64
+type Timestamp time.Time
 
-// Float64 returns the Timestamp as float64 value.
-func (t Timestamp) Float64() float64 {
-	return float64(t)
+// Time returns the Timestamp as time.Time value.
+func (t Timestamp) Time() time.Time {
+	return time.Time(t)
+}
+
+// MarshalEasyJSON satisfies easyjson.Marshaler.
+func (t Timestamp) MarshalEasyJSON(out *jwriter.Writer) {
+	v := float64(time.Time(t).UnixNano() / int64(time.Millisecond))
+
+	out.Buffer.EnsureSpace(20)
+	out.Buffer.Buf = strconv.AppendFloat(out.Buffer.Buf, v, 'f', -1, 64)
+}
+
+// MarshalJSON satisfies json.Marshaler.
+func (t Timestamp) MarshalJSON() ([]byte, error) {
+	return easyjson.Marshal(t)
+}
+
+// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
+func (t *Timestamp) UnmarshalEasyJSON(in *jlexer.Lexer) {
+	*t = Timestamp(time.Unix(0, int64(in.Float64()*float64(time.Millisecond))))
+}
+
+// UnmarshalJSON satisfies json.Unmarshaler.
+func (t *Timestamp) UnmarshalJSON(buf []byte) error {
+	return easyjson.Unmarshal(buf, t)
 }
 
 // CallFrame stack entry for runtime errors and assertions.

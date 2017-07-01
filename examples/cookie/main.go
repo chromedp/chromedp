@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	cdp "github.com/knq/chromedp"
 	cdptypes "github.com/knq/chromedp/cdp"
@@ -26,7 +27,7 @@ func main() {
 	// setup http server
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
-		buf, err := json.Marshal(req.Cookies())
+		buf, err := json.MarshalIndent(req.Cookies(), "", "  ")
 		if err != nil {
 			http.Error(res, err.Error(), http.StatusInternalServerError)
 			return
@@ -70,7 +71,12 @@ func main() {
 func setcookies(host string, res *string) cdp.Tasks {
 	return cdp.Tasks{
 		cdp.ActionFunc(func(ctxt context.Context, h cdptypes.Handler) error {
-			success, err := network.SetCookie(host, "cookiename", "cookievalue").Do(ctxt, h)
+			expr := cdptypes.Timestamp(time.Now().Add(180 * 24 * time.Hour))
+			success, err := network.SetCookie(host, "cookiename", "cookievalue").
+				WithExpirationDate(&expr).
+				WithDomain("localhost").
+				WithHTTPOnly(true).
+				Do(ctxt, h)
 			if err != nil {
 				return err
 			}
@@ -81,6 +87,18 @@ func setcookies(host string, res *string) cdp.Tasks {
 		}),
 		cdp.Navigate(host),
 		cdp.Text(`#result`, res, cdp.ByID, cdp.NodeVisible),
+		cdp.ActionFunc(func(ctxt context.Context, h cdptypes.Handler) error {
+			cookies, err := network.GetAllCookies().Do(ctxt, h)
+			if err != nil {
+				return err
+			}
+
+			for i, cookie := range cookies {
+				log.Printf("cookie %d: %+v", i, cookie)
+			}
+
+			return nil
+		}),
 	}
 }
 

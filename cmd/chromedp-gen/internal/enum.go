@@ -148,3 +148,12 @@ func (te TypeEnum) GoEmptyValue() string {
 
 	return `nil`
 }
+
+// TimestampType are the various timestamp subtypes.
+type TimestampType int
+
+const (
+	TimestampTypeMillisecond TimestampType = 1 + iota
+	TimestampTypeSecond
+	TimestampTypeBootstamp
+)

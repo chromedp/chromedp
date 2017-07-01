@@ -12,14 +12,19 @@
 //  - add 'Inspector.Message' type as a object with id (integer), method (MethodType), params (interface{}), error (MessageError).
 //  - add 'Inspector.DetachReason' type and change event 'Inspector.detached''s parameter reason's type.
 //  - add 'Inspector.ErrorType' type.
+//  - change type of Network.Timestamp and Runtime.Timestamp to internal Timestamp type.
+//  - add 'Page.Bootstamp' type and convert all command/event parameters named
+//    'timestamp' in the Page domain to the Bootstamp type.
 //  - change any object property or command/event parameter named 'timestamp'
-//    that doesn't have a $ref defined to 'Runtime.Timestamp'.
+//    that doesn't have a $ref defined to 'Network.Timestamp'.
 //  - convert object properties and event/command parameters that are enums into independent types.
 //  - change '*.modifiers' parameters to type Input.Modifier.
 //  - add 'DOM.NodeType' type and convert "nodeType" parameters to it.
 //  - change Page.Frame.id/parentID to FrameID type.
 //  - add additional properties to 'Page.Frame' and 'DOM.Node' for use by higher level packages.
-//  - add special unmarshaler to NodeId, BackendNodeId, FrameId to handle values from older (v1.1) protocol versions. -- NOTE: this might need to be applied to more types, such as network.LoaderId
+//  - add special unmarshaler to NodeId, BackendNodeId, FrameId to handle
+//    values from older (v1.1) protocol versions. -- NOTE: this might need to be
+//    applied to more types, such as network.LoaderId
 //  - rename 'Input.GestureSourceType' -> 'Input.GestureType'.
 //  - rename CSS.CSS* types.
 //  - add Error() method to 'Runtime.ExceptionDetails' type so that it can be used as error.
@@ -33,7 +38,6 @@ package fixup
 
 import (
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/knq/chromedp/cmd/chromedp-gen/internal"
@@ -197,6 +201,14 @@ func FixDomains(domains []*internal.Domain) {
 		},
 	}
 
+	// bootstamp type
+	bootstampType := &internal.Type{
+		ID:            "Bootstamp",
+		Type:          internal.TypeTimestamp,
+		TimestampType: internal.TimestampTypeBootstamp,
+		Description:   "Bootstamp type.",
+	}
+
 	// process domains
 	for _, d := range domains {
 		switch d.Domain {
@@ -279,8 +291,14 @@ func FixDomains(domains []*internal.Domain) {
 			}
 
 		case internal.DomainPage:
+			// add Page types
+			d.Types = append(d.Types, bootstampType)
+
 			for _, t := range d.Types {
 				switch t.ID {
+				case "Bootstamp":
+					t.Extra += templates.ExtraTimestampTemplate(t, d)
+
 				case "FrameId":
 					t.Extra += templates.ExtraFixStringUnmarshaler(internal.ForceCamel(t.ID), "", "")
 
@@ -330,10 +348,11 @@ func FixDomains(domains []*internal.Domain) {
 		case internal.DomainNetwork:
 			for _, t := range d.Types {
 				// change Timestamp to TypeTimestamp and add extra unmarshaling template
-				/*if t.ID == "Timestamp" {
+				if t.ID == "Timestamp" {
 					t.Type = internal.TypeTimestamp
+					t.TimestampType = internal.TimestampTypeSecond
 					t.Extra = templates.ExtraTimestampTemplate(t, d)
-				}*/
+				}
 
 				// change Headers to be a map[string]interface{}
 				if t.ID == "Headers" {
@@ -346,9 +365,10 @@ func FixDomains(domains []*internal.Domain) {
 			var types []*internal.Type
 			for _, t := range d.Types {
 				switch t.ID {
-				/*case "Timestamp":
-				t.Type = internal.TypeTimestamp
-				t.Extra += templates.ExtraBootstampTemplate(t, d)*/
+				case "Timestamp":
+					t.Type = internal.TypeTimestamp
+					t.TimestampType = internal.TimestampTypeMillisecond
+					t.Extra += templates.ExtraTimestampTemplate(t, d)
 
 				case "ExceptionDetails":
 					t.Extra += templates.ExtraExceptionDetailsTemplate()
@@ -439,15 +459,21 @@ func convertObjectProperties(params []*internal.Type, d *internal.Domain, name s
 		case p.Enum != nil:
 			r = append(r, fixupEnumParameter(name, p, d))
 
-		case p.Name == "timestamp":
-			log.Printf(">>> %s.%s.%s", d.Domain, name, p.Name)
-			r = append(r, p)
-		/*r = append(r, &internal.Type{
-			Name:        p.Name,
-			Ref:         "Runtime.Timestamp",
-			Description: p.Description,
-			Optional:    p.Optional,
-		})*/
+		case p.Name == "timestamp" && p.Ref == "" && d.Domain == internal.DomainPage:
+			r = append(r, &internal.Type{
+				Name:        p.Name,
+				Ref:         "Page.Bootstamp",
+				Description: p.Description,
+				Optional:    p.Optional,
+			})
+
+		case p.Name == "timestamp" && p.Ref == "":
+			r = append(r, &internal.Type{
+				Name:        p.Name,
+				Ref:         "Network.Timestamp",
+				Description: p.Description,
+				Optional:    p.Optional,
+			})
 
 		case p.Name == "modifiers":
 			r = append(r, &internal.Type{

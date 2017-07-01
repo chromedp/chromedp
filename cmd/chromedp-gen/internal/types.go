@@ -145,6 +145,9 @@ type Type struct {
 	// Redirect is the redirect value for the command or event.
 	Redirect DomainType `json:"redirect,omitempty"`
 
+	// TimestampType is the timestamp subtype.
+	TimestampType TimestampType `json:"-"`
+
 	// NoExpose toggles whether or not to expose the type.
 	NoExpose bool `json:"-"`
 

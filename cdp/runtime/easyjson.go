@@ -2361,7 +2361,15 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpRuntime20(in *jlexer.Lexer, ou
 		}
 		switch key {
 		case "timestamp":
-			out.Timestamp = Timestamp(in.Float64())
+			if in.IsNull() {
+				in.Skip()
+				out.Timestamp = nil
+			} else {
+				if out.Timestamp == nil {
+					out.Timestamp = new(Timestamp)
+				}
+				(*out.Timestamp).UnmarshalEasyJSON(in)
+			}
 		case "exceptionDetails":
 			if in.IsNull() {
 				in.Skip()
@@ -2386,13 +2394,17 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpRuntime20(out *jwriter.Writer,
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.Timestamp != 0 {
+	if in.Timestamp != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"timestamp\":")
-		out.Float64(float64(in.Timestamp))
+		if in.Timestamp == nil {
+			out.RawString("null")
+		} else {
+			(*in.Timestamp).MarshalEasyJSON(out)
+		}
 	}
 	if in.ExceptionDetails != nil {
 		if !first {
@@ -2566,7 +2578,15 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpRuntime22(in *jlexer.Lexer, ou
 		case "executionContextId":
 			out.ExecutionContextID = ExecutionContextID(in.Int64())
 		case "timestamp":
-			out.Timestamp = Timestamp(in.Float64())
+			if in.IsNull() {
+				in.Skip()
+				out.Timestamp = nil
+			} else {
+				if out.Timestamp == nil {
+					out.Timestamp = new(Timestamp)
+				}
+				(*out.Timestamp).UnmarshalEasyJSON(in)
+			}
 		case "stackTrace":
 			if in.IsNull() {
 				in.Skip()
@@ -2632,13 +2652,17 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpRuntime22(out *jwriter.Writer,
 		out.RawString("\"executionContextId\":")
 		out.Int64(int64(in.ExecutionContextID))
 	}
-	if in.Timestamp != 0 {
+	if in.Timestamp != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"timestamp\":")
-		out.Float64(float64(in.Timestamp))
+		if in.Timestamp == nil {
+			out.RawString("null")
+		} else {
+			(*in.Timestamp).MarshalEasyJSON(out)
+		}
 	}
 	if in.StackTrace != nil {
 		if !first {

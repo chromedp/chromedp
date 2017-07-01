@@ -375,7 +375,15 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpLog4(in *jlexer.Lexer, out *En
 		case "text":
 			out.Text = string(in.String())
 		case "timestamp":
-			out.Timestamp = runtime.Timestamp(in.Float64())
+			if in.IsNull() {
+				in.Skip()
+				out.Timestamp = nil
+			} else {
+				if out.Timestamp == nil {
+					out.Timestamp = new(runtime.Timestamp)
+				}
+				(*out.Timestamp).UnmarshalEasyJSON(in)
+			}
 		case "url":
 			out.URL = string(in.String())
 		case "lineNumber":
@@ -432,13 +440,17 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpLog4(out *jwriter.Writer, in E
 		out.RawString("\"text\":")
 		out.String(string(in.Text))
 	}
-	if in.Timestamp != 0 {
+	if in.Timestamp != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"timestamp\":")
-		out.Float64(float64(in.Timestamp))
+		if in.Timestamp == nil {
+			out.RawString("null")
+		} else {
+			(*in.Timestamp).MarshalEasyJSON(out)
+		}
 	}
 	if in.URL != "" {
 		if !first {

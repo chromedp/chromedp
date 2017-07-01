@@ -4,6 +4,7 @@ package input
 
 import (
 	json "encoding/json"
+	cdp "github.com/knq/chromedp/cdp"
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"
@@ -632,7 +633,15 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpInput5(in *jlexer.Lexer, out *
 		case "y":
 			out.Y = int64(in.Int64())
 		case "timestamp":
-			out.Timestamp = float64(in.Float64())
+			if in.IsNull() {
+				in.Skip()
+				out.Timestamp = nil
+			} else {
+				if out.Timestamp == nil {
+					out.Timestamp = new(cdp.Timestamp)
+				}
+				(*out.Timestamp).UnmarshalEasyJSON(in)
+			}
 		case "button":
 			(out.Button).UnmarshalEasyJSON(in)
 		case "deltaX":
@@ -680,7 +689,11 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpInput5(out *jwriter.Writer, in
 	}
 	first = false
 	out.RawString("\"timestamp\":")
-	out.Float64(float64(in.Timestamp))
+	if in.Timestamp == nil {
+		out.RawString("null")
+	} else {
+		(*in.Timestamp).MarshalEasyJSON(out)
+	}
 	if !first {
 		out.RawByte(',')
 	}
@@ -800,7 +813,15 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpInput6(in *jlexer.Lexer, out *
 		case "modifiers":
 			(out.Modifiers).UnmarshalEasyJSON(in)
 		case "timestamp":
-			out.Timestamp = float64(in.Float64())
+			if in.IsNull() {
+				in.Skip()
+				out.Timestamp = nil
+			} else {
+				if out.Timestamp == nil {
+					out.Timestamp = new(cdp.Timestamp)
+				}
+				(*out.Timestamp).UnmarshalEasyJSON(in)
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -850,13 +871,17 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpInput6(out *jwriter.Writer, in
 		out.RawString("\"modifiers\":")
 		(in.Modifiers).MarshalEasyJSON(out)
 	}
-	if in.Timestamp != 0 {
+	if in.Timestamp != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"timestamp\":")
-		out.Float64(float64(in.Timestamp))
+		if in.Timestamp == nil {
+			out.RawString("null")
+		} else {
+			(*in.Timestamp).MarshalEasyJSON(out)
+		}
 	}
 	out.RawByte('}')
 }
@@ -912,7 +937,15 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpInput7(in *jlexer.Lexer, out *
 		case "modifiers":
 			(out.Modifiers).UnmarshalEasyJSON(in)
 		case "timestamp":
-			out.Timestamp = float64(in.Float64())
+			if in.IsNull() {
+				in.Skip()
+				out.Timestamp = nil
+			} else {
+				if out.Timestamp == nil {
+					out.Timestamp = new(cdp.Timestamp)
+				}
+				(*out.Timestamp).UnmarshalEasyJSON(in)
+			}
 		case "button":
 			(out.Button).UnmarshalEasyJSON(in)
 		case "clickCount":
@@ -957,13 +990,17 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpInput7(out *jwriter.Writer, in
 		out.RawString("\"modifiers\":")
 		(in.Modifiers).MarshalEasyJSON(out)
 	}
-	if in.Timestamp != 0 {
+	if in.Timestamp != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"timestamp\":")
-		out.Float64(float64(in.Timestamp))
+		if in.Timestamp == nil {
+			out.RawString("null")
+		} else {
+			(*in.Timestamp).MarshalEasyJSON(out)
+		}
 	}
 	if in.Button != "" {
 		if !first {
@@ -1031,7 +1068,15 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpInput8(in *jlexer.Lexer, out *
 		case "modifiers":
 			(out.Modifiers).UnmarshalEasyJSON(in)
 		case "timestamp":
-			out.Timestamp = float64(in.Float64())
+			if in.IsNull() {
+				in.Skip()
+				out.Timestamp = nil
+			} else {
+				if out.Timestamp == nil {
+					out.Timestamp = new(cdp.Timestamp)
+				}
+				(*out.Timestamp).UnmarshalEasyJSON(in)
+			}
 		case "text":
 			out.Text = string(in.String())
 		case "unmodifiedText":
@@ -1080,13 +1125,17 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpInput8(out *jwriter.Writer, in
 		out.RawString("\"modifiers\":")
 		(in.Modifiers).MarshalEasyJSON(out)
 	}
-	if in.Timestamp != 0 {
+	if in.Timestamp != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"timestamp\":")
-		out.Float64(float64(in.Timestamp))
+		if in.Timestamp == nil {
+			out.RawString("null")
+		} else {
+			(*in.Timestamp).MarshalEasyJSON(out)
+		}
 	}
 	if in.Text != "" {
 		if !first {

@@ -407,7 +407,7 @@ type SetCookieParams struct {
 	Secure         bool           `json:"secure,omitempty"`         // Defaults ot false.
 	HTTPOnly       bool           `json:"httpOnly,omitempty"`       // Defaults to false.
 	SameSite       CookieSameSite `json:"sameSite,omitempty"`       // Defaults to browser default behavior.
-	ExpirationDate cdp.Timestamp  `json:"expirationDate,omitempty"` // If omitted, the cookie becomes a session cookie.
+	ExpirationDate *cdp.Timestamp `json:"expirationDate,omitempty"` // If omitted, the cookie becomes a session cookie.
 }
 
 // SetCookie sets a cookie with the given cookie data; may overwrite
@@ -456,7 +456,7 @@ func (p SetCookieParams) WithSameSite(sameSite CookieSameSite) *SetCookieParams 
 }
 
 // WithExpirationDate if omitted, the cookie becomes a session cookie.
-func (p SetCookieParams) WithExpirationDate(expirationDate cdp.Timestamp) *SetCookieParams {
+func (p SetCookieParams) WithExpirationDate(expirationDate *cdp.Timestamp) *SetCookieParams {
 	p.ExpirationDate = expirationDate
 	return &p
 }

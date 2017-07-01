@@ -9,12 +9,12 @@ import (
 
 // EventDomContentEventFired [no description].
 type EventDomContentEventFired struct {
-	Timestamp float64 `json:"timestamp,omitempty"`
+	Timestamp *Bootstamp `json:"timestamp,omitempty"`
 }
 
 // EventLoadEventFired [no description].
 type EventLoadEventFired struct {
-	Timestamp float64 `json:"timestamp,omitempty"`
+	Timestamp *Bootstamp `json:"timestamp,omitempty"`
 }
 
 // EventFrameAttached fired when frame has been attached to its parent.

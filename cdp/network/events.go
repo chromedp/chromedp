@@ -12,7 +12,7 @@ import (
 type EventResourceChangedPriority struct {
 	RequestID   RequestID        `json:"requestId,omitempty"`   // Request identifier.
 	NewPriority ResourcePriority `json:"newPriority,omitempty"` // New priority
-	Timestamp   cdp.Timestamp    `json:"timestamp,omitempty"`   // Timestamp.
+	Timestamp   *cdp.Timestamp   `json:"timestamp,omitempty"`   // Timestamp.
 }
 
 // EventRequestWillBeSent fired when page is about to send HTTP request.
@@ -22,8 +22,8 @@ type EventRequestWillBeSent struct {
 	LoaderID         cdp.LoaderID      `json:"loaderId,omitempty"`         // Loader identifier.
 	DocumentURL      string            `json:"documentURL,omitempty"`      // URL of the document this request is loaded for.
 	Request          *Request          `json:"request,omitempty"`          // Request data.
-	Timestamp        cdp.Timestamp     `json:"timestamp,omitempty"`        // Timestamp.
-	WallTime         cdp.Timestamp     `json:"wallTime,omitempty"`         // UTC Timestamp.
+	Timestamp        *cdp.Timestamp    `json:"timestamp,omitempty"`        // Timestamp.
+	WallTime         *cdp.Timestamp    `json:"wallTime,omitempty"`         // UTC Timestamp.
 	Initiator        *Initiator        `json:"initiator,omitempty"`        // Request initiator.
 	RedirectResponse *Response         `json:"redirectResponse,omitempty"` // Redirect response data.
 	Type             page.ResourceType `json:"type,omitempty"`             // Type of this resource.
@@ -39,30 +39,30 @@ type EventResponseReceived struct {
 	RequestID RequestID         `json:"requestId,omitempty"` // Request identifier.
 	FrameID   cdp.FrameID       `json:"frameId,omitempty"`   // Frame identifier.
 	LoaderID  cdp.LoaderID      `json:"loaderId,omitempty"`  // Loader identifier.
-	Timestamp cdp.Timestamp     `json:"timestamp,omitempty"` // Timestamp.
+	Timestamp *cdp.Timestamp    `json:"timestamp,omitempty"` // Timestamp.
 	Type      page.ResourceType `json:"type,omitempty"`      // Resource type.
 	Response  *Response         `json:"response,omitempty"`  // Response data.
 }
 
 // EventDataReceived fired when data chunk was received over the network.
 type EventDataReceived struct {
-	RequestID         RequestID     `json:"requestId,omitempty"`         // Request identifier.
-	Timestamp         cdp.Timestamp `json:"timestamp,omitempty"`         // Timestamp.
-	DataLength        int64         `json:"dataLength,omitempty"`        // Data chunk length.
-	EncodedDataLength int64         `json:"encodedDataLength,omitempty"` // Actual bytes received (might be less than dataLength for compressed encodings).
+	RequestID         RequestID      `json:"requestId,omitempty"`         // Request identifier.
+	Timestamp         *cdp.Timestamp `json:"timestamp,omitempty"`         // Timestamp.
+	DataLength        int64          `json:"dataLength,omitempty"`        // Data chunk length.
+	EncodedDataLength int64          `json:"encodedDataLength,omitempty"` // Actual bytes received (might be less than dataLength for compressed encodings).
 }
 
 // EventLoadingFinished fired when HTTP request has finished loading.
 type EventLoadingFinished struct {
-	RequestID         RequestID     `json:"requestId,omitempty"`         // Request identifier.
-	Timestamp         cdp.Timestamp `json:"timestamp,omitempty"`         // Timestamp.
-	EncodedDataLength float64       `json:"encodedDataLength,omitempty"` // Total number of bytes received for this request.
+	RequestID         RequestID      `json:"requestId,omitempty"`         // Request identifier.
+	Timestamp         *cdp.Timestamp `json:"timestamp,omitempty"`         // Timestamp.
+	EncodedDataLength float64        `json:"encodedDataLength,omitempty"` // Total number of bytes received for this request.
 }
 
 // EventLoadingFailed fired when HTTP request has failed to load.
 type EventLoadingFailed struct {
 	RequestID     RequestID         `json:"requestId,omitempty"`     // Request identifier.
-	Timestamp     cdp.Timestamp     `json:"timestamp,omitempty"`     // Timestamp.
+	Timestamp     *cdp.Timestamp    `json:"timestamp,omitempty"`     // Timestamp.
 	Type          page.ResourceType `json:"type,omitempty"`          // Resource type.
 	ErrorText     string            `json:"errorText,omitempty"`     // User friendly error message.
 	Canceled      bool              `json:"canceled,omitempty"`      // True if loading was canceled.
@@ -73,8 +73,8 @@ type EventLoadingFailed struct {
 // initiate handshake.
 type EventWebSocketWillSendHandshakeRequest struct {
 	RequestID RequestID         `json:"requestId,omitempty"` // Request identifier.
-	Timestamp cdp.Timestamp     `json:"timestamp,omitempty"` // Timestamp.
-	WallTime  cdp.Timestamp     `json:"wallTime,omitempty"`  // UTC Timestamp.
+	Timestamp *cdp.Timestamp    `json:"timestamp,omitempty"` // Timestamp.
+	WallTime  *cdp.Timestamp    `json:"wallTime,omitempty"`  // UTC Timestamp.
 	Request   *WebSocketRequest `json:"request,omitempty"`   // WebSocket request data.
 }
 
@@ -82,7 +82,7 @@ type EventWebSocketWillSendHandshakeRequest struct {
 // response becomes available.
 type EventWebSocketHandshakeResponseReceived struct {
 	RequestID RequestID          `json:"requestId,omitempty"` // Request identifier.
-	Timestamp cdp.Timestamp      `json:"timestamp,omitempty"` // Timestamp.
+	Timestamp *cdp.Timestamp     `json:"timestamp,omitempty"` // Timestamp.
 	Response  *WebSocketResponse `json:"response,omitempty"`  // WebSocket response data.
 }
 
@@ -95,39 +95,39 @@ type EventWebSocketCreated struct {
 
 // EventWebSocketClosed fired when WebSocket is closed.
 type EventWebSocketClosed struct {
-	RequestID RequestID     `json:"requestId,omitempty"` // Request identifier.
-	Timestamp cdp.Timestamp `json:"timestamp,omitempty"` // Timestamp.
+	RequestID RequestID      `json:"requestId,omitempty"` // Request identifier.
+	Timestamp *cdp.Timestamp `json:"timestamp,omitempty"` // Timestamp.
 }
 
 // EventWebSocketFrameReceived fired when WebSocket frame is received.
 type EventWebSocketFrameReceived struct {
 	RequestID RequestID       `json:"requestId,omitempty"` // Request identifier.
-	Timestamp cdp.Timestamp   `json:"timestamp,omitempty"` // Timestamp.
+	Timestamp *cdp.Timestamp  `json:"timestamp,omitempty"` // Timestamp.
 	Response  *WebSocketFrame `json:"response,omitempty"`  // WebSocket response data.
 }
 
 // EventWebSocketFrameError fired when WebSocket frame error occurs.
 type EventWebSocketFrameError struct {
-	RequestID    RequestID     `json:"requestId,omitempty"`    // Request identifier.
-	Timestamp    cdp.Timestamp `json:"timestamp,omitempty"`    // Timestamp.
-	ErrorMessage string        `json:"errorMessage,omitempty"` // WebSocket frame error message.
+	RequestID    RequestID      `json:"requestId,omitempty"`    // Request identifier.
+	Timestamp    *cdp.Timestamp `json:"timestamp,omitempty"`    // Timestamp.
+	ErrorMessage string         `json:"errorMessage,omitempty"` // WebSocket frame error message.
 }
 
 // EventWebSocketFrameSent fired when WebSocket frame is sent.
 type EventWebSocketFrameSent struct {
 	RequestID RequestID       `json:"requestId,omitempty"` // Request identifier.
-	Timestamp cdp.Timestamp   `json:"timestamp,omitempty"` // Timestamp.
+	Timestamp *cdp.Timestamp  `json:"timestamp,omitempty"` // Timestamp.
 	Response  *WebSocketFrame `json:"response,omitempty"`  // WebSocket response data.
 }
 
 // EventEventSourceMessageReceived fired when EventSource message is
 // received.
 type EventEventSourceMessageReceived struct {
-	RequestID RequestID     `json:"requestId,omitempty"` // Request identifier.
-	Timestamp cdp.Timestamp `json:"timestamp,omitempty"` // Timestamp.
-	EventName string        `json:"eventName,omitempty"` // Message type.
-	EventID   string        `json:"eventId,omitempty"`   // Message identifier.
-	Data      string        `json:"data,omitempty"`      // Message content.
+	RequestID RequestID      `json:"requestId,omitempty"` // Request identifier.
+	Timestamp *cdp.Timestamp `json:"timestamp,omitempty"` // Timestamp.
+	EventName string         `json:"eventName,omitempty"` // Message type.
+	EventID   string         `json:"eventId,omitempty"`   // Message identifier.
+	Data      string         `json:"data,omitempty"`      // Message content.
 }
 
 // EventRequestIntercepted details of an intercepted HTTP request, which must
