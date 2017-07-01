@@ -297,14 +297,14 @@ type Request struct {
 // SignedCertificateTimestamp details of a signed certificate timestamp
 // (SCT).
 type SignedCertificateTimestamp struct {
-	Status             string         `json:"status,omitempty"`             // Validation status.
-	Origin             string         `json:"origin,omitempty"`             // Origin.
-	LogDescription     string         `json:"logDescription,omitempty"`     // Log name / description.
-	LogID              string         `json:"logId,omitempty"`              // Log ID.
-	Timestamp          *cdp.Timestamp `json:"timestamp,omitempty"`          // Issuance date.
-	HashAlgorithm      string         `json:"hashAlgorithm,omitempty"`      // Hash algorithm.
-	SignatureAlgorithm string         `json:"signatureAlgorithm,omitempty"` // Signature algorithm.
-	SignatureData      string         `json:"signatureData,omitempty"`      // Signature data.
+	Status             string        `json:"status,omitempty"`             // Validation status.
+	Origin             string        `json:"origin,omitempty"`             // Origin.
+	LogDescription     string        `json:"logDescription,omitempty"`     // Log name / description.
+	LogID              string        `json:"logId,omitempty"`              // Log ID.
+	Timestamp          cdp.Timestamp `json:"timestamp,omitempty"`          // Issuance date.
+	HashAlgorithm      string        `json:"hashAlgorithm,omitempty"`      // Hash algorithm.
+	SignatureAlgorithm string        `json:"signatureAlgorithm,omitempty"` // Signature algorithm.
+	SignatureData      string        `json:"signatureData,omitempty"`      // Signature data.
 }
 
 // SecurityDetails security details about a request.
@@ -318,8 +318,8 @@ type SecurityDetails struct {
 	SubjectName                    string                        `json:"subjectName,omitempty"`                    // Certificate subject name.
 	SanList                        []string                      `json:"sanList,omitempty"`                        // Subject Alternative Name (SAN) DNS names and IP addresses.
 	Issuer                         string                        `json:"issuer,omitempty"`                         // Name of the issuing CA.
-	ValidFrom                      *cdp.Timestamp                `json:"validFrom,omitempty"`                      // Certificate valid from date.
-	ValidTo                        *cdp.Timestamp                `json:"validTo,omitempty"`                        // Certificate valid to (expiration) date
+	ValidFrom                      cdp.Timestamp                 `json:"validFrom,omitempty"`                      // Certificate valid from date.
+	ValidTo                        cdp.Timestamp                 `json:"validTo,omitempty"`                        // Certificate valid to (expiration) date
 	SignedCertificateTimestampList []*SignedCertificateTimestamp `json:"signedCertificateTimestampList,omitempty"` // List of signed certificate timestamps (SCTs).
 }
 

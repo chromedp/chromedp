@@ -4,7 +4,6 @@ package runtime
 
 import (
 	json "encoding/json"
-	cdp "github.com/knq/chromedp/cdp"
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"
@@ -2362,15 +2361,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpRuntime20(in *jlexer.Lexer, ou
 		}
 		switch key {
 		case "timestamp":
-			if in.IsNull() {
-				in.Skip()
-				out.Timestamp = nil
-			} else {
-				if out.Timestamp == nil {
-					out.Timestamp = new(cdp.Timestamp)
-				}
-				(*out.Timestamp).UnmarshalEasyJSON(in)
-			}
+			out.Timestamp = Timestamp(in.Float64())
 		case "exceptionDetails":
 			if in.IsNull() {
 				in.Skip()
@@ -2395,17 +2386,13 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpRuntime20(out *jwriter.Writer,
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.Timestamp != nil {
+	if in.Timestamp != 0 {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"timestamp\":")
-		if in.Timestamp == nil {
-			out.RawString("null")
-		} else {
-			(*in.Timestamp).MarshalEasyJSON(out)
-		}
+		out.Float64(float64(in.Timestamp))
 	}
 	if in.ExceptionDetails != nil {
 		if !first {
@@ -2579,15 +2566,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpRuntime22(in *jlexer.Lexer, ou
 		case "executionContextId":
 			out.ExecutionContextID = ExecutionContextID(in.Int64())
 		case "timestamp":
-			if in.IsNull() {
-				in.Skip()
-				out.Timestamp = nil
-			} else {
-				if out.Timestamp == nil {
-					out.Timestamp = new(cdp.Timestamp)
-				}
-				(*out.Timestamp).UnmarshalEasyJSON(in)
-			}
+			out.Timestamp = Timestamp(in.Float64())
 		case "stackTrace":
 			if in.IsNull() {
 				in.Skip()
@@ -2653,17 +2632,13 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpRuntime22(out *jwriter.Writer,
 		out.RawString("\"executionContextId\":")
 		out.Int64(int64(in.ExecutionContextID))
 	}
-	if in.Timestamp != nil {
+	if in.Timestamp != 0 {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"timestamp\":")
-		if in.Timestamp == nil {
-			out.RawString("null")
-		} else {
-			(*in.Timestamp).MarshalEasyJSON(out)
-		}
+		out.Float64(float64(in.Timestamp))
 	}
 	if in.StackTrace != nil {
 		if !first {

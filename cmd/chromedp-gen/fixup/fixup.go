@@ -12,9 +12,8 @@
 //  - add 'Inspector.Message' type as a object with id (integer), method (MethodType), params (interface{}), error (MessageError).
 //  - add 'Inspector.DetachReason' type and change event 'Inspector.detached''s parameter reason's type.
 //  - add 'Inspector.ErrorType' type.
-//  - change 'Runtime.Timestamp' to 'Network.Timestamp'.
 //  - change any object property or command/event parameter named 'timestamp'
-//    or has $ref to Network/Runtime.Timestamp to type 'Network.Timestamp'.
+//    that doesn't have a $ref defined to 'Runtime.Timestamp'.
 //  - convert object properties and event/command parameters that are enums into independent types.
 //  - change '*.modifiers' parameters to type Input.Modifier.
 //  - add 'DOM.NodeType' type and convert "nodeType" parameters to it.
@@ -34,6 +33,7 @@ package fixup
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/knq/chromedp/cmd/chromedp-gen/internal"
@@ -330,10 +330,10 @@ func FixDomains(domains []*internal.Domain) {
 		case internal.DomainNetwork:
 			for _, t := range d.Types {
 				// change Timestamp to TypeTimestamp and add extra unmarshaling template
-				if t.ID == "Timestamp" {
+				/*if t.ID == "Timestamp" {
 					t.Type = internal.TypeTimestamp
-					t.Extra += templates.ExtraTimestampTemplate(t, d)
-				}
+					t.Extra = templates.ExtraTimestampTemplate(t, d)
+				}*/
 
 				// change Headers to be a map[string]interface{}
 				if t.ID == "Headers" {
@@ -346,8 +346,9 @@ func FixDomains(domains []*internal.Domain) {
 			var types []*internal.Type
 			for _, t := range d.Types {
 				switch t.ID {
-				case "Timestamp":
-					continue
+				/*case "Timestamp":
+				t.Type = internal.TypeTimestamp
+				t.Extra += templates.ExtraBootstampTemplate(t, d)*/
 
 				case "ExceptionDetails":
 					t.Extra += templates.ExtraExceptionDetailsTemplate()
@@ -438,13 +439,15 @@ func convertObjectProperties(params []*internal.Type, d *internal.Domain, name s
 		case p.Enum != nil:
 			r = append(r, fixupEnumParameter(name, p, d))
 
-		case (p.Name == "timestamp" || p.Ref == "Network.Timestamp" || p.Ref == "Timestamp") && d.Domain != internal.DomainInput:
-			r = append(r, &internal.Type{
-				Name:        p.Name,
-				Ref:         "Network.Timestamp",
-				Description: p.Description,
-				Optional:    p.Optional,
-			})
+		case p.Name == "timestamp":
+			log.Printf(">>> %s.%s.%s", d.Domain, name, p.Name)
+			r = append(r, p)
+		/*r = append(r, &internal.Type{
+			Name:        p.Name,
+			Ref:         "Runtime.Timestamp",
+			Description: p.Description,
+			Optional:    p.Optional,
+		})*/
 
 		case p.Name == "modifiers":
 			r = append(r, &internal.Type{

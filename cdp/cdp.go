@@ -7,9 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
-	"github.com/knq/sysutil"
 	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"
@@ -1503,31 +1501,11 @@ func (t LoaderID) String() string {
 }
 
 // Timestamp number of seconds since epoch.
-type Timestamp time.Time
+type Timestamp float64
 
-// Time returns the Timestamp as time.Time value.
-func (t Timestamp) Time() time.Time {
-	return time.Time(t)
-}
-
-// MarshalEasyJSON satisfies easyjson.Marshaler.
-func (t Timestamp) MarshalEasyJSON(out *jwriter.Writer) {
-	out.Float64(float64(time.Time(t).Sub(sysutil.BootTime())) / float64(time.Second))
-}
-
-// MarshalJSON satisfies json.Marshaler.
-func (t Timestamp) MarshalJSON() ([]byte, error) {
-	return easyjson.Marshal(t)
-}
-
-// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
-func (t *Timestamp) UnmarshalEasyJSON(in *jlexer.Lexer) {
-	*t = Timestamp(sysutil.BootTime().Add(time.Duration(in.Float64() * float64(time.Second))))
-}
-
-// UnmarshalJSON satisfies json.Unmarshaler.
-func (t *Timestamp) UnmarshalJSON(buf []byte) error {
-	return easyjson.Unmarshal(buf, t)
+// Float64 returns the Timestamp as float64 value.
+func (t Timestamp) Float64() float64 {
+	return float64(t)
 }
 
 // NodeID unique DOM node identifier.

@@ -23,7 +23,7 @@ type EventExecutionContextsCleared struct{}
 
 // EventExceptionThrown issued when exception was thrown and unhandled.
 type EventExceptionThrown struct {
-	Timestamp        *cdp.Timestamp    `json:"timestamp,omitempty"` // Timestamp of the exception.
+	Timestamp        Timestamp         `json:"timestamp,omitempty"` // Timestamp of the exception.
 	ExceptionDetails *ExceptionDetails `json:"exceptionDetails,omitempty"`
 }
 
@@ -38,7 +38,7 @@ type EventConsoleAPICalled struct {
 	Type               APIType            `json:"type,omitempty"`               // Type of the call.
 	Args               []*RemoteObject    `json:"args,omitempty"`               // Call arguments.
 	ExecutionContextID ExecutionContextID `json:"executionContextId,omitempty"` // Identifier of the context where the call was made.
-	Timestamp          *cdp.Timestamp     `json:"timestamp,omitempty"`          // Call timestamp.
+	Timestamp          Timestamp          `json:"timestamp,omitempty"`          // Call timestamp.
 	StackTrace         *StackTrace        `json:"stackTrace,omitempty"`         // Stack trace captured when the call was made.
 	Context            string             `json:"context,omitempty"`            // Console context descriptor for calls on non-default console context (not console.*): 'anonymous#unique-logger-id' for call on unnamed context, 'name#unique-logger-id' for call on named context.
 }

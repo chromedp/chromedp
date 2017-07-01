@@ -6,10 +6,14 @@
 // defines its JSON unmarshaling.
 {% func ExtraTimestampTemplate(t *internal.Type, d *internal.Domain) %}{%code
 	typ := t.IDorName()
+	bootstamp := false
 %}
 // MarshalEasyJSON satisfies easyjson.Marshaler.
 func (t {%s= typ %}) MarshalEasyJSON(out *jwriter.Writer) {
-	out.Float64(float64(time.Time(t).Sub(sysutil.BootTime()))/float64(time.Second))
+{% if bootstamp %}
+	out.Float64(float64(time.Time(t).Sub(sysutil.BootTime()))/float64(time.Second)){% else %}
+	out.Float64(float64(time.Time(t))/float64(time.Second))
+{% endif %}
 }
 
 // MarshalJSON satisfies json.Marshaler.
@@ -19,7 +23,10 @@ func (t {%s= typ %}) MarshalJSON() ([]byte, error) {
 
 // UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
 func (t *{%s= typ %}) UnmarshalEasyJSON(in *jlexer.Lexer) {
-	*t = {%s= typ %}(sysutil.BootTime().Add(time.Duration(in.Float64()*float64(time.Second))))
+{% if bootstamp %}
+	*t = {%s= typ %}(sysutil.BootTime().Add(time.Duration(in.Float64()*float64(time.Second)))){% else %}
+	*t = {%s= typ %}(time.Duration(in.Float64()*float64(time.Second)))
+{% endif %}
 }
 
 // UnmarshalJSON satisfies json.Unmarshaler.

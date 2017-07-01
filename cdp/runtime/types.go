@@ -189,6 +189,14 @@ func (e *ExceptionDetails) Error() string {
 	return fmt.Sprintf("encountered exception '%s' (%d:%d)", e.Text, e.LineNumber, e.ColumnNumber)
 }
 
+// Timestamp number of milliseconds since epoch.
+type Timestamp float64
+
+// Float64 returns the Timestamp as float64 value.
+func (t Timestamp) Float64() float64 {
+	return float64(t)
+}
+
 // CallFrame stack entry for runtime errors and assertions.
 type CallFrame struct {
 	FunctionName string   `json:"functionName,omitempty"` // JavaScript function name.
