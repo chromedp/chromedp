@@ -329,13 +329,46 @@ func DoubleClick(sel interface{}, opts ...QueryOption) Action {
 
 // SendKeys synthesizes the key up, char, and down events as needed for the
 // runes in v, sending them to the first node matching the selector.
+//
+// Note: when selector matches a input[type="file"] node, then dom.SetFileInputFiles
+// is used to set the upload path of the input node to v.
 func SendKeys(sel interface{}, v string, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
-		return KeyActionNode(nodes[0], v).Do(ctxt, h)
+
+		n := nodes[0]
+
+		// grab type attribute from node
+		typ, attrs := "", n.Attributes
+		n.RLock()
+		for i := 0; i < len(attrs); i += 2 {
+			if attrs[i] == "type" {
+				typ = attrs[i+1]
+			}
+		}
+		n.RUnlock()
+
+		// when working with input[type="file"], call dom.SetFileInputFiles
+		if n.NodeName == "INPUT" && typ == "file" {
+			return dom.SetFileInputFiles(n.NodeID, []string{v}).Do(ctxt, h)
+		}
+
+		return KeyActionNode(n, v).Do(ctxt, h)
 	}, append(opts, NodeVisible)...)
+}
+
+// SetUploadFiles sets the files to upload (ie, for a input[type="file"] node)
+// for the first node matching the selector.
+func SetUploadFiles(sel interface{}, files []string, opts ...QueryOption) Action {
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+		if len(nodes) < 1 {
+			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+		}
+
+		return dom.SetFileInputFiles(nodes[0].NodeID, files).Do(ctxt, h)
+	}, opts...)
 }
 
 // Screenshot takes a screenshot of the first node matching the selector.

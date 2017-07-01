@@ -10,8 +10,6 @@ import (
 	"os"
 
 	cdp "github.com/knq/chromedp"
-	cdptypes "github.com/knq/chromedp/cdp"
-	"github.com/knq/chromedp/cdp/dom"
 )
 
 var (
@@ -97,14 +95,9 @@ func main() {
 }
 
 func upload(filepath string, sz *string) cdp.Tasks {
-	var ids []cdptypes.NodeID
 	return cdp.Tasks{
 		cdp.Navigate(fmt.Sprintf("http://localhost:%d", *flagPort)),
-		cdp.WaitVisible(`input[name="upload"]`),
-		cdp.NodeIDs(`input[name="upload"]`, &ids, cdp.NodeVisible),
-		cdp.ActionFunc(func(ctxt context.Context, h cdptypes.Handler) error {
-			return dom.SetFileInputFiles(ids[0], []string{filepath}).Do(ctxt, h)
-		}),
+		cdp.SendKeys(`input[name="upload"]`, filepath, cdp.NodeVisible),
 		cdp.Click(`input[name="submit"]`),
 		cdp.Text(`#result`, sz, cdp.ByID, cdp.NodeVisible),
 	}

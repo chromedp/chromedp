@@ -147,8 +147,10 @@ func ClickCount(n int) MouseOption {
 // KeyAction will synthesize a keyDown, char, and keyUp event for each rune
 // contained in keys along with any supplied key options.
 //
-// Note: only well known, "printable" characters will have "char" events
-// synthesized.
+// Only well-known, "printable" characters will have char events synthesized.
+//
+// Please see the chromedp/kb package for implementation details and the list
+// of well-known keys.
 func KeyAction(keys string, opts ...KeyOption) Action {
 	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
 		var err error

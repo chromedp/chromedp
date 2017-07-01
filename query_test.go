@@ -2,6 +2,10 @@ package chromedp
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -853,3 +857,96 @@ func TestMatchedStyle(t *testing.T) {
 		})
 	}
 }
+
+func TestFileUpload(t *testing.T) {
+	t.Parallel()
+
+	// create test server
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
+		fmt.Fprintf(res, uploadHTML)
+	})
+	mux.HandleFunc("/upload", func(res http.ResponseWriter, req *http.Request) {
+		f, _, err := req.FormFile("upload")
+		if err != nil {
+			http.Error(res, err.Error(), http.StatusBadRequest)
+			return
+		}
+		defer f.Close()
+
+		buf, err := ioutil.ReadAll(f)
+		if err != nil {
+			http.Error(res, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		fmt.Fprintf(res, resultHTML, len(buf))
+	})
+	s := httptest.NewServer(mux)
+	defer s.Close()
+
+	// create temporary file on disk
+	tmpfile, err := ioutil.TempFile("", "chromedp-upload-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(tmpfile.Name())
+	if _, err = tmpfile.WriteString(uploadHTML); err != nil {
+		t.Fatal(err)
+	}
+	if err = tmpfile.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	c := testAllocate(t, "")
+	defer c.Release()
+
+	tests := []struct {
+		a Action
+	}{
+		{SendKeys(`input[name="upload"]`, tmpfile.Name(), NodeVisible)},
+		{SetUploadFiles(`input[name="upload"]`, []string{tmpfile.Name()}, NodeVisible)},
+	}
+
+	for i, test := range tests {
+		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			test = test
+
+			c := testAllocate(t, "")
+			defer c.Release()
+
+			var result string
+			err = c.Run(defaultContext, Tasks{
+				Navigate(s.URL),
+				test.a,
+				Click(`input[name="submit"]`),
+				Text(`#result`, &result, ByID, NodeVisible),
+			})
+			if err != nil {
+				t.Fatalf("test %d expected no error, got: %v", i, err)
+			}
+			if result != fmt.Sprintf("%d", len(uploadHTML)) {
+				t.Errorf("test %d expected result to be %d, got: %s", i, len(uploadHTML), result)
+			}
+		})
+	}
+}
+
+const (
+	uploadHTML = `<!doctype html>
+<html>
+<body>
+  <form method="POST" action="/upload" enctype="multipart/form-data">
+    <input name="upload" type="file"/>
+    <input name="submit" type="submit"/>
+  </form>
+</body>
+</html>`
+
+	resultHTML = `<!doctype html>
+<html>
+<body>
+  <div id="result">%d</div>
+</body>
+</html>`
+)
