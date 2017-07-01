@@ -25,7 +25,7 @@ gometalinter \
   --exclude='^cmd/chromedp-gen/fixup/fixup\.go.*\(goconst\)$' \
   --exclude='^cmd/chromedp-gen/internal/enum\.go.*unreachable' \
   --exclude='^cmd/chromedp-gen/(main|domain-gen)\.go.*\(gas\)$' \
-  --exclude='^examples/upload/main\.go.*\(errcheck\)$' \
+  --exclude='^examples/[a-z]+/main\.go.*\(errcheck\)$' \
   --exclude='^kb/gen\.go.*\((gas|vet)\)$' \
   --exclude='^runner/.*\(gas\)$' \
   --exclude='^handler\.go.*cmd can be easyjson\.Marshaler' \
