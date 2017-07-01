@@ -42,8 +42,8 @@ func TestMouseClickXY(t *testing.T) {
 		{100, 9999},
 	}
 
-	for i, test := range tests {
-		err = c.Run(defaultContext, MouseClickXY(test.x, test.y))
+	for i := range tests {
+		err = c.Run(defaultContext, MouseClickXY(tests[i].x, tests[i].y))
 		if err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
@@ -59,8 +59,8 @@ func TestMouseClickXY(t *testing.T) {
 		if err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
-		if x != test.x {
-			t.Fatalf("test %d expected x to be: %d, got: %d", i, test.x, x)
+		if x != tests[i].x {
+			t.Fatalf("test %d expected x to be: %d, got: %d", i, tests[i].x, x)
 		}
 
 		err = c.Run(defaultContext, Value("#input2", &ystr, ByID))
@@ -71,8 +71,8 @@ func TestMouseClickXY(t *testing.T) {
 		if err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
-		if y != test.y {
-			t.Fatalf("test %d expected y to be: %d, got: %d", i, test.y, y)
+		if y != tests[i].y {
+			t.Fatalf("test %d expected y to be: %d, got: %d", i, tests[i].y, y)
 		}
 	}
 }
@@ -91,7 +91,7 @@ func TestMouseClickNode(t *testing.T) {
 		{"input3", "bar-right", Button("right"), ByID},
 	}
 
-	for i, test := range tests {
+	for i := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
 			t.Parallel()
 
@@ -100,7 +100,7 @@ func TestMouseClickNode(t *testing.T) {
 
 			var err error
 			var nodes []*cdp.Node
-			err = c.Run(defaultContext, Nodes(test.sel, &nodes, test.by))
+			err = c.Run(defaultContext, Nodes(tests[i].sel, &nodes, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -108,7 +108,7 @@ func TestMouseClickNode(t *testing.T) {
 				t.Fatalf("expected nodes to have exactly 1 element, got: %d", len(nodes))
 			}
 
-			err = c.Run(defaultContext, MouseClickNode(nodes[0], test.opt))
+			err = c.Run(defaultContext, MouseClickNode(nodes[0], tests[i].opt))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -120,8 +120,8 @@ func TestMouseClickNode(t *testing.T) {
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
-			if value != test.exp {
-				t.Fatalf("expected to have value %s, got: %s", test.exp, value)
+			if value != tests[i].exp {
+				t.Fatalf("expected to have value %s, got: %s", tests[i].exp, value)
 			}
 		})
 	}
@@ -138,7 +138,7 @@ func TestMouseClickOffscreenNode(t *testing.T) {
 		{"#button3", 10, ByID},
 	}
 
-	for i, test := range tests {
+	for i := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
 			t.Parallel()
 
@@ -147,7 +147,7 @@ func TestMouseClickOffscreenNode(t *testing.T) {
 
 			var err error
 			var nodes []*cdp.Node
-			err = c.Run(defaultContext, Nodes(test.sel, &nodes, test.by))
+			err = c.Run(defaultContext, Nodes(tests[i].sel, &nodes, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -164,7 +164,7 @@ func TestMouseClickOffscreenNode(t *testing.T) {
 				t.Fatal("expected node to be offscreen")
 			}
 
-			for i := test.exp; i > 0; i-- {
+			for i := tests[i].exp; i > 0; i-- {
 				err = c.Run(defaultContext, MouseClickNode(nodes[0]))
 				if err != nil {
 					t.Fatalf("got error: %v", err)
@@ -178,8 +178,8 @@ func TestMouseClickOffscreenNode(t *testing.T) {
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
-			if value != test.exp {
-				t.Fatalf("expected to have value %d, got: %d", test.exp, value)
+			if value != tests[i].exp {
+				t.Fatalf("expected to have value %d, got: %d", tests[i].exp, value)
 			}
 		})
 	}
@@ -198,7 +198,7 @@ func TestKeyAction(t *testing.T) {
 		{"#input4", "\n\nfoo\n\nbar\n\n", ByID},
 	}
 
-	for i, test := range tests {
+	for i := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
 			t.Parallel()
 
@@ -207,7 +207,7 @@ func TestKeyAction(t *testing.T) {
 
 			var err error
 			var nodes []*cdp.Node
-			err = c.Run(defaultContext, Nodes(test.sel, &nodes, test.by))
+			err = c.Run(defaultContext, Nodes(tests[i].sel, &nodes, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -215,23 +215,23 @@ func TestKeyAction(t *testing.T) {
 				t.Fatalf("expected nodes to have exactly 1 element, got: %d", len(nodes))
 			}
 
-			err = c.Run(defaultContext, Focus(test.sel, test.by))
+			err = c.Run(defaultContext, Focus(tests[i].sel, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
-			err = c.Run(defaultContext, KeyAction(test.exp))
+			err = c.Run(defaultContext, KeyAction(tests[i].exp))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
 			var value string
-			err = c.Run(defaultContext, Value(test.sel, &value, test.by))
+			err = c.Run(defaultContext, Value(tests[i].sel, &value, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
-			if value != test.exp {
-				t.Fatalf("expected to have value %s, got: %s", test.exp, value)
+			if value != tests[i].exp {
+				t.Fatalf("expected to have value %s, got: %s", tests[i].exp, value)
 			}
 		})
 	}
@@ -250,7 +250,7 @@ func TestKeyActionNode(t *testing.T) {
 		{"#input4", "\n\nfoo\n\nbar\n\n", ByID},
 	}
 
-	for i, test := range tests {
+	for i := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
 			t.Parallel()
 
@@ -259,7 +259,7 @@ func TestKeyActionNode(t *testing.T) {
 
 			var err error
 			var nodes []*cdp.Node
-			err = c.Run(defaultContext, Nodes(test.sel, &nodes, test.by))
+			err = c.Run(defaultContext, Nodes(tests[i].sel, &nodes, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -267,18 +267,18 @@ func TestKeyActionNode(t *testing.T) {
 				t.Fatalf("expected nodes to have exactly 1 element, got: %d", len(nodes))
 			}
 
-			err = c.Run(defaultContext, KeyActionNode(nodes[0], test.exp))
+			err = c.Run(defaultContext, KeyActionNode(nodes[0], tests[i].exp))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
 			var value string
-			err = c.Run(defaultContext, Value(test.sel, &value, test.by))
+			err = c.Run(defaultContext, Value(tests[i].sel, &value, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
-			if value != test.exp {
-				t.Fatalf("expected to have value %s, got: %s", test.exp, value)
+			if value != tests[i].exp {
+				t.Fatalf("expected to have value %s, got: %s", tests[i].exp, value)
 			}
 		})
 	}
