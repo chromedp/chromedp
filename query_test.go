@@ -34,14 +34,14 @@ func TestNodes(t *testing.T) {
 	}
 
 	var err error
-	for i, test := range tests {
+	for i := range tests {
 		var nodes []*cdp.Node
-		err = c.Run(defaultContext, Nodes(test.sel, &nodes, test.by))
+		err = c.Run(defaultContext, Nodes(tests[i].sel, &nodes, tests[i].by))
 		if err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
-		if len(nodes) != test.len {
-			t.Errorf("test %d expected to have %d nodes: got %d", i, test.len, len(nodes))
+		if len(nodes) != tests[i].len {
+			t.Errorf("test %d expected to have %d nodes: got %d", i, tests[i].len, len(nodes))
 		}
 	}
 }
@@ -64,14 +64,14 @@ func TestNodeIDs(t *testing.T) {
 	}
 
 	var err error
-	for i, test := range tests {
+	for i := range tests {
 		var ids []cdp.NodeID
-		err = c.Run(defaultContext, NodeIDs(test.sel, &ids, test.by))
+		err = c.Run(defaultContext, NodeIDs(tests[i].sel, &ids, tests[i].by))
 		if err != nil {
 			t.Fatal(err)
 		}
-		if len(ids) != test.len {
-			t.Errorf("test %d expected to have %d node id's: got %d", i, test.len, len(ids))
+		if len(ids) != tests[i].len {
+			t.Errorf("test %d expected to have %d node id's: got %d", i, tests[i].len, len(ids))
 		}
 	}
 }
@@ -97,14 +97,14 @@ func TestFocusBlur(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	for i, test := range tests {
-		err = c.Run(defaultContext, Focus(test.sel, test.by))
+	for i := range tests {
+		err = c.Run(defaultContext, Focus(tests[i].sel, tests[i].by))
 		if err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
 
 		var value string
-		err = c.Run(defaultContext, Value(test.sel, &value, test.by))
+		err = c.Run(defaultContext, Value(tests[i].sel, &value, tests[i].by))
 		if err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
@@ -112,12 +112,12 @@ func TestFocusBlur(t *testing.T) {
 			t.Errorf("test %d expected value is '9999', got: '%s'", i, value)
 		}
 
-		err = c.Run(defaultContext, Blur(test.sel, test.by))
+		err = c.Run(defaultContext, Blur(tests[i].sel, tests[i].by))
 		if err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
 
-		err = c.Run(defaultContext, Value(test.sel, &value, test.by))
+		err = c.Run(defaultContext, Value(tests[i].sel, &value, tests[i].by))
 		if err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
@@ -146,14 +146,14 @@ func TestDimensions(t *testing.T) {
 	}
 
 	var err error
-	for i, test := range tests {
+	for i := range tests {
 		var model *dom.BoxModel
-		err = c.Run(defaultContext, Dimensions(test.sel, &model))
+		err = c.Run(defaultContext, Dimensions(tests[i].sel, &model))
 		if err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
-		if model.Height != test.height || model.Width != test.width {
-			t.Errorf("test %d expected %dx%d, got: %dx%d", i, test.width, test.height, model.Height, model.Width)
+		if model.Height != tests[i].height || model.Width != tests[i].width {
+			t.Errorf("test %d expected %dx%d, got: %dx%d", i, tests[i].width, tests[i].height, model.Height, model.Width)
 		}
 	}
 }
@@ -176,14 +176,14 @@ func TestText(t *testing.T) {
 	}
 
 	var err error
-	for i, test := range tests {
+	for i := range tests {
 		var text string
-		err = c.Run(defaultContext, Text(test.sel, &text, test.by))
+		err = c.Run(defaultContext, Text(tests[i].sel, &text, tests[i].by))
 		if err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
-		if text != test.exp {
-			t.Errorf("test %d expected `%s`, got: %s", i, test.exp, text)
+		if text != tests[i].exp {
+			t.Errorf("test %d expected `%s`, got: %s", i, tests[i].exp, text)
 		}
 	}
 }
@@ -210,7 +210,7 @@ func TestClear(t *testing.T) {
 		{`#form > input[type="text"]`, ByQueryAll},
 	}
 
-	for i, test := range tests {
+	for i := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
 			t.Parallel()
 
@@ -218,25 +218,25 @@ func TestClear(t *testing.T) {
 			defer c.Release()
 
 			var val string
-			err := c.Run(defaultContext, Value(test.sel, &val, test.by))
+			err := c.Run(defaultContext, Value(tests[i].sel, &val, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 			if val == "" {
-				t.Errorf("expected `%s` to have non empty value", test.sel)
+				t.Errorf("expected `%s` to have non empty value", tests[i].sel)
 			}
 
-			err = c.Run(defaultContext, Clear(test.sel, test.by))
+			err = c.Run(defaultContext, Clear(tests[i].sel, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
-			err = c.Run(defaultContext, Value(test.sel, &val, test.by))
+			err = c.Run(defaultContext, Value(tests[i].sel, &val, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 			if val != "" {
-				t.Errorf("expected empty value for `%s`, got: %s", test.sel, val)
+				t.Errorf("expected empty value for `%s`, got: %s", tests[i].sel, val)
 			}
 		})
 	}
@@ -255,30 +255,30 @@ func TestReset(t *testing.T) {
 		{"#bar", ByID, "foobar", "bar"},
 	}
 
-	for i, test := range tests {
+	for i := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
 			t.Parallel()
 
 			c := testAllocate(t, "form.html")
 			defer c.Release()
 
-			err := c.Run(defaultContext, SetValue(test.sel, test.value, test.by))
+			err := c.Run(defaultContext, SetValue(tests[i].sel, tests[i].value, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
-			err = c.Run(defaultContext, Reset(test.sel, test.by))
+			err = c.Run(defaultContext, Reset(tests[i].sel, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
 			var value string
-			err = c.Run(defaultContext, Value(test.sel, &value, test.by))
+			err = c.Run(defaultContext, Value(tests[i].sel, &value, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
-			if value != test.exp {
-				t.Errorf("expected value after reset is %s, got: '%s'", test.exp, value)
+			if value != tests[i].exp {
+				t.Errorf("expected value after reset is %s, got: '%s'", tests[i].exp, value)
 			}
 		})
 	}
@@ -301,9 +301,9 @@ func TestValue(t *testing.T) {
 	}
 
 	var err error
-	for i, test := range tests {
+	for i := range tests {
 		var value string
-		err = c.Run(defaultContext, Value(test.sel, &value, test.by))
+		err = c.Run(defaultContext, Value(tests[i].sel, &value, tests[i].by))
 		if err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
@@ -324,20 +324,20 @@ func TestSetValue(t *testing.T) {
 		{`#bar`, ByID},
 	}
 
-	for i, test := range tests {
+	for i := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
 			t.Parallel()
 
 			c := testAllocate(t, "form.html")
 			defer c.Release()
 
-			err := c.Run(defaultContext, SetValue(test.sel, "FOOBAR", test.by))
+			err := c.Run(defaultContext, SetValue(tests[i].sel, "FOOBAR", tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
 			var value string
-			err = c.Run(defaultContext, Value(test.sel, &value, test.by))
+			err = c.Run(defaultContext, Value(tests[i].sel, &value, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -386,15 +386,15 @@ func TestAttributes(t *testing.T) {
 	}
 
 	var err error
-	for i, test := range tests {
+	for i := range tests {
 		var attrs map[string]string
-		err = c.Run(defaultContext, Attributes(test.sel, &attrs, test.by))
+		err = c.Run(defaultContext, Attributes(tests[i].sel, &attrs, tests[i].by))
 		if err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
 
-		if !reflect.DeepEqual(test.exp, attrs) {
-			t.Errorf("test %d expected %v, got: %v", i, test.exp, attrs)
+		if !reflect.DeepEqual(tests[i].exp, attrs) {
+			t.Errorf("test %d expected %v, got: %v", i, tests[i].exp, attrs)
 		}
 	}
 }
@@ -441,26 +441,26 @@ func TestSetAttributes(t *testing.T) {
 			}},
 	}
 
-	for i, test := range tests {
+	for i := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
 			t.Parallel()
 
 			c := testAllocate(t, "image.html")
 			defer c.Release()
 
-			err := c.Run(defaultContext, SetAttributes(test.sel, test.attrs, test.by))
+			err := c.Run(defaultContext, SetAttributes(tests[i].sel, tests[i].attrs, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
 			var attrs map[string]string
-			err = c.Run(defaultContext, Attributes(test.sel, &attrs, test.by))
+			err = c.Run(defaultContext, Attributes(tests[i].sel, &attrs, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
-			if !reflect.DeepEqual(test.exp, attrs) {
-				t.Errorf("expected %v, got: %v", test.exp, attrs)
+			if !reflect.DeepEqual(tests[i].exp, attrs) {
+				t.Errorf("expected %v, got: %v", tests[i].exp, attrs)
 			}
 		})
 	}
@@ -485,21 +485,21 @@ func TestAttributeValue(t *testing.T) {
 	}
 
 	var err error
-	for i, test := range tests {
+	for i := range tests {
 		var value string
 		var ok bool
 
-		err = c.Run(defaultContext, AttributeValue(test.sel, test.attr, &value, &ok, test.by))
+		err = c.Run(defaultContext, AttributeValue(tests[i].sel, tests[i].attr, &value, &ok, tests[i].by))
 		if err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
 
 		if !ok {
-			t.Fatalf("test %d failed to get attribute %s on %s", i, test.attr, test.sel)
+			t.Fatalf("test %d failed to get attribute %s on %s", i, tests[i].attr, tests[i].sel)
 		}
 
-		if value != test.exp {
-			t.Errorf("test %d expected %s to be %s, got: %s", i, test.attr, test.exp, value)
+		if value != tests[i].exp {
+			t.Errorf("test %d expected %s to be %s, got: %s", i, tests[i].attr, tests[i].exp, value)
 		}
 	}
 }
@@ -517,30 +517,30 @@ func TestSetAttributeValue(t *testing.T) {
 		{"#bar", ByID, "foo", "bar"},
 	}
 
-	for i, test := range tests {
+	for i := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
 			t.Parallel()
 
 			c := testAllocate(t, "form.html")
 			defer c.Release()
 
-			err := c.Run(defaultContext, SetAttributeValue(test.sel, test.attr, test.exp, test.by))
+			err := c.Run(defaultContext, SetAttributeValue(tests[i].sel, tests[i].attr, tests[i].exp, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
 			var value string
 			var ok bool
-			err = c.Run(defaultContext, AttributeValue(test.sel, test.attr, &value, &ok, test.by))
+			err = c.Run(defaultContext, AttributeValue(tests[i].sel, tests[i].attr, &value, &ok, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 			if !ok {
-				t.Fatalf("failed to get attribute %s on %s", test.attr, test.sel)
+				t.Fatalf("failed to get attribute %s on %s", tests[i].attr, tests[i].sel)
 			}
 
-			if value != test.exp {
-				t.Errorf("expected %s to be %s, got: %s", test.attr, test.exp, value)
+			if value != tests[i].exp {
+				t.Errorf("expected %s to be %s, got: %s", tests[i].attr, tests[i].exp, value)
 			}
 		})
 	}
@@ -558,26 +558,26 @@ func TestRemoveAttribute(t *testing.T) {
 		{"#icon-github", ByID, "alt"},
 	}
 
-	for i, test := range tests {
+	for i := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
 			t.Parallel()
 
 			c := testAllocate(t, "image.html")
 			defer c.Release()
 
-			err := c.Run(defaultContext, RemoveAttribute(test.sel, test.attr))
+			err := c.Run(defaultContext, RemoveAttribute(tests[i].sel, tests[i].attr))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
 			var value string
 			var ok bool
-			err = c.Run(defaultContext, AttributeValue(test.sel, test.attr, &value, &ok, test.by))
+			err = c.Run(defaultContext, AttributeValue(tests[i].sel, tests[i].attr, &value, &ok, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 			if ok || value != "" {
-				t.Fatalf("expected attribute %s removed from element %s", test.attr, test.sel)
+				t.Fatalf("expected attribute %s removed from element %s", tests[i].attr, tests[i].sel)
 			}
 		})
 	}
@@ -594,14 +594,14 @@ func TestClick(t *testing.T) {
 		{"#btn2", ByID},
 	}
 
-	for i, test := range tests {
+	for i := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
 			t.Parallel()
 
 			c := testAllocate(t, "form.html")
 			defer c.Release()
 
-			err := c.Run(defaultContext, Click(test.sel, test.by))
+			err := c.Run(defaultContext, Click(tests[i].sel, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -634,14 +634,14 @@ func TestDoubleClick(t *testing.T) {
 		{`#button1`, ByID},
 	}
 
-	for i, test := range tests {
+	for i := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
 			t.Parallel()
 
 			c := testAllocate(t, "js.html")
 			defer c.Release()
 
-			err := c.Run(defaultContext, DoubleClick(test.sel, test.by))
+			err := c.Run(defaultContext, DoubleClick(tests[i].sel, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -675,25 +675,25 @@ func TestSendKeys(t *testing.T) {
 		{"#select1", ByID, kb.ArrowDown + kb.ArrowDown, "three"},
 	}
 
-	for i, test := range tests {
+	for i := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
 			t.Parallel()
 
 			c := testAllocate(t, "visible.html")
 			defer c.Release()
 
-			err := c.Run(defaultContext, SendKeys(test.sel, test.keys, test.by))
+			err := c.Run(defaultContext, SendKeys(tests[i].sel, tests[i].keys, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
 			var val string
-			err = c.Run(defaultContext, Value(test.sel, &val, test.by))
+			err = c.Run(defaultContext, Value(tests[i].sel, &val, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
-			if val != test.exp {
-				t.Errorf("expected value %s, got: %s", test.exp, val)
+			if val != tests[i].exp {
+				t.Errorf("expected value %s, got: %s", tests[i].exp, val)
 			}
 		})
 	}
@@ -716,9 +716,9 @@ func TestScreenshot(t *testing.T) {
 	}
 
 	var err error
-	for i, test := range tests {
+	for i := range tests {
 		var buf []byte
-		err = c.Run(defaultContext, Screenshot(test.sel, &buf))
+		err = c.Run(defaultContext, Screenshot(tests[i].sel, &buf))
 		if err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
@@ -741,14 +741,14 @@ func TestSubmit(t *testing.T) {
 		{"#form", ByID},
 	}
 
-	for i, test := range tests {
+	for i := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
 			t.Parallel()
 
 			c := testAllocate(t, "form.html")
 			defer c.Release()
 
-			err := c.Run(defaultContext, Submit(test.sel, test.by))
+			err := c.Run(defaultContext, Submit(tests[i].sel, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -781,7 +781,7 @@ func TestComputedStyle(t *testing.T) {
 		{"#input1", ByID},
 	}
 
-	for i, test := range tests {
+	for i := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
 			t.Parallel()
 
@@ -791,7 +791,7 @@ func TestComputedStyle(t *testing.T) {
 			time.Sleep(50 * time.Millisecond)
 
 			var styles []*css.ComputedProperty
-			err := c.Run(defaultContext, ComputedStyle(test.sel, &styles, test.by))
+			err := c.Run(defaultContext, ComputedStyle(tests[i].sel, &styles, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -811,7 +811,7 @@ func TestComputedStyle(t *testing.T) {
 
 			time.Sleep(50 * time.Millisecond)
 
-			err = c.Run(defaultContext, ComputedStyle(test.sel, &styles, test.by))
+			err = c.Run(defaultContext, ComputedStyle(tests[i].sel, &styles, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -838,7 +838,7 @@ func TestMatchedStyle(t *testing.T) {
 		{"#input1", ByID},
 	}
 
-	for i, test := range tests {
+	for i := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
 			t.Parallel()
 
@@ -848,7 +848,7 @@ func TestMatchedStyle(t *testing.T) {
 			time.Sleep(50 * time.Millisecond)
 
 			var styles *css.GetMatchedStylesForNodeReturns
-			err := c.Run(defaultContext, MatchedStyle(test.sel, &styles, test.by))
+			err := c.Run(defaultContext, MatchedStyle(tests[i].sel, &styles, tests[i].by))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -908,17 +908,15 @@ func TestFileUpload(t *testing.T) {
 		{SetUploadFiles(`input[name="upload"]`, []string{tmpfile.Name()}, NodeVisible)},
 	}
 
-	for i, test := range tests {
+	for i := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
-			test = test
-
 			c := testAllocate(t, "")
 			defer c.Release()
 
 			var result string
 			err = c.Run(defaultContext, Tasks{
 				Navigate(s.URL),
-				test.a,
+				tests[i].a,
 				Click(`input[name="submit"]`),
 				Text(`#result`, &result, ByID, NodeVisible),
 			})
