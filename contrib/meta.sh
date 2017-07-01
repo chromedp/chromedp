@@ -15,6 +15,7 @@ gometalinter \
   --exclude='/easyjson\.go.*(passes|copies) lock' \
   --exclude='/easyjson\.go.*ineffectual assignment' \
   --exclude='/easyjson\.go.*unnecessary conversion' \
+  --exclude='/easyjson\.go.*this value of key is never used' \
   --exclude='/easyjson\.go.*\((gocyclo|golint|goconst|staticcheck)\)$' \
   --exclude='^cdp/.*Potential hardcoded credentials' \
   --exclude='^cdp/cdp\.go.*UnmarshalEasyJSON.*\(gocyclo\)$' \
@@ -24,6 +25,7 @@ gometalinter \
   --exclude='^cmd/chromedp-gen/fixup/fixup\.go.*\(goconst\)$' \
   --exclude='^cmd/chromedp-gen/internal/enum\.go.*unreachable' \
   --exclude='^cmd/chromedp-gen/(main|domain-gen)\.go.*\(gas\)$' \
+  --exclude='^examples/upload/main\.go.*\(errcheck\)$' \
   --exclude='^kb/gen\.go.*\((gas|vet)\)$' \
   --exclude='^runner/.*\(gas\)$' \
   --exclude='^handler\.go.*cmd can be easyjson\.Marshaler' \

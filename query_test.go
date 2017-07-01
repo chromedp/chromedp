@@ -910,8 +910,6 @@ func TestFileUpload(t *testing.T) {
 
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
-			test = test
-
 			c := testAllocate(t, "")
 			defer c.Release()
 

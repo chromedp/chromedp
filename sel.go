@@ -129,14 +129,14 @@ func (s *Selector) selAsString() string {
 }
 
 // selAsInt forces sel into a int.
-func (s *Selector) selAsInt() int {
+/*func (s *Selector) selAsInt() int {
 	sel, ok := s.sel.(int)
 	if !ok {
 		panic("selector must be int")
 	}
 
 	return sel
-}
+}*/
 
 // QueryAfter is an action that will match the specified sel using the supplied
 // query options, and after the visibility conditions of the query have been

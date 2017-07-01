@@ -174,36 +174,16 @@ func Value(sel interface{}, value *string, opts ...QueryOption) Action {
 		panic("value cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
-		if len(nodes) < 1 {
-			return fmt.Errorf("selector `%s` did not return any nodes", sel)
-		}
-
-		return EvaluateAsDevTools(fmt.Sprintf(valueJS, nodes[0].FullXPath()), value).Do(ctxt, h)
-	}, opts...)
+	return JavascriptAttribute(sel, "value", value, opts...)
 }
 
 // SetValue sets the value of an element.
 func SetValue(sel interface{}, value string, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
-		if len(nodes) < 1 {
-			return fmt.Errorf("selector `%s` did not return any nodes", sel)
-		}
-
-		var res string
-		err := EvaluateAsDevTools(fmt.Sprintf(setValueJS, nodes[0].FullXPath(), value), &res).Do(ctxt, h)
-		if err != nil {
-			return err
-		}
-		if res != value {
-			return fmt.Errorf("could not set value on node %d", nodes[0].NodeID)
-		}
-
-		return nil
-	}, opts...)
+	return SetJavascriptAttribute(sel, "value", value, opts...)
 }
 
-// Attributes retrieves the attributes for the first node matching the selector.
+// Attributes retrieves the element attributes for the first node matching the
+// selector.
 func Attributes(sel interface{}, attributes *map[string]string, opts ...QueryOption) Action {
 	if attributes == nil {
 		panic("attributes cannot be nil")
@@ -229,7 +209,8 @@ func Attributes(sel interface{}, attributes *map[string]string, opts ...QueryOpt
 	}, opts...)
 }
 
-// SetAttributes sets the attributes for the first node matching the selector.
+// SetAttributes sets the element attributes for the first node matching the
+// selector.
 func SetAttributes(sel interface{}, attributes map[string]string, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
@@ -246,8 +227,8 @@ func SetAttributes(sel interface{}, attributes map[string]string, opts ...QueryO
 	}, opts...)
 }
 
-// AttributeValue retrieves the attribute value for the first node matching the
-// selector.
+// AttributeValue retrieves the element attribute value for the first node
+// matching the selector.
 func AttributeValue(sel interface{}, name string, value *string, ok *bool, opts ...QueryOption) Action {
 	if value == nil {
 		panic("value cannot be nil")
@@ -280,8 +261,8 @@ func AttributeValue(sel interface{}, name string, value *string, ok *bool, opts 
 	}, opts...)
 }
 
-// SetAttributeValue sets the attribute with name to value on the first node
-// matching the selector.
+// SetAttributeValue sets the element attribute with name to value for the
+// first node matching the selector.
 func SetAttributeValue(sel interface{}, name, value string, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
@@ -292,8 +273,8 @@ func SetAttributeValue(sel interface{}, name, value string, opts ...QueryOption)
 	}, opts...)
 }
 
-// RemoveAttribute removes the attribute with name from the first node matching
-// the selector.
+// RemoveAttribute removes the element attribute with name from the first node
+// matching the selector.
 func RemoveAttribute(sel interface{}, name string, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
@@ -302,6 +283,58 @@ func RemoveAttribute(sel interface{}, name string, opts ...QueryOption) Action {
 
 		return dom.RemoveAttribute(nodes[0].NodeID, name).Do(ctxt, h)
 	}, opts...)
+}
+
+// JavascriptAttribute retrieves the Javascript attribute for the first node
+// matching the selector.
+func JavascriptAttribute(sel interface{}, name string, res interface{}, opts ...QueryOption) Action {
+	if res == nil {
+		panic("res cannot be nil")
+	}
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+		if len(nodes) < 1 {
+			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+		}
+
+		return EvaluateAsDevTools(fmt.Sprintf(attributeJS, nodes[0].FullXPath(), name), res).Do(ctxt, h)
+	}, opts...)
+}
+
+// SetJavascriptAttribute sets the javascript attribute for the first node
+// matching the selector.
+func SetJavascriptAttribute(sel interface{}, name, value string, opts ...QueryOption) Action {
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+		if len(nodes) < 1 {
+			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+		}
+
+		var res string
+		err := EvaluateAsDevTools(fmt.Sprintf(setAttributeJS, nodes[0].FullXPath(), name, value), &res).Do(ctxt, h)
+		if err != nil {
+			return err
+		}
+		if res != value {
+			return fmt.Errorf("could not set value on node %d", nodes[0].NodeID)
+		}
+
+		return nil
+	}, opts...)
+}
+
+// OuterHTML retrieves the outer html of the first node matching the selector.
+func OuterHTML(sel interface{}, html *string, opts ...QueryOption) Action {
+	if html == nil {
+		panic("html cannot be nil")
+	}
+	return JavascriptAttribute(sel, "outerHTML", html, opts...)
+}
+
+// InnerHTML retrieves the inner html of the first node matching the selector.
+func InnerHTML(sel interface{}, html *string, opts ...QueryOption) Action {
+	if html == nil {
+		panic("html cannot be nil")
+	}
+	return JavascriptAttribute(sel, "innerHTML", html, opts...)
 }
 
 // Click sends a mouse click event to the first node matching the selector.

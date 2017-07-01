@@ -80,22 +80,22 @@ const (
 		return false;
 	})($x('%s'))`
 
-	// valueJS is a javascript snippet that returns the value of a specified
+	// attributeJS is a javascript snippet that returns the attribute of a specified
 	// node.
-	valueJS = `(function(a) {
-		return a[0].value;
-	})($x('%s'))`
-
-	// setValueJS is a javascript snippet that sets the value of the specified
-	// node, and returns the value.
-	setValueJS = `(function(a, val) {
-		return a[0].value = val;
+	attributeJS = `(function(a, n) {
+		return a[0][n];
 	})($x('%s'), '%s')`
+
+	// setAttributeJS is a javascript snippet that sets the value of the specified
+	// node, and returns the value.
+	setAttributeJS = `(function(a, n, v) {
+		return a[0][n] = v;
+	})($x('%s'), '%s', '%s')`
 
 	// visibleJS is a javascript snippet that returns true or false depending
 	// on if the specified node's offsetParent is not null.
 	visibleJS = `(function(a) {
-		return a[0].offsetParent !== null
+		return a[0].offsetParent !== null;
 	})($x('%s'))`
 )
 
