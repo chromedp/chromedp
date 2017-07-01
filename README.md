@@ -100,6 +100,10 @@ Please see the [examples](examples/) directory for some more examples, and
 please refer to the [GoDoc API listing](https://godoc.org/github.com/knq/chromedp)
 for a summary of the API and Actions.
 
+## Links + Resources
+* [chromedp: A New Way to Drive the Web (GopherCon SG 2017)](https://www.youtube.com/watch?v=_7pWCg94sKw)
+* [Chrome DevTools Protocol Viewer](https://chromedevtools.github.io/devtools-protocol/)
+
 ## TODO
 * Move timeouts to context (defaults)
 * Implement more query selector options (allow over riding context timeouts)
