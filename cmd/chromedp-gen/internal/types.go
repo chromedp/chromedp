@@ -177,7 +177,7 @@ func (t *Type) ResolveType(d *Domain, domains []*Domain) (DomainType, *Type, str
 		// add ptr if object
 		ptr := ""
 		switch typ.Type {
-		case TypeObject:
+		case TypeObject, TypeTimestamp:
 			ptr = "*"
 		}
 

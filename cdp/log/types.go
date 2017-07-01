@@ -18,7 +18,7 @@ type Entry struct {
 	Source           Source              `json:"source,omitempty"`           // Log entry source.
 	Level            Level               `json:"level,omitempty"`            // Log entry severity.
 	Text             string              `json:"text,omitempty"`             // Logged text.
-	Timestamp        cdp.Timestamp       `json:"timestamp,omitempty"`        // Timestamp when this entry was added.
+	Timestamp        *cdp.Timestamp      `json:"timestamp,omitempty"`        // Timestamp when this entry was added.
 	URL              string              `json:"url,omitempty"`              // URL of the resource if known.
 	LineNumber       int64               `json:"lineNumber,omitempty"`       // Line number in the resource.
 	StackTrace       *runtime.StackTrace `json:"stackTrace,omitempty"`       // JavaScript stack trace.

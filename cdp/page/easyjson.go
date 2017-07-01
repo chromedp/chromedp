@@ -834,7 +834,15 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage9(in *jlexer.Lexer, out *S
 		case "scrollOffsetY":
 			out.ScrollOffsetY = float64(in.Float64())
 		case "timestamp":
-			(out.Timestamp).UnmarshalEasyJSON(in)
+			if in.IsNull() {
+				in.Skip()
+				out.Timestamp = nil
+			} else {
+				if out.Timestamp == nil {
+					out.Timestamp = new(cdp.Timestamp)
+				}
+				(*out.Timestamp).UnmarshalEasyJSON(in)
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -897,13 +905,17 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage9(out *jwriter.Writer, in 
 		out.RawString("\"scrollOffsetY\":")
 		out.Float64(float64(in.ScrollOffsetY))
 	}
-	if true {
+	if in.Timestamp != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"timestamp\":")
-		(in.Timestamp).MarshalEasyJSON(out)
+		if in.Timestamp == nil {
+			out.RawString("null")
+		} else {
+			(*in.Timestamp).MarshalEasyJSON(out)
+		}
 	}
 	out.RawByte('}')
 }
@@ -3091,7 +3103,15 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage34(in *jlexer.Lexer, out *
 		case "mimeType":
 			out.MimeType = string(in.String())
 		case "lastModified":
-			(out.LastModified).UnmarshalEasyJSON(in)
+			if in.IsNull() {
+				in.Skip()
+				out.LastModified = nil
+			} else {
+				if out.LastModified == nil {
+					out.LastModified = new(cdp.Timestamp)
+				}
+				(*out.LastModified).UnmarshalEasyJSON(in)
+			}
 		case "contentSize":
 			out.ContentSize = float64(in.Float64())
 		case "failed":
@@ -3136,13 +3156,17 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage34(out *jwriter.Writer, in
 		out.RawString("\"mimeType\":")
 		out.String(string(in.MimeType))
 	}
-	if true {
+	if in.LastModified != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"lastModified\":")
-		(in.LastModified).MarshalEasyJSON(out)
+		if in.LastModified == nil {
+			out.RawString("null")
+		} else {
+			(*in.LastModified).MarshalEasyJSON(out)
+		}
 	}
 	if in.ContentSize != 0 {
 		if !first {
@@ -3483,7 +3507,15 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage38(in *jlexer.Lexer, out *
 		}
 		switch key {
 		case "timestamp":
-			(out.Timestamp).UnmarshalEasyJSON(in)
+			if in.IsNull() {
+				in.Skip()
+				out.Timestamp = nil
+			} else {
+				if out.Timestamp == nil {
+					out.Timestamp = new(cdp.Timestamp)
+				}
+				(*out.Timestamp).UnmarshalEasyJSON(in)
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -3498,13 +3530,17 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage38(out *jwriter.Writer, in
 	out.RawByte('{')
 	first := true
 	_ = first
-	if true {
+	if in.Timestamp != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"timestamp\":")
-		(in.Timestamp).MarshalEasyJSON(out)
+		if in.Timestamp == nil {
+			out.RawString("null")
+		} else {
+			(*in.Timestamp).MarshalEasyJSON(out)
+		}
 	}
 	out.RawByte('}')
 }
@@ -4414,7 +4450,15 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage51(in *jlexer.Lexer, out *
 		}
 		switch key {
 		case "timestamp":
-			(out.Timestamp).UnmarshalEasyJSON(in)
+			if in.IsNull() {
+				in.Skip()
+				out.Timestamp = nil
+			} else {
+				if out.Timestamp == nil {
+					out.Timestamp = new(cdp.Timestamp)
+				}
+				(*out.Timestamp).UnmarshalEasyJSON(in)
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -4429,13 +4473,17 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage51(out *jwriter.Writer, in
 	out.RawByte('{')
 	first := true
 	_ = first
-	if true {
+	if in.Timestamp != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"timestamp\":")
-		(in.Timestamp).MarshalEasyJSON(out)
+		if in.Timestamp == nil {
+			out.RawString("null")
+		} else {
+			(*in.Timestamp).MarshalEasyJSON(out)
+		}
 	}
 	out.RawByte('}')
 }

@@ -460,7 +460,15 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork3(in *jlexer.Lexer, out
 		case "logId":
 			out.LogID = string(in.String())
 		case "timestamp":
-			(out.Timestamp).UnmarshalEasyJSON(in)
+			if in.IsNull() {
+				in.Skip()
+				out.Timestamp = nil
+			} else {
+				if out.Timestamp == nil {
+					out.Timestamp = new(cdp.Timestamp)
+				}
+				(*out.Timestamp).UnmarshalEasyJSON(in)
+			}
 		case "hashAlgorithm":
 			out.HashAlgorithm = string(in.String())
 		case "signatureAlgorithm":
@@ -513,13 +521,17 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork3(out *jwriter.Writer, 
 		out.RawString("\"logId\":")
 		out.String(string(in.LogID))
 	}
-	if true {
+	if in.Timestamp != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"timestamp\":")
-		(in.Timestamp).MarshalEasyJSON(out)
+		if in.Timestamp == nil {
+			out.RawString("null")
+		} else {
+			(*in.Timestamp).MarshalEasyJSON(out)
+		}
 	}
 	if in.HashAlgorithm != "" {
 		if !first {
@@ -930,7 +942,15 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork8(in *jlexer.Lexer, out
 		case "sameSite":
 			(out.SameSite).UnmarshalEasyJSON(in)
 		case "expirationDate":
-			(out.ExpirationDate).UnmarshalEasyJSON(in)
+			if in.IsNull() {
+				in.Skip()
+				out.ExpirationDate = nil
+			} else {
+				if out.ExpirationDate == nil {
+					out.ExpirationDate = new(cdp.Timestamp)
+				}
+				(*out.ExpirationDate).UnmarshalEasyJSON(in)
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -1003,13 +1023,17 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork8(out *jwriter.Writer, 
 		out.RawString("\"sameSite\":")
 		(in.SameSite).MarshalEasyJSON(out)
 	}
-	if true {
+	if in.ExpirationDate != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"expirationDate\":")
-		(in.ExpirationDate).MarshalEasyJSON(out)
+		if in.ExpirationDate == nil {
+			out.RawString("null")
+		} else {
+			(*in.ExpirationDate).MarshalEasyJSON(out)
+		}
 	}
 	out.RawByte('}')
 }
@@ -1329,9 +1353,25 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork12(in *jlexer.Lexer, ou
 		case "issuer":
 			out.Issuer = string(in.String())
 		case "validFrom":
-			(out.ValidFrom).UnmarshalEasyJSON(in)
+			if in.IsNull() {
+				in.Skip()
+				out.ValidFrom = nil
+			} else {
+				if out.ValidFrom == nil {
+					out.ValidFrom = new(cdp.Timestamp)
+				}
+				(*out.ValidFrom).UnmarshalEasyJSON(in)
+			}
 		case "validTo":
-			(out.ValidTo).UnmarshalEasyJSON(in)
+			if in.IsNull() {
+				in.Skip()
+				out.ValidTo = nil
+			} else {
+				if out.ValidTo == nil {
+					out.ValidTo = new(cdp.Timestamp)
+				}
+				(*out.ValidTo).UnmarshalEasyJSON(in)
+			}
 		case "signedCertificateTimestampList":
 			if in.IsNull() {
 				in.Skip()
@@ -1460,21 +1500,29 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork12(out *jwriter.Writer,
 		out.RawString("\"issuer\":")
 		out.String(string(in.Issuer))
 	}
-	if true {
+	if in.ValidFrom != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"validFrom\":")
-		(in.ValidFrom).MarshalEasyJSON(out)
+		if in.ValidFrom == nil {
+			out.RawString("null")
+		} else {
+			(*in.ValidFrom).MarshalEasyJSON(out)
+		}
 	}
-	if true {
+	if in.ValidTo != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"validTo\":")
-		(in.ValidTo).MarshalEasyJSON(out)
+		if in.ValidTo == nil {
+			out.RawString("null")
+		} else {
+			(*in.ValidTo).MarshalEasyJSON(out)
+		}
 	}
 	if len(in.SignedCertificateTimestampList) != 0 {
 		if !first {
@@ -3191,9 +3239,25 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork26(in *jlexer.Lexer, ou
 		case "requestId":
 			out.RequestID = RequestID(in.String())
 		case "timestamp":
-			(out.Timestamp).UnmarshalEasyJSON(in)
+			if in.IsNull() {
+				in.Skip()
+				out.Timestamp = nil
+			} else {
+				if out.Timestamp == nil {
+					out.Timestamp = new(cdp.Timestamp)
+				}
+				(*out.Timestamp).UnmarshalEasyJSON(in)
+			}
 		case "wallTime":
-			(out.WallTime).UnmarshalEasyJSON(in)
+			if in.IsNull() {
+				in.Skip()
+				out.WallTime = nil
+			} else {
+				if out.WallTime == nil {
+					out.WallTime = new(cdp.Timestamp)
+				}
+				(*out.WallTime).UnmarshalEasyJSON(in)
+			}
 		case "request":
 			if in.IsNull() {
 				in.Skip()
@@ -3226,21 +3290,29 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork26(out *jwriter.Writer,
 		out.RawString("\"requestId\":")
 		out.String(string(in.RequestID))
 	}
-	if true {
+	if in.Timestamp != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"timestamp\":")
-		(in.Timestamp).MarshalEasyJSON(out)
+		if in.Timestamp == nil {
+			out.RawString("null")
+		} else {
+			(*in.Timestamp).MarshalEasyJSON(out)
+		}
 	}
-	if true {
+	if in.WallTime != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"wallTime\":")
-		(in.WallTime).MarshalEasyJSON(out)
+		if in.WallTime == nil {
+			out.RawString("null")
+		} else {
+			(*in.WallTime).MarshalEasyJSON(out)
+		}
 	}
 	if in.Request != nil {
 		if !first {
@@ -3302,7 +3374,15 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork27(in *jlexer.Lexer, ou
 		case "requestId":
 			out.RequestID = RequestID(in.String())
 		case "timestamp":
-			(out.Timestamp).UnmarshalEasyJSON(in)
+			if in.IsNull() {
+				in.Skip()
+				out.Timestamp = nil
+			} else {
+				if out.Timestamp == nil {
+					out.Timestamp = new(cdp.Timestamp)
+				}
+				(*out.Timestamp).UnmarshalEasyJSON(in)
+			}
 		case "response":
 			if in.IsNull() {
 				in.Skip()
@@ -3335,13 +3415,17 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork27(out *jwriter.Writer,
 		out.RawString("\"requestId\":")
 		out.String(string(in.RequestID))
 	}
-	if true {
+	if in.Timestamp != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"timestamp\":")
-		(in.Timestamp).MarshalEasyJSON(out)
+		if in.Timestamp == nil {
+			out.RawString("null")
+		} else {
+			(*in.Timestamp).MarshalEasyJSON(out)
+		}
 	}
 	if in.Response != nil {
 		if !first {
@@ -3403,7 +3487,15 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork28(in *jlexer.Lexer, ou
 		case "requestId":
 			out.RequestID = RequestID(in.String())
 		case "timestamp":
-			(out.Timestamp).UnmarshalEasyJSON(in)
+			if in.IsNull() {
+				in.Skip()
+				out.Timestamp = nil
+			} else {
+				if out.Timestamp == nil {
+					out.Timestamp = new(cdp.Timestamp)
+				}
+				(*out.Timestamp).UnmarshalEasyJSON(in)
+			}
 		case "response":
 			if in.IsNull() {
 				in.Skip()
@@ -3436,13 +3528,17 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork28(out *jwriter.Writer,
 		out.RawString("\"requestId\":")
 		out.String(string(in.RequestID))
 	}
-	if true {
+	if in.Timestamp != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"timestamp\":")
-		(in.Timestamp).MarshalEasyJSON(out)
+		if in.Timestamp == nil {
+			out.RawString("null")
+		} else {
+			(*in.Timestamp).MarshalEasyJSON(out)
+		}
 	}
 	if in.Response != nil {
 		if !first {
@@ -3504,7 +3600,15 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork29(in *jlexer.Lexer, ou
 		case "requestId":
 			out.RequestID = RequestID(in.String())
 		case "timestamp":
-			(out.Timestamp).UnmarshalEasyJSON(in)
+			if in.IsNull() {
+				in.Skip()
+				out.Timestamp = nil
+			} else {
+				if out.Timestamp == nil {
+					out.Timestamp = new(cdp.Timestamp)
+				}
+				(*out.Timestamp).UnmarshalEasyJSON(in)
+			}
 		case "response":
 			if in.IsNull() {
 				in.Skip()
@@ -3537,13 +3641,17 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork29(out *jwriter.Writer,
 		out.RawString("\"requestId\":")
 		out.String(string(in.RequestID))
 	}
-	if true {
+	if in.Timestamp != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"timestamp\":")
-		(in.Timestamp).MarshalEasyJSON(out)
+		if in.Timestamp == nil {
+			out.RawString("null")
+		} else {
+			(*in.Timestamp).MarshalEasyJSON(out)
+		}
 	}
 	if in.Response != nil {
 		if !first {
@@ -3605,7 +3713,15 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork30(in *jlexer.Lexer, ou
 		case "requestId":
 			out.RequestID = RequestID(in.String())
 		case "timestamp":
-			(out.Timestamp).UnmarshalEasyJSON(in)
+			if in.IsNull() {
+				in.Skip()
+				out.Timestamp = nil
+			} else {
+				if out.Timestamp == nil {
+					out.Timestamp = new(cdp.Timestamp)
+				}
+				(*out.Timestamp).UnmarshalEasyJSON(in)
+			}
 		case "errorMessage":
 			out.ErrorMessage = string(in.String())
 		default:
@@ -3630,13 +3746,17 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork30(out *jwriter.Writer,
 		out.RawString("\"requestId\":")
 		out.String(string(in.RequestID))
 	}
-	if true {
+	if in.Timestamp != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"timestamp\":")
-		(in.Timestamp).MarshalEasyJSON(out)
+		if in.Timestamp == nil {
+			out.RawString("null")
+		} else {
+			(*in.Timestamp).MarshalEasyJSON(out)
+		}
 	}
 	if in.ErrorMessage != "" {
 		if !first {
@@ -3795,7 +3915,15 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork32(in *jlexer.Lexer, ou
 		case "requestId":
 			out.RequestID = RequestID(in.String())
 		case "timestamp":
-			(out.Timestamp).UnmarshalEasyJSON(in)
+			if in.IsNull() {
+				in.Skip()
+				out.Timestamp = nil
+			} else {
+				if out.Timestamp == nil {
+					out.Timestamp = new(cdp.Timestamp)
+				}
+				(*out.Timestamp).UnmarshalEasyJSON(in)
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -3818,13 +3946,17 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork32(out *jwriter.Writer,
 		out.RawString("\"requestId\":")
 		out.String(string(in.RequestID))
 	}
-	if true {
+	if in.Timestamp != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"timestamp\":")
-		(in.Timestamp).MarshalEasyJSON(out)
+		if in.Timestamp == nil {
+			out.RawString("null")
+		} else {
+			(*in.Timestamp).MarshalEasyJSON(out)
+		}
 	}
 	out.RawByte('}')
 }
@@ -3878,7 +4010,15 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork33(in *jlexer.Lexer, ou
 		case "loaderId":
 			out.LoaderID = cdp.LoaderID(in.String())
 		case "timestamp":
-			(out.Timestamp).UnmarshalEasyJSON(in)
+			if in.IsNull() {
+				in.Skip()
+				out.Timestamp = nil
+			} else {
+				if out.Timestamp == nil {
+					out.Timestamp = new(cdp.Timestamp)
+				}
+				(*out.Timestamp).UnmarshalEasyJSON(in)
+			}
 		case "type":
 			(out.Type).UnmarshalEasyJSON(in)
 		case "response":
@@ -3929,13 +4069,17 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork33(out *jwriter.Writer,
 		out.RawString("\"loaderId\":")
 		out.String(string(in.LoaderID))
 	}
-	if true {
+	if in.Timestamp != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"timestamp\":")
-		(in.Timestamp).MarshalEasyJSON(out)
+		if in.Timestamp == nil {
+			out.RawString("null")
+		} else {
+			(*in.Timestamp).MarshalEasyJSON(out)
+		}
 	}
 	if in.Type != "" {
 		if !first {
@@ -4007,7 +4151,15 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork34(in *jlexer.Lexer, ou
 		case "newPriority":
 			(out.NewPriority).UnmarshalEasyJSON(in)
 		case "timestamp":
-			(out.Timestamp).UnmarshalEasyJSON(in)
+			if in.IsNull() {
+				in.Skip()
+				out.Timestamp = nil
+			} else {
+				if out.Timestamp == nil {
+					out.Timestamp = new(cdp.Timestamp)
+				}
+				(*out.Timestamp).UnmarshalEasyJSON(in)
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -4038,13 +4190,17 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork34(out *jwriter.Writer,
 		out.RawString("\"newPriority\":")
 		(in.NewPriority).MarshalEasyJSON(out)
 	}
-	if true {
+	if in.Timestamp != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"timestamp\":")
-		(in.Timestamp).MarshalEasyJSON(out)
+		if in.Timestamp == nil {
+			out.RawString("null")
+		} else {
+			(*in.Timestamp).MarshalEasyJSON(out)
+		}
 	}
 	out.RawByte('}')
 }
@@ -4110,9 +4266,25 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork35(in *jlexer.Lexer, ou
 				(*out.Request).UnmarshalEasyJSON(in)
 			}
 		case "timestamp":
-			(out.Timestamp).UnmarshalEasyJSON(in)
+			if in.IsNull() {
+				in.Skip()
+				out.Timestamp = nil
+			} else {
+				if out.Timestamp == nil {
+					out.Timestamp = new(cdp.Timestamp)
+				}
+				(*out.Timestamp).UnmarshalEasyJSON(in)
+			}
 		case "wallTime":
-			(out.WallTime).UnmarshalEasyJSON(in)
+			if in.IsNull() {
+				in.Skip()
+				out.WallTime = nil
+			} else {
+				if out.WallTime == nil {
+					out.WallTime = new(cdp.Timestamp)
+				}
+				(*out.WallTime).UnmarshalEasyJSON(in)
+			}
 		case "initiator":
 			if in.IsNull() {
 				in.Skip()
@@ -4193,21 +4365,29 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork35(out *jwriter.Writer,
 			(*in.Request).MarshalEasyJSON(out)
 		}
 	}
-	if true {
+	if in.Timestamp != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"timestamp\":")
-		(in.Timestamp).MarshalEasyJSON(out)
+		if in.Timestamp == nil {
+			out.RawString("null")
+		} else {
+			(*in.Timestamp).MarshalEasyJSON(out)
+		}
 	}
-	if true {
+	if in.WallTime != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"wallTime\":")
-		(in.WallTime).MarshalEasyJSON(out)
+		if in.WallTime == nil {
+			out.RawString("null")
+		} else {
+			(*in.WallTime).MarshalEasyJSON(out)
+		}
 	}
 	if in.Initiator != nil {
 		if !first {
@@ -4556,7 +4736,15 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork38(in *jlexer.Lexer, ou
 		case "requestId":
 			out.RequestID = RequestID(in.String())
 		case "timestamp":
-			(out.Timestamp).UnmarshalEasyJSON(in)
+			if in.IsNull() {
+				in.Skip()
+				out.Timestamp = nil
+			} else {
+				if out.Timestamp == nil {
+					out.Timestamp = new(cdp.Timestamp)
+				}
+				(*out.Timestamp).UnmarshalEasyJSON(in)
+			}
 		case "encodedDataLength":
 			out.EncodedDataLength = float64(in.Float64())
 		default:
@@ -4581,13 +4769,17 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork38(out *jwriter.Writer,
 		out.RawString("\"requestId\":")
 		out.String(string(in.RequestID))
 	}
-	if true {
+	if in.Timestamp != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"timestamp\":")
-		(in.Timestamp).MarshalEasyJSON(out)
+		if in.Timestamp == nil {
+			out.RawString("null")
+		} else {
+			(*in.Timestamp).MarshalEasyJSON(out)
+		}
 	}
 	if in.EncodedDataLength != 0 {
 		if !first {
@@ -4645,7 +4837,15 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork39(in *jlexer.Lexer, ou
 		case "requestId":
 			out.RequestID = RequestID(in.String())
 		case "timestamp":
-			(out.Timestamp).UnmarshalEasyJSON(in)
+			if in.IsNull() {
+				in.Skip()
+				out.Timestamp = nil
+			} else {
+				if out.Timestamp == nil {
+					out.Timestamp = new(cdp.Timestamp)
+				}
+				(*out.Timestamp).UnmarshalEasyJSON(in)
+			}
 		case "type":
 			(out.Type).UnmarshalEasyJSON(in)
 		case "errorText":
@@ -4676,13 +4876,17 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork39(out *jwriter.Writer,
 		out.RawString("\"requestId\":")
 		out.String(string(in.RequestID))
 	}
-	if true {
+	if in.Timestamp != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"timestamp\":")
-		(in.Timestamp).MarshalEasyJSON(out)
+		if in.Timestamp == nil {
+			out.RawString("null")
+		} else {
+			(*in.Timestamp).MarshalEasyJSON(out)
+		}
 	}
 	if in.Type != "" {
 		if !first {
@@ -4764,7 +4968,15 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork40(in *jlexer.Lexer, ou
 		case "requestId":
 			out.RequestID = RequestID(in.String())
 		case "timestamp":
-			(out.Timestamp).UnmarshalEasyJSON(in)
+			if in.IsNull() {
+				in.Skip()
+				out.Timestamp = nil
+			} else {
+				if out.Timestamp == nil {
+					out.Timestamp = new(cdp.Timestamp)
+				}
+				(*out.Timestamp).UnmarshalEasyJSON(in)
+			}
 		case "eventName":
 			out.EventName = string(in.String())
 		case "eventId":
@@ -4793,13 +5005,17 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork40(out *jwriter.Writer,
 		out.RawString("\"requestId\":")
 		out.String(string(in.RequestID))
 	}
-	if true {
+	if in.Timestamp != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"timestamp\":")
-		(in.Timestamp).MarshalEasyJSON(out)
+		if in.Timestamp == nil {
+			out.RawString("null")
+		} else {
+			(*in.Timestamp).MarshalEasyJSON(out)
+		}
 	}
 	if in.EventName != "" {
 		if !first {
@@ -4873,7 +5089,15 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork41(in *jlexer.Lexer, ou
 		case "requestId":
 			out.RequestID = RequestID(in.String())
 		case "timestamp":
-			(out.Timestamp).UnmarshalEasyJSON(in)
+			if in.IsNull() {
+				in.Skip()
+				out.Timestamp = nil
+			} else {
+				if out.Timestamp == nil {
+					out.Timestamp = new(cdp.Timestamp)
+				}
+				(*out.Timestamp).UnmarshalEasyJSON(in)
+			}
 		case "dataLength":
 			out.DataLength = int64(in.Int64())
 		case "encodedDataLength":
@@ -4900,13 +5124,17 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork41(out *jwriter.Writer,
 		out.RawString("\"requestId\":")
 		out.String(string(in.RequestID))
 	}
-	if true {
+	if in.Timestamp != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"timestamp\":")
-		(in.Timestamp).MarshalEasyJSON(out)
+		if in.Timestamp == nil {
+			out.RawString("null")
+		} else {
+			(*in.Timestamp).MarshalEasyJSON(out)
+		}
 	}
 	if in.DataLength != 0 {
 		if !first {

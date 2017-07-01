@@ -4,6 +4,7 @@ package log
 
 import (
 	json "encoding/json"
+	cdp "github.com/knq/chromedp/cdp"
 	network "github.com/knq/chromedp/cdp/network"
 	runtime "github.com/knq/chromedp/cdp/runtime"
 	easyjson "github.com/mailru/easyjson"
@@ -375,7 +376,15 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpLog4(in *jlexer.Lexer, out *En
 		case "text":
 			out.Text = string(in.String())
 		case "timestamp":
-			(out.Timestamp).UnmarshalEasyJSON(in)
+			if in.IsNull() {
+				in.Skip()
+				out.Timestamp = nil
+			} else {
+				if out.Timestamp == nil {
+					out.Timestamp = new(cdp.Timestamp)
+				}
+				(*out.Timestamp).UnmarshalEasyJSON(in)
+			}
 		case "url":
 			out.URL = string(in.String())
 		case "lineNumber":
@@ -432,13 +441,17 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpLog4(out *jwriter.Writer, in E
 		out.RawString("\"text\":")
 		out.String(string(in.Text))
 	}
-	if true {
+	if in.Timestamp != nil {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"timestamp\":")
-		(in.Timestamp).MarshalEasyJSON(out)
+		if in.Timestamp == nil {
+			out.RawString("null")
+		} else {
+			(*in.Timestamp).MarshalEasyJSON(out)
+		}
 	}
 	if in.URL != "" {
 		if !first {

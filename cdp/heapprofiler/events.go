@@ -27,8 +27,8 @@ type EventReportHeapSnapshotProgress struct {
 // then one or more heapStatsUpdate events will be sent before a new
 // lastSeenObjectId event.
 type EventLastSeenObjectID struct {
-	LastSeenObjectID int64         `json:"lastSeenObjectId,omitempty"`
-	Timestamp        cdp.Timestamp `json:"timestamp,omitempty"`
+	LastSeenObjectID int64          `json:"lastSeenObjectId,omitempty"`
+	Timestamp        *cdp.Timestamp `json:"timestamp,omitempty"`
 }
 
 // EventHeapStatsUpdate if heap objects tracking has been started then
