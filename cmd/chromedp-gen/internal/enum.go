@@ -152,6 +152,7 @@ func (te TypeEnum) GoEmptyValue() string {
 // TimestampType are the various timestamp subtypes.
 type TimestampType int
 
+// TimestampType values.
 const (
 	TimestampTypeMillisecond TimestampType = 1 + iota
 	TimestampTypeSecond
