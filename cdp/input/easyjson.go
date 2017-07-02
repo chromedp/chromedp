@@ -67,30 +67,24 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpInput(out *jwriter.Writer, in 
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.State != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"state\":")
-		(in.State).MarshalEasyJSON(out)
+	if !first {
+		out.RawByte(',')
 	}
-	if in.X != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"x\":")
-		out.Int64(int64(in.X))
+	first = false
+	out.RawString("\"state\":")
+	(in.State).MarshalEasyJSON(out)
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Y != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"y\":")
-		out.Int64(int64(in.Y))
+	first = false
+	out.RawString("\"x\":")
+	out.Int64(int64(in.X))
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"y\":")
+	out.Int64(int64(in.Y))
 	if in.RadiusX != 0 {
 		if !first {
 			out.RawByte(',')

@@ -111,14 +111,12 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpInspector1(out *jwriter.Writer
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.Reason != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"reason\":")
-		(in.Reason).MarshalEasyJSON(out)
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"reason\":")
+	(in.Reason).MarshalEasyJSON(out)
 	out.RawByte('}')
 }
 

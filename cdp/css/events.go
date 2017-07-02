@@ -17,19 +17,19 @@ type EventFontsUpdated struct{}
 // EventStyleSheetChanged fired whenever a stylesheet is changed as a result
 // of the client operation.
 type EventStyleSheetChanged struct {
-	StyleSheetID StyleSheetID `json:"styleSheetId,omitempty"`
+	StyleSheetID StyleSheetID `json:"styleSheetId"`
 }
 
 // EventStyleSheetAdded fired whenever an active document stylesheet is
 // added.
 type EventStyleSheetAdded struct {
-	Header *StyleSheetHeader `json:"header,omitempty"` // Added stylesheet metainfo.
+	Header *StyleSheetHeader `json:"header"` // Added stylesheet metainfo.
 }
 
 // EventStyleSheetRemoved fired whenever an active document stylesheet is
 // removed.
 type EventStyleSheetRemoved struct {
-	StyleSheetID StyleSheetID `json:"styleSheetId,omitempty"` // Identifier of the removed stylesheet.
+	StyleSheetID StyleSheetID `json:"styleSheetId"` // Identifier of the removed stylesheet.
 }
 
 // EventTypes all event types in the domain.

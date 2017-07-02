@@ -12,14 +12,14 @@ func (t ID) String() string {
 
 // Database database object.
 type Database struct {
-	ID      ID     `json:"id,omitempty"`      // Database ID.
-	Domain  string `json:"domain,omitempty"`  // Database domain.
-	Name    string `json:"name,omitempty"`    // Database name.
-	Version string `json:"version,omitempty"` // Database version.
+	ID      ID     `json:"id"`      // Database ID.
+	Domain  string `json:"domain"`  // Database domain.
+	Name    string `json:"name"`    // Database name.
+	Version string `json:"version"` // Database version.
 }
 
 // Error database error.
 type Error struct {
-	Message string `json:"message,omitempty"` // Error message.
-	Code    int64  `json:"code,omitempty"`    // Error code.
+	Message string `json:"message"` // Error message.
+	Code    int64  `json:"code"`    // Error code.
 }

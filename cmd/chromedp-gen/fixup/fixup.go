@@ -132,26 +132,31 @@ func FixDomains(domains []*internal.Domain) {
 				Name:        "id",
 				Type:        internal.TypeInteger,
 				Description: "Unique message identifier.",
+				Optional:    true,
 			},
 			{
 				Name:        "method",
 				Ref:         "Inspector.MethodType",
 				Description: "Event or command type.",
+				Optional:    true,
 			},
 			{
 				Name:        "params",
 				Type:        internal.TypeAny,
 				Description: "Event or command parameters.",
+				Optional:    true,
 			},
 			{
 				Name:        "result",
 				Type:        internal.TypeAny,
 				Description: "Command return values.",
+				Optional:    true,
 			},
 			{
 				Name:        "error",
 				Ref:         "MessageError",
 				Description: "Error message.",
+				Optional:    true,
 			},
 		},
 	}

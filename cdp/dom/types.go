@@ -10,26 +10,26 @@ type Quad []float64
 
 // BoxModel box model.
 type BoxModel struct {
-	Content      Quad              `json:"content,omitempty"`      // Content box
-	Padding      Quad              `json:"padding,omitempty"`      // Padding box
-	Border       Quad              `json:"border,omitempty"`       // Border box
-	Margin       Quad              `json:"margin,omitempty"`       // Margin box
-	Width        int64             `json:"width,omitempty"`        // Node width
-	Height       int64             `json:"height,omitempty"`       // Node height
+	Content      Quad              `json:"content"`                // Content box
+	Padding      Quad              `json:"padding"`                // Padding box
+	Border       Quad              `json:"border"`                 // Border box
+	Margin       Quad              `json:"margin"`                 // Margin box
+	Width        int64             `json:"width"`                  // Node width
+	Height       int64             `json:"height"`                 // Node height
 	ShapeOutside *ShapeOutsideInfo `json:"shapeOutside,omitempty"` // Shape outside coordinates
 }
 
 // ShapeOutsideInfo cSS Shape Outside details.
 type ShapeOutsideInfo struct {
-	Bounds      Quad                  `json:"bounds,omitempty"`      // Shape bounds
-	Shape       []easyjson.RawMessage `json:"shape,omitempty"`       // Shape coordinate details
-	MarginShape []easyjson.RawMessage `json:"marginShape,omitempty"` // Margin shape bounds
+	Bounds      Quad                  `json:"bounds"`      // Shape bounds
+	Shape       []easyjson.RawMessage `json:"shape"`       // Shape coordinate details
+	MarginShape []easyjson.RawMessage `json:"marginShape"` // Margin shape bounds
 }
 
 // Rect rectangle.
 type Rect struct {
-	X      float64 `json:"x,omitempty"`      // X coordinate
-	Y      float64 `json:"y,omitempty"`      // Y coordinate
-	Width  float64 `json:"width,omitempty"`  // Rectangle width
-	Height float64 `json:"height,omitempty"` // Rectangle height
+	X      float64 `json:"x"`      // X coordinate
+	Y      float64 `json:"y"`      // Y coordinate
+	Width  float64 `json:"width"`  // Rectangle width
+	Height float64 `json:"height"` // Rectangle height
 }

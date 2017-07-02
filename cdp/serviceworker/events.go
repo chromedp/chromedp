@@ -8,17 +8,17 @@ import (
 
 // EventWorkerRegistrationUpdated [no description].
 type EventWorkerRegistrationUpdated struct {
-	Registrations []*Registration `json:"registrations,omitempty"`
+	Registrations []*Registration `json:"registrations"`
 }
 
 // EventWorkerVersionUpdated [no description].
 type EventWorkerVersionUpdated struct {
-	Versions []*Version `json:"versions,omitempty"`
+	Versions []*Version `json:"versions"`
 }
 
 // EventWorkerErrorReported [no description].
 type EventWorkerErrorReported struct {
-	ErrorMessage *ErrorMessage `json:"errorMessage,omitempty"`
+	ErrorMessage *ErrorMessage `json:"errorMessage"`
 }
 
 // EventTypes all event types in the domain.

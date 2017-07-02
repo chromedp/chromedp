@@ -20,15 +20,15 @@ func (t BrowserContextID) String() string {
 
 // Info [no description].
 type Info struct {
-	TargetID ID     `json:"targetId,omitempty"`
-	Type     string `json:"type,omitempty"`
-	Title    string `json:"title,omitempty"`
-	URL      string `json:"url,omitempty"`
-	Attached bool   `json:"attached,omitempty"` // Whether the target has an attached client.
+	TargetID ID     `json:"targetId"`
+	Type     string `json:"type"`
+	Title    string `json:"title"`
+	URL      string `json:"url"`
+	Attached bool   `json:"attached"` // Whether the target has an attached client.
 }
 
 // RemoteLocation [no description].
 type RemoteLocation struct {
-	Host string `json:"host,omitempty"`
-	Port int64  `json:"port,omitempty"`
+	Host string `json:"host"`
+	Port int64  `json:"port"`
 }

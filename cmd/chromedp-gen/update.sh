@@ -4,6 +4,8 @@
 
 SRC=$(realpath $(cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd ))
 
+HAR_PROTO="$SRC/har.json"
+
 BASE_URL="https://chromium.googlesource.com"
 BROWSER_PROTO="$BASE_URL/chromium/src/+/master/third_party/WebKit/Source/core/inspector/browser_protocol.json?format=TEXT"
 JS_PROTO="$BASE_URL/v8/v8/+/master/src/inspector/js_protocol.json?format=TEXT"
@@ -20,7 +22,7 @@ curl -s $BROWSER_PROTO | base64 -d > $BROWSER_TMP
 curl -s $JS_PROTO | base64 -d > $JS_TMP
 
 # merge browser_protocol.json and js_protocol.json
-jq -s '[.[] | to_entries] | flatten | reduce .[] as $dot ({}; .[$dot.key] += $dot.value)' $BROWSER_TMP $JS_TMP > $OUT
+jq -s '[.[] | to_entries] | flatten | reduce .[] as $dot ({}; .[$dot.key] += $dot.value)' $BROWSER_TMP $JS_TMP $HAR_PROTO > $OUT
 
 UPDATE=0
 LASTUPDATE=0

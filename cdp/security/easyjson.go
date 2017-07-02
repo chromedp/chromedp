@@ -58,38 +58,30 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpSecurity(out *jwriter.Writer, 
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.SecurityState != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"securityState\":")
-		(in.SecurityState).MarshalEasyJSON(out)
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Summary != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"summary\":")
-		out.String(string(in.Summary))
+	first = false
+	out.RawString("\"securityState\":")
+	(in.SecurityState).MarshalEasyJSON(out)
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Description != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"description\":")
-		out.String(string(in.Description))
+	first = false
+	out.RawString("\"summary\":")
+	out.String(string(in.Summary))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.HasCertificate {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"hasCertificate\":")
-		out.Bool(bool(in.HasCertificate))
+	first = false
+	out.RawString("\"description\":")
+	out.String(string(in.Description))
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"hasCertificate\":")
+	out.Bool(bool(in.HasCertificate))
 	out.RawByte('}')
 }
 
@@ -289,62 +281,48 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpSecurity3(out *jwriter.Writer,
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.RanMixedContent {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"ranMixedContent\":")
-		out.Bool(bool(in.RanMixedContent))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.DisplayedMixedContent {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"displayedMixedContent\":")
-		out.Bool(bool(in.DisplayedMixedContent))
+	first = false
+	out.RawString("\"ranMixedContent\":")
+	out.Bool(bool(in.RanMixedContent))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.ContainedMixedForm {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"containedMixedForm\":")
-		out.Bool(bool(in.ContainedMixedForm))
+	first = false
+	out.RawString("\"displayedMixedContent\":")
+	out.Bool(bool(in.DisplayedMixedContent))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.RanContentWithCertErrors {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"ranContentWithCertErrors\":")
-		out.Bool(bool(in.RanContentWithCertErrors))
+	first = false
+	out.RawString("\"containedMixedForm\":")
+	out.Bool(bool(in.ContainedMixedForm))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.DisplayedContentWithCertErrors {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"displayedContentWithCertErrors\":")
-		out.Bool(bool(in.DisplayedContentWithCertErrors))
+	first = false
+	out.RawString("\"ranContentWithCertErrors\":")
+	out.Bool(bool(in.RanContentWithCertErrors))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.RanInsecureContentStyle != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"ranInsecureContentStyle\":")
-		(in.RanInsecureContentStyle).MarshalEasyJSON(out)
+	first = false
+	out.RawString("\"displayedContentWithCertErrors\":")
+	out.Bool(bool(in.DisplayedContentWithCertErrors))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.DisplayedInsecureContentStyle != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"displayedInsecureContentStyle\":")
-		(in.DisplayedInsecureContentStyle).MarshalEasyJSON(out)
+	first = false
+	out.RawString("\"ranInsecureContentStyle\":")
+	(in.RanInsecureContentStyle).MarshalEasyJSON(out)
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"displayedInsecureContentStyle\":")
+	(in.DisplayedInsecureContentStyle).MarshalEasyJSON(out)
 	out.RawByte('}')
 }
 
@@ -526,56 +504,48 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpSecurity5(out *jwriter.Writer,
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.SecurityState != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"securityState\":")
-		(in.SecurityState).MarshalEasyJSON(out)
+	if !first {
+		out.RawByte(',')
 	}
-	if in.SchemeIsCryptographic {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"schemeIsCryptographic\":")
-		out.Bool(bool(in.SchemeIsCryptographic))
+	first = false
+	out.RawString("\"securityState\":")
+	(in.SecurityState).MarshalEasyJSON(out)
+	if !first {
+		out.RawByte(',')
 	}
-	if len(in.Explanations) != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"explanations\":")
-		if in.Explanations == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-			out.RawString("null")
-		} else {
-			out.RawByte('[')
-			for v2, v3 := range in.Explanations {
-				if v2 > 0 {
-					out.RawByte(',')
-				}
-				if v3 == nil {
-					out.RawString("null")
-				} else {
-					(*v3).MarshalEasyJSON(out)
-				}
+	first = false
+	out.RawString("\"schemeIsCryptographic\":")
+	out.Bool(bool(in.SchemeIsCryptographic))
+	if !first {
+		out.RawByte(',')
+	}
+	first = false
+	out.RawString("\"explanations\":")
+	if in.Explanations == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+		out.RawString("null")
+	} else {
+		out.RawByte('[')
+		for v2, v3 := range in.Explanations {
+			if v2 > 0 {
+				out.RawByte(',')
 			}
-			out.RawByte(']')
+			if v3 == nil {
+				out.RawString("null")
+			} else {
+				(*v3).MarshalEasyJSON(out)
+			}
 		}
+		out.RawByte(']')
 	}
-	if in.InsecureContentStatus != nil {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"insecureContentStatus\":")
-		if in.InsecureContentStatus == nil {
-			out.RawString("null")
-		} else {
-			(*in.InsecureContentStatus).MarshalEasyJSON(out)
-		}
+	if !first {
+		out.RawByte(',')
+	}
+	first = false
+	out.RawString("\"insecureContentStatus\":")
+	if in.InsecureContentStatus == nil {
+		out.RawString("null")
+	} else {
+		(*in.InsecureContentStatus).MarshalEasyJSON(out)
 	}
 	if in.Summary != "" {
 		if !first {
@@ -650,30 +620,24 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpSecurity6(out *jwriter.Writer,
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.EventID != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"eventId\":")
-		out.Int64(int64(in.EventID))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.ErrorType != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"errorType\":")
-		out.String(string(in.ErrorType))
+	first = false
+	out.RawString("\"eventId\":")
+	out.Int64(int64(in.EventID))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.RequestURL != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"requestURL\":")
-		out.String(string(in.RequestURL))
+	first = false
+	out.RawString("\"errorType\":")
+	out.String(string(in.ErrorType))
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"requestURL\":")
+	out.String(string(in.RequestURL))
 	out.RawByte('}')
 }
 

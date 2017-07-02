@@ -8,38 +8,38 @@ import (
 
 // EventTargetCreated issued when a possible inspection target is created.
 type EventTargetCreated struct {
-	TargetInfo *Info `json:"targetInfo,omitempty"`
+	TargetInfo *Info `json:"targetInfo"`
 }
 
 // EventTargetInfoChanged issued when some information about a target has
 // changed. This only happens between targetCreated and targetDestroyed.
 type EventTargetInfoChanged struct {
-	TargetInfo *Info `json:"targetInfo,omitempty"`
+	TargetInfo *Info `json:"targetInfo"`
 }
 
 // EventTargetDestroyed issued when a target is destroyed.
 type EventTargetDestroyed struct {
-	TargetID ID `json:"targetId,omitempty"`
+	TargetID ID `json:"targetId"`
 }
 
 // EventAttachedToTarget issued when attached to target because of
 // auto-attach or attachToTarget command.
 type EventAttachedToTarget struct {
-	TargetInfo         *Info `json:"targetInfo,omitempty"`
-	WaitingForDebugger bool  `json:"waitingForDebugger,omitempty"`
+	TargetInfo         *Info `json:"targetInfo"`
+	WaitingForDebugger bool  `json:"waitingForDebugger"`
 }
 
 // EventDetachedFromTarget issued when detached from target for any reason
 // (including detachFromTarget command).
 type EventDetachedFromTarget struct {
-	TargetID ID `json:"targetId,omitempty"`
+	TargetID ID `json:"targetId"`
 }
 
 // EventReceivedMessageFromTarget notifies about new protocol message from
 // attached target.
 type EventReceivedMessageFromTarget struct {
-	TargetID ID     `json:"targetId,omitempty"`
-	Message  string `json:"message,omitempty"`
+	TargetID ID     `json:"targetId"`
+	Message  string `json:"message"`
 }
 
 // EventTypes all event types in the domain.

@@ -231,26 +231,22 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpLayertree2(out *jwriter.Writer
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.Rect != nil {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"rect\":")
-		if in.Rect == nil {
-			out.RawString("null")
-		} else {
-			(*in.Rect).MarshalEasyJSON(out)
-		}
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Type != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"type\":")
-		(in.Type).MarshalEasyJSON(out)
+	first = false
+	out.RawString("\"rect\":")
+	if in.Rect == nil {
+		out.RawString("null")
+	} else {
+		(*in.Rect).MarshalEasyJSON(out)
 	}
+	if !first {
+		out.RawByte(',')
+	}
+	first = false
+	out.RawString("\"type\":")
+	(in.Type).MarshalEasyJSON(out)
 	out.RawByte('}')
 }
 
@@ -791,30 +787,24 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpLayertree8(out *jwriter.Writer
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.X != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"x\":")
-		out.Float64(float64(in.X))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Y != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"y\":")
-		out.Float64(float64(in.Y))
+	first = false
+	out.RawString("\"x\":")
+	out.Float64(float64(in.X))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Picture != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"picture\":")
-		out.String(string(in.Picture))
+	first = false
+	out.RawString("\"y\":")
+	out.Float64(float64(in.Y))
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"picture\":")
+	out.String(string(in.Picture))
 	out.RawByte('}')
 }
 
@@ -1270,14 +1260,12 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpLayertree13(out *jwriter.Write
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.LayerID != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"layerId\":")
-		out.String(string(in.LayerID))
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"layerId\":")
+	out.String(string(in.LayerID))
 	if in.ParentLayerID != "" {
 		if !first {
 			out.RawByte(',')
@@ -1294,38 +1282,30 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpLayertree13(out *jwriter.Write
 		out.RawString("\"backendNodeId\":")
 		out.Int64(int64(in.BackendNodeID))
 	}
-	if in.OffsetX != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"offsetX\":")
-		out.Float64(float64(in.OffsetX))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.OffsetY != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"offsetY\":")
-		out.Float64(float64(in.OffsetY))
+	first = false
+	out.RawString("\"offsetX\":")
+	out.Float64(float64(in.OffsetX))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Width != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"width\":")
-		out.Float64(float64(in.Width))
+	first = false
+	out.RawString("\"offsetY\":")
+	out.Float64(float64(in.OffsetY))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Height != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"height\":")
-		out.Float64(float64(in.Height))
+	first = false
+	out.RawString("\"width\":")
+	out.Float64(float64(in.Width))
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"height\":")
+	out.Float64(float64(in.Height))
 	if len(in.Transform) != 0 {
 		if !first {
 			out.RawByte(',')
@@ -1369,22 +1349,18 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpLayertree13(out *jwriter.Write
 		out.RawString("\"anchorZ\":")
 		out.Float64(float64(in.AnchorZ))
 	}
-	if in.PaintCount != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"paintCount\":")
-		out.Int64(int64(in.PaintCount))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.DrawsContent {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"drawsContent\":")
-		out.Bool(bool(in.DrawsContent))
+	first = false
+	out.RawString("\"paintCount\":")
+	out.Int64(int64(in.PaintCount))
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"drawsContent\":")
+	out.Bool(bool(in.DrawsContent))
 	if in.Invisible {
 		if !first {
 			out.RawByte(',')
@@ -1600,25 +1576,21 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpLayertree15(out *jwriter.Write
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.LayerID != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"layerId\":")
-		out.String(string(in.LayerID))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Clip != nil {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"clip\":")
-		if in.Clip == nil {
-			out.RawString("null")
-		} else {
-			(*in.Clip).MarshalEasyJSON(out)
-		}
+	first = false
+	out.RawString("\"layerId\":")
+	out.String(string(in.LayerID))
+	if !first {
+		out.RawByte(',')
+	}
+	first = false
+	out.RawString("\"clip\":")
+	if in.Clip == nil {
+		out.RawString("null")
+	} else {
+		(*in.Clip).MarshalEasyJSON(out)
 	}
 	out.RawByte('}')
 }

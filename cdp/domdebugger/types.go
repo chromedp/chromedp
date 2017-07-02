@@ -59,13 +59,13 @@ func (t *DOMBreakpointType) UnmarshalJSON(buf []byte) error {
 
 // EventListener object event listener.
 type EventListener struct {
-	Type            string                `json:"type,omitempty"`            // EventListener's type.
-	UseCapture      bool                  `json:"useCapture,omitempty"`      // EventListener's useCapture.
-	Passive         bool                  `json:"passive,omitempty"`         // EventListener's passive flag.
-	Once            bool                  `json:"once,omitempty"`            // EventListener's once flag.
-	ScriptID        runtime.ScriptID      `json:"scriptId,omitempty"`        // Script id of the handler code.
-	LineNumber      int64                 `json:"lineNumber,omitempty"`      // Line number in the script (0-based).
-	ColumnNumber    int64                 `json:"columnNumber,omitempty"`    // Column number in the script (0-based).
+	Type            string                `json:"type"`                      // EventListener's type.
+	UseCapture      bool                  `json:"useCapture"`                // EventListener's useCapture.
+	Passive         bool                  `json:"passive"`                   // EventListener's passive flag.
+	Once            bool                  `json:"once"`                      // EventListener's once flag.
+	ScriptID        runtime.ScriptID      `json:"scriptId"`                  // Script id of the handler code.
+	LineNumber      int64                 `json:"lineNumber"`                // Line number in the script (0-based).
+	ColumnNumber    int64                 `json:"columnNumber"`              // Column number in the script (0-based).
 	Handler         *runtime.RemoteObject `json:"handler,omitempty"`         // Event handler function value.
 	OriginalHandler *runtime.RemoteObject `json:"originalHandler,omitempty"` // Event original handler function value.
 	BackendNodeID   cdp.BackendNodeID     `json:"backendNodeId,omitempty"`   // Node the listener is added to (if any).

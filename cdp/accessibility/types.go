@@ -223,7 +223,7 @@ func (t *AXValueNativeSourceType) UnmarshalJSON(buf []byte) error {
 
 // AXValueSource a single source for a computed AX property.
 type AXValueSource struct {
-	Type              AXValueSourceType       `json:"type,omitempty"`              // What type of source this is.
+	Type              AXValueSourceType       `json:"type"`                        // What type of source this is.
 	Value             *AXValue                `json:"value,omitempty"`             // The value of this property source.
 	Attribute         string                  `json:"attribute,omitempty"`         // The name of the relevant attribute, if any.
 	AttributeValue    *AXValue                `json:"attributeValue,omitempty"`    // The value of the relevant attribute, if any.
@@ -236,20 +236,20 @@ type AXValueSource struct {
 
 // AXRelatedNode [no description].
 type AXRelatedNode struct {
-	BackendDOMNodeID cdp.BackendNodeID `json:"backendDOMNodeId,omitempty"` // The BackendNodeId of the related DOM node.
-	Idref            string            `json:"idref,omitempty"`            // The IDRef value provided, if any.
-	Text             string            `json:"text,omitempty"`             // The text alternative of this node in the current context.
+	BackendDOMNodeID cdp.BackendNodeID `json:"backendDOMNodeId"` // The BackendNodeId of the related DOM node.
+	Idref            string            `json:"idref,omitempty"`  // The IDRef value provided, if any.
+	Text             string            `json:"text,omitempty"`   // The text alternative of this node in the current context.
 }
 
 // AXProperty [no description].
 type AXProperty struct {
-	Name  string   `json:"name,omitempty"`  // The name of this property.
-	Value *AXValue `json:"value,omitempty"` // The value of this property.
+	Name  string   `json:"name"`  // The name of this property.
+	Value *AXValue `json:"value"` // The value of this property.
 }
 
 // AXValue a single computed AX property.
 type AXValue struct {
-	Type         AXValueType         `json:"type,omitempty"`         // The type of this value.
+	Type         AXValueType         `json:"type"`                   // The type of this value.
 	Value        easyjson.RawMessage `json:"value,omitempty"`        // The computed value of this property.
 	RelatedNodes []*AXRelatedNode    `json:"relatedNodes,omitempty"` // One or more related nodes, if applicable.
 	Sources      []*AXValueSource    `json:"sources,omitempty"`      // The sources which contributed to the computation of this property.
@@ -543,8 +543,8 @@ func (t *AXRelationshipAttributes) UnmarshalJSON(buf []byte) error {
 
 // AXNode a node in the accessibility tree.
 type AXNode struct {
-	NodeID           AXNodeID          `json:"nodeId,omitempty"`           // Unique identifier for this node.
-	Ignored          bool              `json:"ignored,omitempty"`          // Whether this node is ignored for accessibility
+	NodeID           AXNodeID          `json:"nodeId"`                     // Unique identifier for this node.
+	Ignored          bool              `json:"ignored"`                    // Whether this node is ignored for accessibility
 	IgnoredReasons   []*AXProperty     `json:"ignoredReasons,omitempty"`   // Collection of reasons why this node is hidden.
 	Role             *AXValue          `json:"role,omitempty"`             // This Node's role, whether explicit or implicit.
 	Name             *AXValue          `json:"name,omitempty"`             // The accessible name for this Node.

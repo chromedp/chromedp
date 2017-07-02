@@ -226,22 +226,18 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpSchema2(out *jwriter.Writer, i
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.Name != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"name\":")
-		out.String(string(in.Name))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Version != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"version\":")
-		out.String(string(in.Version))
+	first = false
+	out.RawString("\"name\":")
+	out.String(string(in.Name))
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"version\":")
+	out.String(string(in.Version))
 	out.RawByte('}')
 }
 

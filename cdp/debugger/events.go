@@ -11,14 +11,14 @@ import (
 // EventScriptParsed fired when virtual machine parses script. This event is
 // also fired for all known and uncollected scripts upon enabling debugger.
 type EventScriptParsed struct {
-	ScriptID                runtime.ScriptID           `json:"scriptId,omitempty"`           // Identifier of the script parsed.
-	URL                     string                     `json:"url,omitempty"`                // URL or name of the script parsed (if any).
-	StartLine               int64                      `json:"startLine,omitempty"`          // Line offset of the script within the resource with given URL (for script tags).
-	StartColumn             int64                      `json:"startColumn,omitempty"`        // Column offset of the script within the resource with given URL.
-	EndLine                 int64                      `json:"endLine,omitempty"`            // Last line of the script.
-	EndColumn               int64                      `json:"endColumn,omitempty"`          // Length of the last line of the script.
-	ExecutionContextID      runtime.ExecutionContextID `json:"executionContextId,omitempty"` // Specifies script creation context.
-	Hash                    string                     `json:"hash,omitempty"`               // Content hash of the script.
+	ScriptID                runtime.ScriptID           `json:"scriptId"`           // Identifier of the script parsed.
+	URL                     string                     `json:"url"`                // URL or name of the script parsed (if any).
+	StartLine               int64                      `json:"startLine"`          // Line offset of the script within the resource with given URL (for script tags).
+	StartColumn             int64                      `json:"startColumn"`        // Column offset of the script within the resource with given URL.
+	EndLine                 int64                      `json:"endLine"`            // Last line of the script.
+	EndColumn               int64                      `json:"endColumn"`          // Length of the last line of the script.
+	ExecutionContextID      runtime.ExecutionContextID `json:"executionContextId"` // Specifies script creation context.
+	Hash                    string                     `json:"hash"`               // Content hash of the script.
 	ExecutionContextAuxData easyjson.RawMessage        `json:"executionContextAuxData,omitempty"`
 	IsLiveEdit              bool                       `json:"isLiveEdit,omitempty"`   // True, if this script is generated as a result of the live edit operation.
 	SourceMapURL            string                     `json:"sourceMapURL,omitempty"` // URL of source map associated with script (if any).
@@ -31,14 +31,14 @@ type EventScriptParsed struct {
 // EventScriptFailedToParse fired when virtual machine fails to parse the
 // script.
 type EventScriptFailedToParse struct {
-	ScriptID                runtime.ScriptID           `json:"scriptId,omitempty"`           // Identifier of the script parsed.
-	URL                     string                     `json:"url,omitempty"`                // URL or name of the script parsed (if any).
-	StartLine               int64                      `json:"startLine,omitempty"`          // Line offset of the script within the resource with given URL (for script tags).
-	StartColumn             int64                      `json:"startColumn,omitempty"`        // Column offset of the script within the resource with given URL.
-	EndLine                 int64                      `json:"endLine,omitempty"`            // Last line of the script.
-	EndColumn               int64                      `json:"endColumn,omitempty"`          // Length of the last line of the script.
-	ExecutionContextID      runtime.ExecutionContextID `json:"executionContextId,omitempty"` // Specifies script creation context.
-	Hash                    string                     `json:"hash,omitempty"`               // Content hash of the script.
+	ScriptID                runtime.ScriptID           `json:"scriptId"`           // Identifier of the script parsed.
+	URL                     string                     `json:"url"`                // URL or name of the script parsed (if any).
+	StartLine               int64                      `json:"startLine"`          // Line offset of the script within the resource with given URL (for script tags).
+	StartColumn             int64                      `json:"startColumn"`        // Column offset of the script within the resource with given URL.
+	EndLine                 int64                      `json:"endLine"`            // Last line of the script.
+	EndColumn               int64                      `json:"endColumn"`          // Length of the last line of the script.
+	ExecutionContextID      runtime.ExecutionContextID `json:"executionContextId"` // Specifies script creation context.
+	Hash                    string                     `json:"hash"`               // Content hash of the script.
 	ExecutionContextAuxData easyjson.RawMessage        `json:"executionContextAuxData,omitempty"`
 	SourceMapURL            string                     `json:"sourceMapURL,omitempty"` // URL of source map associated with script (if any).
 	HasSourceURL            bool                       `json:"hasSourceURL,omitempty"` // True, if this script has sourceURL.
@@ -50,15 +50,15 @@ type EventScriptFailedToParse struct {
 // EventBreakpointResolved fired when breakpoint is resolved to an actual
 // script and location.
 type EventBreakpointResolved struct {
-	BreakpointID BreakpointID `json:"breakpointId,omitempty"` // Breakpoint unique identifier.
-	Location     *Location    `json:"location,omitempty"`     // Actual breakpoint location.
+	BreakpointID BreakpointID `json:"breakpointId"` // Breakpoint unique identifier.
+	Location     *Location    `json:"location"`     // Actual breakpoint location.
 }
 
 // EventPaused fired when the virtual machine stopped on breakpoint or
 // exception or any other stop criteria.
 type EventPaused struct {
-	CallFrames      []*CallFrame        `json:"callFrames,omitempty"` // Call stack the virtual machine stopped on.
-	Reason          PausedReason        `json:"reason,omitempty"`     // Pause reason.
+	CallFrames      []*CallFrame        `json:"callFrames"` // Call stack the virtual machine stopped on.
+	Reason          PausedReason        `json:"reason"`     // Pause reason.
 	Data            easyjson.RawMessage `json:"data,omitempty"`
 	HitBreakpoints  []string            `json:"hitBreakpoints,omitempty"`  // Hit breakpoints IDs
 	AsyncStackTrace *runtime.StackTrace `json:"asyncStackTrace,omitempty"` // Async stack trace, if any.

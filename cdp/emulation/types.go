@@ -12,8 +12,8 @@ import (
 
 // ScreenOrientation screen orientation.
 type ScreenOrientation struct {
-	Type  OrientationType `json:"type,omitempty"`  // Orientation type.
-	Angle int64           `json:"angle,omitempty"` // Orientation angle.
+	Type  OrientationType `json:"type"`  // Orientation type.
+	Angle int64           `json:"angle"` // Orientation angle.
 }
 
 // VirtualTimePolicy advance: If the scheduler runs out of immediate work,

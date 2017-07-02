@@ -8,17 +8,17 @@ import (
 
 // EventAnimationCreated event for each animation that has been created.
 type EventAnimationCreated struct {
-	ID string `json:"id,omitempty"` // Id of the animation that was created.
+	ID string `json:"id"` // Id of the animation that was created.
 }
 
 // EventAnimationStarted event for animation that has been started.
 type EventAnimationStarted struct {
-	Animation *Animation `json:"animation,omitempty"` // Animation that was started.
+	Animation *Animation `json:"animation"` // Animation that was started.
 }
 
 // EventAnimationCanceled event for when an animation has been cancelled.
 type EventAnimationCanceled struct {
-	ID string `json:"id,omitempty"` // Id of the animation that was cancelled.
+	ID string `json:"id"` // Id of the animation that was cancelled.
 }
 
 // EventTypes all event types in the domain.

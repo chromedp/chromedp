@@ -859,62 +859,48 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDomdebugger10(out *jwriter.Wri
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.Type != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"type\":")
-		out.String(string(in.Type))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.UseCapture {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"useCapture\":")
-		out.Bool(bool(in.UseCapture))
+	first = false
+	out.RawString("\"type\":")
+	out.String(string(in.Type))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Passive {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"passive\":")
-		out.Bool(bool(in.Passive))
+	first = false
+	out.RawString("\"useCapture\":")
+	out.Bool(bool(in.UseCapture))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Once {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"once\":")
-		out.Bool(bool(in.Once))
+	first = false
+	out.RawString("\"passive\":")
+	out.Bool(bool(in.Passive))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.ScriptID != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"scriptId\":")
-		out.String(string(in.ScriptID))
+	first = false
+	out.RawString("\"once\":")
+	out.Bool(bool(in.Once))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.LineNumber != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"lineNumber\":")
-		out.Int64(int64(in.LineNumber))
+	first = false
+	out.RawString("\"scriptId\":")
+	out.String(string(in.ScriptID))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.ColumnNumber != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"columnNumber\":")
-		out.Int64(int64(in.ColumnNumber))
+	first = false
+	out.RawString("\"lineNumber\":")
+	out.Int64(int64(in.LineNumber))
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"columnNumber\":")
+	out.Int64(int64(in.ColumnNumber))
 	if in.Handler != nil {
 		if !first {
 			out.RawByte(',')

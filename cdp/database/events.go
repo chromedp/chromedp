@@ -8,7 +8,7 @@ import (
 
 // EventAddDatabase [no description].
 type EventAddDatabase struct {
-	Database *Database `json:"database,omitempty"`
+	Database *Database `json:"database"`
 }
 
 // EventTypes all event types in the domain.

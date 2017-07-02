@@ -8,28 +8,28 @@ import (
 
 // EventDomStorageItemsCleared [no description].
 type EventDomStorageItemsCleared struct {
-	StorageID *StorageID `json:"storageId,omitempty"`
+	StorageID *StorageID `json:"storageId"`
 }
 
 // EventDomStorageItemRemoved [no description].
 type EventDomStorageItemRemoved struct {
-	StorageID *StorageID `json:"storageId,omitempty"`
-	Key       string     `json:"key,omitempty"`
+	StorageID *StorageID `json:"storageId"`
+	Key       string     `json:"key"`
 }
 
 // EventDomStorageItemAdded [no description].
 type EventDomStorageItemAdded struct {
-	StorageID *StorageID `json:"storageId,omitempty"`
-	Key       string     `json:"key,omitempty"`
-	NewValue  string     `json:"newValue,omitempty"`
+	StorageID *StorageID `json:"storageId"`
+	Key       string     `json:"key"`
+	NewValue  string     `json:"newValue"`
 }
 
 // EventDomStorageItemUpdated [no description].
 type EventDomStorageItemUpdated struct {
-	StorageID *StorageID `json:"storageId,omitempty"`
-	Key       string     `json:"key,omitempty"`
-	OldValue  string     `json:"oldValue,omitempty"`
-	NewValue  string     `json:"newValue,omitempty"`
+	StorageID *StorageID `json:"storageId"`
+	Key       string     `json:"key"`
+	OldValue  string     `json:"oldValue"`
+	NewValue  string     `json:"newValue"`
 }
 
 // EventTypes all event types in the domain.

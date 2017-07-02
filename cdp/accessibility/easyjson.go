@@ -282,14 +282,12 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpAccessibility2(out *jwriter.Wr
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.Type != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"type\":")
-		(in.Type).MarshalEasyJSON(out)
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"type\":")
+	(in.Type).MarshalEasyJSON(out)
 	if in.Value != nil {
 		if !first {
 			out.RawByte(',')
@@ -491,14 +489,12 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpAccessibility3(out *jwriter.Wr
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.Type != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"type\":")
-		(in.Type).MarshalEasyJSON(out)
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"type\":")
+	(in.Type).MarshalEasyJSON(out)
 	if (in.Value).IsDefined() {
 		if !first {
 			out.RawByte(',')
@@ -618,14 +614,12 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpAccessibility4(out *jwriter.Wr
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.BackendDOMNodeID != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"backendDOMNodeId\":")
-		out.Int64(int64(in.BackendDOMNodeID))
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"backendDOMNodeId\":")
+	out.Int64(int64(in.BackendDOMNodeID))
 	if in.Idref != "" {
 		if !first {
 			out.RawByte(',')
@@ -713,25 +707,21 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpAccessibility5(out *jwriter.Wr
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.Name != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"name\":")
-		out.String(string(in.Name))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Value != nil {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"value\":")
-		if in.Value == nil {
-			out.RawString("null")
-		} else {
-			(*in.Value).MarshalEasyJSON(out)
-		}
+	first = false
+	out.RawString("\"name\":")
+	out.String(string(in.Name))
+	if !first {
+		out.RawByte(',')
+	}
+	first = false
+	out.RawString("\"value\":")
+	if in.Value == nil {
+		out.RawString("null")
+	} else {
+		(*in.Value).MarshalEasyJSON(out)
 	}
 	out.RawByte('}')
 }
@@ -923,22 +913,18 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpAccessibility6(out *jwriter.Wr
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.NodeID != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"nodeId\":")
-		out.String(string(in.NodeID))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Ignored {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"ignored\":")
-		out.Bool(bool(in.Ignored))
+	first = false
+	out.RawString("\"nodeId\":")
+	out.String(string(in.NodeID))
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"ignored\":")
+	out.Bool(bool(in.Ignored))
 	if len(in.IgnoredReasons) != 0 {
 		if !first {
 			out.RawByte(',')

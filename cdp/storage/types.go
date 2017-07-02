@@ -81,6 +81,6 @@ func (t *Type) UnmarshalJSON(buf []byte) error {
 
 // UsageForType usage for a storage type.
 type UsageForType struct {
-	StorageType Type    `json:"storageType,omitempty"` // Name of storage type.
-	Usage       float64 `json:"usage,omitempty"`       // Storage usage (bytes).
+	StorageType Type    `json:"storageType"` // Name of storage type.
+	Usage       float64 `json:"usage"`       // Storage usage (bytes).
 }

@@ -12,7 +12,7 @@ import (
 // tracing is stopped collected events will be send as a sequence of
 // dataCollected events followed by tracingComplete event.
 type EventDataCollected struct {
-	Value []easyjson.RawMessage `json:"value,omitempty"`
+	Value []easyjson.RawMessage `json:"value"`
 }
 
 // EventTracingComplete signals that tracing is stopped and there is no trace

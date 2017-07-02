@@ -91,9 +91,9 @@ func (t *ResourceType) UnmarshalJSON(buf []byte) error {
 
 // FrameResource information about the Resource on the page.
 type FrameResource struct {
-	URL          string         `json:"url,omitempty"`          // Resource URL.
-	Type         ResourceType   `json:"type,omitempty"`         // Type of this resource.
-	MimeType     string         `json:"mimeType,omitempty"`     // Resource mimeType as determined by the browser.
+	URL          string         `json:"url"`                    // Resource URL.
+	Type         ResourceType   `json:"type"`                   // Type of this resource.
+	MimeType     string         `json:"mimeType"`               // Resource mimeType as determined by the browser.
 	LastModified *cdp.Timestamp `json:"lastModified,omitempty"` // last-modified timestamp as reported by server.
 	ContentSize  float64        `json:"contentSize,omitempty"`  // Resource content size.
 	Failed       bool           `json:"failed,omitempty"`       // True if the resource failed to load.
@@ -103,9 +103,9 @@ type FrameResource struct {
 // FrameResourceTree information about the Frame hierarchy along with their
 // cached resources.
 type FrameResourceTree struct {
-	Frame       *cdp.Frame           `json:"frame,omitempty"`       // Frame information for this tree item.
+	Frame       *cdp.Frame           `json:"frame"`                 // Frame information for this tree item.
 	ChildFrames []*FrameResourceTree `json:"childFrames,omitempty"` // Child frames.
-	Resources   []*FrameResource     `json:"resources,omitempty"`   // Information about frame resources.
+	Resources   []*FrameResource     `json:"resources"`             // Information about frame resources.
 }
 
 // ScriptIdentifier unique script identifier.
@@ -190,22 +190,22 @@ func (t *TransitionType) UnmarshalJSON(buf []byte) error {
 
 // NavigationEntry navigation history entry.
 type NavigationEntry struct {
-	ID             int64          `json:"id,omitempty"`             // Unique id of the navigation history entry.
-	URL            string         `json:"url,omitempty"`            // URL of the navigation history entry.
-	UserTypedURL   string         `json:"userTypedURL,omitempty"`   // URL that the user typed in the url bar.
-	Title          string         `json:"title,omitempty"`          // Title of the navigation history entry.
-	TransitionType TransitionType `json:"transitionType,omitempty"` // Transition type.
+	ID             int64          `json:"id"`             // Unique id of the navigation history entry.
+	URL            string         `json:"url"`            // URL of the navigation history entry.
+	UserTypedURL   string         `json:"userTypedURL"`   // URL that the user typed in the url bar.
+	Title          string         `json:"title"`          // Title of the navigation history entry.
+	TransitionType TransitionType `json:"transitionType"` // Transition type.
 }
 
 // ScreencastFrameMetadata screencast frame metadata.
 type ScreencastFrameMetadata struct {
-	OffsetTop       float64    `json:"offsetTop,omitempty"`       // Top offset in DIP.
-	PageScaleFactor float64    `json:"pageScaleFactor,omitempty"` // Page scale factor.
-	DeviceWidth     float64    `json:"deviceWidth,omitempty"`     // Device screen width in DIP.
-	DeviceHeight    float64    `json:"deviceHeight,omitempty"`    // Device screen height in DIP.
-	ScrollOffsetX   float64    `json:"scrollOffsetX,omitempty"`   // Position of horizontal scroll in CSS pixels.
-	ScrollOffsetY   float64    `json:"scrollOffsetY,omitempty"`   // Position of vertical scroll in CSS pixels.
-	Timestamp       *Bootstamp `json:"timestamp,omitempty"`       // Frame swap timestamp.
+	OffsetTop       float64    `json:"offsetTop"`           // Top offset in DIP.
+	PageScaleFactor float64    `json:"pageScaleFactor"`     // Page scale factor.
+	DeviceWidth     float64    `json:"deviceWidth"`         // Device screen width in DIP.
+	DeviceHeight    float64    `json:"deviceHeight"`        // Device screen height in DIP.
+	ScrollOffsetX   float64    `json:"scrollOffsetX"`       // Position of horizontal scroll in CSS pixels.
+	ScrollOffsetY   float64    `json:"scrollOffsetY"`       // Position of vertical scroll in CSS pixels.
+	Timestamp       *Bootstamp `json:"timestamp,omitempty"` // Frame swap timestamp.
 }
 
 // DialogType javascript dialog type.
@@ -258,10 +258,10 @@ func (t *DialogType) UnmarshalJSON(buf []byte) error {
 
 // AppManifestError error while paring app manifest.
 type AppManifestError struct {
-	Message  string `json:"message,omitempty"`  // Error message.
-	Critical int64  `json:"critical,omitempty"` // If criticial, this is a non-recoverable parse error.
-	Line     int64  `json:"line,omitempty"`     // Error line.
-	Column   int64  `json:"column,omitempty"`   // Error column.
+	Message  string `json:"message"`  // Error message.
+	Critical int64  `json:"critical"` // If criticial, this is a non-recoverable parse error.
+	Line     int64  `json:"line"`     // Error line.
+	Column   int64  `json:"column"`   // Error column.
 }
 
 // NavigationResponse proceed: allow the navigation; Cancel: cancel the
@@ -313,21 +313,21 @@ func (t *NavigationResponse) UnmarshalJSON(buf []byte) error {
 
 // LayoutViewport layout viewport position and dimensions.
 type LayoutViewport struct {
-	PageX        int64 `json:"pageX,omitempty"`        // Horizontal offset relative to the document (CSS pixels).
-	PageY        int64 `json:"pageY,omitempty"`        // Vertical offset relative to the document (CSS pixels).
-	ClientWidth  int64 `json:"clientWidth,omitempty"`  // Width (CSS pixels), excludes scrollbar if present.
-	ClientHeight int64 `json:"clientHeight,omitempty"` // Height (CSS pixels), excludes scrollbar if present.
+	PageX        int64 `json:"pageX"`        // Horizontal offset relative to the document (CSS pixels).
+	PageY        int64 `json:"pageY"`        // Vertical offset relative to the document (CSS pixels).
+	ClientWidth  int64 `json:"clientWidth"`  // Width (CSS pixels), excludes scrollbar if present.
+	ClientHeight int64 `json:"clientHeight"` // Height (CSS pixels), excludes scrollbar if present.
 }
 
 // VisualViewport visual viewport position, dimensions, and scale.
 type VisualViewport struct {
-	OffsetX      float64 `json:"offsetX,omitempty"`      // Horizontal offset relative to the layout viewport (CSS pixels).
-	OffsetY      float64 `json:"offsetY,omitempty"`      // Vertical offset relative to the layout viewport (CSS pixels).
-	PageX        float64 `json:"pageX,omitempty"`        // Horizontal offset relative to the document (CSS pixels).
-	PageY        float64 `json:"pageY,omitempty"`        // Vertical offset relative to the document (CSS pixels).
-	ClientWidth  float64 `json:"clientWidth,omitempty"`  // Width (CSS pixels), excludes scrollbar if present.
-	ClientHeight float64 `json:"clientHeight,omitempty"` // Height (CSS pixels), excludes scrollbar if present.
-	Scale        float64 `json:"scale,omitempty"`        // Scale relative to the ideal viewport (size at width=device-width).
+	OffsetX      float64 `json:"offsetX"`      // Horizontal offset relative to the layout viewport (CSS pixels).
+	OffsetY      float64 `json:"offsetY"`      // Vertical offset relative to the layout viewport (CSS pixels).
+	PageX        float64 `json:"pageX"`        // Horizontal offset relative to the document (CSS pixels).
+	PageY        float64 `json:"pageY"`        // Vertical offset relative to the document (CSS pixels).
+	ClientWidth  float64 `json:"clientWidth"`  // Width (CSS pixels), excludes scrollbar if present.
+	ClientHeight float64 `json:"clientHeight"` // Height (CSS pixels), excludes scrollbar if present.
+	Scale        float64 `json:"scale"`        // Scale relative to the ideal viewport (size at width=device-width).
 }
 
 // Bootstamp bootstamp type.

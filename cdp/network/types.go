@@ -213,22 +213,22 @@ func (t *CookieSameSite) UnmarshalJSON(buf []byte) error {
 
 // ResourceTiming timing information for the request.
 type ResourceTiming struct {
-	RequestTime       float64 `json:"requestTime,omitempty"`       // Timing's requestTime is a baseline in seconds, while the other numbers are ticks in milliseconds relatively to this requestTime.
-	ProxyStart        float64 `json:"proxyStart,omitempty"`        // Started resolving proxy.
-	ProxyEnd          float64 `json:"proxyEnd,omitempty"`          // Finished resolving proxy.
-	DNSStart          float64 `json:"dnsStart,omitempty"`          // Started DNS address resolve.
-	DNSEnd            float64 `json:"dnsEnd,omitempty"`            // Finished DNS address resolve.
-	ConnectStart      float64 `json:"connectStart,omitempty"`      // Started connecting to the remote host.
-	ConnectEnd        float64 `json:"connectEnd,omitempty"`        // Connected to the remote host.
-	SslStart          float64 `json:"sslStart,omitempty"`          // Started SSL handshake.
-	SslEnd            float64 `json:"sslEnd,omitempty"`            // Finished SSL handshake.
-	WorkerStart       float64 `json:"workerStart,omitempty"`       // Started running ServiceWorker.
-	WorkerReady       float64 `json:"workerReady,omitempty"`       // Finished Starting ServiceWorker.
-	SendStart         float64 `json:"sendStart,omitempty"`         // Started sending request.
-	SendEnd           float64 `json:"sendEnd,omitempty"`           // Finished sending request.
-	PushStart         float64 `json:"pushStart,omitempty"`         // Time the server started pushing request.
-	PushEnd           float64 `json:"pushEnd,omitempty"`           // Time the server finished pushing request.
-	ReceiveHeadersEnd float64 `json:"receiveHeadersEnd,omitempty"` // Finished receiving response headers.
+	RequestTime       float64 `json:"requestTime"`       // Timing's requestTime is a baseline in seconds, while the other numbers are ticks in milliseconds relatively to this requestTime.
+	ProxyStart        float64 `json:"proxyStart"`        // Started resolving proxy.
+	ProxyEnd          float64 `json:"proxyEnd"`          // Finished resolving proxy.
+	DNSStart          float64 `json:"dnsStart"`          // Started DNS address resolve.
+	DNSEnd            float64 `json:"dnsEnd"`            // Finished DNS address resolve.
+	ConnectStart      float64 `json:"connectStart"`      // Started connecting to the remote host.
+	ConnectEnd        float64 `json:"connectEnd"`        // Connected to the remote host.
+	SslStart          float64 `json:"sslStart"`          // Started SSL handshake.
+	SslEnd            float64 `json:"sslEnd"`            // Finished SSL handshake.
+	WorkerStart       float64 `json:"workerStart"`       // Started running ServiceWorker.
+	WorkerReady       float64 `json:"workerReady"`       // Finished Starting ServiceWorker.
+	SendStart         float64 `json:"sendStart"`         // Started sending request.
+	SendEnd           float64 `json:"sendEnd"`           // Finished sending request.
+	PushStart         float64 `json:"pushStart"`         // Time the server started pushing request.
+	PushEnd           float64 `json:"pushEnd"`           // Time the server finished pushing request.
+	ReceiveHeadersEnd float64 `json:"receiveHeadersEnd"` // Finished receiving response headers.
 }
 
 // ResourcePriority loading priority of a resource request.
@@ -284,43 +284,43 @@ func (t *ResourcePriority) UnmarshalJSON(buf []byte) error {
 
 // Request hTTP request data.
 type Request struct {
-	URL              string           `json:"url,omitempty"`              // Request URL.
-	Method           string           `json:"method,omitempty"`           // HTTP request method.
-	Headers          Headers          `json:"headers,omitempty"`          // HTTP request headers.
+	URL              string           `json:"url"`                        // Request URL.
+	Method           string           `json:"method"`                     // HTTP request method.
+	Headers          Headers          `json:"headers"`                    // HTTP request headers.
 	PostData         string           `json:"postData,omitempty"`         // HTTP POST request data.
 	MixedContentType MixedContentType `json:"mixedContentType,omitempty"` // The mixed content status of the request, as defined in http://www.w3.org/TR/mixed-content/
-	InitialPriority  ResourcePriority `json:"initialPriority,omitempty"`  // Priority of the resource request at the time request is sent.
-	ReferrerPolicy   ReferrerPolicy   `json:"referrerPolicy,omitempty"`   // The referrer policy of the request, as defined in https://www.w3.org/TR/referrer-policy/
+	InitialPriority  ResourcePriority `json:"initialPriority"`            // Priority of the resource request at the time request is sent.
+	ReferrerPolicy   ReferrerPolicy   `json:"referrerPolicy"`             // The referrer policy of the request, as defined in https://www.w3.org/TR/referrer-policy/
 	IsLinkPreload    bool             `json:"isLinkPreload,omitempty"`    // Whether is loaded via link preload.
 }
 
 // SignedCertificateTimestamp details of a signed certificate timestamp
 // (SCT).
 type SignedCertificateTimestamp struct {
-	Status             string         `json:"status,omitempty"`             // Validation status.
-	Origin             string         `json:"origin,omitempty"`             // Origin.
-	LogDescription     string         `json:"logDescription,omitempty"`     // Log name / description.
-	LogID              string         `json:"logId,omitempty"`              // Log ID.
-	Timestamp          *cdp.Timestamp `json:"timestamp,omitempty"`          // Issuance date.
-	HashAlgorithm      string         `json:"hashAlgorithm,omitempty"`      // Hash algorithm.
-	SignatureAlgorithm string         `json:"signatureAlgorithm,omitempty"` // Signature algorithm.
-	SignatureData      string         `json:"signatureData,omitempty"`      // Signature data.
+	Status             string         `json:"status"`             // Validation status.
+	Origin             string         `json:"origin"`             // Origin.
+	LogDescription     string         `json:"logDescription"`     // Log name / description.
+	LogID              string         `json:"logId"`              // Log ID.
+	Timestamp          *cdp.Timestamp `json:"timestamp"`          // Issuance date.
+	HashAlgorithm      string         `json:"hashAlgorithm"`      // Hash algorithm.
+	SignatureAlgorithm string         `json:"signatureAlgorithm"` // Signature algorithm.
+	SignatureData      string         `json:"signatureData"`      // Signature data.
 }
 
 // SecurityDetails security details about a request.
 type SecurityDetails struct {
-	Protocol                       string                        `json:"protocol,omitempty"`                       // Protocol name (e.g. "TLS 1.2" or "QUIC").
-	KeyExchange                    string                        `json:"keyExchange,omitempty"`                    // Key Exchange used by the connection, or the empty string if not applicable.
-	KeyExchangeGroup               string                        `json:"keyExchangeGroup,omitempty"`               // (EC)DH group used by the connection, if applicable.
-	Cipher                         string                        `json:"cipher,omitempty"`                         // Cipher name.
-	Mac                            string                        `json:"mac,omitempty"`                            // TLS MAC. Note that AEAD ciphers do not have separate MACs.
-	CertificateID                  security.CertificateID        `json:"certificateId,omitempty"`                  // Certificate ID value.
-	SubjectName                    string                        `json:"subjectName,omitempty"`                    // Certificate subject name.
-	SanList                        []string                      `json:"sanList,omitempty"`                        // Subject Alternative Name (SAN) DNS names and IP addresses.
-	Issuer                         string                        `json:"issuer,omitempty"`                         // Name of the issuing CA.
-	ValidFrom                      *cdp.Timestamp                `json:"validFrom,omitempty"`                      // Certificate valid from date.
-	ValidTo                        *cdp.Timestamp                `json:"validTo,omitempty"`                        // Certificate valid to (expiration) date
-	SignedCertificateTimestampList []*SignedCertificateTimestamp `json:"signedCertificateTimestampList,omitempty"` // List of signed certificate timestamps (SCTs).
+	Protocol                       string                        `json:"protocol"`                       // Protocol name (e.g. "TLS 1.2" or "QUIC").
+	KeyExchange                    string                        `json:"keyExchange"`                    // Key Exchange used by the connection, or the empty string if not applicable.
+	KeyExchangeGroup               string                        `json:"keyExchangeGroup,omitempty"`     // (EC)DH group used by the connection, if applicable.
+	Cipher                         string                        `json:"cipher"`                         // Cipher name.
+	Mac                            string                        `json:"mac,omitempty"`                  // TLS MAC. Note that AEAD ciphers do not have separate MACs.
+	CertificateID                  security.CertificateID        `json:"certificateId"`                  // Certificate ID value.
+	SubjectName                    string                        `json:"subjectName"`                    // Certificate subject name.
+	SanList                        []string                      `json:"sanList"`                        // Subject Alternative Name (SAN) DNS names and IP addresses.
+	Issuer                         string                        `json:"issuer"`                         // Name of the issuing CA.
+	ValidFrom                      *cdp.Timestamp                `json:"validFrom"`                      // Certificate valid from date.
+	ValidTo                        *cdp.Timestamp                `json:"validTo"`                        // Certificate valid to (expiration) date
+	SignedCertificateTimestampList []*SignedCertificateTimestamp `json:"signedCertificateTimestampList"` // List of signed certificate timestamps (SCTs).
 }
 
 // BlockedReason the reason why request was blocked.
@@ -379,37 +379,37 @@ func (t *BlockedReason) UnmarshalJSON(buf []byte) error {
 
 // Response hTTP response data.
 type Response struct {
-	URL                string           `json:"url,omitempty"`                // Response URL. This URL can be different from CachedResource.url in case of redirect.
-	Status             float64          `json:"status,omitempty"`             // HTTP response status code.
-	StatusText         string           `json:"statusText,omitempty"`         // HTTP response status text.
-	Headers            Headers          `json:"headers,omitempty"`            // HTTP response headers.
+	URL                string           `json:"url"`                          // Response URL. This URL can be different from CachedResource.url in case of redirect.
+	Status             float64          `json:"status"`                       // HTTP response status code.
+	StatusText         string           `json:"statusText"`                   // HTTP response status text.
+	Headers            Headers          `json:"headers"`                      // HTTP response headers.
 	HeadersText        string           `json:"headersText,omitempty"`        // HTTP response headers text.
-	MimeType           string           `json:"mimeType,omitempty"`           // Resource mimeType as determined by the browser.
+	MimeType           string           `json:"mimeType"`                     // Resource mimeType as determined by the browser.
 	RequestHeaders     Headers          `json:"requestHeaders,omitempty"`     // Refined HTTP request headers that were actually transmitted over the network.
 	RequestHeadersText string           `json:"requestHeadersText,omitempty"` // HTTP request headers text.
-	ConnectionReused   bool             `json:"connectionReused,omitempty"`   // Specifies whether physical connection was actually reused for this request.
-	ConnectionID       float64          `json:"connectionId,omitempty"`       // Physical connection id that was actually used for this request.
+	ConnectionReused   bool             `json:"connectionReused"`             // Specifies whether physical connection was actually reused for this request.
+	ConnectionID       float64          `json:"connectionId"`                 // Physical connection id that was actually used for this request.
 	RemoteIPAddress    string           `json:"remoteIPAddress,omitempty"`    // Remote IP address.
 	RemotePort         int64            `json:"remotePort,omitempty"`         // Remote port.
 	FromDiskCache      bool             `json:"fromDiskCache,omitempty"`      // Specifies that the request was served from the disk cache.
 	FromServiceWorker  bool             `json:"fromServiceWorker,omitempty"`  // Specifies that the request was served from the ServiceWorker.
-	EncodedDataLength  float64          `json:"encodedDataLength,omitempty"`  // Total number of bytes received for this request so far.
+	EncodedDataLength  float64          `json:"encodedDataLength"`            // Total number of bytes received for this request so far.
 	Timing             *ResourceTiming  `json:"timing,omitempty"`             // Timing information for the given request.
 	Protocol           string           `json:"protocol,omitempty"`           // Protocol used to fetch this request.
-	SecurityState      security.State   `json:"securityState,omitempty"`      // Security state of the request resource.
+	SecurityState      security.State   `json:"securityState"`                // Security state of the request resource.
 	SecurityDetails    *SecurityDetails `json:"securityDetails,omitempty"`    // Security details for the request.
 }
 
 // WebSocketRequest webSocket request data.
 type WebSocketRequest struct {
-	Headers Headers `json:"headers,omitempty"` // HTTP request headers.
+	Headers Headers `json:"headers"` // HTTP request headers.
 }
 
 // WebSocketResponse webSocket response data.
 type WebSocketResponse struct {
-	Status             float64 `json:"status,omitempty"`             // HTTP response status code.
-	StatusText         string  `json:"statusText,omitempty"`         // HTTP response status text.
-	Headers            Headers `json:"headers,omitempty"`            // HTTP response headers.
+	Status             float64 `json:"status"`                       // HTTP response status code.
+	StatusText         string  `json:"statusText"`                   // HTTP response status text.
+	Headers            Headers `json:"headers"`                      // HTTP response headers.
 	HeadersText        string  `json:"headersText,omitempty"`        // HTTP response headers text.
 	RequestHeaders     Headers `json:"requestHeaders,omitempty"`     // HTTP request headers.
 	RequestHeadersText string  `json:"requestHeadersText,omitempty"` // HTTP request headers text.
@@ -417,22 +417,22 @@ type WebSocketResponse struct {
 
 // WebSocketFrame webSocket frame data.
 type WebSocketFrame struct {
-	Opcode      float64 `json:"opcode,omitempty"`      // WebSocket frame opcode.
-	Mask        bool    `json:"mask,omitempty"`        // WebSocke frame mask.
-	PayloadData string  `json:"payloadData,omitempty"` // WebSocke frame payload data.
+	Opcode      float64 `json:"opcode"`      // WebSocket frame opcode.
+	Mask        bool    `json:"mask"`        // WebSocke frame mask.
+	PayloadData string  `json:"payloadData"` // WebSocke frame payload data.
 }
 
 // CachedResource information about the cached resource.
 type CachedResource struct {
-	URL      string            `json:"url,omitempty"`      // Resource URL. This is the url of the original network request.
-	Type     page.ResourceType `json:"type,omitempty"`     // Type of this resource.
+	URL      string            `json:"url"`                // Resource URL. This is the url of the original network request.
+	Type     page.ResourceType `json:"type"`               // Type of this resource.
 	Response *Response         `json:"response,omitempty"` // Cached response data.
-	BodySize float64           `json:"bodySize,omitempty"` // Cached response body size.
+	BodySize float64           `json:"bodySize"`           // Cached response body size.
 }
 
 // Initiator information about the request initiator.
 type Initiator struct {
-	Type       InitiatorType       `json:"type,omitempty"`       // Type of this initiator.
+	Type       InitiatorType       `json:"type"`                 // Type of this initiator.
 	Stack      *runtime.StackTrace `json:"stack,omitempty"`      // Initiator JavaScript stack trace, set for Script only.
 	URL        string              `json:"url,omitempty"`        // Initiator URL, set for Parser type or for Script type (when script is importing module).
 	LineNumber float64             `json:"lineNumber,omitempty"` // Initiator line number, set for Parser type or for Script type (when script is importing module) (0-based).
@@ -440,29 +440,29 @@ type Initiator struct {
 
 // Cookie cookie object.
 type Cookie struct {
-	Name     string         `json:"name,omitempty"`     // Cookie name.
-	Value    string         `json:"value,omitempty"`    // Cookie value.
-	Domain   string         `json:"domain,omitempty"`   // Cookie domain.
-	Path     string         `json:"path,omitempty"`     // Cookie path.
-	Expires  float64        `json:"expires,omitempty"`  // Cookie expiration date as the number of seconds since the UNIX epoch.
-	Size     int64          `json:"size,omitempty"`     // Cookie size.
-	HTTPOnly bool           `json:"httpOnly,omitempty"` // True if cookie is http-only.
-	Secure   bool           `json:"secure,omitempty"`   // True if cookie is secure.
-	Session  bool           `json:"session,omitempty"`  // True in case of session cookie.
+	Name     string         `json:"name"`               // Cookie name.
+	Value    string         `json:"value"`              // Cookie value.
+	Domain   string         `json:"domain"`             // Cookie domain.
+	Path     string         `json:"path"`               // Cookie path.
+	Expires  float64        `json:"expires"`            // Cookie expiration date as the number of seconds since the UNIX epoch.
+	Size     int64          `json:"size"`               // Cookie size.
+	HTTPOnly bool           `json:"httpOnly"`           // True if cookie is http-only.
+	Secure   bool           `json:"secure"`             // True if cookie is secure.
+	Session  bool           `json:"session"`            // True in case of session cookie.
 	SameSite CookieSameSite `json:"sameSite,omitempty"` // Cookie SameSite type.
 }
 
 // AuthChallenge authorization challenge for HTTP status code 401 or 407.
 type AuthChallenge struct {
 	Source AuthChallengeSource `json:"source,omitempty"` // Source of the authentication challenge.
-	Origin string              `json:"origin,omitempty"` // Origin of the challenger.
-	Scheme string              `json:"scheme,omitempty"` // The authentication scheme used, such as basic or digest
-	Realm  string              `json:"realm,omitempty"`  // The realm of the challenge. May be empty.
+	Origin string              `json:"origin"`           // Origin of the challenger.
+	Scheme string              `json:"scheme"`           // The authentication scheme used, such as basic or digest
+	Realm  string              `json:"realm"`            // The realm of the challenge. May be empty.
 }
 
 // AuthChallengeResponse response to an AuthChallenge.
 type AuthChallengeResponse struct {
-	Response AuthChallengeResponseResponse `json:"response,omitempty"` // The decision on what to do in response to the authorization challenge.  Default means deferring to the default behavior of the net stack, which will likely either the Cancel authentication or display a popup dialog box.
+	Response AuthChallengeResponseResponse `json:"response"`           // The decision on what to do in response to the authorization challenge.  Default means deferring to the default behavior of the net stack, which will likely either the Cancel authentication or display a popup dialog box.
 	Username string                        `json:"username,omitempty"` // The username to provide, possibly empty. Should only be set if response is ProvideCredentials.
 	Password string                        `json:"password,omitempty"` // The password to provide, possibly empty. Should only be set if response is ProvideCredentials.
 }

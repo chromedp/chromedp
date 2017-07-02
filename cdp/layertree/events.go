@@ -14,8 +14,8 @@ type EventLayerTreeDidChange struct {
 
 // EventLayerPainted [no description].
 type EventLayerPainted struct {
-	LayerID LayerID   `json:"layerId,omitempty"` // The id of the painted layer.
-	Clip    *dom.Rect `json:"clip,omitempty"`    // Clip rectangle.
+	LayerID LayerID   `json:"layerId"` // The id of the painted layer.
+	Clip    *dom.Rect `json:"clip"`    // Clip rectangle.
 }
 
 // EventTypes all event types in the domain.

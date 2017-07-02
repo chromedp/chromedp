@@ -9,53 +9,53 @@ import (
 
 // EventDomContentEventFired [no description].
 type EventDomContentEventFired struct {
-	Timestamp *Bootstamp `json:"timestamp,omitempty"`
+	Timestamp *Bootstamp `json:"timestamp"`
 }
 
 // EventLoadEventFired [no description].
 type EventLoadEventFired struct {
-	Timestamp *Bootstamp `json:"timestamp,omitempty"`
+	Timestamp *Bootstamp `json:"timestamp"`
 }
 
 // EventFrameAttached fired when frame has been attached to its parent.
 type EventFrameAttached struct {
-	FrameID       cdp.FrameID         `json:"frameId,omitempty"`       // Id of the frame that has been attached.
-	ParentFrameID cdp.FrameID         `json:"parentFrameId,omitempty"` // Parent frame identifier.
-	Stack         *runtime.StackTrace `json:"stack,omitempty"`         // JavaScript stack trace of when frame was attached, only set if frame initiated from script.
+	FrameID       cdp.FrameID         `json:"frameId"`         // Id of the frame that has been attached.
+	ParentFrameID cdp.FrameID         `json:"parentFrameId"`   // Parent frame identifier.
+	Stack         *runtime.StackTrace `json:"stack,omitempty"` // JavaScript stack trace of when frame was attached, only set if frame initiated from script.
 }
 
 // EventFrameNavigated fired once navigation of the frame has completed.
 // Frame is now associated with the new loader.
 type EventFrameNavigated struct {
-	Frame *cdp.Frame `json:"frame,omitempty"` // Frame object.
+	Frame *cdp.Frame `json:"frame"` // Frame object.
 }
 
 // EventFrameDetached fired when frame has been detached from its parent.
 type EventFrameDetached struct {
-	FrameID cdp.FrameID `json:"frameId,omitempty"` // Id of the frame that has been detached.
+	FrameID cdp.FrameID `json:"frameId"` // Id of the frame that has been detached.
 }
 
 // EventFrameStartedLoading fired when frame has started loading.
 type EventFrameStartedLoading struct {
-	FrameID cdp.FrameID `json:"frameId,omitempty"` // Id of the frame that has started loading.
+	FrameID cdp.FrameID `json:"frameId"` // Id of the frame that has started loading.
 }
 
 // EventFrameStoppedLoading fired when frame has stopped loading.
 type EventFrameStoppedLoading struct {
-	FrameID cdp.FrameID `json:"frameId,omitempty"` // Id of the frame that has stopped loading.
+	FrameID cdp.FrameID `json:"frameId"` // Id of the frame that has stopped loading.
 }
 
 // EventFrameScheduledNavigation fired when frame schedules a potential
 // navigation.
 type EventFrameScheduledNavigation struct {
-	FrameID cdp.FrameID `json:"frameId,omitempty"` // Id of the frame that has scheduled a navigation.
-	Delay   float64     `json:"delay,omitempty"`   // Delay (in seconds) until the navigation is scheduled to begin. The navigation is not guaranteed to start.
+	FrameID cdp.FrameID `json:"frameId"` // Id of the frame that has scheduled a navigation.
+	Delay   float64     `json:"delay"`   // Delay (in seconds) until the navigation is scheduled to begin. The navigation is not guaranteed to start.
 }
 
 // EventFrameClearedScheduledNavigation fired when frame no longer has a
 // scheduled navigation.
 type EventFrameClearedScheduledNavigation struct {
-	FrameID cdp.FrameID `json:"frameId,omitempty"` // Id of the frame that has cleared its scheduled navigation.
+	FrameID cdp.FrameID `json:"frameId"` // Id of the frame that has cleared its scheduled navigation.
 }
 
 // EventFrameResized [no description].
@@ -64,28 +64,28 @@ type EventFrameResized struct{}
 // EventJavascriptDialogOpening fired when a JavaScript initiated dialog
 // (alert, confirm, prompt, or onbeforeunload) is about to open.
 type EventJavascriptDialogOpening struct {
-	Message string     `json:"message,omitempty"` // Message that will be displayed by the dialog.
-	Type    DialogType `json:"type,omitempty"`    // Dialog type.
+	Message string     `json:"message"` // Message that will be displayed by the dialog.
+	Type    DialogType `json:"type"`    // Dialog type.
 }
 
 // EventJavascriptDialogClosed fired when a JavaScript initiated dialog
 // (alert, confirm, prompt, or onbeforeunload) has been closed.
 type EventJavascriptDialogClosed struct {
-	Result bool `json:"result,omitempty"` // Whether dialog was confirmed.
+	Result bool `json:"result"` // Whether dialog was confirmed.
 }
 
 // EventScreencastFrame compressed image data requested by the
 // startScreencast.
 type EventScreencastFrame struct {
-	Data      string                   `json:"data,omitempty"`      // Base64-encoded compressed image.
-	Metadata  *ScreencastFrameMetadata `json:"metadata,omitempty"`  // Screencast frame metadata.
-	SessionID int64                    `json:"sessionId,omitempty"` // Frame number.
+	Data      string                   `json:"data"`      // Base64-encoded compressed image.
+	Metadata  *ScreencastFrameMetadata `json:"metadata"`  // Screencast frame metadata.
+	SessionID int64                    `json:"sessionId"` // Frame number.
 }
 
 // EventScreencastVisibilityChanged fired when the page with currently
 // enabled screencast was shown or hidden .
 type EventScreencastVisibilityChanged struct {
-	Visible bool `json:"visible,omitempty"` // True if the page is visible.
+	Visible bool `json:"visible"` // True if the page is visible.
 }
 
 // EventInterstitialShown fired when interstitial page was shown.
@@ -98,10 +98,10 @@ type EventInterstitialHidden struct{}
 // throttles are enabled. The navigation will be deferred until
 // processNavigation is called.
 type EventNavigationRequested struct {
-	IsInMainFrame bool   `json:"isInMainFrame,omitempty"` // Whether the navigation is taking place in the main frame or in a subframe.
-	IsRedirect    bool   `json:"isRedirect,omitempty"`    // Whether the navigation has encountered a server redirect or not.
-	NavigationID  int64  `json:"navigationId,omitempty"`
-	URL           string `json:"url,omitempty"` // URL of requested navigation.
+	IsInMainFrame bool   `json:"isInMainFrame"` // Whether the navigation is taking place in the main frame or in a subframe.
+	IsRedirect    bool   `json:"isRedirect"`    // Whether the navigation has encountered a server redirect or not.
+	NavigationID  int64  `json:"navigationId"`
+	URL           string `json:"url"` // URL of requested navigation.
 }
 
 // EventTypes all event types in the domain.

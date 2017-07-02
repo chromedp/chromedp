@@ -10,10 +10,10 @@ import (
 
 // DOMNode a Node in the DOM tree.
 type DOMNode struct {
-	NodeType              cdp.NodeType      `json:"nodeType,omitempty"`              // Node's nodeType.
-	NodeName              string            `json:"nodeName,omitempty"`              // Node's nodeName.
-	NodeValue             string            `json:"nodeValue,omitempty"`             // Node's nodeValue.
-	BackendNodeID         cdp.BackendNodeID `json:"backendNodeId,omitempty"`         // Node's id, corresponds to DOM.Node.backendNodeId.
+	NodeType              cdp.NodeType      `json:"nodeType"`                        // Node's nodeType.
+	NodeName              string            `json:"nodeName"`                        // Node's nodeName.
+	NodeValue             string            `json:"nodeValue"`                       // Node's nodeValue.
+	BackendNodeID         cdp.BackendNodeID `json:"backendNodeId"`                   // Node's id, corresponds to DOM.Node.backendNodeId.
 	ChildNodeIndexes      []int64           `json:"childNodeIndexes,omitempty"`      // The indexes of the node's child nodes in the domNodes array returned by getSnapshot, if any.
 	Attributes            []*NameValue      `json:"attributes,omitempty"`            // Attributes of an Element node.
 	PseudoElementIndexes  []int64           `json:"pseudoElementIndexes,omitempty"`  // Indexes of pseudo elements associated with this node in the domNodes array returned by getSnapshot, if any.
@@ -33,8 +33,8 @@ type DOMNode struct {
 
 // LayoutTreeNode details of an element in the DOM tree with a LayoutObject.
 type LayoutTreeNode struct {
-	DomNodeIndex    int64                `json:"domNodeIndex,omitempty"`    // The index of the related DOM node in the domNodes array returned by getSnapshot.
-	BoundingBox     *dom.Rect            `json:"boundingBox,omitempty"`     // The absolute position bounding box.
+	DomNodeIndex    int64                `json:"domNodeIndex"`              // The index of the related DOM node in the domNodes array returned by getSnapshot.
+	BoundingBox     *dom.Rect            `json:"boundingBox"`               // The absolute position bounding box.
 	LayoutText      string               `json:"layoutText,omitempty"`      // Contents of the LayoutText, if any.
 	InlineTextNodes []*css.InlineTextBox `json:"inlineTextNodes,omitempty"` // The post-layout inline text nodes, if any.
 	StyleIndex      int64                `json:"styleIndex,omitempty"`      // Index into the computedStyles array returned by getSnapshot.
@@ -43,11 +43,11 @@ type LayoutTreeNode struct {
 // ComputedStyle a subset of the full ComputedStyle as defined by the request
 // whitelist.
 type ComputedStyle struct {
-	Properties []*NameValue `json:"properties,omitempty"` // Name/value pairs of computed style properties.
+	Properties []*NameValue `json:"properties"` // Name/value pairs of computed style properties.
 }
 
 // NameValue a name/value pair.
 type NameValue struct {
-	Name  string `json:"name,omitempty"`  // Attribute/property name.
-	Value string `json:"value,omitempty"` // Attribute/property value.
+	Name  string `json:"name"`  // Attribute/property name.
+	Value string `json:"value"` // Attribute/property value.
 }

@@ -13,30 +13,30 @@ import (
 
 // DatabaseWithObjectStores database with an array of object stores.
 type DatabaseWithObjectStores struct {
-	Name         string         `json:"name,omitempty"`         // Database name.
-	Version      int64          `json:"version,omitempty"`      // Database version.
-	ObjectStores []*ObjectStore `json:"objectStores,omitempty"` // Object stores in this database.
+	Name         string         `json:"name"`         // Database name.
+	Version      int64          `json:"version"`      // Database version.
+	ObjectStores []*ObjectStore `json:"objectStores"` // Object stores in this database.
 }
 
 // ObjectStore object store.
 type ObjectStore struct {
-	Name          string              `json:"name,omitempty"`          // Object store name.
-	KeyPath       *KeyPath            `json:"keyPath,omitempty"`       // Object store key path.
-	AutoIncrement bool                `json:"autoIncrement,omitempty"` // If true, object store has auto increment flag set.
-	Indexes       []*ObjectStoreIndex `json:"indexes,omitempty"`       // Indexes in this object store.
+	Name          string              `json:"name"`          // Object store name.
+	KeyPath       *KeyPath            `json:"keyPath"`       // Object store key path.
+	AutoIncrement bool                `json:"autoIncrement"` // If true, object store has auto increment flag set.
+	Indexes       []*ObjectStoreIndex `json:"indexes"`       // Indexes in this object store.
 }
 
 // ObjectStoreIndex object store index.
 type ObjectStoreIndex struct {
-	Name       string   `json:"name,omitempty"`       // Index name.
-	KeyPath    *KeyPath `json:"keyPath,omitempty"`    // Index key path.
-	Unique     bool     `json:"unique,omitempty"`     // If true, index is unique.
-	MultiEntry bool     `json:"multiEntry,omitempty"` // If true, index allows multiple entries for a key.
+	Name       string   `json:"name"`       // Index name.
+	KeyPath    *KeyPath `json:"keyPath"`    // Index key path.
+	Unique     bool     `json:"unique"`     // If true, index is unique.
+	MultiEntry bool     `json:"multiEntry"` // If true, index allows multiple entries for a key.
 }
 
 // Key key.
 type Key struct {
-	Type   KeyType `json:"type,omitempty"`   // Key type.
+	Type   KeyType `json:"type"`             // Key type.
 	Number float64 `json:"number,omitempty"` // Number value.
 	String string  `json:"string,omitempty"` // String value.
 	Date   float64 `json:"date,omitempty"`   // Date value.
@@ -45,22 +45,22 @@ type Key struct {
 
 // KeyRange key range.
 type KeyRange struct {
-	Lower     *Key `json:"lower,omitempty"`     // Lower bound.
-	Upper     *Key `json:"upper,omitempty"`     // Upper bound.
-	LowerOpen bool `json:"lowerOpen,omitempty"` // If true lower bound is open.
-	UpperOpen bool `json:"upperOpen,omitempty"` // If true upper bound is open.
+	Lower     *Key `json:"lower,omitempty"` // Lower bound.
+	Upper     *Key `json:"upper,omitempty"` // Upper bound.
+	LowerOpen bool `json:"lowerOpen"`       // If true lower bound is open.
+	UpperOpen bool `json:"upperOpen"`       // If true upper bound is open.
 }
 
 // DataEntry data entry.
 type DataEntry struct {
-	Key        *runtime.RemoteObject `json:"key,omitempty"`        // Key object.
-	PrimaryKey *runtime.RemoteObject `json:"primaryKey,omitempty"` // Primary key object.
-	Value      *runtime.RemoteObject `json:"value,omitempty"`      // Value object.
+	Key        *runtime.RemoteObject `json:"key"`        // Key object.
+	PrimaryKey *runtime.RemoteObject `json:"primaryKey"` // Primary key object.
+	Value      *runtime.RemoteObject `json:"value"`      // Value object.
 }
 
 // KeyPath key path.
 type KeyPath struct {
-	Type   KeyPathType `json:"type,omitempty"`   // Key path type.
+	Type   KeyPathType `json:"type"`             // Key path type.
 	String string      `json:"string,omitempty"` // String value.
 	Array  []string    `json:"array,omitempty"`  // Array value.
 }

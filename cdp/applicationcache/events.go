@@ -8,14 +8,14 @@ import (
 
 // EventApplicationCacheStatusUpdated [no description].
 type EventApplicationCacheStatusUpdated struct {
-	FrameID     cdp.FrameID `json:"frameId,omitempty"`     // Identifier of the frame containing document whose application cache updated status.
-	ManifestURL string      `json:"manifestURL,omitempty"` // Manifest URL.
-	Status      int64       `json:"status,omitempty"`      // Updated application cache status.
+	FrameID     cdp.FrameID `json:"frameId"`     // Identifier of the frame containing document whose application cache updated status.
+	ManifestURL string      `json:"manifestURL"` // Manifest URL.
+	Status      int64       `json:"status"`      // Updated application cache status.
 }
 
 // EventNetworkStateUpdated [no description].
 type EventNetworkStateUpdated struct {
-	IsNowOnline bool `json:"isNowOnline,omitempty"`
+	IsNowOnline bool `json:"isNowOnline"`
 }
 
 // EventTypes all event types in the domain.

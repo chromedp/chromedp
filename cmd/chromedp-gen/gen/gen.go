@@ -92,7 +92,7 @@ func (fb fileBuffers) generateCDPTypes(domains []*internal.Domain) {
 
 	w := fb.get(pkg+".go", pkg, nil)
 	for _, t := range types {
-		templates.StreamTypeTemplate(w, t, internal.TypePrefix, internal.TypeSuffix, cdpDomain, doms, nil, false, false)
+		templates.StreamTypeTemplate(w, t, internal.TypePrefix, internal.TypeSuffix, cdpDomain, doms, nil, false, true)
 	}
 	fb.release(w)
 }
@@ -133,7 +133,7 @@ func (fb fileBuffers) generateTypes(
 		if internal.IsCDPType(d.Domain, t.IDorName()) {
 			continue
 		}
-		templates.StreamTypeTemplate(w, t, prefix, suffix, d, domains, nil, false, false)
+		templates.StreamTypeTemplate(w, t, prefix, suffix, d, domains, nil, false, true)
 		names = append(names, t.TypeName(emitPrefix, emitSuffix))
 	}
 

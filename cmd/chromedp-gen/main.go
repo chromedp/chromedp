@@ -4,7 +4,7 @@
 // Please see README.md for more information on using this tool.
 package main
 
-//go:generate go run domain-gen.go
+//go:generate go run gen-domain.go
 //go:generate qtc -dir templates -ext qtpl
 //go:generate gofmt -w -s templates/
 

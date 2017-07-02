@@ -75,21 +75,21 @@ func (t *State) UnmarshalJSON(buf []byte) error {
 // StateExplanation an explanation of an factor contributing to the security
 // state.
 type StateExplanation struct {
-	SecurityState  State  `json:"securityState,omitempty"`  // Security state representing the severity of the factor being explained.
-	Summary        string `json:"summary,omitempty"`        // Short phrase describing the type of factor.
-	Description    string `json:"description,omitempty"`    // Full text explanation of the factor.
-	HasCertificate bool   `json:"hasCertificate,omitempty"` // True if the page has a certificate.
+	SecurityState  State  `json:"securityState"`  // Security state representing the severity of the factor being explained.
+	Summary        string `json:"summary"`        // Short phrase describing the type of factor.
+	Description    string `json:"description"`    // Full text explanation of the factor.
+	HasCertificate bool   `json:"hasCertificate"` // True if the page has a certificate.
 }
 
 // InsecureContentStatus information about insecure content on the page.
 type InsecureContentStatus struct {
-	RanMixedContent                bool  `json:"ranMixedContent,omitempty"`                // True if the page was loaded over HTTPS and ran mixed (HTTP) content such as scripts.
-	DisplayedMixedContent          bool  `json:"displayedMixedContent,omitempty"`          // True if the page was loaded over HTTPS and displayed mixed (HTTP) content such as images.
-	ContainedMixedForm             bool  `json:"containedMixedForm,omitempty"`             // True if the page was loaded over HTTPS and contained a form targeting an insecure url.
-	RanContentWithCertErrors       bool  `json:"ranContentWithCertErrors,omitempty"`       // True if the page was loaded over HTTPS without certificate errors, and ran content such as scripts that were loaded with certificate errors.
-	DisplayedContentWithCertErrors bool  `json:"displayedContentWithCertErrors,omitempty"` // True if the page was loaded over HTTPS without certificate errors, and displayed content such as images that were loaded with certificate errors.
-	RanInsecureContentStyle        State `json:"ranInsecureContentStyle,omitempty"`        // Security state representing a page that ran insecure content.
-	DisplayedInsecureContentStyle  State `json:"displayedInsecureContentStyle,omitempty"`  // Security state representing a page that displayed insecure content.
+	RanMixedContent                bool  `json:"ranMixedContent"`                // True if the page was loaded over HTTPS and ran mixed (HTTP) content such as scripts.
+	DisplayedMixedContent          bool  `json:"displayedMixedContent"`          // True if the page was loaded over HTTPS and displayed mixed (HTTP) content such as images.
+	ContainedMixedForm             bool  `json:"containedMixedForm"`             // True if the page was loaded over HTTPS and contained a form targeting an insecure url.
+	RanContentWithCertErrors       bool  `json:"ranContentWithCertErrors"`       // True if the page was loaded over HTTPS without certificate errors, and ran content such as scripts that were loaded with certificate errors.
+	DisplayedContentWithCertErrors bool  `json:"displayedContentWithCertErrors"` // True if the page was loaded over HTTPS without certificate errors, and displayed content such as images that were loaded with certificate errors.
+	RanInsecureContentStyle        State `json:"ranInsecureContentStyle"`        // Security state representing a page that ran insecure content.
+	DisplayedInsecureContentStyle  State `json:"displayedInsecureContentStyle"`  // Security state representing a page that displayed insecure content.
 }
 
 // CertificateErrorAction the action to take when a certificate error occurs.

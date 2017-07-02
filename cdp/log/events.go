@@ -8,7 +8,7 @@ import (
 
 // EventEntryAdded issued when new message was logged.
 type EventEntryAdded struct {
-	Entry *Entry `json:"entry,omitempty"` // The entry.
+	Entry *Entry `json:"entry"` // The entry.
 }
 
 // EventTypes all event types in the domain.

@@ -468,17 +468,15 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDatabase4(out *jwriter.Writer,
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.Database != nil {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"database\":")
-		if in.Database == nil {
-			out.RawString("null")
-		} else {
-			(*in.Database).MarshalEasyJSON(out)
-		}
+	if !first {
+		out.RawByte(',')
+	}
+	first = false
+	out.RawString("\"database\":")
+	if in.Database == nil {
+		out.RawString("null")
+	} else {
+		(*in.Database).MarshalEasyJSON(out)
 	}
 	out.RawByte('}')
 }
@@ -543,22 +541,18 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDatabase5(out *jwriter.Writer,
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.Message != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"message\":")
-		out.String(string(in.Message))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Code != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"code\":")
-		out.Int64(int64(in.Code))
+	first = false
+	out.RawString("\"message\":")
+	out.String(string(in.Message))
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"code\":")
+	out.Int64(int64(in.Code))
 	out.RawByte('}')
 }
 
@@ -744,38 +738,30 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDatabase8(out *jwriter.Writer,
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.ID != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"id\":")
-		out.String(string(in.ID))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Domain != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"domain\":")
-		out.String(string(in.Domain))
+	first = false
+	out.RawString("\"id\":")
+	out.String(string(in.ID))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Name != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"name\":")
-		out.String(string(in.Name))
+	first = false
+	out.RawString("\"domain\":")
+	out.String(string(in.Domain))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Version != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"version\":")
-		out.String(string(in.Version))
+	first = false
+	out.RawString("\"name\":")
+	out.String(string(in.Name))
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"version\":")
+	out.String(string(in.Version))
 	out.RawByte('}')
 }
 

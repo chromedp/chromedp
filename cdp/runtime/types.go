@@ -79,7 +79,7 @@ func (t *UnserializableValue) UnmarshalJSON(buf []byte) error {
 
 // RemoteObject mirror object referencing original JavaScript object.
 type RemoteObject struct {
-	Type                Type                `json:"type,omitempty"`                // Object type.
+	Type                Type                `json:"type"`                          // Object type.
 	Subtype             Subtype             `json:"subtype,omitempty"`             // Object subtype hint. Specified for object type values only.
 	ClassName           string              `json:"className,omitempty"`           // Object class (constructor) name. Specified for object type values only.
 	Value               easyjson.RawMessage `json:"value,omitempty"`               // Remote object value in case of primitive values or JSON values (if it was requested).
@@ -92,27 +92,27 @@ type RemoteObject struct {
 
 // CustomPreview [no description].
 type CustomPreview struct {
-	Header                     string         `json:"header,omitempty"`
-	HasBody                    bool           `json:"hasBody,omitempty"`
-	FormatterObjectID          RemoteObjectID `json:"formatterObjectId,omitempty"`
-	BindRemoteObjectFunctionID RemoteObjectID `json:"bindRemoteObjectFunctionId,omitempty"`
+	Header                     string         `json:"header"`
+	HasBody                    bool           `json:"hasBody"`
+	FormatterObjectID          RemoteObjectID `json:"formatterObjectId"`
+	BindRemoteObjectFunctionID RemoteObjectID `json:"bindRemoteObjectFunctionId"`
 	ConfigObjectID             RemoteObjectID `json:"configObjectId,omitempty"`
 }
 
 // ObjectPreview object containing abbreviated remote object value.
 type ObjectPreview struct {
-	Type        Type               `json:"type,omitempty"`        // Object type.
+	Type        Type               `json:"type"`                  // Object type.
 	Subtype     Subtype            `json:"subtype,omitempty"`     // Object subtype hint. Specified for object type values only.
 	Description string             `json:"description,omitempty"` // String representation of the object.
-	Overflow    bool               `json:"overflow,omitempty"`    // True iff some of the properties or entries of the original object did not fit.
-	Properties  []*PropertyPreview `json:"properties,omitempty"`  // List of the properties.
+	Overflow    bool               `json:"overflow"`              // True iff some of the properties or entries of the original object did not fit.
+	Properties  []*PropertyPreview `json:"properties"`            // List of the properties.
 	Entries     []*EntryPreview    `json:"entries,omitempty"`     // List of the entries. Specified for map and set subtype values only.
 }
 
 // PropertyPreview [no description].
 type PropertyPreview struct {
-	Name         string         `json:"name,omitempty"`         // Property name.
-	Type         Type           `json:"type,omitempty"`         // Object type. Accessor means that the property itself is an accessor property.
+	Name         string         `json:"name"`                   // Property name.
+	Type         Type           `json:"type"`                   // Object type. Accessor means that the property itself is an accessor property.
 	Value        string         `json:"value,omitempty"`        // User-friendly property value string.
 	ValuePreview *ObjectPreview `json:"valuePreview,omitempty"` // Nested value preview.
 	Subtype      Subtype        `json:"subtype,omitempty"`      // Object subtype hint. Specified for object type values only.
@@ -120,28 +120,28 @@ type PropertyPreview struct {
 
 // EntryPreview [no description].
 type EntryPreview struct {
-	Key   *ObjectPreview `json:"key,omitempty"`   // Preview of the key. Specified for map-like collection entries.
-	Value *ObjectPreview `json:"value,omitempty"` // Preview of the value.
+	Key   *ObjectPreview `json:"key,omitempty"` // Preview of the key. Specified for map-like collection entries.
+	Value *ObjectPreview `json:"value"`         // Preview of the value.
 }
 
 // PropertyDescriptor object property descriptor.
 type PropertyDescriptor struct {
-	Name         string        `json:"name,omitempty"`         // Property name or symbol description.
-	Value        *RemoteObject `json:"value,omitempty"`        // The value associated with the property.
-	Writable     bool          `json:"writable,omitempty"`     // True if the value associated with the property may be changed (data descriptors only).
-	Get          *RemoteObject `json:"get,omitempty"`          // A function which serves as a getter for the property, or undefined if there is no getter (accessor descriptors only).
-	Set          *RemoteObject `json:"set,omitempty"`          // A function which serves as a setter for the property, or undefined if there is no setter (accessor descriptors only).
-	Configurable bool          `json:"configurable,omitempty"` // True if the type of this property descriptor may be changed and if the property may be deleted from the corresponding object.
-	Enumerable   bool          `json:"enumerable,omitempty"`   // True if this property shows up during enumeration of the properties on the corresponding object.
-	WasThrown    bool          `json:"wasThrown,omitempty"`    // True if the result was thrown during the evaluation.
-	IsOwn        bool          `json:"isOwn,omitempty"`        // True if the property is owned for the object.
-	Symbol       *RemoteObject `json:"symbol,omitempty"`       // Property symbol object, if the property is of the symbol type.
+	Name         string        `json:"name"`                // Property name or symbol description.
+	Value        *RemoteObject `json:"value,omitempty"`     // The value associated with the property.
+	Writable     bool          `json:"writable,omitempty"`  // True if the value associated with the property may be changed (data descriptors only).
+	Get          *RemoteObject `json:"get,omitempty"`       // A function which serves as a getter for the property, or undefined if there is no getter (accessor descriptors only).
+	Set          *RemoteObject `json:"set,omitempty"`       // A function which serves as a setter for the property, or undefined if there is no setter (accessor descriptors only).
+	Configurable bool          `json:"configurable"`        // True if the type of this property descriptor may be changed and if the property may be deleted from the corresponding object.
+	Enumerable   bool          `json:"enumerable"`          // True if this property shows up during enumeration of the properties on the corresponding object.
+	WasThrown    bool          `json:"wasThrown,omitempty"` // True if the result was thrown during the evaluation.
+	IsOwn        bool          `json:"isOwn,omitempty"`     // True if the property is owned for the object.
+	Symbol       *RemoteObject `json:"symbol,omitempty"`    // Property symbol object, if the property is of the symbol type.
 }
 
 // InternalPropertyDescriptor object internal property descriptor. This
 // property isn't normally visible in JavaScript code.
 type InternalPropertyDescriptor struct {
-	Name  string        `json:"name,omitempty"`  // Conventional property name.
+	Name  string        `json:"name"`            // Conventional property name.
 	Value *RemoteObject `json:"value,omitempty"` // The value associated with the property.
 }
 
@@ -164,19 +164,19 @@ func (t ExecutionContextID) Int64() int64 {
 
 // ExecutionContextDescription description of an isolated world.
 type ExecutionContextDescription struct {
-	ID      ExecutionContextID  `json:"id,omitempty"`     // Unique id of the execution context. It can be used to specify in which execution context script evaluation should be performed.
-	Origin  string              `json:"origin,omitempty"` // Execution context origin.
-	Name    string              `json:"name,omitempty"`   // Human readable name describing given context.
+	ID      ExecutionContextID  `json:"id"`     // Unique id of the execution context. It can be used to specify in which execution context script evaluation should be performed.
+	Origin  string              `json:"origin"` // Execution context origin.
+	Name    string              `json:"name"`   // Human readable name describing given context.
 	AuxData easyjson.RawMessage `json:"auxData,omitempty"`
 }
 
 // ExceptionDetails detailed information about exception (or error) that was
 // thrown during script compilation or execution.
 type ExceptionDetails struct {
-	ExceptionID        int64              `json:"exceptionId,omitempty"`        // Exception id.
-	Text               string             `json:"text,omitempty"`               // Exception text, which should be used together with exception object when available.
-	LineNumber         int64              `json:"lineNumber,omitempty"`         // Line number of the exception location (0-based).
-	ColumnNumber       int64              `json:"columnNumber,omitempty"`       // Column number of the exception location (0-based).
+	ExceptionID        int64              `json:"exceptionId"`                  // Exception id.
+	Text               string             `json:"text"`                         // Exception text, which should be used together with exception object when available.
+	LineNumber         int64              `json:"lineNumber"`                   // Line number of the exception location (0-based).
+	ColumnNumber       int64              `json:"columnNumber"`                 // Column number of the exception location (0-based).
 	ScriptID           ScriptID           `json:"scriptId,omitempty"`           // Script ID of the exception location.
 	URL                string             `json:"url,omitempty"`                // URL of the exception location, to be used when the script was not reported.
 	StackTrace         *StackTrace        `json:"stackTrace,omitempty"`         // JavaScript stack trace if available.
@@ -224,17 +224,17 @@ func (t *Timestamp) UnmarshalJSON(buf []byte) error {
 
 // CallFrame stack entry for runtime errors and assertions.
 type CallFrame struct {
-	FunctionName string   `json:"functionName,omitempty"` // JavaScript function name.
-	ScriptID     ScriptID `json:"scriptId,omitempty"`     // JavaScript script id.
-	URL          string   `json:"url,omitempty"`          // JavaScript script name or url.
-	LineNumber   int64    `json:"lineNumber,omitempty"`   // JavaScript script line number (0-based).
-	ColumnNumber int64    `json:"columnNumber,omitempty"` // JavaScript script column number (0-based).
+	FunctionName string   `json:"functionName"` // JavaScript function name.
+	ScriptID     ScriptID `json:"scriptId"`     // JavaScript script id.
+	URL          string   `json:"url"`          // JavaScript script name or url.
+	LineNumber   int64    `json:"lineNumber"`   // JavaScript script line number (0-based).
+	ColumnNumber int64    `json:"columnNumber"` // JavaScript script column number (0-based).
 }
 
 // StackTrace call frames for assertions or error messages.
 type StackTrace struct {
 	Description          string       `json:"description,omitempty"`          // String label of this stack trace. For async traces this may be a name of the function that initiated the async call.
-	CallFrames           []*CallFrame `json:"callFrames,omitempty"`           // JavaScript function name.
+	CallFrames           []*CallFrame `json:"callFrames"`                     // JavaScript function name.
 	Parent               *StackTrace  `json:"parent,omitempty"`               // Asynchronous JavaScript stack trace that preceded this stack, if available.
 	PromiseCreationFrame *CallFrame   `json:"promiseCreationFrame,omitempty"` // Creation frame of the Promise which produced the next synchronous trace when resolved, if available.
 }

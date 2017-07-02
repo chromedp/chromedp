@@ -8,23 +8,23 @@ import (
 
 // Resource detailed application cache resource information.
 type Resource struct {
-	URL  string `json:"url,omitempty"`  // Resource url.
-	Size int64  `json:"size,omitempty"` // Resource size.
-	Type string `json:"type,omitempty"` // Resource type.
+	URL  string `json:"url"`  // Resource url.
+	Size int64  `json:"size"` // Resource size.
+	Type string `json:"type"` // Resource type.
 }
 
 // ApplicationCache detailed application cache information.
 type ApplicationCache struct {
-	ManifestURL  string      `json:"manifestURL,omitempty"`  // Manifest URL.
-	Size         float64     `json:"size,omitempty"`         // Application cache size.
-	CreationTime float64     `json:"creationTime,omitempty"` // Application cache creation time.
-	UpdateTime   float64     `json:"updateTime,omitempty"`   // Application cache update time.
-	Resources    []*Resource `json:"resources,omitempty"`    // Application cache resources.
+	ManifestURL  string      `json:"manifestURL"`  // Manifest URL.
+	Size         float64     `json:"size"`         // Application cache size.
+	CreationTime float64     `json:"creationTime"` // Application cache creation time.
+	UpdateTime   float64     `json:"updateTime"`   // Application cache update time.
+	Resources    []*Resource `json:"resources"`    // Application cache resources.
 }
 
 // FrameWithManifest frame identifier - manifest URL pair.
 type FrameWithManifest struct {
-	FrameID     cdp.FrameID `json:"frameId,omitempty"`     // Frame identifier.
-	ManifestURL string      `json:"manifestURL,omitempty"` // Manifest URL.
-	Status      int64       `json:"status,omitempty"`      // Application cache status.
+	FrameID     cdp.FrameID `json:"frameId"`     // Frame identifier.
+	ManifestURL string      `json:"manifestURL"` // Manifest URL.
+	Status      int64       `json:"status"`      // Application cache status.
 }

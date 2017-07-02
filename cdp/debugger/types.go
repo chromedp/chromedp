@@ -29,32 +29,32 @@ func (t CallFrameID) String() string {
 
 // Location location in the source code.
 type Location struct {
-	ScriptID     runtime.ScriptID `json:"scriptId,omitempty"`     // Script identifier as reported in the Debugger.scriptParsed.
-	LineNumber   int64            `json:"lineNumber,omitempty"`   // Line number in the script (0-based).
+	ScriptID     runtime.ScriptID `json:"scriptId"`               // Script identifier as reported in the Debugger.scriptParsed.
+	LineNumber   int64            `json:"lineNumber"`             // Line number in the script (0-based).
 	ColumnNumber int64            `json:"columnNumber,omitempty"` // Column number in the script (0-based).
 }
 
 // ScriptPosition location in the source code.
 type ScriptPosition struct {
-	LineNumber   int64 `json:"lineNumber,omitempty"`
-	ColumnNumber int64 `json:"columnNumber,omitempty"`
+	LineNumber   int64 `json:"lineNumber"`
+	ColumnNumber int64 `json:"columnNumber"`
 }
 
 // CallFrame javaScript call frame. Array of call frames form the call stack.
 type CallFrame struct {
-	CallFrameID      CallFrameID           `json:"callFrameId,omitempty"`      // Call frame identifier. This identifier is only valid while the virtual machine is paused.
-	FunctionName     string                `json:"functionName,omitempty"`     // Name of the JavaScript function called on this call frame.
+	CallFrameID      CallFrameID           `json:"callFrameId"`                // Call frame identifier. This identifier is only valid while the virtual machine is paused.
+	FunctionName     string                `json:"functionName"`               // Name of the JavaScript function called on this call frame.
 	FunctionLocation *Location             `json:"functionLocation,omitempty"` // Location in the source code.
-	Location         *Location             `json:"location,omitempty"`         // Location in the source code.
-	ScopeChain       []*Scope              `json:"scopeChain,omitempty"`       // Scope chain for this call frame.
-	This             *runtime.RemoteObject `json:"this,omitempty"`             // this object for this call frame.
+	Location         *Location             `json:"location"`                   // Location in the source code.
+	ScopeChain       []*Scope              `json:"scopeChain"`                 // Scope chain for this call frame.
+	This             *runtime.RemoteObject `json:"this"`                       // this object for this call frame.
 	ReturnValue      *runtime.RemoteObject `json:"returnValue,omitempty"`      // The value being returned, if the function is at return point.
 }
 
 // Scope scope description.
 type Scope struct {
-	Type          ScopeType             `json:"type,omitempty"`   // Scope type.
-	Object        *runtime.RemoteObject `json:"object,omitempty"` // Object representing the scope. For global and with scopes it represents the actual object; for the rest of the scopes, it is artificial transient object enumerating scope variables as its properties.
+	Type          ScopeType             `json:"type"`   // Scope type.
+	Object        *runtime.RemoteObject `json:"object"` // Object representing the scope. For global and with scopes it represents the actual object; for the rest of the scopes, it is artificial transient object enumerating scope variables as its properties.
 	Name          string                `json:"name,omitempty"`
 	StartLocation *Location             `json:"startLocation,omitempty"` // Location in the source code where scope starts
 	EndLocation   *Location             `json:"endLocation,omitempty"`   // Location in the source code where scope ends
@@ -62,14 +62,14 @@ type Scope struct {
 
 // SearchMatch search match for resource.
 type SearchMatch struct {
-	LineNumber  float64 `json:"lineNumber,omitempty"`  // Line number in resource content.
-	LineContent string  `json:"lineContent,omitempty"` // Line with match content.
+	LineNumber  float64 `json:"lineNumber"`  // Line number in resource content.
+	LineContent string  `json:"lineContent"` // Line with match content.
 }
 
 // BreakLocation [no description].
 type BreakLocation struct {
-	ScriptID     runtime.ScriptID  `json:"scriptId,omitempty"`     // Script identifier as reported in the Debugger.scriptParsed.
-	LineNumber   int64             `json:"lineNumber,omitempty"`   // Line number in the script (0-based).
+	ScriptID     runtime.ScriptID  `json:"scriptId"`               // Script identifier as reported in the Debugger.scriptParsed.
+	LineNumber   int64             `json:"lineNumber"`             // Line number in the script (0-based).
 	ColumnNumber int64             `json:"columnNumber,omitempty"` // Column number in the script (0-based).
 	Type         BreakLocationType `json:"type,omitempty"`
 }

@@ -13,9 +13,9 @@ import (
 
 // TouchPoint [no description].
 type TouchPoint struct {
-	State         TouchState `json:"state,omitempty"`         // State of the touch point.
-	X             int64      `json:"x,omitempty"`             // X coordinate of the event relative to the main frame's viewport.
-	Y             int64      `json:"y,omitempty"`             // Y coordinate of the event relative to the main frame's viewport. 0 refers to the top of the viewport and Y increases as it proceeds towards the bottom of the viewport.
+	State         TouchState `json:"state"`                   // State of the touch point.
+	X             int64      `json:"x"`                       // X coordinate of the event relative to the main frame's viewport.
+	Y             int64      `json:"y"`                       // Y coordinate of the event relative to the main frame's viewport. 0 refers to the top of the viewport and Y increases as it proceeds towards the bottom of the viewport.
 	RadiusX       int64      `json:"radiusX,omitempty"`       // X radius of the touch area (default: 1).
 	RadiusY       int64      `json:"radiusY,omitempty"`       // Y radius of the touch area (default: 1).
 	RotationAngle float64    `json:"rotationAngle,omitempty"` // Rotation angle (default: 0.0).

@@ -15,12 +15,12 @@ func (t HeapSnapshotObjectID) String() string {
 // SamplingHeapProfileNode sampling Heap Profile node. Holds callsite
 // information, allocation statistics and child nodes.
 type SamplingHeapProfileNode struct {
-	CallFrame *runtime.CallFrame         `json:"callFrame,omitempty"` // Function location.
-	SelfSize  float64                    `json:"selfSize,omitempty"`  // Allocations size in bytes for the node excluding children.
-	Children  []*SamplingHeapProfileNode `json:"children,omitempty"`  // Child nodes.
+	CallFrame *runtime.CallFrame         `json:"callFrame"` // Function location.
+	SelfSize  float64                    `json:"selfSize"`  // Allocations size in bytes for the node excluding children.
+	Children  []*SamplingHeapProfileNode `json:"children"`  // Child nodes.
 }
 
 // SamplingHeapProfile profile.
 type SamplingHeapProfile struct {
-	Head *SamplingHeapProfileNode `json:"head,omitempty"`
+	Head *SamplingHeapProfileNode `json:"head"`
 }

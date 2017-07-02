@@ -893,22 +893,18 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpEmulation10(out *jwriter.Write
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.Type != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"type\":")
-		(in.Type).MarshalEasyJSON(out)
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Angle != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"angle\":")
-		out.Int64(int64(in.Angle))
+	first = false
+	out.RawString("\"type\":")
+	(in.Type).MarshalEasyJSON(out)
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"angle\":")
+	out.Int64(int64(in.Angle))
 	out.RawByte('}')
 }
 

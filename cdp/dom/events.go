@@ -14,85 +14,85 @@ type EventDocumentUpdated struct{}
 // missing DOM structure. This happens upon most of the calls requesting node
 // ids.
 type EventSetChildNodes struct {
-	ParentID cdp.NodeID  `json:"parentId,omitempty"` // Parent node id to populate with children.
-	Nodes    []*cdp.Node `json:"nodes,omitempty"`    // Child nodes array.
+	ParentID cdp.NodeID  `json:"parentId"` // Parent node id to populate with children.
+	Nodes    []*cdp.Node `json:"nodes"`    // Child nodes array.
 }
 
 // EventAttributeModified fired when Element's attribute is modified.
 type EventAttributeModified struct {
-	NodeID cdp.NodeID `json:"nodeId,omitempty"` // Id of the node that has changed.
-	Name   string     `json:"name,omitempty"`   // Attribute name.
-	Value  string     `json:"value,omitempty"`  // Attribute value.
+	NodeID cdp.NodeID `json:"nodeId"` // Id of the node that has changed.
+	Name   string     `json:"name"`   // Attribute name.
+	Value  string     `json:"value"`  // Attribute value.
 }
 
 // EventAttributeRemoved fired when Element's attribute is removed.
 type EventAttributeRemoved struct {
-	NodeID cdp.NodeID `json:"nodeId,omitempty"` // Id of the node that has changed.
-	Name   string     `json:"name,omitempty"`   // A ttribute name.
+	NodeID cdp.NodeID `json:"nodeId"` // Id of the node that has changed.
+	Name   string     `json:"name"`   // A ttribute name.
 }
 
 // EventInlineStyleInvalidated fired when Element's inline style is modified
 // via a CSS property modification.
 type EventInlineStyleInvalidated struct {
-	NodeIds []cdp.NodeID `json:"nodeIds,omitempty"` // Ids of the nodes for which the inline styles have been invalidated.
+	NodeIds []cdp.NodeID `json:"nodeIds"` // Ids of the nodes for which the inline styles have been invalidated.
 }
 
 // EventCharacterDataModified mirrors DOMCharacterDataModified event.
 type EventCharacterDataModified struct {
-	NodeID        cdp.NodeID `json:"nodeId,omitempty"`        // Id of the node that has changed.
-	CharacterData string     `json:"characterData,omitempty"` // New text value.
+	NodeID        cdp.NodeID `json:"nodeId"`        // Id of the node that has changed.
+	CharacterData string     `json:"characterData"` // New text value.
 }
 
 // EventChildNodeCountUpdated fired when Container's child node count has
 // changed.
 type EventChildNodeCountUpdated struct {
-	NodeID         cdp.NodeID `json:"nodeId,omitempty"`         // Id of the node that has changed.
-	ChildNodeCount int64      `json:"childNodeCount,omitempty"` // New node count.
+	NodeID         cdp.NodeID `json:"nodeId"`         // Id of the node that has changed.
+	ChildNodeCount int64      `json:"childNodeCount"` // New node count.
 }
 
 // EventChildNodeInserted mirrors DOMNodeInserted event.
 type EventChildNodeInserted struct {
-	ParentNodeID   cdp.NodeID `json:"parentNodeId,omitempty"`   // Id of the node that has changed.
-	PreviousNodeID cdp.NodeID `json:"previousNodeId,omitempty"` // If of the previous siblint.
-	Node           *cdp.Node  `json:"node,omitempty"`           // Inserted node data.
+	ParentNodeID   cdp.NodeID `json:"parentNodeId"`   // Id of the node that has changed.
+	PreviousNodeID cdp.NodeID `json:"previousNodeId"` // If of the previous siblint.
+	Node           *cdp.Node  `json:"node"`           // Inserted node data.
 }
 
 // EventChildNodeRemoved mirrors DOMNodeRemoved event.
 type EventChildNodeRemoved struct {
-	ParentNodeID cdp.NodeID `json:"parentNodeId,omitempty"` // Parent id.
-	NodeID       cdp.NodeID `json:"nodeId,omitempty"`       // Id of the node that has been removed.
+	ParentNodeID cdp.NodeID `json:"parentNodeId"` // Parent id.
+	NodeID       cdp.NodeID `json:"nodeId"`       // Id of the node that has been removed.
 }
 
 // EventShadowRootPushed called when shadow root is pushed into the element.
 type EventShadowRootPushed struct {
-	HostID cdp.NodeID `json:"hostId,omitempty"` // Host element id.
-	Root   *cdp.Node  `json:"root,omitempty"`   // Shadow root.
+	HostID cdp.NodeID `json:"hostId"` // Host element id.
+	Root   *cdp.Node  `json:"root"`   // Shadow root.
 }
 
 // EventShadowRootPopped called when shadow root is popped from the element.
 type EventShadowRootPopped struct {
-	HostID cdp.NodeID `json:"hostId,omitempty"` // Host element id.
-	RootID cdp.NodeID `json:"rootId,omitempty"` // Shadow root id.
+	HostID cdp.NodeID `json:"hostId"` // Host element id.
+	RootID cdp.NodeID `json:"rootId"` // Shadow root id.
 }
 
 // EventPseudoElementAdded called when a pseudo element is added to an
 // element.
 type EventPseudoElementAdded struct {
-	ParentID      cdp.NodeID `json:"parentId,omitempty"`      // Pseudo element's parent element id.
-	PseudoElement *cdp.Node  `json:"pseudoElement,omitempty"` // The added pseudo element.
+	ParentID      cdp.NodeID `json:"parentId"`      // Pseudo element's parent element id.
+	PseudoElement *cdp.Node  `json:"pseudoElement"` // The added pseudo element.
 }
 
 // EventPseudoElementRemoved called when a pseudo element is removed from an
 // element.
 type EventPseudoElementRemoved struct {
-	ParentID        cdp.NodeID `json:"parentId,omitempty"`        // Pseudo element's parent element id.
-	PseudoElementID cdp.NodeID `json:"pseudoElementId,omitempty"` // The removed pseudo element id.
+	ParentID        cdp.NodeID `json:"parentId"`        // Pseudo element's parent element id.
+	PseudoElementID cdp.NodeID `json:"pseudoElementId"` // The removed pseudo element id.
 }
 
 // EventDistributedNodesUpdated called when distribution is changed.
 type EventDistributedNodesUpdated struct {
-	InsertionPointID cdp.NodeID         `json:"insertionPointId,omitempty"` // Insertion point where distributed nodes were updated.
-	DistributedNodes []*cdp.BackendNode `json:"distributedNodes,omitempty"` // Distributed nodes for given insertion point.
+	InsertionPointID cdp.NodeID         `json:"insertionPointId"` // Insertion point where distributed nodes were updated.
+	DistributedNodes []*cdp.BackendNode `json:"distributedNodes"` // Distributed nodes for given insertion point.
 }
 
 // EventTypes all event types in the domain.

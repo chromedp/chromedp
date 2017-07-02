@@ -915,24 +915,22 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpTracing9(out *jwriter.Writer, 
 	out.RawByte('{')
 	first := true
 	_ = first
-	if len(in.Value) != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"value\":")
-		if in.Value == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-			out.RawString("null")
-		} else {
-			out.RawByte('[')
-			for v14, v15 := range in.Value {
-				if v14 > 0 {
-					out.RawByte(',')
-				}
-				(v15).MarshalEasyJSON(out)
+	if !first {
+		out.RawByte(',')
+	}
+	first = false
+	out.RawString("\"value\":")
+	if in.Value == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+		out.RawString("null")
+	} else {
+		out.RawByte('[')
+		for v14, v15 := range in.Value {
+			if v14 > 0 {
+				out.RawByte(',')
 			}
-			out.RawByte(']')
+			(v15).MarshalEasyJSON(out)
 		}
+		out.RawByte(']')
 	}
 	out.RawByte('}')
 }

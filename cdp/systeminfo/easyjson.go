@@ -278,28 +278,26 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpSysteminfo2(out *jwriter.Write
 	out.RawByte('{')
 	first := true
 	_ = first
-	if len(in.Devices) != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"devices\":")
-		if in.Devices == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-			out.RawString("null")
-		} else {
-			out.RawByte('[')
-			for v3, v4 := range in.Devices {
-				if v3 > 0 {
-					out.RawByte(',')
-				}
-				if v4 == nil {
-					out.RawString("null")
-				} else {
-					(*v4).MarshalEasyJSON(out)
-				}
+	if !first {
+		out.RawByte(',')
+	}
+	first = false
+	out.RawString("\"devices\":")
+	if in.Devices == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+		out.RawString("null")
+	} else {
+		out.RawByte('[')
+		for v3, v4 := range in.Devices {
+			if v3 > 0 {
+				out.RawByte(',')
 			}
-			out.RawByte(']')
+			if v4 == nil {
+				out.RawString("null")
+			} else {
+				(*v4).MarshalEasyJSON(out)
+			}
 		}
+		out.RawByte(']')
 	}
 	if (in.AuxAttributes).IsDefined() {
 		if !first {
@@ -317,24 +315,22 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpSysteminfo2(out *jwriter.Write
 		out.RawString("\"featureStatus\":")
 		(in.FeatureStatus).MarshalEasyJSON(out)
 	}
-	if len(in.DriverBugWorkarounds) != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"driverBugWorkarounds\":")
-		if in.DriverBugWorkarounds == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-			out.RawString("null")
-		} else {
-			out.RawByte('[')
-			for v5, v6 := range in.DriverBugWorkarounds {
-				if v5 > 0 {
-					out.RawByte(',')
-				}
-				out.String(string(v6))
+	if !first {
+		out.RawByte(',')
+	}
+	first = false
+	out.RawString("\"driverBugWorkarounds\":")
+	if in.DriverBugWorkarounds == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+		out.RawString("null")
+	} else {
+		out.RawByte('[')
+		for v5, v6 := range in.DriverBugWorkarounds {
+			if v5 > 0 {
+				out.RawByte(',')
 			}
-			out.RawByte(']')
+			out.String(string(v6))
 		}
+		out.RawByte(']')
 	}
 	out.RawByte('}')
 }
@@ -403,38 +399,30 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpSysteminfo3(out *jwriter.Write
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.VendorID != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"vendorId\":")
-		out.Float64(float64(in.VendorID))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.DeviceID != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"deviceId\":")
-		out.Float64(float64(in.DeviceID))
+	first = false
+	out.RawString("\"vendorId\":")
+	out.Float64(float64(in.VendorID))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.VendorString != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"vendorString\":")
-		out.String(string(in.VendorString))
+	first = false
+	out.RawString("\"deviceId\":")
+	out.Float64(float64(in.DeviceID))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.DeviceString != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"deviceString\":")
-		out.String(string(in.DeviceString))
+	first = false
+	out.RawString("\"vendorString\":")
+	out.String(string(in.VendorString))
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"deviceString\":")
+	out.String(string(in.DeviceString))
 	out.RawByte('}')
 }
 

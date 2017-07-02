@@ -27,6 +27,7 @@ const (
 	DomainDebugger          DomainType = "Debugger"
 	DomainDeviceOrientation DomainType = "DeviceOrientation"
 	DomainEmulation         DomainType = "Emulation"
+	DomainHAR               DomainType = "HAR"
 	DomainHeapProfiler      DomainType = "HeapProfiler"
 	DomainIO                DomainType = "IO"
 	DomainIndexedDB         DomainType = "IndexedDB"
@@ -98,6 +99,8 @@ func (dt *DomainType) UnmarshalJSON(buf []byte) error {
 		*dt = DomainDeviceOrientation
 	case DomainEmulation:
 		*dt = DomainEmulation
+	case DomainHAR:
+		*dt = DomainHAR
 	case DomainHeapProfiler:
 		*dt = DomainHeapProfiler
 	case DomainIO:

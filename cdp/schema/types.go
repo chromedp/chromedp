@@ -4,6 +4,6 @@ package schema
 
 // Domain description of the protocol domain.
 type Domain struct {
-	Name    string `json:"name,omitempty"`    // Domain name.
-	Version string `json:"version,omitempty"` // Domain version.
+	Name    string `json:"name"`    // Domain name.
+	Version string `json:"version"` // Domain version.
 }

@@ -8,11 +8,11 @@ import (
 
 // EventSecurityStateChanged the security state of the page changed.
 type EventSecurityStateChanged struct {
-	SecurityState         State                  `json:"securityState,omitempty"`         // Security state.
-	SchemeIsCryptographic bool                   `json:"schemeIsCryptographic,omitempty"` // True if the page was loaded over cryptographic transport such as HTTPS.
-	Explanations          []*StateExplanation    `json:"explanations,omitempty"`          // List of explanations for the security state. If the overall security state is `insecure` or `warning`, at least one corresponding explanation should be included.
-	InsecureContentStatus *InsecureContentStatus `json:"insecureContentStatus,omitempty"` // Information about insecure content on the page.
-	Summary               string                 `json:"summary,omitempty"`               // Overrides user-visible description of the state.
+	SecurityState         State                  `json:"securityState"`         // Security state.
+	SchemeIsCryptographic bool                   `json:"schemeIsCryptographic"` // True if the page was loaded over cryptographic transport such as HTTPS.
+	Explanations          []*StateExplanation    `json:"explanations"`          // List of explanations for the security state. If the overall security state is `insecure` or `warning`, at least one corresponding explanation should be included.
+	InsecureContentStatus *InsecureContentStatus `json:"insecureContentStatus"` // Information about insecure content on the page.
+	Summary               string                 `json:"summary,omitempty"`     // Overrides user-visible description of the state.
 }
 
 // EventCertificateError there is a certificate error. If overriding
@@ -20,9 +20,9 @@ type EventSecurityStateChanged struct {
 // handleCertificateError command. Note: this event does not fire if the
 // certificate error has been allowed internally.
 type EventCertificateError struct {
-	EventID    int64  `json:"eventId,omitempty"`    // The ID of the event.
-	ErrorType  string `json:"errorType,omitempty"`  // The type of the error.
-	RequestURL string `json:"requestURL,omitempty"` // The url that was requested.
+	EventID    int64  `json:"eventId"`    // The ID of the event.
+	ErrorType  string `json:"errorType"`  // The type of the error.
+	RequestURL string `json:"requestURL"` // The url that was requested.
 }
 
 // EventTypes all event types in the domain.

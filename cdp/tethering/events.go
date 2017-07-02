@@ -9,8 +9,8 @@ import (
 // EventAccepted informs that port was successfully bound and got a specified
 // connection id.
 type EventAccepted struct {
-	Port         int64  `json:"port,omitempty"`         // Port number that was successfully bound.
-	ConnectionID string `json:"connectionId,omitempty"` // Connection id to be used.
+	Port         int64  `json:"port"`         // Port number that was successfully bound.
+	ConnectionID string `json:"connectionId"` // Connection id to be used.
 }
 
 // EventTypes all event types in the domain.

@@ -14,10 +14,10 @@ import (
 
 // Entry log entry.
 type Entry struct {
-	Source           Source              `json:"source,omitempty"`           // Log entry source.
-	Level            Level               `json:"level,omitempty"`            // Log entry severity.
-	Text             string              `json:"text,omitempty"`             // Logged text.
-	Timestamp        *runtime.Timestamp  `json:"timestamp,omitempty"`        // Timestamp when this entry was added.
+	Source           Source              `json:"source"`                     // Log entry source.
+	Level            Level               `json:"level"`                      // Log entry severity.
+	Text             string              `json:"text"`                       // Logged text.
+	Timestamp        *runtime.Timestamp  `json:"timestamp"`                  // Timestamp when this entry was added.
 	URL              string              `json:"url,omitempty"`              // URL of the resource if known.
 	LineNumber       int64               `json:"lineNumber,omitempty"`       // Line number in the resource.
 	StackTrace       *runtime.StackTrace `json:"stackTrace,omitempty"`       // JavaScript stack trace.
@@ -27,8 +27,8 @@ type Entry struct {
 
 // ViolationSetting violation configuration setting.
 type ViolationSetting struct {
-	Name      Violation `json:"name,omitempty"`      // Violation type.
-	Threshold float64   `json:"threshold,omitempty"` // Time threshold to trigger upon.
+	Name      Violation `json:"name"`      // Violation type.
+	Threshold float64   `json:"threshold"` // Time threshold to trigger upon.
 }
 
 // Source log entry source.

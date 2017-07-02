@@ -8,7 +8,7 @@ import (
 
 // EventAddHeapSnapshotChunk [no description].
 type EventAddHeapSnapshotChunk struct {
-	Chunk string `json:"chunk,omitempty"`
+	Chunk string `json:"chunk"`
 }
 
 // EventResetProfiles [no description].
@@ -16,8 +16,8 @@ type EventResetProfiles struct{}
 
 // EventReportHeapSnapshotProgress [no description].
 type EventReportHeapSnapshotProgress struct {
-	Done     int64 `json:"done,omitempty"`
-	Total    int64 `json:"total,omitempty"`
+	Done     int64 `json:"done"`
+	Total    int64 `json:"total"`
 	Finished bool  `json:"finished,omitempty"`
 }
 
@@ -27,14 +27,14 @@ type EventReportHeapSnapshotProgress struct {
 // then one or more heapStatsUpdate events will be sent before a new
 // lastSeenObjectId event.
 type EventLastSeenObjectID struct {
-	LastSeenObjectID int64          `json:"lastSeenObjectId,omitempty"`
-	Timestamp        *cdp.Timestamp `json:"timestamp,omitempty"`
+	LastSeenObjectID int64          `json:"lastSeenObjectId"`
+	Timestamp        *cdp.Timestamp `json:"timestamp"`
 }
 
 // EventHeapStatsUpdate if heap objects tracking has been started then
 // backend may send update for one or more fragments.
 type EventHeapStatsUpdate struct {
-	StatsUpdate []int64 `json:"statsUpdate,omitempty"` // An array of triplets. Each triplet describes a fragment. The first integer is the fragment index, the second integer is a total count of objects for the fragment, the third integer is a total size of the objects for the fragment.
+	StatsUpdate []int64 `json:"statsUpdate"` // An array of triplets. Each triplet describes a fragment. The first integer is the fragment index, the second integer is a total count of objects for the fragment, the third integer is a total size of the objects for the fragment.
 }
 
 // EventTypes all event types in the domain.

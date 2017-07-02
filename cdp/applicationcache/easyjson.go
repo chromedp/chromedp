@@ -56,30 +56,24 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpApplicationcache(out *jwriter.
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.URL != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"url\":")
-		out.String(string(in.URL))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Size != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"size\":")
-		out.Int64(int64(in.Size))
+	first = false
+	out.RawString("\"url\":")
+	out.String(string(in.URL))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Type != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"type\":")
-		out.String(string(in.Type))
+	first = false
+	out.RawString("\"size\":")
+	out.Int64(int64(in.Size))
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"type\":")
+	out.String(string(in.Type))
 	out.RawByte('}')
 }
 
@@ -601,30 +595,24 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpApplicationcache7(out *jwriter
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.FrameID != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"frameId\":")
-		out.String(string(in.FrameID))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.ManifestURL != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"manifestURL\":")
-		out.String(string(in.ManifestURL))
+	first = false
+	out.RawString("\"frameId\":")
+	out.String(string(in.FrameID))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Status != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"status\":")
-		out.Int64(int64(in.Status))
+	first = false
+	out.RawString("\"manifestURL\":")
+	out.String(string(in.ManifestURL))
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"status\":")
+	out.Int64(int64(in.Status))
 	out.RawByte('}')
 }
 
@@ -686,14 +674,12 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpApplicationcache8(out *jwriter
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.IsNowOnline {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"isNowOnline\":")
-		out.Bool(bool(in.IsNowOnline))
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"isNowOnline\":")
+	out.Bool(bool(in.IsNowOnline))
 	out.RawByte('}')
 }
 
@@ -759,30 +745,24 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpApplicationcache9(out *jwriter
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.FrameID != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"frameId\":")
-		out.String(string(in.FrameID))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.ManifestURL != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"manifestURL\":")
-		out.String(string(in.ManifestURL))
+	first = false
+	out.RawString("\"frameId\":")
+	out.String(string(in.FrameID))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Status != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"status\":")
-		out.Int64(int64(in.Status))
+	first = false
+	out.RawString("\"manifestURL\":")
+	out.String(string(in.ManifestURL))
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"status\":")
+	out.Int64(int64(in.Status))
 	out.RawByte('}')
 }
 
@@ -940,60 +920,50 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpApplicationcache11(out *jwrite
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.ManifestURL != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"manifestURL\":")
-		out.String(string(in.ManifestURL))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Size != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"size\":")
-		out.Float64(float64(in.Size))
+	first = false
+	out.RawString("\"manifestURL\":")
+	out.String(string(in.ManifestURL))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.CreationTime != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"creationTime\":")
-		out.Float64(float64(in.CreationTime))
+	first = false
+	out.RawString("\"size\":")
+	out.Float64(float64(in.Size))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.UpdateTime != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"updateTime\":")
-		out.Float64(float64(in.UpdateTime))
+	first = false
+	out.RawString("\"creationTime\":")
+	out.Float64(float64(in.CreationTime))
+	if !first {
+		out.RawByte(',')
 	}
-	if len(in.Resources) != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"resources\":")
-		if in.Resources == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-			out.RawString("null")
-		} else {
-			out.RawByte('[')
-			for v5, v6 := range in.Resources {
-				if v5 > 0 {
-					out.RawByte(',')
-				}
-				if v6 == nil {
-					out.RawString("null")
-				} else {
-					(*v6).MarshalEasyJSON(out)
-				}
+	first = false
+	out.RawString("\"updateTime\":")
+	out.Float64(float64(in.UpdateTime))
+	if !first {
+		out.RawByte(',')
+	}
+	first = false
+	out.RawString("\"resources\":")
+	if in.Resources == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+		out.RawString("null")
+	} else {
+		out.RawByte('[')
+		for v5, v6 := range in.Resources {
+			if v5 > 0 {
+				out.RawByte(',')
 			}
-			out.RawByte(']')
+			if v6 == nil {
+				out.RawString("null")
+			} else {
+				(*v6).MarshalEasyJSON(out)
+			}
 		}
+		out.RawByte(']')
 	}
 	out.RawByte('}')
 }

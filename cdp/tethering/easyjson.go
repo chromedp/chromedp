@@ -121,22 +121,18 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpTethering1(out *jwriter.Writer
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.Port != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"port\":")
-		out.Int64(int64(in.Port))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.ConnectionID != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"connectionId\":")
-		out.String(string(in.ConnectionID))
+	first = false
+	out.RawString("\"port\":")
+	out.Int64(int64(in.Port))
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"connectionId\":")
+	out.String(string(in.ConnectionID))
 	out.RawByte('}')
 }
 

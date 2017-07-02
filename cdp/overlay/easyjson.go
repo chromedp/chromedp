@@ -1571,14 +1571,12 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpOverlay16(out *jwriter.Writer,
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.NodeID != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"nodeId\":")
-		out.Int64(int64(in.NodeID))
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"nodeId\":")
+	out.Int64(int64(in.NodeID))
 	out.RawByte('}')
 }
 
@@ -1640,14 +1638,12 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpOverlay17(out *jwriter.Writer,
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.BackendNodeID != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"backendNodeId\":")
-		out.Int64(int64(in.BackendNodeID))
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"backendNodeId\":")
+	out.Int64(int64(in.BackendNodeID))
 	out.RawByte('}')
 }
 

@@ -13,9 +13,9 @@ import (
 
 // Registration serviceWorker registration.
 type Registration struct {
-	RegistrationID string `json:"registrationId,omitempty"`
-	ScopeURL       string `json:"scopeURL,omitempty"`
-	IsDeleted      bool   `json:"isDeleted,omitempty"`
+	RegistrationID string `json:"registrationId"`
+	ScopeURL       string `json:"scopeURL"`
+	IsDeleted      bool   `json:"isDeleted"`
 }
 
 // VersionRunningStatus [no description].
@@ -122,11 +122,11 @@ func (t *VersionStatus) UnmarshalJSON(buf []byte) error {
 
 // Version serviceWorker version.
 type Version struct {
-	VersionID          string               `json:"versionId,omitempty"`
-	RegistrationID     string               `json:"registrationId,omitempty"`
-	ScriptURL          string               `json:"scriptURL,omitempty"`
-	RunningStatus      VersionRunningStatus `json:"runningStatus,omitempty"`
-	Status             VersionStatus        `json:"status,omitempty"`
+	VersionID          string               `json:"versionId"`
+	RegistrationID     string               `json:"registrationId"`
+	ScriptURL          string               `json:"scriptURL"`
+	RunningStatus      VersionRunningStatus `json:"runningStatus"`
+	Status             VersionStatus        `json:"status"`
 	ScriptLastModified float64              `json:"scriptLastModified,omitempty"` // The Last-Modified header value of the main script.
 	ScriptResponseTime float64              `json:"scriptResponseTime,omitempty"` // The time at which the response headers of the main script were received from the server.  For cached script it is the last time the cache entry was validated.
 	ControlledClients  []target.ID          `json:"controlledClients,omitempty"`
@@ -135,10 +135,10 @@ type Version struct {
 
 // ErrorMessage serviceWorker error message.
 type ErrorMessage struct {
-	ErrorMessage   string `json:"errorMessage,omitempty"`
-	RegistrationID string `json:"registrationId,omitempty"`
-	VersionID      string `json:"versionId,omitempty"`
-	SourceURL      string `json:"sourceURL,omitempty"`
-	LineNumber     int64  `json:"lineNumber,omitempty"`
-	ColumnNumber   int64  `json:"columnNumber,omitempty"`
+	ErrorMessage   string `json:"errorMessage"`
+	RegistrationID string `json:"registrationId"`
+	VersionID      string `json:"versionId"`
+	SourceURL      string `json:"sourceURL"`
+	LineNumber     int64  `json:"lineNumber"`
+	ColumnNumber   int64  `json:"columnNumber"`
 }

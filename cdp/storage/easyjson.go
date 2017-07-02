@@ -54,22 +54,18 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpStorage(out *jwriter.Writer, i
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.StorageType != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"storageType\":")
-		(in.StorageType).MarshalEasyJSON(out)
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Usage != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"usage\":")
-		out.Float64(float64(in.Usage))
+	first = false
+	out.RawString("\"storageType\":")
+	(in.StorageType).MarshalEasyJSON(out)
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"usage\":")
+	out.Float64(float64(in.Usage))
 	out.RawByte('}')
 }
 

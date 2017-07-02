@@ -9,7 +9,7 @@ import (
 // EventDetached fired when remote debugging connection is about to be
 // terminated. Contains detach reason.
 type EventDetached struct {
-	Reason DetachReason `json:"reason,omitempty"` // The reason why connection has been terminated.
+	Reason DetachReason `json:"reason"` // The reason why connection has been terminated.
 }
 
 // EventTargetCrashed fired when debugging target has crashed.

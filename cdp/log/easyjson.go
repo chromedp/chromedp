@@ -56,22 +56,18 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpLog(out *jwriter.Writer, in Vi
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.Name != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"name\":")
-		(in.Name).MarshalEasyJSON(out)
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Threshold != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"threshold\":")
-		out.Float64(float64(in.Threshold))
+	first = false
+	out.RawString("\"name\":")
+	(in.Name).MarshalEasyJSON(out)
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"threshold\":")
+	out.Float64(float64(in.Threshold))
 	out.RawByte('}')
 }
 
@@ -311,17 +307,15 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpLog3(out *jwriter.Writer, in E
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.Entry != nil {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"entry\":")
-		if in.Entry == nil {
-			out.RawString("null")
-		} else {
-			(*in.Entry).MarshalEasyJSON(out)
-		}
+	if !first {
+		out.RawByte(',')
+	}
+	first = false
+	out.RawString("\"entry\":")
+	if in.Entry == nil {
+		out.RawString("null")
+	} else {
+		(*in.Entry).MarshalEasyJSON(out)
 	}
 	out.RawByte('}')
 }
@@ -416,41 +410,33 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpLog4(out *jwriter.Writer, in E
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.Source != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"source\":")
-		(in.Source).MarshalEasyJSON(out)
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Level != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"level\":")
-		(in.Level).MarshalEasyJSON(out)
+	first = false
+	out.RawString("\"source\":")
+	(in.Source).MarshalEasyJSON(out)
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Text != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"text\":")
-		out.String(string(in.Text))
+	first = false
+	out.RawString("\"level\":")
+	(in.Level).MarshalEasyJSON(out)
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Timestamp != nil {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"timestamp\":")
-		if in.Timestamp == nil {
-			out.RawString("null")
-		} else {
-			(*in.Timestamp).MarshalEasyJSON(out)
-		}
+	first = false
+	out.RawString("\"text\":")
+	out.String(string(in.Text))
+	if !first {
+		out.RawByte(',')
+	}
+	first = false
+	out.RawString("\"timestamp\":")
+	if in.Timestamp == nil {
+		out.RawString("null")
+	} else {
+		(*in.Timestamp).MarshalEasyJSON(out)
 	}
 	if in.URL != "" {
 		if !first {

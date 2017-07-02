@@ -584,30 +584,24 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpCachestorage6(out *jwriter.Wri
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.Request != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"request\":")
-		out.String(string(in.Request))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.Response != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"response\":")
-		out.String(string(in.Response))
+	first = false
+	out.RawString("\"request\":")
+	out.String(string(in.Request))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.ResponseTime != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"responseTime\":")
-		out.Float64(float64(in.ResponseTime))
+	first = false
+	out.RawString("\"response\":")
+	out.String(string(in.Response))
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"responseTime\":")
+	out.Float64(float64(in.ResponseTime))
 	out.RawByte('}')
 }
 
@@ -673,30 +667,24 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpCachestorage7(out *jwriter.Wri
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.CacheID != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"cacheId\":")
-		out.String(string(in.CacheID))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.SecurityOrigin != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"securityOrigin\":")
-		out.String(string(in.SecurityOrigin))
+	first = false
+	out.RawString("\"cacheId\":")
+	out.String(string(in.CacheID))
+	if !first {
+		out.RawByte(',')
 	}
-	if in.CacheName != "" {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"cacheName\":")
-		out.String(string(in.CacheName))
+	first = false
+	out.RawString("\"securityOrigin\":")
+	out.String(string(in.SecurityOrigin))
+	if !first {
+		out.RawByte(',')
 	}
+	first = false
+	out.RawString("\"cacheName\":")
+	out.String(string(in.CacheName))
 	out.RawByte('}')
 }
 

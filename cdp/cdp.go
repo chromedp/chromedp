@@ -18,8 +18,8 @@ import (
 
 // MessageError message error type.
 type MessageError struct {
-	Code    int64  `json:"code,omitempty"`    // Error code.
-	Message string `json:"message,omitempty"` // Error message.
+	Code    int64  `json:"code"`    // Error code.
+	Message string `json:"message"` // Error message.
 }
 
 // Error satisfies error interface.
@@ -1443,16 +1443,16 @@ func (t *FrameID) UnmarshalJSON(buf []byte) error {
 
 // Frame information about the Frame on the page.
 type Frame struct {
-	ID             FrameID          `json:"id,omitempty"`             // Frame unique identifier.
-	ParentID       FrameID          `json:"parentId,omitempty"`       // Parent frame identifier.
-	LoaderID       LoaderID         `json:"loaderId,omitempty"`       // Identifier of the loader associated with this frame.
-	Name           string           `json:"name,omitempty"`           // Frame's name as specified in the tag.
-	URL            string           `json:"url,omitempty"`            // Frame document's URL.
-	SecurityOrigin string           `json:"securityOrigin,omitempty"` // Frame document's security origin.
-	MimeType       string           `json:"mimeType,omitempty"`       // Frame document's mimeType as determined by the browser.
-	State          FrameState       `json:"-"`                        // Frame state.
-	Root           *Node            `json:"-"`                        // Frame document root.
-	Nodes          map[NodeID]*Node `json:"-"`                        // Frame nodes.
+	ID             FrameID          `json:"id"`                 // Frame unique identifier.
+	ParentID       FrameID          `json:"parentId,omitempty"` // Parent frame identifier.
+	LoaderID       LoaderID         `json:"loaderId"`           // Identifier of the loader associated with this frame.
+	Name           string           `json:"name,omitempty"`     // Frame's name as specified in the tag.
+	URL            string           `json:"url"`                // Frame document's URL.
+	SecurityOrigin string           `json:"securityOrigin"`     // Frame document's security origin.
+	MimeType       string           `json:"mimeType"`           // Frame document's mimeType as determined by the browser.
+	State          FrameState       `json:"-"`                  // Frame state.
+	Root           *Node            `json:"-"`                  // Frame document root.
+	Nodes          map[NodeID]*Node `json:"-"`                  // Frame nodes.
 	sync.RWMutex   `json:"-"`       // Read write mutex.
 }
 
@@ -1591,9 +1591,9 @@ func (t *BackendNodeID) UnmarshalJSON(buf []byte) error {
 
 // BackendNode backend node with a friendly name.
 type BackendNode struct {
-	NodeType      NodeType      `json:"nodeType,omitempty"` // Node's nodeType.
-	NodeName      string        `json:"nodeName,omitempty"` // Node's nodeName.
-	BackendNodeID BackendNodeID `json:"backendNodeId,omitempty"`
+	NodeType      NodeType      `json:"nodeType"` // Node's nodeType.
+	NodeName      string        `json:"nodeName"` // Node's nodeName.
+	BackendNodeID BackendNodeID `json:"backendNodeId"`
 }
 
 // PseudoType pseudo element type.
@@ -1725,13 +1725,13 @@ func (t *ShadowRootType) UnmarshalJSON(buf []byte) error {
 // Node dOM interaction is implemented in terms of mirror objects that
 // represent the actual DOM nodes. DOMNode is a base node mirror type.
 type Node struct {
-	NodeID           NodeID         `json:"nodeId,omitempty"`           // Node identifier that is passed into the rest of the DOM messages as the nodeId. Backend will only push node with given id once. It is aware of all requested nodes and will only fire DOM events for nodes known to the client.
+	NodeID           NodeID         `json:"nodeId"`                     // Node identifier that is passed into the rest of the DOM messages as the nodeId. Backend will only push node with given id once. It is aware of all requested nodes and will only fire DOM events for nodes known to the client.
 	ParentID         NodeID         `json:"parentId,omitempty"`         // The id of the parent node if any.
-	BackendNodeID    BackendNodeID  `json:"backendNodeId,omitempty"`    // The BackendNodeId for this node.
-	NodeType         NodeType       `json:"nodeType,omitempty"`         // Node's nodeType.
-	NodeName         string         `json:"nodeName,omitempty"`         // Node's nodeName.
-	LocalName        string         `json:"localName,omitempty"`        // Node's localName.
-	NodeValue        string         `json:"nodeValue,omitempty"`        // Node's nodeValue.
+	BackendNodeID    BackendNodeID  `json:"backendNodeId"`              // The BackendNodeId for this node.
+	NodeType         NodeType       `json:"nodeType"`                   // Node's nodeType.
+	NodeName         string         `json:"nodeName"`                   // Node's nodeName.
+	LocalName        string         `json:"localName"`                  // Node's localName.
+	NodeValue        string         `json:"nodeValue"`                  // Node's nodeValue.
 	ChildNodeCount   int64          `json:"childNodeCount,omitempty"`   // Child count for Container nodes.
 	Children         []*Node        `json:"children,omitempty"`         // Child nodes of this node when requested with children.
 	Attributes       []string       `json:"attributes,omitempty"`       // Attributes of the Element node in the form of flat array [name1, value1, name2, value2].
@@ -1875,9 +1875,9 @@ const EmptyNodeID = NodeID(0)
 
 // RGBA a structure holding an RGBA color.
 type RGBA struct {
-	R int64   `json:"r,omitempty"` // The red component, in the [0-255] range.
-	G int64   `json:"g,omitempty"` // The green component, in the [0-255] range.
-	B int64   `json:"b,omitempty"` // The blue component, in the [0-255] range.
+	R int64   `json:"r"`           // The red component, in the [0-255] range.
+	G int64   `json:"g"`           // The green component, in the [0-255] range.
+	B int64   `json:"b"`           // The blue component, in the [0-255] range.
 	A float64 `json:"a,omitempty"` // The alpha component, in the [0-1] range (default: 1).
 }
 
