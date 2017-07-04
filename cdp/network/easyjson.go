@@ -3853,8 +3853,6 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork33(in *jlexer.Lexer, ou
 		switch key {
 		case "requestId":
 			out.RequestID = RequestID(in.String())
-		case "frameId":
-			(out.FrameID).UnmarshalEasyJSON(in)
 		case "loaderId":
 			out.LoaderID = cdp.LoaderID(in.String())
 		case "timestamp":
@@ -3879,6 +3877,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork33(in *jlexer.Lexer, ou
 				}
 				(*out.Response).UnmarshalEasyJSON(in)
 			}
+		case "frameId":
+			(out.FrameID).UnmarshalEasyJSON(in)
 		default:
 			in.SkipRecursive()
 		}
@@ -3899,12 +3899,6 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork33(out *jwriter.Writer,
 	first = false
 	out.RawString("\"requestId\":")
 	out.String(string(in.RequestID))
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"frameId\":")
-	out.String(string(in.FrameID))
 	if !first {
 		out.RawByte(',')
 	}
@@ -3936,6 +3930,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork33(out *jwriter.Writer,
 		out.RawString("null")
 	} else {
 		(*in.Response).MarshalEasyJSON(out)
+	}
+	if in.FrameID != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"frameId\":")
+		out.String(string(in.FrameID))
 	}
 	out.RawByte('}')
 }
@@ -4079,8 +4081,6 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork35(in *jlexer.Lexer, ou
 		switch key {
 		case "requestId":
 			out.RequestID = RequestID(in.String())
-		case "frameId":
-			(out.FrameID).UnmarshalEasyJSON(in)
 		case "loaderId":
 			out.LoaderID = cdp.LoaderID(in.String())
 		case "documentURL":
@@ -4137,6 +4137,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork35(in *jlexer.Lexer, ou
 			}
 		case "type":
 			(out.Type).UnmarshalEasyJSON(in)
+		case "frameId":
+			(out.FrameID).UnmarshalEasyJSON(in)
 		default:
 			in.SkipRecursive()
 		}
@@ -4157,12 +4159,6 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork35(out *jwriter.Writer,
 	first = false
 	out.RawString("\"requestId\":")
 	out.String(string(in.RequestID))
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"frameId\":")
-	out.String(string(in.FrameID))
 	if !first {
 		out.RawByte(',')
 	}
@@ -4234,6 +4230,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork35(out *jwriter.Writer,
 		first = false
 		out.RawString("\"type\":")
 		(in.Type).MarshalEasyJSON(out)
+	}
+	if in.FrameID != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"frameId\":")
+		out.String(string(in.FrameID))
 	}
 	out.RawByte('}')
 }

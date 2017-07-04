@@ -18,8 +18,7 @@ type EventResourceChangedPriority struct {
 // EventRequestWillBeSent fired when page is about to send HTTP request.
 type EventRequestWillBeSent struct {
 	RequestID        RequestID         `json:"requestId"`                  // Request identifier.
-	FrameID          cdp.FrameID       `json:"frameId"`                    // Frame identifier.
-	LoaderID         cdp.LoaderID      `json:"loaderId"`                   // Loader identifier.
+	LoaderID         cdp.LoaderID      `json:"loaderId"`                   // Loader identifier. Empty string if the request is fetched form worker.
 	DocumentURL      string            `json:"documentURL"`                // URL of the document this request is loaded for.
 	Request          *Request          `json:"request"`                    // Request data.
 	Timestamp        *cdp.Timestamp    `json:"timestamp"`                  // Timestamp.
@@ -27,6 +26,7 @@ type EventRequestWillBeSent struct {
 	Initiator        *Initiator        `json:"initiator"`                  // Request initiator.
 	RedirectResponse *Response         `json:"redirectResponse,omitempty"` // Redirect response data.
 	Type             page.ResourceType `json:"type,omitempty"`             // Type of this resource.
+	FrameID          cdp.FrameID       `json:"frameId,omitempty"`          // Frame identifier.
 }
 
 // EventRequestServedFromCache fired if request ended up loading from cache.
@@ -36,12 +36,12 @@ type EventRequestServedFromCache struct {
 
 // EventResponseReceived fired when HTTP response is available.
 type EventResponseReceived struct {
-	RequestID RequestID         `json:"requestId"` // Request identifier.
-	FrameID   cdp.FrameID       `json:"frameId"`   // Frame identifier.
-	LoaderID  cdp.LoaderID      `json:"loaderId"`  // Loader identifier.
-	Timestamp *cdp.Timestamp    `json:"timestamp"` // Timestamp.
-	Type      page.ResourceType `json:"type"`      // Resource type.
-	Response  *Response         `json:"response"`  // Response data.
+	RequestID RequestID         `json:"requestId"`         // Request identifier.
+	LoaderID  cdp.LoaderID      `json:"loaderId"`          // Loader identifier. Empty string if the request is fetched form worker.
+	Timestamp *cdp.Timestamp    `json:"timestamp"`         // Timestamp.
+	Type      page.ResourceType `json:"type"`              // Resource type.
+	Response  *Response         `json:"response"`          // Response data.
+	FrameID   cdp.FrameID       `json:"frameId,omitempty"` // Frame identifier.
 }
 
 // EventDataReceived fired when data chunk was received over the network.

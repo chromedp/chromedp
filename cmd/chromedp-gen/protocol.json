@@ -3545,15 +3545,9 @@
               "description": "Request identifier."
             },
             {
-              "name": "frameId",
-              "$ref": "Page.FrameId",
-              "description": "Frame identifier.",
-              "experimental": true
-            },
-            {
               "name": "loaderId",
               "$ref": "LoaderId",
-              "description": "Loader identifier."
+              "description": "Loader identifier. Empty string if the request is fetched form worker."
             },
             {
               "name": "documentURL",
@@ -3593,6 +3587,13 @@
               "optional": true,
               "experimental": true,
               "description": "Type of this resource."
+            },
+            {
+              "name": "frameId",
+              "optional": true,
+              "$ref": "Page.FrameId",
+              "description": "Frame identifier.",
+              "experimental": true
             }
           ]
         },
@@ -3617,15 +3618,9 @@
               "description": "Request identifier."
             },
             {
-              "name": "frameId",
-              "$ref": "Page.FrameId",
-              "description": "Frame identifier.",
-              "experimental": true
-            },
-            {
               "name": "loaderId",
               "$ref": "LoaderId",
-              "description": "Loader identifier."
+              "description": "Loader identifier. Empty string if the request is fetched form worker."
             },
             {
               "name": "timestamp",
@@ -3641,6 +3636,13 @@
               "name": "response",
               "$ref": "Response",
               "description": "Response data."
+            },
+            {
+              "name": "frameId",
+              "optional": true,
+              "$ref": "Page.FrameId",
+              "description": "Frame identifier.",
+              "experimental": true
             }
           ]
         },
