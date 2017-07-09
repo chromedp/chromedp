@@ -284,27 +284,27 @@ func (t *ResourcePriority) UnmarshalJSON(buf []byte) error {
 
 // Request hTTP request data.
 type Request struct {
-	URL              string           `json:"url"`                        // Request URL.
-	Method           string           `json:"method"`                     // HTTP request method.
-	Headers          Headers          `json:"headers"`                    // HTTP request headers.
-	PostData         string           `json:"postData,omitempty"`         // HTTP POST request data.
-	MixedContentType MixedContentType `json:"mixedContentType,omitempty"` // The mixed content status of the request, as defined in http://www.w3.org/TR/mixed-content/
-	InitialPriority  ResourcePriority `json:"initialPriority"`            // Priority of the resource request at the time request is sent.
-	ReferrerPolicy   ReferrerPolicy   `json:"referrerPolicy"`             // The referrer policy of the request, as defined in https://www.w3.org/TR/referrer-policy/
-	IsLinkPreload    bool             `json:"isLinkPreload,omitempty"`    // Whether is loaded via link preload.
+	URL              string                    `json:"url"`                        // Request URL.
+	Method           string                    `json:"method"`                     // HTTP request method.
+	Headers          Headers                   `json:"headers"`                    // HTTP request headers.
+	PostData         string                    `json:"postData,omitempty"`         // HTTP POST request data.
+	MixedContentType security.MixedContentType `json:"mixedContentType,omitempty"` // The mixed content type of the request.
+	InitialPriority  ResourcePriority          `json:"initialPriority"`            // Priority of the resource request at the time request is sent.
+	ReferrerPolicy   ReferrerPolicy            `json:"referrerPolicy"`             // The referrer policy of the request, as defined in https://www.w3.org/TR/referrer-policy/
+	IsLinkPreload    bool                      `json:"isLinkPreload,omitempty"`    // Whether is loaded via link preload.
 }
 
 // SignedCertificateTimestamp details of a signed certificate timestamp
 // (SCT).
 type SignedCertificateTimestamp struct {
-	Status             string         `json:"status"`             // Validation status.
-	Origin             string         `json:"origin"`             // Origin.
-	LogDescription     string         `json:"logDescription"`     // Log name / description.
-	LogID              string         `json:"logId"`              // Log ID.
-	Timestamp          *cdp.Timestamp `json:"timestamp"`          // Issuance date.
-	HashAlgorithm      string         `json:"hashAlgorithm"`      // Hash algorithm.
-	SignatureAlgorithm string         `json:"signatureAlgorithm"` // Signature algorithm.
-	SignatureData      string         `json:"signatureData"`      // Signature data.
+	Status             string              `json:"status"`             // Validation status.
+	Origin             string              `json:"origin"`             // Origin.
+	LogDescription     string              `json:"logDescription"`     // Log name / description.
+	LogID              string              `json:"logId"`              // Log ID.
+	Timestamp          *cdp.TimeSinceEpoch `json:"timestamp"`          // Issuance date.
+	HashAlgorithm      string              `json:"hashAlgorithm"`      // Hash algorithm.
+	SignatureAlgorithm string              `json:"signatureAlgorithm"` // Signature algorithm.
+	SignatureData      string              `json:"signatureData"`      // Signature data.
 }
 
 // SecurityDetails security details about a request.
@@ -318,8 +318,8 @@ type SecurityDetails struct {
 	SubjectName                    string                        `json:"subjectName"`                    // Certificate subject name.
 	SanList                        []string                      `json:"sanList"`                        // Subject Alternative Name (SAN) DNS names and IP addresses.
 	Issuer                         string                        `json:"issuer"`                         // Name of the issuing CA.
-	ValidFrom                      *cdp.Timestamp                `json:"validFrom"`                      // Certificate valid from date.
-	ValidTo                        *cdp.Timestamp                `json:"validTo"`                        // Certificate valid to (expiration) date
+	ValidFrom                      *cdp.TimeSinceEpoch           `json:"validFrom"`                      // Certificate valid from date.
+	ValidTo                        *cdp.TimeSinceEpoch           `json:"validTo"`                        // Certificate valid to (expiration) date
 	SignedCertificateTimestampList []*SignedCertificateTimestamp `json:"signedCertificateTimestampList"` // List of signed certificate timestamps (SCTs).
 }
 
@@ -465,52 +465,6 @@ type AuthChallengeResponse struct {
 	Response AuthChallengeResponseResponse `json:"response"`           // The decision on what to do in response to the authorization challenge.  Default means deferring to the default behavior of the net stack, which will likely either the Cancel authentication or display a popup dialog box.
 	Username string                        `json:"username,omitempty"` // The username to provide, possibly empty. Should only be set if response is ProvideCredentials.
 	Password string                        `json:"password,omitempty"` // The password to provide, possibly empty. Should only be set if response is ProvideCredentials.
-}
-
-// MixedContentType the mixed content status of the request, as defined in
-// http://www.w3.org/TR/mixed-content/.
-type MixedContentType string
-
-// String returns the MixedContentType as string value.
-func (t MixedContentType) String() string {
-	return string(t)
-}
-
-// MixedContentType values.
-const (
-	MixedContentTypeBlockable           MixedContentType = "blockable"
-	MixedContentTypeOptionallyBlockable MixedContentType = "optionally-blockable"
-	MixedContentTypeNone                MixedContentType = "none"
-)
-
-// MarshalEasyJSON satisfies easyjson.Marshaler.
-func (t MixedContentType) MarshalEasyJSON(out *jwriter.Writer) {
-	out.String(string(t))
-}
-
-// MarshalJSON satisfies json.Marshaler.
-func (t MixedContentType) MarshalJSON() ([]byte, error) {
-	return easyjson.Marshal(t)
-}
-
-// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
-func (t *MixedContentType) UnmarshalEasyJSON(in *jlexer.Lexer) {
-	switch MixedContentType(in.String()) {
-	case MixedContentTypeBlockable:
-		*t = MixedContentTypeBlockable
-	case MixedContentTypeOptionallyBlockable:
-		*t = MixedContentTypeOptionallyBlockable
-	case MixedContentTypeNone:
-		*t = MixedContentTypeNone
-
-	default:
-		in.AddError(errors.New("unknown MixedContentType value"))
-	}
-}
-
-// UnmarshalJSON satisfies json.Unmarshaler.
-func (t *MixedContentType) UnmarshalJSON(buf []byte) error {
-	return easyjson.Unmarshal(buf, t)
 }
 
 // ReferrerPolicy the referrer policy of the request, as defined in

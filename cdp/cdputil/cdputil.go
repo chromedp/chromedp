@@ -77,10 +77,10 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandPageDisable:
 		return emptyVal, nil
 
-	case cdp.CommandPageAddScriptToEvaluateOnLoad:
-		v = new(page.AddScriptToEvaluateOnLoadReturns)
+	case cdp.CommandPageAddScriptToEvaluateOnNewDocument:
+		v = new(page.AddScriptToEvaluateOnNewDocumentReturns)
 
-	case cdp.CommandPageRemoveScriptToEvaluateOnLoad:
+	case cdp.CommandPageRemoveScriptToEvaluateOnNewDocument:
 		return emptyVal, nil
 
 	case cdp.CommandPageSetAutoAttachToCreatedPages:
@@ -389,7 +389,7 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandNetworkGetCertificate:
 		v = new(network.GetCertificateReturns)
 
-	case cdp.CommandNetworkEnableRequestInterception:
+	case cdp.CommandNetworkSetRequestInterceptionEnabled:
 		return emptyVal, nil
 
 	case cdp.CommandNetworkContinueInterceptedRequest:

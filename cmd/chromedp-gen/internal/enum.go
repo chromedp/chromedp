@@ -156,5 +156,5 @@ type TimestampType int
 const (
 	TimestampTypeMillisecond TimestampType = 1 + iota
 	TimestampTypeSecond
-	TimestampTypeBootstamp
+	TimestampTypeMonotonic
 )

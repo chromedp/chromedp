@@ -328,7 +328,7 @@ func TestCaptureScreenshot(t *testing.T) {
 	//TODO: test image
 }
 
-func TestAddOnLoadScript(t *testing.T) {
+/*func TestAddOnLoadScript(t *testing.T) {
 	t.Parallel()
 
 	var err error
@@ -384,7 +384,7 @@ func TestRemoveOnLoadScript(t *testing.T) {
 	}
 
 	time.Sleep(50 * time.Millisecond)
-}
+}*/
 
 func TestLocation(t *testing.T) {
 	t.Parallel()

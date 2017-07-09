@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/knq/sysutil"
 	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"
@@ -74,8 +75,8 @@ const (
 	EventPageNavigationRequested                           MethodType = "Page.navigationRequested"
 	CommandPageEnable                                      MethodType = "Page.enable"
 	CommandPageDisable                                     MethodType = "Page.disable"
-	CommandPageAddScriptToEvaluateOnLoad                   MethodType = "Page.addScriptToEvaluateOnLoad"
-	CommandPageRemoveScriptToEvaluateOnLoad                MethodType = "Page.removeScriptToEvaluateOnLoad"
+	CommandPageAddScriptToEvaluateOnNewDocument            MethodType = "Page.addScriptToEvaluateOnNewDocument"
+	CommandPageRemoveScriptToEvaluateOnNewDocument         MethodType = "Page.removeScriptToEvaluateOnNewDocument"
 	CommandPageSetAutoAttachToCreatedPages                 MethodType = "Page.setAutoAttachToCreatedPages"
 	CommandPageReload                                      MethodType = "Page.reload"
 	CommandPageNavigate                                    MethodType = "Page.navigate"
@@ -177,7 +178,7 @@ const (
 	CommandNetworkSetBypassServiceWorker                   MethodType = "Network.setBypassServiceWorker"
 	CommandNetworkSetDataSizeLimitsForTest                 MethodType = "Network.setDataSizeLimitsForTest"
 	CommandNetworkGetCertificate                           MethodType = "Network.getCertificate"
-	CommandNetworkEnableRequestInterception                MethodType = "Network.enableRequestInterception"
+	CommandNetworkSetRequestInterceptionEnabled            MethodType = "Network.setRequestInterceptionEnabled"
 	CommandNetworkContinueInterceptedRequest               MethodType = "Network.continueInterceptedRequest"
 	EventDatabaseAddDatabase                               MethodType = "Database.addDatabase"
 	CommandDatabaseEnable                                  MethodType = "Database.enable"
@@ -536,10 +537,10 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandPageEnable
 	case CommandPageDisable:
 		*t = CommandPageDisable
-	case CommandPageAddScriptToEvaluateOnLoad:
-		*t = CommandPageAddScriptToEvaluateOnLoad
-	case CommandPageRemoveScriptToEvaluateOnLoad:
-		*t = CommandPageRemoveScriptToEvaluateOnLoad
+	case CommandPageAddScriptToEvaluateOnNewDocument:
+		*t = CommandPageAddScriptToEvaluateOnNewDocument
+	case CommandPageRemoveScriptToEvaluateOnNewDocument:
+		*t = CommandPageRemoveScriptToEvaluateOnNewDocument
 	case CommandPageSetAutoAttachToCreatedPages:
 		*t = CommandPageSetAutoAttachToCreatedPages
 	case CommandPageReload:
@@ -742,8 +743,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandNetworkSetDataSizeLimitsForTest
 	case CommandNetworkGetCertificate:
 		*t = CommandNetworkGetCertificate
-	case CommandNetworkEnableRequestInterception:
-		*t = CommandNetworkEnableRequestInterception
+	case CommandNetworkSetRequestInterceptionEnabled:
+		*t = CommandNetworkSetRequestInterceptionEnabled
 	case CommandNetworkContinueInterceptedRequest:
 		*t = CommandNetworkContinueInterceptedRequest
 	case EventDatabaseAddDatabase:
@@ -1501,16 +1502,16 @@ func (t LoaderID) String() string {
 	return string(t)
 }
 
-// Timestamp number of seconds since epoch.
-type Timestamp time.Time
+// TimeSinceEpoch uTC time in seconds, counted from January 1, 1970.
+type TimeSinceEpoch time.Time
 
-// Time returns the Timestamp as time.Time value.
-func (t Timestamp) Time() time.Time {
+// Time returns the TimeSinceEpoch as time.Time value.
+func (t TimeSinceEpoch) Time() time.Time {
 	return time.Time(t)
 }
 
 // MarshalEasyJSON satisfies easyjson.Marshaler.
-func (t Timestamp) MarshalEasyJSON(out *jwriter.Writer) {
+func (t TimeSinceEpoch) MarshalEasyJSON(out *jwriter.Writer) {
 	v := float64(time.Time(t).UnixNano() / int64(time.Second))
 
 	out.Buffer.EnsureSpace(20)
@@ -1518,17 +1519,58 @@ func (t Timestamp) MarshalEasyJSON(out *jwriter.Writer) {
 }
 
 // MarshalJSON satisfies json.Marshaler.
-func (t Timestamp) MarshalJSON() ([]byte, error) {
+func (t TimeSinceEpoch) MarshalJSON() ([]byte, error) {
 	return easyjson.Marshal(t)
 }
 
 // UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
-func (t *Timestamp) UnmarshalEasyJSON(in *jlexer.Lexer) {
-	*t = Timestamp(time.Unix(0, int64(in.Float64()*float64(time.Second))))
+func (t *TimeSinceEpoch) UnmarshalEasyJSON(in *jlexer.Lexer) {
+	*t = TimeSinceEpoch(time.Unix(0, int64(in.Float64()*float64(time.Second))))
 }
 
 // UnmarshalJSON satisfies json.Unmarshaler.
-func (t *Timestamp) UnmarshalJSON(buf []byte) error {
+func (t *TimeSinceEpoch) UnmarshalJSON(buf []byte) error {
+	return easyjson.Unmarshal(buf, t)
+}
+
+// MonotonicTime monotonically increasing time in seconds since an arbitrary
+// point in the past.
+type MonotonicTime time.Time
+
+// Time returns the MonotonicTime as time.Time value.
+func (t MonotonicTime) Time() time.Time {
+	return time.Time(t)
+}
+
+// MonotonicTimeEpoch is the MonotonicTime time epoch.
+var MonotonicTimeEpoch *time.Time
+
+func init() {
+	// initialize epoch
+	bt := sysutil.BootTime()
+	MonotonicTimeEpoch = &bt
+}
+
+// MarshalEasyJSON satisfies easyjson.Marshaler.
+func (t MonotonicTime) MarshalEasyJSON(out *jwriter.Writer) {
+	v := float64(time.Time(t).Sub(*MonotonicTimeEpoch)) / float64(time.Second)
+
+	out.Buffer.EnsureSpace(20)
+	out.Buffer.Buf = strconv.AppendFloat(out.Buffer.Buf, v, 'f', -1, 64)
+}
+
+// MarshalJSON satisfies json.Marshaler.
+func (t MonotonicTime) MarshalJSON() ([]byte, error) {
+	return easyjson.Marshal(t)
+}
+
+// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
+func (t *MonotonicTime) UnmarshalEasyJSON(in *jlexer.Lexer) {
+	*t = MonotonicTime(MonotonicTimeEpoch.Add(time.Duration(in.Float64() * float64(time.Second))))
+}
+
+// UnmarshalJSON satisfies json.Unmarshaler.
+func (t *MonotonicTime) UnmarshalJSON(buf []byte) error {
 	return easyjson.Unmarshal(buf, t)
 }
 

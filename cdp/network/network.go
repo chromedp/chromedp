@@ -399,15 +399,15 @@ func (p *DeleteCookieParams) Do(ctxt context.Context, h cdp.Handler) (err error)
 // SetCookieParams sets a cookie with the given cookie data; may overwrite
 // equivalent cookies if they exist.
 type SetCookieParams struct {
-	URL            string         `json:"url"`                      // The request-URI to associate with the setting of the cookie. This value can affect the default domain and path values of the created cookie.
-	Name           string         `json:"name"`                     // The name of the cookie.
-	Value          string         `json:"value"`                    // The value of the cookie.
-	Domain         string         `json:"domain,omitempty"`         // If omitted, the cookie becomes a host-only cookie.
-	Path           string         `json:"path,omitempty"`           // Defaults to the path portion of the url parameter.
-	Secure         bool           `json:"secure,omitempty"`         // Defaults ot false.
-	HTTPOnly       bool           `json:"httpOnly,omitempty"`       // Defaults to false.
-	SameSite       CookieSameSite `json:"sameSite,omitempty"`       // Defaults to browser default behavior.
-	ExpirationDate *cdp.Timestamp `json:"expirationDate,omitempty"` // If omitted, the cookie becomes a session cookie.
+	URL            string              `json:"url"`                      // The request-URI to associate with the setting of the cookie. This value can affect the default domain and path values of the created cookie.
+	Name           string              `json:"name"`                     // The name of the cookie.
+	Value          string              `json:"value"`                    // The value of the cookie.
+	Domain         string              `json:"domain,omitempty"`         // If omitted, the cookie becomes a host-only cookie.
+	Path           string              `json:"path,omitempty"`           // Defaults to the path portion of the url parameter.
+	Secure         bool                `json:"secure,omitempty"`         // Defaults ot false.
+	HTTPOnly       bool                `json:"httpOnly,omitempty"`       // Defaults to false.
+	SameSite       CookieSameSite      `json:"sameSite,omitempty"`       // Defaults to browser default behavior.
+	ExpirationDate *cdp.TimeSinceEpoch `json:"expirationDate,omitempty"` // If omitted, the cookie becomes a session cookie.
 }
 
 // SetCookie sets a cookie with the given cookie data; may overwrite
@@ -456,7 +456,7 @@ func (p SetCookieParams) WithSameSite(sameSite CookieSameSite) *SetCookieParams 
 }
 
 // WithExpirationDate if omitted, the cookie becomes a session cookie.
-func (p SetCookieParams) WithExpirationDate(expirationDate *cdp.Timestamp) *SetCookieParams {
+func (p SetCookieParams) WithExpirationDate(expirationDate *cdp.TimeSinceEpoch) *SetCookieParams {
 	p.ExpirationDate = expirationDate
 	return &p
 }
@@ -656,25 +656,25 @@ func (p *GetCertificateParams) Do(ctxt context.Context, h cdp.Handler) (tableNam
 	return res.TableNames, nil
 }
 
-// EnableRequestInterceptionParams [no description].
-type EnableRequestInterceptionParams struct {
+// SetRequestInterceptionEnabledParams [no description].
+type SetRequestInterceptionEnabledParams struct {
 	Enabled bool `json:"enabled"` // Whether or not HTTP requests should be intercepted and Network.requestIntercepted events sent.
 }
 
-// EnableRequestInterception [no description].
+// SetRequestInterceptionEnabled [no description].
 //
 // parameters:
 //   enabled - Whether or not HTTP requests should be intercepted and Network.requestIntercepted events sent.
-func EnableRequestInterception(enabled bool) *EnableRequestInterceptionParams {
-	return &EnableRequestInterceptionParams{
+func SetRequestInterceptionEnabled(enabled bool) *SetRequestInterceptionEnabledParams {
+	return &SetRequestInterceptionEnabledParams{
 		Enabled: enabled,
 	}
 }
 
-// Do executes Network.enableRequestInterception against the provided context and
+// Do executes Network.setRequestInterceptionEnabled against the provided context and
 // target handler.
-func (p *EnableRequestInterceptionParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandNetworkEnableRequestInterception, p, nil)
+func (p *SetRequestInterceptionEnabledParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandNetworkSetRequestInterceptionEnabled, p, nil)
 }
 
 // ContinueInterceptedRequestParams response to Network.requestIntercepted

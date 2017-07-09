@@ -47,35 +47,37 @@ func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandPageDisable, nil, nil)
 }
 
-// AddScriptToEvaluateOnLoadParams [no description].
-type AddScriptToEvaluateOnLoadParams struct {
-	ScriptSource string `json:"scriptSource"`
+// AddScriptToEvaluateOnNewDocumentParams evaluates given script in every
+// frame upon creation (before loading frame's scripts).
+type AddScriptToEvaluateOnNewDocumentParams struct {
+	Source string `json:"source"`
 }
 
-// AddScriptToEvaluateOnLoad [no description].
+// AddScriptToEvaluateOnNewDocument evaluates given script in every frame
+// upon creation (before loading frame's scripts).
 //
 // parameters:
-//   scriptSource
-func AddScriptToEvaluateOnLoad(scriptSource string) *AddScriptToEvaluateOnLoadParams {
-	return &AddScriptToEvaluateOnLoadParams{
-		ScriptSource: scriptSource,
+//   source
+func AddScriptToEvaluateOnNewDocument(source string) *AddScriptToEvaluateOnNewDocumentParams {
+	return &AddScriptToEvaluateOnNewDocumentParams{
+		Source: source,
 	}
 }
 
-// AddScriptToEvaluateOnLoadReturns return values.
-type AddScriptToEvaluateOnLoadReturns struct {
+// AddScriptToEvaluateOnNewDocumentReturns return values.
+type AddScriptToEvaluateOnNewDocumentReturns struct {
 	Identifier ScriptIdentifier `json:"identifier,omitempty"` // Identifier of the added script.
 }
 
-// Do executes Page.addScriptToEvaluateOnLoad against the provided context and
+// Do executes Page.addScriptToEvaluateOnNewDocument against the provided context and
 // target handler.
 //
 // returns:
 //   identifier - Identifier of the added script.
-func (p *AddScriptToEvaluateOnLoadParams) Do(ctxt context.Context, h cdp.Handler) (identifier ScriptIdentifier, err error) {
+func (p *AddScriptToEvaluateOnNewDocumentParams) Do(ctxt context.Context, h cdp.Handler) (identifier ScriptIdentifier, err error) {
 	// execute
-	var res AddScriptToEvaluateOnLoadReturns
-	err = h.Execute(ctxt, cdp.CommandPageAddScriptToEvaluateOnLoad, p, &res)
+	var res AddScriptToEvaluateOnNewDocumentReturns
+	err = h.Execute(ctxt, cdp.CommandPageAddScriptToEvaluateOnNewDocument, p, &res)
 	if err != nil {
 		return "", err
 	}
@@ -83,25 +85,26 @@ func (p *AddScriptToEvaluateOnLoadParams) Do(ctxt context.Context, h cdp.Handler
 	return res.Identifier, nil
 }
 
-// RemoveScriptToEvaluateOnLoadParams [no description].
-type RemoveScriptToEvaluateOnLoadParams struct {
+// RemoveScriptToEvaluateOnNewDocumentParams removes given script from the
+// list.
+type RemoveScriptToEvaluateOnNewDocumentParams struct {
 	Identifier ScriptIdentifier `json:"identifier"`
 }
 
-// RemoveScriptToEvaluateOnLoad [no description].
+// RemoveScriptToEvaluateOnNewDocument removes given script from the list.
 //
 // parameters:
 //   identifier
-func RemoveScriptToEvaluateOnLoad(identifier ScriptIdentifier) *RemoveScriptToEvaluateOnLoadParams {
-	return &RemoveScriptToEvaluateOnLoadParams{
+func RemoveScriptToEvaluateOnNewDocument(identifier ScriptIdentifier) *RemoveScriptToEvaluateOnNewDocumentParams {
+	return &RemoveScriptToEvaluateOnNewDocumentParams{
 		Identifier: identifier,
 	}
 }
 
-// Do executes Page.removeScriptToEvaluateOnLoad against the provided context and
+// Do executes Page.removeScriptToEvaluateOnNewDocument against the provided context and
 // target handler.
-func (p *RemoveScriptToEvaluateOnLoadParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandPageRemoveScriptToEvaluateOnLoad, p, nil)
+func (p *RemoveScriptToEvaluateOnNewDocumentParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandPageRemoveScriptToEvaluateOnNewDocument, p, nil)
 }
 
 // SetAutoAttachToCreatedPagesParams controls whether browser will open a new

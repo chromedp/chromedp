@@ -4,7 +4,6 @@ package input
 
 import (
 	json "encoding/json"
-	cdp "github.com/knq/chromedp/cdp"
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"
@@ -632,7 +631,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpInput5(in *jlexer.Lexer, out *
 				out.Timestamp = nil
 			} else {
 				if out.Timestamp == nil {
-					out.Timestamp = new(cdp.Timestamp)
+					out.Timestamp = new(TimeSinceEpoch)
 				}
 				(*out.Timestamp).UnmarshalEasyJSON(in)
 			}
@@ -812,7 +811,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpInput6(in *jlexer.Lexer, out *
 				out.Timestamp = nil
 			} else {
 				if out.Timestamp == nil {
-					out.Timestamp = new(cdp.Timestamp)
+					out.Timestamp = new(TimeSinceEpoch)
 				}
 				(*out.Timestamp).UnmarshalEasyJSON(in)
 			}
@@ -936,7 +935,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpInput7(in *jlexer.Lexer, out *
 				out.Timestamp = nil
 			} else {
 				if out.Timestamp == nil {
-					out.Timestamp = new(cdp.Timestamp)
+					out.Timestamp = new(TimeSinceEpoch)
 				}
 				(*out.Timestamp).UnmarshalEasyJSON(in)
 			}
@@ -1067,7 +1066,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpInput8(in *jlexer.Lexer, out *
 				out.Timestamp = nil
 			} else {
 				if out.Timestamp == nil {
-					out.Timestamp = new(cdp.Timestamp)
+					out.Timestamp = new(TimeSinceEpoch)
 				}
 				(*out.Timestamp).UnmarshalEasyJSON(in)
 			}

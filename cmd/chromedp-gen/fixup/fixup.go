@@ -12,11 +12,8 @@
 //  - add 'Inspector.Message' type as a object with id (integer), method (MethodType), params (interface{}), error (MessageError).
 //  - add 'Inspector.DetachReason' type and change event 'Inspector.detached''s parameter reason's type.
 //  - add 'Inspector.ErrorType' type.
-//  - change type of Network.Timestamp and Runtime.Timestamp to internal Timestamp type.
-//  - add 'Page.Bootstamp' type and convert all command/event parameters named
-//    'timestamp' in the Page domain to the Bootstamp type.
-//  - change any object property or command/event parameter named 'timestamp'
-//    that doesn't have a $ref defined to 'Network.Timestamp'.
+//  - change type of Network.TimeSinceEpoch, Network.MonotonicTime, and
+//    Runtime.Timestamp to internal Timestamp type.
 //  - convert object properties and event/command parameters that are enums into independent types.
 //  - change '*.modifiers' parameters to type Input.Modifier.
 //  - add 'DOM.NodeType' type and convert "nodeType" parameters to it.
@@ -59,7 +56,8 @@ func setup() {
 		"Inspector.Message":      true,
 		"Inspector.MethodType":   true,
 		"Network.LoaderId":       true,
-		"Network.Timestamp":      true,
+		"Network.MonotonicTime":  true,
+		"Network.TimeSinceEpoch": true,
 		"Page.FrameId":           true,
 		"Page.Frame":             true,
 	}
@@ -206,14 +204,6 @@ func FixDomains(domains []*internal.Domain) {
 		},
 	}
 
-	// bootstamp type
-	bootstampType := &internal.Type{
-		ID:            "Bootstamp",
-		Type:          internal.TypeTimestamp,
-		TimestampType: internal.TimestampTypeBootstamp,
-		Description:   "Bootstamp type.",
-	}
-
 	// process domains
 	for _, d := range domains {
 		switch d.Domain {
@@ -246,8 +236,14 @@ func FixDomains(domains []*internal.Domain) {
 			// add Input types
 			d.Types = append(d.Types, modifierType)
 			for _, t := range d.Types {
-				if t.ID == "GestureSourceType" {
+				switch t.ID {
+				case "GestureSourceType":
 					t.ID = "GestureType"
+
+				case "TimeSinceEpoch":
+					t.Type = internal.TypeTimestamp
+					t.TimestampType = internal.TimestampTypeSecond
+					t.Extra = templates.ExtraTimestampTemplate(t, d)
 				}
 			}
 
@@ -296,14 +292,8 @@ func FixDomains(domains []*internal.Domain) {
 			}
 
 		case internal.DomainPage:
-			// add Page types
-			d.Types = append(d.Types, bootstampType)
-
 			for _, t := range d.Types {
 				switch t.ID {
-				case "Bootstamp":
-					t.Extra += templates.ExtraTimestampTemplate(t, d)
-
 				case "FrameId":
 					t.Extra += templates.ExtraFixStringUnmarshaler(internal.ForceCamel(t.ID), "", "")
 
@@ -352,10 +342,17 @@ func FixDomains(domains []*internal.Domain) {
 
 		case internal.DomainNetwork:
 			for _, t := range d.Types {
-				// change Timestamp to TypeTimestamp and add extra unmarshaling template
-				if t.ID == "Timestamp" {
+				// change Monotonic to TypeTimestamp and add extra unmarshaling template
+				if t.ID == "TimeSinceEpoch" {
 					t.Type = internal.TypeTimestamp
 					t.TimestampType = internal.TimestampTypeSecond
+					t.Extra = templates.ExtraTimestampTemplate(t, d)
+				}
+
+				// change Monotonic to TypeTimestamp and add extra unmarshaling template
+				if t.ID == "MonotonicTime" {
+					t.Type = internal.TypeTimestamp
+					t.TimestampType = internal.TimestampTypeMonotonic
 					t.Extra = templates.ExtraTimestampTemplate(t, d)
 				}
 
@@ -463,22 +460,6 @@ func convertObjectProperties(params []*internal.Type, d *internal.Domain, name s
 
 		case p.Enum != nil:
 			r = append(r, fixupEnumParameter(name, p, d))
-
-		case p.Name == "timestamp" && p.Ref == "" && d.Domain == internal.DomainPage:
-			r = append(r, &internal.Type{
-				Name:        p.Name,
-				Ref:         "Page.Bootstamp",
-				Description: p.Description,
-				Optional:    p.Optional,
-			})
-
-		case p.Name == "timestamp" && p.Ref == "":
-			r = append(r, &internal.Type{
-				Name:        p.Name,
-				Ref:         "Network.Timestamp",
-				Description: p.Description,
-				Optional:    p.Optional,
-			})
 
 		case p.Name == "modifiers":
 			r = append(r, &internal.Type{

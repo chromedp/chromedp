@@ -44,6 +44,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpSecurity(in *jlexer.Lexer, out
 			out.Description = string(in.String())
 		case "hasCertificate":
 			out.HasCertificate = bool(in.Bool())
+		case "mixedContentType":
+			(out.MixedContentType).UnmarshalEasyJSON(in)
 		default:
 			in.SkipRecursive()
 		}
@@ -82,6 +84,12 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpSecurity(out *jwriter.Writer, 
 	first = false
 	out.RawString("\"hasCertificate\":")
 	out.Bool(bool(in.HasCertificate))
+	if !first {
+		out.RawByte(',')
+	}
+	first = false
+	out.RawString("\"mixedContentType\":")
+	(in.MixedContentType).MarshalEasyJSON(out)
 	out.RawByte('}')
 }
 

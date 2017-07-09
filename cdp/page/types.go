@@ -4,11 +4,8 @@ package page
 
 import (
 	"errors"
-	"strconv"
-	"time"
 
 	cdp "github.com/knq/chromedp/cdp"
-	"github.com/knq/sysutil"
 	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"
@@ -91,13 +88,13 @@ func (t *ResourceType) UnmarshalJSON(buf []byte) error {
 
 // FrameResource information about the Resource on the page.
 type FrameResource struct {
-	URL          string         `json:"url"`                    // Resource URL.
-	Type         ResourceType   `json:"type"`                   // Type of this resource.
-	MimeType     string         `json:"mimeType"`               // Resource mimeType as determined by the browser.
-	LastModified *cdp.Timestamp `json:"lastModified,omitempty"` // last-modified timestamp as reported by server.
-	ContentSize  float64        `json:"contentSize,omitempty"`  // Resource content size.
-	Failed       bool           `json:"failed,omitempty"`       // True if the resource failed to load.
-	Canceled     bool           `json:"canceled,omitempty"`     // True if the resource was canceled during loading.
+	URL          string              `json:"url"`                    // Resource URL.
+	Type         ResourceType        `json:"type"`                   // Type of this resource.
+	MimeType     string              `json:"mimeType"`               // Resource mimeType as determined by the browser.
+	LastModified *cdp.TimeSinceEpoch `json:"lastModified,omitempty"` // last-modified timestamp as reported by server.
+	ContentSize  float64             `json:"contentSize,omitempty"`  // Resource content size.
+	Failed       bool                `json:"failed,omitempty"`       // True if the resource failed to load.
+	Canceled     bool                `json:"canceled,omitempty"`     // True if the resource was canceled during loading.
 }
 
 // FrameResourceTree information about the Frame hierarchy along with their
@@ -199,13 +196,13 @@ type NavigationEntry struct {
 
 // ScreencastFrameMetadata screencast frame metadata.
 type ScreencastFrameMetadata struct {
-	OffsetTop       float64    `json:"offsetTop"`           // Top offset in DIP.
-	PageScaleFactor float64    `json:"pageScaleFactor"`     // Page scale factor.
-	DeviceWidth     float64    `json:"deviceWidth"`         // Device screen width in DIP.
-	DeviceHeight    float64    `json:"deviceHeight"`        // Device screen height in DIP.
-	ScrollOffsetX   float64    `json:"scrollOffsetX"`       // Position of horizontal scroll in CSS pixels.
-	ScrollOffsetY   float64    `json:"scrollOffsetY"`       // Position of vertical scroll in CSS pixels.
-	Timestamp       *Bootstamp `json:"timestamp,omitempty"` // Frame swap timestamp.
+	OffsetTop       float64             `json:"offsetTop"`           // Top offset in DIP.
+	PageScaleFactor float64             `json:"pageScaleFactor"`     // Page scale factor.
+	DeviceWidth     float64             `json:"deviceWidth"`         // Device screen width in DIP.
+	DeviceHeight    float64             `json:"deviceHeight"`        // Device screen height in DIP.
+	ScrollOffsetX   float64             `json:"scrollOffsetX"`       // Position of horizontal scroll in CSS pixels.
+	ScrollOffsetY   float64             `json:"scrollOffsetY"`       // Position of vertical scroll in CSS pixels.
+	Timestamp       *cdp.TimeSinceEpoch `json:"timestamp,omitempty"` // Frame swap timestamp.
 }
 
 // DialogType javascript dialog type.
@@ -328,37 +325,6 @@ type VisualViewport struct {
 	ClientWidth  float64 `json:"clientWidth"`  // Width (CSS pixels), excludes scrollbar if present.
 	ClientHeight float64 `json:"clientHeight"` // Height (CSS pixels), excludes scrollbar if present.
 	Scale        float64 `json:"scale"`        // Scale relative to the ideal viewport (size at width=device-width).
-}
-
-// Bootstamp bootstamp type.
-type Bootstamp time.Time
-
-// Time returns the Bootstamp as time.Time value.
-func (t Bootstamp) Time() time.Time {
-	return time.Time(t)
-}
-
-// MarshalEasyJSON satisfies easyjson.Marshaler.
-func (t Bootstamp) MarshalEasyJSON(out *jwriter.Writer) {
-	v := float64(time.Time(t).Sub(sysutil.BootTime())) / float64(time.Second)
-
-	out.Buffer.EnsureSpace(20)
-	out.Buffer.Buf = strconv.AppendFloat(out.Buffer.Buf, v, 'f', -1, 64)
-}
-
-// MarshalJSON satisfies json.Marshaler.
-func (t Bootstamp) MarshalJSON() ([]byte, error) {
-	return easyjson.Marshal(t)
-}
-
-// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
-func (t *Bootstamp) UnmarshalEasyJSON(in *jlexer.Lexer) {
-	*t = Bootstamp(sysutil.BootTime().Add(time.Duration(in.Float64() * float64(time.Second))))
-}
-
-// UnmarshalJSON satisfies json.Unmarshaler.
-func (t *Bootstamp) UnmarshalJSON(buf []byte) error {
-	return easyjson.Unmarshal(buf, t)
 }
 
 // CaptureScreenshotFormat image compression format (defaults to png).

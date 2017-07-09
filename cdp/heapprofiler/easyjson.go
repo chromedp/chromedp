@@ -4,7 +4,6 @@ package heapprofiler
 
 import (
 	json "encoding/json"
-	cdp "github.com/knq/chromedp/cdp"
 	runtime "github.com/knq/chromedp/cdp/runtime"
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
@@ -1113,15 +1112,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpHeapprofiler14(in *jlexer.Lexe
 		case "lastSeenObjectId":
 			out.LastSeenObjectID = int64(in.Int64())
 		case "timestamp":
-			if in.IsNull() {
-				in.Skip()
-				out.Timestamp = nil
-			} else {
-				if out.Timestamp == nil {
-					out.Timestamp = new(cdp.Timestamp)
-				}
-				(*out.Timestamp).UnmarshalEasyJSON(in)
-			}
+			out.Timestamp = float64(in.Float64())
 		default:
 			in.SkipRecursive()
 		}
@@ -1147,11 +1138,7 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpHeapprofiler14(out *jwriter.Wr
 	}
 	first = false
 	out.RawString("\"timestamp\":")
-	if in.Timestamp == nil {
-		out.RawString("null")
-	} else {
-		(*in.Timestamp).MarshalEasyJSON(out)
-	}
+	out.Float64(float64(in.Timestamp))
 	out.RawByte('}')
 }
 

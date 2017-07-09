@@ -6,15 +6,26 @@
 // defines its JSON unmarshaling.
 {% func ExtraTimestampTemplate(t *internal.Type, d *internal.Domain) %}{%code
 	typ := t.IDorName()
-	bootstamp := t.TimestampType == internal.TimestampTypeBootstamp
+	monotonic := t.TimestampType == internal.TimestampTypeMonotonic
 	timeRes := "time.Millisecond"
 	if t.TimestampType != internal.TimestampTypeMillisecond {
 		timeRes = "time.Second"
 	}
 %}
+{% if monotonic %}
+// {%s= typ %}Epoch is the {%s= typ %} time epoch.
+var {%s= typ %}Epoch *time.Time
+
+func init() {
+	// initialize epoch
+	bt := sysutil.BootTime()
+	{%s= typ %}Epoch = &bt
+}
+{% endif %}
+
 // MarshalEasyJSON satisfies easyjson.Marshaler.
 func (t {%s= typ %}) MarshalEasyJSON(out *jwriter.Writer) {
-	v := {% if bootstamp %}float64(time.Time(t).Sub(sysutil.BootTime()))/float64(time.Second){% else %}float64(time.Time(t).UnixNano()/int64({%s= timeRes %})){% endif %}
+	v := {% if monotonic %}float64(time.Time(t).Sub(*{%s= typ %}Epoch))/float64(time.Second){% else %}float64(time.Time(t).UnixNano()/int64({%s= timeRes %})){% endif %}
 
 	out.Buffer.EnsureSpace(20)
 	out.Buffer.Buf = strconv.AppendFloat(out.Buffer.Buf, v, 'f', -1, 64)
@@ -26,8 +37,8 @@ func (t {%s= typ %}) MarshalJSON() ([]byte, error) {
 }
 
 // UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
-func (t *{%s= typ %}) UnmarshalEasyJSON(in *jlexer.Lexer) {{% if bootstamp %}
-	*t = {%s= typ %}(sysutil.BootTime().Add(time.Duration(in.Float64()*float64(time.Second)))){% else %}
+func (t *{%s= typ %}) UnmarshalEasyJSON(in *jlexer.Lexer) {{% if monotonic %}
+	*t = {%s= typ %}({%s= typ %}Epoch.Add(time.Duration(in.Float64()*float64(time.Second)))){% else %}
 	*t = {%s= typ %}(time.Unix(0, int64(in.Float64()*float64({%s= timeRes %})))){% endif %}
 }
 

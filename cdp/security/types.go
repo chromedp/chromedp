@@ -18,6 +18,52 @@ func (t CertificateID) Int64() int64 {
 	return int64(t)
 }
 
+// MixedContentType a description of mixed content (HTTP resources on HTTPS
+// pages), as defined by https://www.w3.org/TR/mixed-content/#categories.
+type MixedContentType string
+
+// String returns the MixedContentType as string value.
+func (t MixedContentType) String() string {
+	return string(t)
+}
+
+// MixedContentType values.
+const (
+	MixedContentTypeBlockable           MixedContentType = "blockable"
+	MixedContentTypeOptionallyBlockable MixedContentType = "optionally-blockable"
+	MixedContentTypeNone                MixedContentType = "none"
+)
+
+// MarshalEasyJSON satisfies easyjson.Marshaler.
+func (t MixedContentType) MarshalEasyJSON(out *jwriter.Writer) {
+	out.String(string(t))
+}
+
+// MarshalJSON satisfies json.Marshaler.
+func (t MixedContentType) MarshalJSON() ([]byte, error) {
+	return easyjson.Marshal(t)
+}
+
+// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
+func (t *MixedContentType) UnmarshalEasyJSON(in *jlexer.Lexer) {
+	switch MixedContentType(in.String()) {
+	case MixedContentTypeBlockable:
+		*t = MixedContentTypeBlockable
+	case MixedContentTypeOptionallyBlockable:
+		*t = MixedContentTypeOptionallyBlockable
+	case MixedContentTypeNone:
+		*t = MixedContentTypeNone
+
+	default:
+		in.AddError(errors.New("unknown MixedContentType value"))
+	}
+}
+
+// UnmarshalJSON satisfies json.Unmarshaler.
+func (t *MixedContentType) UnmarshalJSON(buf []byte) error {
+	return easyjson.Unmarshal(buf, t)
+}
+
 // State the security level of a page or resource.
 type State string
 
@@ -75,10 +121,11 @@ func (t *State) UnmarshalJSON(buf []byte) error {
 // StateExplanation an explanation of an factor contributing to the security
 // state.
 type StateExplanation struct {
-	SecurityState  State  `json:"securityState"`  // Security state representing the severity of the factor being explained.
-	Summary        string `json:"summary"`        // Short phrase describing the type of factor.
-	Description    string `json:"description"`    // Full text explanation of the factor.
-	HasCertificate bool   `json:"hasCertificate"` // True if the page has a certificate.
+	SecurityState    State            `json:"securityState"`    // Security state representing the severity of the factor being explained.
+	Summary          string           `json:"summary"`          // Short phrase describing the type of factor.
+	Description      string           `json:"description"`      // Full text explanation of the factor.
+	HasCertificate   bool             `json:"hasCertificate"`   // True if the page has a certificate.
+	MixedContentType MixedContentType `json:"mixedContentType"` // The type of mixed content described by the explanation.
 }
 
 // InsecureContentStatus information about insecure content on the page.

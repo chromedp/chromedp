@@ -825,7 +825,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage9(in *jlexer.Lexer, out *S
 				out.Timestamp = nil
 			} else {
 				if out.Timestamp == nil {
-					out.Timestamp = new(Bootstamp)
+					out.Timestamp = new(cdp.TimeSinceEpoch)
 				}
 				(*out.Timestamp).UnmarshalEasyJSON(in)
 			}
@@ -1043,7 +1043,7 @@ func (v *RequestAppBannerParams) UnmarshalJSON(data []byte) error {
 func (v *RequestAppBannerParams) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage11(l, v)
 }
-func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage12(in *jlexer.Lexer, out *RemoveScriptToEvaluateOnLoadParams) {
+func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage12(in *jlexer.Lexer, out *RemoveScriptToEvaluateOnNewDocumentParams) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -1074,7 +1074,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage12(in *jlexer.Lexer, out *
 		in.Consumed()
 	}
 }
-func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage12(out *jwriter.Writer, in RemoveScriptToEvaluateOnLoadParams) {
+func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage12(out *jwriter.Writer, in RemoveScriptToEvaluateOnNewDocumentParams) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -1088,26 +1088,26 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage12(out *jwriter.Writer, in
 }
 
 // MarshalJSON supports json.Marshaler interface
-func (v RemoveScriptToEvaluateOnLoadParams) MarshalJSON() ([]byte, error) {
+func (v RemoveScriptToEvaluateOnNewDocumentParams) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
 	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage12(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
-func (v RemoveScriptToEvaluateOnLoadParams) MarshalEasyJSON(w *jwriter.Writer) {
+func (v RemoveScriptToEvaluateOnNewDocumentParams) MarshalEasyJSON(w *jwriter.Writer) {
 	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage12(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
-func (v *RemoveScriptToEvaluateOnLoadParams) UnmarshalJSON(data []byte) error {
+func (v *RemoveScriptToEvaluateOnNewDocumentParams) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
 	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage12(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *RemoveScriptToEvaluateOnLoadParams) UnmarshalEasyJSON(l *jlexer.Lexer) {
+func (v *RemoveScriptToEvaluateOnNewDocumentParams) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage12(l, v)
 }
 func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage13(in *jlexer.Lexer, out *ReloadParams) {
@@ -3060,7 +3060,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage34(in *jlexer.Lexer, out *
 				out.LastModified = nil
 			} else {
 				if out.LastModified == nil {
-					out.LastModified = new(cdp.Timestamp)
+					out.LastModified = new(cdp.TimeSinceEpoch)
 				}
 				(*out.LastModified).UnmarshalEasyJSON(in)
 			}
@@ -3442,7 +3442,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage38(in *jlexer.Lexer, out *
 				out.Timestamp = nil
 			} else {
 				if out.Timestamp == nil {
-					out.Timestamp = new(Bootstamp)
+					out.Timestamp = new(cdp.MonotonicTime)
 				}
 				(*out.Timestamp).UnmarshalEasyJSON(in)
 			}
@@ -4359,7 +4359,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage51(in *jlexer.Lexer, out *
 				out.Timestamp = nil
 			} else {
 				if out.Timestamp == nil {
-					out.Timestamp = new(Bootstamp)
+					out.Timestamp = new(cdp.MonotonicTime)
 				}
 				(*out.Timestamp).UnmarshalEasyJSON(in)
 			}
@@ -4936,7 +4936,7 @@ func (v *AppManifestError) UnmarshalJSON(data []byte) error {
 func (v *AppManifestError) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage58(l, v)
 }
-func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage59(in *jlexer.Lexer, out *AddScriptToEvaluateOnLoadReturns) {
+func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage59(in *jlexer.Lexer, out *AddScriptToEvaluateOnNewDocumentReturns) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -4967,7 +4967,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage59(in *jlexer.Lexer, out *
 		in.Consumed()
 	}
 }
-func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage59(out *jwriter.Writer, in AddScriptToEvaluateOnLoadReturns) {
+func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage59(out *jwriter.Writer, in AddScriptToEvaluateOnNewDocumentReturns) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -4983,29 +4983,29 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage59(out *jwriter.Writer, in
 }
 
 // MarshalJSON supports json.Marshaler interface
-func (v AddScriptToEvaluateOnLoadReturns) MarshalJSON() ([]byte, error) {
+func (v AddScriptToEvaluateOnNewDocumentReturns) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
 	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage59(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
-func (v AddScriptToEvaluateOnLoadReturns) MarshalEasyJSON(w *jwriter.Writer) {
+func (v AddScriptToEvaluateOnNewDocumentReturns) MarshalEasyJSON(w *jwriter.Writer) {
 	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage59(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
-func (v *AddScriptToEvaluateOnLoadReturns) UnmarshalJSON(data []byte) error {
+func (v *AddScriptToEvaluateOnNewDocumentReturns) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
 	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage59(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *AddScriptToEvaluateOnLoadReturns) UnmarshalEasyJSON(l *jlexer.Lexer) {
+func (v *AddScriptToEvaluateOnNewDocumentReturns) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage59(l, v)
 }
-func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage60(in *jlexer.Lexer, out *AddScriptToEvaluateOnLoadParams) {
+func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage60(in *jlexer.Lexer, out *AddScriptToEvaluateOnNewDocumentParams) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -5024,8 +5024,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage60(in *jlexer.Lexer, out *
 			continue
 		}
 		switch key {
-		case "scriptSource":
-			out.ScriptSource = string(in.String())
+		case "source":
+			out.Source = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -5036,7 +5036,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage60(in *jlexer.Lexer, out *
 		in.Consumed()
 	}
 }
-func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage60(out *jwriter.Writer, in AddScriptToEvaluateOnLoadParams) {
+func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage60(out *jwriter.Writer, in AddScriptToEvaluateOnNewDocumentParams) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -5044,31 +5044,31 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage60(out *jwriter.Writer, in
 		out.RawByte(',')
 	}
 	first = false
-	out.RawString("\"scriptSource\":")
-	out.String(string(in.ScriptSource))
+	out.RawString("\"source\":")
+	out.String(string(in.Source))
 	out.RawByte('}')
 }
 
 // MarshalJSON supports json.Marshaler interface
-func (v AddScriptToEvaluateOnLoadParams) MarshalJSON() ([]byte, error) {
+func (v AddScriptToEvaluateOnNewDocumentParams) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
 	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage60(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
-func (v AddScriptToEvaluateOnLoadParams) MarshalEasyJSON(w *jwriter.Writer) {
+func (v AddScriptToEvaluateOnNewDocumentParams) MarshalEasyJSON(w *jwriter.Writer) {
 	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage60(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
-func (v *AddScriptToEvaluateOnLoadParams) UnmarshalJSON(data []byte) error {
+func (v *AddScriptToEvaluateOnNewDocumentParams) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
 	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage60(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *AddScriptToEvaluateOnLoadParams) UnmarshalEasyJSON(l *jlexer.Lexer) {
+func (v *AddScriptToEvaluateOnNewDocumentParams) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage60(l, v)
 }

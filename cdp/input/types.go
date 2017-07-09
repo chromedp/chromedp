@@ -3,6 +3,8 @@ package input
 import (
 	"errors"
 	"fmt"
+	"strconv"
+	"time"
 
 	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jlexer"
@@ -65,6 +67,37 @@ func (t *GestureType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 
 // UnmarshalJSON satisfies json.Unmarshaler.
 func (t *GestureType) UnmarshalJSON(buf []byte) error {
+	return easyjson.Unmarshal(buf, t)
+}
+
+// TimeSinceEpoch uTC time in seconds, counted from January 1, 1970.
+type TimeSinceEpoch time.Time
+
+// Time returns the TimeSinceEpoch as time.Time value.
+func (t TimeSinceEpoch) Time() time.Time {
+	return time.Time(t)
+}
+
+// MarshalEasyJSON satisfies easyjson.Marshaler.
+func (t TimeSinceEpoch) MarshalEasyJSON(out *jwriter.Writer) {
+	v := float64(time.Time(t).UnixNano() / int64(time.Second))
+
+	out.Buffer.EnsureSpace(20)
+	out.Buffer.Buf = strconv.AppendFloat(out.Buffer.Buf, v, 'f', -1, 64)
+}
+
+// MarshalJSON satisfies json.Marshaler.
+func (t TimeSinceEpoch) MarshalJSON() ([]byte, error) {
+	return easyjson.Marshal(t)
+}
+
+// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
+func (t *TimeSinceEpoch) UnmarshalEasyJSON(in *jlexer.Lexer) {
+	*t = TimeSinceEpoch(time.Unix(0, int64(in.Float64()*float64(time.Second))))
+}
+
+// UnmarshalJSON satisfies json.Unmarshaler.
+func (t *TimeSinceEpoch) UnmarshalJSON(buf []byte) error {
 	return easyjson.Unmarshal(buf, t)
 }
 

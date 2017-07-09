@@ -10,23 +10,23 @@ import (
 // EventResourceChangedPriority fired when resource loading priority is
 // changed.
 type EventResourceChangedPriority struct {
-	RequestID   RequestID        `json:"requestId"`   // Request identifier.
-	NewPriority ResourcePriority `json:"newPriority"` // New priority
-	Timestamp   *cdp.Timestamp   `json:"timestamp"`   // Timestamp.
+	RequestID   RequestID          `json:"requestId"`   // Request identifier.
+	NewPriority ResourcePriority   `json:"newPriority"` // New priority
+	Timestamp   *cdp.MonotonicTime `json:"timestamp"`   // Timestamp.
 }
 
 // EventRequestWillBeSent fired when page is about to send HTTP request.
 type EventRequestWillBeSent struct {
-	RequestID        RequestID         `json:"requestId"`                  // Request identifier.
-	LoaderID         cdp.LoaderID      `json:"loaderId"`                   // Loader identifier. Empty string if the request is fetched form worker.
-	DocumentURL      string            `json:"documentURL"`                // URL of the document this request is loaded for.
-	Request          *Request          `json:"request"`                    // Request data.
-	Timestamp        *cdp.Timestamp    `json:"timestamp"`                  // Timestamp.
-	WallTime         *cdp.Timestamp    `json:"wallTime"`                   // UTC Timestamp.
-	Initiator        *Initiator        `json:"initiator"`                  // Request initiator.
-	RedirectResponse *Response         `json:"redirectResponse,omitempty"` // Redirect response data.
-	Type             page.ResourceType `json:"type,omitempty"`             // Type of this resource.
-	FrameID          cdp.FrameID       `json:"frameId,omitempty"`          // Frame identifier.
+	RequestID        RequestID           `json:"requestId"`                  // Request identifier.
+	LoaderID         cdp.LoaderID        `json:"loaderId"`                   // Loader identifier. Empty string if the request is fetched form worker.
+	DocumentURL      string              `json:"documentURL"`                // URL of the document this request is loaded for.
+	Request          *Request            `json:"request"`                    // Request data.
+	Timestamp        *cdp.MonotonicTime  `json:"timestamp"`                  // Timestamp.
+	WallTime         *cdp.TimeSinceEpoch `json:"wallTime"`                   // Timestamp.
+	Initiator        *Initiator          `json:"initiator"`                  // Request initiator.
+	RedirectResponse *Response           `json:"redirectResponse,omitempty"` // Redirect response data.
+	Type             page.ResourceType   `json:"type,omitempty"`             // Type of this resource.
+	FrameID          cdp.FrameID         `json:"frameId,omitempty"`          // Frame identifier.
 }
 
 // EventRequestServedFromCache fired if request ended up loading from cache.
@@ -36,53 +36,53 @@ type EventRequestServedFromCache struct {
 
 // EventResponseReceived fired when HTTP response is available.
 type EventResponseReceived struct {
-	RequestID RequestID         `json:"requestId"`         // Request identifier.
-	LoaderID  cdp.LoaderID      `json:"loaderId"`          // Loader identifier. Empty string if the request is fetched form worker.
-	Timestamp *cdp.Timestamp    `json:"timestamp"`         // Timestamp.
-	Type      page.ResourceType `json:"type"`              // Resource type.
-	Response  *Response         `json:"response"`          // Response data.
-	FrameID   cdp.FrameID       `json:"frameId,omitempty"` // Frame identifier.
+	RequestID RequestID          `json:"requestId"`         // Request identifier.
+	LoaderID  cdp.LoaderID       `json:"loaderId"`          // Loader identifier. Empty string if the request is fetched form worker.
+	Timestamp *cdp.MonotonicTime `json:"timestamp"`         // Timestamp.
+	Type      page.ResourceType  `json:"type"`              // Resource type.
+	Response  *Response          `json:"response"`          // Response data.
+	FrameID   cdp.FrameID        `json:"frameId,omitempty"` // Frame identifier.
 }
 
 // EventDataReceived fired when data chunk was received over the network.
 type EventDataReceived struct {
-	RequestID         RequestID      `json:"requestId"`         // Request identifier.
-	Timestamp         *cdp.Timestamp `json:"timestamp"`         // Timestamp.
-	DataLength        int64          `json:"dataLength"`        // Data chunk length.
-	EncodedDataLength int64          `json:"encodedDataLength"` // Actual bytes received (might be less than dataLength for compressed encodings).
+	RequestID         RequestID          `json:"requestId"`         // Request identifier.
+	Timestamp         *cdp.MonotonicTime `json:"timestamp"`         // Timestamp.
+	DataLength        int64              `json:"dataLength"`        // Data chunk length.
+	EncodedDataLength int64              `json:"encodedDataLength"` // Actual bytes received (might be less than dataLength for compressed encodings).
 }
 
 // EventLoadingFinished fired when HTTP request has finished loading.
 type EventLoadingFinished struct {
-	RequestID         RequestID      `json:"requestId"`         // Request identifier.
-	Timestamp         *cdp.Timestamp `json:"timestamp"`         // Timestamp.
-	EncodedDataLength float64        `json:"encodedDataLength"` // Total number of bytes received for this request.
+	RequestID         RequestID          `json:"requestId"`         // Request identifier.
+	Timestamp         *cdp.MonotonicTime `json:"timestamp"`         // Timestamp.
+	EncodedDataLength float64            `json:"encodedDataLength"` // Total number of bytes received for this request.
 }
 
 // EventLoadingFailed fired when HTTP request has failed to load.
 type EventLoadingFailed struct {
-	RequestID     RequestID         `json:"requestId"`               // Request identifier.
-	Timestamp     *cdp.Timestamp    `json:"timestamp"`               // Timestamp.
-	Type          page.ResourceType `json:"type"`                    // Resource type.
-	ErrorText     string            `json:"errorText"`               // User friendly error message.
-	Canceled      bool              `json:"canceled,omitempty"`      // True if loading was canceled.
-	BlockedReason BlockedReason     `json:"blockedReason,omitempty"` // The reason why loading was blocked, if any.
+	RequestID     RequestID          `json:"requestId"`               // Request identifier.
+	Timestamp     *cdp.MonotonicTime `json:"timestamp"`               // Timestamp.
+	Type          page.ResourceType  `json:"type"`                    // Resource type.
+	ErrorText     string             `json:"errorText"`               // User friendly error message.
+	Canceled      bool               `json:"canceled,omitempty"`      // True if loading was canceled.
+	BlockedReason BlockedReason      `json:"blockedReason,omitempty"` // The reason why loading was blocked, if any.
 }
 
 // EventWebSocketWillSendHandshakeRequest fired when WebSocket is about to
 // initiate handshake.
 type EventWebSocketWillSendHandshakeRequest struct {
-	RequestID RequestID         `json:"requestId"` // Request identifier.
-	Timestamp *cdp.Timestamp    `json:"timestamp"` // Timestamp.
-	WallTime  *cdp.Timestamp    `json:"wallTime"`  // UTC Timestamp.
-	Request   *WebSocketRequest `json:"request"`   // WebSocket request data.
+	RequestID RequestID           `json:"requestId"` // Request identifier.
+	Timestamp *cdp.MonotonicTime  `json:"timestamp"` // Timestamp.
+	WallTime  *cdp.TimeSinceEpoch `json:"wallTime"`  // UTC Timestamp.
+	Request   *WebSocketRequest   `json:"request"`   // WebSocket request data.
 }
 
 // EventWebSocketHandshakeResponseReceived fired when WebSocket handshake
 // response becomes available.
 type EventWebSocketHandshakeResponseReceived struct {
 	RequestID RequestID          `json:"requestId"` // Request identifier.
-	Timestamp *cdp.Timestamp     `json:"timestamp"` // Timestamp.
+	Timestamp *cdp.MonotonicTime `json:"timestamp"` // Timestamp.
 	Response  *WebSocketResponse `json:"response"`  // WebSocket response data.
 }
 
@@ -95,39 +95,39 @@ type EventWebSocketCreated struct {
 
 // EventWebSocketClosed fired when WebSocket is closed.
 type EventWebSocketClosed struct {
-	RequestID RequestID      `json:"requestId"` // Request identifier.
-	Timestamp *cdp.Timestamp `json:"timestamp"` // Timestamp.
+	RequestID RequestID          `json:"requestId"` // Request identifier.
+	Timestamp *cdp.MonotonicTime `json:"timestamp"` // Timestamp.
 }
 
 // EventWebSocketFrameReceived fired when WebSocket frame is received.
 type EventWebSocketFrameReceived struct {
-	RequestID RequestID       `json:"requestId"` // Request identifier.
-	Timestamp *cdp.Timestamp  `json:"timestamp"` // Timestamp.
-	Response  *WebSocketFrame `json:"response"`  // WebSocket response data.
+	RequestID RequestID          `json:"requestId"` // Request identifier.
+	Timestamp *cdp.MonotonicTime `json:"timestamp"` // Timestamp.
+	Response  *WebSocketFrame    `json:"response"`  // WebSocket response data.
 }
 
 // EventWebSocketFrameError fired when WebSocket frame error occurs.
 type EventWebSocketFrameError struct {
-	RequestID    RequestID      `json:"requestId"`    // Request identifier.
-	Timestamp    *cdp.Timestamp `json:"timestamp"`    // Timestamp.
-	ErrorMessage string         `json:"errorMessage"` // WebSocket frame error message.
+	RequestID    RequestID          `json:"requestId"`    // Request identifier.
+	Timestamp    *cdp.MonotonicTime `json:"timestamp"`    // Timestamp.
+	ErrorMessage string             `json:"errorMessage"` // WebSocket frame error message.
 }
 
 // EventWebSocketFrameSent fired when WebSocket frame is sent.
 type EventWebSocketFrameSent struct {
-	RequestID RequestID       `json:"requestId"` // Request identifier.
-	Timestamp *cdp.Timestamp  `json:"timestamp"` // Timestamp.
-	Response  *WebSocketFrame `json:"response"`  // WebSocket response data.
+	RequestID RequestID          `json:"requestId"` // Request identifier.
+	Timestamp *cdp.MonotonicTime `json:"timestamp"` // Timestamp.
+	Response  *WebSocketFrame    `json:"response"`  // WebSocket response data.
 }
 
 // EventEventSourceMessageReceived fired when EventSource message is
 // received.
 type EventEventSourceMessageReceived struct {
-	RequestID RequestID      `json:"requestId"` // Request identifier.
-	Timestamp *cdp.Timestamp `json:"timestamp"` // Timestamp.
-	EventName string         `json:"eventName"` // Message type.
-	EventID   string         `json:"eventId"`   // Message identifier.
-	Data      string         `json:"data"`      // Message content.
+	RequestID RequestID          `json:"requestId"` // Request identifier.
+	Timestamp *cdp.MonotonicTime `json:"timestamp"` // Timestamp.
+	EventName string             `json:"eventName"` // Message type.
+	EventID   string             `json:"eventId"`   // Message identifier.
+	Data      string             `json:"data"`      // Message content.
 }
 
 // EventRequestIntercepted details of an intercepted HTTP request, which must
