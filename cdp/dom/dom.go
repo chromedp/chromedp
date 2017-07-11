@@ -803,20 +803,32 @@ func (p *SetInspectedNodeParams) Do(ctxt context.Context, h cdp.Handler) (err er
 	return h.Execute(ctxt, cdp.CommandDOMSetInspectedNode, p, nil)
 }
 
-// ResolveNodeParams resolves JavaScript node object for given node id.
+// ResolveNodeParams resolves the JavaScript node object for a given NodeId
+// or BackendNodeId.
 type ResolveNodeParams struct {
-	NodeID      cdp.NodeID `json:"nodeId"`                // Id of the node to resolve.
-	ObjectGroup string     `json:"objectGroup,omitempty"` // Symbolic group name that can be used to release multiple objects.
+	NodeID        cdp.NodeID        `json:"nodeId,omitempty"`        // Id of the node to resolve.
+	BackendNodeID cdp.BackendNodeID `json:"backendNodeId,omitempty"` // Backend identifier of the node to resolve.
+	ObjectGroup   string            `json:"objectGroup,omitempty"`   // Symbolic group name that can be used to release multiple objects.
 }
 
-// ResolveNode resolves JavaScript node object for given node id.
+// ResolveNode resolves the JavaScript node object for a given NodeId or
+// BackendNodeId.
 //
 // parameters:
-//   nodeID - Id of the node to resolve.
-func ResolveNode(nodeID cdp.NodeID) *ResolveNodeParams {
-	return &ResolveNodeParams{
-		NodeID: nodeID,
-	}
+func ResolveNode() *ResolveNodeParams {
+	return &ResolveNodeParams{}
+}
+
+// WithNodeID id of the node to resolve.
+func (p ResolveNodeParams) WithNodeID(nodeID cdp.NodeID) *ResolveNodeParams {
+	p.NodeID = nodeID
+	return &p
+}
+
+// WithBackendNodeID backend identifier of the node to resolve.
+func (p ResolveNodeParams) WithBackendNodeID(backendNodeID cdp.BackendNodeID) *ResolveNodeParams {
+	p.BackendNodeID = backendNodeID
+	return &p
 }
 
 // WithObjectGroup symbolic group name that can be used to release multiple

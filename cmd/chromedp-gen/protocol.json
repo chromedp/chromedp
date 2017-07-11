@@ -5874,7 +5874,14 @@
             {
               "name": "nodeId",
               "$ref": "NodeId",
+              "optional": true,
               "description": "Id of the node to resolve."
+            },
+            {
+              "name": "backendNodeId",
+              "$ref": "DOM.BackendNodeId",
+              "optional": true,
+              "description": "Backend identifier of the node to resolve."
             },
             {
               "name": "objectGroup",
@@ -5890,7 +5897,7 @@
               "description": "JavaScript object wrapper for given node."
             }
           ],
-          "description": "Resolves JavaScript node object for given node id."
+          "description": "Resolves the JavaScript node object for a given NodeId or BackendNodeId."
         },
         {
           "name": "getAttributes",

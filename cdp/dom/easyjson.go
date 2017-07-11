@@ -995,6 +995,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpDom11(in *jlexer.Lexer, out *R
 		switch key {
 		case "nodeId":
 			(out.NodeID).UnmarshalEasyJSON(in)
+		case "backendNodeId":
+			(out.BackendNodeID).UnmarshalEasyJSON(in)
 		case "objectGroup":
 			out.ObjectGroup = string(in.String())
 		default:
@@ -1011,12 +1013,22 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDom11(out *jwriter.Writer, in 
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	if in.NodeID != 0 {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"nodeId\":")
+		out.Int64(int64(in.NodeID))
 	}
-	first = false
-	out.RawString("\"nodeId\":")
-	out.Int64(int64(in.NodeID))
+	if in.BackendNodeID != 0 {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"backendNodeId\":")
+		out.Int64(int64(in.BackendNodeID))
+	}
 	if in.ObjectGroup != "" {
 		if !first {
 			out.RawByte(',')
