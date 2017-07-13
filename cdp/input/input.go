@@ -152,8 +152,8 @@ func (p *DispatchKeyEventParams) Do(ctxt context.Context, h cdp.Handler) (err er
 // DispatchMouseEventParams dispatches a mouse event to the page.
 type DispatchMouseEventParams struct {
 	Type       MouseType       `json:"type"`                 // Type of the mouse event.
-	X          int64           `json:"x"`                    // X coordinate of the event relative to the main frame's viewport.
-	Y          int64           `json:"y"`                    // Y coordinate of the event relative to the main frame's viewport. 0 refers to the top of the viewport and Y increases as it proceeds towards the bottom of the viewport.
+	X          float64         `json:"x"`                    // X coordinate of the event relative to the main frame's viewport in CSS pixels.
+	Y          float64         `json:"y"`                    // Y coordinate of the event relative to the main frame's viewport in CSS pixels. 0 refers to the top of the viewport and Y increases as it proceeds towards the bottom of the viewport.
 	Modifiers  Modifier        `json:"modifiers,omitempty"`  // Bit field representing pressed modifier keys. Alt=1, Ctrl=2, Meta/Command=4, Shift=8 (default: 0).
 	Timestamp  *TimeSinceEpoch `json:"timestamp,omitempty"`  // Time at which the event occurred.
 	Button     ButtonType      `json:"button,omitempty"`     // Mouse button (default: "none").
@@ -164,9 +164,9 @@ type DispatchMouseEventParams struct {
 //
 // parameters:
 //   type - Type of the mouse event.
-//   x - X coordinate of the event relative to the main frame's viewport.
-//   y - Y coordinate of the event relative to the main frame's viewport. 0 refers to the top of the viewport and Y increases as it proceeds towards the bottom of the viewport.
-func DispatchMouseEvent(typeVal MouseType, x int64, y int64) *DispatchMouseEventParams {
+//   x - X coordinate of the event relative to the main frame's viewport in CSS pixels.
+//   y - Y coordinate of the event relative to the main frame's viewport in CSS pixels. 0 refers to the top of the viewport and Y increases as it proceeds towards the bottom of the viewport.
+func DispatchMouseEvent(typeVal MouseType, x float64, y float64) *DispatchMouseEventParams {
 	return &DispatchMouseEventParams{
 		Type: typeVal,
 		X:    x,
@@ -311,8 +311,8 @@ func (p *EmulateTouchFromMouseEventParams) Do(ctxt context.Context, h cdp.Handle
 // SynthesizePinchGestureParams synthesizes a pinch gesture over a time
 // period by issuing appropriate touch events.
 type SynthesizePinchGestureParams struct {
-	X                 int64       `json:"x"`                           // X coordinate of the start of the gesture in CSS pixels.
-	Y                 int64       `json:"y"`                           // Y coordinate of the start of the gesture in CSS pixels.
+	X                 float64     `json:"x"`                           // X coordinate of the start of the gesture in CSS pixels.
+	Y                 float64     `json:"y"`                           // Y coordinate of the start of the gesture in CSS pixels.
 	ScaleFactor       float64     `json:"scaleFactor"`                 // Relative scale factor after zooming (>1.0 zooms in, <1.0 zooms out).
 	RelativeSpeed     int64       `json:"relativeSpeed,omitempty"`     // Relative pointer speed in pixels per second (default: 800).
 	GestureSourceType GestureType `json:"gestureSourceType,omitempty"` // Which type of input events to be generated (default: 'default', which queries the platform for the preferred input type).
@@ -325,7 +325,7 @@ type SynthesizePinchGestureParams struct {
 //   x - X coordinate of the start of the gesture in CSS pixels.
 //   y - Y coordinate of the start of the gesture in CSS pixels.
 //   scaleFactor - Relative scale factor after zooming (>1.0 zooms in, <1.0 zooms out).
-func SynthesizePinchGesture(x int64, y int64, scaleFactor float64) *SynthesizePinchGestureParams {
+func SynthesizePinchGesture(x float64, y float64, scaleFactor float64) *SynthesizePinchGestureParams {
 	return &SynthesizePinchGestureParams{
 		X:           x,
 		Y:           y,
@@ -356,12 +356,12 @@ func (p *SynthesizePinchGestureParams) Do(ctxt context.Context, h cdp.Handler) (
 // SynthesizeScrollGestureParams synthesizes a scroll gesture over a time
 // period by issuing appropriate touch events.
 type SynthesizeScrollGestureParams struct {
-	X                     int64       `json:"x"`                               // X coordinate of the start of the gesture in CSS pixels.
-	Y                     int64       `json:"y"`                               // Y coordinate of the start of the gesture in CSS pixels.
-	XDistance             int64       `json:"xDistance,omitempty"`             // The distance to scroll along the X axis (positive to scroll left).
-	YDistance             int64       `json:"yDistance,omitempty"`             // The distance to scroll along the Y axis (positive to scroll up).
-	XOverscroll           int64       `json:"xOverscroll,omitempty"`           // The number of additional pixels to scroll back along the X axis, in addition to the given distance.
-	YOverscroll           int64       `json:"yOverscroll,omitempty"`           // The number of additional pixels to scroll back along the Y axis, in addition to the given distance.
+	X                     float64     `json:"x"`                               // X coordinate of the start of the gesture in CSS pixels.
+	Y                     float64     `json:"y"`                               // Y coordinate of the start of the gesture in CSS pixels.
+	XDistance             float64     `json:"xDistance,omitempty"`             // The distance to scroll along the X axis (positive to scroll left).
+	YDistance             float64     `json:"yDistance,omitempty"`             // The distance to scroll along the Y axis (positive to scroll up).
+	XOverscroll           float64     `json:"xOverscroll,omitempty"`           // The number of additional pixels to scroll back along the X axis, in addition to the given distance.
+	YOverscroll           float64     `json:"yOverscroll,omitempty"`           // The number of additional pixels to scroll back along the Y axis, in addition to the given distance.
 	PreventFling          bool        `json:"preventFling,omitempty"`          // Prevent fling (default: true).
 	Speed                 int64       `json:"speed,omitempty"`                 // Swipe speed in pixels per second (default: 800).
 	GestureSourceType     GestureType `json:"gestureSourceType,omitempty"`     // Which type of input events to be generated (default: 'default', which queries the platform for the preferred input type).
@@ -376,7 +376,7 @@ type SynthesizeScrollGestureParams struct {
 // parameters:
 //   x - X coordinate of the start of the gesture in CSS pixels.
 //   y - Y coordinate of the start of the gesture in CSS pixels.
-func SynthesizeScrollGesture(x int64, y int64) *SynthesizeScrollGestureParams {
+func SynthesizeScrollGesture(x float64, y float64) *SynthesizeScrollGestureParams {
 	return &SynthesizeScrollGestureParams{
 		X: x,
 		Y: y,
@@ -385,28 +385,28 @@ func SynthesizeScrollGesture(x int64, y int64) *SynthesizeScrollGestureParams {
 
 // WithXDistance the distance to scroll along the X axis (positive to scroll
 // left).
-func (p SynthesizeScrollGestureParams) WithXDistance(xDistance int64) *SynthesizeScrollGestureParams {
+func (p SynthesizeScrollGestureParams) WithXDistance(xDistance float64) *SynthesizeScrollGestureParams {
 	p.XDistance = xDistance
 	return &p
 }
 
 // WithYDistance the distance to scroll along the Y axis (positive to scroll
 // up).
-func (p SynthesizeScrollGestureParams) WithYDistance(yDistance int64) *SynthesizeScrollGestureParams {
+func (p SynthesizeScrollGestureParams) WithYDistance(yDistance float64) *SynthesizeScrollGestureParams {
 	p.YDistance = yDistance
 	return &p
 }
 
 // WithXOverscroll the number of additional pixels to scroll back along the X
 // axis, in addition to the given distance.
-func (p SynthesizeScrollGestureParams) WithXOverscroll(xOverscroll int64) *SynthesizeScrollGestureParams {
+func (p SynthesizeScrollGestureParams) WithXOverscroll(xOverscroll float64) *SynthesizeScrollGestureParams {
 	p.XOverscroll = xOverscroll
 	return &p
 }
 
 // WithYOverscroll the number of additional pixels to scroll back along the Y
 // axis, in addition to the given distance.
-func (p SynthesizeScrollGestureParams) WithYOverscroll(yOverscroll int64) *SynthesizeScrollGestureParams {
+func (p SynthesizeScrollGestureParams) WithYOverscroll(yOverscroll float64) *SynthesizeScrollGestureParams {
 	p.YOverscroll = yOverscroll
 	return &p
 }
@@ -459,8 +459,8 @@ func (p *SynthesizeScrollGestureParams) Do(ctxt context.Context, h cdp.Handler) 
 // SynthesizeTapGestureParams synthesizes a tap gesture over a time period by
 // issuing appropriate touch events.
 type SynthesizeTapGestureParams struct {
-	X                 int64       `json:"x"`                           // X coordinate of the start of the gesture in CSS pixels.
-	Y                 int64       `json:"y"`                           // Y coordinate of the start of the gesture in CSS pixels.
+	X                 float64     `json:"x"`                           // X coordinate of the start of the gesture in CSS pixels.
+	Y                 float64     `json:"y"`                           // Y coordinate of the start of the gesture in CSS pixels.
 	Duration          int64       `json:"duration,omitempty"`          // Duration between touchdown and touchup events in ms (default: 50).
 	TapCount          int64       `json:"tapCount,omitempty"`          // Number of times to perform the tap (e.g. 2 for double tap, default: 1).
 	GestureSourceType GestureType `json:"gestureSourceType,omitempty"` // Which type of input events to be generated (default: 'default', which queries the platform for the preferred input type).
@@ -472,7 +472,7 @@ type SynthesizeTapGestureParams struct {
 // parameters:
 //   x - X coordinate of the start of the gesture in CSS pixels.
 //   y - Y coordinate of the start of the gesture in CSS pixels.
-func SynthesizeTapGesture(x int64, y int64) *SynthesizeTapGestureParams {
+func SynthesizeTapGesture(x float64, y float64) *SynthesizeTapGestureParams {
 	return &SynthesizeTapGestureParams{
 		X: x,
 		Y: y,

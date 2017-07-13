@@ -260,19 +260,10 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandEmulationClearDeviceMetricsOverride:
 		return emptyVal, nil
 
-	case cdp.CommandEmulationForceViewport:
-		return emptyVal, nil
-
-	case cdp.CommandEmulationResetViewport:
-		return emptyVal, nil
-
 	case cdp.CommandEmulationResetPageScaleFactor:
 		return emptyVal, nil
 
 	case cdp.CommandEmulationSetPageScaleFactor:
-		return emptyVal, nil
-
-	case cdp.CommandEmulationSetVisibleSize:
 		return emptyVal, nil
 
 	case cdp.CommandEmulationSetScriptExecutionDisabled:

@@ -478,6 +478,39 @@
               "description": "Scale relative to the ideal viewport (size at width=device-width)."
             }
           ]
+        },
+        {
+          "id": "Viewport",
+          "type": "object",
+          "description": "Viewport for capturing screenshot.",
+          "experimental": true,
+          "properties": [
+            {
+              "name": "x",
+              "type": "number",
+              "description": "X offset in CSS pixels."
+            },
+            {
+              "name": "y",
+              "type": "number",
+              "description": "Y offset in CSS pixels"
+            },
+            {
+              "name": "width",
+              "type": "number",
+              "description": "Rectangle width in CSS pixels"
+            },
+            {
+              "name": "height",
+              "type": "number",
+              "description": "Rectangle height in CSS pixels"
+            },
+            {
+              "name": "scale",
+              "type": "number",
+              "description": "Page scale factor."
+            }
+          ]
         }
       ],
       "commands": [
@@ -812,6 +845,7 @@
             {
               "name": "fitWindow",
               "type": "boolean",
+              "optional": true,
               "description": "Whether a view that exceeds the available browser window area should be scaled down to fit."
             },
             {
@@ -973,6 +1007,13 @@
               "type": "integer",
               "optional": true,
               "description": "Compression quality from range [0..100] (jpeg only)."
+            },
+            {
+              "name": "clip",
+              "$ref": "Viewport",
+              "optional": true,
+              "description": "Capture the screenshot of a given region only.",
+              "experimental": true
             },
             {
               "name": "fromSurface",
@@ -1901,6 +1942,7 @@
             {
               "name": "fitWindow",
               "type": "boolean",
+              "optional": true,
               "description": "Whether a view that exceeds the available browser window area should be scaled down to fit."
             },
             {
@@ -1967,33 +2009,6 @@
           "description": "Clears the overriden device metrics."
         },
         {
-          "name": "forceViewport",
-          "description": "Overrides the visible area of the page. The change is hidden from the page, i.e. the observable scroll position and page scale does not change. In effect, the command moves the specified area of the page into the top-left corner of the frame.",
-          "experimental": true,
-          "parameters": [
-            {
-              "name": "x",
-              "type": "number",
-              "description": "X coordinate of top-left corner of the area (CSS pixels)."
-            },
-            {
-              "name": "y",
-              "type": "number",
-              "description": "Y coordinate of top-left corner of the area (CSS pixels)."
-            },
-            {
-              "name": "scale",
-              "type": "number",
-              "description": "Scale to apply to the area (relative to a page scale of 1.0)."
-            }
-          ]
-        },
-        {
-          "name": "resetViewport",
-          "description": "Resets the visible area of the page to the original viewport, undoing any effects of the <code>forceViewport</code> command.",
-          "experimental": true
-        },
-        {
           "name": "resetPageScaleFactor",
           "experimental": true,
           "description": "Requests that page scale factor is reset to initial values."
@@ -2012,8 +2027,9 @@
         },
         {
           "name": "setVisibleSize",
-          "description": "Resizes the frame/viewport of the page. Note that this does not affect the frame's container (e.g. browser window). Can be used to produce screenshots of the specified size. Not supported on Android.",
+          "description": "Deprecated, does nothing. Please use setDeviceMetricsOverride instead.",
           "experimental": true,
+          "deprecated": true,
           "parameters": [
             {
               "name": "width",
@@ -8821,13 +8837,13 @@
             },
             {
               "name": "x",
-              "type": "integer",
-              "description": "X coordinate of the event relative to the main frame's viewport."
+              "type": "number",
+              "description": "X coordinate of the event relative to the main frame's viewport in CSS pixels."
             },
             {
               "name": "y",
-              "type": "integer",
-              "description": "Y coordinate of the event relative to the main frame's viewport. 0 refers to the top of the viewport and Y increases as it proceeds towards the bottom of the viewport."
+              "type": "number",
+              "description": "Y coordinate of the event relative to the main frame's viewport in CSS pixels. 0 refers to the top of the viewport and Y increases as it proceeds towards the bottom of the viewport."
             },
             {
               "name": "modifiers",
@@ -8972,12 +8988,12 @@
           "parameters": [
             {
               "name": "x",
-              "type": "integer",
+              "type": "number",
               "description": "X coordinate of the start of the gesture in CSS pixels."
             },
             {
               "name": "y",
-              "type": "integer",
+              "type": "number",
               "description": "Y coordinate of the start of the gesture in CSS pixels."
             },
             {
@@ -9006,35 +9022,35 @@
           "parameters": [
             {
               "name": "x",
-              "type": "integer",
+              "type": "number",
               "description": "X coordinate of the start of the gesture in CSS pixels."
             },
             {
               "name": "y",
-              "type": "integer",
+              "type": "number",
               "description": "Y coordinate of the start of the gesture in CSS pixels."
             },
             {
               "name": "xDistance",
-              "type": "integer",
+              "type": "number",
               "optional": true,
               "description": "The distance to scroll along the X axis (positive to scroll left)."
             },
             {
               "name": "yDistance",
-              "type": "integer",
+              "type": "number",
               "optional": true,
               "description": "The distance to scroll along the Y axis (positive to scroll up)."
             },
             {
               "name": "xOverscroll",
-              "type": "integer",
+              "type": "number",
               "optional": true,
               "description": "The number of additional pixels to scroll back along the X axis, in addition to the given distance."
             },
             {
               "name": "yOverscroll",
-              "type": "integer",
+              "type": "number",
               "optional": true,
               "description": "The number of additional pixels to scroll back along the Y axis, in addition to the given distance."
             },
@@ -9083,12 +9099,12 @@
           "parameters": [
             {
               "name": "x",
-              "type": "integer",
+              "type": "number",
               "description": "X coordinate of the start of the gesture in CSS pixels."
             },
             {
               "name": "y",
-              "type": "integer",
+              "type": "number",
               "description": "Y coordinate of the start of the gesture in CSS pixels."
             },
             {

@@ -120,11 +120,8 @@ const (
 	EventEmulationVirtualTimeBudgetExpired                 MethodType = "Emulation.virtualTimeBudgetExpired"
 	CommandEmulationSetDeviceMetricsOverride               MethodType = "Emulation.setDeviceMetricsOverride"
 	CommandEmulationClearDeviceMetricsOverride             MethodType = "Emulation.clearDeviceMetricsOverride"
-	CommandEmulationForceViewport                          MethodType = "Emulation.forceViewport"
-	CommandEmulationResetViewport                          MethodType = "Emulation.resetViewport"
 	CommandEmulationResetPageScaleFactor                   MethodType = "Emulation.resetPageScaleFactor"
 	CommandEmulationSetPageScaleFactor                     MethodType = "Emulation.setPageScaleFactor"
-	CommandEmulationSetVisibleSize                         MethodType = "Emulation.setVisibleSize"
 	CommandEmulationSetScriptExecutionDisabled             MethodType = "Emulation.setScriptExecutionDisabled"
 	CommandEmulationSetGeolocationOverride                 MethodType = "Emulation.setGeolocationOverride"
 	CommandEmulationClearGeolocationOverride               MethodType = "Emulation.clearGeolocationOverride"
@@ -627,16 +624,10 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandEmulationSetDeviceMetricsOverride
 	case CommandEmulationClearDeviceMetricsOverride:
 		*t = CommandEmulationClearDeviceMetricsOverride
-	case CommandEmulationForceViewport:
-		*t = CommandEmulationForceViewport
-	case CommandEmulationResetViewport:
-		*t = CommandEmulationResetViewport
 	case CommandEmulationResetPageScaleFactor:
 		*t = CommandEmulationResetPageScaleFactor
 	case CommandEmulationSetPageScaleFactor:
 		*t = CommandEmulationSetPageScaleFactor
-	case CommandEmulationSetVisibleSize:
-		*t = CommandEmulationSetVisibleSize
 	case CommandEmulationSetScriptExecutionDisabled:
 		*t = CommandEmulationSetScriptExecutionDisabled
 	case CommandEmulationSetGeolocationOverride:

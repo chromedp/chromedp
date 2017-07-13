@@ -170,9 +170,9 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpInput1(in *jlexer.Lexer, out *
 		}
 		switch key {
 		case "x":
-			out.X = int64(in.Int64())
+			out.X = float64(in.Float64())
 		case "y":
-			out.Y = int64(in.Int64())
+			out.Y = float64(in.Float64())
 		case "duration":
 			out.Duration = int64(in.Int64())
 		case "tapCount":
@@ -198,13 +198,13 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpInput1(out *jwriter.Writer, in
 	}
 	first = false
 	out.RawString("\"x\":")
-	out.Int64(int64(in.X))
+	out.Float64(float64(in.X))
 	if !first {
 		out.RawByte(',')
 	}
 	first = false
 	out.RawString("\"y\":")
-	out.Int64(int64(in.Y))
+	out.Float64(float64(in.Y))
 	if in.Duration != 0 {
 		if !first {
 			out.RawByte(',')
@@ -275,17 +275,17 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpInput2(in *jlexer.Lexer, out *
 		}
 		switch key {
 		case "x":
-			out.X = int64(in.Int64())
+			out.X = float64(in.Float64())
 		case "y":
-			out.Y = int64(in.Int64())
+			out.Y = float64(in.Float64())
 		case "xDistance":
-			out.XDistance = int64(in.Int64())
+			out.XDistance = float64(in.Float64())
 		case "yDistance":
-			out.YDistance = int64(in.Int64())
+			out.YDistance = float64(in.Float64())
 		case "xOverscroll":
-			out.XOverscroll = int64(in.Int64())
+			out.XOverscroll = float64(in.Float64())
 		case "yOverscroll":
-			out.YOverscroll = int64(in.Int64())
+			out.YOverscroll = float64(in.Float64())
 		case "preventFling":
 			out.PreventFling = bool(in.Bool())
 		case "speed":
@@ -317,20 +317,20 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpInput2(out *jwriter.Writer, in
 	}
 	first = false
 	out.RawString("\"x\":")
-	out.Int64(int64(in.X))
+	out.Float64(float64(in.X))
 	if !first {
 		out.RawByte(',')
 	}
 	first = false
 	out.RawString("\"y\":")
-	out.Int64(int64(in.Y))
+	out.Float64(float64(in.Y))
 	if in.XDistance != 0 {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"xDistance\":")
-		out.Int64(int64(in.XDistance))
+		out.Float64(float64(in.XDistance))
 	}
 	if in.YDistance != 0 {
 		if !first {
@@ -338,7 +338,7 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpInput2(out *jwriter.Writer, in
 		}
 		first = false
 		out.RawString("\"yDistance\":")
-		out.Int64(int64(in.YDistance))
+		out.Float64(float64(in.YDistance))
 	}
 	if in.XOverscroll != 0 {
 		if !first {
@@ -346,7 +346,7 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpInput2(out *jwriter.Writer, in
 		}
 		first = false
 		out.RawString("\"xOverscroll\":")
-		out.Int64(int64(in.XOverscroll))
+		out.Float64(float64(in.XOverscroll))
 	}
 	if in.YOverscroll != 0 {
 		if !first {
@@ -354,7 +354,7 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpInput2(out *jwriter.Writer, in
 		}
 		first = false
 		out.RawString("\"yOverscroll\":")
-		out.Int64(int64(in.YOverscroll))
+		out.Float64(float64(in.YOverscroll))
 	}
 	if in.PreventFling {
 		if !first {
@@ -450,9 +450,9 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpInput3(in *jlexer.Lexer, out *
 		}
 		switch key {
 		case "x":
-			out.X = int64(in.Int64())
+			out.X = float64(in.Float64())
 		case "y":
-			out.Y = int64(in.Int64())
+			out.Y = float64(in.Float64())
 		case "scaleFactor":
 			out.ScaleFactor = float64(in.Float64())
 		case "relativeSpeed":
@@ -478,13 +478,13 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpInput3(out *jwriter.Writer, in
 	}
 	first = false
 	out.RawString("\"x\":")
-	out.Int64(int64(in.X))
+	out.Float64(float64(in.X))
 	if !first {
 		out.RawByte(',')
 	}
 	first = false
 	out.RawString("\"y\":")
-	out.Int64(int64(in.Y))
+	out.Float64(float64(in.Y))
 	if !first {
 		out.RawByte(',')
 	}
@@ -924,9 +924,9 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpInput7(in *jlexer.Lexer, out *
 		case "type":
 			(out.Type).UnmarshalEasyJSON(in)
 		case "x":
-			out.X = int64(in.Int64())
+			out.X = float64(in.Float64())
 		case "y":
-			out.Y = int64(in.Int64())
+			out.Y = float64(in.Float64())
 		case "modifiers":
 			(out.Modifiers).UnmarshalEasyJSON(in)
 		case "timestamp":
@@ -968,13 +968,13 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpInput7(out *jwriter.Writer, in
 	}
 	first = false
 	out.RawString("\"x\":")
-	out.Int64(int64(in.X))
+	out.Float64(float64(in.X))
 	if !first {
 		out.RawByte(',')
 	}
 	first = false
 	out.RawString("\"y\":")
-	out.Int64(int64(in.Y))
+	out.Float64(float64(in.Y))
 	if in.Modifiers != 0 {
 		if !first {
 			out.RawByte(',')

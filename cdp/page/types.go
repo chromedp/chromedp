@@ -327,6 +327,15 @@ type VisualViewport struct {
 	Scale        float64 `json:"scale"`        // Scale relative to the ideal viewport (size at width=device-width).
 }
 
+// Viewport viewport for capturing screenshot.
+type Viewport struct {
+	X      float64 `json:"x"`      // X offset in CSS pixels.
+	Y      float64 `json:"y"`      // Y offset in CSS pixels
+	Width  float64 `json:"width"`  // Rectangle width in CSS pixels
+	Height float64 `json:"height"` // Rectangle height in CSS pixels
+	Scale  float64 `json:"scale"`  // Page scale factor.
+}
+
 // CaptureScreenshotFormat image compression format (defaults to png).
 type CaptureScreenshotFormat string
 

@@ -23,7 +23,7 @@ type SetDeviceMetricsOverrideParams struct {
 	Height            int64              `json:"height"`                      // Overriding height value in pixels (minimum 0, maximum 10000000). 0 disables the override.
 	DeviceScaleFactor float64            `json:"deviceScaleFactor"`           // Overriding device scale factor value. 0 disables the override.
 	Mobile            bool               `json:"mobile"`                      // Whether to emulate mobile device. This includes viewport meta tag, overlay scrollbars, text autosizing and more.
-	FitWindow         bool               `json:"fitWindow"`                   // Whether a view that exceeds the available browser window area should be scaled down to fit.
+	FitWindow         bool               `json:"fitWindow,omitempty"`         // Whether a view that exceeds the available browser window area should be scaled down to fit.
 	Scale             float64            `json:"scale,omitempty"`             // Scale to apply to resulting view image. Ignored in |fitWindow| mode.
 	ScreenWidth       int64              `json:"screenWidth,omitempty"`       // Overriding screen width value in pixels (minimum 0, maximum 10000000). Only used for |mobile==true|.
 	ScreenHeight      int64              `json:"screenHeight,omitempty"`      // Overriding screen height value in pixels (minimum 0, maximum 10000000). Only used for |mobile==true|.
@@ -42,15 +42,20 @@ type SetDeviceMetricsOverrideParams struct {
 //   height - Overriding height value in pixels (minimum 0, maximum 10000000). 0 disables the override.
 //   deviceScaleFactor - Overriding device scale factor value. 0 disables the override.
 //   mobile - Whether to emulate mobile device. This includes viewport meta tag, overlay scrollbars, text autosizing and more.
-//   fitWindow - Whether a view that exceeds the available browser window area should be scaled down to fit.
-func SetDeviceMetricsOverride(width int64, height int64, deviceScaleFactor float64, mobile bool, fitWindow bool) *SetDeviceMetricsOverrideParams {
+func SetDeviceMetricsOverride(width int64, height int64, deviceScaleFactor float64, mobile bool) *SetDeviceMetricsOverrideParams {
 	return &SetDeviceMetricsOverrideParams{
 		Width:             width,
 		Height:            height,
 		DeviceScaleFactor: deviceScaleFactor,
 		Mobile:            mobile,
-		FitWindow:         fitWindow,
 	}
+}
+
+// WithFitWindow whether a view that exceeds the available browser window
+// area should be scaled down to fit.
+func (p SetDeviceMetricsOverrideParams) WithFitWindow(fitWindow bool) *SetDeviceMetricsOverrideParams {
+	p.FitWindow = fitWindow
+	return &p
 }
 
 // WithScale scale to apply to resulting view image. Ignored in |fitWindow|
@@ -114,55 +119,6 @@ func (p *ClearDeviceMetricsOverrideParams) Do(ctxt context.Context, h cdp.Handle
 	return h.Execute(ctxt, cdp.CommandEmulationClearDeviceMetricsOverride, nil, nil)
 }
 
-// ForceViewportParams overrides the visible area of the page. The change is
-// hidden from the page, i.e. the observable scroll position and page scale does
-// not change. In effect, the command moves the specified area of the page into
-// the top-left corner of the frame.
-type ForceViewportParams struct {
-	X     float64 `json:"x"`     // X coordinate of top-left corner of the area (CSS pixels).
-	Y     float64 `json:"y"`     // Y coordinate of top-left corner of the area (CSS pixels).
-	Scale float64 `json:"scale"` // Scale to apply to the area (relative to a page scale of 1.0).
-}
-
-// ForceViewport overrides the visible area of the page. The change is hidden
-// from the page, i.e. the observable scroll position and page scale does not
-// change. In effect, the command moves the specified area of the page into the
-// top-left corner of the frame.
-//
-// parameters:
-//   x - X coordinate of top-left corner of the area (CSS pixels).
-//   y - Y coordinate of top-left corner of the area (CSS pixels).
-//   scale - Scale to apply to the area (relative to a page scale of 1.0).
-func ForceViewport(x float64, y float64, scale float64) *ForceViewportParams {
-	return &ForceViewportParams{
-		X:     x,
-		Y:     y,
-		Scale: scale,
-	}
-}
-
-// Do executes Emulation.forceViewport against the provided context and
-// target handler.
-func (p *ForceViewportParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandEmulationForceViewport, p, nil)
-}
-
-// ResetViewportParams resets the visible area of the page to the original
-// viewport, undoing any effects of the forceViewport command.
-type ResetViewportParams struct{}
-
-// ResetViewport resets the visible area of the page to the original
-// viewport, undoing any effects of the forceViewport command.
-func ResetViewport() *ResetViewportParams {
-	return &ResetViewportParams{}
-}
-
-// Do executes Emulation.resetViewport against the provided context and
-// target handler.
-func (p *ResetViewportParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandEmulationResetViewport, nil, nil)
-}
-
 // ResetPageScaleFactorParams requests that page scale factor is reset to
 // initial values.
 type ResetPageScaleFactorParams struct{}
@@ -198,34 +154,6 @@ func SetPageScaleFactor(pageScaleFactor float64) *SetPageScaleFactorParams {
 // target handler.
 func (p *SetPageScaleFactorParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandEmulationSetPageScaleFactor, p, nil)
-}
-
-// SetVisibleSizeParams resizes the frame/viewport of the page. Note that
-// this does not affect the frame's container (e.g. browser window). Can be used
-// to produce screenshots of the specified size. Not supported on Android.
-type SetVisibleSizeParams struct {
-	Width  int64 `json:"width"`  // Frame width (DIP).
-	Height int64 `json:"height"` // Frame height (DIP).
-}
-
-// SetVisibleSize resizes the frame/viewport of the page. Note that this does
-// not affect the frame's container (e.g. browser window). Can be used to
-// produce screenshots of the specified size. Not supported on Android.
-//
-// parameters:
-//   width - Frame width (DIP).
-//   height - Frame height (DIP).
-func SetVisibleSize(width int64, height int64) *SetVisibleSizeParams {
-	return &SetVisibleSizeParams{
-		Width:  width,
-		Height: height,
-	}
-}
-
-// Do executes Emulation.setVisibleSize against the provided context and
-// target handler.
-func (p *SetVisibleSizeParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandEmulationSetVisibleSize, p, nil)
 }
 
 // SetScriptExecutionDisabledParams switches script execution in the page.
