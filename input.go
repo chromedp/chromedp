@@ -13,7 +13,7 @@ import (
 
 // MouseAction is a mouse action.
 func MouseAction(typ input.MouseType, x, y int64, opts ...MouseOption) Action {
-	me := input.DispatchMouseEvent(typ, x, y)
+	me := input.DispatchMouseEvent(typ, float64(x), float64(y))
 
 	// apply opts
 	for _, o := range opts {
@@ -29,8 +29,8 @@ func MouseClickXY(x, y int64, opts ...MouseOption) Action {
 	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
 		me := &input.DispatchMouseEventParams{
 			Type:       input.MousePressed,
-			X:          x,
-			Y:          y,
+			X:          float64(x),
+			Y:          float64(y),
 			Button:     input.ButtonLeft,
 			ClickCount: 1,
 		}
