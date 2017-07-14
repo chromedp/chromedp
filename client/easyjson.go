@@ -50,6 +50,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpClient(in *jlexer.Lexer, out *Chr
 			out.URL = string(in.String())
 		case "webSocketDebuggerUrl":
 			out.WebsocketURL = string(in.String())
+		case "faviconURL":
+			out.FaviconURL = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -119,6 +121,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpClient(out *jwriter.Writer, in Ch
 		first = false
 		out.RawString("\"webSocketDebuggerUrl\":")
 		out.String(string(in.WebsocketURL))
+	}
+	if in.FaviconURL != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"faviconURL\":")
+		out.String(string(in.FaviconURL))
 	}
 	out.RawByte('}')
 }

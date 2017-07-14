@@ -15,6 +15,7 @@ type Chrome struct {
 	Type         TargetType `json:"type,omitempty"`
 	URL          string     `json:"url,omitempty"`
 	WebsocketURL string     `json:"webSocketDebuggerUrl,omitempty"`
+	FaviconURL   string     `json:"faviconURL,omitempty"`
 }
 
 // String satisfies the stringer interface.

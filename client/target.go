@@ -25,6 +25,7 @@ const (
 	Other          TargetType = "other"
 	Page           TargetType = "page"
 	ServiceWorker  TargetType = "service_worker"
+	Node           TargetType = "node"
 )
 
 // String satisfies stringer.
@@ -53,6 +54,8 @@ func (tt *TargetType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*tt = Page
 	case ServiceWorker:
 		*tt = ServiceWorker
+	case Node:
+		*tt = Node
 
 	default:
 		in.AddError(errors.New("unknown TargetType"))
