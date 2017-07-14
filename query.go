@@ -55,7 +55,7 @@ func Focus(sel interface{}, opts ...QueryOption) Action {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
-		return dom.Focus(nodes[0].NodeID).Do(ctxt, h)
+		return dom.Focus().WithNodeID(nodes[0].NodeID).Do(ctxt, h)
 	}, opts...)
 }
 
@@ -91,7 +91,7 @@ func Dimensions(sel interface{}, model **dom.BoxModel, opts ...QueryOption) Acti
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 		var err error
-		*model, err = dom.GetBoxModel(nodes[0].NodeID).Do(ctxt, h)
+		*model, err = dom.GetBoxModel().WithNodeID(nodes[0].NodeID).Do(ctxt, h)
 		return err
 	}, opts...)
 }
@@ -385,7 +385,7 @@ func SendKeys(sel interface{}, v string, opts ...QueryOption) Action {
 
 		// when working with input[type="file"], call dom.SetFileInputFiles
 		if n.NodeName == "INPUT" && typ == "file" {
-			return dom.SetFileInputFiles(n.NodeID, []string{v}).Do(ctxt, h)
+			return dom.SetFileInputFiles([]string{v}).WithNodeID(n.NodeID).Do(ctxt, h)
 		}
 
 		return KeyActionNode(n, v).Do(ctxt, h)
@@ -400,7 +400,7 @@ func SetUploadFiles(sel interface{}, files []string, opts ...QueryOption) Action
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
-		return dom.SetFileInputFiles(nodes[0].NodeID, files).Do(ctxt, h)
+		return dom.SetFileInputFiles(files).WithNodeID(nodes[0].NodeID).Do(ctxt, h)
 	}, opts...)
 }
 
@@ -418,7 +418,7 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 		var err error
 
 		// get box model
-		box, err := dom.GetBoxModel(nodes[0].NodeID).Do(ctxt, h)
+		box, err := dom.GetBoxModel().WithNodeID(nodes[0].NodeID).Do(ctxt, h)
 		if err != nil {
 			return err
 		}

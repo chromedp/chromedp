@@ -293,7 +293,7 @@ func NodeVisible(s *Selector) {
 		var err error
 
 		// check box model
-		_, err = dom.GetBoxModel(n.NodeID).Do(ctxt, h)
+		_, err = dom.GetBoxModel().WithNodeID(n.NodeID).Do(ctxt, h)
 		if err != nil {
 			if isCouldNotComputeBoxModelError(err) {
 				return ErrNotVisible
@@ -321,7 +321,7 @@ func NodeNotVisible(s *Selector) {
 		var err error
 
 		// check box model
-		_, err = dom.GetBoxModel(n.NodeID).Do(ctxt, h)
+		_, err = dom.GetBoxModel().WithNodeID(n.NodeID).Do(ctxt, h)
 		if err != nil {
 			if isCouldNotComputeBoxModelError(err) {
 				return nil

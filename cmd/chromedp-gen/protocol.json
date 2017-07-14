@@ -6016,7 +6016,20 @@
             {
               "name": "nodeId",
               "$ref": "NodeId",
-              "description": "Id of the node to focus."
+              "optional": true,
+              "description": "Identifier of the node."
+            },
+            {
+              "name": "backendNodeId",
+              "$ref": "BackendNodeId",
+              "optional": true,
+              "description": "Identifier of the backend node."
+            },
+            {
+              "name": "objectId",
+              "$ref": "Runtime.RemoteObjectId",
+              "optional": true,
+              "description": "JavaScript object id of the node wrapper."
             }
           ],
           "description": "Focuses the given element.",
@@ -6026,17 +6039,30 @@
           "name": "setFileInputFiles",
           "parameters": [
             {
-              "name": "nodeId",
-              "$ref": "NodeId",
-              "description": "Id of the file input node to set files for."
-            },
-            {
               "name": "files",
               "type": "array",
               "items": {
                 "type": "string"
               },
               "description": "Array of file paths to set."
+            },
+            {
+              "name": "nodeId",
+              "$ref": "NodeId",
+              "optional": true,
+              "description": "Identifier of the node."
+            },
+            {
+              "name": "backendNodeId",
+              "$ref": "BackendNodeId",
+              "optional": true,
+              "description": "Identifier of the backend node."
+            },
+            {
+              "name": "objectId",
+              "$ref": "Runtime.RemoteObjectId",
+              "optional": true,
+              "description": "JavaScript object id of the node wrapper."
             }
           ],
           "description": "Sets files for the given file input element.",
@@ -6048,7 +6074,20 @@
             {
               "name": "nodeId",
               "$ref": "NodeId",
-              "description": "Id of the node to get box model for."
+              "optional": true,
+              "description": "Identifier of the node."
+            },
+            {
+              "name": "backendNodeId",
+              "$ref": "BackendNodeId",
+              "optional": true,
+              "description": "Identifier of the backend node."
+            },
+            {
+              "name": "objectId",
+              "$ref": "Runtime.RemoteObjectId",
+              "optional": true,
+              "description": "JavaScript object id of the node wrapper."
             }
           ],
           "returns": [
@@ -7516,6 +7555,30 @@
               "name": "nodeValue",
               "type": "string",
               "description": "<code>Node</code>'s nodeValue."
+            },
+            {
+              "name": "textValue",
+              "type": "string",
+              "optional": true,
+              "description": "Only set for textarea elements, contains the text value."
+            },
+            {
+              "name": "inputValue",
+              "type": "string",
+              "optional": true,
+              "description": "Only set for input elements, contains the input's associated text value."
+            },
+            {
+              "name": "inputChecked",
+              "type": "boolean",
+              "optional": true,
+              "description": "Only set for radio and checkbox input elements, indicates if the element has been checked"
+            },
+            {
+              "name": "optionSelected",
+              "type": "boolean",
+              "optional": true,
+              "description": "Only set for option elements, indicates if the element has been selected"
             },
             {
               "name": "backendNodeId",

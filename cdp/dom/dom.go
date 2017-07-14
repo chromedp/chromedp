@@ -1037,17 +1037,34 @@ func (p *MarkUndoableStateParams) Do(ctxt context.Context, h cdp.Handler) (err e
 
 // FocusParams focuses the given element.
 type FocusParams struct {
-	NodeID cdp.NodeID `json:"nodeId"` // Id of the node to focus.
+	NodeID        cdp.NodeID             `json:"nodeId,omitempty"`        // Identifier of the node.
+	BackendNodeID cdp.BackendNodeID      `json:"backendNodeId,omitempty"` // Identifier of the backend node.
+	ObjectID      runtime.RemoteObjectID `json:"objectId,omitempty"`      // JavaScript object id of the node wrapper.
 }
 
 // Focus focuses the given element.
 //
 // parameters:
-//   nodeID - Id of the node to focus.
-func Focus(nodeID cdp.NodeID) *FocusParams {
-	return &FocusParams{
-		NodeID: nodeID,
-	}
+func Focus() *FocusParams {
+	return &FocusParams{}
+}
+
+// WithNodeID identifier of the node.
+func (p FocusParams) WithNodeID(nodeID cdp.NodeID) *FocusParams {
+	p.NodeID = nodeID
+	return &p
+}
+
+// WithBackendNodeID identifier of the backend node.
+func (p FocusParams) WithBackendNodeID(backendNodeID cdp.BackendNodeID) *FocusParams {
+	p.BackendNodeID = backendNodeID
+	return &p
+}
+
+// WithObjectID javaScript object id of the node wrapper.
+func (p FocusParams) WithObjectID(objectID runtime.RemoteObjectID) *FocusParams {
+	p.ObjectID = objectID
+	return &p
 }
 
 // Do executes DOM.focus against the provided context and
@@ -1058,20 +1075,38 @@ func (p *FocusParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 
 // SetFileInputFilesParams sets files for the given file input element.
 type SetFileInputFilesParams struct {
-	NodeID cdp.NodeID `json:"nodeId"` // Id of the file input node to set files for.
-	Files  []string   `json:"files"`  // Array of file paths to set.
+	Files         []string               `json:"files"`                   // Array of file paths to set.
+	NodeID        cdp.NodeID             `json:"nodeId,omitempty"`        // Identifier of the node.
+	BackendNodeID cdp.BackendNodeID      `json:"backendNodeId,omitempty"` // Identifier of the backend node.
+	ObjectID      runtime.RemoteObjectID `json:"objectId,omitempty"`      // JavaScript object id of the node wrapper.
 }
 
 // SetFileInputFiles sets files for the given file input element.
 //
 // parameters:
-//   nodeID - Id of the file input node to set files for.
 //   files - Array of file paths to set.
-func SetFileInputFiles(nodeID cdp.NodeID, files []string) *SetFileInputFilesParams {
+func SetFileInputFiles(files []string) *SetFileInputFilesParams {
 	return &SetFileInputFilesParams{
-		NodeID: nodeID,
-		Files:  files,
+		Files: files,
 	}
+}
+
+// WithNodeID identifier of the node.
+func (p SetFileInputFilesParams) WithNodeID(nodeID cdp.NodeID) *SetFileInputFilesParams {
+	p.NodeID = nodeID
+	return &p
+}
+
+// WithBackendNodeID identifier of the backend node.
+func (p SetFileInputFilesParams) WithBackendNodeID(backendNodeID cdp.BackendNodeID) *SetFileInputFilesParams {
+	p.BackendNodeID = backendNodeID
+	return &p
+}
+
+// WithObjectID javaScript object id of the node wrapper.
+func (p SetFileInputFilesParams) WithObjectID(objectID runtime.RemoteObjectID) *SetFileInputFilesParams {
+	p.ObjectID = objectID
+	return &p
 }
 
 // Do executes DOM.setFileInputFiles against the provided context and
@@ -1082,17 +1117,34 @@ func (p *SetFileInputFilesParams) Do(ctxt context.Context, h cdp.Handler) (err e
 
 // GetBoxModelParams returns boxes for the currently selected nodes.
 type GetBoxModelParams struct {
-	NodeID cdp.NodeID `json:"nodeId"` // Id of the node to get box model for.
+	NodeID        cdp.NodeID             `json:"nodeId,omitempty"`        // Identifier of the node.
+	BackendNodeID cdp.BackendNodeID      `json:"backendNodeId,omitempty"` // Identifier of the backend node.
+	ObjectID      runtime.RemoteObjectID `json:"objectId,omitempty"`      // JavaScript object id of the node wrapper.
 }
 
 // GetBoxModel returns boxes for the currently selected nodes.
 //
 // parameters:
-//   nodeID - Id of the node to get box model for.
-func GetBoxModel(nodeID cdp.NodeID) *GetBoxModelParams {
-	return &GetBoxModelParams{
-		NodeID: nodeID,
-	}
+func GetBoxModel() *GetBoxModelParams {
+	return &GetBoxModelParams{}
+}
+
+// WithNodeID identifier of the node.
+func (p GetBoxModelParams) WithNodeID(nodeID cdp.NodeID) *GetBoxModelParams {
+	p.NodeID = nodeID
+	return &p
+}
+
+// WithBackendNodeID identifier of the backend node.
+func (p GetBoxModelParams) WithBackendNodeID(backendNodeID cdp.BackendNodeID) *GetBoxModelParams {
+	p.BackendNodeID = backendNodeID
+	return &p
+}
+
+// WithObjectID javaScript object id of the node wrapper.
+func (p GetBoxModelParams) WithObjectID(objectID runtime.RemoteObjectID) *GetBoxModelParams {
+	p.ObjectID = objectID
+	return &p
 }
 
 // GetBoxModelReturns return values.

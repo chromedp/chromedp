@@ -65,7 +65,7 @@ func MouseClickNode(n *cdp.Node, opts ...MouseOption) Action {
 			return err
 		}
 
-		box, err := dom.GetBoxModel(n.NodeID).Do(ctxt, h)
+		box, err := dom.GetBoxModel().WithNodeID(n.NodeID).Do(ctxt, h)
 		if err != nil {
 			return err
 		}
@@ -174,7 +174,7 @@ func KeyAction(keys string, opts ...KeyOption) Action {
 // KeyActionNode dispatches a key event on a node.
 func KeyActionNode(n *cdp.Node, keys string, opts ...KeyOption) Action {
 	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
-		err := dom.Focus(n.NodeID).Do(ctxt, h)
+		err := dom.Focus().WithNodeID(n.NodeID).Do(ctxt, h)
 		if err != nil {
 			return err
 		}

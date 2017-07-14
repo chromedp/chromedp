@@ -600,6 +600,14 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpDomsnapshot4(in *jlexer.Lexer,
 			out.NodeName = string(in.String())
 		case "nodeValue":
 			out.NodeValue = string(in.String())
+		case "textValue":
+			out.TextValue = string(in.String())
+		case "inputValue":
+			out.InputValue = string(in.String())
+		case "inputChecked":
+			out.InputChecked = bool(in.Bool())
+		case "optionSelected":
+			out.OptionSelected = bool(in.Bool())
 		case "backendNodeId":
 			(out.BackendNodeID).UnmarshalEasyJSON(in)
 		case "childNodeIndexes":
@@ -735,6 +743,38 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDomsnapshot4(out *jwriter.Writ
 	first = false
 	out.RawString("\"nodeValue\":")
 	out.String(string(in.NodeValue))
+	if in.TextValue != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"textValue\":")
+		out.String(string(in.TextValue))
+	}
+	if in.InputValue != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"inputValue\":")
+		out.String(string(in.InputValue))
+	}
+	if in.InputChecked {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"inputChecked\":")
+		out.Bool(bool(in.InputChecked))
+	}
+	if in.OptionSelected {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"optionSelected\":")
+		out.Bool(bool(in.OptionSelected))
+	}
 	if !first {
 		out.RawByte(',')
 	}
