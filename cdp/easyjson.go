@@ -910,6 +910,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdp4(in *jlexer.Lexer, out *Frame
 			out.SecurityOrigin = string(in.String())
 		case "mimeType":
 			out.MimeType = string(in.String())
+		case "unreachableUrl":
+			out.UnreachableURL = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -970,6 +972,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdp4(out *jwriter.Writer, in Fram
 	first = false
 	out.RawString("\"mimeType\":")
 	out.String(string(in.MimeType))
+	if in.UnreachableURL != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"unreachableUrl\":")
+		out.String(string(in.UnreachableURL))
+	}
 	out.RawByte('}')
 }
 

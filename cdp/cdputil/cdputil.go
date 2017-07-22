@@ -482,6 +482,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandCacheStorageDeleteEntry:
 		return emptyVal, nil
 
+	case cdp.CommandCacheStorageRequestCachedResponse:
+		v = new(cachestorage.RequestCachedResponseReturns)
+
 	case cdp.CommandDOMStorageEnable:
 		return emptyVal, nil
 
@@ -766,6 +769,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 
 	case cdp.CommandIOClose:
 		return emptyVal, nil
+
+	case cdp.CommandIOResolveBlob:
+		v = new(iodom.ResolveBlobReturns)
 
 	case cdp.CommandDOMDebuggerSetDOMBreakpoint:
 		return emptyVal, nil

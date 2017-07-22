@@ -12,6 +12,7 @@ import (
 	"context"
 
 	cdp "github.com/knq/chromedp/cdp"
+	"github.com/knq/chromedp/cdp/runtime"
 )
 
 // ReadParams read a chunk of the stream.
@@ -87,4 +88,41 @@ func Close(handle StreamHandle) *CloseParams {
 // target handler.
 func (p *CloseParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandIOClose, p, nil)
+}
+
+// ResolveBlobParams return UUID of Blob object specified by a remote object
+// id.
+type ResolveBlobParams struct {
+	ObjectID runtime.RemoteObjectID `json:"objectId"` // Object id of a Blob object wrapper.
+}
+
+// ResolveBlob return UUID of Blob object specified by a remote object id.
+//
+// parameters:
+//   objectID - Object id of a Blob object wrapper.
+func ResolveBlob(objectID runtime.RemoteObjectID) *ResolveBlobParams {
+	return &ResolveBlobParams{
+		ObjectID: objectID,
+	}
+}
+
+// ResolveBlobReturns return values.
+type ResolveBlobReturns struct {
+	UUID string `json:"uuid,omitempty"` // UUID of the specified Blob.
+}
+
+// Do executes IO.resolveBlob against the provided context and
+// target handler.
+//
+// returns:
+//   uuid - UUID of the specified Blob.
+func (p *ResolveBlobParams) Do(ctxt context.Context, h cdp.Handler) (uuid string, err error) {
+	// execute
+	var res ResolveBlobReturns
+	err = h.Execute(ctxt, cdp.CommandIOResolveBlob, p, &res)
+	if err != nil {
+		return "", err
+	}
+
+	return res.UUID, nil
 }

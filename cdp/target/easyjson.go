@@ -356,10 +356,10 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpTarget4(in *jlexer.Lexer, out 
 			continue
 		}
 		switch key {
-		case "targetId":
-			out.TargetID = ID(in.String())
 		case "message":
 			out.Message = string(in.String())
+		case "sessionId":
+			out.SessionID = SessionID(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -378,14 +378,16 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpTarget4(out *jwriter.Writer, i
 		out.RawByte(',')
 	}
 	first = false
-	out.RawString("\"targetId\":")
-	out.String(string(in.TargetID))
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
 	out.RawString("\"message\":")
 	out.String(string(in.Message))
+	if in.SessionID != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"sessionId\":")
+		out.String(string(in.SessionID))
+	}
 	out.RawByte('}')
 }
 
@@ -1150,8 +1152,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpTarget14(in *jlexer.Lexer, out
 			continue
 		}
 		switch key {
-		case "targetId":
-			out.TargetID = ID(in.String())
+		case "sessionId":
+			out.SessionID = SessionID(in.String())
 		case "message":
 			out.Message = string(in.String())
 		default:
@@ -1172,8 +1174,8 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpTarget14(out *jwriter.Writer, 
 		out.RawByte(',')
 	}
 	first = false
-	out.RawString("\"targetId\":")
-	out.String(string(in.TargetID))
+	out.RawString("\"sessionId\":")
+	out.String(string(in.SessionID))
 	if !first {
 		out.RawByte(',')
 	}
@@ -1225,8 +1227,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpTarget15(in *jlexer.Lexer, out
 			continue
 		}
 		switch key {
-		case "targetId":
-			out.TargetID = ID(in.String())
+		case "sessionId":
+			out.SessionID = SessionID(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -1245,8 +1247,8 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpTarget15(out *jwriter.Writer, 
 		out.RawByte(',')
 	}
 	first = false
-	out.RawString("\"targetId\":")
-	out.String(string(in.TargetID))
+	out.RawString("\"sessionId\":")
+	out.String(string(in.SessionID))
 	out.RawByte('}')
 }
 
@@ -1292,6 +1294,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpTarget16(in *jlexer.Lexer, out
 			continue
 		}
 		switch key {
+		case "sessionId":
+			out.SessionID = SessionID(in.String())
 		case "targetInfo":
 			if in.IsNull() {
 				in.Skip()
@@ -1318,6 +1322,12 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpTarget16(out *jwriter.Writer, 
 	out.RawByte('{')
 	first := true
 	_ = first
+	if !first {
+		out.RawByte(',')
+	}
+	first = false
+	out.RawString("\"sessionId\":")
+	out.String(string(in.SessionID))
 	if !first {
 		out.RawByte(',')
 	}
@@ -1515,8 +1525,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpTarget19(in *jlexer.Lexer, out
 			continue
 		}
 		switch key {
-		case "targetId":
-			out.TargetID = ID(in.String())
+		case "sessionId":
+			out.SessionID = SessionID(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -1531,12 +1541,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpTarget19(out *jwriter.Writer, 
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	if in.SessionID != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"sessionId\":")
+		out.String(string(in.SessionID))
 	}
-	first = false
-	out.RawString("\"targetId\":")
-	out.String(string(in.TargetID))
 	out.RawByte('}')
 }
 
@@ -2012,8 +2024,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpTarget26(in *jlexer.Lexer, out
 			continue
 		}
 		switch key {
-		case "success":
-			out.Success = bool(in.Bool())
+		case "sessionId":
+			out.SessionID = SessionID(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -2028,13 +2040,13 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpTarget26(out *jwriter.Writer, 
 	out.RawByte('{')
 	first := true
 	_ = first
-	if in.Success {
+	if in.SessionID != "" {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
-		out.RawString("\"success\":")
-		out.Bool(bool(in.Success))
+		out.RawString("\"sessionId\":")
+		out.String(string(in.SessionID))
 	}
 	out.RawByte('}')
 }

@@ -19,17 +19,17 @@ import (
 // window.innerHeight, and "device-width"/"device-height"-related CSS media
 // query results).
 type SetDeviceMetricsOverrideParams struct {
-	Width             int64              `json:"width"`                       // Overriding width value in pixels (minimum 0, maximum 10000000). 0 disables the override.
-	Height            int64              `json:"height"`                      // Overriding height value in pixels (minimum 0, maximum 10000000). 0 disables the override.
-	DeviceScaleFactor float64            `json:"deviceScaleFactor"`           // Overriding device scale factor value. 0 disables the override.
-	Mobile            bool               `json:"mobile"`                      // Whether to emulate mobile device. This includes viewport meta tag, overlay scrollbars, text autosizing and more.
-	FitWindow         bool               `json:"fitWindow,omitempty"`         // Whether a view that exceeds the available browser window area should be scaled down to fit.
-	Scale             float64            `json:"scale,omitempty"`             // Scale to apply to resulting view image. Ignored in |fitWindow| mode.
-	ScreenWidth       int64              `json:"screenWidth,omitempty"`       // Overriding screen width value in pixels (minimum 0, maximum 10000000). Only used for |mobile==true|.
-	ScreenHeight      int64              `json:"screenHeight,omitempty"`      // Overriding screen height value in pixels (minimum 0, maximum 10000000). Only used for |mobile==true|.
-	PositionX         int64              `json:"positionX,omitempty"`         // Overriding view X position on screen in pixels (minimum 0, maximum 10000000). Only used for |mobile==true|.
-	PositionY         int64              `json:"positionY,omitempty"`         // Overriding view Y position on screen in pixels (minimum 0, maximum 10000000). Only used for |mobile==true|.
-	ScreenOrientation *ScreenOrientation `json:"screenOrientation,omitempty"` // Screen orientation override.
+	Width              int64              `json:"width"`                        // Overriding width value in pixels (minimum 0, maximum 10000000). 0 disables the override.
+	Height             int64              `json:"height"`                       // Overriding height value in pixels (minimum 0, maximum 10000000). 0 disables the override.
+	DeviceScaleFactor  float64            `json:"deviceScaleFactor"`            // Overriding device scale factor value. 0 disables the override.
+	Mobile             bool               `json:"mobile"`                       // Whether to emulate mobile device. This includes viewport meta tag, overlay scrollbars, text autosizing and more.
+	Scale              float64            `json:"scale,omitempty"`              // Scale to apply to resulting view image. Ignored in |fitWindow| mode.
+	ScreenWidth        int64              `json:"screenWidth,omitempty"`        // Overriding screen width value in pixels (minimum 0, maximum 10000000). Only used for |mobile==true|.
+	ScreenHeight       int64              `json:"screenHeight,omitempty"`       // Overriding screen height value in pixels (minimum 0, maximum 10000000). Only used for |mobile==true|.
+	PositionX          int64              `json:"positionX,omitempty"`          // Overriding view X position on screen in pixels (minimum 0, maximum 10000000). Only used for |mobile==true|.
+	PositionY          int64              `json:"positionY,omitempty"`          // Overriding view Y position on screen in pixels (minimum 0, maximum 10000000). Only used for |mobile==true|.
+	DontSetVisibleSize bool               `json:"dontSetVisibleSize,omitempty"` // Do not set visible view size, rely upon explicit setVisibleSize call.
+	ScreenOrientation  *ScreenOrientation `json:"screenOrientation,omitempty"`  // Screen orientation override.
 }
 
 // SetDeviceMetricsOverride overrides the values of device screen dimensions
@@ -49,13 +49,6 @@ func SetDeviceMetricsOverride(width int64, height int64, deviceScaleFactor float
 		DeviceScaleFactor: deviceScaleFactor,
 		Mobile:            mobile,
 	}
-}
-
-// WithFitWindow whether a view that exceeds the available browser window
-// area should be scaled down to fit.
-func (p SetDeviceMetricsOverrideParams) WithFitWindow(fitWindow bool) *SetDeviceMetricsOverrideParams {
-	p.FitWindow = fitWindow
-	return &p
 }
 
 // WithScale scale to apply to resulting view image. Ignored in |fitWindow|
@@ -90,6 +83,13 @@ func (p SetDeviceMetricsOverrideParams) WithPositionX(positionX int64) *SetDevic
 // maximum 10000000). Only used for |mobile==true|.
 func (p SetDeviceMetricsOverrideParams) WithPositionY(positionY int64) *SetDeviceMetricsOverrideParams {
 	p.PositionY = positionY
+	return &p
+}
+
+// WithDontSetVisibleSize do not set visible view size, rely upon explicit
+// setVisibleSize call.
+func (p SetDeviceMetricsOverrideParams) WithDontSetVisibleSize(dontSetVisibleSize bool) *SetDeviceMetricsOverrideParams {
+	p.DontSetVisibleSize = dontSetVisibleSize
 	return &p
 }
 

@@ -10,6 +10,14 @@ func (t ID) String() string {
 	return string(t)
 }
 
+// SessionID unique identifier of attached debugging session.
+type SessionID string
+
+// String returns the SessionID as string value.
+func (t SessionID) String() string {
+	return string(t)
+}
+
 // BrowserContextID [no description].
 type BrowserContextID string
 

@@ -193,6 +193,7 @@ const (
 	CommandCacheStorageRequestEntries                      MethodType = "CacheStorage.requestEntries"
 	CommandCacheStorageDeleteCache                         MethodType = "CacheStorage.deleteCache"
 	CommandCacheStorageDeleteEntry                         MethodType = "CacheStorage.deleteEntry"
+	CommandCacheStorageRequestCachedResponse               MethodType = "CacheStorage.requestCachedResponse"
 	EventDOMStorageDomStorageItemsCleared                  MethodType = "DOMStorage.domStorageItemsCleared"
 	EventDOMStorageDomStorageItemRemoved                   MethodType = "DOMStorage.domStorageItemRemoved"
 	EventDOMStorageDomStorageItemAdded                     MethodType = "DOMStorage.domStorageItemAdded"
@@ -288,6 +289,7 @@ const (
 	CommandDOMSnapshotGetSnapshot                          MethodType = "DOMSnapshot.getSnapshot"
 	CommandIORead                                          MethodType = "IO.read"
 	CommandIOClose                                         MethodType = "IO.close"
+	CommandIOResolveBlob                                   MethodType = "IO.resolveBlob"
 	CommandDOMDebuggerSetDOMBreakpoint                     MethodType = "DOMDebugger.setDOMBreakpoint"
 	CommandDOMDebuggerRemoveDOMBreakpoint                  MethodType = "DOMDebugger.removeDOMBreakpoint"
 	CommandDOMDebuggerSetEventListenerBreakpoint           MethodType = "DOMDebugger.setEventListenerBreakpoint"
@@ -770,6 +772,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandCacheStorageDeleteCache
 	case CommandCacheStorageDeleteEntry:
 		*t = CommandCacheStorageDeleteEntry
+	case CommandCacheStorageRequestCachedResponse:
+		*t = CommandCacheStorageRequestCachedResponse
 	case EventDOMStorageDomStorageItemsCleared:
 		*t = EventDOMStorageDomStorageItemsCleared
 	case EventDOMStorageDomStorageItemRemoved:
@@ -960,6 +964,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandIORead
 	case CommandIOClose:
 		*t = CommandIOClose
+	case CommandIOResolveBlob:
+		*t = CommandIOResolveBlob
 	case CommandDOMDebuggerSetDOMBreakpoint:
 		*t = CommandDOMDebuggerSetDOMBreakpoint
 	case CommandDOMDebuggerRemoveDOMBreakpoint:
@@ -1435,16 +1441,17 @@ func (t *FrameID) UnmarshalJSON(buf []byte) error {
 
 // Frame information about the Frame on the page.
 type Frame struct {
-	ID             FrameID          `json:"id"`                 // Frame unique identifier.
-	ParentID       FrameID          `json:"parentId,omitempty"` // Parent frame identifier.
-	LoaderID       LoaderID         `json:"loaderId"`           // Identifier of the loader associated with this frame.
-	Name           string           `json:"name,omitempty"`     // Frame's name as specified in the tag.
-	URL            string           `json:"url"`                // Frame document's URL.
-	SecurityOrigin string           `json:"securityOrigin"`     // Frame document's security origin.
-	MimeType       string           `json:"mimeType"`           // Frame document's mimeType as determined by the browser.
-	State          FrameState       `json:"-"`                  // Frame state.
-	Root           *Node            `json:"-"`                  // Frame document root.
-	Nodes          map[NodeID]*Node `json:"-"`                  // Frame nodes.
+	ID             FrameID          `json:"id"`                       // Frame unique identifier.
+	ParentID       FrameID          `json:"parentId,omitempty"`       // Parent frame identifier.
+	LoaderID       LoaderID         `json:"loaderId"`                 // Identifier of the loader associated with this frame.
+	Name           string           `json:"name,omitempty"`           // Frame's name as specified in the tag.
+	URL            string           `json:"url"`                      // Frame document's URL.
+	SecurityOrigin string           `json:"securityOrigin"`           // Frame document's security origin.
+	MimeType       string           `json:"mimeType"`                 // Frame document's mimeType as determined by the browser.
+	UnreachableURL string           `json:"unreachableUrl,omitempty"` // If the frame failed to load, this contains the URL that could not be loaded.
+	State          FrameState       `json:"-"`                        // Frame state.
+	Root           *Node            `json:"-"`                        // Frame document root.
+	Nodes          map[NodeID]*Node `json:"-"`                        // Frame nodes.
 	sync.RWMutex   `json:"-"`       // Read write mutex.
 }
 

@@ -489,8 +489,6 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpEmulation6(in *jlexer.Lexer, o
 			out.DeviceScaleFactor = float64(in.Float64())
 		case "mobile":
 			out.Mobile = bool(in.Bool())
-		case "fitWindow":
-			out.FitWindow = bool(in.Bool())
 		case "scale":
 			out.Scale = float64(in.Float64())
 		case "screenWidth":
@@ -501,6 +499,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpEmulation6(in *jlexer.Lexer, o
 			out.PositionX = int64(in.Int64())
 		case "positionY":
 			out.PositionY = int64(in.Int64())
+		case "dontSetVisibleSize":
+			out.DontSetVisibleSize = bool(in.Bool())
 		case "screenOrientation":
 			if in.IsNull() {
 				in.Skip()
@@ -549,14 +549,6 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpEmulation6(out *jwriter.Writer
 	first = false
 	out.RawString("\"mobile\":")
 	out.Bool(bool(in.Mobile))
-	if in.FitWindow {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"fitWindow\":")
-		out.Bool(bool(in.FitWindow))
-	}
 	if in.Scale != 0 {
 		if !first {
 			out.RawByte(',')
@@ -596,6 +588,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpEmulation6(out *jwriter.Writer
 		first = false
 		out.RawString("\"positionY\":")
 		out.Int64(int64(in.PositionY))
+	}
+	if in.DontSetVisibleSize {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"dontSetVisibleSize\":")
+		out.Bool(bool(in.DontSetVisibleSize))
 	}
 	if in.ScreenOrientation != nil {
 		if !first {

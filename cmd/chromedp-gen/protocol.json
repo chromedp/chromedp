@@ -167,6 +167,13 @@
               "name": "mimeType",
               "type": "string",
               "description": "Frame document's mimeType as determined by the browser."
+            },
+            {
+              "name": "unreachableUrl",
+              "type": "string",
+              "optional": true,
+              "experimental": true,
+              "description": "If the frame failed to load, this contains the URL that could not be loaded."
             }
           ]
         },
@@ -843,28 +850,10 @@
               "description": "Whether to emulate mobile device. This includes viewport meta tag, overlay scrollbars, text autosizing and more."
             },
             {
-              "name": "fitWindow",
-              "type": "boolean",
-              "optional": true,
-              "description": "Whether a view that exceeds the available browser window area should be scaled down to fit."
-            },
-            {
               "name": "scale",
               "type": "number",
               "optional": true,
               "description": "Scale to apply to resulting view image. Ignored in |fitWindow| mode."
-            },
-            {
-              "name": "offsetX",
-              "type": "number",
-              "optional": true,
-              "description": "X offset to shift resulting view image by. Ignored in |fitWindow| mode."
-            },
-            {
-              "name": "offsetY",
-              "type": "number",
-              "optional": true,
-              "description": "Y offset to shift resulting view image by. Ignored in |fitWindow| mode."
             },
             {
               "name": "screenWidth",
@@ -889,6 +878,12 @@
               "type": "integer",
               "optional": true,
               "description": "Overriding view Y position on screen in pixels (minimum 0, maximum 10000000). Only used for |mobile==true|."
+            },
+            {
+              "name": "dontSetVisibleSize",
+              "type": "boolean",
+              "optional": true,
+              "description": "Do not set visible view size, rely upon explicit setVisibleSize call."
             },
             {
               "name": "screenOrientation",
@@ -1101,6 +1096,12 @@
               "type": "string",
               "optional": true,
               "description": "Paper ranges to print, e.g., '1-5, 8, 11-13'. Defaults to the empty string, which means print all pages."
+            },
+            {
+              "name": "ignoreInvalidPageRanges",
+              "type": "boolean",
+              "optional": true,
+              "description": "Whether to silently ignore invalid but successfully parsed page ranges, such as '3-2'. Defaults to false."
             }
           ],
           "returns": [
@@ -1940,33 +1941,10 @@
               "description": "Whether to emulate mobile device. This includes viewport meta tag, overlay scrollbars, text autosizing and more."
             },
             {
-              "name": "fitWindow",
-              "type": "boolean",
-              "optional": true,
-              "description": "Whether a view that exceeds the available browser window area should be scaled down to fit."
-            },
-            {
               "name": "scale",
               "type": "number",
               "optional": true,
-              "experimental": true,
               "description": "Scale to apply to resulting view image. Ignored in |fitWindow| mode."
-            },
-            {
-              "name": "offsetX",
-              "type": "number",
-              "optional": true,
-              "deprecated": true,
-              "experimental": true,
-              "description": "Not used."
-            },
-            {
-              "name": "offsetY",
-              "type": "number",
-              "optional": true,
-              "deprecated": true,
-              "experimental": true,
-              "description": "Not used."
             },
             {
               "name": "screenWidth",
@@ -1995,6 +1973,13 @@
               "optional": true,
               "experimental": true,
               "description": "Overriding view Y position on screen in pixels (minimum 0, maximum 10000000). Only used for |mobile==true|."
+            },
+            {
+              "name": "dontSetVisibleSize",
+              "type": "boolean",
+              "optional": true,
+              "experimental": true,
+              "description": "Do not set visible view size, rely upon explicit setVisibleSize call."
             },
             {
               "name": "screenOrientation",
@@ -2027,7 +2012,7 @@
         },
         {
           "name": "setVisibleSize",
-          "description": "Deprecated, does nothing. Please use setDeviceMetricsOverride instead.",
+          "description": "Resizes the frame/viewport of the page. Note that this does not affect the frame's container (e.g. browser window). Can be used to produce screenshots of the specified size. Not supported on Android.",
           "experimental": true,
           "deprecated": true,
           "parameters": [
@@ -4585,6 +4570,23 @@
               "description": "The name of the cache."
             }
           ]
+        },
+        {
+          "id": "CachedResponse",
+          "type": "object",
+          "description": "Cached response",
+          "properties": [
+            {
+              "name": "headers",
+              "type": "object",
+              "description": "Response headers"
+            },
+            {
+              "name": "body",
+              "type": "string",
+              "description": "Entry content, base64-encoded."
+            }
+          ]
         }
       ],
       "commands": [
@@ -4671,6 +4673,29 @@
             }
           ],
           "description": "Deletes a cache entry."
+        },
+        {
+          "name": "requestCachedResponse",
+          "parameters": [
+            {
+              "name": "cacheId",
+              "$ref": "CacheId",
+              "description": "Id of cache that contains the enty."
+            },
+            {
+              "name": "requestURL",
+              "type": "string",
+              "description": "URL spec of the request."
+            }
+          ],
+          "returns": [
+            {
+              "name": "response",
+              "$ref": "CachedResponse",
+              "description": "Response read from the cache."
+            }
+          ],
+          "description": "Fetches cache entry."
         }
       ]
     },
@@ -7804,6 +7829,9 @@
     {
       "domain": "IO",
       "description": "Input/Output operations for streams produced by DevTools.",
+      "dependencies": [
+        "Runtime"
+      ],
       "experimental": true,
       "types": [
         {
@@ -7857,6 +7885,24 @@
               "description": "Handle of the stream to close."
             }
           ]
+        },
+        {
+          "name": "resolveBlob",
+          "parameters": [
+            {
+              "name": "objectId",
+              "$ref": "Runtime.RemoteObjectId",
+              "description": "Object id of a Blob object wrapper."
+            }
+          ],
+          "returns": [
+            {
+              "name": "uuid",
+              "type": "string",
+              "description": "UUID of the specified Blob."
+            }
+          ],
+          "description": "Return UUID of Blob object specified by a remote object id."
         }
       ]
     },
@@ -8103,6 +8149,11 @@
           "type": "string"
         },
         {
+          "id": "SessionID",
+          "type": "string",
+          "description": "Unique identifier of attached debugging session."
+        },
+        {
           "id": "BrowserContextID",
           "type": "string"
         },
@@ -8202,15 +8253,24 @@
         },
         {
           "name": "sendMessageToTarget",
-          "description": "Sends protocol message to the target with given id.",
+          "description": "Sends protocol message over session with given id.",
           "parameters": [
-            {
-              "name": "targetId",
-              "$ref": "TargetID"
-            },
             {
               "name": "message",
               "type": "string"
+            },
+            {
+              "name": "sessionId",
+              "$ref": "SessionID",
+              "optional": true,
+              "description": "Identifier of the session."
+            },
+            {
+              "name": "targetId",
+              "$ref": "TargetID",
+              "optional": true,
+              "deprecated": true,
+              "description": "Deprecated."
             }
           ]
         },
@@ -8267,19 +8327,28 @@
           ],
           "returns": [
             {
-              "name": "success",
-              "type": "boolean",
-              "description": "Whether attach succeeded."
+              "name": "sessionId",
+              "$ref": "SessionID",
+              "description": "Id assigned to the session."
             }
           ]
         },
         {
           "name": "detachFromTarget",
-          "description": "Detaches from the target with given id.",
+          "description": "Detaches session with given id.",
           "parameters": [
             {
+              "name": "sessionId",
+              "$ref": "SessionID",
+              "optional": true,
+              "description": "Session to detach."
+            },
+            {
               "name": "targetId",
-              "$ref": "TargetID"
+              "$ref": "TargetID",
+              "optional": true,
+              "deprecated": true,
+              "description": "Deprecated."
             }
           ]
         },
@@ -8397,6 +8466,11 @@
           "description": "Issued when attached to target because of auto-attach or <code>attachToTarget</code> command.",
           "parameters": [
             {
+              "name": "sessionId",
+              "$ref": "SessionID",
+              "description": "Identifier assigned to the session used to send/receive messages."
+            },
+            {
               "name": "targetInfo",
               "$ref": "TargetInfo"
             },
@@ -8408,25 +8482,41 @@
         },
         {
           "name": "detachedFromTarget",
-          "description": "Issued when detached from target for any reason (including <code>detachFromTarget</code> command).",
+          "description": "Issued when detached from target for any reason (including <code>detachFromTarget</code> command). Can be issued multiple times per target if multiple sessions have been attached to it.",
           "parameters": [
             {
+              "name": "sessionId",
+              "$ref": "SessionID",
+              "description": "Detached session identifier."
+            },
+            {
               "name": "targetId",
-              "$ref": "TargetID"
+              "$ref": "TargetID",
+              "optional": true,
+              "deprecated": true,
+              "description": "Deprecated."
             }
           ]
         },
         {
           "name": "receivedMessageFromTarget",
-          "description": "Notifies about new protocol message from attached target.",
+          "description": "Notifies about a new protocol message received from the session (as reported in <code>attachedToTarget</code> event).",
           "parameters": [
             {
-              "name": "targetId",
-              "$ref": "TargetID"
+              "name": "sessionId",
+              "$ref": "SessionID",
+              "description": "Identifier of a session which sends a message."
             },
             {
               "name": "message",
               "type": "string"
+            },
+            {
+              "name": "targetId",
+              "$ref": "TargetID",
+              "optional": true,
+              "deprecated": true,
+              "description": "Deprecated."
             }
           ]
         }

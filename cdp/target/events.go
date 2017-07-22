@@ -25,21 +25,23 @@ type EventTargetDestroyed struct {
 // EventAttachedToTarget issued when attached to target because of
 // auto-attach or attachToTarget command.
 type EventAttachedToTarget struct {
-	TargetInfo         *Info `json:"targetInfo"`
-	WaitingForDebugger bool  `json:"waitingForDebugger"`
+	SessionID          SessionID `json:"sessionId"` // Identifier assigned to the session used to send/receive messages.
+	TargetInfo         *Info     `json:"targetInfo"`
+	WaitingForDebugger bool      `json:"waitingForDebugger"`
 }
 
 // EventDetachedFromTarget issued when detached from target for any reason
-// (including detachFromTarget command).
+// (including detachFromTarget command). Can be issued multiple times per target
+// if multiple sessions have been attached to it.
 type EventDetachedFromTarget struct {
-	TargetID ID `json:"targetId"`
+	SessionID SessionID `json:"sessionId"` // Detached session identifier.
 }
 
-// EventReceivedMessageFromTarget notifies about new protocol message from
-// attached target.
+// EventReceivedMessageFromTarget notifies about a new protocol message
+// received from the session (as reported in attachedToTarget event).
 type EventReceivedMessageFromTarget struct {
-	TargetID ID     `json:"targetId"`
-	Message  string `json:"message"`
+	SessionID SessionID `json:"sessionId"` // Identifier of a session which sends a message.
+	Message   string    `json:"message"`
 }
 
 // EventTypes all event types in the domain.

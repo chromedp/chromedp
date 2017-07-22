@@ -111,23 +111,27 @@ func (p *SetRemoteLocationsParams) Do(ctxt context.Context, h cdp.Handler) (err 
 	return h.Execute(ctxt, cdp.CommandTargetSetRemoteLocations, p, nil)
 }
 
-// SendMessageToTargetParams sends protocol message to the target with given
+// SendMessageToTargetParams sends protocol message over session with given
 // id.
 type SendMessageToTargetParams struct {
-	TargetID ID     `json:"targetId"`
-	Message  string `json:"message"`
+	Message   string    `json:"message"`
+	SessionID SessionID `json:"sessionId,omitempty"` // Identifier of the session.
 }
 
-// SendMessageToTarget sends protocol message to the target with given id.
+// SendMessageToTarget sends protocol message over session with given id.
 //
 // parameters:
-//   targetID
 //   message
-func SendMessageToTarget(targetID ID, message string) *SendMessageToTargetParams {
+func SendMessageToTarget(message string) *SendMessageToTargetParams {
 	return &SendMessageToTargetParams{
-		TargetID: targetID,
-		Message:  message,
+		Message: message,
 	}
+}
+
+// WithSessionID identifier of the session.
+func (p SendMessageToTargetParams) WithSessionID(sessionID SessionID) *SendMessageToTargetParams {
+	p.SessionID = sessionID
+	return &p
 }
 
 // Do executes Target.sendMessageToTarget against the provided context and
@@ -248,38 +252,41 @@ func AttachToTarget(targetID ID) *AttachToTargetParams {
 
 // AttachToTargetReturns return values.
 type AttachToTargetReturns struct {
-	Success bool `json:"success,omitempty"` // Whether attach succeeded.
+	SessionID SessionID `json:"sessionId,omitempty"` // Id assigned to the session.
 }
 
 // Do executes Target.attachToTarget against the provided context and
 // target handler.
 //
 // returns:
-//   success - Whether attach succeeded.
-func (p *AttachToTargetParams) Do(ctxt context.Context, h cdp.Handler) (success bool, err error) {
+//   sessionID - Id assigned to the session.
+func (p *AttachToTargetParams) Do(ctxt context.Context, h cdp.Handler) (sessionID SessionID, err error) {
 	// execute
 	var res AttachToTargetReturns
 	err = h.Execute(ctxt, cdp.CommandTargetAttachToTarget, p, &res)
 	if err != nil {
-		return false, err
+		return "", err
 	}
 
-	return res.Success, nil
+	return res.SessionID, nil
 }
 
-// DetachFromTargetParams detaches from the target with given id.
+// DetachFromTargetParams detaches session with given id.
 type DetachFromTargetParams struct {
-	TargetID ID `json:"targetId"`
+	SessionID SessionID `json:"sessionId,omitempty"` // Session to detach.
 }
 
-// DetachFromTarget detaches from the target with given id.
+// DetachFromTarget detaches session with given id.
 //
 // parameters:
-//   targetID
-func DetachFromTarget(targetID ID) *DetachFromTargetParams {
-	return &DetachFromTargetParams{
-		TargetID: targetID,
-	}
+func DetachFromTarget() *DetachFromTargetParams {
+	return &DetachFromTargetParams{}
+}
+
+// WithSessionID session to detach.
+func (p DetachFromTargetParams) WithSessionID(sessionID SessionID) *DetachFromTargetParams {
+	p.SessionID = sessionID
+	return &p
 }
 
 // Do executes Target.detachFromTarget against the provided context and

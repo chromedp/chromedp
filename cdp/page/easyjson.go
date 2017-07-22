@@ -1473,6 +1473,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage17(in *jlexer.Lexer, out *
 			out.MarginRight = float64(in.Float64())
 		case "pageRanges":
 			out.PageRanges = string(in.String())
+		case "ignoreInvalidPageRanges":
+			out.IgnoreInvalidPageRanges = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -1574,6 +1576,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage17(out *jwriter.Writer, in
 		first = false
 		out.RawString("\"pageRanges\":")
 		out.String(string(in.PageRanges))
+	}
+	if in.IgnoreInvalidPageRanges {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"ignoreInvalidPageRanges\":")
+		out.Bool(bool(in.IgnoreInvalidPageRanges))
 	}
 	out.RawByte('}')
 }

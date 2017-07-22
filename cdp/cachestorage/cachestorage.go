@@ -136,3 +136,42 @@ func DeleteEntry(cacheID CacheID, request string) *DeleteEntryParams {
 func (p *DeleteEntryParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandCacheStorageDeleteEntry, p, nil)
 }
+
+// RequestCachedResponseParams fetches cache entry.
+type RequestCachedResponseParams struct {
+	CacheID    CacheID `json:"cacheId"`    // Id of cache that contains the enty.
+	RequestURL string  `json:"requestURL"` // URL spec of the request.
+}
+
+// RequestCachedResponse fetches cache entry.
+//
+// parameters:
+//   cacheID - Id of cache that contains the enty.
+//   requestURL - URL spec of the request.
+func RequestCachedResponse(cacheID CacheID, requestURL string) *RequestCachedResponseParams {
+	return &RequestCachedResponseParams{
+		CacheID:    cacheID,
+		RequestURL: requestURL,
+	}
+}
+
+// RequestCachedResponseReturns return values.
+type RequestCachedResponseReturns struct {
+	Response *CachedResponse `json:"response,omitempty"` // Response read from the cache.
+}
+
+// Do executes CacheStorage.requestCachedResponse against the provided context and
+// target handler.
+//
+// returns:
+//   response - Response read from the cache.
+func (p *RequestCachedResponseParams) Do(ctxt context.Context, h cdp.Handler) (response *CachedResponse, err error) {
+	// execute
+	var res RequestCachedResponseReturns
+	err = h.Execute(ctxt, cdp.CommandCacheStorageRequestCachedResponse, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Response, nil
+}
