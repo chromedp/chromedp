@@ -4,6 +4,7 @@ package overlay
 
 import (
 	cdp "github.com/knq/chromedp/cdp"
+	"github.com/knq/chromedp/cdp/page"
 )
 
 // EventNodeHighlightRequested fired when the node should be highlighted.
@@ -19,8 +20,15 @@ type EventInspectNodeRequested struct {
 	BackendNodeID cdp.BackendNodeID `json:"backendNodeId"` // Id of the node to inspect.
 }
 
+// EventScreenshotRequested fired when user asks to capture screenshot of
+// some area on the page.
+type EventScreenshotRequested struct {
+	Viewport *page.Viewport `json:"viewport"` // Viewport to capture, in CSS.
+}
+
 // EventTypes all event types in the domain.
 var EventTypes = []cdp.MethodType{
 	cdp.EventOverlayNodeHighlightRequested,
 	cdp.EventOverlayInspectNodeRequested,
+	cdp.EventOverlayScreenshotRequested,
 }

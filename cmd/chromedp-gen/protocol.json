@@ -620,6 +620,18 @@
           "description": "Reloads given page optionally ignoring the cache."
         },
         {
+          "name": "setAdBlockingEnabled",
+          "description": "Enable Chrome's experimental ad filter on all sites.",
+          "parameters": [
+            {
+              "name": "enabled",
+              "type": "boolean",
+              "description": "Whether to block ads."
+            }
+          ],
+          "experimental": true
+        },
+        {
           "name": "navigate",
           "parameters": [
             {
@@ -1294,6 +1306,10 @@
               "description": "Execution context of the isolated world."
             }
           ]
+        },
+        {
+          "name": "bringToFront",
+          "description": "Brings page to front (activates tab)."
         }
       ],
       "events": [
@@ -1397,6 +1413,26 @@
               "name": "delay",
               "type": "number",
               "description": "Delay (in seconds) until the navigation is scheduled to begin. The navigation is not guaranteed to start."
+            },
+            {
+              "name": "reason",
+              "type": "string",
+              "experimental": true,
+              "enum": [
+                "formSubmission",
+                "httpHeaderRefresh",
+                "scriptInitiated",
+                "metaTagRefresh",
+                "pageBlockInterstitial",
+                "reload"
+              ],
+              "description": "The reason for the navigation."
+            },
+            {
+              "name": "url",
+              "type": "string",
+              "experimental": true,
+              "description": "The destination URL for the scheduled navigation."
             }
           ],
           "experimental": true
@@ -1868,6 +1904,17 @@
               "name": "backendNodeId",
               "$ref": "DOM.BackendNodeId",
               "description": "Id of the node to inspect."
+            }
+          ]
+        },
+        {
+          "name": "screenshotRequested",
+          "description": "Fired when user asks to capture screenshot of some area on the page.",
+          "parameters": [
+            {
+              "name": "viewport",
+              "$ref": "Page.Viewport",
+              "description": "Viewport to capture, in CSS."
             }
           ]
         }
@@ -7829,14 +7876,12 @@
     {
       "domain": "IO",
       "description": "Input/Output operations for streams produced by DevTools.",
-      "dependencies": [
-        "Runtime"
-      ],
       "experimental": true,
       "types": [
         {
           "id": "StreamHandle",
-          "type": "string"
+          "type": "string",
+          "description": "This is either obtained from another method or specifed as <code>blob:&lt;uuid&gt;</code> where <code>&lt;uuid&gt</code> is an UUID of a Blob."
         }
       ],
       "commands": [
@@ -7863,6 +7908,12 @@
             }
           ],
           "returns": [
+            {
+              "name": "base64Encoded",
+              "type": "boolean",
+              "optional": true,
+              "description": "Set if the data is base64-encoded"
+            },
             {
               "name": "data",
               "type": "string",
@@ -9325,6 +9376,35 @@
           ]
         },
         {
+          "id": "StickyPositionConstraint",
+          "type": "object",
+          "description": "Sticky position constraints.",
+          "properties": [
+            {
+              "name": "stickyBoxRect",
+              "$ref": "DOM.Rect",
+              "description": "Layout rectangle of the sticky element before being shifted"
+            },
+            {
+              "name": "containingBlockRect",
+              "$ref": "DOM.Rect",
+              "description": "Layout rectangle of the containing block of the sticky element"
+            },
+            {
+              "name": "nearestLayerShiftingStickyBox",
+              "$ref": "LayerId",
+              "optional": true,
+              "description": "The nearest sticky layer that shifts the sticky box"
+            },
+            {
+              "name": "nearestLayerShiftingContainingBlock",
+              "$ref": "LayerId",
+              "optional": true,
+              "description": "The nearest sticky layer that shifts the containing block"
+            }
+          ]
+        },
+        {
           "id": "PictureTile",
           "type": "object",
           "description": "Serialized fragment of layer picture along with its offset within the layer.",
@@ -9441,6 +9521,12 @@
               },
               "optional": true,
               "description": "Rectangles scrolling on main thread only."
+            },
+            {
+              "name": "stickyPositionConstraint",
+              "$ref": "StickyPositionConstraint",
+              "optional": true,
+              "description": "Sticky position constraint information"
             }
           ]
         },

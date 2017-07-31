@@ -79,6 +79,7 @@ const (
 	CommandPageRemoveScriptToEvaluateOnNewDocument         MethodType = "Page.removeScriptToEvaluateOnNewDocument"
 	CommandPageSetAutoAttachToCreatedPages                 MethodType = "Page.setAutoAttachToCreatedPages"
 	CommandPageReload                                      MethodType = "Page.reload"
+	CommandPageSetAdBlockingEnabled                        MethodType = "Page.setAdBlockingEnabled"
 	CommandPageNavigate                                    MethodType = "Page.navigate"
 	CommandPageStopLoading                                 MethodType = "Page.stopLoading"
 	CommandPageGetNavigationHistory                        MethodType = "Page.getNavigationHistory"
@@ -99,8 +100,10 @@ const (
 	CommandPageProcessNavigation                           MethodType = "Page.processNavigation"
 	CommandPageGetLayoutMetrics                            MethodType = "Page.getLayoutMetrics"
 	CommandPageCreateIsolatedWorld                         MethodType = "Page.createIsolatedWorld"
+	CommandPageBringToFront                                MethodType = "Page.bringToFront"
 	EventOverlayNodeHighlightRequested                     MethodType = "Overlay.nodeHighlightRequested"
 	EventOverlayInspectNodeRequested                       MethodType = "Overlay.inspectNodeRequested"
+	EventOverlayScreenshotRequested                        MethodType = "Overlay.screenshotRequested"
 	CommandOverlayEnable                                   MethodType = "Overlay.enable"
 	CommandOverlayDisable                                  MethodType = "Overlay.disable"
 	CommandOverlaySetShowPaintRects                        MethodType = "Overlay.setShowPaintRects"
@@ -544,6 +547,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandPageSetAutoAttachToCreatedPages
 	case CommandPageReload:
 		*t = CommandPageReload
+	case CommandPageSetAdBlockingEnabled:
+		*t = CommandPageSetAdBlockingEnabled
 	case CommandPageNavigate:
 		*t = CommandPageNavigate
 	case CommandPageStopLoading:
@@ -584,10 +589,14 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandPageGetLayoutMetrics
 	case CommandPageCreateIsolatedWorld:
 		*t = CommandPageCreateIsolatedWorld
+	case CommandPageBringToFront:
+		*t = CommandPageBringToFront
 	case EventOverlayNodeHighlightRequested:
 		*t = EventOverlayNodeHighlightRequested
 	case EventOverlayInspectNodeRequested:
 		*t = EventOverlayInspectNodeRequested
+	case EventOverlayScreenshotRequested:
+		*t = EventOverlayScreenshotRequested
 	case CommandOverlayEnable:
 		*t = CommandOverlayEnable
 	case CommandOverlayDisable:

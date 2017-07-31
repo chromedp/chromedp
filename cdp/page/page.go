@@ -163,6 +163,28 @@ func (p *ReloadParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandPageReload, p, nil)
 }
 
+// SetAdBlockingEnabledParams enable Chrome's experimental ad filter on all
+// sites.
+type SetAdBlockingEnabledParams struct {
+	Enabled bool `json:"enabled"` // Whether to block ads.
+}
+
+// SetAdBlockingEnabled enable Chrome's experimental ad filter on all sites.
+//
+// parameters:
+//   enabled - Whether to block ads.
+func SetAdBlockingEnabled(enabled bool) *SetAdBlockingEnabledParams {
+	return &SetAdBlockingEnabledParams{
+		Enabled: enabled,
+	}
+}
+
+// Do executes Page.setAdBlockingEnabled against the provided context and
+// target handler.
+func (p *SetAdBlockingEnabledParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandPageSetAdBlockingEnabled, p, nil)
+}
+
 // NavigateParams navigates current page to the given URL.
 type NavigateParams struct {
 	URL            string         `json:"url"`                      // URL to navigate the page to.
@@ -935,4 +957,18 @@ func (p *CreateIsolatedWorldParams) Do(ctxt context.Context, h cdp.Handler) (exe
 	}
 
 	return res.ExecutionContextID, nil
+}
+
+// BringToFrontParams brings page to front (activates tab).
+type BringToFrontParams struct{}
+
+// BringToFront brings page to front (activates tab).
+func BringToFront() *BringToFrontParams {
+	return &BringToFrontParams{}
+}
+
+// Do executes Page.bringToFront against the provided context and
+// target handler.
+func (p *BringToFrontParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandPageBringToFront, nil, nil)
 }

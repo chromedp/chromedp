@@ -48,8 +48,9 @@ func (p ReadParams) WithSize(size int64) *ReadParams {
 
 // ReadReturns return values.
 type ReadReturns struct {
-	Data string `json:"data,omitempty"` // Data that were read.
-	EOF  bool   `json:"eof,omitempty"`  // Set if the end-of-file condition occurred while reading.
+	Base64encoded bool   `json:"base64Encoded,omitempty"` // Set if the data is base64-encoded
+	Data          string `json:"data,omitempty"`          // Data that were read.
+	EOF           bool   `json:"eof,omitempty"`           // Set if the end-of-file condition occurred while reading.
 }
 
 // Do executes IO.read against the provided context and

@@ -89,6 +89,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandPageReload:
 		return emptyVal, nil
 
+	case cdp.CommandPageSetAdBlockingEnabled:
+		return emptyVal, nil
+
 	case cdp.CommandPageNavigate:
 		v = new(page.NavigateReturns)
 
@@ -148,6 +151,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 
 	case cdp.CommandPageCreateIsolatedWorld:
 		v = new(page.CreateIsolatedWorldReturns)
+
+	case cdp.CommandPageBringToFront:
+		return emptyVal, nil
 
 	case cdp.EventPageDomContentEventFired:
 		v = new(page.EventDomContentEventFired)
@@ -253,6 +259,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 
 	case cdp.EventOverlayInspectNodeRequested:
 		v = new(overlay.EventInspectNodeRequested)
+
+	case cdp.EventOverlayScreenshotRequested:
+		v = new(overlay.EventScreenshotRequested)
 
 	case cdp.CommandEmulationSetDeviceMetricsOverride:
 		return emptyVal, nil

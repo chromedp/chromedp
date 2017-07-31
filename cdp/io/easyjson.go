@@ -173,6 +173,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpIo2(in *jlexer.Lexer, out *Rea
 			continue
 		}
 		switch key {
+		case "base64Encoded":
+			out.Base64encoded = bool(in.Bool())
 		case "data":
 			out.Data = string(in.String())
 		case "eof":
@@ -191,6 +193,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpIo2(out *jwriter.Writer, in Re
 	out.RawByte('{')
 	first := true
 	_ = first
+	if in.Base64encoded {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"base64Encoded\":")
+		out.Bool(bool(in.Base64encoded))
+	}
 	if in.Data != "" {
 		if !first {
 			out.RawByte(',')

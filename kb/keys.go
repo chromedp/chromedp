@@ -363,7 +363,7 @@ var Keys = map[rune]*Key{
 	'\u0d2f': {"MediaPlay", "MediaPlay", "", "", 0, 0, false, false},
 	'\u0d30': {"MediaRecord", "MediaRecord", "", "", 0, 0, false, false},
 	'\u0d31': {"MediaRewind", "MediaRewind", "", "", 0, 0, false, false},
-	'\u0d43': {"Settings", "Settings", "", "", 0, 0, false, false},
+	'\u0d43': {"LaunchControlPanel", "Settings", "", "", 154, 0, false, false},
 	'\u0d4e': {"ZoomToggle", "ZoomToggle", "", "", 251, 251, false, false},
 	'\u0e02': {"AudioBassBoostToggle", "AudioBassBoostToggle", "", "", 0, 0, false, false},
 	'\u0f02': {"SpeechInputToggle", "SpeechInputToggle", "", "", 0, 0, false, false},

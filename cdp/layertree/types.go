@@ -34,6 +34,14 @@ type ScrollRect struct {
 	Type ScrollRectType `json:"type"` // Reason for rectangle to force scrolling on the main thread
 }
 
+// StickyPositionConstraint sticky position constraints.
+type StickyPositionConstraint struct {
+	StickyBoxRect                       *dom.Rect `json:"stickyBoxRect"`                                 // Layout rectangle of the sticky element before being shifted
+	ContainingBlockRect                 *dom.Rect `json:"containingBlockRect"`                           // Layout rectangle of the containing block of the sticky element
+	NearestLayerShiftingStickyBox       LayerID   `json:"nearestLayerShiftingStickyBox,omitempty"`       // The nearest sticky layer that shifts the sticky box
+	NearestLayerShiftingContainingBlock LayerID   `json:"nearestLayerShiftingContainingBlock,omitempty"` // The nearest sticky layer that shifts the containing block
+}
+
 // PictureTile serialized fragment of layer picture along with its offset
 // within the layer.
 type PictureTile struct {
@@ -44,21 +52,22 @@ type PictureTile struct {
 
 // Layer information about a compositing layer.
 type Layer struct {
-	LayerID       LayerID           `json:"layerId"`                 // The unique id for this layer.
-	ParentLayerID LayerID           `json:"parentLayerId,omitempty"` // The id of parent (not present for root).
-	BackendNodeID cdp.BackendNodeID `json:"backendNodeId,omitempty"` // The backend id for the node associated with this layer.
-	OffsetX       float64           `json:"offsetX"`                 // Offset from parent layer, X coordinate.
-	OffsetY       float64           `json:"offsetY"`                 // Offset from parent layer, Y coordinate.
-	Width         float64           `json:"width"`                   // Layer width.
-	Height        float64           `json:"height"`                  // Layer height.
-	Transform     []float64         `json:"transform,omitempty"`     // Transformation matrix for layer, default is identity matrix
-	AnchorX       float64           `json:"anchorX,omitempty"`       // Transform anchor point X, absent if no transform specified
-	AnchorY       float64           `json:"anchorY,omitempty"`       // Transform anchor point Y, absent if no transform specified
-	AnchorZ       float64           `json:"anchorZ,omitempty"`       // Transform anchor point Z, absent if no transform specified
-	PaintCount    int64             `json:"paintCount"`              // Indicates how many time this layer has painted.
-	DrawsContent  bool              `json:"drawsContent"`            // Indicates whether this layer hosts any content, rather than being used for transform/scrolling purposes only.
-	Invisible     bool              `json:"invisible,omitempty"`     // Set if layer is not visible.
-	ScrollRects   []*ScrollRect     `json:"scrollRects,omitempty"`   // Rectangles scrolling on main thread only.
+	LayerID                  LayerID                   `json:"layerId"`                            // The unique id for this layer.
+	ParentLayerID            LayerID                   `json:"parentLayerId,omitempty"`            // The id of parent (not present for root).
+	BackendNodeID            cdp.BackendNodeID         `json:"backendNodeId,omitempty"`            // The backend id for the node associated with this layer.
+	OffsetX                  float64                   `json:"offsetX"`                            // Offset from parent layer, X coordinate.
+	OffsetY                  float64                   `json:"offsetY"`                            // Offset from parent layer, Y coordinate.
+	Width                    float64                   `json:"width"`                              // Layer width.
+	Height                   float64                   `json:"height"`                             // Layer height.
+	Transform                []float64                 `json:"transform,omitempty"`                // Transformation matrix for layer, default is identity matrix
+	AnchorX                  float64                   `json:"anchorX,omitempty"`                  // Transform anchor point X, absent if no transform specified
+	AnchorY                  float64                   `json:"anchorY,omitempty"`                  // Transform anchor point Y, absent if no transform specified
+	AnchorZ                  float64                   `json:"anchorZ,omitempty"`                  // Transform anchor point Z, absent if no transform specified
+	PaintCount               int64                     `json:"paintCount"`                         // Indicates how many time this layer has painted.
+	DrawsContent             bool                      `json:"drawsContent"`                       // Indicates whether this layer hosts any content, rather than being used for transform/scrolling purposes only.
+	Invisible                bool                      `json:"invisible,omitempty"`                // Set if layer is not visible.
+	ScrollRects              []*ScrollRect             `json:"scrollRects,omitempty"`              // Rectangles scrolling on main thread only.
+	StickyPositionConstraint *StickyPositionConstraint `json:"stickyPositionConstraint,omitempty"` // Sticky position constraint information
 }
 
 // PaintProfile array of timings, one per paint step.

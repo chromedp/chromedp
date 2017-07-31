@@ -336,6 +336,60 @@ type Viewport struct {
 	Scale  float64 `json:"scale"`  // Page scale factor.
 }
 
+// FrameScheduledNavigationReason the reason for the navigation.
+type FrameScheduledNavigationReason string
+
+// String returns the FrameScheduledNavigationReason as string value.
+func (t FrameScheduledNavigationReason) String() string {
+	return string(t)
+}
+
+// FrameScheduledNavigationReason values.
+const (
+	FrameScheduledNavigationReasonFormSubmission        FrameScheduledNavigationReason = "formSubmission"
+	FrameScheduledNavigationReasonHTTPHeaderRefresh     FrameScheduledNavigationReason = "httpHeaderRefresh"
+	FrameScheduledNavigationReasonScriptInitiated       FrameScheduledNavigationReason = "scriptInitiated"
+	FrameScheduledNavigationReasonMetaTagRefresh        FrameScheduledNavigationReason = "metaTagRefresh"
+	FrameScheduledNavigationReasonPageBlockInterstitial FrameScheduledNavigationReason = "pageBlockInterstitial"
+	FrameScheduledNavigationReasonReload                FrameScheduledNavigationReason = "reload"
+)
+
+// MarshalEasyJSON satisfies easyjson.Marshaler.
+func (t FrameScheduledNavigationReason) MarshalEasyJSON(out *jwriter.Writer) {
+	out.String(string(t))
+}
+
+// MarshalJSON satisfies json.Marshaler.
+func (t FrameScheduledNavigationReason) MarshalJSON() ([]byte, error) {
+	return easyjson.Marshal(t)
+}
+
+// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
+func (t *FrameScheduledNavigationReason) UnmarshalEasyJSON(in *jlexer.Lexer) {
+	switch FrameScheduledNavigationReason(in.String()) {
+	case FrameScheduledNavigationReasonFormSubmission:
+		*t = FrameScheduledNavigationReasonFormSubmission
+	case FrameScheduledNavigationReasonHTTPHeaderRefresh:
+		*t = FrameScheduledNavigationReasonHTTPHeaderRefresh
+	case FrameScheduledNavigationReasonScriptInitiated:
+		*t = FrameScheduledNavigationReasonScriptInitiated
+	case FrameScheduledNavigationReasonMetaTagRefresh:
+		*t = FrameScheduledNavigationReasonMetaTagRefresh
+	case FrameScheduledNavigationReasonPageBlockInterstitial:
+		*t = FrameScheduledNavigationReasonPageBlockInterstitial
+	case FrameScheduledNavigationReasonReload:
+		*t = FrameScheduledNavigationReasonReload
+
+	default:
+		in.AddError(errors.New("unknown FrameScheduledNavigationReason value"))
+	}
+}
+
+// UnmarshalJSON satisfies json.Unmarshaler.
+func (t *FrameScheduledNavigationReason) UnmarshalJSON(buf []byte) error {
+	return easyjson.Unmarshal(buf, t)
+}
+
 // CaptureScreenshotFormat image compression format (defaults to png).
 type CaptureScreenshotFormat string
 
