@@ -823,56 +823,6 @@ func (p *RequestAppBannerParams) Do(ctxt context.Context, h cdp.Handler) (err er
 	return h.Execute(ctxt, cdp.CommandPageRequestAppBanner, nil, nil)
 }
 
-// SetControlNavigationsParams toggles navigation throttling which allows
-// programatic control over navigation and redirect response.
-type SetControlNavigationsParams struct {
-	Enabled bool `json:"enabled"`
-}
-
-// SetControlNavigations toggles navigation throttling which allows
-// programatic control over navigation and redirect response.
-//
-// parameters:
-//   enabled
-func SetControlNavigations(enabled bool) *SetControlNavigationsParams {
-	return &SetControlNavigationsParams{
-		Enabled: enabled,
-	}
-}
-
-// Do executes Page.setControlNavigations against the provided context and
-// target handler.
-func (p *SetControlNavigationsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandPageSetControlNavigations, p, nil)
-}
-
-// ProcessNavigationParams should be sent in response to a
-// navigationRequested or a redirectRequested event, telling the browser how to
-// handle the navigation.
-type ProcessNavigationParams struct {
-	Response     NavigationResponse `json:"response"`
-	NavigationID int64              `json:"navigationId"`
-}
-
-// ProcessNavigation should be sent in response to a navigationRequested or a
-// redirectRequested event, telling the browser how to handle the navigation.
-//
-// parameters:
-//   response
-//   navigationID
-func ProcessNavigation(response NavigationResponse, navigationID int64) *ProcessNavigationParams {
-	return &ProcessNavigationParams{
-		Response:     response,
-		NavigationID: navigationID,
-	}
-}
-
-// Do executes Page.processNavigation against the provided context and
-// target handler.
-func (p *ProcessNavigationParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandPageProcessNavigation, p, nil)
-}
-
 // GetLayoutMetricsParams returns metrics relating to the layouting of the
 // page, such as viewport bounds/scale.
 type GetLayoutMetricsParams struct{}

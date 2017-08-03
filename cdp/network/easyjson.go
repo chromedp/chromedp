@@ -4432,6 +4432,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork38(in *jlexer.Lexer, ou
 			}
 		case "resourceType":
 			(out.ResourceType).UnmarshalEasyJSON(in)
+		case "isNavigationRequest":
+			out.IsNavigationRequest = bool(in.Bool())
 		case "redirectHeaders":
 			if in.IsNull() {
 				in.Skip()
@@ -4508,6 +4510,12 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork38(out *jwriter.Writer,
 	first = false
 	out.RawString("\"resourceType\":")
 	(in.ResourceType).MarshalEasyJSON(out)
+	if !first {
+		out.RawByte(',')
+	}
+	first = false
+	out.RawString("\"isNavigationRequest\":")
+	out.Bool(bool(in.IsNavigationRequest))
 	if len(in.RedirectHeaders) != 0 {
 		if !first {
 			out.RawByte(',')

@@ -684,7 +684,7 @@ func (p *SetRequestInterceptionEnabledParams) Do(ctxt context.Context, h cdp.Han
 // Network.requestIntercepted event will be sent with the same InterceptionId.
 type ContinueInterceptedRequestParams struct {
 	InterceptionID        InterceptionID         `json:"interceptionId"`
-	ErrorReason           ErrorReason            `json:"errorReason,omitempty"`           // If set this causes the request to fail with the given reason. Must not be set in response to an authChallenge.
+	ErrorReason           ErrorReason            `json:"errorReason,omitempty"`           // If set this causes the request to fail with the given reason. Passing Aborted for requests marked with isNavigationRequest also cancels the navigation. Must not be set in response to an authChallenge.
 	RawResponse           string                 `json:"rawResponse,omitempty"`           // If set the requests completes using with the provided base64 encoded raw response, including HTTP status line and headers etc... Must not be set in response to an authChallenge.
 	URL                   string                 `json:"url,omitempty"`                   // If set the request url will be modified in a way that's not observable by page. Must not be set in response to an authChallenge.
 	Method                string                 `json:"method,omitempty"`                // If set this allows the request method to be overridden. Must not be set in response to an authChallenge.
@@ -708,7 +708,8 @@ func ContinueInterceptedRequest(interceptionID InterceptionID) *ContinueIntercep
 }
 
 // WithErrorReason if set this causes the request to fail with the given
-// reason. Must not be set in response to an authChallenge.
+// reason. Passing Aborted for requests marked with isNavigationRequest also
+// cancels the navigation. Must not be set in response to an authChallenge.
 func (p ContinueInterceptedRequestParams) WithErrorReason(errorReason ErrorReason) *ContinueInterceptedRequestParams {
 	p.ErrorReason = errorReason
 	return &p

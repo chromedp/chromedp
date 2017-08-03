@@ -25,6 +25,7 @@ type DOMNode struct {
 	DocumentURL           string            `json:"documentURL,omitempty"`           // Document URL that Document or FrameOwner node points to.
 	BaseURL               string            `json:"baseURL,omitempty"`               // Base URL that Document or FrameOwner node uses for URL completion.
 	ContentLanguage       string            `json:"contentLanguage,omitempty"`       // Only set for documents, contains the document's content language.
+	DocumentEncoding      string            `json:"documentEncoding,omitempty"`      // Only set for documents, contains the document's character set encoding.
 	PublicID              string            `json:"publicId,omitempty"`              // DocumentType node's publicId.
 	SystemID              string            `json:"systemId,omitempty"`              // DocumentType node's systemId.
 	FrameID               cdp.FrameID       `json:"frameId,omitempty"`               // Frame ID for frame owner elements.

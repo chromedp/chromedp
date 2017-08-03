@@ -72,7 +72,6 @@ const (
 	EventPageScreencastVisibilityChanged                   MethodType = "Page.screencastVisibilityChanged"
 	EventPageInterstitialShown                             MethodType = "Page.interstitialShown"
 	EventPageInterstitialHidden                            MethodType = "Page.interstitialHidden"
-	EventPageNavigationRequested                           MethodType = "Page.navigationRequested"
 	CommandPageEnable                                      MethodType = "Page.enable"
 	CommandPageDisable                                     MethodType = "Page.disable"
 	CommandPageAddScriptToEvaluateOnNewDocument            MethodType = "Page.addScriptToEvaluateOnNewDocument"
@@ -96,8 +95,6 @@ const (
 	CommandPageHandleJavaScriptDialog                      MethodType = "Page.handleJavaScriptDialog"
 	CommandPageGetAppManifest                              MethodType = "Page.getAppManifest"
 	CommandPageRequestAppBanner                            MethodType = "Page.requestAppBanner"
-	CommandPageSetControlNavigations                       MethodType = "Page.setControlNavigations"
-	CommandPageProcessNavigation                           MethodType = "Page.processNavigation"
 	CommandPageGetLayoutMetrics                            MethodType = "Page.getLayoutMetrics"
 	CommandPageCreateIsolatedWorld                         MethodType = "Page.createIsolatedWorld"
 	CommandPageBringToFront                                MethodType = "Page.bringToFront"
@@ -533,8 +530,6 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = EventPageInterstitialShown
 	case EventPageInterstitialHidden:
 		*t = EventPageInterstitialHidden
-	case EventPageNavigationRequested:
-		*t = EventPageNavigationRequested
 	case CommandPageEnable:
 		*t = CommandPageEnable
 	case CommandPageDisable:
@@ -581,10 +576,6 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandPageGetAppManifest
 	case CommandPageRequestAppBanner:
 		*t = CommandPageRequestAppBanner
-	case CommandPageSetControlNavigations:
-		*t = CommandPageSetControlNavigations
-	case CommandPageProcessNavigation:
-		*t = CommandPageProcessNavigation
 	case CommandPageGetLayoutMetrics:
 		*t = CommandPageGetLayoutMetrics
 	case CommandPageCreateIsolatedWorld:

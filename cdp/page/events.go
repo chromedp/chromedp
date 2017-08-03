@@ -66,14 +66,17 @@ type EventFrameResized struct{}
 // EventJavascriptDialogOpening fired when a JavaScript initiated dialog
 // (alert, confirm, prompt, or onbeforeunload) is about to open.
 type EventJavascriptDialogOpening struct {
-	Message string     `json:"message"` // Message that will be displayed by the dialog.
-	Type    DialogType `json:"type"`    // Dialog type.
+	URL           string     `json:"url"`                     // Frame url.
+	Message       string     `json:"message"`                 // Message that will be displayed by the dialog.
+	Type          DialogType `json:"type"`                    // Dialog type.
+	DefaultPrompt string     `json:"defaultPrompt,omitempty"` // Default dialog prompt.
 }
 
 // EventJavascriptDialogClosed fired when a JavaScript initiated dialog
 // (alert, confirm, prompt, or onbeforeunload) has been closed.
 type EventJavascriptDialogClosed struct {
-	Result bool `json:"result"` // Whether dialog was confirmed.
+	Result    bool   `json:"result"`    // Whether dialog was confirmed.
+	UserInput string `json:"userInput"` // User input in case of prompt.
 }
 
 // EventScreencastFrame compressed image data requested by the
@@ -96,16 +99,6 @@ type EventInterstitialShown struct{}
 // EventInterstitialHidden fired when interstitial page was hidden.
 type EventInterstitialHidden struct{}
 
-// EventNavigationRequested fired when a navigation is started if navigation
-// throttles are enabled. The navigation will be deferred until
-// processNavigation is called.
-type EventNavigationRequested struct {
-	IsInMainFrame bool   `json:"isInMainFrame"` // Whether the navigation is taking place in the main frame or in a subframe.
-	IsRedirect    bool   `json:"isRedirect"`    // Whether the navigation has encountered a server redirect or not.
-	NavigationID  int64  `json:"navigationId"`
-	URL           string `json:"url"` // URL of requested navigation.
-}
-
 // EventTypes all event types in the domain.
 var EventTypes = []cdp.MethodType{
 	cdp.EventPageDomContentEventFired,
@@ -124,5 +117,4 @@ var EventTypes = []cdp.MethodType{
 	cdp.EventPageScreencastVisibilityChanged,
 	cdp.EventPageInterstitialShown,
 	cdp.EventPageInterstitialHidden,
-	cdp.EventPageNavigationRequested,
 }

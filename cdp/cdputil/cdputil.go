@@ -140,12 +140,6 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandPageRequestAppBanner:
 		return emptyVal, nil
 
-	case cdp.CommandPageSetControlNavigations:
-		return emptyVal, nil
-
-	case cdp.CommandPageProcessNavigation:
-		return emptyVal, nil
-
 	case cdp.CommandPageGetLayoutMetrics:
 		v = new(page.GetLayoutMetricsReturns)
 
@@ -202,9 +196,6 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 
 	case cdp.EventPageInterstitialHidden:
 		v = new(page.EventInterstitialHidden)
-
-	case cdp.EventPageNavigationRequested:
-		v = new(page.EventNavigationRequested)
 
 	case cdp.CommandOverlayEnable:
 		return emptyVal, nil

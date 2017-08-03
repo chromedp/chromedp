@@ -265,6 +265,7 @@ func (t AXGlobalStates) String() string {
 
 // AXGlobalStates values.
 const (
+	AXGlobalStatesBusy            AXGlobalStates = "busy"
 	AXGlobalStatesDisabled        AXGlobalStates = "disabled"
 	AXGlobalStatesHidden          AXGlobalStates = "hidden"
 	AXGlobalStatesHiddenRoot      AXGlobalStates = "hiddenRoot"
@@ -286,6 +287,8 @@ func (t AXGlobalStates) MarshalJSON() ([]byte, error) {
 // UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
 func (t *AXGlobalStates) UnmarshalEasyJSON(in *jlexer.Lexer) {
 	switch AXGlobalStates(in.String()) {
+	case AXGlobalStatesBusy:
+		*t = AXGlobalStatesBusy
 	case AXGlobalStatesDisabled:
 		*t = AXGlobalStatesDisabled
 	case AXGlobalStatesHidden:
@@ -322,7 +325,6 @@ const (
 	AXLiveRegionAttributesLive     AXLiveRegionAttributes = "live"
 	AXLiveRegionAttributesAtomic   AXLiveRegionAttributes = "atomic"
 	AXLiveRegionAttributesRelevant AXLiveRegionAttributes = "relevant"
-	AXLiveRegionAttributesBusy     AXLiveRegionAttributes = "busy"
 	AXLiveRegionAttributesRoot     AXLiveRegionAttributes = "root"
 )
 
@@ -345,8 +347,6 @@ func (t *AXLiveRegionAttributes) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = AXLiveRegionAttributesAtomic
 	case AXLiveRegionAttributesRelevant:
 		*t = AXLiveRegionAttributesRelevant
-	case AXLiveRegionAttributesBusy:
-		*t = AXLiveRegionAttributesBusy
 	case AXLiveRegionAttributesRoot:
 		*t = AXLiveRegionAttributesRoot
 

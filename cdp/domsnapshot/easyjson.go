@@ -695,6 +695,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpDomsnapshot4(in *jlexer.Lexer,
 			out.BaseURL = string(in.String())
 		case "contentLanguage":
 			out.ContentLanguage = string(in.String())
+		case "documentEncoding":
+			out.DocumentEncoding = string(in.String())
 		case "publicId":
 			out.PublicID = string(in.String())
 		case "systemId":
@@ -873,6 +875,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDomsnapshot4(out *jwriter.Writ
 		first = false
 		out.RawString("\"contentLanguage\":")
 		out.String(string(in.ContentLanguage))
+	}
+	if in.DocumentEncoding != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"documentEncoding\":")
+		out.String(string(in.DocumentEncoding))
 	}
 	if in.PublicID != "" {
 		if !first {

@@ -133,13 +133,14 @@ type EventEventSourceMessageReceived struct {
 // EventRequestIntercepted details of an intercepted HTTP request, which must
 // be either allowed, blocked, modified or mocked.
 type EventRequestIntercepted struct {
-	InterceptionID     InterceptionID    `json:"interceptionId"` // Each request the page makes will have a unique id, however if any redirects are encountered while processing that fetch, they will be reported with the same id as the original fetch. Likewise if HTTP authentication is needed then the same fetch id will be used.
-	Request            *Request          `json:"request"`
-	ResourceType       page.ResourceType `json:"resourceType"`                 // How the requested resource will be used.
-	RedirectHeaders    Headers           `json:"redirectHeaders,omitempty"`    // HTTP response headers, only sent if a redirect was intercepted.
-	RedirectStatusCode int64             `json:"redirectStatusCode,omitempty"` // HTTP response code, only sent if a redirect was intercepted.
-	RedirectURL        string            `json:"redirectUrl,omitempty"`        // Redirect location, only sent if a redirect was intercepted.
-	AuthChallenge      *AuthChallenge    `json:"authChallenge,omitempty"`      // Details of the Authorization Challenge encountered. If this is set then continueInterceptedRequest must contain an authChallengeResponse.
+	InterceptionID      InterceptionID    `json:"interceptionId"` // Each request the page makes will have a unique id, however if any redirects are encountered while processing that fetch, they will be reported with the same id as the original fetch. Likewise if HTTP authentication is needed then the same fetch id will be used.
+	Request             *Request          `json:"request"`
+	ResourceType        page.ResourceType `json:"resourceType"`                 // How the requested resource will be used.
+	IsNavigationRequest bool              `json:"isNavigationRequest"`          // Whether this is a navigation request, which can abort the navigation completely.
+	RedirectHeaders     Headers           `json:"redirectHeaders,omitempty"`    // HTTP response headers, only sent if a redirect was intercepted.
+	RedirectStatusCode  int64             `json:"redirectStatusCode,omitempty"` // HTTP response code, only sent if a redirect was intercepted.
+	RedirectURL         string            `json:"redirectUrl,omitempty"`        // Redirect location, only sent if a redirect was intercepted.
+	AuthChallenge       *AuthChallenge    `json:"authChallenge,omitempty"`      // Details of the Authorization Challenge encountered. If this is set then continueInterceptedRequest must contain an authChallengeResponse.
 }
 
 // EventTypes all event types in the domain.
