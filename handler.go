@@ -19,6 +19,7 @@ import (
 	logdom "github.com/igsky/chromedp/cdp/log"
 	"github.com/igsky/chromedp/cdp/page"
 	rundom "github.com/igsky/chromedp/cdp/runtime"
+	network "github.com/igsky/chromedp/cdp/network"
 	"github.com/igsky/chromedp/client"
 )
 
@@ -101,7 +102,7 @@ func (h *TargetHandler) Run(ctxt context.Context) error {
 	for _, a := range []Action{
 		logdom.Enable(),
 		rundom.Enable(),
-		//network.Enable(),
+		network.Enable(),
 		inspector.Enable(),
 		page.Enable(),
 		dom.Enable(),
