@@ -10,9 +10,9 @@ import (
 	"net/http"
 	"time"
 
-	cdp "github.com/knq/chromedp"
-	cdptypes "github.com/knq/chromedp/cdp"
-	"github.com/knq/chromedp/cdp/network"
+	cdp "github.com/igsky/chromedp"
+	cdptypes "github.com/igsky/chromedp/cdp"
+	"github.com/igsky/chromedp/cdp/network"
 )
 
 var (

@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/knq/chromedp/cdp"
-	"github.com/knq/chromedp/cdp/dom"
+	"github.com/igsky/chromedp/cdp"
+	"github.com/igsky/chromedp/cdp/dom"
 )
 
 /*

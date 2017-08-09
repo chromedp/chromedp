@@ -5,7 +5,7 @@ package templates
 import (
 	"strings"
 
-	"github.com/knq/chromedp/cmd/chromedp-gen/internal"
+	"github.com/igsky/chromedp/cmd/chromedp-gen/internal"
 )
 
 const (

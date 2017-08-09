@@ -13,8 +13,8 @@ package domdebugger
 import (
 	"context"
 
-	cdp "github.com/knq/chromedp/cdp"
-	"github.com/knq/chromedp/cdp/runtime"
+	cdp "github.com/igsky/chromedp/cdp"
+	"github.com/igsky/chromedp/cdp/runtime"
 )
 
 // SetDOMBreakpointParams sets breakpoint on particular operation with DOM.

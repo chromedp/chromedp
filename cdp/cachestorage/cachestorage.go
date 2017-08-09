@@ -9,7 +9,7 @@ package cachestorage
 import (
 	"context"
 
-	cdp "github.com/knq/chromedp/cdp"
+	cdp "github.com/igsky/chromedp/cdp"
 )
 
 // RequestCacheNamesParams requests cache names.

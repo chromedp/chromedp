@@ -6,7 +6,7 @@ package templates
 
 //line templates/extra.qtpl:1
 import (
-	"github.com/knq/chromedp/cmd/chromedp-gen/internal"
+	"github.com/igsky/chromedp/cmd/chromedp-gen/internal"
 )
 
 // ExtraTimestampTemplate is a special template for the Timestamp type that

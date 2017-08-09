@@ -5,8 +5,8 @@ package layertree
 import (
 	"errors"
 
-	cdp "github.com/knq/chromedp/cdp"
-	"github.com/knq/chromedp/cdp/dom"
+	cdp "github.com/igsky/chromedp/cdp"
+	"github.com/igsky/chromedp/cdp/dom"
 	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"

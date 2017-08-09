@@ -11,8 +11,8 @@ package browser
 import (
 	"context"
 
-	cdp "github.com/knq/chromedp/cdp"
-	"github.com/knq/chromedp/cdp/target"
+	cdp "github.com/igsky/chromedp/cdp"
+	"github.com/igsky/chromedp/cdp/target"
 )
 
 // GetWindowForTargetParams get the browser window that contains the devtools

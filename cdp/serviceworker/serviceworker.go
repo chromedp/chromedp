@@ -9,7 +9,7 @@ package serviceworker
 import (
 	"context"
 
-	cdp "github.com/knq/chromedp/cdp"
+	cdp "github.com/igsky/chromedp/cdp"
 )
 
 // EnableParams [no description].

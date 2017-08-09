@@ -8,7 +8,7 @@ package templates
 import (
 	"sort"
 
-	"github.com/knq/chromedp/cmd/chromedp-gen/internal"
+	"github.com/igsky/chromedp/cmd/chromedp-gen/internal"
 )
 
 // FileHeader is the file header template.

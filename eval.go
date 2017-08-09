@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/knq/chromedp/cdp"
-	rundom "github.com/knq/chromedp/cdp/runtime"
+	"github.com/igsky/chromedp/cdp"
+	rundom "github.com/igsky/chromedp/cdp/runtime"
 )
 
 // Evaluate is an action to evaluate the Javascript expression, unmarshaling

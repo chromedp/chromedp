@@ -4,8 +4,8 @@ package domsnapshot
 
 import (
 	json "encoding/json"
-	css "github.com/knq/chromedp/cdp/css"
-	dom "github.com/knq/chromedp/cdp/dom"
+	css "github.com/igsky/chromedp/cdp/css"
+	dom "github.com/igsky/chromedp/cdp/dom"
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"

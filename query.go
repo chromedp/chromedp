@@ -12,10 +12,10 @@ import (
 	"sync"
 
 	"github.com/disintegration/imaging"
-	"github.com/knq/chromedp/cdp"
-	"github.com/knq/chromedp/cdp/css"
-	"github.com/knq/chromedp/cdp/dom"
-	"github.com/knq/chromedp/cdp/page"
+	"github.com/igsky/chromedp/cdp"
+	"github.com/igsky/chromedp/cdp/css"
+	"github.com/igsky/chromedp/cdp/dom"
+	"github.com/igsky/chromedp/cdp/page"
 )
 
 // Nodes retrieves the document nodes matching the selector.

@@ -16,7 +16,7 @@ package runtime
 import (
 	"context"
 
-	cdp "github.com/knq/chromedp/cdp"
+	cdp "github.com/igsky/chromedp/cdp"
 )
 
 // EvaluateParams evaluates expression on global object.

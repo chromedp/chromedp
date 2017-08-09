@@ -11,7 +11,7 @@ package log
 import (
 	"context"
 
-	cdp "github.com/knq/chromedp/cdp"
+	cdp "github.com/igsky/chromedp/cdp"
 )
 
 // EnableParams enables log domain, sends the entries collected so far to the

@@ -14,7 +14,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/gedex/inflector"
-	"github.com/knq/chromedp/cmd/chromedp-gen/internal"
+	"github.com/igsky/chromedp/cmd/chromedp-gen/internal"
 )
 
 const (

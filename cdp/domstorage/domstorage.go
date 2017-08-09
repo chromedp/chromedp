@@ -11,7 +11,7 @@ package domstorage
 import (
 	"context"
 
-	cdp "github.com/knq/chromedp/cdp"
+	cdp "github.com/igsky/chromedp/cdp"
 )
 
 // EnableParams enables storage tracking, storage events will now be

@@ -9,8 +9,8 @@ import (
 	"github.com/gedex/inflector"
 	qtpl "github.com/valyala/quicktemplate"
 
-	"github.com/knq/chromedp/cmd/chromedp-gen/internal"
-	"github.com/knq/chromedp/cmd/chromedp-gen/templates"
+	"github.com/igsky/chromedp/cmd/chromedp-gen/internal"
+	"github.com/igsky/chromedp/cmd/chromedp-gen/templates"
 )
 
 // fileBuffers is a type to manage buffers for file data.

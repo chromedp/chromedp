@@ -9,7 +9,7 @@ package applicationcache
 import (
 	"context"
 
-	cdp "github.com/knq/chromedp/cdp"
+	cdp "github.com/igsky/chromedp/cdp"
 )
 
 // GetFramesWithManifestsParams returns array of frame identifiers with

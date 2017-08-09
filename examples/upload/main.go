@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"os"
 
-	cdp "github.com/knq/chromedp"
+	cdp "github.com/igsky/chromedp"
 )
 
 var (

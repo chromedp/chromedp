@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/knq/chromedp/cdp"
+	"github.com/igsky/chromedp/cdp"
 )
 
 // Action is the common interface for an action that will be executed against a

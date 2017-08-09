@@ -9,7 +9,7 @@ package tracing
 import (
 	"context"
 
-	cdp "github.com/knq/chromedp/cdp"
+	cdp "github.com/igsky/chromedp/cdp"
 )
 
 // StartParams start trace events collection.
