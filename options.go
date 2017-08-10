@@ -82,3 +82,29 @@ func WithConsolef(f LogFunc) Option {
 		return nil
 	}
 }
+
+// HookChain is a slice of MsgHooks
+type HookChain []MsgHook
+
+// Add is a convenient way to add new MsgHook
+func (c *HookChain) Add(h MsgHook) {
+	*c = append(*c, h)
+}
+
+// Process passes msg through all hooks
+func (c *HookChain) Process(msg interface{}) {
+	for _, hook := range *c {
+		hook(msg)
+	}
+}
+
+// MsgHook is a CDP message handler
+type MsgHook func(interface{})
+
+// WithCustomHook adds provided hook to CDP
+func WithCustomHook(f MsgHook) Option {
+	return func(c *CDP) error {
+		c.hookChain.Add(f)
+		return nil
+	}
+}

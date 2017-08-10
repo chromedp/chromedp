@@ -37,6 +37,9 @@ type CDP struct {
 	// logging funcs
 	logf, debugf, errorf LogFunc
 
+	// optional message hooks
+	hookChain HookChain
+
 	sync.RWMutex
 }
 
@@ -50,6 +53,7 @@ func New(ctxt context.Context, opts ...Option) (*CDP, error) {
 		logf:       log.Printf,
 		debugf:     func(string, ...interface{}) {},
 		errorf:     func(s string, v ...interface{}) { log.Printf("error: "+s, v...) },
+		hookChain:  make(HookChain, 0),
 	}
 
 	// apply options
@@ -117,7 +121,7 @@ func (c *CDP) AddTarget(ctxt context.Context, t client.Target) {
 	defer c.Unlock()
 
 	// create target manager
-	h, err := NewTargetHandler(t, c.logf, c.debugf, c.errorf)
+	h, err := NewTargetHandler(t, c.logf, c.debugf, c.errorf, c.hookChain)
 	if err != nil {
 		c.errorf("could not create handler for %s: %v", t, err)
 		return

@@ -57,11 +57,14 @@ type TargetHandler struct {
 	// logging funcs
 	logf, debugf, errorf LogFunc
 
+	// optional message hooks
+	hookChain HookChain
+
 	sync.RWMutex
 }
 
-// NewTargetHandler creates a new handler for the specified client target.
-func NewTargetHandler(t client.Target, logf, debugf, errorf LogFunc) (*TargetHandler, error) {
+// NewTargetHandler creates a new handler for the specified client target
+func NewTargetHandler(t client.Target, logf, debugf, errorf LogFunc, chain HookChain) (*TargetHandler, error) {
 	conn, err := client.Dial(t)
 	if err != nil {
 		return nil, err
@@ -72,6 +75,7 @@ func NewTargetHandler(t client.Target, logf, debugf, errorf LogFunc) (*TargetHan
 		logf:   logf,
 		debugf: debugf,
 		errorf: errorf,
+		hookChain: chain,
 	}, nil
 }
 
@@ -235,6 +239,9 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdp.Message) err
 	if err != nil {
 		return err
 	}
+
+	// pass message through hooks
+	go h.hookChain.Process(ev)
 
 	switch e := ev.(type) {
 	case *inspector.EventDetached:
