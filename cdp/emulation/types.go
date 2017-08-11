@@ -113,45 +113,45 @@ func (t *OrientationType) UnmarshalJSON(buf []byte) error {
 	return easyjson.Unmarshal(buf, t)
 }
 
-// EnabledConfiguration touch/gesture events configuration. Default: current
-// platform.
-type EnabledConfiguration string
+// SetEmitTouchEventsForMouseConfiguration touch/gesture events
+// configuration. Default: current platform.
+type SetEmitTouchEventsForMouseConfiguration string
 
-// String returns the EnabledConfiguration as string value.
-func (t EnabledConfiguration) String() string {
+// String returns the SetEmitTouchEventsForMouseConfiguration as string value.
+func (t SetEmitTouchEventsForMouseConfiguration) String() string {
 	return string(t)
 }
 
-// EnabledConfiguration values.
+// SetEmitTouchEventsForMouseConfiguration values.
 const (
-	EnabledConfigurationMobile  EnabledConfiguration = "mobile"
-	EnabledConfigurationDesktop EnabledConfiguration = "desktop"
+	SetEmitTouchEventsForMouseConfigurationMobile  SetEmitTouchEventsForMouseConfiguration = "mobile"
+	SetEmitTouchEventsForMouseConfigurationDesktop SetEmitTouchEventsForMouseConfiguration = "desktop"
 )
 
 // MarshalEasyJSON satisfies easyjson.Marshaler.
-func (t EnabledConfiguration) MarshalEasyJSON(out *jwriter.Writer) {
+func (t SetEmitTouchEventsForMouseConfiguration) MarshalEasyJSON(out *jwriter.Writer) {
 	out.String(string(t))
 }
 
 // MarshalJSON satisfies json.Marshaler.
-func (t EnabledConfiguration) MarshalJSON() ([]byte, error) {
+func (t SetEmitTouchEventsForMouseConfiguration) MarshalJSON() ([]byte, error) {
 	return easyjson.Marshal(t)
 }
 
 // UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
-func (t *EnabledConfiguration) UnmarshalEasyJSON(in *jlexer.Lexer) {
-	switch EnabledConfiguration(in.String()) {
-	case EnabledConfigurationMobile:
-		*t = EnabledConfigurationMobile
-	case EnabledConfigurationDesktop:
-		*t = EnabledConfigurationDesktop
+func (t *SetEmitTouchEventsForMouseConfiguration) UnmarshalEasyJSON(in *jlexer.Lexer) {
+	switch SetEmitTouchEventsForMouseConfiguration(in.String()) {
+	case SetEmitTouchEventsForMouseConfigurationMobile:
+		*t = SetEmitTouchEventsForMouseConfigurationMobile
+	case SetEmitTouchEventsForMouseConfigurationDesktop:
+		*t = SetEmitTouchEventsForMouseConfigurationDesktop
 
 	default:
-		in.AddError(errors.New("unknown EnabledConfiguration value"))
+		in.AddError(errors.New("unknown SetEmitTouchEventsForMouseConfiguration value"))
 	}
 }
 
 // UnmarshalJSON satisfies json.Unmarshaler.
-func (t *EnabledConfiguration) UnmarshalJSON(buf []byte) error {
+func (t *SetEmitTouchEventsForMouseConfiguration) UnmarshalJSON(buf []byte) error {
 	return easyjson.Unmarshal(buf, t)
 }

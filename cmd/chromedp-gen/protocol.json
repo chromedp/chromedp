@@ -93,6 +93,53 @@
       ]
     },
     {
+      "domain": "Performance",
+      "experimental": true,
+      "types": [
+        {
+          "id": "Metric",
+          "type": "object",
+          "properties": [
+            {
+              "name": "name",
+              "type": "string",
+              "description": "Metric name."
+            },
+            {
+              "name": "value",
+              "type": "number",
+              "description": "Metric value."
+            }
+          ],
+          "description": "Run-time execution metric."
+        }
+      ],
+      "commands": [
+        {
+          "name": "enable",
+          "description": "Enable collecting and reporting metrics."
+        },
+        {
+          "name": "disable",
+          "description": "Disable collecting and reporting metrics."
+        },
+        {
+          "name": "getMetrics",
+          "returns": [
+            {
+              "name": "metrics",
+              "type": "array",
+              "items": {
+                "$ref": "Metric"
+              },
+              "description": "Current values for run-time metrics."
+            }
+          ],
+          "description": "Retrieve current values of run-time metrics."
+        }
+      ]
+    },
+    {
       "domain": "Page",
       "description": "Actions and events related to the inspected page belong to the page domain.",
       "dependencies": [
@@ -2091,6 +2138,23 @@
               "description": "Whether the touch event emulation should be enabled."
             },
             {
+              "name": "maxTouchPoints",
+              "type": "integer",
+              "optional": true,
+              "description": "Maximum touch points supported. Defaults to one."
+            }
+          ],
+          "description": "Enables touch on platforms which do not support them."
+        },
+        {
+          "name": "setEmitTouchEventsForMouse",
+          "parameters": [
+            {
+              "name": "enabled",
+              "type": "boolean",
+              "description": "Whether touch emulation based on mouse input should be enabled."
+            },
+            {
               "name": "configuration",
               "type": "string",
               "enum": [
@@ -2101,7 +2165,7 @@
               "description": "Touch/gesture events configuration. Default: current platform."
             }
           ],
-          "description": "Toggles mouse event-based touch event emulation."
+          "experimental": true
         },
         {
           "name": "setEmulatedMedia",
@@ -7488,6 +7552,24 @@
               },
               "description": "The range of background colors behind this element, if it contains any visible text. If no visible text is present, this will be undefined. In the case of a flat background color, this will consist of simply that color. In the case of a gradient, this will consist of each of the color stops. For anything more complicated, this will be an empty array. Images will be ignored (as if the image had failed to load).",
               "optional": true
+            },
+            {
+              "name": "computedFontSize",
+              "type": "string",
+              "description": "The computed font size for this node, as a CSS computed value string (e.g. '12px').",
+              "optional": true
+            },
+            {
+              "name": "computedFontWeight",
+              "type": "string",
+              "description": "The computed font weight for this node, as a CSS computed value string (e.g. 'normal' or '100').",
+              "optional": true
+            },
+            {
+              "name": "computedBodyFontSize",
+              "type": "string",
+              "description": "The computed font size for the document body, as a computed CSS value string (e.g. '16px').",
+              "optional": true
             }
           ],
           "experimental": true
@@ -7700,7 +7782,7 @@
               "name": "frameId",
               "$ref": "Page.FrameId",
               "optional": true,
-              "description": "Frame ID for frame owner elements."
+              "description": "Frame ID for frame owner elements and also for the document node."
             },
             {
               "name": "contentDocumentIndex",

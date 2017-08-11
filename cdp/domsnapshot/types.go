@@ -28,7 +28,7 @@ type DOMNode struct {
 	DocumentEncoding      string            `json:"documentEncoding,omitempty"`      // Only set for documents, contains the document's character set encoding.
 	PublicID              string            `json:"publicId,omitempty"`              // DocumentType node's publicId.
 	SystemID              string            `json:"systemId,omitempty"`              // DocumentType node's systemId.
-	FrameID               cdp.FrameID       `json:"frameId,omitempty"`               // Frame ID for frame owner elements.
+	FrameID               cdp.FrameID       `json:"frameId,omitempty"`               // Frame ID for frame owner elements and also for the document node.
 	ContentDocumentIndex  int64             `json:"contentDocumentIndex,omitempty"`  // The index of a frame owner element's content document in the domNodes array returned by getSnapshot, if any.
 	ImportedDocumentIndex int64             `json:"importedDocumentIndex,omitempty"` // Index of the imported document's node of a link element in the domNodes array returned by getSnapshot, if any.
 	TemplateContentIndex  int64             `json:"templateContentIndex,omitempty"`  // Index of the content node of a template element in the domNodes array returned by getSnapshot.

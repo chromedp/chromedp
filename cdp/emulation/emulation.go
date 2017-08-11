@@ -233,14 +233,15 @@ func (p *ClearGeolocationOverrideParams) Do(ctxt context.Context, h cdp.Handler)
 	return h.Execute(ctxt, cdp.CommandEmulationClearGeolocationOverride, nil, nil)
 }
 
-// SetTouchEmulationEnabledParams toggles mouse event-based touch event
-// emulation.
+// SetTouchEmulationEnabledParams enables touch on platforms which do not
+// support them.
 type SetTouchEmulationEnabledParams struct {
-	Enabled       bool                 `json:"enabled"`                 // Whether the touch event emulation should be enabled.
-	Configuration EnabledConfiguration `json:"configuration,omitempty"` // Touch/gesture events configuration. Default: current platform.
+	Enabled        bool  `json:"enabled"`                  // Whether the touch event emulation should be enabled.
+	MaxTouchPoints int64 `json:"maxTouchPoints,omitempty"` // Maximum touch points supported. Defaults to one.
 }
 
-// SetTouchEmulationEnabled toggles mouse event-based touch event emulation.
+// SetTouchEmulationEnabled enables touch on platforms which do not support
+// them.
 //
 // parameters:
 //   enabled - Whether the touch event emulation should be enabled.
@@ -250,10 +251,9 @@ func SetTouchEmulationEnabled(enabled bool) *SetTouchEmulationEnabledParams {
 	}
 }
 
-// WithConfiguration touch/gesture events configuration. Default: current
-// platform.
-func (p SetTouchEmulationEnabledParams) WithConfiguration(configuration EnabledConfiguration) *SetTouchEmulationEnabledParams {
-	p.Configuration = configuration
+// WithMaxTouchPoints maximum touch points supported. Defaults to one.
+func (p SetTouchEmulationEnabledParams) WithMaxTouchPoints(maxTouchPoints int64) *SetTouchEmulationEnabledParams {
+	p.MaxTouchPoints = maxTouchPoints
 	return &p
 }
 
@@ -261,6 +261,35 @@ func (p SetTouchEmulationEnabledParams) WithConfiguration(configuration EnabledC
 // target handler.
 func (p *SetTouchEmulationEnabledParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandEmulationSetTouchEmulationEnabled, p, nil)
+}
+
+// SetEmitTouchEventsForMouseParams [no description].
+type SetEmitTouchEventsForMouseParams struct {
+	Enabled       bool                                    `json:"enabled"`                 // Whether touch emulation based on mouse input should be enabled.
+	Configuration SetEmitTouchEventsForMouseConfiguration `json:"configuration,omitempty"` // Touch/gesture events configuration. Default: current platform.
+}
+
+// SetEmitTouchEventsForMouse [no description].
+//
+// parameters:
+//   enabled - Whether touch emulation based on mouse input should be enabled.
+func SetEmitTouchEventsForMouse(enabled bool) *SetEmitTouchEventsForMouseParams {
+	return &SetEmitTouchEventsForMouseParams{
+		Enabled: enabled,
+	}
+}
+
+// WithConfiguration touch/gesture events configuration. Default: current
+// platform.
+func (p SetEmitTouchEventsForMouseParams) WithConfiguration(configuration SetEmitTouchEventsForMouseConfiguration) *SetEmitTouchEventsForMouseParams {
+	p.Configuration = configuration
+	return &p
+}
+
+// Do executes Emulation.setEmitTouchEventsForMouse against the provided context and
+// target handler.
+func (p *SetEmitTouchEventsForMouseParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandEmulationSetEmitTouchEventsForMouse, p, nil)
 }
 
 // SetEmulatedMediaParams emulates the given media for CSS media queries.

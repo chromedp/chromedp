@@ -29,6 +29,7 @@ import (
 	"github.com/knq/chromedp/cdp/network"
 	"github.com/knq/chromedp/cdp/overlay"
 	"github.com/knq/chromedp/cdp/page"
+	"github.com/knq/chromedp/cdp/performance"
 	"github.com/knq/chromedp/cdp/profiler"
 	"github.com/knq/chromedp/cdp/runtime"
 	"github.com/knq/chromedp/cdp/schema"
@@ -70,6 +71,15 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 
 	case cdp.CommandMemorySimulatePressureNotification:
 		return emptyVal, nil
+
+	case cdp.CommandPerformanceEnable:
+		return emptyVal, nil
+
+	case cdp.CommandPerformanceDisable:
+		return emptyVal, nil
+
+	case cdp.CommandPerformanceGetMetrics:
+		v = new(performance.GetMetricsReturns)
 
 	case cdp.CommandPageEnable:
 		return emptyVal, nil
@@ -276,6 +286,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 		return emptyVal, nil
 
 	case cdp.CommandEmulationSetTouchEmulationEnabled:
+		return emptyVal, nil
+
+	case cdp.CommandEmulationSetEmitTouchEventsForMouse:
 		return emptyVal, nil
 
 	case cdp.CommandEmulationSetEmulatedMedia:

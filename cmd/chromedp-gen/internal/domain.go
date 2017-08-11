@@ -39,6 +39,7 @@ const (
 	DomainNetwork           DomainType = "Network"
 	DomainOverlay           DomainType = "Overlay"
 	DomainPage              DomainType = "Page"
+	DomainPerformance       DomainType = "Performance"
 	DomainProfiler          DomainType = "Profiler"
 	DomainRuntime           DomainType = "Runtime"
 	DomainSchema            DomainType = "Schema"
@@ -123,6 +124,8 @@ func (dt *DomainType) UnmarshalJSON(buf []byte) error {
 		*dt = DomainOverlay
 	case DomainPage:
 		*dt = DomainPage
+	case DomainPerformance:
+		*dt = DomainPerformance
 	case DomainProfiler:
 		*dt = DomainProfiler
 	case DomainRuntime:

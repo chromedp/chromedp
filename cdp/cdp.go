@@ -56,6 +56,9 @@ const (
 	CommandMemoryGetDOMCounters                            MethodType = "Memory.getDOMCounters"
 	CommandMemorySetPressureNotificationsSuppressed        MethodType = "Memory.setPressureNotificationsSuppressed"
 	CommandMemorySimulatePressureNotification              MethodType = "Memory.simulatePressureNotification"
+	CommandPerformanceEnable                               MethodType = "Performance.enable"
+	CommandPerformanceDisable                              MethodType = "Performance.disable"
+	CommandPerformanceGetMetrics                           MethodType = "Performance.getMetrics"
 	EventPageDomContentEventFired                          MethodType = "Page.domContentEventFired"
 	EventPageLoadEventFired                                MethodType = "Page.loadEventFired"
 	EventPageFrameAttached                                 MethodType = "Page.frameAttached"
@@ -126,6 +129,7 @@ const (
 	CommandEmulationSetGeolocationOverride                 MethodType = "Emulation.setGeolocationOverride"
 	CommandEmulationClearGeolocationOverride               MethodType = "Emulation.clearGeolocationOverride"
 	CommandEmulationSetTouchEmulationEnabled               MethodType = "Emulation.setTouchEmulationEnabled"
+	CommandEmulationSetEmitTouchEventsForMouse             MethodType = "Emulation.setEmitTouchEventsForMouse"
 	CommandEmulationSetEmulatedMedia                       MethodType = "Emulation.setEmulatedMedia"
 	CommandEmulationSetCPUThrottlingRate                   MethodType = "Emulation.setCPUThrottlingRate"
 	CommandEmulationCanEmulate                             MethodType = "Emulation.canEmulate"
@@ -498,6 +502,12 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandMemorySetPressureNotificationsSuppressed
 	case CommandMemorySimulatePressureNotification:
 		*t = CommandMemorySimulatePressureNotification
+	case CommandPerformanceEnable:
+		*t = CommandPerformanceEnable
+	case CommandPerformanceDisable:
+		*t = CommandPerformanceDisable
+	case CommandPerformanceGetMetrics:
+		*t = CommandPerformanceGetMetrics
 	case EventPageDomContentEventFired:
 		*t = EventPageDomContentEventFired
 	case EventPageLoadEventFired:
@@ -638,6 +648,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandEmulationClearGeolocationOverride
 	case CommandEmulationSetTouchEmulationEnabled:
 		*t = CommandEmulationSetTouchEmulationEnabled
+	case CommandEmulationSetEmitTouchEventsForMouse:
+		*t = CommandEmulationSetEmitTouchEventsForMouse
 	case CommandEmulationSetEmulatedMedia:
 		*t = CommandEmulationSetEmulatedMedia
 	case CommandEmulationSetCPUThrottlingRate:

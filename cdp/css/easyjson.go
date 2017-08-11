@@ -5130,6 +5130,12 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpCss48(in *jlexer.Lexer, out *G
 				}
 				in.Delim(']')
 			}
+		case "computedFontSize":
+			out.ComputedFontSize = string(in.String())
+		case "computedFontWeight":
+			out.ComputedFontWeight = string(in.String())
+		case "computedBodyFontSize":
+			out.ComputedBodyFontSize = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -5162,6 +5168,30 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpCss48(out *jwriter.Writer, in 
 			}
 			out.RawByte(']')
 		}
+	}
+	if in.ComputedFontSize != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"computedFontSize\":")
+		out.String(string(in.ComputedFontSize))
+	}
+	if in.ComputedFontWeight != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"computedFontWeight\":")
+		out.String(string(in.ComputedFontWeight))
+	}
+	if in.ComputedBodyFontSize != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"computedBodyFontSize\":")
+		out.String(string(in.ComputedBodyFontSize))
 	}
 	out.RawByte('}')
 }
