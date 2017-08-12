@@ -3,6 +3,13 @@ package chromedp
 import (
 	"github.com/igsky/chromedp/client"
 	"github.com/igsky/chromedp/runner"
+	"github.com/igsky/chromedp/cdp/network"
+	"github.com/igsky/chromedp/cdp/inspector"
+	"github.com/igsky/chromedp/cdp/page"
+	"github.com/igsky/chromedp/cdp/dom"
+	"github.com/igsky/chromedp/cdp/css"
+	logdom "github.com/igsky/chromedp/cdp/log"
+	rundom "github.com/igsky/chromedp/cdp/runtime"
 )
 
 // Option is a Chrome Debugging Protocol option.
@@ -108,3 +115,42 @@ func WithCustomHook(f MsgHook) Option {
 		return nil
 	}
 }
+
+type ChromeDomains []Action
+
+func WithDefaultDomains() Option {
+	return func(c *CDP) error {
+		c.Config.domains = []Action{
+			logdom.Enable(),
+			rundom.Enable(),
+			network.Enable(),
+			inspector.Enable(),
+			page.Enable(),
+			dom.Enable(),
+			css.Enable(),
+		}
+		return nil
+	}
+}
+
+func WithCustomDomain(f func() Action) Option {
+	return func(c *CDP) error {
+		c.Config.domains = append(c.Config.domains, f())
+		return nil
+	}
+}
+
+// Config is a struct of all optional features
+type Config struct {
+	// logging funcs
+	logf, debugf, errorf LogFunc
+
+	// optional message hooks
+	hookChain HookChain
+
+	// optional custom domains
+	// note: overrides default behaviour
+	domains ChromeDomains
+}
+
+

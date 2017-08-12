@@ -13,14 +13,9 @@ import (
 
 	"github.com/igsky/chromedp/cdp"
 	"github.com/igsky/chromedp/cdp/cdputil"
-	"github.com/igsky/chromedp/cdp/css"
 	"github.com/igsky/chromedp/cdp/dom"
 	"github.com/igsky/chromedp/cdp/inspector"
-	logdom "github.com/igsky/chromedp/cdp/log"
 	"github.com/igsky/chromedp/cdp/page"
-	"github.com/igsky/chromedp/cdp/network"
-	rundom "github.com/igsky/chromedp/cdp/runtime"
-	network "github.com/igsky/chromedp/cdp/network"
 	"github.com/igsky/chromedp/client"
 )
 
@@ -56,17 +51,14 @@ type TargetHandler struct {
 	res   map[int64]chan *cdp.Message
 	resrw sync.RWMutex
 
-	// logging funcs
-	logf, debugf, errorf LogFunc
-
-	// optional message hooks
-	hookChain HookChain
+	// Config contains logging and message hooks
+	Config
 
 	sync.RWMutex
 }
 
 // NewTargetHandler creates a new handler for the specified client target
-func NewTargetHandler(t client.Target, logf, debugf, errorf LogFunc, chain HookChain) (*TargetHandler, error) {
+func NewTargetHandler(t client.Target, conf Config) (*TargetHandler, error) {
 	conn, err := client.Dial(t)
 	if err != nil {
 		return nil, err
@@ -74,10 +66,7 @@ func NewTargetHandler(t client.Target, logf, debugf, errorf LogFunc, chain HookC
 
 	return &TargetHandler{
 		conn:   conn,
-		logf:   logf,
-		debugf: debugf,
-		errorf: errorf,
-		hookChain: chain,
+		Config: conf,
 	}, nil
 }
 
@@ -104,15 +93,7 @@ func (h *TargetHandler) Run(ctxt context.Context) error {
 	go h.run(ctxt)
 
 	// enable domains
-	for _, a := range []Action{
-		logdom.Enable(),
-		rundom.Enable(),
-		network.Enable(),
-		inspector.Enable(),
-		page.Enable(),
-		dom.Enable(),
-		css.Enable(),
-	} {
+	for _, a := range h.domains {
 		err = a.Do(ctxt, h)
 		if err != nil {
 			return fmt.Errorf("unable to execute %s: %v", reflect.TypeOf(a), err)

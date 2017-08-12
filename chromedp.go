@@ -34,11 +34,8 @@ type CDP struct {
 	// handlerMap is the map of target IDs to its active handler.
 	handlerMap map[string]int
 
-	// logging funcs
-	logf, debugf, errorf LogFunc
-
-	// optional message hooks
-	hookChain HookChain
+	// Config contains logging and message hooks
+	Config
 
 	sync.RWMutex
 }
@@ -50,15 +47,26 @@ func New(ctxt context.Context, opts ...Option) (*CDP, error) {
 	c := &CDP{
 		handlers:   make([]*TargetHandler, 0),
 		handlerMap: make(map[string]int),
-		logf:       log.Printf,
-		debugf:     func(string, ...interface{}) {},
-		errorf:     func(s string, v ...interface{}) { log.Printf("error: "+s, v...) },
-		hookChain:  make(HookChain, 0),
+		Config: Config{
+			logf:       log.Printf,
+			debugf:     func(string, ...interface{}) {},
+			errorf:     func(s string, v ...interface{}) { log.Printf("error: "+s, v...) },
+			hookChain:  make(HookChain, 0),
+			domains:	make([]Action, 0),
+		},
 	}
 
 	// apply options
 	for _, o := range opts {
 		err = o(c)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// if no domains set by options -> set to default
+	if len(c.domains) == 0 {
+		err = WithDefaultDomains()(c)
 		if err != nil {
 			return nil, err
 		}
@@ -121,7 +129,7 @@ func (c *CDP) AddTarget(ctxt context.Context, t client.Target) {
 	defer c.Unlock()
 
 	// create target manager
-	h, err := NewTargetHandler(t, c.logf, c.debugf, c.errorf, c.hookChain)
+	h, err := NewTargetHandler(t, c.Config)
 	if err != nil {
 		c.errorf("could not create handler for %s: %v", t, err)
 		return
