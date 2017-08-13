@@ -7,6 +7,7 @@ import (
 	cdp "github.com/igsky/chromedp"
 	"github.com/igsky/chromedp/cdp/network"
 	"github.com/igsky/chromedp/client"
+	"time"
 )
 
 func main() {
@@ -21,6 +22,10 @@ func main() {
 	// create chrome
 	c, err := cdp.New(ctxt,
 		cdp.WithTargets(client.New().WatchPageTargets(ctxt)),
+		cdp.WithDefaultDomains(),
+		// enable network domain, to get status code
+		cdp.WithCustomDomain(network.Enable()),
+		// set handler to capture status code
 		cdp.WithCustomHook(
 			func(msg interface{}) {
 				// look for responses received
@@ -44,12 +49,13 @@ func main() {
 
 	// show results
 	log.Printf("Status code: %v\n", statusCode)
-	log.Printf("Html: %s...", html)
+	log.Printf("Html: %s", html)
 }
 
 func scrape(res *string, url string) cdp.Tasks {
 	return cdp.Tasks{
 		cdp.Navigate(url),
+		cdp.Sleep(1 * time.Second),
 		cdp.InnerHTML(`html`, res),
 	}
 }
