@@ -44,7 +44,7 @@ func main() {
 
 	// show results
 	log.Printf("Status code: %v\n", statusCode)
-	log.Printf("Html: %s...", html[:300])
+	log.Printf("Html: %s...", html)
 }
 
 func scrape(res *string, url string) cdp.Tasks {
