@@ -123,7 +123,6 @@ func WithDefaultDomains() Option {
 		c.Config.domains = []Action{
 			logdom.Enable(),
 			rundom.Enable(),
-			network.Enable(),
 			inspector.Enable(),
 			page.Enable(),
 			dom.Enable(),
