@@ -8,9 +8,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/igsky/chromedp/cdp"
-	"github.com/igsky/chromedp/client"
-	"github.com/igsky/chromedp/runner"
+	"github.com/knq/chromedp/cdp"
+	"github.com/knq/chromedp/client"
+	"github.com/knq/chromedp/runner"
 )
 
 // CDP contains information for managing a Chrome process runner, low level

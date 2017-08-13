@@ -11,12 +11,12 @@ import (
 
 	"github.com/mailru/easyjson"
 
-	"github.com/igsky/chromedp/cdp"
-	"github.com/igsky/chromedp/cdp/cdputil"
-	"github.com/igsky/chromedp/cdp/dom"
-	"github.com/igsky/chromedp/cdp/inspector"
-	"github.com/igsky/chromedp/cdp/page"
-	"github.com/igsky/chromedp/client"
+	"github.com/knq/chromedp/cdp"
+	"github.com/knq/chromedp/cdp/cdputil"
+	"github.com/knq/chromedp/cdp/dom"
+	"github.com/knq/chromedp/cdp/inspector"
+	"github.com/knq/chromedp/cdp/page"
+	"github.com/knq/chromedp/client"
 )
 
 // TargetHandler manages a Chrome Debugging Protocol target.

@@ -9,7 +9,7 @@ package deviceorientation
 import (
 	"context"
 
-	cdp "github.com/igsky/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 )
 
 // SetDeviceOrientationOverrideParams overrides the Device Orientation.

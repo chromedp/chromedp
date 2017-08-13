@@ -5,7 +5,7 @@ package page
 import (
 	"errors"
 
-	cdp "github.com/igsky/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"

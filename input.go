@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/igsky/chromedp/cdp"
-	"github.com/igsky/chromedp/cdp/dom"
-	"github.com/igsky/chromedp/cdp/input"
-	"github.com/igsky/chromedp/kb"
+	"github.com/knq/chromedp/cdp"
+	"github.com/knq/chromedp/cdp/dom"
+	"github.com/knq/chromedp/cdp/input"
+	"github.com/knq/chromedp/kb"
 )
 
 // MouseAction is a mouse action.

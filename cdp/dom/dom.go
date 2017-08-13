@@ -19,8 +19,8 @@ package dom
 import (
 	"context"
 
-	cdp "github.com/igsky/chromedp/cdp"
-	"github.com/igsky/chromedp/cdp/runtime"
+	cdp "github.com/knq/chromedp/cdp"
+	"github.com/knq/chromedp/cdp/runtime"
 )
 
 // EnableParams enables DOM agent for the given page.

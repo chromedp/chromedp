@@ -3,8 +3,8 @@ package log
 import (
 	"errors"
 
-	"github.com/igsky/chromedp/cdp/network"
-	"github.com/igsky/chromedp/cdp/runtime"
+	"github.com/knq/chromedp/cdp/network"
+	"github.com/knq/chromedp/cdp/runtime"
 	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"

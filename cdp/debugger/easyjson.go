@@ -4,7 +4,7 @@ package debugger
 
 import (
 	json "encoding/json"
-	runtime "github.com/igsky/chromedp/cdp/runtime"
+	runtime "github.com/knq/chromedp/cdp/runtime"
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"

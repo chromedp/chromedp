@@ -18,7 +18,7 @@ package css
 import (
 	"context"
 
-	cdp "github.com/igsky/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 )
 
 // EnableParams enables the CSS agent for the given page. Clients should not

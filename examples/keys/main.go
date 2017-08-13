@@ -6,8 +6,8 @@ import (
 	"os"
 	"time"
 
-	cdp "github.com/igsky/chromedp"
-	"github.com/igsky/chromedp/kb"
+	cdp "github.com/knq/chromedp"
+	"github.com/knq/chromedp/kb"
 )
 
 func main() {

@@ -7,8 +7,8 @@ import (
 	"log"
 	"time"
 
-	cdp "github.com/igsky/chromedp"
-	cdptypes "github.com/igsky/chromedp/cdp"
+	cdp "github.com/knq/chromedp"
+	cdptypes "github.com/knq/chromedp/cdp"
 )
 
 func main() {

@@ -11,7 +11,7 @@ package schema
 import (
 	"context"
 
-	cdp "github.com/igsky/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 )
 
 // GetDomainsParams returns supported domains.

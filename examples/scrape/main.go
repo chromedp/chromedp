@@ -4,9 +4,9 @@ import (
 	"context"
 	"log"
 
-	cdp "github.com/igsky/chromedp"
-	"github.com/igsky/chromedp/cdp/network"
-	"github.com/igsky/chromedp/client"
+	cdp "github.com/knq/chromedp"
+	"github.com/knq/chromedp/cdp/network"
+	"github.com/knq/chromedp/client"
 	"time"
 )
 

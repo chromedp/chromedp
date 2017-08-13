@@ -4,9 +4,9 @@ package network
 
 import (
 	json "encoding/json"
-	cdp "github.com/igsky/chromedp/cdp"
-	runtime "github.com/igsky/chromedp/cdp/runtime"
-	security "github.com/igsky/chromedp/cdp/security"
+	cdp "github.com/knq/chromedp/cdp"
+	runtime "github.com/knq/chromedp/cdp/runtime"
+	security "github.com/knq/chromedp/cdp/security"
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"

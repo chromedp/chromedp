@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	cdp "github.com/igsky/chromedp"
+	cdp "github.com/knq/chromedp"
 )
 
 func main() {

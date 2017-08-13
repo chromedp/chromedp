@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	cdp "github.com/igsky/chromedp"
+	cdp "github.com/knq/chromedp"
 )
 
 func main() {

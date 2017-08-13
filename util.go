@@ -3,7 +3,7 @@ package chromedp
 import (
 	"time"
 
-	"github.com/igsky/chromedp/cdp"
+	"github.com/knq/chromedp/cdp"
 )
 
 const (

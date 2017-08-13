@@ -7,7 +7,7 @@ package kb
 import (
 	"unicode"
 
-	"github.com/igsky/chromedp/cdp/input"
+	"github.com/knq/chromedp/cdp/input"
 )
 
 // Key contains information for generating a key press based off the unicode

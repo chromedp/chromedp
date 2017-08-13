@@ -15,7 +15,7 @@ import (
 
 	"net/url"
 
-	"github.com/igsky/chromedp/client"
+	"github.com/knq/chromedp/client"
 )
 
 const (

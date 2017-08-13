@@ -11,7 +11,7 @@ package target
 import (
 	"context"
 
-	cdp "github.com/igsky/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 )
 
 // SetDiscoverTargetsParams controls whether to discover available targets

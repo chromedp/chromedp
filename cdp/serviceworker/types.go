@@ -3,7 +3,7 @@ package serviceworker
 import (
 	"errors"
 
-	"github.com/igsky/chromedp/cdp/target"
+	"github.com/knq/chromedp/cdp/target"
 	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"

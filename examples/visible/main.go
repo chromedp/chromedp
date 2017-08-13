@@ -7,9 +7,9 @@ import (
 	"os"
 	"time"
 
-	cdp "github.com/igsky/chromedp"
-	cdptypes "github.com/igsky/chromedp/cdp"
-	rundom "github.com/igsky/chromedp/cdp/runtime"
+	cdp "github.com/knq/chromedp"
+	cdptypes "github.com/knq/chromedp/cdp"
+	rundom "github.com/knq/chromedp/cdp/runtime"
 )
 
 func main() {

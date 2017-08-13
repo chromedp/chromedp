@@ -10,10 +10,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/igsky/chromedp/cdp"
-	"github.com/igsky/chromedp/cdp/css"
-	"github.com/igsky/chromedp/cdp/dom"
-	"github.com/igsky/chromedp/kb"
+	"github.com/knq/chromedp/cdp"
+	"github.com/knq/chromedp/cdp/css"
+	"github.com/knq/chromedp/cdp/dom"
+	"github.com/knq/chromedp/kb"
 )
 
 func TestNodes(t *testing.T) {

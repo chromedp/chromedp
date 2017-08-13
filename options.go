@@ -1,14 +1,14 @@
 package chromedp
 
 import (
-	"github.com/igsky/chromedp/client"
-	"github.com/igsky/chromedp/runner"
-	"github.com/igsky/chromedp/cdp/inspector"
-	"github.com/igsky/chromedp/cdp/page"
-	"github.com/igsky/chromedp/cdp/dom"
-	"github.com/igsky/chromedp/cdp/css"
-	logdom "github.com/igsky/chromedp/cdp/log"
-	rundom "github.com/igsky/chromedp/cdp/runtime"
+	"github.com/knq/chromedp/client"
+	"github.com/knq/chromedp/runner"
+	"github.com/knq/chromedp/cdp/inspector"
+	"github.com/knq/chromedp/cdp/page"
+	"github.com/knq/chromedp/cdp/dom"
+	"github.com/knq/chromedp/cdp/css"
+	logdom "github.com/knq/chromedp/cdp/log"
+	rundom "github.com/knq/chromedp/cdp/runtime"
 )
 
 // Option is a Chrome Debugging Protocol option.

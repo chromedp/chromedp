@@ -11,7 +11,7 @@ package emulation
 import (
 	"context"
 
-	cdp "github.com/igsky/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 )
 
 // SetDeviceMetricsOverrideParams overrides the values of device screen

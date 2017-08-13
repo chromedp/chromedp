@@ -9,7 +9,7 @@ package profiler
 import (
 	"context"
 
-	cdp "github.com/igsky/chromedp/cdp"
+	cdp "github.com/knq/chromedp/cdp"
 )
 
 // EnableParams [no description].
