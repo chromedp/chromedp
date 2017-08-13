@@ -3,7 +3,6 @@ package chromedp
 import (
 	"github.com/igsky/chromedp/client"
 	"github.com/igsky/chromedp/runner"
-	"github.com/igsky/chromedp/cdp/network"
 	"github.com/igsky/chromedp/cdp/inspector"
 	"github.com/igsky/chromedp/cdp/page"
 	"github.com/igsky/chromedp/cdp/dom"
@@ -132,9 +131,9 @@ func WithDefaultDomains() Option {
 	}
 }
 
-func WithCustomDomain(f func() Action) Option {
+func WithCustomDomain(a Action) Option {
 	return func(c *CDP) error {
-		c.Config.domains = append(c.Config.domains, f())
+		c.Config.domains = append(c.Config.domains, a)
 		return nil
 	}
 }
@@ -151,5 +150,3 @@ type Config struct {
 	// note: overrides default behaviour
 	domains ChromeDomains
 }
-
-
