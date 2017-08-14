@@ -13,12 +13,9 @@ import (
 
 	"github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/cdputil"
-	"github.com/knq/chromedp/cdp/css"
 	"github.com/knq/chromedp/cdp/dom"
 	"github.com/knq/chromedp/cdp/inspector"
-	logdom "github.com/knq/chromedp/cdp/log"
 	"github.com/knq/chromedp/cdp/page"
-	rundom "github.com/knq/chromedp/cdp/runtime"
 	"github.com/knq/chromedp/client"
 )
 
@@ -54,14 +51,14 @@ type TargetHandler struct {
 	res   map[int64]chan *cdp.Message
 	resrw sync.RWMutex
 
-	// logging funcs
-	logf, debugf, errorf LogFunc
+	// Config contains logging and message hooks
+	Config
 
 	sync.RWMutex
 }
 
-// NewTargetHandler creates a new handler for the specified client target.
-func NewTargetHandler(t client.Target, logf, debugf, errorf LogFunc) (*TargetHandler, error) {
+// NewTargetHandler creates a new handler for the specified client target
+func NewTargetHandler(t client.Target, conf Config) (*TargetHandler, error) {
 	conn, err := client.Dial(t)
 	if err != nil {
 		return nil, err
@@ -69,9 +66,7 @@ func NewTargetHandler(t client.Target, logf, debugf, errorf LogFunc) (*TargetHan
 
 	return &TargetHandler{
 		conn:   conn,
-		logf:   logf,
-		debugf: debugf,
-		errorf: errorf,
+		Config: conf,
 	}, nil
 }
 
@@ -98,15 +93,7 @@ func (h *TargetHandler) Run(ctxt context.Context) error {
 	go h.run(ctxt)
 
 	// enable domains
-	for _, a := range []Action{
-		logdom.Enable(),
-		rundom.Enable(),
-		//network.Enable(),
-		inspector.Enable(),
-		page.Enable(),
-		dom.Enable(),
-		css.Enable(),
-	} {
+	for _, a := range h.domains {
 		err = a.Do(ctxt, h)
 		if err != nil {
 			return fmt.Errorf("unable to execute %s: %v", reflect.TypeOf(a), err)
@@ -235,6 +222,9 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdp.Message) err
 	if err != nil {
 		return err
 	}
+
+	// pass message through hooks
+	go h.hookChain.Process(ev)
 
 	switch e := ev.(type) {
 	case *inspector.EventDetached:

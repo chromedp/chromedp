@@ -34,8 +34,8 @@ type CDP struct {
 	// handlerMap is the map of target IDs to its active handler.
 	handlerMap map[string]int
 
-	// logging funcs
-	logf, debugf, errorf LogFunc
+	// Config contains logging and message hooks
+	Config
 
 	sync.RWMutex
 }
@@ -47,14 +47,26 @@ func New(ctxt context.Context, opts ...Option) (*CDP, error) {
 	c := &CDP{
 		handlers:   make([]*TargetHandler, 0),
 		handlerMap: make(map[string]int),
-		logf:       log.Printf,
-		debugf:     func(string, ...interface{}) {},
-		errorf:     func(s string, v ...interface{}) { log.Printf("error: "+s, v...) },
+		Config: Config{
+			logf:       log.Printf,
+			debugf:     func(string, ...interface{}) {},
+			errorf:     func(s string, v ...interface{}) { log.Printf("error: "+s, v...) },
+			hookChain:  make(HookChain, 0),
+			domains:	make([]Action, 0),
+		},
 	}
 
 	// apply options
 	for _, o := range opts {
 		err = o(c)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// if no domains set by options -> set to default
+	if len(c.domains) == 0 {
+		err = WithDefaultDomains()(c)
 		if err != nil {
 			return nil, err
 		}
@@ -117,7 +129,7 @@ func (c *CDP) AddTarget(ctxt context.Context, t client.Target) {
 	defer c.Unlock()
 
 	// create target manager
-	h, err := NewTargetHandler(t, c.logf, c.debugf, c.errorf)
+	h, err := NewTargetHandler(t, c.Config)
 	if err != nil {
 		c.errorf("could not create handler for %s: %v", t, err)
 		return
@@ -351,82 +363,4 @@ func (c *CDP) Run(ctxt context.Context, a Action) error {
 	c.RUnlock()
 
 	return a.Do(ctxt, cur)
-}
-
-// Option is a Chrome Debugging Protocol option.
-type Option func(*CDP) error
-
-// WithRunner is a CDP option to specify the underlying Chrome runner to
-// monitor for page handlers.
-func WithRunner(r *runner.Runner) Option {
-	return func(c *CDP) error {
-		c.r = r
-		return nil
-	}
-}
-
-// WithTargets is a CDP option to specify the incoming targets to monitor for
-// page handlers.
-func WithTargets(watch <-chan client.Target) Option {
-	return func(c *CDP) error {
-		c.watch = watch
-		return nil
-	}
-}
-
-// WithRunnerOptions is a CDP option to specify the options to pass to a newly
-// created Chrome process runner.
-func WithRunnerOptions(opts ...runner.CommandLineOption) Option {
-	return func(c *CDP) error {
-		c.opts = opts
-		return nil
-	}
-}
-
-// LogFunc is the common logging func type.
-type LogFunc func(string, ...interface{})
-
-// WithLogf is a CDP option to specify a func to receive general logging.
-func WithLogf(f LogFunc) Option {
-	return func(c *CDP) error {
-		c.logf = f
-		return nil
-	}
-}
-
-// WithDebugf is a CDP option to specify a func to receive debug logging (ie,
-// protocol information).
-func WithDebugf(f LogFunc) Option {
-	return func(c *CDP) error {
-		c.debugf = f
-		return nil
-	}
-}
-
-// WithErrorf is a CDP option to specify a func to receive error logging.
-func WithErrorf(f LogFunc) Option {
-	return func(c *CDP) error {
-		c.errorf = f
-		return nil
-	}
-}
-
-// WithLog is a CDP option that sets the logging, debugging, and error funcs to
-// f.
-func WithLog(f LogFunc) Option {
-	return func(c *CDP) error {
-		c.logf = f
-		c.debugf = f
-		c.errorf = f
-		return nil
-	}
-}
-
-// WithConsolef is a CDP option to specify a func to receive chrome log events.
-//
-// Note: NOT YET IMPLEMENTED.
-func WithConsolef(f LogFunc) Option {
-	return func(c *CDP) error {
-		return nil
-	}
 }
