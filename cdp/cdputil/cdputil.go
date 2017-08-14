@@ -315,9 +315,6 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandSecurityDisable:
 		return emptyVal, nil
 
-	case cdp.CommandSecurityShowCertificateViewer:
-		return emptyVal, nil
-
 	case cdp.CommandSecurityHandleCertificateError:
 		return emptyVal, nil
 
@@ -1082,6 +1079,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 
 	case cdp.CommandBrowserGetWindowForTarget:
 		v = new(browser.GetWindowForTargetReturns)
+
+	case cdp.CommandBrowserGetVersion:
+		v = new(browser.GetVersionReturns)
 
 	case cdp.CommandBrowserSetWindowBounds:
 		return emptyVal, nil

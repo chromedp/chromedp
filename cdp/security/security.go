@@ -42,21 +42,6 @@ func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandSecurityDisable, nil, nil)
 }
 
-// ShowCertificateViewerParams displays native dialog with the certificate
-// details.
-type ShowCertificateViewerParams struct{}
-
-// ShowCertificateViewer displays native dialog with the certificate details.
-func ShowCertificateViewer() *ShowCertificateViewerParams {
-	return &ShowCertificateViewerParams{}
-}
-
-// Do executes Security.showCertificateViewer against the provided context and
-// target handler.
-func (p *ShowCertificateViewerParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandSecurityShowCertificateViewer, nil, nil)
-}
-
 // HandleCertificateErrorParams handles a certificate error that fired a
 // certificateError event.
 type HandleCertificateErrorParams struct {

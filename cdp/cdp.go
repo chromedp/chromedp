@@ -139,7 +139,6 @@ const (
 	EventSecurityCertificateError                          MethodType = "Security.certificateError"
 	CommandSecurityEnable                                  MethodType = "Security.enable"
 	CommandSecurityDisable                                 MethodType = "Security.disable"
-	CommandSecurityShowCertificateViewer                   MethodType = "Security.showCertificateViewer"
 	CommandSecurityHandleCertificateError                  MethodType = "Security.handleCertificateError"
 	CommandSecuritySetOverrideCertificateErrors            MethodType = "Security.setOverrideCertificateErrors"
 	EventNetworkResourceChangedPriority                    MethodType = "Network.resourceChangedPriority"
@@ -393,6 +392,7 @@ const (
 	CommandTetheringBind                                   MethodType = "Tethering.bind"
 	CommandTetheringUnbind                                 MethodType = "Tethering.unbind"
 	CommandBrowserGetWindowForTarget                       MethodType = "Browser.getWindowForTarget"
+	CommandBrowserGetVersion                               MethodType = "Browser.getVersion"
 	CommandBrowserSetWindowBounds                          MethodType = "Browser.setWindowBounds"
 	CommandBrowserGetWindowBounds                          MethodType = "Browser.getWindowBounds"
 	CommandSchemaGetDomains                                MethodType = "Schema.getDomains"
@@ -668,8 +668,6 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandSecurityEnable
 	case CommandSecurityDisable:
 		*t = CommandSecurityDisable
-	case CommandSecurityShowCertificateViewer:
-		*t = CommandSecurityShowCertificateViewer
 	case CommandSecurityHandleCertificateError:
 		*t = CommandSecurityHandleCertificateError
 	case CommandSecuritySetOverrideCertificateErrors:
@@ -1176,6 +1174,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandTetheringUnbind
 	case CommandBrowserGetWindowForTarget:
 		*t = CommandBrowserGetWindowForTarget
+	case CommandBrowserGetVersion:
+		*t = CommandBrowserGetVersion
 	case CommandBrowserSetWindowBounds:
 		*t = CommandBrowserSetWindowBounds
 	case CommandBrowserGetWindowBounds:

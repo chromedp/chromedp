@@ -55,6 +55,43 @@ func (p *GetWindowForTargetParams) Do(ctxt context.Context, h cdp.Handler) (wind
 	return res.WindowID, res.Bounds, nil
 }
 
+// GetVersionParams returns version information.
+type GetVersionParams struct{}
+
+// GetVersion returns version information.
+func GetVersion() *GetVersionParams {
+	return &GetVersionParams{}
+}
+
+// GetVersionReturns return values.
+type GetVersionReturns struct {
+	ProtocolVersion string `json:"protocolVersion,omitempty"` // Protocol version.
+	Product         string `json:"product,omitempty"`         // Product name.
+	Revision        string `json:"revision,omitempty"`        // Product revision.
+	UserAgent       string `json:"userAgent,omitempty"`       // User-Agent.
+	JsVersion       string `json:"jsVersion,omitempty"`       // V8 version.
+}
+
+// Do executes Browser.getVersion against the provided context and
+// target handler.
+//
+// returns:
+//   protocolVersion - Protocol version.
+//   product - Product name.
+//   revision - Product revision.
+//   userAgent - User-Agent.
+//   jsVersion - V8 version.
+func (p *GetVersionParams) Do(ctxt context.Context, h cdp.Handler) (protocolVersion string, product string, revision string, userAgent string, jsVersion string, err error) {
+	// execute
+	var res GetVersionReturns
+	err = h.Execute(ctxt, cdp.CommandBrowserGetVersion, nil, &res)
+	if err != nil {
+		return "", "", "", "", "", err
+	}
+
+	return res.ProtocolVersion, res.Product, res.Revision, res.UserAgent, res.JsVersion, nil
+}
+
 // SetWindowBoundsParams set position and/or size of the browser window.
 type SetWindowBoundsParams struct {
 	WindowID WindowID `json:"windowId"` // Browser window id.

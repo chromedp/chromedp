@@ -2294,14 +2294,17 @@
               "description": "Full text explanation of the factor."
             },
             {
-              "name": "hasCertificate",
-              "type": "boolean",
-              "description": "True if the page has a certificate."
-            },
-            {
               "name": "mixedContentType",
               "$ref": "MixedContentType",
               "description": "The type of mixed content described by the explanation."
+            },
+            {
+              "name": "certificate",
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Page certificate."
             }
           ],
           "description": "An explanation of an factor contributing to the security state."
@@ -2366,10 +2369,6 @@
         {
           "name": "disable",
           "description": "Disables tracking security state changes."
-        },
-        {
-          "name": "showCertificateViewer",
-          "description": "Displays native dialog with the certificate details."
         },
         {
           "name": "handleCertificateError",
@@ -11255,6 +11254,37 @@
               "name": "bounds",
               "$ref": "Bounds",
               "description": "Bounds information of the window. When window state is 'minimized', the restored window position and size are returned."
+            }
+          ]
+        },
+        {
+          "name": "getVersion",
+          "description": "Returns version information.",
+          "returns": [
+            {
+              "name": "protocolVersion",
+              "type": "string",
+              "description": "Protocol version."
+            },
+            {
+              "name": "product",
+              "type": "string",
+              "description": "Product name."
+            },
+            {
+              "name": "revision",
+              "type": "string",
+              "description": "Product revision."
+            },
+            {
+              "name": "userAgent",
+              "type": "string",
+              "description": "User-Agent."
+            },
+            {
+              "name": "jsVersion",
+              "type": "string",
+              "description": "V8 version."
             }
           ]
         },
