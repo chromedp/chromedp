@@ -56,6 +56,7 @@ const (
 	CommandMemoryGetDOMCounters                            MethodType = "Memory.getDOMCounters"
 	CommandMemorySetPressureNotificationsSuppressed        MethodType = "Memory.setPressureNotificationsSuppressed"
 	CommandMemorySimulatePressureNotification              MethodType = "Memory.simulatePressureNotification"
+	EventPerformanceMetrics                                MethodType = "Performance.metrics"
 	CommandPerformanceEnable                               MethodType = "Performance.enable"
 	CommandPerformanceDisable                              MethodType = "Performance.disable"
 	CommandPerformanceGetMetrics                           MethodType = "Performance.getMetrics"
@@ -141,6 +142,7 @@ const (
 	CommandSecurityDisable                                 MethodType = "Security.disable"
 	CommandSecurityHandleCertificateError                  MethodType = "Security.handleCertificateError"
 	CommandSecuritySetOverrideCertificateErrors            MethodType = "Security.setOverrideCertificateErrors"
+	CommandAuditsGetEncodedResponse                        MethodType = "Audits.getEncodedResponse"
 	EventNetworkResourceChangedPriority                    MethodType = "Network.resourceChangedPriority"
 	EventNetworkRequestWillBeSent                          MethodType = "Network.requestWillBeSent"
 	EventNetworkRequestServedFromCache                     MethodType = "Network.requestServedFromCache"
@@ -170,8 +172,9 @@ const (
 	CommandNetworkClearBrowserCookies                      MethodType = "Network.clearBrowserCookies"
 	CommandNetworkGetCookies                               MethodType = "Network.getCookies"
 	CommandNetworkGetAllCookies                            MethodType = "Network.getAllCookies"
-	CommandNetworkDeleteCookie                             MethodType = "Network.deleteCookie"
+	CommandNetworkDeleteCookies                            MethodType = "Network.deleteCookies"
 	CommandNetworkSetCookie                                MethodType = "Network.setCookie"
+	CommandNetworkSetCookies                               MethodType = "Network.setCookies"
 	CommandNetworkCanEmulateNetworkConditions              MethodType = "Network.canEmulateNetworkConditions"
 	CommandNetworkEmulateNetworkConditions                 MethodType = "Network.emulateNetworkConditions"
 	CommandNetworkSetCacheDisabled                         MethodType = "Network.setCacheDisabled"
@@ -379,8 +382,12 @@ const (
 	CommandAnimationReleaseAnimations                      MethodType = "Animation.releaseAnimations"
 	CommandAnimationResolveAnimation                       MethodType = "Animation.resolveAnimation"
 	CommandAccessibilityGetPartialAXTree                   MethodType = "Accessibility.getPartialAXTree"
+	EventStorageCacheStorageListUpdated                    MethodType = "Storage.cacheStorageListUpdated"
+	EventStorageCacheStorageContentUpdated                 MethodType = "Storage.cacheStorageContentUpdated"
 	CommandStorageClearDataForOrigin                       MethodType = "Storage.clearDataForOrigin"
 	CommandStorageGetUsageAndQuota                         MethodType = "Storage.getUsageAndQuota"
+	CommandStorageTrackCacheStorageForOrigin               MethodType = "Storage.trackCacheStorageForOrigin"
+	CommandStorageUntrackCacheStorageForOrigin             MethodType = "Storage.untrackCacheStorageForOrigin"
 	EventLogEntryAdded                                     MethodType = "Log.entryAdded"
 	CommandLogEnable                                       MethodType = "Log.enable"
 	CommandLogDisable                                      MethodType = "Log.disable"
@@ -502,6 +509,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandMemorySetPressureNotificationsSuppressed
 	case CommandMemorySimulatePressureNotification:
 		*t = CommandMemorySimulatePressureNotification
+	case EventPerformanceMetrics:
+		*t = EventPerformanceMetrics
 	case CommandPerformanceEnable:
 		*t = CommandPerformanceEnable
 	case CommandPerformanceDisable:
@@ -672,6 +681,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandSecurityHandleCertificateError
 	case CommandSecuritySetOverrideCertificateErrors:
 		*t = CommandSecuritySetOverrideCertificateErrors
+	case CommandAuditsGetEncodedResponse:
+		*t = CommandAuditsGetEncodedResponse
 	case EventNetworkResourceChangedPriority:
 		*t = EventNetworkResourceChangedPriority
 	case EventNetworkRequestWillBeSent:
@@ -730,10 +741,12 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandNetworkGetCookies
 	case CommandNetworkGetAllCookies:
 		*t = CommandNetworkGetAllCookies
-	case CommandNetworkDeleteCookie:
-		*t = CommandNetworkDeleteCookie
+	case CommandNetworkDeleteCookies:
+		*t = CommandNetworkDeleteCookies
 	case CommandNetworkSetCookie:
 		*t = CommandNetworkSetCookie
+	case CommandNetworkSetCookies:
+		*t = CommandNetworkSetCookies
 	case CommandNetworkCanEmulateNetworkConditions:
 		*t = CommandNetworkCanEmulateNetworkConditions
 	case CommandNetworkEmulateNetworkConditions:
@@ -1148,10 +1161,18 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandAnimationResolveAnimation
 	case CommandAccessibilityGetPartialAXTree:
 		*t = CommandAccessibilityGetPartialAXTree
+	case EventStorageCacheStorageListUpdated:
+		*t = EventStorageCacheStorageListUpdated
+	case EventStorageCacheStorageContentUpdated:
+		*t = EventStorageCacheStorageContentUpdated
 	case CommandStorageClearDataForOrigin:
 		*t = CommandStorageClearDataForOrigin
 	case CommandStorageGetUsageAndQuota:
 		*t = CommandStorageGetUsageAndQuota
+	case CommandStorageTrackCacheStorageForOrigin:
+		*t = CommandStorageTrackCacheStorageForOrigin
+	case CommandStorageUntrackCacheStorageForOrigin:
+		*t = CommandStorageUntrackCacheStorageForOrigin
 	case EventLogEntryAdded:
 		*t = EventLogEntryAdded
 	case CommandLogEnable:

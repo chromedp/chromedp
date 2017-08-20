@@ -488,17 +488,34 @@ func (p *RemoveAttributeParams) Do(ctxt context.Context, h cdp.Handler) (err err
 
 // GetOuterHTMLParams returns node's HTML markup.
 type GetOuterHTMLParams struct {
-	NodeID cdp.NodeID `json:"nodeId"` // Id of the node to get markup for.
+	NodeID        cdp.NodeID             `json:"nodeId,omitempty"`        // Identifier of the node.
+	BackendNodeID cdp.BackendNodeID      `json:"backendNodeId,omitempty"` // Identifier of the backend node.
+	ObjectID      runtime.RemoteObjectID `json:"objectId,omitempty"`      // JavaScript object id of the node wrapper.
 }
 
 // GetOuterHTML returns node's HTML markup.
 //
 // parameters:
-//   nodeID - Id of the node to get markup for.
-func GetOuterHTML(nodeID cdp.NodeID) *GetOuterHTMLParams {
-	return &GetOuterHTMLParams{
-		NodeID: nodeID,
-	}
+func GetOuterHTML() *GetOuterHTMLParams {
+	return &GetOuterHTMLParams{}
+}
+
+// WithNodeID identifier of the node.
+func (p GetOuterHTMLParams) WithNodeID(nodeID cdp.NodeID) *GetOuterHTMLParams {
+	p.NodeID = nodeID
+	return &p
+}
+
+// WithBackendNodeID identifier of the backend node.
+func (p GetOuterHTMLParams) WithBackendNodeID(backendNodeID cdp.BackendNodeID) *GetOuterHTMLParams {
+	p.BackendNodeID = backendNodeID
+	return &p
+}
+
+// WithObjectID javaScript object id of the node wrapper.
+func (p GetOuterHTMLParams) WithObjectID(objectID runtime.RemoteObjectID) *GetOuterHTMLParams {
+	p.ObjectID = objectID
+	return &p
 }
 
 // GetOuterHTMLReturns return values.

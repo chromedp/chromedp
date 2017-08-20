@@ -371,93 +371,118 @@ func (p *GetAllCookiesParams) Do(ctxt context.Context, h cdp.Handler) (cookies [
 	return res.Cookies, nil
 }
 
-// DeleteCookieParams deletes browser cookie with given name, domain and
-// path.
-type DeleteCookieParams struct {
-	CookieName string `json:"cookieName"` // Name of the cookie to remove.
-	URL        string `json:"url"`        // URL to match cooke domain and path.
+// DeleteCookiesParams deletes browser cookies with matching name and url or
+// domain/path pair.
+type DeleteCookiesParams struct {
+	Name   string `json:"name"`             // Name of the cookies to remove.
+	URL    string `json:"url,omitempty"`    // If specified, deletes all the cookies with the given name where domain and path match provided URL.
+	Domain string `json:"domain,omitempty"` // If specified, deletes only cookies with the exact domain.
+	Path   string `json:"path,omitempty"`   // If specified, deletes only cookies with the exact path.
 }
 
-// DeleteCookie deletes browser cookie with given name, domain and path.
+// DeleteCookies deletes browser cookies with matching name and url or
+// domain/path pair.
 //
 // parameters:
-//   cookieName - Name of the cookie to remove.
-//   url - URL to match cooke domain and path.
-func DeleteCookie(cookieName string, url string) *DeleteCookieParams {
-	return &DeleteCookieParams{
-		CookieName: cookieName,
-		URL:        url,
+//   name - Name of the cookies to remove.
+func DeleteCookies(name string) *DeleteCookiesParams {
+	return &DeleteCookiesParams{
+		Name: name,
 	}
 }
 
-// Do executes Network.deleteCookie against the provided context and
+// WithURL if specified, deletes all the cookies with the given name where
+// domain and path match provided URL.
+func (p DeleteCookiesParams) WithURL(url string) *DeleteCookiesParams {
+	p.URL = url
+	return &p
+}
+
+// WithDomain if specified, deletes only cookies with the exact domain.
+func (p DeleteCookiesParams) WithDomain(domain string) *DeleteCookiesParams {
+	p.Domain = domain
+	return &p
+}
+
+// WithPath if specified, deletes only cookies with the exact path.
+func (p DeleteCookiesParams) WithPath(path string) *DeleteCookiesParams {
+	p.Path = path
+	return &p
+}
+
+// Do executes Network.deleteCookies against the provided context and
 // target handler.
-func (p *DeleteCookieParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandNetworkDeleteCookie, p, nil)
+func (p *DeleteCookiesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandNetworkDeleteCookies, p, nil)
 }
 
 // SetCookieParams sets a cookie with the given cookie data; may overwrite
 // equivalent cookies if they exist.
 type SetCookieParams struct {
-	URL            string              `json:"url"`                      // The request-URI to associate with the setting of the cookie. This value can affect the default domain and path values of the created cookie.
-	Name           string              `json:"name"`                     // The name of the cookie.
-	Value          string              `json:"value"`                    // The value of the cookie.
-	Domain         string              `json:"domain,omitempty"`         // If omitted, the cookie becomes a host-only cookie.
-	Path           string              `json:"path,omitempty"`           // Defaults to the path portion of the url parameter.
-	Secure         bool                `json:"secure,omitempty"`         // Defaults ot false.
-	HTTPOnly       bool                `json:"httpOnly,omitempty"`       // Defaults to false.
-	SameSite       CookieSameSite      `json:"sameSite,omitempty"`       // Defaults to browser default behavior.
-	ExpirationDate *cdp.TimeSinceEpoch `json:"expirationDate,omitempty"` // If omitted, the cookie becomes a session cookie.
+	Name     string              `json:"name"`               // Cookie name.
+	Value    string              `json:"value"`              // Cookie value.
+	URL      string              `json:"url,omitempty"`      // The request-URI to associate with the setting of the cookie. This value can affect the default domain and path values of the created cookie.
+	Domain   string              `json:"domain,omitempty"`   // Cookie domain.
+	Path     string              `json:"path,omitempty"`     // Cookie path.
+	Secure   bool                `json:"secure,omitempty"`   // True if cookie is secure.
+	HTTPOnly bool                `json:"httpOnly,omitempty"` // True if cookie is http-only.
+	SameSite CookieSameSite      `json:"sameSite,omitempty"` // Cookie SameSite type.
+	Expires  *cdp.TimeSinceEpoch `json:"expires,omitempty"`  // Cookie expiration date, session cookie if not set
 }
 
 // SetCookie sets a cookie with the given cookie data; may overwrite
 // equivalent cookies if they exist.
 //
 // parameters:
-//   url - The request-URI to associate with the setting of the cookie. This value can affect the default domain and path values of the created cookie.
-//   name - The name of the cookie.
-//   value - The value of the cookie.
-func SetCookie(url string, name string, value string) *SetCookieParams {
+//   name - Cookie name.
+//   value - Cookie value.
+func SetCookie(name string, value string) *SetCookieParams {
 	return &SetCookieParams{
-		URL:   url,
 		Name:  name,
 		Value: value,
 	}
 }
 
-// WithDomain if omitted, the cookie becomes a host-only cookie.
+// WithURL the request-URI to associate with the setting of the cookie. This
+// value can affect the default domain and path values of the created cookie.
+func (p SetCookieParams) WithURL(url string) *SetCookieParams {
+	p.URL = url
+	return &p
+}
+
+// WithDomain cookie domain.
 func (p SetCookieParams) WithDomain(domain string) *SetCookieParams {
 	p.Domain = domain
 	return &p
 }
 
-// WithPath defaults to the path portion of the url parameter.
+// WithPath cookie path.
 func (p SetCookieParams) WithPath(path string) *SetCookieParams {
 	p.Path = path
 	return &p
 }
 
-// WithSecure defaults ot false.
+// WithSecure true if cookie is secure.
 func (p SetCookieParams) WithSecure(secure bool) *SetCookieParams {
 	p.Secure = secure
 	return &p
 }
 
-// WithHTTPOnly defaults to false.
+// WithHTTPOnly true if cookie is http-only.
 func (p SetCookieParams) WithHTTPOnly(httpOnly bool) *SetCookieParams {
 	p.HTTPOnly = httpOnly
 	return &p
 }
 
-// WithSameSite defaults to browser default behavior.
+// WithSameSite cookie SameSite type.
 func (p SetCookieParams) WithSameSite(sameSite CookieSameSite) *SetCookieParams {
 	p.SameSite = sameSite
 	return &p
 }
 
-// WithExpirationDate if omitted, the cookie becomes a session cookie.
-func (p SetCookieParams) WithExpirationDate(expirationDate *cdp.TimeSinceEpoch) *SetCookieParams {
-	p.ExpirationDate = expirationDate
+// WithExpires cookie expiration date, session cookie if not set.
+func (p SetCookieParams) WithExpires(expires *cdp.TimeSinceEpoch) *SetCookieParams {
+	p.Expires = expires
 	return &p
 }
 
@@ -480,6 +505,27 @@ func (p *SetCookieParams) Do(ctxt context.Context, h cdp.Handler) (success bool,
 	}
 
 	return res.Success, nil
+}
+
+// SetCookiesParams sets given cookies.
+type SetCookiesParams struct {
+	Cookies []*CookieParam `json:"cookies"` // Cookies to be set.
+}
+
+// SetCookies sets given cookies.
+//
+// parameters:
+//   cookies - Cookies to be set.
+func SetCookies(cookies []*CookieParam) *SetCookiesParams {
+	return &SetCookiesParams{
+		Cookies: cookies,
+	}
+}
+
+// Do executes Network.setCookies against the provided context and
+// target handler.
+func (p *SetCookiesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandNetworkSetCookies, p, nil)
 }
 
 // CanEmulateNetworkConditionsParams tells whether emulation of network

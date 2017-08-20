@@ -15,14 +15,13 @@ import (
 
 // TouchPoint [no description].
 type TouchPoint struct {
-	State         TouchState `json:"state"`                   // State of the touch point.
-	X             int64      `json:"x"`                       // X coordinate of the event relative to the main frame's viewport.
-	Y             int64      `json:"y"`                       // Y coordinate of the event relative to the main frame's viewport. 0 refers to the top of the viewport and Y increases as it proceeds towards the bottom of the viewport.
-	RadiusX       int64      `json:"radiusX,omitempty"`       // X radius of the touch area (default: 1).
-	RadiusY       int64      `json:"radiusY,omitempty"`       // Y radius of the touch area (default: 1).
-	RotationAngle float64    `json:"rotationAngle,omitempty"` // Rotation angle (default: 0.0).
-	Force         float64    `json:"force,omitempty"`         // Force (default: 1.0).
-	ID            float64    `json:"id,omitempty"`            // Identifier used to track touch sources between events, must be unique within an event.
+	X             int64   `json:"x"`                       // X coordinate of the event relative to the main frame's viewport in CSS pixels.
+	Y             int64   `json:"y"`                       // Y coordinate of the event relative to the main frame's viewport in CSS pixels. 0 refers to the top of the viewport and Y increases as it proceeds towards the bottom of the viewport.
+	RadiusX       int64   `json:"radiusX,omitempty"`       // X radius of the touch area (default: 1).
+	RadiusY       int64   `json:"radiusY,omitempty"`       // Y radius of the touch area (default: 1).
+	RotationAngle float64 `json:"rotationAngle,omitempty"` // Rotation angle (default: 0.0).
+	Force         float64 `json:"force,omitempty"`         // Force (default: 1.0).
+	ID            float64 `json:"id,omitempty"`            // Identifier used to track touch sources between events, must be unique within an event.
 }
 
 // GestureType [no description].
@@ -173,57 +172,6 @@ func (t *Modifier) UnmarshalJSON(buf []byte) error {
 // ModifierCommand is an alias for ModifierMeta.
 const ModifierCommand Modifier = ModifierMeta
 
-// TouchState state of the touch point.
-type TouchState string
-
-// String returns the TouchState as string value.
-func (t TouchState) String() string {
-	return string(t)
-}
-
-// TouchState values.
-const (
-	TouchPressed    TouchState = "touchPressed"
-	TouchReleased   TouchState = "touchReleased"
-	TouchMoved      TouchState = "touchMoved"
-	TouchStationary TouchState = "touchStationary"
-	TouchCanceled   TouchState = "touchCancelled"
-)
-
-// MarshalEasyJSON satisfies easyjson.Marshaler.
-func (t TouchState) MarshalEasyJSON(out *jwriter.Writer) {
-	out.String(string(t))
-}
-
-// MarshalJSON satisfies json.Marshaler.
-func (t TouchState) MarshalJSON() ([]byte, error) {
-	return easyjson.Marshal(t)
-}
-
-// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
-func (t *TouchState) UnmarshalEasyJSON(in *jlexer.Lexer) {
-	switch TouchState(in.String()) {
-	case TouchPressed:
-		*t = TouchPressed
-	case TouchReleased:
-		*t = TouchReleased
-	case TouchMoved:
-		*t = TouchMoved
-	case TouchStationary:
-		*t = TouchStationary
-	case TouchCanceled:
-		*t = TouchCanceled
-
-	default:
-		in.AddError(errors.New("unknown TouchState value"))
-	}
-}
-
-// UnmarshalJSON satisfies json.Unmarshaler.
-func (t *TouchState) UnmarshalJSON(buf []byte) error {
-	return easyjson.Unmarshal(buf, t)
-}
-
 // KeyType type of the key event.
 type KeyType string
 
@@ -368,7 +316,9 @@ func (t *ButtonType) UnmarshalJSON(buf []byte) error {
 	return easyjson.Unmarshal(buf, t)
 }
 
-// TouchType type of the touch event.
+// TouchType type of the touch event. TouchEnd and TouchCancel must not
+// contain any touch points, while TouchStart and TouchMove must contains at
+// least one.
 type TouchType string
 
 // String returns the TouchType as string value.
@@ -378,9 +328,10 @@ func (t TouchType) String() string {
 
 // TouchType values.
 const (
-	TouchStart TouchType = "touchStart"
-	TouchEnd   TouchType = "touchEnd"
-	TouchMove  TouchType = "touchMove"
+	TouchStart  TouchType = "touchStart"
+	TouchEnd    TouchType = "touchEnd"
+	TouchMove   TouchType = "touchMove"
+	TouchCancel TouchType = "touchCancel"
 )
 
 // MarshalEasyJSON satisfies easyjson.Marshaler.
@@ -402,6 +353,8 @@ func (t *TouchType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = TouchEnd
 	case TouchMove:
 		*t = TouchMove
+	case TouchCancel:
+		*t = TouchCancel
 
 	default:
 		in.AddError(errors.New("unknown TouchType value"))

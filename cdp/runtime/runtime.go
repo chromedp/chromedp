@@ -29,7 +29,7 @@ type EvaluateParams struct {
 	ReturnByValue         bool               `json:"returnByValue,omitempty"`         // Whether the result is expected to be a JSON object that should be sent by value.
 	GeneratePreview       bool               `json:"generatePreview,omitempty"`       // Whether preview should be generated for the result.
 	UserGesture           bool               `json:"userGesture,omitempty"`           // Whether execution should be treated as initiated by user in the UI.
-	AwaitPromise          bool               `json:"awaitPromise,omitempty"`          // Whether execution should wait for promise to be resolved. If the result of evaluation is not a Promise, it's considered to be an error.
+	AwaitPromise          bool               `json:"awaitPromise,omitempty"`          // Whether execution should await for resulting value and return once awaited promise is resolved.
 }
 
 // Evaluate evaluates expression on global object.
@@ -91,8 +91,8 @@ func (p EvaluateParams) WithUserGesture(userGesture bool) *EvaluateParams {
 	return &p
 }
 
-// WithAwaitPromise whether execution should wait for promise to be resolved.
-// If the result of evaluation is not a Promise, it's considered to be an error.
+// WithAwaitPromise whether execution should await for resulting value and
+// return once awaited promise is resolved.
 func (p EvaluateParams) WithAwaitPromise(awaitPromise bool) *EvaluateParams {
 	p.AwaitPromise = awaitPromise
 	return &p
@@ -184,7 +184,7 @@ type CallFunctionOnParams struct {
 	ReturnByValue       bool            `json:"returnByValue,omitempty"`   // Whether the result is expected to be a JSON object which should be sent by value.
 	GeneratePreview     bool            `json:"generatePreview,omitempty"` // Whether preview should be generated for the result.
 	UserGesture         bool            `json:"userGesture,omitempty"`     // Whether execution should be treated as initiated by user in the UI.
-	AwaitPromise        bool            `json:"awaitPromise,omitempty"`    // Whether execution should wait for promise to be resolved. If the result of evaluation is not a Promise, it's considered to be an error.
+	AwaitPromise        bool            `json:"awaitPromise,omitempty"`    // Whether execution should await for resulting value and return once awaited promise is resolved.
 }
 
 // CallFunctionOn calls function with given declaration on the given object.
@@ -234,8 +234,8 @@ func (p CallFunctionOnParams) WithUserGesture(userGesture bool) *CallFunctionOnP
 	return &p
 }
 
-// WithAwaitPromise whether execution should wait for promise to be resolved.
-// If the result of evaluation is not a Promise, it's considered to be an error.
+// WithAwaitPromise whether execution should await for resulting value and
+// return once awaited promise is resolved.
 func (p CallFunctionOnParams) WithAwaitPromise(awaitPromise bool) *CallFunctionOnParams {
 	p.AwaitPromise = awaitPromise
 	return &p
@@ -519,7 +519,7 @@ type RunScriptParams struct {
 	IncludeCommandLineAPI bool               `json:"includeCommandLineAPI,omitempty"` // Determines whether Command Line API should be available during the evaluation.
 	ReturnByValue         bool               `json:"returnByValue,omitempty"`         // Whether the result is expected to be a JSON object which should be sent by value.
 	GeneratePreview       bool               `json:"generatePreview,omitempty"`       // Whether preview should be generated for the result.
-	AwaitPromise          bool               `json:"awaitPromise,omitempty"`          // Whether execution should wait for promise to be resolved. If the result of evaluation is not a Promise, it's considered to be an error.
+	AwaitPromise          bool               `json:"awaitPromise,omitempty"`          // Whether execution should await for resulting value and return once awaited promise is resolved.
 }
 
 // RunScript runs script with given id in a given context.
@@ -574,8 +574,8 @@ func (p RunScriptParams) WithGeneratePreview(generatePreview bool) *RunScriptPar
 	return &p
 }
 
-// WithAwaitPromise whether execution should wait for promise to be resolved.
-// If the result of evaluation is not a Promise, it's considered to be an error.
+// WithAwaitPromise whether execution should await for resulting value and
+// return once awaited promise is resolved.
 func (p RunScriptParams) WithAwaitPromise(awaitPromise bool) *RunScriptParams {
 	p.AwaitPromise = awaitPromise
 	return &p

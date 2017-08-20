@@ -137,6 +137,27 @@
           ],
           "description": "Retrieve current values of run-time metrics."
         }
+      ],
+      "events": [
+        {
+          "name": "metrics",
+          "description": "Current values of the metrics.",
+          "parameters": [
+            {
+              "name": "metrics",
+              "type": "array",
+              "items": {
+                "$ref": "Metric"
+              },
+              "description": "Current values of the metrics."
+            },
+            {
+              "name": "title",
+              "type": "string",
+              "description": "Timestamp title."
+            }
+          ]
+        }
       ]
     },
     {
@@ -1645,6 +1666,12 @@
               "type": "string",
               "optional": true,
               "description": "Selectors to highlight relevant nodes."
+            },
+            {
+              "name": "cssGridColor",
+              "$ref": "DOM.RGBA",
+              "optional": true,
+              "description": "The grid layout color (default: transparent)."
             }
           ],
           "description": "Configuration data for the highlighting of page elements."
@@ -2458,6 +2485,67 @@
       ]
     },
     {
+      "domain": "Audits",
+      "description": "Audits domain allows investigation of page violations and possible improvements.",
+      "dependencies": [
+        "Network"
+      ],
+      "experimental": true,
+      "commands": [
+        {
+          "name": "getEncodedResponse",
+          "description": "Returns the response body and size if it were re-encoded with the specified settings. Only applies to images.",
+          "parameters": [
+            {
+              "name": "requestId",
+              "$ref": "Network.RequestId",
+              "description": "Identifier of the network request to get content for."
+            },
+            {
+              "name": "encoding",
+              "type": "string",
+              "enum": [
+                "webp",
+                "jpeg",
+                "png"
+              ],
+              "description": "The encoding to use."
+            },
+            {
+              "name": "quality",
+              "type": "number",
+              "optional": true,
+              "description": "The quality of the encoding (0-1). (defaults to 1)"
+            },
+            {
+              "name": "sizeOnly",
+              "type": "boolean",
+              "optional": true,
+              "description": "Whether to only return the size information (defaults to false)."
+            }
+          ],
+          "returns": [
+            {
+              "name": "body",
+              "type": "string",
+              "optional": true,
+              "description": "The encoded body as a base64 string. Omitted if sizeOnly is true."
+            },
+            {
+              "name": "originalSize",
+              "type": "integer",
+              "description": "Size before re-encoding."
+            },
+            {
+              "name": "encodedSize",
+              "type": "integer",
+              "description": "Size after re-encoding."
+            }
+          ]
+        }
+      ]
+    },
+    {
       "domain": "Network",
       "description": "Network domain allows tracking network activities of the page. It exposes information about http, file, data and other requests and responses, their headers, bodies, timing, etc.",
       "dependencies": [
@@ -3154,6 +3242,66 @@
           "experimental": true
         },
         {
+          "id": "CookieParam",
+          "type": "object",
+          "description": "Cookie parameter object",
+          "properties": [
+            {
+              "name": "name",
+              "type": "string",
+              "description": "Cookie name."
+            },
+            {
+              "name": "value",
+              "type": "string",
+              "description": "Cookie value."
+            },
+            {
+              "name": "url",
+              "type": "string",
+              "optional": true,
+              "description": "The request-URI to associate with the setting of the cookie. This value can affect the default domain and path values of the created cookie."
+            },
+            {
+              "name": "domain",
+              "type": "string",
+              "optional": true,
+              "description": "Cookie domain."
+            },
+            {
+              "name": "path",
+              "type": "string",
+              "optional": true,
+              "description": "Cookie path."
+            },
+            {
+              "name": "secure",
+              "type": "boolean",
+              "optional": true,
+              "description": "True if cookie is secure."
+            },
+            {
+              "name": "httpOnly",
+              "type": "boolean",
+              "optional": true,
+              "description": "True if cookie is http-only."
+            },
+            {
+              "name": "sameSite",
+              "$ref": "CookieSameSite",
+              "optional": true,
+              "description": "Cookie SameSite type."
+            },
+            {
+              "name": "expires",
+              "$ref": "TimeSinceEpoch",
+              "optional": true,
+              "description": "Cookie expiration date, session cookie if not set"
+            }
+          ],
+          "experimental": true
+        },
+        {
           "id": "AuthChallenge",
           "type": "object",
           "description": "Authorization challenge for HTTP status code 401 or 407.",
@@ -3386,75 +3534,89 @@
           "experimental": true
         },
         {
-          "name": "deleteCookie",
+          "name": "deleteCookies",
           "parameters": [
             {
-              "name": "cookieName",
+              "name": "name",
               "type": "string",
-              "description": "Name of the cookie to remove."
+              "description": "Name of the cookies to remove."
             },
             {
               "name": "url",
               "type": "string",
-              "description": "URL to match cooke domain and path."
+              "optional": true,
+              "description": "If specified, deletes all the cookies with the given name where domain and path match provided URL."
+            },
+            {
+              "name": "domain",
+              "type": "string",
+              "optional": true,
+              "description": "If specified, deletes only cookies with the exact domain."
+            },
+            {
+              "name": "path",
+              "type": "string",
+              "optional": true,
+              "description": "If specified, deletes only cookies with the exact path."
             }
           ],
-          "description": "Deletes browser cookie with given name, domain and path.",
+          "description": "Deletes browser cookies with matching name and url or domain/path pair.",
           "experimental": true
         },
         {
           "name": "setCookie",
           "parameters": [
             {
-              "name": "url",
-              "type": "string",
-              "description": "The request-URI to associate with the setting of the cookie. This value can affect the default domain and path values of the created cookie."
-            },
-            {
               "name": "name",
               "type": "string",
-              "description": "The name of the cookie."
+              "description": "Cookie name."
             },
             {
               "name": "value",
               "type": "string",
-              "description": "The value of the cookie."
+              "description": "Cookie value."
+            },
+            {
+              "name": "url",
+              "type": "string",
+              "optional": true,
+              "description": "The request-URI to associate with the setting of the cookie. This value can affect the default domain and path values of the created cookie."
             },
             {
               "name": "domain",
               "type": "string",
               "optional": true,
-              "description": "If omitted, the cookie becomes a host-only cookie."
+              "description": "Cookie domain."
             },
             {
               "name": "path",
               "type": "string",
               "optional": true,
-              "description": "Defaults to the path portion of the url parameter."
+              "description": "Cookie path."
             },
             {
               "name": "secure",
               "type": "boolean",
               "optional": true,
-              "description": "Defaults ot false."
+              "description": "True if cookie is secure."
             },
             {
               "name": "httpOnly",
               "type": "boolean",
               "optional": true,
-              "description": "Defaults to false."
+              "description": "True if cookie is http-only."
             },
             {
               "name": "sameSite",
               "$ref": "CookieSameSite",
               "optional": true,
-              "description": "Defaults to browser default behavior."
+              "description": "Cookie SameSite type."
             },
             {
-              "name": "expirationDate",
+              "name": "expires",
               "$ref": "TimeSinceEpoch",
               "optional": true,
-              "description": "If omitted, the cookie becomes a session cookie."
+              "description": "Cookie expiration date, session cookie if not set"
             }
           ],
           "returns": [
@@ -3465,6 +3627,21 @@
             }
           ],
           "description": "Sets a cookie with the given cookie data; may overwrite equivalent cookies if they exist.",
+          "experimental": true
+        },
+        {
+          "name": "setCookies",
+          "parameters": [
+            {
+              "name": "cookies",
+              "type": "array",
+              "items": {
+                "$ref": "CookieParam"
+              },
+              "description": "Cookies to be set."
+            }
+          ],
+          "description": "Sets given cookies.",
           "experimental": true
         },
         {
@@ -5797,7 +5974,20 @@
             {
               "name": "nodeId",
               "$ref": "NodeId",
-              "description": "Id of the node to get markup for."
+              "optional": true,
+              "description": "Identifier of the node."
+            },
+            {
+              "name": "backendNodeId",
+              "$ref": "BackendNodeId",
+              "optional": true,
+              "description": "Identifier of the backend node."
+            },
+            {
+              "name": "objectId",
+              "$ref": "Runtime.RemoteObjectId",
+              "optional": true,
+              "description": "JavaScript object id of the node wrapper."
             }
           ],
           "returns": [
@@ -8913,26 +9103,14 @@
           "experimental": true,
           "properties": [
             {
-              "name": "state",
-              "type": "string",
-              "enum": [
-                "touchPressed",
-                "touchReleased",
-                "touchMoved",
-                "touchStationary",
-                "touchCancelled"
-              ],
-              "description": "State of the touch point."
-            },
-            {
               "name": "x",
               "type": "integer",
-              "description": "X coordinate of the event relative to the main frame's viewport."
+              "description": "X coordinate of the event relative to the main frame's viewport in CSS pixels."
             },
             {
               "name": "y",
               "type": "integer",
-              "description": "Y coordinate of the event relative to the main frame's viewport. 0 refers to the top of the viewport and Y increases as it proceeds towards the bottom of the viewport."
+              "description": "Y coordinate of the event relative to the main frame's viewport in CSS pixels. 0 refers to the top of the viewport and Y increases as it proceeds towards the bottom of the viewport."
             },
             {
               "name": "radiusX",
@@ -9092,7 +9270,8 @@
               "enum": [
                 "mousePressed",
                 "mouseReleased",
-                "mouseMoved"
+                "mouseMoved",
+                "mouseWheel"
               ],
               "description": "Type of the mouse event."
             },
@@ -9135,6 +9314,18 @@
               "type": "integer",
               "optional": true,
               "description": "Number of times the mouse button was clicked (default: 0)."
+            },
+            {
+              "name": "deltaX",
+              "type": "number",
+              "optional": true,
+              "description": "X delta in CSS pixels for mouse wheel event (default: 0)."
+            },
+            {
+              "name": "deltaY",
+              "type": "number",
+              "optional": true,
+              "description": "Y delta in CSS pixels for mouse wheel event (default: 0)."
             }
           ],
           "description": "Dispatches a mouse event to the page."
@@ -9149,9 +9340,10 @@
               "enum": [
                 "touchStart",
                 "touchEnd",
-                "touchMove"
+                "touchMove",
+                "touchCancel"
               ],
-              "description": "Type of the touch event."
+              "description": "Type of the touch event. TouchEnd and TouchCancel must not contain any touch points, while TouchStart and TouchMove must contains at least one."
             },
             {
               "name": "touchPoints",
@@ -9159,7 +9351,7 @@
               "items": {
                 "$ref": "TouchPoint"
               },
-              "description": "Touch points."
+              "description": "Active touch points on the touch device. One event per any changed point (compared to previous touch event in a sequence) is generated, emulating pressing/moving/releasing points one by one."
             },
             {
               "name": "modifiers",
@@ -10869,6 +11061,57 @@
             }
           ],
           "description": "Returns usage and quota in bytes."
+        },
+        {
+          "name": "trackCacheStorageForOrigin",
+          "parameters": [
+            {
+              "name": "origin",
+              "type": "string",
+              "description": "Security origin."
+            }
+          ],
+          "description": "Registers origin to be notified when an update occurs to its cache storage list."
+        },
+        {
+          "name": "untrackCacheStorageForOrigin",
+          "parameters": [
+            {
+              "name": "origin",
+              "type": "string",
+              "description": "Security origin."
+            }
+          ],
+          "description": "Unregisters origin from receiving notifications for cache storage."
+        }
+      ],
+      "events": [
+        {
+          "name": "cacheStorageListUpdated",
+          "parameters": [
+            {
+              "name": "origin",
+              "type": "string",
+              "description": "Origin to update."
+            }
+          ],
+          "description": "A cache has been added/deleted."
+        },
+        {
+          "name": "cacheStorageContentUpdated",
+          "parameters": [
+            {
+              "name": "origin",
+              "type": "string",
+              "description": "Origin to update."
+            },
+            {
+              "name": "cacheName",
+              "type": "string",
+              "description": "Name of cache in origin."
+            }
+          ],
+          "description": "A cache's contents have been modified."
         }
       ]
     },
@@ -11980,7 +12223,7 @@
               "name": "awaitPromise",
               "type": "boolean",
               "optional": true,
-              "description": "Whether execution should wait for promise to be resolved. If the result of evaluation is not a Promise, it's considered to be an error."
+              "description": "Whether execution should <code>await</code> for resulting value and return once awaited promise is resolved."
             }
           ],
           "returns": [
@@ -12087,7 +12330,7 @@
               "name": "awaitPromise",
               "type": "boolean",
               "optional": true,
-              "description": "Whether execution should wait for promise to be resolved. If the result of evaluation is not a Promise, it's considered to be an error."
+              "description": "Whether execution should <code>await</code> for resulting value and return once awaited promise is resolved."
             }
           ],
           "returns": [
@@ -12298,7 +12541,7 @@
               "name": "awaitPromise",
               "type": "boolean",
               "optional": true,
-              "description": "Whether execution should wait for promise to be resolved. If the result of evaluation is not a Promise, it's considered to be an error."
+              "description": "Whether execution should <code>await</code> for resulting value and return once awaited promise is resolved."
             }
           ],
           "returns": [

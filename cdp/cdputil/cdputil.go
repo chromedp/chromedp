@@ -9,6 +9,7 @@ import (
 	"github.com/knq/chromedp/cdp/accessibility"
 	"github.com/knq/chromedp/cdp/animation"
 	"github.com/knq/chromedp/cdp/applicationcache"
+	"github.com/knq/chromedp/cdp/audits"
 	"github.com/knq/chromedp/cdp/browser"
 	"github.com/knq/chromedp/cdp/cachestorage"
 	"github.com/knq/chromedp/cdp/css"
@@ -80,6 +81,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 
 	case cdp.CommandPerformanceGetMetrics:
 		v = new(performance.GetMetricsReturns)
+
+	case cdp.EventPerformanceMetrics:
+		v = new(performance.EventMetrics)
 
 	case cdp.CommandPageEnable:
 		return emptyVal, nil
@@ -327,6 +331,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.EventSecurityCertificateError:
 		v = new(security.EventCertificateError)
 
+	case cdp.CommandAuditsGetEncodedResponse:
+		v = new(audits.GetEncodedResponseReturns)
+
 	case cdp.CommandNetworkEnable:
 		return emptyVal, nil
 
@@ -366,11 +373,14 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandNetworkGetAllCookies:
 		v = new(network.GetAllCookiesReturns)
 
-	case cdp.CommandNetworkDeleteCookie:
+	case cdp.CommandNetworkDeleteCookies:
 		return emptyVal, nil
 
 	case cdp.CommandNetworkSetCookie:
 		v = new(network.SetCookieReturns)
+
+	case cdp.CommandNetworkSetCookies:
+		return emptyVal, nil
 
 	case cdp.CommandNetworkCanEmulateNetworkConditions:
 		v = new(network.CanEmulateNetworkConditionsReturns)
@@ -1046,6 +1056,18 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 
 	case cdp.CommandStorageGetUsageAndQuota:
 		v = new(storage.GetUsageAndQuotaReturns)
+
+	case cdp.CommandStorageTrackCacheStorageForOrigin:
+		return emptyVal, nil
+
+	case cdp.CommandStorageUntrackCacheStorageForOrigin:
+		return emptyVal, nil
+
+	case cdp.EventStorageCacheStorageListUpdated:
+		v = new(storage.EventCacheStorageListUpdated)
+
+	case cdp.EventStorageCacheStorageContentUpdated:
+		v = new(storage.EventCacheStorageContentUpdated)
 
 	case cdp.CommandLogEnable:
 		return emptyVal, nil

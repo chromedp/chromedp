@@ -75,3 +75,49 @@ func (p *GetUsageAndQuotaParams) Do(ctxt context.Context, h cdp.Handler) (usage 
 
 	return res.Usage, res.Quota, res.UsageBreakdown, nil
 }
+
+// TrackCacheStorageForOriginParams registers origin to be notified when an
+// update occurs to its cache storage list.
+type TrackCacheStorageForOriginParams struct {
+	Origin string `json:"origin"` // Security origin.
+}
+
+// TrackCacheStorageForOrigin registers origin to be notified when an update
+// occurs to its cache storage list.
+//
+// parameters:
+//   origin - Security origin.
+func TrackCacheStorageForOrigin(origin string) *TrackCacheStorageForOriginParams {
+	return &TrackCacheStorageForOriginParams{
+		Origin: origin,
+	}
+}
+
+// Do executes Storage.trackCacheStorageForOrigin against the provided context and
+// target handler.
+func (p *TrackCacheStorageForOriginParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandStorageTrackCacheStorageForOrigin, p, nil)
+}
+
+// UntrackCacheStorageForOriginParams unregisters origin from receiving
+// notifications for cache storage.
+type UntrackCacheStorageForOriginParams struct {
+	Origin string `json:"origin"` // Security origin.
+}
+
+// UntrackCacheStorageForOrigin unregisters origin from receiving
+// notifications for cache storage.
+//
+// parameters:
+//   origin - Security origin.
+func UntrackCacheStorageForOrigin(origin string) *UntrackCacheStorageForOriginParams {
+	return &UntrackCacheStorageForOriginParams{
+		Origin: origin,
+	}
+}
+
+// Do executes Storage.untrackCacheStorageForOrigin against the provided context and
+// target handler.
+func (p *UntrackCacheStorageForOriginParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandStorageUntrackCacheStorageForOrigin, p, nil)
+}

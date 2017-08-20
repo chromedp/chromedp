@@ -158,6 +158,8 @@ type DispatchMouseEventParams struct {
 	Timestamp  *TimeSinceEpoch `json:"timestamp,omitempty"`  // Time at which the event occurred.
 	Button     ButtonType      `json:"button,omitempty"`     // Mouse button (default: "none").
 	ClickCount int64           `json:"clickCount,omitempty"` // Number of times the mouse button was clicked (default: 0).
+	DeltaX     float64         `json:"deltaX,omitempty"`     // X delta in CSS pixels for mouse wheel event (default: 0).
+	DeltaY     float64         `json:"deltaY,omitempty"`     // Y delta in CSS pixels for mouse wheel event (default: 0).
 }
 
 // DispatchMouseEvent dispatches a mouse event to the page.
@@ -199,6 +201,18 @@ func (p DispatchMouseEventParams) WithClickCount(clickCount int64) *DispatchMous
 	return &p
 }
 
+// WithDeltaX x delta in CSS pixels for mouse wheel event (default: 0).
+func (p DispatchMouseEventParams) WithDeltaX(deltaX float64) *DispatchMouseEventParams {
+	p.DeltaX = deltaX
+	return &p
+}
+
+// WithDeltaY y delta in CSS pixels for mouse wheel event (default: 0).
+func (p DispatchMouseEventParams) WithDeltaY(deltaY float64) *DispatchMouseEventParams {
+	p.DeltaY = deltaY
+	return &p
+}
+
 // Do executes Input.dispatchMouseEvent against the provided context and
 // target handler.
 func (p *DispatchMouseEventParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
@@ -207,8 +221,8 @@ func (p *DispatchMouseEventParams) Do(ctxt context.Context, h cdp.Handler) (err 
 
 // DispatchTouchEventParams dispatches a touch event to the page.
 type DispatchTouchEventParams struct {
-	Type        TouchType       `json:"type"`                // Type of the touch event.
-	TouchPoints []*TouchPoint   `json:"touchPoints"`         // Touch points.
+	Type        TouchType       `json:"type"`                // Type of the touch event. TouchEnd and TouchCancel must not contain any touch points, while TouchStart and TouchMove must contains at least one.
+	TouchPoints []*TouchPoint   `json:"touchPoints"`         // Active touch points on the touch device. One event per any changed point (compared to previous touch event in a sequence) is generated, emulating pressing/moving/releasing points one by one.
 	Modifiers   Modifier        `json:"modifiers,omitempty"` // Bit field representing pressed modifier keys. Alt=1, Ctrl=2, Meta/Command=4, Shift=8 (default: 0).
 	Timestamp   *TimeSinceEpoch `json:"timestamp,omitempty"` // Time at which the event occurred.
 }
@@ -216,8 +230,8 @@ type DispatchTouchEventParams struct {
 // DispatchTouchEvent dispatches a touch event to the page.
 //
 // parameters:
-//   type - Type of the touch event.
-//   touchPoints - Touch points.
+//   type - Type of the touch event. TouchEnd and TouchCancel must not contain any touch points, while TouchStart and TouchMove must contains at least one.
+//   touchPoints - Active touch points on the touch device. One event per any changed point (compared to previous touch event in a sequence) is generated, emulating pressing/moving/releasing points one by one.
 func DispatchTouchEvent(typeVal TouchType, touchPoints []*TouchPoint) *DispatchTouchEventParams {
 	return &DispatchTouchEventParams{
 		Type:        typeVal,

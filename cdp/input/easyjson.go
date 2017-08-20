@@ -36,8 +36,6 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpInput(in *jlexer.Lexer, out *T
 			continue
 		}
 		switch key {
-		case "state":
-			(out.State).UnmarshalEasyJSON(in)
 		case "x":
 			out.X = int64(in.Int64())
 		case "y":
@@ -66,12 +64,6 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpInput(out *jwriter.Writer, in 
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"state\":")
-	(in.State).MarshalEasyJSON(out)
 	if !first {
 		out.RawByte(',')
 	}
@@ -943,6 +935,10 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpInput7(in *jlexer.Lexer, out *
 			(out.Button).UnmarshalEasyJSON(in)
 		case "clickCount":
 			out.ClickCount = int64(in.Int64())
+		case "deltaX":
+			out.DeltaX = float64(in.Float64())
+		case "deltaY":
+			out.DeltaY = float64(in.Float64())
 		default:
 			in.SkipRecursive()
 		}
@@ -1010,6 +1006,22 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpInput7(out *jwriter.Writer, in
 		first = false
 		out.RawString("\"clickCount\":")
 		out.Int64(int64(in.ClickCount))
+	}
+	if in.DeltaX != 0 {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"deltaX\":")
+		out.Float64(float64(in.DeltaX))
+	}
+	if in.DeltaY != 0 {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"deltaY\":")
+		out.Float64(float64(in.DeltaY))
 	}
 	out.RawByte('}')
 }

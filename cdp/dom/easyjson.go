@@ -3035,6 +3035,10 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpDom37(in *jlexer.Lexer, out *G
 		switch key {
 		case "nodeId":
 			(out.NodeID).UnmarshalEasyJSON(in)
+		case "backendNodeId":
+			(out.BackendNodeID).UnmarshalEasyJSON(in)
+		case "objectId":
+			out.ObjectID = runtime.RemoteObjectID(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -3049,12 +3053,30 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDom37(out *jwriter.Writer, in 
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	if in.NodeID != 0 {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"nodeId\":")
+		out.Int64(int64(in.NodeID))
 	}
-	first = false
-	out.RawString("\"nodeId\":")
-	out.Int64(int64(in.NodeID))
+	if in.BackendNodeID != 0 {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"backendNodeId\":")
+		out.Int64(int64(in.BackendNodeID))
+	}
+	if in.ObjectID != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"objectId\":")
+		out.String(string(in.ObjectID))
+	}
 	out.RawByte('}')
 }
 

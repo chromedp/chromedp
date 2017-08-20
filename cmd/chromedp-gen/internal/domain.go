@@ -15,6 +15,7 @@ const (
 	DomainAccessibility     DomainType = "Accessibility"
 	DomainAnimation         DomainType = "Animation"
 	DomainApplicationCache  DomainType = "ApplicationCache"
+	DomainAudits            DomainType = "Audits"
 	DomainBrowser           DomainType = "Browser"
 	DomainCSS               DomainType = "CSS"
 	DomainCacheStorage      DomainType = "CacheStorage"
@@ -76,6 +77,8 @@ func (dt *DomainType) UnmarshalJSON(buf []byte) error {
 		*dt = DomainAnimation
 	case DomainApplicationCache:
 		*dt = DomainApplicationCache
+	case DomainAudits:
+		*dt = DomainAudits
 	case DomainBrowser:
 		*dt = DomainBrowser
 	case DomainCSS:

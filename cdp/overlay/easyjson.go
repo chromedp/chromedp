@@ -1178,6 +1178,16 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpOverlay12(in *jlexer.Lexer, ou
 			}
 		case "selectorList":
 			out.SelectorList = string(in.String())
+		case "cssGridColor":
+			if in.IsNull() {
+				in.Skip()
+				out.CSSGridColor = nil
+			} else {
+				if out.CSSGridColor == nil {
+					out.CSSGridColor = new(cdp.RGBA)
+				}
+				(*out.CSSGridColor).UnmarshalEasyJSON(in)
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -1315,6 +1325,18 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpOverlay12(out *jwriter.Writer,
 		first = false
 		out.RawString("\"selectorList\":")
 		out.String(string(in.SelectorList))
+	}
+	if in.CSSGridColor != nil {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"cssGridColor\":")
+		if in.CSSGridColor == nil {
+			out.RawString("null")
+		} else {
+			(*in.CSSGridColor).MarshalEasyJSON(out)
+		}
 	}
 	out.RawByte('}')
 }
