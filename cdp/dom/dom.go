@@ -1269,3 +1269,75 @@ func (p *GetRelayoutBoundaryParams) Do(ctxt context.Context, h cdp.Handler) (nod
 
 	return res.NodeID, nil
 }
+
+// DescribeNodeParams describes node given its id, does not require domain to
+// be enabled. Does not start tracking any objects, can be used for automation.
+type DescribeNodeParams struct {
+	NodeID        cdp.NodeID             `json:"nodeId,omitempty"`        // Identifier of the node.
+	BackendNodeID cdp.BackendNodeID      `json:"backendNodeId,omitempty"` // Identifier of the backend node.
+	ObjectID      runtime.RemoteObjectID `json:"objectId,omitempty"`      // JavaScript object id of the node wrapper.
+	Depth         int64                  `json:"depth,omitempty"`         // The maximum depth at which children should be retrieved, defaults to 1. Use -1 for the entire subtree or provide an integer larger than 0.
+	Pierce        bool                   `json:"pierce,omitempty"`        // Whether or not iframes and shadow roots should be traversed when returning the subtree (default is false).
+}
+
+// DescribeNode describes node given its id, does not require domain to be
+// enabled. Does not start tracking any objects, can be used for automation.
+//
+// parameters:
+func DescribeNode() *DescribeNodeParams {
+	return &DescribeNodeParams{}
+}
+
+// WithNodeID identifier of the node.
+func (p DescribeNodeParams) WithNodeID(nodeID cdp.NodeID) *DescribeNodeParams {
+	p.NodeID = nodeID
+	return &p
+}
+
+// WithBackendNodeID identifier of the backend node.
+func (p DescribeNodeParams) WithBackendNodeID(backendNodeID cdp.BackendNodeID) *DescribeNodeParams {
+	p.BackendNodeID = backendNodeID
+	return &p
+}
+
+// WithObjectID javaScript object id of the node wrapper.
+func (p DescribeNodeParams) WithObjectID(objectID runtime.RemoteObjectID) *DescribeNodeParams {
+	p.ObjectID = objectID
+	return &p
+}
+
+// WithDepth the maximum depth at which children should be retrieved,
+// defaults to 1. Use -1 for the entire subtree or provide an integer larger
+// than 0.
+func (p DescribeNodeParams) WithDepth(depth int64) *DescribeNodeParams {
+	p.Depth = depth
+	return &p
+}
+
+// WithPierce whether or not iframes and shadow roots should be traversed
+// when returning the subtree (default is false).
+func (p DescribeNodeParams) WithPierce(pierce bool) *DescribeNodeParams {
+	p.Pierce = pierce
+	return &p
+}
+
+// DescribeNodeReturns return values.
+type DescribeNodeReturns struct {
+	Node *cdp.Node `json:"node,omitempty"` // Node description.
+}
+
+// Do executes DOM.describeNode against the provided context and
+// target handler.
+//
+// returns:
+//   node - Node description.
+func (p *DescribeNodeParams) Do(ctxt context.Context, h cdp.Handler) (node *cdp.Node, err error) {
+	// execute
+	var res DescribeNodeReturns
+	err = h.Execute(ctxt, cdp.CommandDOMDescribeNode, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Node, nil
+}

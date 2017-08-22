@@ -265,6 +265,7 @@ const (
 	CommandDOMGetBoxModel                                  MethodType = "DOM.getBoxModel"
 	CommandDOMGetNodeForLocation                           MethodType = "DOM.getNodeForLocation"
 	CommandDOMGetRelayoutBoundary                          MethodType = "DOM.getRelayoutBoundary"
+	CommandDOMDescribeNode                                 MethodType = "DOM.describeNode"
 	EventCSSMediaQueryResultChanged                        MethodType = "CSS.mediaQueryResultChanged"
 	EventCSSFontsUpdated                                   MethodType = "CSS.fontsUpdated"
 	EventCSSStyleSheetChanged                              MethodType = "CSS.styleSheetChanged"
@@ -423,6 +424,7 @@ const (
 	CommandRuntimeSetCustomObjectFormatterEnabled          MethodType = "Runtime.setCustomObjectFormatterEnabled"
 	CommandRuntimeCompileScript                            MethodType = "Runtime.compileScript"
 	CommandRuntimeRunScript                                MethodType = "Runtime.runScript"
+	CommandRuntimeQueryObjects                             MethodType = "Runtime.queryObjects"
 	EventDebuggerScriptParsed                              MethodType = "Debugger.scriptParsed"
 	EventDebuggerScriptFailedToParse                       MethodType = "Debugger.scriptFailedToParse"
 	EventDebuggerBreakpointResolved                        MethodType = "Debugger.breakpointResolved"
@@ -927,6 +929,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandDOMGetNodeForLocation
 	case CommandDOMGetRelayoutBoundary:
 		*t = CommandDOMGetRelayoutBoundary
+	case CommandDOMDescribeNode:
+		*t = CommandDOMDescribeNode
 	case EventCSSMediaQueryResultChanged:
 		*t = EventCSSMediaQueryResultChanged
 	case EventCSSFontsUpdated:
@@ -1243,6 +1247,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandRuntimeCompileScript
 	case CommandRuntimeRunScript:
 		*t = CommandRuntimeRunScript
+	case CommandRuntimeQueryObjects:
+		*t = CommandRuntimeQueryObjects
 	case EventDebuggerScriptParsed:
 		*t = EventDebuggerScriptParsed
 	case EventDebuggerScriptFailedToParse:

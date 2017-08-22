@@ -658,6 +658,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandDOMGetRelayoutBoundary:
 		v = new(dom.GetRelayoutBoundaryReturns)
 
+	case cdp.CommandDOMDescribeNode:
+		v = new(dom.DescribeNodeReturns)
+
 	case cdp.EventDOMDocumentUpdated:
 		v = new(dom.EventDocumentUpdated)
 
@@ -1152,6 +1155,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 
 	case cdp.CommandRuntimeRunScript:
 		v = new(runtime.RunScriptReturns)
+
+	case cdp.CommandRuntimeQueryObjects:
+		v = new(runtime.QueryObjectsReturns)
 
 	case cdp.EventRuntimeExecutionContextCreated:
 		v = new(runtime.EventExecutionContextCreated)

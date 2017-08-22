@@ -603,3 +603,39 @@ func (p *RunScriptParams) Do(ctxt context.Context, h cdp.Handler) (result *Remot
 
 	return res.Result, res.ExceptionDetails, nil
 }
+
+// QueryObjectsParams [no description].
+type QueryObjectsParams struct {
+	ConstructorObjectID RemoteObjectID `json:"constructorObjectId"` // Identifier of the constructor to return objects for.
+}
+
+// QueryObjects [no description].
+//
+// parameters:
+//   constructorObjectID - Identifier of the constructor to return objects for.
+func QueryObjects(constructorObjectID RemoteObjectID) *QueryObjectsParams {
+	return &QueryObjectsParams{
+		ConstructorObjectID: constructorObjectID,
+	}
+}
+
+// QueryObjectsReturns return values.
+type QueryObjectsReturns struct {
+	Objects *RemoteObject `json:"objects,omitempty"` // Array with objects.
+}
+
+// Do executes Runtime.queryObjects against the provided context and
+// target handler.
+//
+// returns:
+//   objects - Array with objects.
+func (p *QueryObjectsParams) Do(ctxt context.Context, h cdp.Handler) (objects *RemoteObject, err error) {
+	// execute
+	var res QueryObjectsReturns
+	err = h.Execute(ctxt, cdp.CommandRuntimeQueryObjects, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Objects, nil
+}

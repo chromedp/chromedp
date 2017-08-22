@@ -6443,6 +6443,51 @@
           ],
           "description": "Returns the id of the nearest ancestor that is a relayout boundary.",
           "experimental": true
+        },
+        {
+          "name": "describeNode",
+          "parameters": [
+            {
+              "name": "nodeId",
+              "$ref": "NodeId",
+              "optional": true,
+              "description": "Identifier of the node."
+            },
+            {
+              "name": "backendNodeId",
+              "$ref": "BackendNodeId",
+              "optional": true,
+              "description": "Identifier of the backend node."
+            },
+            {
+              "name": "objectId",
+              "$ref": "Runtime.RemoteObjectId",
+              "optional": true,
+              "description": "JavaScript object id of the node wrapper."
+            },
+            {
+              "name": "depth",
+              "type": "integer",
+              "optional": true,
+              "description": "The maximum depth at which children should be retrieved, defaults to 1. Use -1 for the entire subtree or provide an integer larger than 0.",
+              "experimental": true
+            },
+            {
+              "name": "pierce",
+              "type": "boolean",
+              "optional": true,
+              "description": "Whether or not iframes and shadow roots should be traversed when returning the subtree (default is false).",
+              "experimental": true
+            }
+          ],
+          "returns": [
+            {
+              "name": "node",
+              "$ref": "Node",
+              "description": "Node description."
+            }
+          ],
+          "description": "Describes node given its id, does not require domain to be enabled. Does not start tracking any objects, can be used for automation."
         }
       ],
       "events": [
@@ -12558,6 +12603,24 @@
             }
           ],
           "description": "Runs script with given id in a given context."
+        },
+        {
+          "name": "queryObjects",
+          "parameters": [
+            {
+              "name": "constructorObjectId",
+              "$ref": "RemoteObjectId",
+              "description": "Identifier of the constructor to return objects for."
+            }
+          ],
+          "returns": [
+            {
+              "name": "objects",
+              "$ref": "RemoteObject",
+              "description": "Array with objects."
+            }
+          ],
+          "experimental": true
         }
       ],
       "events": [
