@@ -54,14 +54,14 @@ type TargetHandler struct {
 	res   map[int64]chan *cdp.Message
 	resrw sync.RWMutex
 
-	// logging funcs
-	logf, debugf, errorf LogFunc
+	// Config contains optional features - logging, etc.
+	Config
 
 	sync.RWMutex
 }
 
 // NewTargetHandler creates a new handler for the specified client target.
-func NewTargetHandler(t client.Target, logf, debugf, errorf LogFunc) (*TargetHandler, error) {
+func NewTargetHandler(t client.Target, conf Config) (*TargetHandler, error) {
 	conn, err := client.Dial(t)
 	if err != nil {
 		return nil, err
@@ -69,9 +69,7 @@ func NewTargetHandler(t client.Target, logf, debugf, errorf LogFunc) (*TargetHan
 
 	return &TargetHandler{
 		conn:   conn,
-		logf:   logf,
-		debugf: debugf,
-		errorf: errorf,
+		Config: conf,
 	}, nil
 }
 

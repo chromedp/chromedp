@@ -34,8 +34,8 @@ type CDP struct {
 	// handlerMap is the map of target IDs to its active handler.
 	handlerMap map[string]int
 
-	// logging funcs
-	logf, debugf, errorf LogFunc
+	// Config contains optional features - logging, etc.
+	Config
 
 	sync.RWMutex
 }
@@ -47,9 +47,11 @@ func New(ctxt context.Context, opts ...Option) (*CDP, error) {
 	c := &CDP{
 		handlers:   make([]*TargetHandler, 0),
 		handlerMap: make(map[string]int),
-		logf:       log.Printf,
-		debugf:     func(string, ...interface{}) {},
-		errorf:     func(s string, v ...interface{}) { log.Printf("error: "+s, v...) },
+		Config: Config{
+			logf:       log.Printf,
+			debugf:     func(string, ...interface{}) {},
+			errorf:     func(s string, v ...interface{}) { log.Printf("error: "+s, v...) },
+		},
 	}
 
 	// apply options
@@ -117,7 +119,7 @@ func (c *CDP) AddTarget(ctxt context.Context, t client.Target) {
 	defer c.Unlock()
 
 	// create target manager
-	h, err := NewTargetHandler(t, c.logf, c.debugf, c.errorf)
+	h, err := NewTargetHandler(t, c.Config)
 	if err != nil {
 		c.errorf("could not create handler for %s: %v", t, err)
 		return

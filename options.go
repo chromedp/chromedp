@@ -82,3 +82,9 @@ func WithConsolef(f LogFunc) Option {
 		return nil
 	}
 }
+
+// Config is a struct of optional features
+type Config struct {
+	// logging funcs
+	logf, debugf, errorf LogFunc
+}
