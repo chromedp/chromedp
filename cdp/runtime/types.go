@@ -149,7 +149,7 @@ type InternalPropertyDescriptor struct {
 // objectId, primitive value, unserializable primitive value or neither of (for
 // undefined) them should be specified.
 type CallArgument struct {
-	Value               easyjson.RawMessage `json:"value,omitempty"`               // Primitive value.
+	Value               easyjson.RawMessage `json:"value,omitempty"`               // Primitive value or serializable javascript object.
 	UnserializableValue UnserializableValue `json:"unserializableValue,omitempty"` // Primitive value which can not be JSON-stringified.
 	ObjectID            RemoteObjectID      `json:"objectId,omitempty"`            // Remote object handle.
 }

@@ -111,6 +111,7 @@ func (p *StopParams) Do(ctxt context.Context, h cdp.Handler) (profile *Profile, 
 // Enabling prevents running optimized code and resets execution counters.
 type StartPreciseCoverageParams struct {
 	CallCount bool `json:"callCount,omitempty"` // Collect accurate call counts beyond simple 'covered' or 'not covered'.
+	Detailed  bool `json:"detailed,omitempty"`  // Collect block-based coverage.
 }
 
 // StartPreciseCoverage enable precise code coverage. Coverage data for
@@ -126,6 +127,12 @@ func StartPreciseCoverage() *StartPreciseCoverageParams {
 // covered'.
 func (p StartPreciseCoverageParams) WithCallCount(callCount bool) *StartPreciseCoverageParams {
 	p.CallCount = callCount
+	return &p
+}
+
+// WithDetailed collect block-based coverage.
+func (p StartPreciseCoverageParams) WithDetailed(detailed bool) *StartPreciseCoverageParams {
+	p.Detailed = detailed
 	return &p
 }
 

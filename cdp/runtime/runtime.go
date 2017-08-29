@@ -606,16 +606,16 @@ func (p *RunScriptParams) Do(ctxt context.Context, h cdp.Handler) (result *Remot
 
 // QueryObjectsParams [no description].
 type QueryObjectsParams struct {
-	ConstructorObjectID RemoteObjectID `json:"constructorObjectId"` // Identifier of the constructor to return objects for.
+	PrototypeObjectID RemoteObjectID `json:"prototypeObjectId"` // Identifier of the prototype to return objects for.
 }
 
 // QueryObjects [no description].
 //
 // parameters:
-//   constructorObjectID - Identifier of the constructor to return objects for.
-func QueryObjects(constructorObjectID RemoteObjectID) *QueryObjectsParams {
+//   prototypeObjectID - Identifier of the prototype to return objects for.
+func QueryObjects(prototypeObjectID RemoteObjectID) *QueryObjectsParams {
 	return &QueryObjectsParams{
-		ConstructorObjectID: constructorObjectID,
+		PrototypeObjectID: prototypeObjectID,
 	}
 }
 

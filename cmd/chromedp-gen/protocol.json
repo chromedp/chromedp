@@ -69,6 +69,9 @@
           ]
         },
         {
+          "name": "prepareForLeakDetection"
+        },
+        {
           "name": "setPressureNotificationsSuppressed",
           "description": "Enable/disable suppressing memory pressure notifications in all processes.",
           "parameters": [
@@ -1352,6 +1355,29 @@
         {
           "name": "bringToFront",
           "description": "Brings page to front (activates tab)."
+        },
+        {
+          "name": "setDownloadBehavior",
+          "description": "Set the behavior when downloading a file.",
+          "experimental": true,
+          "parameters": [
+            {
+              "name": "behavior",
+              "type": "string",
+              "enum": [
+                "deny",
+                "allow",
+                "default"
+              ],
+              "description": "Whether to allow all or deny all download requests, or use default Chrome behavior if available (otherwise deny)."
+            },
+            {
+              "name": "downloadPath",
+              "type": "string",
+              "optional": true,
+              "description": "The default path to save downloaded files to. This is requred if behavior is set to 'allow'"
+            }
+          ]
         }
       ],
       "events": [
@@ -1372,6 +1398,20 @@
               "$ref": "Network.MonotonicTime"
             }
           ]
+        },
+        {
+          "name": "lifecycleEvent",
+          "parameters": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "timestamp",
+              "$ref": "Network.MonotonicTime"
+            }
+          ],
+          "description": "Fired for top level page lifecycle events such as navigation, load, paint, etc."
         },
         {
           "name": "frameAttached",
@@ -2295,7 +2335,6 @@
             "unknown",
             "neutral",
             "insecure",
-            "warning",
             "secure",
             "info"
           ],
@@ -3751,11 +3790,21 @@
         },
         {
           "name": "setRequestInterceptionEnabled",
+          "description": "Sets the requests to intercept that match a the provided patterns.",
           "parameters": [
             {
               "name": "enabled",
               "type": "boolean",
-              "description": "Whether or not HTTP requests should be intercepted and Network.requestIntercepted events sent."
+              "description": "Whether requests should be intercepted. If patterns is not set, matches all and resets any previously set patterns. Other parameters are ignored if false."
+            },
+            {
+              "name": "patterns",
+              "type": "array",
+              "optional": true,
+              "items": {
+                "type": "string"
+              },
+              "description": "URLs matching any of these patterns will be forwarded and wait for the corresponding continueInterceptedRequest call. Wildcards ('*' -> zero or more, '?' -> exactly one) are allowed. Escape character is backslash. If omitted equivalent to ['*'] (intercept all)."
             }
           ],
           "experimental": true
@@ -12033,7 +12082,7 @@
               "name": "value",
               "type": "any",
               "optional": true,
-              "description": "Primitive value."
+              "description": "Primitive value or serializable javascript object."
             },
             {
               "name": "unserializableValue",
@@ -12608,9 +12657,9 @@
           "name": "queryObjects",
           "parameters": [
             {
-              "name": "constructorObjectId",
+              "name": "prototypeObjectId",
               "$ref": "RemoteObjectId",
-              "description": "Identifier of the constructor to return objects for."
+              "description": "Identifier of the prototype to return objects for."
             }
           ],
           "returns": [
@@ -14033,6 +14082,12 @@
               "type": "boolean",
               "optional": true,
               "description": "Collect accurate call counts beyond simple 'covered' or 'not covered'."
+            },
+            {
+              "name": "detailed",
+              "type": "boolean",
+              "optional": true,
+              "description": "Collect block-based coverage."
             }
           ],
           "description": "Enable precise code coverage. Coverage data for JavaScript executed before enabling precise code coverage may be incomplete. Enabling prevents running optimized code and resets execution counters.",

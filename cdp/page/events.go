@@ -17,6 +17,13 @@ type EventLoadEventFired struct {
 	Timestamp *cdp.MonotonicTime `json:"timestamp"`
 }
 
+// EventLifecycleEvent fired for top level page lifecycle events such as
+// navigation, load, paint, etc.
+type EventLifecycleEvent struct {
+	Name      string             `json:"name"`
+	Timestamp *cdp.MonotonicTime `json:"timestamp"`
+}
+
 // EventFrameAttached fired when frame has been attached to its parent.
 type EventFrameAttached struct {
 	FrameID       cdp.FrameID         `json:"frameId"`         // Id of the frame that has been attached.
@@ -103,6 +110,7 @@ type EventInterstitialHidden struct{}
 var EventTypes = []cdp.MethodType{
 	cdp.EventPageDomContentEventFired,
 	cdp.EventPageLoadEventFired,
+	cdp.EventPageLifecycleEvent,
 	cdp.EventPageFrameAttached,
 	cdp.EventPageFrameNavigated,
 	cdp.EventPageFrameDetached,

@@ -411,6 +411,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpProfiler5(in *jlexer.Lexer, ou
 		switch key {
 		case "callCount":
 			out.CallCount = bool(in.Bool())
+		case "detailed":
+			out.Detailed = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -432,6 +434,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpProfiler5(out *jwriter.Writer,
 		first = false
 		out.RawString("\"callCount\":")
 		out.Bool(bool(in.CallCount))
+	}
+	if in.Detailed {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"detailed\":")
+		out.Bool(bool(in.Detailed))
 	}
 	out.RawByte('}')
 }

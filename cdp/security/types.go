@@ -77,7 +77,6 @@ const (
 	StateUnknown  State = "unknown"
 	StateNeutral  State = "neutral"
 	StateInsecure State = "insecure"
-	StateWarning  State = "warning"
 	StateSecure   State = "secure"
 	StateInfo     State = "info"
 )
@@ -101,8 +100,6 @@ func (t *State) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = StateNeutral
 	case StateInsecure:
 		*t = StateInsecure
-	case StateWarning:
-		*t = StateWarning
 	case StateSecure:
 		*t = StateSecure
 	case StateInfo:

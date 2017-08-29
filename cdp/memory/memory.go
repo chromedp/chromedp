@@ -45,6 +45,20 @@ func (p *GetDOMCountersParams) Do(ctxt context.Context, h cdp.Handler) (document
 	return res.Documents, res.Nodes, res.JsEventListeners, nil
 }
 
+// PrepareForLeakDetectionParams [no description].
+type PrepareForLeakDetectionParams struct{}
+
+// PrepareForLeakDetection [no description].
+func PrepareForLeakDetection() *PrepareForLeakDetectionParams {
+	return &PrepareForLeakDetectionParams{}
+}
+
+// Do executes Memory.prepareForLeakDetection against the provided context and
+// target handler.
+func (p *PrepareForLeakDetectionParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandMemoryPrepareForLeakDetection, nil, nil)
+}
+
 // SetPressureNotificationsSuppressedParams enable/disable suppressing memory
 // pressure notifications in all processes.
 type SetPressureNotificationsSuppressedParams struct {

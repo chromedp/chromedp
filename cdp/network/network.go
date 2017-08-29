@@ -702,19 +702,31 @@ func (p *GetCertificateParams) Do(ctxt context.Context, h cdp.Handler) (tableNam
 	return res.TableNames, nil
 }
 
-// SetRequestInterceptionEnabledParams [no description].
+// SetRequestInterceptionEnabledParams sets the requests to intercept that
+// match a the provided patterns.
 type SetRequestInterceptionEnabledParams struct {
-	Enabled bool `json:"enabled"` // Whether or not HTTP requests should be intercepted and Network.requestIntercepted events sent.
+	Enabled  bool     `json:"enabled"`            // Whether requests should be intercepted. If patterns is not set, matches all and resets any previously set patterns. Other parameters are ignored if false.
+	Patterns []string `json:"patterns,omitempty"` // URLs matching any of these patterns will be forwarded and wait for the corresponding continueInterceptedRequest call. Wildcards ('*' -> zero or more, '?' -> exactly one) are allowed. Escape character is backslash. If omitted equivalent to ['*'] (intercept all).
 }
 
-// SetRequestInterceptionEnabled [no description].
+// SetRequestInterceptionEnabled sets the requests to intercept that match a
+// the provided patterns.
 //
 // parameters:
-//   enabled - Whether or not HTTP requests should be intercepted and Network.requestIntercepted events sent.
+//   enabled - Whether requests should be intercepted. If patterns is not set, matches all and resets any previously set patterns. Other parameters are ignored if false.
 func SetRequestInterceptionEnabled(enabled bool) *SetRequestInterceptionEnabledParams {
 	return &SetRequestInterceptionEnabledParams{
 		Enabled: enabled,
 	}
+}
+
+// WithPatterns uRLs matching any of these patterns will be forwarded and
+// wait for the corresponding continueInterceptedRequest call. Wildcards ('*' ->
+// zero or more, '?' -> exactly one) are allowed. Escape character is backslash.
+// If omitted equivalent to ['*'] (intercept all).
+func (p SetRequestInterceptionEnabledParams) WithPatterns(patterns []string) *SetRequestInterceptionEnabledParams {
+	p.Patterns = patterns
+	return &p
 }
 
 // Do executes Network.setRequestInterceptionEnabled against the provided context and

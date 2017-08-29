@@ -67,6 +67,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandMemoryGetDOMCounters:
 		v = new(memory.GetDOMCountersReturns)
 
+	case cdp.CommandMemoryPrepareForLeakDetection:
+		return emptyVal, nil
+
 	case cdp.CommandMemorySetPressureNotificationsSuppressed:
 		return emptyVal, nil
 
@@ -163,11 +166,17 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandPageBringToFront:
 		return emptyVal, nil
 
+	case cdp.CommandPageSetDownloadBehavior:
+		return emptyVal, nil
+
 	case cdp.EventPageDomContentEventFired:
 		v = new(page.EventDomContentEventFired)
 
 	case cdp.EventPageLoadEventFired:
 		v = new(page.EventLoadEventFired)
+
+	case cdp.EventPageLifecycleEvent:
+		v = new(page.EventLifecycleEvent)
 
 	case cdp.EventPageFrameAttached:
 		v = new(page.EventFrameAttached)

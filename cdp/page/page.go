@@ -922,3 +922,32 @@ func BringToFront() *BringToFrontParams {
 func (p *BringToFrontParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandPageBringToFront, nil, nil)
 }
+
+// SetDownloadBehaviorParams set the behavior when downloading a file.
+type SetDownloadBehaviorParams struct {
+	Behavior     SetDownloadBehaviorBehavior `json:"behavior"`               // Whether to allow all or deny all download requests, or use default Chrome behavior if available (otherwise deny).
+	DownloadPath string                      `json:"downloadPath,omitempty"` // The default path to save downloaded files to. This is required if behavior is set to 'allow'
+}
+
+// SetDownloadBehavior set the behavior when downloading a file.
+//
+// parameters:
+//   behavior - Whether to allow all or deny all download requests, or use default Chrome behavior if available (otherwise deny).
+func SetDownloadBehavior(behavior SetDownloadBehaviorBehavior) *SetDownloadBehaviorParams {
+	return &SetDownloadBehaviorParams{
+		Behavior: behavior,
+	}
+}
+
+// WithDownloadPath the default path to save downloaded files to. This is
+// required if behavior is set to 'allow'.
+func (p SetDownloadBehaviorParams) WithDownloadPath(downloadPath string) *SetDownloadBehaviorParams {
+	p.DownloadPath = downloadPath
+	return &p
+}
+
+// Do executes Page.setDownloadBehavior against the provided context and
+// target handler.
+func (p *SetDownloadBehaviorParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandPageSetDownloadBehavior, p, nil)
+}

@@ -953,8 +953,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpRuntime9(in *jlexer.Lexer, out
 			continue
 		}
 		switch key {
-		case "constructorObjectId":
-			out.ConstructorObjectID = RemoteObjectID(in.String())
+		case "prototypeObjectId":
+			out.PrototypeObjectID = RemoteObjectID(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -973,8 +973,8 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpRuntime9(out *jwriter.Writer, 
 		out.RawByte(',')
 	}
 	first = false
-	out.RawString("\"constructorObjectId\":")
-	out.String(string(in.ConstructorObjectID))
+	out.RawString("\"prototypeObjectId\":")
+	out.String(string(in.PrototypeObjectID))
 	out.RawByte('}')
 }
 

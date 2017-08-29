@@ -54,6 +54,7 @@ const (
 	CommandInspectorEnable                                 MethodType = "Inspector.enable"
 	CommandInspectorDisable                                MethodType = "Inspector.disable"
 	CommandMemoryGetDOMCounters                            MethodType = "Memory.getDOMCounters"
+	CommandMemoryPrepareForLeakDetection                   MethodType = "Memory.prepareForLeakDetection"
 	CommandMemorySetPressureNotificationsSuppressed        MethodType = "Memory.setPressureNotificationsSuppressed"
 	CommandMemorySimulatePressureNotification              MethodType = "Memory.simulatePressureNotification"
 	EventPerformanceMetrics                                MethodType = "Performance.metrics"
@@ -62,6 +63,7 @@ const (
 	CommandPerformanceGetMetrics                           MethodType = "Performance.getMetrics"
 	EventPageDomContentEventFired                          MethodType = "Page.domContentEventFired"
 	EventPageLoadEventFired                                MethodType = "Page.loadEventFired"
+	EventPageLifecycleEvent                                MethodType = "Page.lifecycleEvent"
 	EventPageFrameAttached                                 MethodType = "Page.frameAttached"
 	EventPageFrameNavigated                                MethodType = "Page.frameNavigated"
 	EventPageFrameDetached                                 MethodType = "Page.frameDetached"
@@ -102,6 +104,7 @@ const (
 	CommandPageGetLayoutMetrics                            MethodType = "Page.getLayoutMetrics"
 	CommandPageCreateIsolatedWorld                         MethodType = "Page.createIsolatedWorld"
 	CommandPageBringToFront                                MethodType = "Page.bringToFront"
+	CommandPageSetDownloadBehavior                         MethodType = "Page.setDownloadBehavior"
 	EventOverlayNodeHighlightRequested                     MethodType = "Overlay.nodeHighlightRequested"
 	EventOverlayInspectNodeRequested                       MethodType = "Overlay.inspectNodeRequested"
 	EventOverlayScreenshotRequested                        MethodType = "Overlay.screenshotRequested"
@@ -507,6 +510,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandInspectorDisable
 	case CommandMemoryGetDOMCounters:
 		*t = CommandMemoryGetDOMCounters
+	case CommandMemoryPrepareForLeakDetection:
+		*t = CommandMemoryPrepareForLeakDetection
 	case CommandMemorySetPressureNotificationsSuppressed:
 		*t = CommandMemorySetPressureNotificationsSuppressed
 	case CommandMemorySimulatePressureNotification:
@@ -523,6 +528,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = EventPageDomContentEventFired
 	case EventPageLoadEventFired:
 		*t = EventPageLoadEventFired
+	case EventPageLifecycleEvent:
+		*t = EventPageLifecycleEvent
 	case EventPageFrameAttached:
 		*t = EventPageFrameAttached
 	case EventPageFrameNavigated:
@@ -603,6 +610,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandPageCreateIsolatedWorld
 	case CommandPageBringToFront:
 		*t = CommandPageBringToFront
+	case CommandPageSetDownloadBehavior:
+		*t = CommandPageSetDownloadBehavior
 	case EventOverlayNodeHighlightRequested:
 		*t = EventOverlayNodeHighlightRequested
 	case EventOverlayInspectNodeRequested:
