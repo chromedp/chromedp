@@ -17,10 +17,12 @@ curl -s https://storage.googleapis.com/docker-chrome-headless/headless_shell-$VE
 
 ./headless_shell --remote-debugging-port=8222 &
 
+HEADLESS_PID=$!
+
 sleep 1
 
 curl -v -q http://localhost:8222/json/version
 
-killall -9 headless_shell
+kill -9 $HEADLESS_PID
 
 popd &> /dev/null
