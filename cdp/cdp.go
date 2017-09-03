@@ -125,6 +125,7 @@ const (
 	CommandOverlayHideHighlight                            MethodType = "Overlay.hideHighlight"
 	CommandOverlayGetHighlightObjectForTest                MethodType = "Overlay.getHighlightObjectForTest"
 	EventEmulationVirtualTimeBudgetExpired                 MethodType = "Emulation.virtualTimeBudgetExpired"
+	EventEmulationVirtualTimePaused                        MethodType = "Emulation.virtualTimePaused"
 	CommandEmulationSetDeviceMetricsOverride               MethodType = "Emulation.setDeviceMetricsOverride"
 	CommandEmulationClearDeviceMetricsOverride             MethodType = "Emulation.clearDeviceMetricsOverride"
 	CommandEmulationResetPageScaleFactor                   MethodType = "Emulation.resetPageScaleFactor"
@@ -652,6 +653,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandOverlayGetHighlightObjectForTest
 	case EventEmulationVirtualTimeBudgetExpired:
 		*t = EventEmulationVirtualTimeBudgetExpired
+	case EventEmulationVirtualTimePaused:
+		*t = EventEmulationVirtualTimePaused
 	case CommandEmulationSetDeviceMetricsOverride:
 		*t = CommandEmulationSetDeviceMetricsOverride
 	case CommandEmulationClearDeviceMetricsOverride:

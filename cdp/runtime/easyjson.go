@@ -3733,10 +3733,10 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpRuntime35(in *jlexer.Lexer, ou
 			continue
 		}
 		switch key {
-		case "objectId":
-			out.ObjectID = RemoteObjectID(in.String())
 		case "functionDeclaration":
 			out.FunctionDeclaration = string(in.String())
+		case "objectId":
+			out.ObjectID = RemoteObjectID(in.String())
 		case "arguments":
 			if in.IsNull() {
 				in.Skip()
@@ -3778,6 +3778,10 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpRuntime35(in *jlexer.Lexer, ou
 			out.UserGesture = bool(in.Bool())
 		case "awaitPromise":
 			out.AwaitPromise = bool(in.Bool())
+		case "executionContextId":
+			out.ExecutionContextID = ExecutionContextID(in.Int64())
+		case "objectGroup":
+			out.ObjectGroup = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -3796,14 +3800,16 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpRuntime35(out *jwriter.Writer,
 		out.RawByte(',')
 	}
 	first = false
-	out.RawString("\"objectId\":")
-	out.String(string(in.ObjectID))
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
 	out.RawString("\"functionDeclaration\":")
 	out.String(string(in.FunctionDeclaration))
+	if in.ObjectID != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"objectId\":")
+		out.String(string(in.ObjectID))
+	}
 	if len(in.Arguments) != 0 {
 		if !first {
 			out.RawByte(',')
@@ -3866,6 +3872,22 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpRuntime35(out *jwriter.Writer,
 		first = false
 		out.RawString("\"awaitPromise\":")
 		out.Bool(bool(in.AwaitPromise))
+	}
+	if in.ExecutionContextID != 0 {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"executionContextId\":")
+		out.Int64(int64(in.ExecutionContextID))
+	}
+	if in.ObjectGroup != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"objectGroup\":")
+		out.String(string(in.ObjectGroup))
 	}
 	out.RawByte('}')
 }

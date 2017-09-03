@@ -2304,7 +2304,19 @@
         {
           "name": "virtualTimeBudgetExpired",
           "experimental": true,
-          "description": "Notification sent after the virual time budget for the current VirtualTimePolicy has run out."
+          "description": "Notification sent after the virtual time budget for the current VirtualTimePolicy has run out."
+        },
+        {
+          "name": "virtualTimePaused",
+          "experimental": true,
+          "parameters": [
+            {
+              "name": "virtualTimeElapsed",
+              "type": "integer",
+              "description": "The amount of virtual time that has elapsed in milliseconds since virtual time was first enabled."
+            }
+          ],
+          "description": "Notification sent after the virtual time has paused."
         }
       ]
     },
@@ -4839,19 +4851,45 @@
           "description": "Data entry.",
           "properties": [
             {
-              "name": "request",
+              "name": "requestURL",
               "type": "string",
-              "description": "Request url spec."
+              "description": "Request URL."
             },
             {
-              "name": "response",
+              "name": "requestMethod",
               "type": "string",
-              "description": "Response status text."
+              "description": "Request method."
+            },
+            {
+              "name": "requestHeaders",
+              "type": "array",
+              "items": {
+                "$ref": "Header"
+              },
+              "description": "Request headers"
             },
             {
               "name": "responseTime",
               "type": "number",
               "description": "Number of seconds since epoch."
+            },
+            {
+              "name": "responseStatus",
+              "type": "integer",
+              "description": "HTTP response status code."
+            },
+            {
+              "name": "responseStatusText",
+              "type": "string",
+              "description": "HTTP response status text."
+            },
+            {
+              "name": "responseHeaders",
+              "type": "array",
+              "items": {
+                "$ref": "Header"
+              },
+              "description": "Response headers"
             }
           ]
         },
@@ -4878,15 +4916,24 @@
           ]
         },
         {
+          "id": "Header",
+          "type": "object",
+          "properties": [
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "value",
+              "type": "string"
+            }
+          ]
+        },
+        {
           "id": "CachedResponse",
           "type": "object",
           "description": "Cached response",
           "properties": [
-            {
-              "name": "headers",
-              "type": "object",
-              "description": "Response headers"
-            },
             {
               "name": "body",
               "type": "string",
@@ -12375,14 +12422,15 @@
           "name": "callFunctionOn",
           "parameters": [
             {
-              "name": "objectId",
-              "$ref": "RemoteObjectId",
-              "description": "Identifier of the object to call function on."
-            },
-            {
               "name": "functionDeclaration",
               "type": "string",
               "description": "Declaration of the function to call."
+            },
+            {
+              "name": "objectId",
+              "$ref": "RemoteObjectId",
+              "optional": true,
+              "description": "Identifier of the object to call function on. Either objectId or executionContextId should be specified."
             },
             {
               "name": "arguments",
@@ -12425,6 +12473,18 @@
               "type": "boolean",
               "optional": true,
               "description": "Whether execution should <code>await</code> for resulting value and return once awaited promise is resolved."
+            },
+            {
+              "name": "executionContextId",
+              "$ref": "ExecutionContextId",
+              "optional": true,
+              "description": "Specifies execution context which global object will be used to call function on. Either executionContextId or objectId should be specified."
+            },
+            {
+              "name": "objectGroup",
+              "type": "string",
+              "optional": true,
+              "description": "Symbolic group name that can be used to release multiple objects. If objectGroup is not specified and objectId is, objectGroup will be inherited from object."
             }
           ],
           "returns": [

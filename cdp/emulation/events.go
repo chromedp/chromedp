@@ -6,11 +6,18 @@ import (
 	cdp "github.com/knq/chromedp/cdp"
 )
 
-// EventVirtualTimeBudgetExpired notification sent after the virual time
+// EventVirtualTimeBudgetExpired notification sent after the virtual time
 // budget for the current VirtualTimePolicy has run out.
 type EventVirtualTimeBudgetExpired struct{}
+
+// EventVirtualTimePaused notification sent after the virtual time has
+// paused.
+type EventVirtualTimePaused struct {
+	VirtualTimeElapsed int64 `json:"virtualTimeElapsed"` // The amount of virtual time that has elapsed in milliseconds since virtual time was first enabled.
+}
 
 // EventTypes all event types in the domain.
 var EventTypes = []cdp.MethodType{
 	cdp.EventEmulationVirtualTimeBudgetExpired,
+	cdp.EventEmulationVirtualTimePaused,
 }

@@ -177,27 +177,34 @@ func (p *AwaitPromiseParams) Do(ctxt context.Context, h cdp.Handler) (result *Re
 // CallFunctionOnParams calls function with given declaration on the given
 // object. Object group of the result is inherited from the target object.
 type CallFunctionOnParams struct {
-	ObjectID            RemoteObjectID  `json:"objectId"`                  // Identifier of the object to call function on.
-	FunctionDeclaration string          `json:"functionDeclaration"`       // Declaration of the function to call.
-	Arguments           []*CallArgument `json:"arguments,omitempty"`       // Call arguments. All call arguments must belong to the same JavaScript world as the target object.
-	Silent              bool            `json:"silent,omitempty"`          // In silent mode exceptions thrown during evaluation are not reported and do not pause execution. Overrides setPauseOnException state.
-	ReturnByValue       bool            `json:"returnByValue,omitempty"`   // Whether the result is expected to be a JSON object which should be sent by value.
-	GeneratePreview     bool            `json:"generatePreview,omitempty"` // Whether preview should be generated for the result.
-	UserGesture         bool            `json:"userGesture,omitempty"`     // Whether execution should be treated as initiated by user in the UI.
-	AwaitPromise        bool            `json:"awaitPromise,omitempty"`    // Whether execution should await for resulting value and return once awaited promise is resolved.
+	FunctionDeclaration string             `json:"functionDeclaration"`          // Declaration of the function to call.
+	ObjectID            RemoteObjectID     `json:"objectId,omitempty"`           // Identifier of the object to call function on. Either objectId or executionContextId should be specified.
+	Arguments           []*CallArgument    `json:"arguments,omitempty"`          // Call arguments. All call arguments must belong to the same JavaScript world as the target object.
+	Silent              bool               `json:"silent,omitempty"`             // In silent mode exceptions thrown during evaluation are not reported and do not pause execution. Overrides setPauseOnException state.
+	ReturnByValue       bool               `json:"returnByValue,omitempty"`      // Whether the result is expected to be a JSON object which should be sent by value.
+	GeneratePreview     bool               `json:"generatePreview,omitempty"`    // Whether preview should be generated for the result.
+	UserGesture         bool               `json:"userGesture,omitempty"`        // Whether execution should be treated as initiated by user in the UI.
+	AwaitPromise        bool               `json:"awaitPromise,omitempty"`       // Whether execution should await for resulting value and return once awaited promise is resolved.
+	ExecutionContextID  ExecutionContextID `json:"executionContextId,omitempty"` // Specifies execution context which global object will be used to call function on. Either executionContextId or objectId should be specified.
+	ObjectGroup         string             `json:"objectGroup,omitempty"`        // Symbolic group name that can be used to release multiple objects. If objectGroup is not specified and objectId is, objectGroup will be inherited from object.
 }
 
 // CallFunctionOn calls function with given declaration on the given object.
 // Object group of the result is inherited from the target object.
 //
 // parameters:
-//   objectID - Identifier of the object to call function on.
 //   functionDeclaration - Declaration of the function to call.
-func CallFunctionOn(objectID RemoteObjectID, functionDeclaration string) *CallFunctionOnParams {
+func CallFunctionOn(functionDeclaration string) *CallFunctionOnParams {
 	return &CallFunctionOnParams{
-		ObjectID:            objectID,
 		FunctionDeclaration: functionDeclaration,
 	}
+}
+
+// WithObjectID identifier of the object to call function on. Either objectId
+// or executionContextId should be specified.
+func (p CallFunctionOnParams) WithObjectID(objectID RemoteObjectID) *CallFunctionOnParams {
+	p.ObjectID = objectID
+	return &p
 }
 
 // WithArguments call arguments. All call arguments must belong to the same
@@ -238,6 +245,22 @@ func (p CallFunctionOnParams) WithUserGesture(userGesture bool) *CallFunctionOnP
 // return once awaited promise is resolved.
 func (p CallFunctionOnParams) WithAwaitPromise(awaitPromise bool) *CallFunctionOnParams {
 	p.AwaitPromise = awaitPromise
+	return &p
+}
+
+// WithExecutionContextID specifies execution context which global object
+// will be used to call function on. Either executionContextId or objectId
+// should be specified.
+func (p CallFunctionOnParams) WithExecutionContextID(executionContextID ExecutionContextID) *CallFunctionOnParams {
+	p.ExecutionContextID = executionContextID
+	return &p
+}
+
+// WithObjectGroup symbolic group name that can be used to release multiple
+// objects. If objectGroup is not specified and objectId is, objectGroup will be
+// inherited from object.
+func (p CallFunctionOnParams) WithObjectGroup(objectGroup string) *CallFunctionOnParams {
+	p.ObjectGroup = objectGroup
 	return &p
 }
 
