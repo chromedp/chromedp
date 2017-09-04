@@ -14,3 +14,7 @@ massif.out
 /cmd/chromedp-gen/chromedp-gen
 /cmd/chromedp-gen/chromedp-proxy
 /cmd/chromedp-gen/chromedp-cli
+
+# headless_shell
+/headless_shell/
+/hs/
