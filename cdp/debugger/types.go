@@ -3,6 +3,7 @@ package debugger
 import (
 	"errors"
 
+	"github.com/knq/chromedp/cdp/runtime"
 	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"
