@@ -220,3 +220,62 @@ func (p *GetBestEffortCoverageParams) Do(ctxt context.Context, h cdp.Handler) (r
 
 	return res.Result, nil
 }
+
+// StartTypeProfileParams enable type profile.
+type StartTypeProfileParams struct{}
+
+// StartTypeProfile enable type profile.
+func StartTypeProfile() *StartTypeProfileParams {
+	return &StartTypeProfileParams{}
+}
+
+// Do executes Profiler.startTypeProfile against the provided context and
+// target handler.
+func (p *StartTypeProfileParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandProfilerStartTypeProfile, nil, nil)
+}
+
+// StopTypeProfileParams disable type profile. Disabling releases type
+// profile data collected so far.
+type StopTypeProfileParams struct{}
+
+// StopTypeProfile disable type profile. Disabling releases type profile data
+// collected so far.
+func StopTypeProfile() *StopTypeProfileParams {
+	return &StopTypeProfileParams{}
+}
+
+// Do executes Profiler.stopTypeProfile against the provided context and
+// target handler.
+func (p *StopTypeProfileParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandProfilerStopTypeProfile, nil, nil)
+}
+
+// TakeTypeProfileParams collect type profile.
+type TakeTypeProfileParams struct{}
+
+// TakeTypeProfile collect type profile.
+func TakeTypeProfile() *TakeTypeProfileParams {
+	return &TakeTypeProfileParams{}
+}
+
+// TakeTypeProfileReturns return values.
+type TakeTypeProfileReturns struct {
+	Result []*ScriptTypeProfile `json:"result,omitempty"` // Type profile for all scripts since startTypeProfile() was turned on.
+}
+
+// Do executes Profiler.takeTypeProfile against the provided context and
+// target handler.
+//
+// returns:
+//   result - Type profile for all scripts since startTypeProfile() was turned on.
+func (p *TakeTypeProfileParams) Do(ctxt context.Context, h cdp.Handler) (result []*ScriptTypeProfile, err error) {
+	// execute
+	var res TakeTypeProfileReturns
+	err = h.Execute(ctxt, cdp.CommandProfilerTakeTypeProfile, nil, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Result, nil
+}

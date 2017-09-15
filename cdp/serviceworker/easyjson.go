@@ -390,7 +390,66 @@ func (v *StopWorkerParams) UnmarshalJSON(data []byte) error {
 func (v *StopWorkerParams) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker3(l, v)
 }
-func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker4(in *jlexer.Lexer, out *StartWorkerParams) {
+func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker4(in *jlexer.Lexer, out *StopAllWorkersParams) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeString()
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker4(out *jwriter.Writer, in StopAllWorkersParams) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v StopAllWorkersParams) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker4(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v StopAllWorkersParams) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker4(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *StopAllWorkersParams) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker4(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *StopAllWorkersParams) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker4(l, v)
+}
+func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker5(in *jlexer.Lexer, out *StartWorkerParams) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -421,7 +480,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker4(in *jlexer.Lexe
 		in.Consumed()
 	}
 }
-func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker4(out *jwriter.Writer, in StartWorkerParams) {
+func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker5(out *jwriter.Writer, in StartWorkerParams) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -437,27 +496,27 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker4(out *jwriter.Wr
 // MarshalJSON supports json.Marshaler interface
 func (v StartWorkerParams) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker4(&w, v)
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker5(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v StartWorkerParams) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker4(w, v)
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker5(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *StartWorkerParams) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker4(&r, v)
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker5(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *StartWorkerParams) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker4(l, v)
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker5(l, v)
 }
-func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker5(in *jlexer.Lexer, out *SkipWaitingParams) {
+func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker6(in *jlexer.Lexer, out *SkipWaitingParams) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -488,7 +547,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker5(in *jlexer.Lexe
 		in.Consumed()
 	}
 }
-func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker5(out *jwriter.Writer, in SkipWaitingParams) {
+func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker6(out *jwriter.Writer, in SkipWaitingParams) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -504,27 +563,27 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker5(out *jwriter.Wr
 // MarshalJSON supports json.Marshaler interface
 func (v SkipWaitingParams) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker5(&w, v)
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker6(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v SkipWaitingParams) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker5(w, v)
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker6(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *SkipWaitingParams) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker5(&r, v)
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker6(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *SkipWaitingParams) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker5(l, v)
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker6(l, v)
 }
-func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker6(in *jlexer.Lexer, out *SetForceUpdateOnPageLoadParams) {
+func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker7(in *jlexer.Lexer, out *SetForceUpdateOnPageLoadParams) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -555,7 +614,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker6(in *jlexer.Lexe
 		in.Consumed()
 	}
 }
-func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker6(out *jwriter.Writer, in SetForceUpdateOnPageLoadParams) {
+func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker7(out *jwriter.Writer, in SetForceUpdateOnPageLoadParams) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -571,27 +630,27 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker6(out *jwriter.Wr
 // MarshalJSON supports json.Marshaler interface
 func (v SetForceUpdateOnPageLoadParams) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker6(&w, v)
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker7(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v SetForceUpdateOnPageLoadParams) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker6(w, v)
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker7(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *SetForceUpdateOnPageLoadParams) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker6(&r, v)
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker7(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *SetForceUpdateOnPageLoadParams) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker6(l, v)
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker7(l, v)
 }
-func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker7(in *jlexer.Lexer, out *Registration) {
+func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker8(in *jlexer.Lexer, out *Registration) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -626,7 +685,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker7(in *jlexer.Lexe
 		in.Consumed()
 	}
 }
-func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker7(out *jwriter.Writer, in Registration) {
+func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker8(out *jwriter.Writer, in Registration) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -654,27 +713,27 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker7(out *jwriter.Wr
 // MarshalJSON supports json.Marshaler interface
 func (v Registration) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker7(&w, v)
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker8(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Registration) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker7(w, v)
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker8(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Registration) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker7(&r, v)
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker8(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *Registration) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker7(l, v)
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker8(l, v)
 }
-func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker8(in *jlexer.Lexer, out *InspectWorkerParams) {
+func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker9(in *jlexer.Lexer, out *InspectWorkerParams) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -705,7 +764,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker8(in *jlexer.Lexe
 		in.Consumed()
 	}
 }
-func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker8(out *jwriter.Writer, in InspectWorkerParams) {
+func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker9(out *jwriter.Writer, in InspectWorkerParams) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -721,27 +780,27 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker8(out *jwriter.Wr
 // MarshalJSON supports json.Marshaler interface
 func (v InspectWorkerParams) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker8(&w, v)
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker9(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v InspectWorkerParams) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker8(w, v)
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker9(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *InspectWorkerParams) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker8(&r, v)
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker9(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *InspectWorkerParams) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker8(l, v)
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker9(l, v)
 }
-func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker9(in *jlexer.Lexer, out *EventWorkerVersionUpdated) {
+func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker10(in *jlexer.Lexer, out *EventWorkerVersionUpdated) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -801,7 +860,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker9(in *jlexer.Lexe
 		in.Consumed()
 	}
 }
-func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker9(out *jwriter.Writer, in EventWorkerVersionUpdated) {
+func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker10(out *jwriter.Writer, in EventWorkerVersionUpdated) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -832,27 +891,27 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker9(out *jwriter.Wr
 // MarshalJSON supports json.Marshaler interface
 func (v EventWorkerVersionUpdated) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker9(&w, v)
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker10(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v EventWorkerVersionUpdated) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker9(w, v)
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker10(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *EventWorkerVersionUpdated) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker9(&r, v)
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker10(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *EventWorkerVersionUpdated) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker9(l, v)
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker10(l, v)
 }
-func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker10(in *jlexer.Lexer, out *EventWorkerRegistrationUpdated) {
+func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker11(in *jlexer.Lexer, out *EventWorkerRegistrationUpdated) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -912,7 +971,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker10(in *jlexer.Lex
 		in.Consumed()
 	}
 }
-func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker10(out *jwriter.Writer, in EventWorkerRegistrationUpdated) {
+func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker11(out *jwriter.Writer, in EventWorkerRegistrationUpdated) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -943,27 +1002,27 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker10(out *jwriter.W
 // MarshalJSON supports json.Marshaler interface
 func (v EventWorkerRegistrationUpdated) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker10(&w, v)
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker11(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v EventWorkerRegistrationUpdated) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker10(w, v)
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker11(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *EventWorkerRegistrationUpdated) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker10(&r, v)
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker11(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *EventWorkerRegistrationUpdated) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker10(l, v)
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker11(l, v)
 }
-func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker11(in *jlexer.Lexer, out *EventWorkerErrorReported) {
+func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker12(in *jlexer.Lexer, out *EventWorkerErrorReported) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -1002,7 +1061,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker11(in *jlexer.Lex
 		in.Consumed()
 	}
 }
-func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker11(out *jwriter.Writer, in EventWorkerErrorReported) {
+func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker12(out *jwriter.Writer, in EventWorkerErrorReported) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -1022,27 +1081,27 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker11(out *jwriter.W
 // MarshalJSON supports json.Marshaler interface
 func (v EventWorkerErrorReported) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker11(&w, v)
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker12(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v EventWorkerErrorReported) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker11(w, v)
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker12(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *EventWorkerErrorReported) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker11(&r, v)
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker12(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *EventWorkerErrorReported) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker11(l, v)
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker12(l, v)
 }
-func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker12(in *jlexer.Lexer, out *ErrorMessage) {
+func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker13(in *jlexer.Lexer, out *ErrorMessage) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -1083,7 +1142,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker12(in *jlexer.Lex
 		in.Consumed()
 	}
 }
-func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker12(out *jwriter.Writer, in ErrorMessage) {
+func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker13(out *jwriter.Writer, in ErrorMessage) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -1129,27 +1188,27 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker12(out *jwriter.W
 // MarshalJSON supports json.Marshaler interface
 func (v ErrorMessage) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker12(&w, v)
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker13(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v ErrorMessage) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker12(w, v)
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker13(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *ErrorMessage) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker12(&r, v)
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker13(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *ErrorMessage) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker12(l, v)
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker13(l, v)
 }
-func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker13(in *jlexer.Lexer, out *EnableParams) {
+func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker14(in *jlexer.Lexer, out *EnableParams) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -1178,7 +1237,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker13(in *jlexer.Lex
 		in.Consumed()
 	}
 }
-func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker13(out *jwriter.Writer, in EnableParams) {
+func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker14(out *jwriter.Writer, in EnableParams) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -1188,27 +1247,27 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker13(out *jwriter.W
 // MarshalJSON supports json.Marshaler interface
 func (v EnableParams) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker13(&w, v)
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker14(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v EnableParams) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker13(w, v)
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker14(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *EnableParams) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker13(&r, v)
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker14(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *EnableParams) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker13(l, v)
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker14(l, v)
 }
-func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker14(in *jlexer.Lexer, out *DispatchSyncEventParams) {
+func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker15(in *jlexer.Lexer, out *DispatchSyncEventParams) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -1245,7 +1304,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker14(in *jlexer.Lex
 		in.Consumed()
 	}
 }
-func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker14(out *jwriter.Writer, in DispatchSyncEventParams) {
+func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker15(out *jwriter.Writer, in DispatchSyncEventParams) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -1279,27 +1338,27 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker14(out *jwriter.W
 // MarshalJSON supports json.Marshaler interface
 func (v DispatchSyncEventParams) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker14(&w, v)
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker15(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v DispatchSyncEventParams) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker14(w, v)
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker15(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *DispatchSyncEventParams) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker14(&r, v)
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker15(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *DispatchSyncEventParams) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker14(l, v)
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker15(l, v)
 }
-func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker15(in *jlexer.Lexer, out *DisableParams) {
+func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker16(in *jlexer.Lexer, out *DisableParams) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -1328,7 +1387,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker15(in *jlexer.Lex
 		in.Consumed()
 	}
 }
-func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker15(out *jwriter.Writer, in DisableParams) {
+func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker16(out *jwriter.Writer, in DisableParams) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -1338,27 +1397,27 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker15(out *jwriter.W
 // MarshalJSON supports json.Marshaler interface
 func (v DisableParams) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker15(&w, v)
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker16(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v DisableParams) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker15(w, v)
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker16(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *DisableParams) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker15(&r, v)
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker16(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *DisableParams) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker15(l, v)
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker16(l, v)
 }
-func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker16(in *jlexer.Lexer, out *DeliverPushMessageParams) {
+func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker17(in *jlexer.Lexer, out *DeliverPushMessageParams) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -1393,7 +1452,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker16(in *jlexer.Lex
 		in.Consumed()
 	}
 }
-func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker16(out *jwriter.Writer, in DeliverPushMessageParams) {
+func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker17(out *jwriter.Writer, in DeliverPushMessageParams) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -1421,23 +1480,23 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker16(out *jwriter.W
 // MarshalJSON supports json.Marshaler interface
 func (v DeliverPushMessageParams) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker16(&w, v)
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker17(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v DeliverPushMessageParams) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker16(w, v)
+	easyjsonC5a4559bEncodeGithubComKnqChromedpCdpServiceworker17(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *DeliverPushMessageParams) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker16(&r, v)
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker17(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *DeliverPushMessageParams) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker16(l, v)
+	easyjsonC5a4559bDecodeGithubComKnqChromedpCdpServiceworker17(l, v)
 }

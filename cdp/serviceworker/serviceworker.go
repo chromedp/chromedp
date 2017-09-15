@@ -145,6 +145,20 @@ func (p *StopWorkerParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandServiceWorkerStopWorker, p, nil)
 }
 
+// StopAllWorkersParams [no description].
+type StopAllWorkersParams struct{}
+
+// StopAllWorkers [no description].
+func StopAllWorkers() *StopAllWorkersParams {
+	return &StopAllWorkersParams{}
+}
+
+// Do executes ServiceWorker.stopAllWorkers against the provided context and
+// target handler.
+func (p *StopAllWorkersParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandServiceWorkerStopAllWorkers, nil, nil)
+}
+
 // InspectWorkerParams [no description].
 type InspectWorkerParams struct {
 	VersionID string `json:"versionId"`

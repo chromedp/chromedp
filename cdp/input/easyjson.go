@@ -37,13 +37,13 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpInput(in *jlexer.Lexer, out *T
 		}
 		switch key {
 		case "x":
-			out.X = int64(in.Int64())
+			out.X = float64(in.Float64())
 		case "y":
-			out.Y = int64(in.Int64())
+			out.Y = float64(in.Float64())
 		case "radiusX":
-			out.RadiusX = int64(in.Int64())
+			out.RadiusX = float64(in.Float64())
 		case "radiusY":
-			out.RadiusY = int64(in.Int64())
+			out.RadiusY = float64(in.Float64())
 		case "rotationAngle":
 			out.RotationAngle = float64(in.Float64())
 		case "force":
@@ -69,20 +69,20 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpInput(out *jwriter.Writer, in 
 	}
 	first = false
 	out.RawString("\"x\":")
-	out.Int64(int64(in.X))
+	out.Float64(float64(in.X))
 	if !first {
 		out.RawByte(',')
 	}
 	first = false
 	out.RawString("\"y\":")
-	out.Int64(int64(in.Y))
+	out.Float64(float64(in.Y))
 	if in.RadiusX != 0 {
 		if !first {
 			out.RawByte(',')
 		}
 		first = false
 		out.RawString("\"radiusX\":")
-		out.Int64(int64(in.RadiusX))
+		out.Float64(float64(in.RadiusX))
 	}
 	if in.RadiusY != 0 {
 		if !first {
@@ -90,7 +90,7 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpInput(out *jwriter.Writer, in 
 		}
 		first = false
 		out.RawString("\"radiusY\":")
-		out.Int64(int64(in.RadiusY))
+		out.Float64(float64(in.RadiusY))
 	}
 	if in.RotationAngle != 0 {
 		if !first {

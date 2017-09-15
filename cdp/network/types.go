@@ -105,7 +105,8 @@ func (t *ErrorReason) UnmarshalJSON(buf []byte) error {
 // Headers request / response headers as keys / values of JSON object.
 type Headers map[string]interface{}
 
-// ConnectionType loading priority of a resource request.
+// ConnectionType the underlying connection technology that the browser is
+// supposedly using.
 type ConnectionType string
 
 // String returns the ConnectionType as string value.

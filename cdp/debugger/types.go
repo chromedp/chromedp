@@ -3,7 +3,6 @@ package debugger
 import (
 	"errors"
 
-	"github.com/knq/chromedp/cdp/runtime"
 	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"
@@ -46,6 +45,7 @@ type CallFrame struct {
 	FunctionName     string                `json:"functionName"`               // Name of the JavaScript function called on this call frame.
 	FunctionLocation *Location             `json:"functionLocation,omitempty"` // Location in the source code.
 	Location         *Location             `json:"location"`                   // Location in the source code.
+	URL              string                `json:"url"`                        // JavaScript script name or url.
 	ScopeChain       []*Scope              `json:"scopeChain"`                 // Scope chain for this call frame.
 	This             *runtime.RemoteObject `json:"this"`                       // this object for this call frame.
 	ReturnValue      *runtime.RemoteObject `json:"returnValue,omitempty"`      // The value being returned, if the function is at return point.

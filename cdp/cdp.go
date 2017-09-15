@@ -139,6 +139,7 @@ const (
 	CommandEmulationSetCPUThrottlingRate                   MethodType = "Emulation.setCPUThrottlingRate"
 	CommandEmulationCanEmulate                             MethodType = "Emulation.canEmulate"
 	CommandEmulationSetVirtualTimePolicy                   MethodType = "Emulation.setVirtualTimePolicy"
+	CommandEmulationSetNavigatorOverrides                  MethodType = "Emulation.setNavigatorOverrides"
 	CommandEmulationSetDefaultBackgroundColorOverride      MethodType = "Emulation.setDefaultBackgroundColorOverride"
 	EventSecuritySecurityStateChanged                      MethodType = "Security.securityStateChanged"
 	EventSecurityCertificateError                          MethodType = "Security.certificateError"
@@ -340,6 +341,7 @@ const (
 	CommandServiceWorkerStartWorker                        MethodType = "ServiceWorker.startWorker"
 	CommandServiceWorkerSkipWaiting                        MethodType = "ServiceWorker.skipWaiting"
 	CommandServiceWorkerStopWorker                         MethodType = "ServiceWorker.stopWorker"
+	CommandServiceWorkerStopAllWorkers                     MethodType = "ServiceWorker.stopAllWorkers"
 	CommandServiceWorkerInspectWorker                      MethodType = "ServiceWorker.inspectWorker"
 	CommandServiceWorkerSetForceUpdateOnPageLoad           MethodType = "ServiceWorker.setForceUpdateOnPageLoad"
 	CommandServiceWorkerDeliverPushMessage                 MethodType = "ServiceWorker.deliverPushMessage"
@@ -470,6 +472,9 @@ const (
 	CommandProfilerStopPreciseCoverage                     MethodType = "Profiler.stopPreciseCoverage"
 	CommandProfilerTakePreciseCoverage                     MethodType = "Profiler.takePreciseCoverage"
 	CommandProfilerGetBestEffortCoverage                   MethodType = "Profiler.getBestEffortCoverage"
+	CommandProfilerStartTypeProfile                        MethodType = "Profiler.startTypeProfile"
+	CommandProfilerStopTypeProfile                         MethodType = "Profiler.stopTypeProfile"
+	CommandProfilerTakeTypeProfile                         MethodType = "Profiler.takeTypeProfile"
 	EventHeapProfilerAddHeapSnapshotChunk                  MethodType = "HeapProfiler.addHeapSnapshotChunk"
 	EventHeapProfilerResetProfiles                         MethodType = "HeapProfiler.resetProfiles"
 	EventHeapProfilerReportHeapSnapshotProgress            MethodType = "HeapProfiler.reportHeapSnapshotProgress"
@@ -681,6 +686,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandEmulationCanEmulate
 	case CommandEmulationSetVirtualTimePolicy:
 		*t = CommandEmulationSetVirtualTimePolicy
+	case CommandEmulationSetNavigatorOverrides:
+		*t = CommandEmulationSetNavigatorOverrides
 	case CommandEmulationSetDefaultBackgroundColorOverride:
 		*t = CommandEmulationSetDefaultBackgroundColorOverride
 	case EventSecuritySecurityStateChanged:
@@ -1083,6 +1090,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandServiceWorkerSkipWaiting
 	case CommandServiceWorkerStopWorker:
 		*t = CommandServiceWorkerStopWorker
+	case CommandServiceWorkerStopAllWorkers:
+		*t = CommandServiceWorkerStopAllWorkers
 	case CommandServiceWorkerInspectWorker:
 		*t = CommandServiceWorkerInspectWorker
 	case CommandServiceWorkerSetForceUpdateOnPageLoad:
@@ -1343,6 +1352,12 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandProfilerTakePreciseCoverage
 	case CommandProfilerGetBestEffortCoverage:
 		*t = CommandProfilerGetBestEffortCoverage
+	case CommandProfilerStartTypeProfile:
+		*t = CommandProfilerStartTypeProfile
+	case CommandProfilerStopTypeProfile:
+		*t = CommandProfilerStopTypeProfile
+	case CommandProfilerTakeTypeProfile:
+		*t = CommandProfilerTakeTypeProfile
 	case EventHeapProfilerAddHeapSnapshotChunk:
 		*t = EventHeapProfilerAddHeapSnapshotChunk
 	case EventHeapProfilerResetProfiles:

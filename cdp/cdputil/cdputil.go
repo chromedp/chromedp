@@ -316,6 +316,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandEmulationSetVirtualTimePolicy:
 		return emptyVal, nil
 
+	case cdp.CommandEmulationSetNavigatorOverrides:
+		return emptyVal, nil
+
 	case cdp.CommandEmulationSetDefaultBackgroundColorOverride:
 		return emptyVal, nil
 
@@ -916,6 +919,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandServiceWorkerStopWorker:
 		return emptyVal, nil
 
+	case cdp.CommandServiceWorkerStopAllWorkers:
+		return emptyVal, nil
+
 	case cdp.CommandServiceWorkerInspectWorker:
 		return emptyVal, nil
 
@@ -1308,6 +1314,15 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 
 	case cdp.CommandProfilerGetBestEffortCoverage:
 		v = new(profiler.GetBestEffortCoverageReturns)
+
+	case cdp.CommandProfilerStartTypeProfile:
+		return emptyVal, nil
+
+	case cdp.CommandProfilerStopTypeProfile:
+		return emptyVal, nil
+
+	case cdp.CommandProfilerTakeTypeProfile:
+		v = new(profiler.TakeTypeProfileReturns)
 
 	case cdp.EventProfilerConsoleProfileStarted:
 		v = new(profiler.EventConsoleProfileStarted)

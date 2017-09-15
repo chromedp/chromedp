@@ -936,31 +936,31 @@
               "name": "scale",
               "type": "number",
               "optional": true,
-              "description": "Scale to apply to resulting view image. Ignored in |fitWindow| mode."
+              "description": "Scale to apply to resulting view image."
             },
             {
               "name": "screenWidth",
               "type": "integer",
               "optional": true,
-              "description": "Overriding screen width value in pixels (minimum 0, maximum 10000000). Only used for |mobile==true|."
+              "description": "Overriding screen width value in pixels (minimum 0, maximum 10000000)."
             },
             {
               "name": "screenHeight",
               "type": "integer",
               "optional": true,
-              "description": "Overriding screen height value in pixels (minimum 0, maximum 10000000). Only used for |mobile==true|."
+              "description": "Overriding screen height value in pixels (minimum 0, maximum 10000000)."
             },
             {
               "name": "positionX",
               "type": "integer",
               "optional": true,
-              "description": "Overriding view X position on screen in pixels (minimum 0, maximum 10000000). Only used for |mobile==true|."
+              "description": "Overriding view X position on screen in pixels (minimum 0, maximum 10000000)."
             },
             {
               "name": "positionY",
               "type": "integer",
               "optional": true,
-              "description": "Overriding view Y position on screen in pixels (minimum 0, maximum 10000000). Only used for |mobile==true|."
+              "description": "Overriding view Y position on screen in pixels (minimum 0, maximum 10000000)."
             },
             {
               "name": "dontSetVisibleSize",
@@ -2070,35 +2070,35 @@
               "name": "scale",
               "type": "number",
               "optional": true,
-              "description": "Scale to apply to resulting view image. Ignored in |fitWindow| mode."
+              "description": "Scale to apply to resulting view image."
             },
             {
               "name": "screenWidth",
               "type": "integer",
               "optional": true,
               "experimental": true,
-              "description": "Overriding screen width value in pixels (minimum 0, maximum 10000000). Only used for |mobile==true|."
+              "description": "Overriding screen width value in pixels (minimum 0, maximum 10000000)."
             },
             {
               "name": "screenHeight",
               "type": "integer",
               "optional": true,
               "experimental": true,
-              "description": "Overriding screen height value in pixels (minimum 0, maximum 10000000). Only used for |mobile==true|."
+              "description": "Overriding screen height value in pixels (minimum 0, maximum 10000000)."
             },
             {
               "name": "positionX",
               "type": "integer",
               "optional": true,
               "experimental": true,
-              "description": "Overriding view X position on screen in pixels (minimum 0, maximum 10000000). Only used for |mobile==true|."
+              "description": "Overriding view X position on screen in pixels (minimum 0, maximum 10000000)."
             },
             {
               "name": "positionY",
               "type": "integer",
               "optional": true,
               "experimental": true,
-              "description": "Overriding view Y position on screen in pixels (minimum 0, maximum 10000000). Only used for |mobile==true|."
+              "description": "Overriding view Y position on screen in pixels (minimum 0, maximum 10000000)."
             },
             {
               "name": "dontSetVisibleSize",
@@ -2282,6 +2282,18 @@
               "type": "integer",
               "optional": true,
               "description": "If set, after this many virtual milliseconds have elapsed virtual time will be paused and a virtualTimeBudgetExpired event is sent."
+            }
+          ],
+          "experimental": true
+        },
+        {
+          "name": "setNavigatorOverrides",
+          "description": "Overrides value returned by the javascript navigator object.",
+          "parameters": [
+            {
+              "name": "platform",
+              "type": "string",
+              "description": "The platform navigator.platform should return."
             }
           ],
           "experimental": true
@@ -2667,7 +2679,7 @@
             "wimax",
             "other"
           ],
-          "description": "Loading priority of a resource request."
+          "description": "The underlying connection technology that the browser is supposedly using."
         },
         {
           "id": "CookieSameSite",
@@ -3719,17 +3731,17 @@
             {
               "name": "latency",
               "type": "number",
-              "description": "Additional latency (ms)."
+              "description": "Minimum latency from request sent to response headers received (ms)."
             },
             {
               "name": "downloadThroughput",
               "type": "number",
-              "description": "Maximal aggregated download throughput."
+              "description": "Maximal aggregated download throughput (bytes/sec). -1 disables download throttling."
             },
             {
               "name": "uploadThroughput",
               "type": "number",
-              "description": "Maximal aggregated upload throughput."
+              "description": "Maximal aggregated upload throughput (bytes/sec).  -1 disables upload throttling."
             },
             {
               "name": "connectionType",
@@ -9143,6 +9155,9 @@
           ]
         },
         {
+          "name": "stopAllWorkers"
+        },
+        {
           "name": "inspectWorker",
           "parameters": [
             {
@@ -9245,25 +9260,25 @@
           "properties": [
             {
               "name": "x",
-              "type": "integer",
+              "type": "number",
               "description": "X coordinate of the event relative to the main frame's viewport in CSS pixels."
             },
             {
               "name": "y",
-              "type": "integer",
+              "type": "number",
               "description": "Y coordinate of the event relative to the main frame's viewport in CSS pixels. 0 refers to the top of the viewport and Y increases as it proceeds towards the bottom of the viewport."
             },
             {
               "name": "radiusX",
-              "type": "integer",
+              "type": "number",
               "optional": true,
-              "description": "X radius of the touch area (default: 1)."
+              "description": "X radius of the touch area (default: 1.0)."
             },
             {
               "name": "radiusY",
-              "type": "integer",
+              "type": "number",
               "optional": true,
-              "description": "Y radius of the touch area (default: 1)."
+              "description": "Y radius of the touch area (default: 1.0)."
             },
             {
               "name": "rotationAngle",
@@ -12951,6 +12966,11 @@
               "description": "Location in the source code."
             },
             {
+              "name": "url",
+              "type": "string",
+              "description": "JavaScript script name or url."
+            },
+            {
               "name": "scopeChain",
               "type": "array",
               "items": {
@@ -14101,6 +14121,66 @@
             }
           ],
           "experimental": true
+        },
+        {
+          "id": "TypeObject",
+          "type": "object",
+          "description": "Describes a type collected during runtime.",
+          "properties": [
+            {
+              "name": "name",
+              "type": "string",
+              "description": "Name of a type collected with type profiling."
+            }
+          ],
+          "experimental": true
+        },
+        {
+          "id": "TypeProfileEntry",
+          "type": "object",
+          "description": "Source offset and types for a parameter or return value.",
+          "properties": [
+            {
+              "name": "offset",
+              "type": "integer",
+              "description": "Source offset of the parameter or end of function for return values."
+            },
+            {
+              "name": "types",
+              "type": "array",
+              "items": {
+                "$ref": "TypeObject"
+              },
+              "description": "The types for this parameter or return value."
+            }
+          ],
+          "experimental": true
+        },
+        {
+          "id": "ScriptTypeProfile",
+          "type": "object",
+          "description": "Type profile data collected during runtime for a JavaScript script.",
+          "properties": [
+            {
+              "name": "scriptId",
+              "$ref": "Runtime.ScriptId",
+              "description": "JavaScript script id."
+            },
+            {
+              "name": "url",
+              "type": "string",
+              "description": "JavaScript script name or url."
+            },
+            {
+              "name": "entries",
+              "type": "array",
+              "items": {
+                "$ref": "TypeProfileEntry"
+              },
+              "description": "Type profile entries for parameters and return values of the functions in the script."
+            }
+          ],
+          "experimental": true
         }
       ],
       "commands": [
@@ -14186,6 +14266,31 @@
             }
           ],
           "description": "Collect coverage data for the current isolate. The coverage data may be incomplete due to garbage collection.",
+          "experimental": true
+        },
+        {
+          "name": "startTypeProfile",
+          "description": "Enable type profile.",
+          "experimental": true
+        },
+        {
+          "name": "stopTypeProfile",
+          "description": "Disable type profile. Disabling releases type profile data collected so far.",
+          "experimental": true
+        },
+        {
+          "name": "takeTypeProfile",
+          "returns": [
+            {
+              "name": "result",
+              "type": "array",
+              "items": {
+                "$ref": "ScriptTypeProfile"
+              },
+              "description": "Type profile for all scripts since startTypeProfile() was turned on."
+            }
+          ],
+          "description": "Collect type profile.",
           "experimental": true
         }
       ],

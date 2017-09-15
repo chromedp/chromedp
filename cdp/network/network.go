@@ -562,9 +562,9 @@ func (p *CanEmulateNetworkConditionsParams) Do(ctxt context.Context, h cdp.Handl
 // EmulateNetworkConditionsParams activates emulation of network conditions.
 type EmulateNetworkConditionsParams struct {
 	Offline            bool           `json:"offline"`                  // True to emulate internet disconnection.
-	Latency            float64        `json:"latency"`                  // Additional latency (ms).
-	DownloadThroughput float64        `json:"downloadThroughput"`       // Maximal aggregated download throughput.
-	UploadThroughput   float64        `json:"uploadThroughput"`         // Maximal aggregated upload throughput.
+	Latency            float64        `json:"latency"`                  // Minimum latency from request sent to response headers received (ms).
+	DownloadThroughput float64        `json:"downloadThroughput"`       // Maximal aggregated download throughput (bytes/sec). -1 disables download throttling.
+	UploadThroughput   float64        `json:"uploadThroughput"`         // Maximal aggregated upload throughput (bytes/sec).  -1 disables upload throttling.
 	ConnectionType     ConnectionType `json:"connectionType,omitempty"` // Connection type if known.
 }
 
@@ -572,9 +572,9 @@ type EmulateNetworkConditionsParams struct {
 //
 // parameters:
 //   offline - True to emulate internet disconnection.
-//   latency - Additional latency (ms).
-//   downloadThroughput - Maximal aggregated download throughput.
-//   uploadThroughput - Maximal aggregated upload throughput.
+//   latency - Minimum latency from request sent to response headers received (ms).
+//   downloadThroughput - Maximal aggregated download throughput (bytes/sec). -1 disables download throttling.
+//   uploadThroughput - Maximal aggregated upload throughput (bytes/sec).  -1 disables upload throttling.
 func EmulateNetworkConditions(offline bool, latency float64, downloadThroughput float64, uploadThroughput float64) *EmulateNetworkConditionsParams {
 	return &EmulateNetworkConditionsParams{
 		Offline:            offline,

@@ -51,3 +51,22 @@ type ScriptCoverage struct {
 	URL       string              `json:"url"`       // JavaScript script name or url.
 	Functions []*FunctionCoverage `json:"functions"` // Functions contained in the script that has coverage data.
 }
+
+// TypeObject describes a type collected during runtime.
+type TypeObject struct {
+	Name string `json:"name"` // Name of a type collected with type profiling.
+}
+
+// TypeProfileEntry source offset and types for a parameter or return value.
+type TypeProfileEntry struct {
+	Offset int64         `json:"offset"` // Source offset of the parameter or end of function for return values.
+	Types  []*TypeObject `json:"types"`  // The types for this parameter or return value.
+}
+
+// ScriptTypeProfile type profile data collected during runtime for a
+// JavaScript script.
+type ScriptTypeProfile struct {
+	ScriptID runtime.ScriptID    `json:"scriptId"` // JavaScript script id.
+	URL      string              `json:"url"`      // JavaScript script name or url.
+	Entries  []*TypeProfileEntry `json:"entries"`  // Type profile entries for parameters and return values of the functions in the script.
+}

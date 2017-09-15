@@ -23,11 +23,11 @@ type SetDeviceMetricsOverrideParams struct {
 	Height             int64              `json:"height"`                       // Overriding height value in pixels (minimum 0, maximum 10000000). 0 disables the override.
 	DeviceScaleFactor  float64            `json:"deviceScaleFactor"`            // Overriding device scale factor value. 0 disables the override.
 	Mobile             bool               `json:"mobile"`                       // Whether to emulate mobile device. This includes viewport meta tag, overlay scrollbars, text autosizing and more.
-	Scale              float64            `json:"scale,omitempty"`              // Scale to apply to resulting view image. Ignored in |fitWindow| mode.
-	ScreenWidth        int64              `json:"screenWidth,omitempty"`        // Overriding screen width value in pixels (minimum 0, maximum 10000000). Only used for |mobile==true|.
-	ScreenHeight       int64              `json:"screenHeight,omitempty"`       // Overriding screen height value in pixels (minimum 0, maximum 10000000). Only used for |mobile==true|.
-	PositionX          int64              `json:"positionX,omitempty"`          // Overriding view X position on screen in pixels (minimum 0, maximum 10000000). Only used for |mobile==true|.
-	PositionY          int64              `json:"positionY,omitempty"`          // Overriding view Y position on screen in pixels (minimum 0, maximum 10000000). Only used for |mobile==true|.
+	Scale              float64            `json:"scale,omitempty"`              // Scale to apply to resulting view image.
+	ScreenWidth        int64              `json:"screenWidth,omitempty"`        // Overriding screen width value in pixels (minimum 0, maximum 10000000).
+	ScreenHeight       int64              `json:"screenHeight,omitempty"`       // Overriding screen height value in pixels (minimum 0, maximum 10000000).
+	PositionX          int64              `json:"positionX,omitempty"`          // Overriding view X position on screen in pixels (minimum 0, maximum 10000000).
+	PositionY          int64              `json:"positionY,omitempty"`          // Overriding view Y position on screen in pixels (minimum 0, maximum 10000000).
 	DontSetVisibleSize bool               `json:"dontSetVisibleSize,omitempty"` // Do not set visible view size, rely upon explicit setVisibleSize call.
 	ScreenOrientation  *ScreenOrientation `json:"screenOrientation,omitempty"`  // Screen orientation override.
 }
@@ -51,36 +51,35 @@ func SetDeviceMetricsOverride(width int64, height int64, deviceScaleFactor float
 	}
 }
 
-// WithScale scale to apply to resulting view image. Ignored in |fitWindow|
-// mode.
+// WithScale scale to apply to resulting view image.
 func (p SetDeviceMetricsOverrideParams) WithScale(scale float64) *SetDeviceMetricsOverrideParams {
 	p.Scale = scale
 	return &p
 }
 
 // WithScreenWidth overriding screen width value in pixels (minimum 0,
-// maximum 10000000). Only used for |mobile==true|.
+// maximum 10000000).
 func (p SetDeviceMetricsOverrideParams) WithScreenWidth(screenWidth int64) *SetDeviceMetricsOverrideParams {
 	p.ScreenWidth = screenWidth
 	return &p
 }
 
 // WithScreenHeight overriding screen height value in pixels (minimum 0,
-// maximum 10000000). Only used for |mobile==true|.
+// maximum 10000000).
 func (p SetDeviceMetricsOverrideParams) WithScreenHeight(screenHeight int64) *SetDeviceMetricsOverrideParams {
 	p.ScreenHeight = screenHeight
 	return &p
 }
 
 // WithPositionX overriding view X position on screen in pixels (minimum 0,
-// maximum 10000000). Only used for |mobile==true|.
+// maximum 10000000).
 func (p SetDeviceMetricsOverrideParams) WithPositionX(positionX int64) *SetDeviceMetricsOverrideParams {
 	p.PositionX = positionX
 	return &p
 }
 
 // WithPositionY overriding view Y position on screen in pixels (minimum 0,
-// maximum 10000000). Only used for |mobile==true|.
+// maximum 10000000).
 func (p SetDeviceMetricsOverrideParams) WithPositionY(positionY int64) *SetDeviceMetricsOverrideParams {
 	p.PositionY = positionY
 	return &p
@@ -394,6 +393,29 @@ func (p SetVirtualTimePolicyParams) WithBudget(budget int64) *SetVirtualTimePoli
 // target handler.
 func (p *SetVirtualTimePolicyParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandEmulationSetVirtualTimePolicy, p, nil)
+}
+
+// SetNavigatorOverridesParams overrides value returned by the javascript
+// navigator object.
+type SetNavigatorOverridesParams struct {
+	Platform string `json:"platform"` // The platform navigator.platform should return.
+}
+
+// SetNavigatorOverrides overrides value returned by the javascript navigator
+// object.
+//
+// parameters:
+//   platform - The platform navigator.platform should return.
+func SetNavigatorOverrides(platform string) *SetNavigatorOverridesParams {
+	return &SetNavigatorOverridesParams{
+		Platform: platform,
+	}
+}
+
+// Do executes Emulation.setNavigatorOverrides against the provided context and
+// target handler.
+func (p *SetNavigatorOverridesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandEmulationSetNavigatorOverrides, p, nil)
 }
 
 // SetDefaultBackgroundColorOverrideParams sets or clears an override of the

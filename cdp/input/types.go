@@ -15,10 +15,10 @@ import (
 
 // TouchPoint [no description].
 type TouchPoint struct {
-	X             int64   `json:"x"`                       // X coordinate of the event relative to the main frame's viewport in CSS pixels.
-	Y             int64   `json:"y"`                       // Y coordinate of the event relative to the main frame's viewport in CSS pixels. 0 refers to the top of the viewport and Y increases as it proceeds towards the bottom of the viewport.
-	RadiusX       int64   `json:"radiusX,omitempty"`       // X radius of the touch area (default: 1).
-	RadiusY       int64   `json:"radiusY,omitempty"`       // Y radius of the touch area (default: 1).
+	X             float64 `json:"x"`                       // X coordinate of the event relative to the main frame's viewport in CSS pixels.
+	Y             float64 `json:"y"`                       // Y coordinate of the event relative to the main frame's viewport in CSS pixels. 0 refers to the top of the viewport and Y increases as it proceeds towards the bottom of the viewport.
+	RadiusX       float64 `json:"radiusX,omitempty"`       // X radius of the touch area (default: 1.0).
+	RadiusY       float64 `json:"radiusY,omitempty"`       // Y radius of the touch area (default: 1.0).
 	RotationAngle float64 `json:"rotationAngle,omitempty"` // Rotation angle (default: 0.0).
 	Force         float64 `json:"force,omitempty"`         // Force (default: 1.0).
 	ID            float64 `json:"id,omitempty"`            // Identifier used to track touch sources between events, must be unique within an event.
