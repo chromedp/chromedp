@@ -930,6 +930,85 @@ func TestFileUpload(t *testing.T) {
 	}
 }
 
+func TestInnerHTML(t *testing.T) {
+	t.Parallel()
+
+	c := testAllocate(t, "table.html")
+	defer c.Release()
+
+	tests := []struct {
+		sel string
+		by  QueryOption
+	}{
+		{"/html/body/table/thead", BySearch},
+		{"thead", ByQueryAll},
+		{"thead", ByQuery},
+	}
+	var err error
+	for i, test := range tests {
+		var html string
+		err = c.Run(defaultContext, InnerHTML(test.sel, &html))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+		if html == "" {
+			t.Fatalf("test %d: InnerHTML is empty", i)
+		}
+	}
+}
+
+func TestOuterHTML(t *testing.T) {
+	t.Parallel()
+
+	c := testAllocate(t, "table.html")
+	defer c.Release()
+
+	tests := []struct {
+		sel string
+		by  QueryOption
+	}{
+		{"/html/body/table/thead/tr", BySearch},
+		{"thead tr", ByQueryAll},
+		{"thead tr", ByQuery},
+	}
+	var err error
+	for i, test := range tests {
+		var html string
+		err = c.Run(defaultContext, OuterHTML(test.sel, &html))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+		if html == "" {
+			t.Fatalf("test %d: OuterHTML is empty", i)
+		}
+	}
+}
+
+func TestScrollIntoView(t *testing.T) {
+	t.Parallel()
+
+	c := testAllocate(t, "image.html")
+	defer c.Release()
+
+	tests := []struct {
+		sel string
+		by  QueryOption
+	}{
+		{"/html/body/img", BySearch},
+		{"img", ByQueryAll},
+		{"img", ByQuery},
+		{"#icon-github", ByID},
+	}
+	var err error
+	for i, test := range tests {
+		err = c.Run(defaultContext, ScrollIntoView(test.sel, test.by))
+		if err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+		// TODO test scroll event
+	}
+}
+
 const (
 	uploadHTML = `<!doctype html>
 <html>
