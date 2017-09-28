@@ -1828,7 +1828,7 @@ func (t *ShadowRootType) UnmarshalJSON(buf []byte) error {
 	return easyjson.Unmarshal(buf, t)
 }
 
-// Node dOM interaction is implemented in terms of mirror objects that
+// Node DOM interaction is implemented in terms of mirror objects that
 // represent the actual DOM nodes. DOMNode is a base node mirror type.
 type Node struct {
 	NodeID           NodeID         `json:"nodeId"`                     // Node identifier that is passed into the rest of the DOM messages as the nodeId. Backend will only push node with given id once. It is aware of all requested nodes and will only fire DOM events for nodes known to the client.

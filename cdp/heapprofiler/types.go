@@ -20,7 +20,7 @@ type SamplingHeapProfileNode struct {
 	Children  []*SamplingHeapProfileNode `json:"children"`  // Child nodes.
 }
 
-// SamplingHeapProfile profile.
+// SamplingHeapProfile Profile.
 type SamplingHeapProfile struct {
 	Head *SamplingHeapProfileNode `json:"head"`
 }

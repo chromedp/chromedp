@@ -349,7 +349,7 @@ func (p HighlightNodeParams) WithBackendNodeID(backendNodeID cdp.BackendNodeID) 
 	return &p
 }
 
-// WithObjectID javaScript object id of the node to be highlighted.
+// WithObjectID JavaScript object id of the node to be highlighted.
 func (p HighlightNodeParams) WithObjectID(objectID runtime.RemoteObjectID) *HighlightNodeParams {
 	p.ObjectID = objectID
 	return &p

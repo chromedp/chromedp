@@ -201,13 +201,13 @@ func (p DispatchMouseEventParams) WithClickCount(clickCount int64) *DispatchMous
 	return &p
 }
 
-// WithDeltaX x delta in CSS pixels for mouse wheel event (default: 0).
+// WithDeltaX X delta in CSS pixels for mouse wheel event (default: 0).
 func (p DispatchMouseEventParams) WithDeltaX(deltaX float64) *DispatchMouseEventParams {
 	p.DeltaX = deltaX
 	return &p
 }
 
-// WithDeltaY y delta in CSS pixels for mouse wheel event (default: 0).
+// WithDeltaY Y delta in CSS pixels for mouse wheel event (default: 0).
 func (p DispatchMouseEventParams) WithDeltaY(deltaY float64) *DispatchMouseEventParams {
 	p.DeltaY = deltaY
 	return &p
@@ -291,13 +291,13 @@ func EmulateTouchFromMouseEvent(typeVal MouseType, x int64, y int64, timestamp *
 	}
 }
 
-// WithDeltaX x delta in DIP for mouse wheel event (default: 0).
+// WithDeltaX X delta in DIP for mouse wheel event (default: 0).
 func (p EmulateTouchFromMouseEventParams) WithDeltaX(deltaX float64) *EmulateTouchFromMouseEventParams {
 	p.DeltaX = deltaX
 	return &p
 }
 
-// WithDeltaY y delta in DIP for mouse wheel event (default: 0).
+// WithDeltaY Y delta in DIP for mouse wheel event (default: 0).
 func (p EmulateTouchFromMouseEventParams) WithDeltaY(deltaY float64) *EmulateTouchFromMouseEventParams {
 	p.DeltaY = deltaY
 	return &p

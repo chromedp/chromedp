@@ -12,7 +12,7 @@ import (
 	"github.com/mailru/easyjson/jwriter"
 )
 
-// DOMBreakpointType dOM breakpoint type.
+// DOMBreakpointType DOM breakpoint type.
 type DOMBreakpointType string
 
 // String returns the DOMBreakpointType as string value.

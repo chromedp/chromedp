@@ -154,7 +154,7 @@ type CallArgument struct {
 	ObjectID            RemoteObjectID      `json:"objectId,omitempty"`            // Remote object handle.
 }
 
-// ExecutionContextID id of an execution context.
+// ExecutionContextID ID of an execution context.
 type ExecutionContextID int64
 
 // Int64 returns the ExecutionContextID as int64 value.

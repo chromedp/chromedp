@@ -34,7 +34,7 @@ type ObjectStoreIndex struct {
 	MultiEntry bool     `json:"multiEntry"` // If true, index allows multiple entries for a key.
 }
 
-// Key key.
+// Key Key.
 type Key struct {
 	Type   KeyType `json:"type"`             // Key type.
 	Number float64 `json:"number,omitempty"` // Number value.

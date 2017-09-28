@@ -512,7 +512,7 @@ func (p GetOuterHTMLParams) WithBackendNodeID(backendNodeID cdp.BackendNodeID) *
 	return &p
 }
 
-// WithObjectID javaScript object id of the node wrapper.
+// WithObjectID JavaScript object id of the node wrapper.
 func (p GetOuterHTMLParams) WithObjectID(objectID runtime.RemoteObjectID) *GetOuterHTMLParams {
 	p.ObjectID = objectID
 	return &p
@@ -613,7 +613,7 @@ func (p *PerformSearchParams) Do(ctxt context.Context, h cdp.Handler) (searchID 
 }
 
 // GetSearchResultsParams returns search results from given fromIndex to
-// given toIndex from the sarch with the given identifier.
+// given toIndex from the search with the given identifier.
 type GetSearchResultsParams struct {
 	SearchID  string `json:"searchId"`  // Unique search session identifier.
 	FromIndex int64  `json:"fromIndex"` // Start index of the search result to be returned.
@@ -621,7 +621,7 @@ type GetSearchResultsParams struct {
 }
 
 // GetSearchResults returns search results from given fromIndex to given
-// toIndex from the sarch with the given identifier.
+// toIndex from the search with the given identifier.
 //
 // parameters:
 //   searchID - Unique search session identifier.
@@ -836,7 +836,7 @@ func ResolveNode() *ResolveNodeParams {
 	return &ResolveNodeParams{}
 }
 
-// WithNodeID id of the node to resolve.
+// WithNodeID ID of the node to resolve.
 func (p ResolveNodeParams) WithNodeID(nodeID cdp.NodeID) *ResolveNodeParams {
 	p.NodeID = nodeID
 	return &p
@@ -1078,7 +1078,7 @@ func (p FocusParams) WithBackendNodeID(backendNodeID cdp.BackendNodeID) *FocusPa
 	return &p
 }
 
-// WithObjectID javaScript object id of the node wrapper.
+// WithObjectID JavaScript object id of the node wrapper.
 func (p FocusParams) WithObjectID(objectID runtime.RemoteObjectID) *FocusParams {
 	p.ObjectID = objectID
 	return &p
@@ -1120,7 +1120,7 @@ func (p SetFileInputFilesParams) WithBackendNodeID(backendNodeID cdp.BackendNode
 	return &p
 }
 
-// WithObjectID javaScript object id of the node wrapper.
+// WithObjectID JavaScript object id of the node wrapper.
 func (p SetFileInputFilesParams) WithObjectID(objectID runtime.RemoteObjectID) *SetFileInputFilesParams {
 	p.ObjectID = objectID
 	return &p
@@ -1158,7 +1158,7 @@ func (p GetBoxModelParams) WithBackendNodeID(backendNodeID cdp.BackendNodeID) *G
 	return &p
 }
 
-// WithObjectID javaScript object id of the node wrapper.
+// WithObjectID JavaScript object id of the node wrapper.
 func (p GetBoxModelParams) WithObjectID(objectID runtime.RemoteObjectID) *GetBoxModelParams {
 	p.ObjectID = objectID
 	return &p
@@ -1300,7 +1300,7 @@ func (p DescribeNodeParams) WithBackendNodeID(backendNodeID cdp.BackendNodeID) *
 	return &p
 }
 
-// WithObjectID javaScript object id of the node wrapper.
+// WithObjectID JavaScript object id of the node wrapper.
 func (p DescribeNodeParams) WithObjectID(objectID runtime.RemoteObjectID) *DescribeNodeParams {
 	p.ObjectID = objectID
 	return &p

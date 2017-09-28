@@ -15,7 +15,7 @@ type ProfileNode struct {
 	PositionTicks []*PositionTickInfo `json:"positionTicks,omitempty"` // An array of source position ticks.
 }
 
-// Profile profile.
+// Profile Profile.
 type Profile struct {
 	Nodes      []*ProfileNode `json:"nodes"`                // The list of profile nodes. First item is the root node.
 	StartTime  float64        `json:"startTime"`            // Profiling start timestamp in microseconds.

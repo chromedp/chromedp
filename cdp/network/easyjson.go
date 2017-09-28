@@ -40,7 +40,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork(in *jlexer.Lexer, out 
 		}
 		switch key {
 		case "status":
-			out.Status = float64(in.Float64())
+			out.Status = int64(in.Int64())
 		case "statusText":
 			out.StatusText = string(in.String())
 		case "headers":
@@ -118,7 +118,7 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork(out *jwriter.Writer, i
 	}
 	first = false
 	out.RawString("\"status\":")
-	out.Float64(float64(in.Status))
+	out.Int64(int64(in.Status))
 	if !first {
 		out.RawByte(',')
 	}
@@ -1767,7 +1767,7 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork15(in *jlexer.Lexer, ou
 		case "url":
 			out.URL = string(in.String())
 		case "status":
-			out.Status = float64(in.Float64())
+			out.Status = int64(in.Int64())
 		case "statusText":
 			out.StatusText = string(in.String())
 		case "headers":
@@ -1891,7 +1891,7 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork15(out *jwriter.Writer,
 	}
 	first = false
 	out.RawString("\"status\":")
-	out.Float64(float64(in.Status))
+	out.Int64(int64(in.Status))
 	if !first {
 		out.RawByte(',')
 	}

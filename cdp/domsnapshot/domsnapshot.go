@@ -19,7 +19,7 @@ import (
 // of the root node (including iframes, template contents, and imported
 // documents) in a flattened array, as well as layout and white-listed computed
 // style information for the nodes. Shadow DOM in the returned DOM tree is
-// flattened. .
+// flattened.
 type GetSnapshotParams struct {
 	ComputedStyleWhitelist []string `json:"computedStyleWhitelist"` // Whitelist of computed styles to return.
 }
@@ -28,7 +28,6 @@ type GetSnapshotParams struct {
 // the root node (including iframes, template contents, and imported documents)
 // in a flattened array, as well as layout and white-listed computed style
 // information for the nodes. Shadow DOM in the returned DOM tree is flattened.
-// .
 //
 // parameters:
 //   computedStyleWhitelist - Whitelist of computed styles to return.

@@ -19,14 +19,14 @@ type BoxModel struct {
 	ShapeOutside *ShapeOutsideInfo `json:"shapeOutside,omitempty"` // Shape outside coordinates
 }
 
-// ShapeOutsideInfo cSS Shape Outside details.
+// ShapeOutsideInfo CSS Shape Outside details.
 type ShapeOutsideInfo struct {
 	Bounds      Quad                  `json:"bounds"`      // Shape bounds
 	Shape       []easyjson.RawMessage `json:"shape"`       // Shape coordinate details
 	MarginShape []easyjson.RawMessage `json:"marginShape"` // Margin shape bounds
 }
 
-// Rect rectangle.
+// Rect Rectangle.
 type Rect struct {
 	X      float64 `json:"x"`      // X coordinate
 	Y      float64 `json:"y"`      // Y coordinate

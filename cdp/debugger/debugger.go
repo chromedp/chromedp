@@ -121,7 +121,7 @@ func SetBreakpointByURL(lineNumber int64) *SetBreakpointByURLParams {
 	}
 }
 
-// WithURL uRL of the resources to set breakpoint on.
+// WithURL URL of the resources to set breakpoint on.
 func (p SetBreakpointByURLParams) WithURL(url string) *SetBreakpointByURLParams {
 	p.URL = url
 	return &p
@@ -484,7 +484,7 @@ func SetScriptSource(scriptID runtime.ScriptID, scriptSource string) *SetScriptS
 	}
 }
 
-// WithDryRun If true the change will not actually be applied. Dry run may be
+// WithDryRun if true the change will not actually be applied. Dry run may be
 // used to get result description without actually modifying the code.
 func (p SetScriptSourceParams) WithDryRun(dryRun bool) *SetScriptSourceParams {
 	p.DryRun = dryRun

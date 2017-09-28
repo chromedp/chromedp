@@ -30,7 +30,7 @@ type EventExceptionThrown struct {
 // EventExceptionRevoked issued when unhandled exception was revoked.
 type EventExceptionRevoked struct {
 	Reason      string `json:"reason"`      // Reason describing why exception was revoked.
-	ExceptionID int64  `json:"exceptionId"` // The id of revoked exception, as reported in exceptionUnhandled.
+	ExceptionID int64  `json:"exceptionId"` // The id of revoked exception, as reported in exceptionThrown.
 }
 
 // EventConsoleAPICalled issued when console API was called.

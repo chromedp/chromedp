@@ -4,8 +4,10 @@ package templates
 
 import (
 	"strings"
+	"unicode"
 
 	"github.com/knq/chromedp/cmd/chromedp-gen/internal"
+	"github.com/knq/snaker"
 )
 
 const (
@@ -13,14 +15,34 @@ const (
 	commentPrefix = `// `
 )
 
+var toUpper = map[string]bool{
+	"DOM": true,
+	"X":   true,
+	"Y":   true,
+}
+
+var keep = map[string]bool{
+	"JavaScript": true,
+}
+
 // formatComment formats a comment.
 func formatComment(s, chop, newstr string) string {
 	s = strings.TrimPrefix(s, chop)
-	s = internal.CodeRE.ReplaceAllString(s, "")
+	s = strings.TrimSpace(internal.CodeRE.ReplaceAllString(s, ""))
 
 	l := len(s)
 	if newstr != "" && l > 0 {
-		s = strings.ToLower(s[:1]) + s[1:]
+		if i := strings.IndexFunc(s, unicode.IsSpace); i != -1 {
+			firstWord, remaining := s[:i], s[i:]
+			if snaker.IsInitialism(firstWord) || toUpper[firstWord] {
+				s = strings.ToUpper(firstWord)
+			} else if keep[firstWord] {
+				s = firstWord
+			} else {
+				s = strings.ToLower(firstWord[:1]) + firstWord[1:]
+			}
+			s += remaining
+		}
 	}
 	s = newstr + strings.TrimSuffix(s, ".")
 	if l < 1 {

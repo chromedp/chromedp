@@ -71,7 +71,7 @@ func (t *StyleSheetOrigin) UnmarshalJSON(buf []byte) error {
 	return easyjson.Unmarshal(buf, t)
 }
 
-// PseudoElementMatches cSS rule collection for a single pseudo style.
+// PseudoElementMatches CSS rule collection for a single pseudo style.
 type PseudoElementMatches struct {
 	PseudoType cdp.PseudoType `json:"pseudoType"` // Pseudo element type.
 	Matches    []*RuleMatch   `json:"matches"`    // Matches of CSS rules applicable to the pseudo style.
@@ -102,7 +102,7 @@ type SelectorList struct {
 	Text      string   `json:"text"`      // Rule selector text.
 }
 
-// StyleSheetHeader cSS stylesheet metainformation.
+// StyleSheetHeader CSS stylesheet metainformation.
 type StyleSheetHeader struct {
 	StyleSheetID StyleSheetID      `json:"styleSheetId"`           // The stylesheet identifier.
 	FrameID      cdp.FrameID       `json:"frameId"`                // Owner frame identifier.
@@ -119,7 +119,7 @@ type StyleSheetHeader struct {
 	Length       float64           `json:"length"`                 // Size of the content (in characters).
 }
 
-// Rule cSS rule representation.
+// Rule CSS rule representation.
 type Rule struct {
 	StyleSheetID StyleSheetID     `json:"styleSheetId,omitempty"` // The css style sheet identifier (absent for user agent stylesheet and user-specified stylesheet rules) this rule came from.
 	SelectorList *SelectorList    `json:"selectorList"`           // Rule selector data.
@@ -128,7 +128,7 @@ type Rule struct {
 	Media        []*Media         `json:"media,omitempty"`        // Media list array (for rules involving media queries). The array enumerates media queries starting with the innermost one, going outwards.
 }
 
-// RuleUsage cSS coverage information.
+// RuleUsage CSS coverage information.
 type RuleUsage struct {
 	StyleSheetID StyleSheetID `json:"styleSheetId"` // The css style sheet identifier (absent for user agent stylesheet and user-specified stylesheet rules) this rule came from.
 	StartOffset  float64      `json:"startOffset"`  // Offset of the start of the rule (including selector) from the beginning of the stylesheet.
@@ -157,7 +157,7 @@ type ComputedProperty struct {
 	Value string `json:"value"` // Computed style property value.
 }
 
-// Style cSS style representation.
+// Style CSS style representation.
 type Style struct {
 	StyleSheetID     StyleSheetID      `json:"styleSheetId,omitempty"` // The css style sheet identifier (absent for user agent stylesheet and user-specified stylesheet rules) this rule came from.
 	CSSProperties    []*Property       `json:"cssProperties"`          // CSS properties in the style.
@@ -166,7 +166,7 @@ type Style struct {
 	Range            *SourceRange      `json:"range,omitempty"`        // Style declaration range in the enclosing stylesheet (if available).
 }
 
-// Property cSS property declaration data.
+// Property CSS property declaration data.
 type Property struct {
 	Name      string       `json:"name"`                // The property name.
 	Value     string       `json:"value"`               // The property value.
@@ -178,7 +178,7 @@ type Property struct {
 	Range     *SourceRange `json:"range,omitempty"`     // The entire property range in the enclosing style declaration (if available).
 }
 
-// Media cSS media rule descriptor.
+// Media CSS media rule descriptor.
 type Media struct {
 	Text         string        `json:"text"`                   // Media query text.
 	Source       MediaSource   `json:"source"`                 // Source of the media query: "mediaRule" if specified by a @media rule, "importRule" if specified by an @import rule, "linkedSheet" if specified by a "media" attribute in a linked stylesheet's LINK tag, "inlineSheet" if specified by a "media" attribute in an inline stylesheet's STYLE tag.
@@ -211,13 +211,13 @@ type PlatformFontUsage struct {
 	GlyphCount   float64 `json:"glyphCount"`   // Amount of glyphs that were rendered with this font.
 }
 
-// KeyframesRule cSS keyframes rule representation.
+// KeyframesRule CSS keyframes rule representation.
 type KeyframesRule struct {
 	AnimationName *Value          `json:"animationName"` // Animation name.
 	Keyframes     []*KeyframeRule `json:"keyframes"`     // List of keyframes.
 }
 
-// KeyframeRule cSS keyframe rule representation.
+// KeyframeRule CSS keyframe rule representation.
 type KeyframeRule struct {
 	StyleSheetID StyleSheetID     `json:"styleSheetId,omitempty"` // The css style sheet identifier (absent for user agent stylesheet and user-specified stylesheet rules) this rule came from.
 	Origin       StyleSheetOrigin `json:"origin"`                 // Parent stylesheet's origin.
