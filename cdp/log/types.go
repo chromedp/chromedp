@@ -14,15 +14,16 @@ import (
 
 // Entry log entry.
 type Entry struct {
-	Source           Source              `json:"source"`                     // Log entry source.
-	Level            Level               `json:"level"`                      // Log entry severity.
-	Text             string              `json:"text"`                       // Logged text.
-	Timestamp        *runtime.Timestamp  `json:"timestamp"`                  // Timestamp when this entry was added.
-	URL              string              `json:"url,omitempty"`              // URL of the resource if known.
-	LineNumber       int64               `json:"lineNumber,omitempty"`       // Line number in the resource.
-	StackTrace       *runtime.StackTrace `json:"stackTrace,omitempty"`       // JavaScript stack trace.
-	NetworkRequestID network.RequestID   `json:"networkRequestId,omitempty"` // Identifier of the network request associated with this entry.
-	WorkerID         string              `json:"workerId,omitempty"`         // Identifier of the worker associated with this entry.
+	Source           Source                  `json:"source"`                     // Log entry source.
+	Level            Level                   `json:"level"`                      // Log entry severity.
+	Text             string                  `json:"text"`                       // Logged text.
+	Timestamp        *runtime.Timestamp      `json:"timestamp"`                  // Timestamp when this entry was added.
+	URL              string                  `json:"url,omitempty"`              // URL of the resource if known.
+	LineNumber       int64                   `json:"lineNumber,omitempty"`       // Line number in the resource.
+	StackTrace       *runtime.StackTrace     `json:"stackTrace,omitempty"`       // JavaScript stack trace.
+	NetworkRequestID network.RequestID       `json:"networkRequestId,omitempty"` // Identifier of the network request associated with this entry.
+	WorkerID         string                  `json:"workerId,omitempty"`         // Identifier of the worker associated with this entry.
+	Args             []*runtime.RemoteObject `json:"args,omitempty"`             // Call arguments.
 }
 
 // ViolationSetting violation configuration setting.
@@ -41,18 +42,19 @@ func (t Source) String() string {
 
 // Source values.
 const (
-	SourceXML          Source = "xml"
-	SourceJavascript   Source = "javascript"
-	SourceNetwork      Source = "network"
-	SourceStorage      Source = "storage"
-	SourceAppcache     Source = "appcache"
-	SourceRendering    Source = "rendering"
-	SourceSecurity     Source = "security"
-	SourceDeprecation  Source = "deprecation"
-	SourceWorker       Source = "worker"
-	SourceViolation    Source = "violation"
-	SourceIntervention Source = "intervention"
-	SourceOther        Source = "other"
+	SourceXML            Source = "xml"
+	SourceJavascript     Source = "javascript"
+	SourceNetwork        Source = "network"
+	SourceStorage        Source = "storage"
+	SourceAppcache       Source = "appcache"
+	SourceRendering      Source = "rendering"
+	SourceSecurity       Source = "security"
+	SourceDeprecation    Source = "deprecation"
+	SourceWorker         Source = "worker"
+	SourceViolation      Source = "violation"
+	SourceIntervention   Source = "intervention"
+	SourceRecommendation Source = "recommendation"
+	SourceOther          Source = "other"
 )
 
 // MarshalEasyJSON satisfies easyjson.Marshaler.
@@ -90,6 +92,8 @@ func (t *Source) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = SourceViolation
 	case SourceIntervention:
 		*t = SourceIntervention
+	case SourceRecommendation:
+		*t = SourceRecommendation
 	case SourceOther:
 		*t = SourceOther
 

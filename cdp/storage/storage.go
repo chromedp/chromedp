@@ -121,3 +121,49 @@ func UntrackCacheStorageForOrigin(origin string) *UntrackCacheStorageForOriginPa
 func (p *UntrackCacheStorageForOriginParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandStorageUntrackCacheStorageForOrigin, p, nil)
 }
+
+// TrackIndexedDBForOriginParams registers origin to be notified when an
+// update occurs to its IndexedDB.
+type TrackIndexedDBForOriginParams struct {
+	Origin string `json:"origin"` // Security origin.
+}
+
+// TrackIndexedDBForOrigin registers origin to be notified when an update
+// occurs to its IndexedDB.
+//
+// parameters:
+//   origin - Security origin.
+func TrackIndexedDBForOrigin(origin string) *TrackIndexedDBForOriginParams {
+	return &TrackIndexedDBForOriginParams{
+		Origin: origin,
+	}
+}
+
+// Do executes Storage.trackIndexedDBForOrigin against the provided context and
+// target handler.
+func (p *TrackIndexedDBForOriginParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandStorageTrackIndexedDBForOrigin, p, nil)
+}
+
+// UntrackIndexedDBForOriginParams unregisters origin from receiving
+// notifications for IndexedDB.
+type UntrackIndexedDBForOriginParams struct {
+	Origin string `json:"origin"` // Security origin.
+}
+
+// UntrackIndexedDBForOrigin unregisters origin from receiving notifications
+// for IndexedDB.
+//
+// parameters:
+//   origin - Security origin.
+func UntrackIndexedDBForOrigin(origin string) *UntrackIndexedDBForOriginParams {
+	return &UntrackIndexedDBForOriginParams{
+		Origin: origin,
+	}
+}
+
+// Do executes Storage.untrackIndexedDBForOrigin against the provided context and
+// target handler.
+func (p *UntrackIndexedDBForOriginParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandStorageUntrackIndexedDBForOrigin, p, nil)
+}

@@ -396,6 +396,37 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpLog4(in *jlexer.Lexer, out *En
 			out.NetworkRequestID = network.RequestID(in.String())
 		case "workerId":
 			out.WorkerID = string(in.String())
+		case "args":
+			if in.IsNull() {
+				in.Skip()
+				out.Args = nil
+			} else {
+				in.Delim('[')
+				if out.Args == nil {
+					if !in.IsDelim(']') {
+						out.Args = make([]*runtime.RemoteObject, 0, 8)
+					} else {
+						out.Args = []*runtime.RemoteObject{}
+					}
+				} else {
+					out.Args = (out.Args)[:0]
+				}
+				for !in.IsDelim(']') {
+					var v4 *runtime.RemoteObject
+					if in.IsNull() {
+						in.Skip()
+						v4 = nil
+					} else {
+						if v4 == nil {
+							v4 = new(runtime.RemoteObject)
+						}
+						(*v4).UnmarshalEasyJSON(in)
+					}
+					out.Args = append(out.Args, v4)
+					in.WantComma()
+				}
+				in.Delim(']')
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -481,6 +512,29 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpLog4(out *jwriter.Writer, in E
 		first = false
 		out.RawString("\"workerId\":")
 		out.String(string(in.WorkerID))
+	}
+	if len(in.Args) != 0 {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"args\":")
+		if in.Args == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			out.RawString("null")
+		} else {
+			out.RawByte('[')
+			for v5, v6 := range in.Args {
+				if v5 > 0 {
+					out.RawByte(',')
+				}
+				if v6 == nil {
+					out.RawString("null")
+				} else {
+					(*v6).MarshalEasyJSON(out)
+				}
+			}
+			out.RawByte(']')
+		}
 	}
 	out.RawByte('}')
 }

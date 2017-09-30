@@ -1084,11 +1084,23 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandStorageUntrackCacheStorageForOrigin:
 		return emptyVal, nil
 
+	case cdp.CommandStorageTrackIndexedDBForOrigin:
+		return emptyVal, nil
+
+	case cdp.CommandStorageUntrackIndexedDBForOrigin:
+		return emptyVal, nil
+
 	case cdp.EventStorageCacheStorageListUpdated:
 		v = new(storage.EventCacheStorageListUpdated)
 
 	case cdp.EventStorageCacheStorageContentUpdated:
 		v = new(storage.EventCacheStorageContentUpdated)
+
+	case cdp.EventStorageIndexedDBListUpdated:
+		v = new(storage.EventIndexedDBListUpdated)
+
+	case cdp.EventStorageIndexedDBContentUpdated:
+		v = new(storage.EventIndexedDBContentUpdated)
 
 	case cdp.CommandLogEnable:
 		return emptyVal, nil

@@ -11239,6 +11239,28 @@
             }
           ],
           "description": "Unregisters origin from receiving notifications for cache storage."
+        },
+        {
+          "name": "trackIndexedDBForOrigin",
+          "parameters": [
+            {
+              "name": "origin",
+              "type": "string",
+              "description": "Security origin."
+            }
+          ],
+          "description": "Registers origin to be notified when an update occurs to its IndexedDB."
+        },
+        {
+          "name": "untrackIndexedDBForOrigin",
+          "parameters": [
+            {
+              "name": "origin",
+              "type": "string",
+              "description": "Security origin."
+            }
+          ],
+          "description": "Unregisters origin from receiving notifications for IndexedDB."
         }
       ],
       "events": [
@@ -11268,6 +11290,38 @@
             }
           ],
           "description": "A cache's contents have been modified."
+        },
+        {
+          "name": "indexedDBListUpdated",
+          "parameters": [
+            {
+              "name": "origin",
+              "type": "string",
+              "description": "Origin to update."
+            }
+          ],
+          "description": "The origin's IndexedDB database list has been modified."
+        },
+        {
+          "name": "indexedDBContentUpdated",
+          "parameters": [
+            {
+              "name": "origin",
+              "type": "string",
+              "description": "Origin to update."
+            },
+            {
+              "name": "databaseName",
+              "type": "string",
+              "description": "Database to update."
+            },
+            {
+              "name": "objectStoreName",
+              "type": "string",
+              "description": "ObjectStore to update."
+            }
+          ],
+          "description": "The origin's IndexedDB object store has been modified."
         }
       ]
     },
@@ -11300,6 +11354,7 @@
                 "worker",
                 "violation",
                 "intervention",
+                "recommendation",
                 "other"
               ],
               "description": "Log entry source."
@@ -11354,6 +11409,15 @@
               "type": "string",
               "optional": true,
               "description": "Identifier of the worker associated with this entry."
+            },
+            {
+              "name": "args",
+              "type": "array",
+              "items": {
+                "$ref": "Runtime.RemoteObject"
+              },
+              "optional": true,
+              "description": "Call arguments."
             }
           ]
         },

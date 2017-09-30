@@ -391,10 +391,14 @@ const (
 	CommandAccessibilityGetPartialAXTree                   MethodType = "Accessibility.getPartialAXTree"
 	EventStorageCacheStorageListUpdated                    MethodType = "Storage.cacheStorageListUpdated"
 	EventStorageCacheStorageContentUpdated                 MethodType = "Storage.cacheStorageContentUpdated"
+	EventStorageIndexedDBListUpdated                       MethodType = "Storage.indexedDBListUpdated"
+	EventStorageIndexedDBContentUpdated                    MethodType = "Storage.indexedDBContentUpdated"
 	CommandStorageClearDataForOrigin                       MethodType = "Storage.clearDataForOrigin"
 	CommandStorageGetUsageAndQuota                         MethodType = "Storage.getUsageAndQuota"
 	CommandStorageTrackCacheStorageForOrigin               MethodType = "Storage.trackCacheStorageForOrigin"
 	CommandStorageUntrackCacheStorageForOrigin             MethodType = "Storage.untrackCacheStorageForOrigin"
+	CommandStorageTrackIndexedDBForOrigin                  MethodType = "Storage.trackIndexedDBForOrigin"
+	CommandStorageUntrackIndexedDBForOrigin                MethodType = "Storage.untrackIndexedDBForOrigin"
 	EventLogEntryAdded                                     MethodType = "Log.entryAdded"
 	CommandLogEnable                                       MethodType = "Log.enable"
 	CommandLogDisable                                      MethodType = "Log.disable"
@@ -1190,6 +1194,10 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = EventStorageCacheStorageListUpdated
 	case EventStorageCacheStorageContentUpdated:
 		*t = EventStorageCacheStorageContentUpdated
+	case EventStorageIndexedDBListUpdated:
+		*t = EventStorageIndexedDBListUpdated
+	case EventStorageIndexedDBContentUpdated:
+		*t = EventStorageIndexedDBContentUpdated
 	case CommandStorageClearDataForOrigin:
 		*t = CommandStorageClearDataForOrigin
 	case CommandStorageGetUsageAndQuota:
@@ -1198,6 +1206,10 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandStorageTrackCacheStorageForOrigin
 	case CommandStorageUntrackCacheStorageForOrigin:
 		*t = CommandStorageUntrackCacheStorageForOrigin
+	case CommandStorageTrackIndexedDBForOrigin:
+		*t = CommandStorageTrackIndexedDBForOrigin
+	case CommandStorageUntrackIndexedDBForOrigin:
+		*t = CommandStorageUntrackIndexedDBForOrigin
 	case EventLogEntryAdded:
 		*t = EventLogEntryAdded
 	case CommandLogEnable:
