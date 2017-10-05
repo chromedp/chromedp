@@ -1464,12 +1464,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpAnimation17(out *jwriter.Write
 	first = false
 	out.RawString("\"fill\":")
 	out.String(string(in.Fill))
-	if !first {
-		out.RawByte(',')
+	if in.BackendNodeID != 0 {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"backendNodeId\":")
+		out.Int64(int64(in.BackendNodeID))
 	}
-	first = false
-	out.RawString("\"backendNodeId\":")
-	out.Int64(int64(in.BackendNodeID))
 	if in.KeyframesRule != nil {
 		if !first {
 			out.RawByte(',')
@@ -1606,6 +1608,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpAnimation19(in *jlexer.Lexer, 
 			out.StartTime = float64(in.Float64())
 		case "currentTime":
 			out.CurrentTime = float64(in.Float64())
+		case "type":
+			(out.Type).UnmarshalEasyJSON(in)
 		case "source":
 			if in.IsNull() {
 				in.Skip()
@@ -1616,8 +1620,6 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpAnimation19(in *jlexer.Lexer, 
 				}
 				(*out.Source).UnmarshalEasyJSON(in)
 			}
-		case "type":
-			(out.Type).UnmarshalEasyJSON(in)
 		case "cssId":
 			out.CSSID = string(in.String())
 		default:
@@ -1680,18 +1682,20 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpAnimation19(out *jwriter.Write
 		out.RawByte(',')
 	}
 	first = false
-	out.RawString("\"source\":")
-	if in.Source == nil {
-		out.RawString("null")
-	} else {
-		(*in.Source).MarshalEasyJSON(out)
-	}
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
 	out.RawString("\"type\":")
 	(in.Type).MarshalEasyJSON(out)
+	if in.Source != nil {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"source\":")
+		if in.Source == nil {
+			out.RawString("null")
+		} else {
+			(*in.Source).MarshalEasyJSON(out)
+		}
+	}
 	if in.CSSID != "" {
 		if !first {
 			out.RawByte(',')

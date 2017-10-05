@@ -13,16 +13,16 @@ import (
 
 // Animation animation instance.
 type Animation struct {
-	ID           string  `json:"id"`              // Animation's id.
-	Name         string  `json:"name"`            // Animation's name.
-	PausedState  bool    `json:"pausedState"`     // Animation's internal paused state.
-	PlayState    string  `json:"playState"`       // Animation's play state.
-	PlaybackRate float64 `json:"playbackRate"`    // Animation's playback rate.
-	StartTime    float64 `json:"startTime"`       // Animation's start time.
-	CurrentTime  float64 `json:"currentTime"`     // Animation's current time.
-	Source       *Effect `json:"source"`          // Animation's source animation node.
-	Type         Type    `json:"type"`            // Animation type of Animation.
-	CSSID        string  `json:"cssId,omitempty"` // A unique ID for Animation representing the sources that triggered this CSS animation/transition.
+	ID           string  `json:"id"`               // Animation's id.
+	Name         string  `json:"name"`             // Animation's name.
+	PausedState  bool    `json:"pausedState"`      // Animation's internal paused state.
+	PlayState    string  `json:"playState"`        // Animation's play state.
+	PlaybackRate float64 `json:"playbackRate"`     // Animation's playback rate.
+	StartTime    float64 `json:"startTime"`        // Animation's start time.
+	CurrentTime  float64 `json:"currentTime"`      // Animation's current time.
+	Type         Type    `json:"type"`             // Animation type of Animation.
+	Source       *Effect `json:"source,omitempty"` // Animation's source animation node.
+	CSSID        string  `json:"cssId,omitempty"`  // A unique ID for Animation representing the sources that triggered this CSS animation/transition.
 }
 
 // Effect animationEffect instance.
@@ -34,7 +34,7 @@ type Effect struct {
 	Duration       float64           `json:"duration"`                // AnimationEffect's iteration duration.
 	Direction      string            `json:"direction"`               // AnimationEffect's playback direction.
 	Fill           string            `json:"fill"`                    // AnimationEffect's fill mode.
-	BackendNodeID  cdp.BackendNodeID `json:"backendNodeId"`           // AnimationEffect's target node.
+	BackendNodeID  cdp.BackendNodeID `json:"backendNodeId,omitempty"` // AnimationEffect's target node.
 	KeyframesRule  *KeyframesRule    `json:"keyframesRule,omitempty"` // AnimationEffect's keyframes.
 	Easing         string            `json:"easing"`                  // AnimationEffect's timing function.
 }
