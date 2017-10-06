@@ -25,6 +25,7 @@ the right link, and then taking a screenshot of a specific element on the
 loaded page and saving that to a local file on disk.
 
 ```go
+// examples/simple/main.go
 package main
 
 import (
@@ -53,7 +54,7 @@ func main() {
 
 	// run task list
 	var site, res string
-	err = c.Run(ctxt, googleSearch("site:brank.as", "Easy Money Management", &site, &res))
+	err = c.Run(ctxt, googleSearch("site:brank.as", "Home", &site, &res))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,7 +71,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	log.Printf("saved screenshot of #testimonials from search result listing `%s` (%s)", res, site)
+	log.Printf("saved screenshot from search result listing `%s` (%s)", res, site)
 }
 
 func googleSearch(q, text string, site, res *string) cdp.Tasks {
@@ -78,19 +79,19 @@ func googleSearch(q, text string, site, res *string) cdp.Tasks {
 	sel := fmt.Sprintf(`//a[text()[contains(., '%s')]]`, text)
 	return cdp.Tasks{
 		cdp.Navigate(`https://www.google.com`),
-		cdp.Sleep(2 * time.Second),
 		cdp.WaitVisible(`#hplogo`, cdp.ByID),
 		cdp.SendKeys(`#lst-ib`, q+"\n", cdp.ByID),
 		cdp.WaitVisible(`#res`, cdp.ByID),
 		cdp.Text(sel, res),
 		cdp.Click(sel),
-		cdp.Sleep(2 * time.Second),
-		cdp.WaitVisible(`#footer`, cdp.ByQuery),
-		cdp.WaitNotVisible(`div.v-middle > div.la-ball-clip-rotate`, cdp.ByQuery),
+		cdp.WaitVisible(`a[href="/brankas-for-business"]`, cdp.ByQuery),
+		cdp.WaitNotVisible(`.preloader-content`, cdp.ByQuery),
 		cdp.Location(site),
-		cdp.Screenshot(`#testimonials`, &buf, cdp.ByID),
+		cdp.ScrollIntoView(`.banner-section.third-section`, cdp.ByQuery),
+		cdp.Sleep(2 * time.Second), // wait for animation to finish
+		cdp.Screenshot(`.banner-section.third-section`, &buf, cdp.ByQuery),
 		cdp.ActionFunc(func(context.Context, cdptypes.Handler) error {
-			return ioutil.WriteFile("testimonials.png", buf, 0644)
+			return ioutil.WriteFile("screenshot.png", buf, 0644)
 		}),
 	}
 }
