@@ -325,6 +325,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.EventEmulationVirtualTimeBudgetExpired:
 		v = new(emulation.EventVirtualTimeBudgetExpired)
 
+	case cdp.EventEmulationVirtualTimeAdvanced:
+		v = new(emulation.EventVirtualTimeAdvanced)
+
 	case cdp.EventEmulationVirtualTimePaused:
 		v = new(emulation.EventVirtualTimePaused)
 

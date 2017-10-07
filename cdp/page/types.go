@@ -346,7 +346,8 @@ func (t FrameScheduledNavigationReason) String() string {
 
 // FrameScheduledNavigationReason values.
 const (
-	FrameScheduledNavigationReasonFormSubmission        FrameScheduledNavigationReason = "formSubmission"
+	FrameScheduledNavigationReasonFormSubmissionGet     FrameScheduledNavigationReason = "formSubmissionGet"
+	FrameScheduledNavigationReasonFormSubmissionPost    FrameScheduledNavigationReason = "formSubmissionPost"
 	FrameScheduledNavigationReasonHTTPHeaderRefresh     FrameScheduledNavigationReason = "httpHeaderRefresh"
 	FrameScheduledNavigationReasonScriptInitiated       FrameScheduledNavigationReason = "scriptInitiated"
 	FrameScheduledNavigationReasonMetaTagRefresh        FrameScheduledNavigationReason = "metaTagRefresh"
@@ -367,8 +368,10 @@ func (t FrameScheduledNavigationReason) MarshalJSON() ([]byte, error) {
 // UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
 func (t *FrameScheduledNavigationReason) UnmarshalEasyJSON(in *jlexer.Lexer) {
 	switch FrameScheduledNavigationReason(in.String()) {
-	case FrameScheduledNavigationReasonFormSubmission:
-		*t = FrameScheduledNavigationReasonFormSubmission
+	case FrameScheduledNavigationReasonFormSubmissionGet:
+		*t = FrameScheduledNavigationReasonFormSubmissionGet
+	case FrameScheduledNavigationReasonFormSubmissionPost:
+		*t = FrameScheduledNavigationReasonFormSubmissionPost
 	case FrameScheduledNavigationReasonHTTPHeaderRefresh:
 		*t = FrameScheduledNavigationReasonHTTPHeaderRefresh
 	case FrameScheduledNavigationReasonScriptInitiated:

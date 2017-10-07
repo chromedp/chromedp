@@ -10,6 +10,12 @@ import (
 // budget for the current VirtualTimePolicy has run out.
 type EventVirtualTimeBudgetExpired struct{}
 
+// EventVirtualTimeAdvanced notification sent after the virtual time has
+// advanced.
+type EventVirtualTimeAdvanced struct {
+	VirtualTimeElapsed int64 `json:"virtualTimeElapsed"` // The amount of virtual time that has elapsed in milliseconds since virtual time was first enabled.
+}
+
 // EventVirtualTimePaused notification sent after the virtual time has
 // paused.
 type EventVirtualTimePaused struct {
@@ -19,5 +25,6 @@ type EventVirtualTimePaused struct {
 // EventTypes all event types in the domain.
 var EventTypes = []cdp.MethodType{
 	cdp.EventEmulationVirtualTimeBudgetExpired,
+	cdp.EventEmulationVirtualTimeAdvanced,
 	cdp.EventEmulationVirtualTimePaused,
 }
