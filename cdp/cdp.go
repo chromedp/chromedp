@@ -78,6 +78,7 @@ const (
 	EventPageScreencastVisibilityChanged                   MethodType = "Page.screencastVisibilityChanged"
 	EventPageInterstitialShown                             MethodType = "Page.interstitialShown"
 	EventPageInterstitialHidden                            MethodType = "Page.interstitialHidden"
+	EventPageWindowOpen                                    MethodType = "Page.windowOpen"
 	CommandPageEnable                                      MethodType = "Page.enable"
 	CommandPageDisable                                     MethodType = "Page.disable"
 	CommandPageAddScriptToEvaluateOnNewDocument            MethodType = "Page.addScriptToEvaluateOnNewDocument"
@@ -332,6 +333,11 @@ const (
 	CommandTargetDisposeBrowserContext                     MethodType = "Target.disposeBrowserContext"
 	CommandTargetCreateTarget                              MethodType = "Target.createTarget"
 	CommandTargetGetTargets                                MethodType = "Target.getTargets"
+	EventHeadlessExperimentalNeedsBeginFramesChanged       MethodType = "HeadlessExperimental.needsBeginFramesChanged"
+	EventHeadlessExperimentalMainFrameReadyForScreenshots  MethodType = "HeadlessExperimental.mainFrameReadyForScreenshots"
+	CommandHeadlessExperimentalEnable                      MethodType = "HeadlessExperimental.enable"
+	CommandHeadlessExperimentalDisable                     MethodType = "HeadlessExperimental.disable"
+	CommandHeadlessExperimentalBeginFrame                  MethodType = "HeadlessExperimental.beginFrame"
 	EventServiceWorkerWorkerRegistrationUpdated            MethodType = "ServiceWorker.workerRegistrationUpdated"
 	EventServiceWorkerWorkerVersionUpdated                 MethodType = "ServiceWorker.workerVersionUpdated"
 	EventServiceWorkerWorkerErrorReported                  MethodType = "ServiceWorker.workerErrorReported"
@@ -410,6 +416,7 @@ const (
 	EventTetheringAccepted                                 MethodType = "Tethering.accepted"
 	CommandTetheringBind                                   MethodType = "Tethering.bind"
 	CommandTetheringUnbind                                 MethodType = "Tethering.unbind"
+	CommandBrowserClose                                    MethodType = "Browser.close"
 	CommandBrowserGetWindowForTarget                       MethodType = "Browser.getWindowForTarget"
 	CommandBrowserGetVersion                               MethodType = "Browser.getVersion"
 	CommandBrowserSetWindowBounds                          MethodType = "Browser.setWindowBounds"
@@ -569,6 +576,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = EventPageInterstitialShown
 	case EventPageInterstitialHidden:
 		*t = EventPageInterstitialHidden
+	case EventPageWindowOpen:
+		*t = EventPageWindowOpen
 	case CommandPageEnable:
 		*t = CommandPageEnable
 	case CommandPageDisable:
@@ -1077,6 +1086,16 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandTargetCreateTarget
 	case CommandTargetGetTargets:
 		*t = CommandTargetGetTargets
+	case EventHeadlessExperimentalNeedsBeginFramesChanged:
+		*t = EventHeadlessExperimentalNeedsBeginFramesChanged
+	case EventHeadlessExperimentalMainFrameReadyForScreenshots:
+		*t = EventHeadlessExperimentalMainFrameReadyForScreenshots
+	case CommandHeadlessExperimentalEnable:
+		*t = CommandHeadlessExperimentalEnable
+	case CommandHeadlessExperimentalDisable:
+		*t = CommandHeadlessExperimentalDisable
+	case CommandHeadlessExperimentalBeginFrame:
+		*t = CommandHeadlessExperimentalBeginFrame
 	case EventServiceWorkerWorkerRegistrationUpdated:
 		*t = EventServiceWorkerWorkerRegistrationUpdated
 	case EventServiceWorkerWorkerVersionUpdated:
@@ -1233,6 +1252,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandTetheringBind
 	case CommandTetheringUnbind:
 		*t = CommandTetheringUnbind
+	case CommandBrowserClose:
+		*t = CommandBrowserClose
 	case CommandBrowserGetWindowForTarget:
 		*t = CommandBrowserGetWindowForTarget
 	case CommandBrowserGetVersion:

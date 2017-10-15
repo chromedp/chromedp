@@ -20,6 +20,7 @@ type EventLoadEventFired struct {
 // EventLifecycleEvent fired for top level page lifecycle events such as
 // navigation, load, paint, etc.
 type EventLifecycleEvent struct {
+	FrameID   cdp.FrameID        `json:"frameId"` // Id of the frame.
 	Name      string             `json:"name"`
 	Timestamp *cdp.MonotonicTime `json:"timestamp"`
 }
@@ -106,6 +107,14 @@ type EventInterstitialShown struct{}
 // EventInterstitialHidden fired when interstitial page was hidden.
 type EventInterstitialHidden struct{}
 
+// EventWindowOpen fired when window.open() was called.
+type EventWindowOpen struct {
+	URL            string `json:"url"`            // The URL for the new window.
+	WindowName     string `json:"windowName"`     // Window name passed to window.open().
+	WindowFeatures string `json:"windowFeatures"` // Window features passed to window.open().
+	UserGesture    bool   `json:"userGesture"`    // Whether or not window.open() was triggered by user gesture.
+}
+
 // EventTypes all event types in the domain.
 var EventTypes = []cdp.MethodType{
 	cdp.EventPageDomContentEventFired,
@@ -125,4 +134,5 @@ var EventTypes = []cdp.MethodType{
 	cdp.EventPageScreencastVisibilityChanged,
 	cdp.EventPageInterstitialShown,
 	cdp.EventPageInterstitialHidden,
+	cdp.EventPageWindowOpen,
 }

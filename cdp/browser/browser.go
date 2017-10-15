@@ -15,6 +15,20 @@ import (
 	"github.com/knq/chromedp/cdp/target"
 )
 
+// CloseParams close browser gracefully.
+type CloseParams struct{}
+
+// Close close browser gracefully.
+func Close() *CloseParams {
+	return &CloseParams{}
+}
+
+// Do executes Browser.close against the provided context and
+// target handler.
+func (p *CloseParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandBrowserClose, nil, nil)
+}
+
 // GetWindowForTargetParams get the browser window that contains the devtools
 // target.
 type GetWindowForTargetParams struct {

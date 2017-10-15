@@ -973,6 +973,12 @@
               "$ref": "Emulation.ScreenOrientation",
               "optional": true,
               "description": "Screen orientation override."
+            },
+            {
+              "name": "viewport",
+              "$ref": "Viewport",
+              "optional": true,
+              "description": "The viewport dimensions and scale. If not set, the override is cleared."
             }
           ],
           "redirect": "Emulation",
@@ -1403,6 +1409,11 @@
           "name": "lifecycleEvent",
           "parameters": [
             {
+              "name": "frameId",
+              "$ref": "FrameId",
+              "description": "Id of the frame."
+            },
+            {
               "name": "name",
               "type": "string"
             },
@@ -1620,6 +1631,33 @@
         {
           "name": "interstitialHidden",
           "description": "Fired when interstitial page was hidden"
+        },
+        {
+          "name": "windowOpen",
+          "description": "Fired when window.open() was called",
+          "parameters": [
+            {
+              "name": "url",
+              "type": "string",
+              "description": "The URL for the new window."
+            },
+            {
+              "name": "windowName",
+              "type": "string",
+              "description": "Window name passed to window.open()."
+            },
+            {
+              "name": "windowFeatures",
+              "type": "string",
+              "description": "Window features passed to window.open()."
+            },
+            {
+              "name": "userGesture",
+              "type": "boolean",
+              "description": "Whether or not window.open() was triggered by user gesture."
+            }
+          ],
+          "experimental": true
         }
       ]
     },
@@ -2004,7 +2042,8 @@
       "domain": "Emulation",
       "description": "This domain emulates different environments for the page.",
       "dependencies": [
-        "DOM"
+        "DOM",
+        "Page"
       ],
       "types": [
         {
@@ -2113,6 +2152,13 @@
               "$ref": "ScreenOrientation",
               "optional": true,
               "description": "Screen orientation override."
+            },
+            {
+              "name": "viewport",
+              "$ref": "Page.Viewport",
+              "optional": true,
+              "experimental": true,
+              "description": "If set, the visible area of the page will be overridden to this viewport. This viewport change is not observed by the page, e.g. viewport-relative elements do not change positions."
             }
           ]
         },
@@ -3827,7 +3873,7 @@
         },
         {
           "name": "setRequestInterceptionEnabled",
-          "description": "Sets the requests to intercept that match a the provided patterns.",
+          "description": "Sets the requests to intercept that match a the provided patterns and optionally resource types.",
           "parameters": [
             {
               "name": "enabled",
@@ -3842,6 +3888,15 @@
                 "type": "string"
               },
               "description": "URLs matching any of these patterns will be forwarded and wait for the corresponding continueInterceptedRequest call. Wildcards ('*' -> zero or more, '?' -> exactly one) are allowed. Escape character is backslash. If omitted equivalent to ['*'] (intercept all)."
+            },
+            {
+              "name": "resourceTypes",
+              "type": "array",
+              "optional": true,
+              "items": {
+                "$ref": "Page.ResourceType"
+              },
+              "description": "If set, only requests for matching resource types will be intercepted."
             }
           ],
           "experimental": true
@@ -8645,6 +8700,12 @@
               "name": "attached",
               "type": "boolean",
               "description": "Whether the target has an attached client."
+            },
+            {
+              "name": "openerId",
+              "optional": true,
+              "$ref": "TargetID",
+              "description": "Opener target Id"
             }
           ]
         },
@@ -8869,6 +8930,13 @@
               "$ref": "BrowserContextID",
               "description": "The browser context to create the page in (headless chrome only).",
               "optional": true
+            },
+            {
+              "name": "enableBeginFrameControl",
+              "type": "boolean",
+              "description": "Whether BeginFrames for this target will be controlled via DevTools (headless chrome only, not supported on MacOS yet, false by default).",
+              "optional": true,
+              "experimental": true
             }
           ],
           "returns": [
@@ -8983,6 +9051,110 @@
               "description": "Deprecated."
             }
           ]
+        }
+      ]
+    },
+    {
+      "domain": "HeadlessExperimental",
+      "experimental": true,
+      "description": "This domain provides experimental commands only supported in headless mode.",
+      "dependencies": [
+        "Page",
+        "Runtime"
+      ],
+      "types": [
+        {
+          "id": "ScreenshotParams",
+          "type": "object",
+          "properties": [
+            {
+              "name": "format",
+              "type": "string",
+              "optional": true,
+              "enum": [
+                "jpeg",
+                "png"
+              ],
+              "description": "Image compression format (defaults to png)."
+            },
+            {
+              "name": "quality",
+              "type": "integer",
+              "optional": true,
+              "description": "Compression quality from range [0..100] (jpeg only)."
+            }
+          ],
+          "description": "Encoding options for a screenshot."
+        }
+      ],
+      "commands": [
+        {
+          "name": "enable",
+          "description": "Enables headless events for the target."
+        },
+        {
+          "name": "disable",
+          "description": "Disables headless events for the target."
+        },
+        {
+          "name": "beginFrame",
+          "parameters": [
+            {
+              "name": "frameTime",
+              "$ref": "Runtime.Timestamp",
+              "optional": true,
+              "description": "Timestamp of this BeginFrame (milliseconds since epoch). If not set, the current time will be used."
+            },
+            {
+              "name": "deadline",
+              "$ref": "Runtime.Timestamp",
+              "optional": true,
+              "description": "Deadline of this BeginFrame (milliseconds since epoch). If not set, the deadline will be calculated from the frameTime and interval."
+            },
+            {
+              "name": "interval",
+              "type": "number",
+              "optional": true,
+              "description": "The interval between BeginFrames that is reported to the compositor, in milliseconds. Defaults to a 60 frames/second interval, i.e. about 16.666 milliseconds."
+            },
+            {
+              "name": "screenshot",
+              "$ref": "ScreenshotParams",
+              "optional": true,
+              "description": "If set, a screenshot of the frame will be captured and returned in the response. Otherwise, no screenshot will be captured."
+            }
+          ],
+          "returns": [
+            {
+              "name": "hasDamage",
+              "type": "boolean",
+              "description": "Whether the BeginFrame resulted in damage and, thus, a new frame was committed to the display."
+            },
+            {
+              "name": "screenshotData",
+              "type": "string",
+              "optional": true,
+              "description": "Base64-encoded image data of the screenshot, if one was requested and successfully taken."
+            }
+          ],
+          "description": "Sends a BeginFrame to the target and returns when the frame was completed. Optionally captures a screenshot from the resulting frame. Requires that the target was created with enabled BeginFrameControl."
+        }
+      ],
+      "events": [
+        {
+          "name": "needsBeginFramesChanged",
+          "description": "Issued when the target starts or stops needing BeginFrames.",
+          "parameters": [
+            {
+              "name": "needsBeginFrames",
+              "type": "boolean",
+              "description": "True if BeginFrames are needed, false otherwise."
+            }
+          ]
+        },
+        {
+          "name": "mainFrameReadyForScreenshots",
+          "description": "Issued when the main frame has first submitted a frame to the browser. May only be fired while a BeginFrame is in flight. Before this event, screenshotting requests may fail."
         }
       ]
     },
@@ -11713,6 +11885,10 @@
       ],
       "commands": [
         {
+          "name": "close",
+          "description": "Close browser gracefully."
+        },
+        {
           "name": "getWindowForTarget",
           "description": "Get the browser window that contains the devtools target.",
           "parameters": [
@@ -13218,6 +13394,13 @@
               "type": "string",
               "optional": true,
               "description": "Regex pattern for the URLs of the resources to set breakpoints on. Either <code>url</code> or <code>urlRegex</code> must be specified."
+            },
+            {
+              "name": "scriptHash",
+              "type": "string",
+              "optional": true,
+              "experimental": true,
+              "description": "Script hash of the resources to set breakpoint on."
             },
             {
               "name": "columnNumber",

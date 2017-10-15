@@ -5,6 +5,7 @@ package emulation
 import (
 	json "encoding/json"
 	cdp "github.com/knq/chromedp/cdp"
+	page "github.com/knq/chromedp/cdp/page"
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"
@@ -655,6 +656,16 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpEmulation8(in *jlexer.Lexer, o
 				}
 				(*out.ScreenOrientation).UnmarshalEasyJSON(in)
 			}
+		case "viewport":
+			if in.IsNull() {
+				in.Skip()
+				out.Viewport = nil
+			} else {
+				if out.Viewport == nil {
+					out.Viewport = new(page.Viewport)
+				}
+				(*out.Viewport).UnmarshalEasyJSON(in)
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -751,6 +762,18 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpEmulation8(out *jwriter.Writer
 			out.RawString("null")
 		} else {
 			(*in.ScreenOrientation).MarshalEasyJSON(out)
+		}
+	}
+	if in.Viewport != nil {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"viewport\":")
+		if in.Viewport == nil {
+			out.RawString("null")
+		} else {
+			(*in.Viewport).MarshalEasyJSON(out)
 		}
 	}
 	out.RawByte('}')

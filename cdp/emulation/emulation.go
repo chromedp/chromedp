@@ -12,6 +12,7 @@ import (
 	"context"
 
 	cdp "github.com/knq/chromedp/cdp"
+	"github.com/knq/chromedp/cdp/page"
 )
 
 // SetDeviceMetricsOverrideParams overrides the values of device screen
@@ -30,6 +31,7 @@ type SetDeviceMetricsOverrideParams struct {
 	PositionY          int64              `json:"positionY,omitempty"`          // Overriding view Y position on screen in pixels (minimum 0, maximum 10000000).
 	DontSetVisibleSize bool               `json:"dontSetVisibleSize,omitempty"` // Do not set visible view size, rely upon explicit setVisibleSize call.
 	ScreenOrientation  *ScreenOrientation `json:"screenOrientation,omitempty"`  // Screen orientation override.
+	Viewport           *page.Viewport     `json:"viewport,omitempty"`           // If set, the visible area of the page will be overridden to this viewport. This viewport change is not observed by the page, e.g. viewport-relative elements do not change positions.
 }
 
 // SetDeviceMetricsOverride overrides the values of device screen dimensions
@@ -95,6 +97,14 @@ func (p SetDeviceMetricsOverrideParams) WithDontSetVisibleSize(dontSetVisibleSiz
 // WithScreenOrientation screen orientation override.
 func (p SetDeviceMetricsOverrideParams) WithScreenOrientation(screenOrientation *ScreenOrientation) *SetDeviceMetricsOverrideParams {
 	p.ScreenOrientation = screenOrientation
+	return &p
+}
+
+// WithViewport if set, the visible area of the page will be overridden to
+// this viewport. This viewport change is not observed by the page, e.g.
+// viewport-relative elements do not change positions.
+func (p SetDeviceMetricsOverrideParams) WithViewport(viewport *page.Viewport) *SetDeviceMetricsOverrideParams {
+	p.Viewport = viewport
 	return &p
 }
 

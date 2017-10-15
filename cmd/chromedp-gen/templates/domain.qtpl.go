@@ -549,7 +549,11 @@ func (p *`)
 			//line templates/domain.qtpl:128
 			qw422016.N().S(`)
 		if err != nil {
-			return nil, err
+			return `)
+			//line templates/domain.qtpl:130
+			qw422016.N().S(emptyRet)
+			//line templates/domain.qtpl:130
+			qw422016.N().S(`err
 		}`)
 			//line templates/domain.qtpl:131
 			if b64cond {

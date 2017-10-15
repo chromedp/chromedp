@@ -518,6 +518,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpTarget6(in *jlexer.Lexer, out 
 			out.URL = string(in.String())
 		case "attached":
 			out.Attached = bool(in.Bool())
+		case "openerId":
+			out.OpenerID = ID(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -562,6 +564,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpTarget6(out *jwriter.Writer, i
 	first = false
 	out.RawString("\"attached\":")
 	out.Bool(bool(in.Attached))
+	if in.OpenerID != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"openerId\":")
+		out.String(string(in.OpenerID))
+	}
 	out.RawByte('}')
 }
 
@@ -1671,6 +1681,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpTarget21(in *jlexer.Lexer, out
 			out.Height = int64(in.Int64())
 		case "browserContextId":
 			out.BrowserContextID = BrowserContextID(in.String())
+		case "enableBeginFrameControl":
+			out.EnableBeginFrameControl = bool(in.Bool())
 		default:
 			in.SkipRecursive()
 		}
@@ -1714,6 +1726,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpTarget21(out *jwriter.Writer, 
 		first = false
 		out.RawString("\"browserContextId\":")
 		out.String(string(in.BrowserContextID))
+	}
+	if in.EnableBeginFrameControl {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"enableBeginFrameControl\":")
+		out.Bool(bool(in.EnableBeginFrameControl))
 	}
 	out.RawByte('}')
 }

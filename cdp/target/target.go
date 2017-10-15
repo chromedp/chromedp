@@ -366,10 +366,11 @@ func (p *DisposeBrowserContextParams) Do(ctxt context.Context, h cdp.Handler) (s
 
 // CreateTargetParams creates a new page.
 type CreateTargetParams struct {
-	URL              string           `json:"url"`                        // The initial URL the page will be navigated to.
-	Width            int64            `json:"width,omitempty"`            // Frame width in DIP (headless chrome only).
-	Height           int64            `json:"height,omitempty"`           // Frame height in DIP (headless chrome only).
-	BrowserContextID BrowserContextID `json:"browserContextId,omitempty"` // The browser context to create the page in (headless chrome only).
+	URL                     string           `json:"url"`                               // The initial URL the page will be navigated to.
+	Width                   int64            `json:"width,omitempty"`                   // Frame width in DIP (headless chrome only).
+	Height                  int64            `json:"height,omitempty"`                  // Frame height in DIP (headless chrome only).
+	BrowserContextID        BrowserContextID `json:"browserContextId,omitempty"`        // The browser context to create the page in (headless chrome only).
+	EnableBeginFrameControl bool             `json:"enableBeginFrameControl,omitempty"` // Whether BeginFrames for this target will be controlled via DevTools (headless chrome only, not supported on MacOS yet, false by default).
 }
 
 // CreateTarget creates a new page.
@@ -398,6 +399,14 @@ func (p CreateTargetParams) WithHeight(height int64) *CreateTargetParams {
 // chrome only).
 func (p CreateTargetParams) WithBrowserContextID(browserContextID BrowserContextID) *CreateTargetParams {
 	p.BrowserContextID = browserContextID
+	return &p
+}
+
+// WithEnableBeginFrameControl whether BeginFrames for this target will be
+// controlled via DevTools (headless chrome only, not supported on MacOS yet,
+// false by default).
+func (p CreateTargetParams) WithEnableBeginFrameControl(enableBeginFrameControl bool) *CreateTargetParams {
+	p.EnableBeginFrameControl = enableBeginFrameControl
 	return &p
 }
 

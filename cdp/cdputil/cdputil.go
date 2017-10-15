@@ -20,6 +20,7 @@ import (
 	"github.com/knq/chromedp/cdp/domsnapshot"
 	"github.com/knq/chromedp/cdp/domstorage"
 	"github.com/knq/chromedp/cdp/emulation"
+	"github.com/knq/chromedp/cdp/headlessexperimental"
 	"github.com/knq/chromedp/cdp/heapprofiler"
 	"github.com/knq/chromedp/cdp/indexeddb"
 	"github.com/knq/chromedp/cdp/inspector"
@@ -219,6 +220,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 
 	case cdp.EventPageInterstitialHidden:
 		v = new(page.EventInterstitialHidden)
+
+	case cdp.EventPageWindowOpen:
+		v = new(page.EventWindowOpen)
 
 	case cdp.CommandOverlayEnable:
 		return emptyVal, nil
@@ -901,6 +905,21 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.EventTargetReceivedMessageFromTarget:
 		v = new(target.EventReceivedMessageFromTarget)
 
+	case cdp.CommandHeadlessExperimentalEnable:
+		return emptyVal, nil
+
+	case cdp.CommandHeadlessExperimentalDisable:
+		return emptyVal, nil
+
+	case cdp.CommandHeadlessExperimentalBeginFrame:
+		v = new(headlessexperimental.BeginFrameReturns)
+
+	case cdp.EventHeadlessExperimentalNeedsBeginFramesChanged:
+		v = new(headlessexperimental.EventNeedsBeginFramesChanged)
+
+	case cdp.EventHeadlessExperimentalMainFrameReadyForScreenshots:
+		v = new(headlessexperimental.EventMainFrameReadyForScreenshots)
+
 	case cdp.CommandServiceWorkerEnable:
 		return emptyVal, nil
 
@@ -1134,6 +1153,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 
 	case cdp.EventTetheringAccepted:
 		v = new(tethering.EventAccepted)
+
+	case cdp.CommandBrowserClose:
+		return emptyVal, nil
 
 	case cdp.CommandBrowserGetWindowForTarget:
 		v = new(browser.GetWindowForTargetReturns)

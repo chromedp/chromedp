@@ -15,6 +15,7 @@ import (
 	"encoding/base64"
 
 	cdp "github.com/knq/chromedp/cdp"
+	"github.com/knq/chromedp/cdp/page"
 )
 
 // EnableParams enables network tracking, network events will now be
@@ -703,14 +704,15 @@ func (p *GetCertificateParams) Do(ctxt context.Context, h cdp.Handler) (tableNam
 }
 
 // SetRequestInterceptionEnabledParams sets the requests to intercept that
-// match a the provided patterns.
+// match a the provided patterns and optionally resource types.
 type SetRequestInterceptionEnabledParams struct {
-	Enabled  bool     `json:"enabled"`            // Whether requests should be intercepted. If patterns is not set, matches all and resets any previously set patterns. Other parameters are ignored if false.
-	Patterns []string `json:"patterns,omitempty"` // URLs matching any of these patterns will be forwarded and wait for the corresponding continueInterceptedRequest call. Wildcards ('*' -> zero or more, '?' -> exactly one) are allowed. Escape character is backslash. If omitted equivalent to ['*'] (intercept all).
+	Enabled       bool                `json:"enabled"`                 // Whether requests should be intercepted. If patterns is not set, matches all and resets any previously set patterns. Other parameters are ignored if false.
+	Patterns      []string            `json:"patterns,omitempty"`      // URLs matching any of these patterns will be forwarded and wait for the corresponding continueInterceptedRequest call. Wildcards ('*' -> zero or more, '?' -> exactly one) are allowed. Escape character is backslash. If omitted equivalent to ['*'] (intercept all).
+	ResourceTypes []page.ResourceType `json:"resourceTypes,omitempty"` // If set, only requests for matching resource types will be intercepted.
 }
 
 // SetRequestInterceptionEnabled sets the requests to intercept that match a
-// the provided patterns.
+// the provided patterns and optionally resource types.
 //
 // parameters:
 //   enabled - Whether requests should be intercepted. If patterns is not set, matches all and resets any previously set patterns. Other parameters are ignored if false.
@@ -726,6 +728,13 @@ func SetRequestInterceptionEnabled(enabled bool) *SetRequestInterceptionEnabledP
 // If omitted equivalent to ['*'] (intercept all).
 func (p SetRequestInterceptionEnabledParams) WithPatterns(patterns []string) *SetRequestInterceptionEnabledParams {
 	p.Patterns = patterns
+	return &p
+}
+
+// WithResourceTypes if set, only requests for matching resource types will
+// be intercepted.
+func (p SetRequestInterceptionEnabledParams) WithResourceTypes(resourceTypes []page.ResourceType) *SetRequestInterceptionEnabledParams {
+	p.ResourceTypes = resourceTypes
 	return &p
 }
 

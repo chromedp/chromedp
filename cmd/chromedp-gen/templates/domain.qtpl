@@ -127,7 +127,7 @@ func (p *{%s= typ %}) Do(ctxt context.Context, h cdp.Handler) ({%s= retTypeList 
 	if res.Base64encoded {{% endif %}
 		dec, err = base64.StdEncoding.DecodeString(res.{%s= b64ret.GoName(false) %})
 		if err != nil {
-			return nil, err
+			return {%s= emptyRet %}err
 		}{% if b64cond %}
 	} else {
 		dec = []byte(res.{%s= b64ret.GoName(false) %})

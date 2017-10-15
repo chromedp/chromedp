@@ -1079,6 +1079,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpDebugger12(in *jlexer.Lexer, o
 			out.URL = string(in.String())
 		case "urlRegex":
 			out.URLRegex = string(in.String())
+		case "scriptHash":
+			out.ScriptHash = string(in.String())
 		case "columnNumber":
 			out.ColumnNumber = int64(in.Int64())
 		case "condition":
@@ -1118,6 +1120,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDebugger12(out *jwriter.Writer
 		first = false
 		out.RawString("\"urlRegex\":")
 		out.String(string(in.URLRegex))
+	}
+	if in.ScriptHash != "" {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"scriptHash\":")
+		out.String(string(in.ScriptHash))
 	}
 	if in.ColumnNumber != 0 {
 		if !first {
