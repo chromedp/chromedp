@@ -13000,6 +13000,28 @@
             }
           ],
           "experimental": true
+        },
+        {
+          "name": "globalLexicalScopeNames",
+          "parameters": [
+            {
+              "name": "executionContextId",
+              "$ref": "ExecutionContextId",
+              "optional": true,
+              "description": "Specifies in which execution context to lookup global scope variables."
+            }
+          ],
+          "returns": [
+            {
+              "name": "names",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ],
+          "description": "Returns all let, const and class variables from global scope.",
+          "experimental": true
         }
       ],
       "events": [

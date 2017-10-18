@@ -662,3 +662,45 @@ func (p *QueryObjectsParams) Do(ctxt context.Context, h cdp.Handler) (objects *R
 
 	return res.Objects, nil
 }
+
+// GlobalLexicalScopeNamesParams returns all let, const and class variables
+// from global scope.
+type GlobalLexicalScopeNamesParams struct {
+	ExecutionContextID ExecutionContextID `json:"executionContextId,omitempty"` // Specifies in which execution context to lookup global scope variables.
+}
+
+// GlobalLexicalScopeNames returns all let, const and class variables from
+// global scope.
+//
+// parameters:
+func GlobalLexicalScopeNames() *GlobalLexicalScopeNamesParams {
+	return &GlobalLexicalScopeNamesParams{}
+}
+
+// WithExecutionContextID specifies in which execution context to lookup
+// global scope variables.
+func (p GlobalLexicalScopeNamesParams) WithExecutionContextID(executionContextID ExecutionContextID) *GlobalLexicalScopeNamesParams {
+	p.ExecutionContextID = executionContextID
+	return &p
+}
+
+// GlobalLexicalScopeNamesReturns return values.
+type GlobalLexicalScopeNamesReturns struct {
+	Names []string `json:"names,omitempty"`
+}
+
+// Do executes Runtime.globalLexicalScopeNames against the provided context and
+// target handler.
+//
+// returns:
+//   names
+func (p *GlobalLexicalScopeNamesParams) Do(ctxt context.Context, h cdp.Handler) (names []string, err error) {
+	// execute
+	var res GlobalLexicalScopeNamesReturns
+	err = h.Execute(ctxt, cdp.CommandRuntimeGlobalLexicalScopeNames, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Names, nil
+}

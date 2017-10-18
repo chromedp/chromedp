@@ -1214,6 +1214,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandRuntimeQueryObjects:
 		v = new(runtime.QueryObjectsReturns)
 
+	case cdp.CommandRuntimeGlobalLexicalScopeNames:
+		v = new(runtime.GlobalLexicalScopeNamesReturns)
+
 	case cdp.EventRuntimeExecutionContextCreated:
 		v = new(runtime.EventExecutionContextCreated)
 

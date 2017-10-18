@@ -443,6 +443,7 @@ const (
 	CommandRuntimeCompileScript                            MethodType = "Runtime.compileScript"
 	CommandRuntimeRunScript                                MethodType = "Runtime.runScript"
 	CommandRuntimeQueryObjects                             MethodType = "Runtime.queryObjects"
+	CommandRuntimeGlobalLexicalScopeNames                  MethodType = "Runtime.globalLexicalScopeNames"
 	EventDebuggerScriptParsed                              MethodType = "Debugger.scriptParsed"
 	EventDebuggerScriptFailedToParse                       MethodType = "Debugger.scriptFailedToParse"
 	EventDebuggerBreakpointResolved                        MethodType = "Debugger.breakpointResolved"
@@ -1306,6 +1307,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandRuntimeRunScript
 	case CommandRuntimeQueryObjects:
 		*t = CommandRuntimeQueryObjects
+	case CommandRuntimeGlobalLexicalScopeNames:
+		*t = CommandRuntimeGlobalLexicalScopeNames
 	case EventDebuggerScriptParsed:
 		*t = EventDebuggerScriptParsed
 	case EventDebuggerScriptFailedToParse:
