@@ -376,8 +376,9 @@ func (p *CanEmulateParams) Do(ctxt context.Context, h cdp.Handler) (result bool,
 // real-time with a synthetic time source) and sets the current virtual time
 // policy. Note this supersedes any previous time budget.
 type SetVirtualTimePolicyParams struct {
-	Policy VirtualTimePolicy `json:"policy"`
-	Budget int64             `json:"budget,omitempty"` // If set, after this many virtual milliseconds have elapsed virtual time will be paused and a virtualTimeBudgetExpired event is sent.
+	Policy                            VirtualTimePolicy `json:"policy"`
+	Budget                            int64             `json:"budget,omitempty"`                            // If set, after this many virtual milliseconds have elapsed virtual time will be paused and a virtualTimeBudgetExpired event is sent.
+	MaxVirtualTimeTaskStarvationCount int64             `json:"maxVirtualTimeTaskStarvationCount,omitempty"` // If set this specifies the maximum number of tasks that can be run before virtual is forced forwards to prevent deadlock.
 }
 
 // SetVirtualTimePolicy turns on virtual time for all frames (replacing
@@ -396,6 +397,14 @@ func SetVirtualTimePolicy(policy VirtualTimePolicy) *SetVirtualTimePolicyParams 
 // virtual time will be paused and a virtualTimeBudgetExpired event is sent.
 func (p SetVirtualTimePolicyParams) WithBudget(budget int64) *SetVirtualTimePolicyParams {
 	p.Budget = budget
+	return &p
+}
+
+// WithMaxVirtualTimeTaskStarvationCount if set this specifies the maximum
+// number of tasks that can be run before virtual is forced forwards to prevent
+// deadlock.
+func (p SetVirtualTimePolicyParams) WithMaxVirtualTimeTaskStarvationCount(maxVirtualTimeTaskStarvationCount int64) *SetVirtualTimePolicyParams {
+	p.MaxVirtualTimeTaskStarvationCount = maxVirtualTimeTaskStarvationCount
 	return &p
 }
 

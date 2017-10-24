@@ -49,6 +49,7 @@ type DispatchKeyEventParams struct {
 	AutoRepeat            bool            `json:"autoRepeat,omitempty"`            // Whether the event was generated from auto repeat (default: false).
 	IsKeypad              bool            `json:"isKeypad,omitempty"`              // Whether the event was generated from the keypad (default: false).
 	IsSystemKey           bool            `json:"isSystemKey,omitempty"`           // Whether the event was a system key event (default: false).
+	Location              int64           `json:"location,omitempty"`              // Whether the event was from the left or right side of the keyboard. 1=Left, 2=Right (default: 0).
 }
 
 // DispatchKeyEvent dispatches a key event to the page.
@@ -140,6 +141,13 @@ func (p DispatchKeyEventParams) WithIsKeypad(isKeypad bool) *DispatchKeyEventPar
 // WithIsSystemKey whether the event was a system key event (default: false).
 func (p DispatchKeyEventParams) WithIsSystemKey(isSystemKey bool) *DispatchKeyEventParams {
 	p.IsSystemKey = isSystemKey
+	return &p
+}
+
+// WithLocation whether the event was from the left or right side of the
+// keyboard. 1=Left, 2=Right (default: 0).
+func (p DispatchKeyEventParams) WithLocation(location int64) *DispatchKeyEventParams {
+	p.Location = location
 	return &p
 }
 

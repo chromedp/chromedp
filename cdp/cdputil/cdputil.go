@@ -422,7 +422,7 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandNetworkGetCertificate:
 		v = new(network.GetCertificateReturns)
 
-	case cdp.CommandNetworkSetRequestInterceptionEnabled:
+	case cdp.CommandNetworkSetRequestInterception:
 		return emptyVal, nil
 
 	case cdp.CommandNetworkContinueInterceptedRequest:

@@ -188,7 +188,7 @@ const (
 	CommandNetworkSetBypassServiceWorker                   MethodType = "Network.setBypassServiceWorker"
 	CommandNetworkSetDataSizeLimitsForTest                 MethodType = "Network.setDataSizeLimitsForTest"
 	CommandNetworkGetCertificate                           MethodType = "Network.getCertificate"
-	CommandNetworkSetRequestInterceptionEnabled            MethodType = "Network.setRequestInterceptionEnabled"
+	CommandNetworkSetRequestInterception                   MethodType = "Network.setRequestInterception"
 	CommandNetworkContinueInterceptedRequest               MethodType = "Network.continueInterceptedRequest"
 	EventDatabaseAddDatabase                               MethodType = "Database.addDatabase"
 	CommandDatabaseEnable                                  MethodType = "Database.enable"
@@ -797,8 +797,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandNetworkSetDataSizeLimitsForTest
 	case CommandNetworkGetCertificate:
 		*t = CommandNetworkGetCertificate
-	case CommandNetworkSetRequestInterceptionEnabled:
-		*t = CommandNetworkSetRequestInterceptionEnabled
+	case CommandNetworkSetRequestInterception:
+		*t = CommandNetworkSetRequestInterception
 	case CommandNetworkContinueInterceptedRequest:
 		*t = CommandNetworkContinueInterceptedRequest
 	case EventDatabaseAddDatabase:

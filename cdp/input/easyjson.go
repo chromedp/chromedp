@@ -1102,6 +1102,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpInput8(in *jlexer.Lexer, out *
 			out.IsKeypad = bool(in.Bool())
 		case "isSystemKey":
 			out.IsSystemKey = bool(in.Bool())
+		case "location":
+			out.Location = int64(in.Int64())
 		default:
 			in.SkipRecursive()
 		}
@@ -1221,6 +1223,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpInput8(out *jwriter.Writer, in
 		first = false
 		out.RawString("\"isSystemKey\":")
 		out.Bool(bool(in.IsSystemKey))
+	}
+	if in.Location != 0 {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"location\":")
+		out.Int64(int64(in.Location))
 	}
 	out.RawByte('}')
 }

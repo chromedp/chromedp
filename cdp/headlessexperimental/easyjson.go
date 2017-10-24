@@ -362,6 +362,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpHeadlessexperimental5(in *jlex
 		switch key {
 		case "hasDamage":
 			out.HasDamage = bool(in.Bool())
+		case "mainFrameContentUpdated":
+			out.MainFrameContentUpdated = bool(in.Bool())
 		case "screenshotData":
 			out.ScreenshotData = string(in.String())
 		default:
@@ -385,6 +387,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpHeadlessexperimental5(out *jwr
 		first = false
 		out.RawString("\"hasDamage\":")
 		out.Bool(bool(in.HasDamage))
+	}
+	if in.MainFrameContentUpdated {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"mainFrameContentUpdated\":")
+		out.Bool(bool(in.MainFrameContentUpdated))
 	}
 	if in.ScreenshotData != "" {
 		if !first {

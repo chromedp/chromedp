@@ -481,6 +481,12 @@ type AuthChallengeResponse struct {
 	Password string                        `json:"password,omitempty"` // The password to provide, possibly empty. Should only be set if response is ProvideCredentials.
 }
 
+// RequestPattern request pattern for interception.
+type RequestPattern struct {
+	URLPattern   string            `json:"urlPattern,omitempty"`   // Wildcards ('*' -> zero or more, '?' -> exactly one) are allowed. Escape character is backslash. Omitting is equivalent to "*".
+	ResourceType page.ResourceType `json:"resourceType,omitempty"` // If set, only requests for matching resource types will be intercepted.
+}
+
 // ReferrerPolicy the referrer policy of the request, as defined in
 // https://www.w3.org/TR/referrer-policy/.
 type ReferrerPolicy string

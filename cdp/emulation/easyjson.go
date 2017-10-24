@@ -42,6 +42,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpEmulation(in *jlexer.Lexer, ou
 			(out.Policy).UnmarshalEasyJSON(in)
 		case "budget":
 			out.Budget = int64(in.Int64())
+		case "maxVirtualTimeTaskStarvationCount":
+			out.MaxVirtualTimeTaskStarvationCount = int64(in.Int64())
 		default:
 			in.SkipRecursive()
 		}
@@ -69,6 +71,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpEmulation(out *jwriter.Writer,
 		first = false
 		out.RawString("\"budget\":")
 		out.Int64(int64(in.Budget))
+	}
+	if in.MaxVirtualTimeTaskStarvationCount != 0 {
+		if !first {
+			out.RawByte(',')
+		}
+		first = false
+		out.RawString("\"maxVirtualTimeTaskStarvationCount\":")
+		out.Int64(int64(in.MaxVirtualTimeTaskStarvationCount))
 	}
 	out.RawByte('}')
 }

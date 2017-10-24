@@ -2329,6 +2329,12 @@
               "type": "integer",
               "optional": true,
               "description": "If set, after this many virtual milliseconds have elapsed virtual time will be paused and a virtualTimeBudgetExpired event is sent."
+            },
+            {
+              "name": "maxVirtualTimeTaskStarvationCount",
+              "type": "integer",
+              "optional": true,
+              "description": "If set this specifies the maximum number of tasks that can be run before virtual is forced forwards to prevent deadlock."
             }
           ],
           "experimental": true
@@ -3485,6 +3491,26 @@
             }
           ],
           "experimental": true
+        },
+        {
+          "id": "RequestPattern",
+          "type": "object",
+          "description": "Request pattern for interception.",
+          "properties": [
+            {
+              "name": "urlPattern",
+              "type": "string",
+              "optional": true,
+              "description": "Wildcards ('*' -> zero or more, '?' -> exactly one) are allowed. Escape character is backslash. Omitting is equivalent to \"*\"."
+            },
+            {
+              "name": "resourceType",
+              "$ref": "Page.ResourceType",
+              "optional": true,
+              "description": "If set, only requests for matching resource types will be intercepted."
+            }
+          ],
+          "experimental": true
         }
       ],
       "commands": [
@@ -3872,31 +3898,16 @@
           "experimental": true
         },
         {
-          "name": "setRequestInterceptionEnabled",
+          "name": "setRequestInterception",
           "description": "Sets the requests to intercept that match a the provided patterns and optionally resource types.",
           "parameters": [
             {
-              "name": "enabled",
-              "type": "boolean",
-              "description": "Whether requests should be intercepted. If patterns is not set, matches all and resets any previously set patterns. Other parameters are ignored if false."
-            },
-            {
               "name": "patterns",
               "type": "array",
-              "optional": true,
               "items": {
-                "type": "string"
+                "$ref": "RequestPattern"
               },
-              "description": "URLs matching any of these patterns will be forwarded and wait for the corresponding continueInterceptedRequest call. Wildcards ('*' -> zero or more, '?' -> exactly one) are allowed. Escape character is backslash. If omitted equivalent to ['*'] (intercept all)."
-            },
-            {
-              "name": "resourceTypes",
-              "type": "array",
-              "optional": true,
-              "items": {
-                "$ref": "Page.ResourceType"
-              },
-              "description": "If set, only requests for matching resource types will be intercepted."
+              "description": "Requests matching any of these patterns will be forwarded and wait for the corresponding continueInterceptedRequest call."
             }
           ],
           "experimental": true
@@ -9131,6 +9142,11 @@
               "description": "Whether the BeginFrame resulted in damage and, thus, a new frame was committed to the display."
             },
             {
+              "name": "mainFrameContentUpdated",
+              "type": "boolean",
+              "description": "Whether the main frame submitted a new display frame in response to this BeginFrame."
+            },
+            {
               "name": "screenshotData",
               "type": "string",
               "optional": true,
@@ -9598,6 +9614,13 @@
               "type": "boolean",
               "optional": true,
               "description": "Whether the event was a system key event (default: false)."
+            },
+            {
+              "name": "location",
+              "type": "integer",
+              "optional": true,
+              "experimental": true,
+              "description": "Whether the event was from the left or right side of the keyboard. 1=Left, 2=Right (default: 0)."
             }
           ],
           "description": "Dispatches a key event to the page."

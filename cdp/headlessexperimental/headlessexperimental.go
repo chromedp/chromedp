@@ -95,8 +95,9 @@ func (p BeginFrameParams) WithScreenshot(screenshot *ScreenshotParams) *BeginFra
 
 // BeginFrameReturns return values.
 type BeginFrameReturns struct {
-	HasDamage      bool   `json:"hasDamage,omitempty"`      // Whether the BeginFrame resulted in damage and, thus, a new frame was committed to the display.
-	ScreenshotData string `json:"screenshotData,omitempty"` // Base64-encoded image data of the screenshot, if one was requested and successfully taken.
+	HasDamage               bool   `json:"hasDamage,omitempty"`               // Whether the BeginFrame resulted in damage and, thus, a new frame was committed to the display.
+	MainFrameContentUpdated bool   `json:"mainFrameContentUpdated,omitempty"` // Whether the main frame submitted a new display frame in response to this BeginFrame.
+	ScreenshotData          string `json:"screenshotData,omitempty"`          // Base64-encoded image data of the screenshot, if one was requested and successfully taken.
 }
 
 // Do executes HeadlessExperimental.beginFrame against the provided context and
@@ -104,20 +105,21 @@ type BeginFrameReturns struct {
 //
 // returns:
 //   hasDamage - Whether the BeginFrame resulted in damage and, thus, a new frame was committed to the display.
+//   mainFrameContentUpdated - Whether the main frame submitted a new display frame in response to this BeginFrame.
 //   screenshotData - Base64-encoded image data of the screenshot, if one was requested and successfully taken.
-func (p *BeginFrameParams) Do(ctxt context.Context, h cdp.Handler) (hasDamage bool, screenshotData []byte, err error) {
+func (p *BeginFrameParams) Do(ctxt context.Context, h cdp.Handler) (hasDamage bool, mainFrameContentUpdated bool, screenshotData []byte, err error) {
 	// execute
 	var res BeginFrameReturns
 	err = h.Execute(ctxt, cdp.CommandHeadlessExperimentalBeginFrame, p, &res)
 	if err != nil {
-		return false, nil, err
+		return false, false, nil, err
 	}
 
 	// decode
 	var dec []byte
 	dec, err = base64.StdEncoding.DecodeString(res.ScreenshotData)
 	if err != nil {
-		return false, nil, err
+		return false, false, nil, err
 	}
-	return res.HasDamage, dec, nil
+	return res.HasDamage, res.MainFrameContentUpdated, dec, nil
 }
