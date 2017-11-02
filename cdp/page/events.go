@@ -20,7 +20,8 @@ type EventLoadEventFired struct {
 // EventLifecycleEvent fired for top level page lifecycle events such as
 // navigation, load, paint, etc.
 type EventLifecycleEvent struct {
-	FrameID   cdp.FrameID        `json:"frameId"` // Id of the frame.
+	FrameID   cdp.FrameID        `json:"frameId"`  // Id of the frame.
+	LoaderID  cdp.LoaderID       `json:"loaderId"` // Loader identifier. Empty string if the request is fetched from worker.
 	Name      string             `json:"name"`
 	Timestamp *cdp.MonotonicTime `json:"timestamp"`
 }

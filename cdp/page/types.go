@@ -105,6 +105,12 @@ type FrameResourceTree struct {
 	Resources   []*FrameResource     `json:"resources"`             // Information about frame resources.
 }
 
+// FrameTree information about the Frame hierarchy.
+type FrameTree struct {
+	Frame       *cdp.Frame   `json:"frame"`                 // Frame information for this tree item.
+	ChildFrames []*FrameTree `json:"childFrames,omitempty"` // Child frames.
+}
+
 // ScriptIdentifier unique script identifier.
 type ScriptIdentifier string
 
@@ -259,53 +265,6 @@ type AppManifestError struct {
 	Critical int64  `json:"critical"` // If criticial, this is a non-recoverable parse error.
 	Line     int64  `json:"line"`     // Error line.
 	Column   int64  `json:"column"`   // Error column.
-}
-
-// NavigationResponse proceed: allow the navigation; Cancel: cancel the
-// navigation; CancelAndIgnore: cancels the navigation and makes the requester
-// of the navigation acts like the request was never made.
-type NavigationResponse string
-
-// String returns the NavigationResponse as string value.
-func (t NavigationResponse) String() string {
-	return string(t)
-}
-
-// NavigationResponse values.
-const (
-	NavigationResponseProceed         NavigationResponse = "Proceed"
-	NavigationResponseCancel          NavigationResponse = "Cancel"
-	NavigationResponseCancelAndIgnore NavigationResponse = "CancelAndIgnore"
-)
-
-// MarshalEasyJSON satisfies easyjson.Marshaler.
-func (t NavigationResponse) MarshalEasyJSON(out *jwriter.Writer) {
-	out.String(string(t))
-}
-
-// MarshalJSON satisfies json.Marshaler.
-func (t NavigationResponse) MarshalJSON() ([]byte, error) {
-	return easyjson.Marshal(t)
-}
-
-// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
-func (t *NavigationResponse) UnmarshalEasyJSON(in *jlexer.Lexer) {
-	switch NavigationResponse(in.String()) {
-	case NavigationResponseProceed:
-		*t = NavigationResponseProceed
-	case NavigationResponseCancel:
-		*t = NavigationResponseCancel
-	case NavigationResponseCancelAndIgnore:
-		*t = NavigationResponseCancelAndIgnore
-
-	default:
-		in.AddError(errors.New("unknown NavigationResponse value"))
-	}
-}
-
-// UnmarshalJSON satisfies json.Unmarshaler.
-func (t *NavigationResponse) UnmarshalJSON(buf []byte) error {
-	return easyjson.Unmarshal(buf, t)
 }
 
 // LayoutViewport layout viewport position and dimensions.

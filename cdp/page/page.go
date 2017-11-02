@@ -334,6 +334,35 @@ func (p *GetResourceTreeParams) Do(ctxt context.Context, h cdp.Handler) (frameTr
 	return res.FrameTree, nil
 }
 
+// GetFrameTreeParams returns present frame tree structure.
+type GetFrameTreeParams struct{}
+
+// GetFrameTree returns present frame tree structure.
+func GetFrameTree() *GetFrameTreeParams {
+	return &GetFrameTreeParams{}
+}
+
+// GetFrameTreeReturns return values.
+type GetFrameTreeReturns struct {
+	FrameTree *FrameTree `json:"frameTree,omitempty"` // Present frame tree structure.
+}
+
+// Do executes Page.getFrameTree against the provided context and
+// target handler.
+//
+// returns:
+//   frameTree - Present frame tree structure.
+func (p *GetFrameTreeParams) Do(ctxt context.Context, h cdp.Handler) (frameTree *FrameTree, err error) {
+	// execute
+	var res GetFrameTreeReturns
+	err = h.Execute(ctxt, cdp.CommandPageGetFrameTree, nil, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.FrameTree, nil
+}
+
 // GetResourceContentParams returns content of the given resource.
 type GetResourceContentParams struct {
 	FrameID cdp.FrameID `json:"frameId"` // Frame id to get resource for.

@@ -4666,6 +4666,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpNetwork40(in *jlexer.Lexer, ou
 				}
 				(*out.Request).UnmarshalEasyJSON(in)
 			}
+		case "frameId":
+			(out.FrameID).UnmarshalEasyJSON(in)
 		case "resourceType":
 			(out.ResourceType).UnmarshalEasyJSON(in)
 		case "isNavigationRequest":
@@ -4740,6 +4742,12 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpNetwork40(out *jwriter.Writer,
 	} else {
 		(*in.Request).MarshalEasyJSON(out)
 	}
+	if !first {
+		out.RawByte(',')
+	}
+	first = false
+	out.RawString("\"frameId\":")
+	out.String(string(in.FrameID))
 	if !first {
 		out.RawByte(',')
 	}

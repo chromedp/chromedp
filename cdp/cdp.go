@@ -91,6 +91,7 @@ const (
 	CommandPageGetNavigationHistory                        MethodType = "Page.getNavigationHistory"
 	CommandPageNavigateToHistoryEntry                      MethodType = "Page.navigateToHistoryEntry"
 	CommandPageGetResourceTree                             MethodType = "Page.getResourceTree"
+	CommandPageGetFrameTree                                MethodType = "Page.getFrameTree"
 	CommandPageGetResourceContent                          MethodType = "Page.getResourceContent"
 	CommandPageSearchInResource                            MethodType = "Page.searchInResource"
 	CommandPageSetDocumentContent                          MethodType = "Page.setDocumentContent"
@@ -603,6 +604,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandPageNavigateToHistoryEntry
 	case CommandPageGetResourceTree:
 		*t = CommandPageGetResourceTree
+	case CommandPageGetFrameTree:
+		*t = CommandPageGetFrameTree
 	case CommandPageGetResourceContent:
 		*t = CommandPageGetResourceContent
 	case CommandPageSearchInResource:

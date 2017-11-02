@@ -4,7 +4,6 @@ package domsnapshot
 
 import (
 	cdp "github.com/knq/chromedp/cdp"
-	"github.com/knq/chromedp/cdp/css"
 	"github.com/knq/chromedp/cdp/dom"
 )
 
@@ -36,13 +35,21 @@ type DOMNode struct {
 	IsClickable           bool              `json:"isClickable,omitempty"`           // Whether this DOM node responds to mouse clicks. This includes nodes that have had click event listeners attached via JavaScript as well as anchor tags that naturally navigate when clicked.
 }
 
+// InlineTextBox details of post layout rendered text positions. The exact
+// layout should not be regarded as stable and may change between versions.
+type InlineTextBox struct {
+	BoundingBox         *dom.Rect `json:"boundingBox"`         // The absolute position bounding box.
+	StartCharacterIndex int64     `json:"startCharacterIndex"` // The starting index in characters, for this post layout textbox substring.
+	NumCharacters       int64     `json:"numCharacters"`       // The number of characters in this post layout textbox substring.
+}
+
 // LayoutTreeNode details of an element in the DOM tree with a LayoutObject.
 type LayoutTreeNode struct {
-	DomNodeIndex    int64                `json:"domNodeIndex"`              // The index of the related DOM node in the domNodes array returned by getSnapshot.
-	BoundingBox     *dom.Rect            `json:"boundingBox"`               // The absolute position bounding box.
-	LayoutText      string               `json:"layoutText,omitempty"`      // Contents of the LayoutText, if any.
-	InlineTextNodes []*css.InlineTextBox `json:"inlineTextNodes,omitempty"` // The post-layout inline text nodes, if any.
-	StyleIndex      int64                `json:"styleIndex,omitempty"`      // Index into the computedStyles array returned by getSnapshot.
+	DomNodeIndex    int64            `json:"domNodeIndex"`              // The index of the related DOM node in the domNodes array returned by getSnapshot.
+	BoundingBox     *dom.Rect        `json:"boundingBox"`               // The absolute position bounding box.
+	LayoutText      string           `json:"layoutText,omitempty"`      // Contents of the LayoutText, if any.
+	InlineTextNodes []*InlineTextBox `json:"inlineTextNodes,omitempty"` // The post-layout inline text nodes, if any.
+	StyleIndex      int64            `json:"styleIndex,omitempty"`      // Index into the computedStyles array returned by getSnapshot.
 }
 
 // ComputedStyle a subset of the full ComputedStyle as defined by the request

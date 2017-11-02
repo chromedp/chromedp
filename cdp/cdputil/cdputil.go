@@ -125,6 +125,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandPageGetResourceTree:
 		v = new(page.GetResourceTreeReturns)
 
+	case cdp.CommandPageGetFrameTree:
+		v = new(page.GetFrameTreeReturns)
+
 	case cdp.CommandPageGetResourceContent:
 		v = new(page.GetResourceContentReturns)
 

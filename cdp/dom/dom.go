@@ -1132,14 +1132,14 @@ func (p *SetFileInputFilesParams) Do(ctxt context.Context, h cdp.Handler) (err e
 	return h.Execute(ctxt, cdp.CommandDOMSetFileInputFiles, p, nil)
 }
 
-// GetBoxModelParams returns boxes for the currently selected nodes.
+// GetBoxModelParams returns boxes for the given node.
 type GetBoxModelParams struct {
 	NodeID        cdp.NodeID             `json:"nodeId,omitempty"`        // Identifier of the node.
 	BackendNodeID cdp.BackendNodeID      `json:"backendNodeId,omitempty"` // Identifier of the backend node.
 	ObjectID      runtime.RemoteObjectID `json:"objectId,omitempty"`      // JavaScript object id of the node wrapper.
 }
 
-// GetBoxModel returns boxes for the currently selected nodes.
+// GetBoxModel returns boxes for the given node.
 //
 // parameters:
 func GetBoxModel() *GetBoxModelParams {

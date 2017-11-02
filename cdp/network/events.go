@@ -18,7 +18,7 @@ type EventResourceChangedPriority struct {
 // EventRequestWillBeSent fired when page is about to send HTTP request.
 type EventRequestWillBeSent struct {
 	RequestID        RequestID           `json:"requestId"`                  // Request identifier.
-	LoaderID         cdp.LoaderID        `json:"loaderId"`                   // Loader identifier. Empty string if the request is fetched form worker.
+	LoaderID         cdp.LoaderID        `json:"loaderId"`                   // Loader identifier. Empty string if the request is fetched from worker.
 	DocumentURL      string              `json:"documentURL"`                // URL of the document this request is loaded for.
 	Request          *Request            `json:"request"`                    // Request data.
 	Timestamp        *cdp.MonotonicTime  `json:"timestamp"`                  // Timestamp.
@@ -37,7 +37,7 @@ type EventRequestServedFromCache struct {
 // EventResponseReceived fired when HTTP response is available.
 type EventResponseReceived struct {
 	RequestID RequestID          `json:"requestId"`         // Request identifier.
-	LoaderID  cdp.LoaderID       `json:"loaderId"`          // Loader identifier. Empty string if the request is fetched form worker.
+	LoaderID  cdp.LoaderID       `json:"loaderId"`          // Loader identifier. Empty string if the request is fetched from worker.
 	Timestamp *cdp.MonotonicTime `json:"timestamp"`         // Timestamp.
 	Type      page.ResourceType  `json:"type"`              // Resource type.
 	Response  *Response          `json:"response"`          // Response data.
@@ -135,6 +135,7 @@ type EventEventSourceMessageReceived struct {
 type EventRequestIntercepted struct {
 	InterceptionID      InterceptionID    `json:"interceptionId"` // Each request the page makes will have a unique id, however if any redirects are encountered while processing that fetch, they will be reported with the same id as the original fetch. Likewise if HTTP authentication is needed then the same fetch id will be used.
 	Request             *Request          `json:"request"`
+	FrameID             cdp.FrameID       `json:"frameId"`                      // The id of the frame that initiated the request.
 	ResourceType        page.ResourceType `json:"resourceType"`                 // How the requested resource will be used.
 	IsNavigationRequest bool              `json:"isNavigationRequest"`          // Whether this is a navigation request, which can abort the navigation completely.
 	RedirectHeaders     Headers           `json:"redirectHeaders,omitempty"`    // HTTP response headers, only sent if a redirect was intercepted.

@@ -6,7 +6,6 @@ import (
 	"errors"
 
 	cdp "github.com/knq/chromedp/cdp"
-	"github.com/knq/chromedp/cdp/dom"
 	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"
@@ -231,14 +230,6 @@ type StyleDeclarationEdit struct {
 	StyleSheetID StyleSheetID `json:"styleSheetId"` // The css style sheet identifier.
 	Range        *SourceRange `json:"range"`        // The range of the style text in the enclosing stylesheet.
 	Text         string       `json:"text"`         // New style text.
-}
-
-// InlineTextBox details of post layout rendered text positions. The exact
-// layout should not be regarded as stable and may change between versions.
-type InlineTextBox struct {
-	BoundingBox         *dom.Rect `json:"boundingBox"`         // The absolute position bounding box.
-	StartCharacterIndex int64     `json:"startCharacterIndex"` // The starting index in characters, for this post layout textbox substring.
-	NumCharacters       int64     `json:"numCharacters"`       // The number of characters in this post layout textbox substring.
 }
 
 // MediaSource source of the media query: "mediaRule" if specified by a
