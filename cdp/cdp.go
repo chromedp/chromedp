@@ -1512,6 +1512,9 @@ type Handler interface {
 	// WaitNode waits for a node to be available.
 	WaitNode(context.Context, *Frame, NodeID) (*Node, error)
 
+	ResetEventLoad()
+	WaitEventLoad() <-chan struct{}
+
 	// Execute executes the specified command using the supplied context and
 	// parameters.
 	Execute(context.Context, MethodType, easyjson.Marshaler, easyjson.Unmarshaler) error
