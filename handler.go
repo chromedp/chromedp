@@ -20,6 +20,7 @@ import (
 	"github.com/knq/chromedp/cdp/page"
 	rundom "github.com/knq/chromedp/cdp/runtime"
 	"github.com/knq/chromedp/client"
+	"github.com/knq/chromedp/cdp/network"
 )
 
 // TargetHandler manages a Chrome Debugging Protocol target.
@@ -28,6 +29,12 @@ type TargetHandler struct {
 
 	// frames is the set of encountered frames.
 	frames map[cdp.FrameID]*cdp.Frame
+
+	// lsnr is the map of listeners, which maps from cdp.MethodType to channels.
+	lsnr map[cdp.MethodType][]chan interface{}
+
+	// lsnrchs is the map of channels, which maps from channel to registered cdp.MethodType(s).
+	lsnrchs map[<-chan interface{}]map[cdp.MethodType]bool
 
 	// cur is the current top level frame.
 	cur *cdp.Frame
@@ -85,6 +92,8 @@ func (h *TargetHandler) Run(ctxt context.Context) error {
 	// reset
 	h.Lock()
 	h.frames = make(map[cdp.FrameID]*cdp.Frame)
+	h.lsnr = make(map[cdp.MethodType][]chan interface{})
+	h.lsnrchs = make(map[<-chan interface{}]map[cdp.MethodType]bool)
 	h.qcmd = make(chan *cdp.Message)
 	h.qres = make(chan *cdp.Message)
 	h.qevents = make(chan *cdp.Message)
@@ -101,7 +110,7 @@ func (h *TargetHandler) Run(ctxt context.Context) error {
 	for _, a := range []Action{
 		logdom.Enable(),
 		rundom.Enable(),
-		//network.Enable(),
+		network.Enable(),
 		inspector.Enable(),
 		page.Enable(),
 		dom.Enable(),
@@ -250,9 +259,10 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdp.Message) err
 	}
 
 	d := msg.Method.Domain()
-	if d != "Page" && d != "DOM" {
-		return nil
-	}
+
+	//if d != "Page" && d != "DOM" {
+	//	return nil
+	//}
 
 	switch d {
 	case "Page":
@@ -262,6 +272,13 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdp.Message) err
 	case "DOM":
 		h.domWaitGroup.Add(1)
 		go h.domEvent(ctxt, ev)
+	}
+
+	// populate event to the listeners
+	if lsnrs, ok := h.lsnr[msg.Method]; ok {
+		for _,l := range lsnrs {
+			l <- ev
+		}
 	}
 
 	return nil
@@ -667,10 +684,42 @@ func (h *TargetHandler) domEvent(ctxt context.Context, ev interface{}) {
 
 // Listen creates a listener for the specified event types.
 func (h *TargetHandler) Listen(eventTypes ...cdp.MethodType) <-chan interface{} {
-	return nil
+	ch := make(chan interface{}, 16)
+	for _, evtTyp := range eventTypes {
+		if chlist, ok := h.lsnr[evtTyp]; ok {
+			chlist = append(chlist, ch)
+			if _, etok := h.lsnrchs[ch][evtTyp]; !etok {
+				h.lsnrchs[ch][evtTyp] = true
+			}
+		} else {
+			h.lsnr[evtTyp] = []chan interface{}{ch}
+			h.lsnrchs[ch] = map[cdp.MethodType]bool{evtTyp: true}
+		}
+	}
+	return ch
 }
 
 // Release releases a channel returned from Listen.
 func (h *TargetHandler) Release(ch <-chan interface{}) {
-
+	lsnrchs := h.lsnrchs[ch]
+	closed := false
+	for evtTyp := range lsnrchs {
+		chs := h.lsnr[evtTyp]
+		for i := 0; i < len(chs); i++ {
+			if ch == chs[i] {
+				if !closed {
+					close(chs[i])
+					closed = true
+				}
+				if i == len(chs)-1 {
+					chs = chs[:len(chs)-1]
+				} else {
+					chs = append(chs[:i], chs[i+1:]...)
+				}
+				h.lsnr[evtTyp] = chs
+				break
+			}
+		}
+	}
+	delete(h.lsnrchs, ch)
 }
