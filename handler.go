@@ -317,6 +317,8 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdproto.Message)
 		return err
 	}
 
+	propagate(h, msg.Method, ev)
+
 	switch e := ev.(type) {
 	case *inspector.EventDetached:
 		h.Lock()
@@ -342,14 +344,18 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdproto.Message)
 		h.domEvent(ctxt, ev)
 	}
 
-	// populate event to the listeners
-	if lsnrs, ok := h.lsnr[msg.Method]; ok {
-		for _,l := range lsnrs {
+	return nil
+}
+
+// propagate propagates event to the listeners
+func propagate(h *TargetHandler, method cdp.MethodType, ev interface{}) {
+	h.RLock()
+	defer h.RUnlock()
+	if lsnrs, ok := h.lsnr[method]; ok {
+		for _, l := range lsnrs {
 			l <- ev
 		}
 	}
-
-	return nil
 }
 
 // documentUpdated handles the document updated event, retrieving the document
@@ -758,6 +764,9 @@ func (h *TargetHandler) domEvent(ctxt context.Context, ev interface{}) {
 
 // Listen creates a listener for the specified event types.
 func (h *TargetHandler) Listen(eventTypes ...cdp.MethodType) <-chan interface{} {
+	h.Lock()
+	defer h.Unlock()
+
 	ch := make(chan interface{}, 16)
 	for _, evtTyp := range eventTypes {
 		if chlist, ok := h.lsnr[evtTyp]; ok {
@@ -775,16 +784,15 @@ func (h *TargetHandler) Listen(eventTypes ...cdp.MethodType) <-chan interface{} 
 
 // Release releases a channel returned from Listen.
 func (h *TargetHandler) Release(ch <-chan interface{}) {
+	h.Lock()
+	defer h.Unlock()
+
 	lsnrchs := h.lsnrchs[ch]
-	closed := false
 	for evtTyp := range lsnrchs {
 		chs := h.lsnr[evtTyp]
 		for i := 0; i < len(chs); i++ {
 			if ch == chs[i] {
-				if !closed {
-					close(chs[i])
-					closed = true
-				}
+				chs[i] = nil
 				if i == len(chs)-1 {
 					chs = chs[:len(chs)-1]
 				} else {
