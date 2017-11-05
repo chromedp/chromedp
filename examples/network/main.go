@@ -62,6 +62,7 @@ func googleSearch(data *[]byte) cdp.Tasks {
 			fchan = h.Listen(cdptypes.EventNetworkLoadingFinished)
 			go func() {
 				echan := h.Listen(cdptypes.EventNetworkRequestWillBeSent)
+				defer h.Release(echan)
 			LOOP:
 				for d := range echan {
 					switch d.(type) {
@@ -73,7 +74,6 @@ func googleSearch(data *[]byte) cdp.Tasks {
 						}
 					}
 				}
-				h.Release(echan)
 			}()
 			return nil
 		}),
