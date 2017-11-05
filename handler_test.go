@@ -3,23 +3,16 @@ package chromedp
 import (
 	"testing"
 	"context"
-	"log"
 	"github.com/knq/chromedp/cdp"
 )
 
 func TestTargetHandler_Listen(t *testing.T) {
-	// create context
-	ctxt, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	// create chrome instance
-	c, err := New(ctxt, WithLog(log.Printf))
-	if err != nil {
-		log.Fatal(err)
-	}
+	t.Parallel()
+	c := testAllocate(t, "input.html")
+	defer c.Release()
 
 	// run task list
-	err = c.Run(ctxt, Tasks{
+	err := c.Run(defaultContext, Tasks{
 		ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
 			echan := h.Listen(cdp.EventNetworkRequestWillBeSent)
 			th := h.(*TargetHandler)
@@ -56,20 +49,7 @@ func TestTargetHandler_Listen(t *testing.T) {
 			return nil
 		}),
 	})
-
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	// shutdown chrome
-	err = c.Shutdown(ctxt)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// wait for chrome to finish
-	err = c.Wait()
-	if err != nil {
-		log.Fatal(err)
+		t.Fatal(err)
 	}
 }
