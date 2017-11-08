@@ -641,7 +641,8 @@ func (h *TargetHandler) pageEvent(ctxt context.Context, ev interface{}) {
 		return
 	case *page.EventFrameResized:
 		return
-
+	case *page.EventLifecycleEvent:
+		return
 	default:
 		h.errorf("unhandled page event %s", reflect.TypeOf(ev))
 		return
