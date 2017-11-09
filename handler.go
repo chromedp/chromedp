@@ -274,10 +274,16 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdp.Message) err
 		go h.domEvent(ctxt, ev)
 	}
 
-	// populate event to the listeners
+	// propogate event to the listeners
+	h.Lock()
+	defer h.Unlock()
 	if lsnrs, ok := h.lsnr[msg.Method]; ok {
-		for _,l := range lsnrs {
-			l <- ev
+		for _, l := range lsnrs {
+			select {
+			case l <- ev:
+			default:
+				//channel is closed and nullified
+			}
 		}
 	}
 
@@ -715,6 +721,7 @@ func (h *TargetHandler) Release(ch <-chan interface{}) {
 			if ch == chs[i] {
 				if !closed {
 					close(chs[i])
+					chs[i] = nil
 					closed = true
 				}
 				if i == len(chs)-1 {
