@@ -684,6 +684,9 @@ func (h *TargetHandler) domEvent(ctxt context.Context, ev interface{}) {
 
 // Listen creates a listener for the specified event types.
 func (h *TargetHandler) Listen(eventTypes ...cdp.MethodType) <-chan interface{} {
+	h.Lock()
+	defer h.Unlock()
+
 	ch := make(chan interface{}, 16)
 	for _, evtTyp := range eventTypes {
 		if chlist, ok := h.lsnr[evtTyp]; ok {
@@ -701,6 +704,9 @@ func (h *TargetHandler) Listen(eventTypes ...cdp.MethodType) <-chan interface{} 
 
 // Release releases a channel returned from Listen.
 func (h *TargetHandler) Release(ch <-chan interface{}) {
+	h.Lock()
+	defer h.Unlock()
+
 	lsnrchs := h.lsnrchs[ch]
 	closed := false
 	for evtTyp := range lsnrchs {
