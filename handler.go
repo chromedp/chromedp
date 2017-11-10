@@ -139,6 +139,7 @@ func (h *TargetHandler) Run(ctxt context.Context) error {
 
 	h.Unlock()
 
+	h.domWaitGroup.Add(1)
 	h.documentUpdated(ctxt)
 
 	return nil
@@ -254,6 +255,7 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdp.Message) err
 
 	case *dom.EventDocumentUpdated:
 		h.domWaitGroup.Wait()
+		h.domWaitGroup.Add(1)
 		go h.documentUpdated(ctxt)
 		return nil
 	}
@@ -266,17 +268,19 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdp.Message) err
 
 	switch d {
 	case "Page":
+		h.pageWaitGroup.Wait()
 		h.pageWaitGroup.Add(1)
 		go h.pageEvent(ctxt, ev)
 
 	case "DOM":
+		h.domWaitGroup.Wait()
 		h.domWaitGroup.Add(1)
 		go h.domEvent(ctxt, ev)
 	}
 
 	// propogate event to the listeners
-	h.Lock()
-	defer h.Unlock()
+	h.RLock() // prevent "send on closed channel"
+	defer h.RUnlock()
 	if lsnrs, ok := h.lsnr[msg.Method]; ok {
 		for _, l := range lsnrs {
 			select {
@@ -293,6 +297,8 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdp.Message) err
 // documentUpdated handles the document updated event, retrieving the document
 // root for the root frame.
 func (h *TargetHandler) documentUpdated(ctxt context.Context) {
+	defer h.domWaitGroup.Done()
+
 	f, err := h.WaitFrame(ctxt, cdp.EmptyFrameID)
 	if err != nil {
 		h.errorf("could not get current frame: %v", err)
