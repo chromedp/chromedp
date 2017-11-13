@@ -56,7 +56,8 @@ func (p *Pool) Shutdown() error {
 	defer p.rw.Unlock()
 
 	for _, r := range p.res {
-		r.cancel()
+		//r.cancel()
+		r.Release() // may fix the memory leak issue
 	}
 
 	return nil
@@ -148,6 +149,10 @@ func (r *Res) Release() error {
 	var err error
 	if r.c != nil {
 		err = r.c.Wait()
+	}
+
+	if r.CDP() != nil {
+		r.CDP().Shutdown(r.ctxt)
 	}
 
 	defer r.p.debugf("pool released %d", r.port)

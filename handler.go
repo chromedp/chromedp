@@ -51,7 +51,8 @@ type TargetHandler struct {
 	// detached is closed when the detached event is received.
 	detached chan *inspector.EventDetached
 
-	pageWaitGroup, domWaitGroup *sync.WaitGroup
+	// dpm is the RWMutex for synchronizing dom and page event handling
+	dpm sync.RWMutex
 
 	// last is the last sent message identifier.
 	last  int64
@@ -99,8 +100,6 @@ func (h *TargetHandler) Run(ctxt context.Context) error {
 	h.qevents = make(chan *cdp.Message)
 	h.res = make(map[int64]chan *cdp.Message)
 	h.detached = make(chan *inspector.EventDetached)
-	h.pageWaitGroup = new(sync.WaitGroup)
-	h.domWaitGroup = new(sync.WaitGroup)
 	h.Unlock()
 
 	// run
@@ -139,7 +138,6 @@ func (h *TargetHandler) Run(ctxt context.Context) error {
 
 	h.Unlock()
 
-	h.domWaitGroup.Add(1)
 	h.documentUpdated(ctxt)
 
 	return nil
@@ -246,6 +244,8 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdp.Message) err
 		return err
 	}
 
+	propagate(h, msg.Method, ev)
+
 	switch e := ev.(type) {
 	case *inspector.EventDetached:
 		h.Lock()
@@ -254,51 +254,37 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdp.Message) err
 		return nil
 
 	case *dom.EventDocumentUpdated:
-		h.domWaitGroup.Wait()
-		h.domWaitGroup.Add(1)
-		go h.documentUpdated(ctxt)
+		h.documentUpdated(ctxt)
 		return nil
 	}
 
 	d := msg.Method.Domain()
 
-	//if d != "Page" && d != "DOM" {
-	//	return nil
-	//}
-
 	switch d {
 	case "Page":
-		h.pageWaitGroup.Wait()
-		h.pageWaitGroup.Add(1)
-		go h.pageEvent(ctxt, ev)
+		h.pageEvent(ctxt, ev)
 
 	case "DOM":
-		h.domWaitGroup.Wait()
-		h.domWaitGroup.Add(1)
-		go h.domEvent(ctxt, ev)
-	}
-
-	// propogate event to the listeners
-	h.RLock() // prevent "send on closed channel"
-	defer h.RUnlock()
-	if lsnrs, ok := h.lsnr[msg.Method]; ok {
-		for _, l := range lsnrs {
-			select {
-			case l <- ev:
-			default:
-				//channel is closed and nullified
-			}
-		}
+		h.domEvent(ctxt, ev)
 	}
 
 	return nil
 }
 
+// propagate propogates event to the listeners
+func propagate(h *TargetHandler, method cdp.MethodType, ev interface{}) {
+	h.RLock() // prevent "send on closed channel"
+	defer h.RUnlock()
+	if lsnrs, ok := h.lsnr[method]; ok {
+		for _, l := range lsnrs {
+			l <- ev
+		}
+	}
+}
+
 // documentUpdated handles the document updated event, retrieving the document
 // root for the root frame.
 func (h *TargetHandler) documentUpdated(ctxt context.Context) {
-	defer h.domWaitGroup.Done()
-
 	f, err := h.WaitFrame(ctxt, cdp.EmptyFrameID)
 	if err != nil {
 		h.errorf("could not get current frame: %v", err)
@@ -544,8 +530,6 @@ loop:
 
 // pageEvent handles incoming page events.
 func (h *TargetHandler) pageEvent(ctxt context.Context, ev interface{}) {
-	defer h.pageWaitGroup.Done()
-
 	var id cdp.FrameID
 	var op frameOp
 
@@ -606,8 +590,6 @@ func (h *TargetHandler) pageEvent(ctxt context.Context, ev interface{}) {
 
 // domEvent handles incoming DOM events.
 func (h *TargetHandler) domEvent(ctxt context.Context, ev interface{}) {
-	defer h.domWaitGroup.Done()
-
 	// wait current frame
 	f, err := h.WaitFrame(ctxt, cdp.EmptyFrameID)
 	if err != nil {
