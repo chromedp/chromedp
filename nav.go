@@ -11,7 +11,7 @@ import (
 // Navigate navigates the current frame.
 func Navigate(urlstr string) Action {
 	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
-		frameID, err := page.Navigate(urlstr).Do(ctxt, h)
+		frameID, _, _, err := page.Navigate(urlstr).Do(ctxt, h)
 		if err != nil {
 			return err
 		}
