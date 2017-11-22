@@ -74,14 +74,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDatabase(out *jwriter.Writer, 
 	first := true
 	_ = first
 	if len(in.TableNames) != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"tableNames\":")
-		if in.TableNames == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-			out.RawString("null")
+		const prefix string = ",\"tableNames\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
 		} else {
+			out.RawString(prefix)
+		}
+		{
 			out.RawByte('[')
 			for v2, v3 := range in.TableNames {
 				if v2 > 0 {
@@ -153,12 +153,16 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDatabase1(out *jwriter.Writer,
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"databaseId\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.DatabaseID))
 	}
-	first = false
-	out.RawString("\"databaseId\":")
-	out.String(string(in.DatabaseID))
 	out.RawByte('}')
 }
 
@@ -275,14 +279,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDatabase2(out *jwriter.Writer,
 	first := true
 	_ = first
 	if len(in.ColumnNames) != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"columnNames\":")
-		if in.ColumnNames == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-			out.RawString("null")
+		const prefix string = ",\"columnNames\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
 		} else {
+			out.RawString(prefix)
+		}
+		{
 			out.RawByte('[')
 			for v6, v7 := range in.ColumnNames {
 				if v6 > 0 {
@@ -294,14 +298,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDatabase2(out *jwriter.Writer,
 		}
 	}
 	if len(in.Values) != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"values\":")
-		if in.Values == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-			out.RawString("null")
+		const prefix string = ",\"values\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
 		} else {
+			out.RawString(prefix)
+		}
+		{
 			out.RawByte('[')
 			for v8, v9 := range in.Values {
 				if v8 > 0 {
@@ -313,16 +317,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDatabase2(out *jwriter.Writer,
 		}
 	}
 	if in.SQLError != nil {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"sqlError\":")
-		if in.SQLError == nil {
-			out.RawString("null")
+		const prefix string = ",\"sqlError\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
 		} else {
-			(*in.SQLError).MarshalEasyJSON(out)
+			out.RawString(prefix)
 		}
+		(*in.SQLError).MarshalEasyJSON(out)
 	}
 	out.RawByte('}')
 }
@@ -387,18 +389,26 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDatabase3(out *jwriter.Writer,
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"databaseId\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.DatabaseID))
 	}
-	first = false
-	out.RawString("\"databaseId\":")
-	out.String(string(in.DatabaseID))
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"query\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Query))
 	}
-	first = false
-	out.RawString("\"query\":")
-	out.String(string(in.Query))
 	out.RawByte('}')
 }
 
@@ -468,15 +478,19 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDatabase4(out *jwriter.Writer,
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"database\":")
-	if in.Database == nil {
-		out.RawString("null")
-	} else {
-		(*in.Database).MarshalEasyJSON(out)
+	{
+		const prefix string = ",\"database\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		if in.Database == nil {
+			out.RawString("null")
+		} else {
+			(*in.Database).MarshalEasyJSON(out)
+		}
 	}
 	out.RawByte('}')
 }
@@ -541,18 +555,26 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDatabase5(out *jwriter.Writer,
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"message\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Message))
 	}
-	first = false
-	out.RawString("\"message\":")
-	out.String(string(in.Message))
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"code\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Int64(int64(in.Code))
 	}
-	first = false
-	out.RawString("\"code\":")
-	out.Int64(int64(in.Code))
 	out.RawByte('}')
 }
 
@@ -738,30 +760,46 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDatabase8(out *jwriter.Writer,
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"id\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.ID))
 	}
-	first = false
-	out.RawString("\"id\":")
-	out.String(string(in.ID))
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"domain\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Domain))
 	}
-	first = false
-	out.RawString("\"domain\":")
-	out.String(string(in.Domain))
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"name\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Name))
 	}
-	first = false
-	out.RawString("\"name\":")
-	out.String(string(in.Name))
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"version\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Version))
 	}
-	first = false
-	out.RawString("\"version\":")
-	out.String(string(in.Version))
 	out.RawByte('}')
 }
 

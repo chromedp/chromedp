@@ -13,6 +13,7 @@ import (
 
 	cdp "github.com/knq/chromedp/cdp"
 	"github.com/knq/chromedp/cdp/page"
+	"github.com/knq/chromedp/cdp/runtime"
 )
 
 // SetDeviceMetricsOverrideParams overrides the values of device screen
@@ -377,7 +378,7 @@ func (p *CanEmulateParams) Do(ctxt context.Context, h cdp.Handler) (result bool,
 // policy. Note this supersedes any previous time budget.
 type SetVirtualTimePolicyParams struct {
 	Policy                            VirtualTimePolicy `json:"policy"`
-	Budget                            int64             `json:"budget,omitempty"`                            // If set, after this many virtual milliseconds have elapsed virtual time will be paused and a virtualTimeBudgetExpired event is sent.
+	Budget                            float64           `json:"budget,omitempty"`                            // If set, after this many virtual milliseconds have elapsed virtual time will be paused and a virtualTimeBudgetExpired event is sent.
 	MaxVirtualTimeTaskStarvationCount int64             `json:"maxVirtualTimeTaskStarvationCount,omitempty"` // If set this specifies the maximum number of tasks that can be run before virtual is forced forwards to prevent deadlock.
 }
 
@@ -395,7 +396,7 @@ func SetVirtualTimePolicy(policy VirtualTimePolicy) *SetVirtualTimePolicyParams 
 
 // WithBudget if set, after this many virtual milliseconds have elapsed
 // virtual time will be paused and a virtualTimeBudgetExpired event is sent.
-func (p SetVirtualTimePolicyParams) WithBudget(budget int64) *SetVirtualTimePolicyParams {
+func (p SetVirtualTimePolicyParams) WithBudget(budget float64) *SetVirtualTimePolicyParams {
 	p.Budget = budget
 	return &p
 }
@@ -408,10 +409,25 @@ func (p SetVirtualTimePolicyParams) WithMaxVirtualTimeTaskStarvationCount(maxVir
 	return &p
 }
 
+// SetVirtualTimePolicyReturns return values.
+type SetVirtualTimePolicyReturns struct {
+	VirtualTimeBase *runtime.Timestamp `json:"virtualTimeBase,omitempty"` // Absolute timestamp at which virtual time was first enabled (milliseconds since epoch).
+}
+
 // Do executes Emulation.setVirtualTimePolicy against the provided context and
 // target handler.
-func (p *SetVirtualTimePolicyParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandEmulationSetVirtualTimePolicy, p, nil)
+//
+// returns:
+//   virtualTimeBase - Absolute timestamp at which virtual time was first enabled (milliseconds since epoch).
+func (p *SetVirtualTimePolicyParams) Do(ctxt context.Context, h cdp.Handler) (virtualTimeBase *runtime.Timestamp, err error) {
+	// execute
+	var res SetVirtualTimePolicyReturns
+	err = h.Execute(ctxt, cdp.CommandEmulationSetVirtualTimePolicy, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.VirtualTimeBase, nil
 }
 
 // SetNavigatorOverridesParams overrides value returned by the javascript

@@ -243,8 +243,8 @@ type AXRelatedNode struct {
 
 // AXProperty [no description].
 type AXProperty struct {
-	Name  string   `json:"name"`  // The name of this property.
-	Value *AXValue `json:"value"` // The value of this property.
+	Name  AXPropertyName `json:"name"`  // The name of this property.
+	Value *AXValue       `json:"value"` // The value of this property.
 }
 
 // AXValue a single computed AX property.
@@ -255,289 +255,149 @@ type AXValue struct {
 	Sources      []*AXValueSource    `json:"sources,omitempty"`      // The sources which contributed to the computation of this property.
 }
 
-// AXGlobalStates states which apply to every AX node.
-type AXGlobalStates string
+// AXPropertyName values of AXProperty name: from 'busy' to 'roledescription'
+// - states which apply to every AX node, from 'live' to 'root' - attributes
+// which apply to nodes in live regions, from 'autocomplete' to 'valuetext' -
+// attributes which apply to widgets, from 'checked' to 'selected' - states
+// which apply to widgets, from 'activedescendant' to 'owns' - relationships
+// between elements other than parent/child/sibling.
+type AXPropertyName string
 
-// String returns the AXGlobalStates as string value.
-func (t AXGlobalStates) String() string {
+// String returns the AXPropertyName as string value.
+func (t AXPropertyName) String() string {
 	return string(t)
 }
 
-// AXGlobalStates values.
+// AXPropertyName values.
 const (
-	AXGlobalStatesBusy            AXGlobalStates = "busy"
-	AXGlobalStatesDisabled        AXGlobalStates = "disabled"
-	AXGlobalStatesHidden          AXGlobalStates = "hidden"
-	AXGlobalStatesHiddenRoot      AXGlobalStates = "hiddenRoot"
-	AXGlobalStatesInvalid         AXGlobalStates = "invalid"
-	AXGlobalStatesKeyshortcuts    AXGlobalStates = "keyshortcuts"
-	AXGlobalStatesRoledescription AXGlobalStates = "roledescription"
+	AXPropertyNameBusy             AXPropertyName = "busy"
+	AXPropertyNameDisabled         AXPropertyName = "disabled"
+	AXPropertyNameHidden           AXPropertyName = "hidden"
+	AXPropertyNameHiddenRoot       AXPropertyName = "hiddenRoot"
+	AXPropertyNameInvalid          AXPropertyName = "invalid"
+	AXPropertyNameKeyshortcuts     AXPropertyName = "keyshortcuts"
+	AXPropertyNameRoledescription  AXPropertyName = "roledescription"
+	AXPropertyNameLive             AXPropertyName = "live"
+	AXPropertyNameAtomic           AXPropertyName = "atomic"
+	AXPropertyNameRelevant         AXPropertyName = "relevant"
+	AXPropertyNameRoot             AXPropertyName = "root"
+	AXPropertyNameAutocomplete     AXPropertyName = "autocomplete"
+	AXPropertyNameHaspopup         AXPropertyName = "haspopup"
+	AXPropertyNameLevel            AXPropertyName = "level"
+	AXPropertyNameMultiselectable  AXPropertyName = "multiselectable"
+	AXPropertyNameOrientation      AXPropertyName = "orientation"
+	AXPropertyNameMultiline        AXPropertyName = "multiline"
+	AXPropertyNameReadonly         AXPropertyName = "readonly"
+	AXPropertyNameRequired         AXPropertyName = "required"
+	AXPropertyNameValuemin         AXPropertyName = "valuemin"
+	AXPropertyNameValuemax         AXPropertyName = "valuemax"
+	AXPropertyNameValuetext        AXPropertyName = "valuetext"
+	AXPropertyNameChecked          AXPropertyName = "checked"
+	AXPropertyNameExpanded         AXPropertyName = "expanded"
+	AXPropertyNameModal            AXPropertyName = "modal"
+	AXPropertyNamePressed          AXPropertyName = "pressed"
+	AXPropertyNameSelected         AXPropertyName = "selected"
+	AXPropertyNameActivedescendant AXPropertyName = "activedescendant"
+	AXPropertyNameControls         AXPropertyName = "controls"
+	AXPropertyNameDescribedby      AXPropertyName = "describedby"
+	AXPropertyNameDetails          AXPropertyName = "details"
+	AXPropertyNameErrormessage     AXPropertyName = "errormessage"
+	AXPropertyNameFlowto           AXPropertyName = "flowto"
+	AXPropertyNameLabelledby       AXPropertyName = "labelledby"
+	AXPropertyNameOwns             AXPropertyName = "owns"
 )
 
 // MarshalEasyJSON satisfies easyjson.Marshaler.
-func (t AXGlobalStates) MarshalEasyJSON(out *jwriter.Writer) {
+func (t AXPropertyName) MarshalEasyJSON(out *jwriter.Writer) {
 	out.String(string(t))
 }
 
 // MarshalJSON satisfies json.Marshaler.
-func (t AXGlobalStates) MarshalJSON() ([]byte, error) {
+func (t AXPropertyName) MarshalJSON() ([]byte, error) {
 	return easyjson.Marshal(t)
 }
 
 // UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
-func (t *AXGlobalStates) UnmarshalEasyJSON(in *jlexer.Lexer) {
-	switch AXGlobalStates(in.String()) {
-	case AXGlobalStatesBusy:
-		*t = AXGlobalStatesBusy
-	case AXGlobalStatesDisabled:
-		*t = AXGlobalStatesDisabled
-	case AXGlobalStatesHidden:
-		*t = AXGlobalStatesHidden
-	case AXGlobalStatesHiddenRoot:
-		*t = AXGlobalStatesHiddenRoot
-	case AXGlobalStatesInvalid:
-		*t = AXGlobalStatesInvalid
-	case AXGlobalStatesKeyshortcuts:
-		*t = AXGlobalStatesKeyshortcuts
-	case AXGlobalStatesRoledescription:
-		*t = AXGlobalStatesRoledescription
+func (t *AXPropertyName) UnmarshalEasyJSON(in *jlexer.Lexer) {
+	switch AXPropertyName(in.String()) {
+	case AXPropertyNameBusy:
+		*t = AXPropertyNameBusy
+	case AXPropertyNameDisabled:
+		*t = AXPropertyNameDisabled
+	case AXPropertyNameHidden:
+		*t = AXPropertyNameHidden
+	case AXPropertyNameHiddenRoot:
+		*t = AXPropertyNameHiddenRoot
+	case AXPropertyNameInvalid:
+		*t = AXPropertyNameInvalid
+	case AXPropertyNameKeyshortcuts:
+		*t = AXPropertyNameKeyshortcuts
+	case AXPropertyNameRoledescription:
+		*t = AXPropertyNameRoledescription
+	case AXPropertyNameLive:
+		*t = AXPropertyNameLive
+	case AXPropertyNameAtomic:
+		*t = AXPropertyNameAtomic
+	case AXPropertyNameRelevant:
+		*t = AXPropertyNameRelevant
+	case AXPropertyNameRoot:
+		*t = AXPropertyNameRoot
+	case AXPropertyNameAutocomplete:
+		*t = AXPropertyNameAutocomplete
+	case AXPropertyNameHaspopup:
+		*t = AXPropertyNameHaspopup
+	case AXPropertyNameLevel:
+		*t = AXPropertyNameLevel
+	case AXPropertyNameMultiselectable:
+		*t = AXPropertyNameMultiselectable
+	case AXPropertyNameOrientation:
+		*t = AXPropertyNameOrientation
+	case AXPropertyNameMultiline:
+		*t = AXPropertyNameMultiline
+	case AXPropertyNameReadonly:
+		*t = AXPropertyNameReadonly
+	case AXPropertyNameRequired:
+		*t = AXPropertyNameRequired
+	case AXPropertyNameValuemin:
+		*t = AXPropertyNameValuemin
+	case AXPropertyNameValuemax:
+		*t = AXPropertyNameValuemax
+	case AXPropertyNameValuetext:
+		*t = AXPropertyNameValuetext
+	case AXPropertyNameChecked:
+		*t = AXPropertyNameChecked
+	case AXPropertyNameExpanded:
+		*t = AXPropertyNameExpanded
+	case AXPropertyNameModal:
+		*t = AXPropertyNameModal
+	case AXPropertyNamePressed:
+		*t = AXPropertyNamePressed
+	case AXPropertyNameSelected:
+		*t = AXPropertyNameSelected
+	case AXPropertyNameActivedescendant:
+		*t = AXPropertyNameActivedescendant
+	case AXPropertyNameControls:
+		*t = AXPropertyNameControls
+	case AXPropertyNameDescribedby:
+		*t = AXPropertyNameDescribedby
+	case AXPropertyNameDetails:
+		*t = AXPropertyNameDetails
+	case AXPropertyNameErrormessage:
+		*t = AXPropertyNameErrormessage
+	case AXPropertyNameFlowto:
+		*t = AXPropertyNameFlowto
+	case AXPropertyNameLabelledby:
+		*t = AXPropertyNameLabelledby
+	case AXPropertyNameOwns:
+		*t = AXPropertyNameOwns
 
 	default:
-		in.AddError(errors.New("unknown AXGlobalStates value"))
+		in.AddError(errors.New("unknown AXPropertyName value"))
 	}
 }
 
 // UnmarshalJSON satisfies json.Unmarshaler.
-func (t *AXGlobalStates) UnmarshalJSON(buf []byte) error {
-	return easyjson.Unmarshal(buf, t)
-}
-
-// AXLiveRegionAttributes attributes which apply to nodes in live regions.
-type AXLiveRegionAttributes string
-
-// String returns the AXLiveRegionAttributes as string value.
-func (t AXLiveRegionAttributes) String() string {
-	return string(t)
-}
-
-// AXLiveRegionAttributes values.
-const (
-	AXLiveRegionAttributesLive     AXLiveRegionAttributes = "live"
-	AXLiveRegionAttributesAtomic   AXLiveRegionAttributes = "atomic"
-	AXLiveRegionAttributesRelevant AXLiveRegionAttributes = "relevant"
-	AXLiveRegionAttributesRoot     AXLiveRegionAttributes = "root"
-)
-
-// MarshalEasyJSON satisfies easyjson.Marshaler.
-func (t AXLiveRegionAttributes) MarshalEasyJSON(out *jwriter.Writer) {
-	out.String(string(t))
-}
-
-// MarshalJSON satisfies json.Marshaler.
-func (t AXLiveRegionAttributes) MarshalJSON() ([]byte, error) {
-	return easyjson.Marshal(t)
-}
-
-// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
-func (t *AXLiveRegionAttributes) UnmarshalEasyJSON(in *jlexer.Lexer) {
-	switch AXLiveRegionAttributes(in.String()) {
-	case AXLiveRegionAttributesLive:
-		*t = AXLiveRegionAttributesLive
-	case AXLiveRegionAttributesAtomic:
-		*t = AXLiveRegionAttributesAtomic
-	case AXLiveRegionAttributesRelevant:
-		*t = AXLiveRegionAttributesRelevant
-	case AXLiveRegionAttributesRoot:
-		*t = AXLiveRegionAttributesRoot
-
-	default:
-		in.AddError(errors.New("unknown AXLiveRegionAttributes value"))
-	}
-}
-
-// UnmarshalJSON satisfies json.Unmarshaler.
-func (t *AXLiveRegionAttributes) UnmarshalJSON(buf []byte) error {
-	return easyjson.Unmarshal(buf, t)
-}
-
-// AXWidgetAttributes attributes which apply to widgets.
-type AXWidgetAttributes string
-
-// String returns the AXWidgetAttributes as string value.
-func (t AXWidgetAttributes) String() string {
-	return string(t)
-}
-
-// AXWidgetAttributes values.
-const (
-	AXWidgetAttributesAutocomplete    AXWidgetAttributes = "autocomplete"
-	AXWidgetAttributesHaspopup        AXWidgetAttributes = "haspopup"
-	AXWidgetAttributesLevel           AXWidgetAttributes = "level"
-	AXWidgetAttributesMultiselectable AXWidgetAttributes = "multiselectable"
-	AXWidgetAttributesOrientation     AXWidgetAttributes = "orientation"
-	AXWidgetAttributesMultiline       AXWidgetAttributes = "multiline"
-	AXWidgetAttributesReadonly        AXWidgetAttributes = "readonly"
-	AXWidgetAttributesRequired        AXWidgetAttributes = "required"
-	AXWidgetAttributesValuemin        AXWidgetAttributes = "valuemin"
-	AXWidgetAttributesValuemax        AXWidgetAttributes = "valuemax"
-	AXWidgetAttributesValuetext       AXWidgetAttributes = "valuetext"
-)
-
-// MarshalEasyJSON satisfies easyjson.Marshaler.
-func (t AXWidgetAttributes) MarshalEasyJSON(out *jwriter.Writer) {
-	out.String(string(t))
-}
-
-// MarshalJSON satisfies json.Marshaler.
-func (t AXWidgetAttributes) MarshalJSON() ([]byte, error) {
-	return easyjson.Marshal(t)
-}
-
-// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
-func (t *AXWidgetAttributes) UnmarshalEasyJSON(in *jlexer.Lexer) {
-	switch AXWidgetAttributes(in.String()) {
-	case AXWidgetAttributesAutocomplete:
-		*t = AXWidgetAttributesAutocomplete
-	case AXWidgetAttributesHaspopup:
-		*t = AXWidgetAttributesHaspopup
-	case AXWidgetAttributesLevel:
-		*t = AXWidgetAttributesLevel
-	case AXWidgetAttributesMultiselectable:
-		*t = AXWidgetAttributesMultiselectable
-	case AXWidgetAttributesOrientation:
-		*t = AXWidgetAttributesOrientation
-	case AXWidgetAttributesMultiline:
-		*t = AXWidgetAttributesMultiline
-	case AXWidgetAttributesReadonly:
-		*t = AXWidgetAttributesReadonly
-	case AXWidgetAttributesRequired:
-		*t = AXWidgetAttributesRequired
-	case AXWidgetAttributesValuemin:
-		*t = AXWidgetAttributesValuemin
-	case AXWidgetAttributesValuemax:
-		*t = AXWidgetAttributesValuemax
-	case AXWidgetAttributesValuetext:
-		*t = AXWidgetAttributesValuetext
-
-	default:
-		in.AddError(errors.New("unknown AXWidgetAttributes value"))
-	}
-}
-
-// UnmarshalJSON satisfies json.Unmarshaler.
-func (t *AXWidgetAttributes) UnmarshalJSON(buf []byte) error {
-	return easyjson.Unmarshal(buf, t)
-}
-
-// AXWidgetStates states which apply to widgets.
-type AXWidgetStates string
-
-// String returns the AXWidgetStates as string value.
-func (t AXWidgetStates) String() string {
-	return string(t)
-}
-
-// AXWidgetStates values.
-const (
-	AXWidgetStatesChecked  AXWidgetStates = "checked"
-	AXWidgetStatesExpanded AXWidgetStates = "expanded"
-	AXWidgetStatesModal    AXWidgetStates = "modal"
-	AXWidgetStatesPressed  AXWidgetStates = "pressed"
-	AXWidgetStatesSelected AXWidgetStates = "selected"
-)
-
-// MarshalEasyJSON satisfies easyjson.Marshaler.
-func (t AXWidgetStates) MarshalEasyJSON(out *jwriter.Writer) {
-	out.String(string(t))
-}
-
-// MarshalJSON satisfies json.Marshaler.
-func (t AXWidgetStates) MarshalJSON() ([]byte, error) {
-	return easyjson.Marshal(t)
-}
-
-// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
-func (t *AXWidgetStates) UnmarshalEasyJSON(in *jlexer.Lexer) {
-	switch AXWidgetStates(in.String()) {
-	case AXWidgetStatesChecked:
-		*t = AXWidgetStatesChecked
-	case AXWidgetStatesExpanded:
-		*t = AXWidgetStatesExpanded
-	case AXWidgetStatesModal:
-		*t = AXWidgetStatesModal
-	case AXWidgetStatesPressed:
-		*t = AXWidgetStatesPressed
-	case AXWidgetStatesSelected:
-		*t = AXWidgetStatesSelected
-
-	default:
-		in.AddError(errors.New("unknown AXWidgetStates value"))
-	}
-}
-
-// UnmarshalJSON satisfies json.Unmarshaler.
-func (t *AXWidgetStates) UnmarshalJSON(buf []byte) error {
-	return easyjson.Unmarshal(buf, t)
-}
-
-// AXRelationshipAttributes relationships between elements other than
-// parent/child/sibling.
-type AXRelationshipAttributes string
-
-// String returns the AXRelationshipAttributes as string value.
-func (t AXRelationshipAttributes) String() string {
-	return string(t)
-}
-
-// AXRelationshipAttributes values.
-const (
-	AXRelationshipAttributesActivedescendant AXRelationshipAttributes = "activedescendant"
-	AXRelationshipAttributesControls         AXRelationshipAttributes = "controls"
-	AXRelationshipAttributesDescribedby      AXRelationshipAttributes = "describedby"
-	AXRelationshipAttributesDetails          AXRelationshipAttributes = "details"
-	AXRelationshipAttributesErrormessage     AXRelationshipAttributes = "errormessage"
-	AXRelationshipAttributesFlowto           AXRelationshipAttributes = "flowto"
-	AXRelationshipAttributesLabelledby       AXRelationshipAttributes = "labelledby"
-	AXRelationshipAttributesOwns             AXRelationshipAttributes = "owns"
-)
-
-// MarshalEasyJSON satisfies easyjson.Marshaler.
-func (t AXRelationshipAttributes) MarshalEasyJSON(out *jwriter.Writer) {
-	out.String(string(t))
-}
-
-// MarshalJSON satisfies json.Marshaler.
-func (t AXRelationshipAttributes) MarshalJSON() ([]byte, error) {
-	return easyjson.Marshal(t)
-}
-
-// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
-func (t *AXRelationshipAttributes) UnmarshalEasyJSON(in *jlexer.Lexer) {
-	switch AXRelationshipAttributes(in.String()) {
-	case AXRelationshipAttributesActivedescendant:
-		*t = AXRelationshipAttributesActivedescendant
-	case AXRelationshipAttributesControls:
-		*t = AXRelationshipAttributesControls
-	case AXRelationshipAttributesDescribedby:
-		*t = AXRelationshipAttributesDescribedby
-	case AXRelationshipAttributesDetails:
-		*t = AXRelationshipAttributesDetails
-	case AXRelationshipAttributesErrormessage:
-		*t = AXRelationshipAttributesErrormessage
-	case AXRelationshipAttributesFlowto:
-		*t = AXRelationshipAttributesFlowto
-	case AXRelationshipAttributesLabelledby:
-		*t = AXRelationshipAttributesLabelledby
-	case AXRelationshipAttributesOwns:
-		*t = AXRelationshipAttributesOwns
-
-	default:
-		in.AddError(errors.New("unknown AXRelationshipAttributes value"))
-	}
-}
-
-// UnmarshalJSON satisfies json.Unmarshaler.
-func (t *AXRelationshipAttributes) UnmarshalJSON(buf []byte) error {
+func (t *AXPropertyName) UnmarshalJSON(buf []byte) error {
 	return easyjson.Unmarshal(buf, t)
 }
 

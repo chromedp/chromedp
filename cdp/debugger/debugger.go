@@ -329,6 +329,27 @@ func (p *ContinueToLocationParams) Do(ctxt context.Context, h cdp.Handler) (err 
 	return h.Execute(ctxt, cdp.CommandDebuggerContinueToLocation, p, nil)
 }
 
+// PauseOnAsyncTaskParams [no description].
+type PauseOnAsyncTaskParams struct {
+	AsyncTaskID runtime.AsyncTaskID `json:"asyncTaskId"` // Debugger will pause when given async task is started.
+}
+
+// PauseOnAsyncTask [no description].
+//
+// parameters:
+//   asyncTaskID - Debugger will pause when given async task is started.
+func PauseOnAsyncTask(asyncTaskID runtime.AsyncTaskID) *PauseOnAsyncTaskParams {
+	return &PauseOnAsyncTaskParams{
+		AsyncTaskID: asyncTaskID,
+	}
+}
+
+// Do executes Debugger.pauseOnAsyncTask against the provided context and
+// target handler.
+func (p *PauseOnAsyncTaskParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDebuggerPauseOnAsyncTask, p, nil)
+}
+
 // StepOverParams steps over the statement.
 type StepOverParams struct{}
 
@@ -344,17 +365,28 @@ func (p *StepOverParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 }
 
 // StepIntoParams steps into the function call.
-type StepIntoParams struct{}
+type StepIntoParams struct {
+	BreakOnAsyncCall bool `json:"breakOnAsyncCall,omitempty"` // Debugger will issue additional Debugger.paused notification if any async task is scheduled before next pause.
+}
 
 // StepInto steps into the function call.
+//
+// parameters:
 func StepInto() *StepIntoParams {
 	return &StepIntoParams{}
+}
+
+// WithBreakOnAsyncCall debugger will issue additional Debugger.paused
+// notification if any async task is scheduled before next pause.
+func (p StepIntoParams) WithBreakOnAsyncCall(breakOnAsyncCall bool) *StepIntoParams {
+	p.BreakOnAsyncCall = breakOnAsyncCall
+	return &p
 }
 
 // Do executes Debugger.stepInto against the provided context and
 // target handler.
 func (p *StepIntoParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDebuggerStepInto, nil, nil)
+	return h.Execute(ctxt, cdp.CommandDebuggerStepInto, p, nil)
 }
 
 // StepOutParams steps out of the function call.
@@ -385,16 +417,18 @@ func (p *PauseParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandDebuggerPause, nil, nil)
 }
 
-// ScheduleStepIntoAsyncParams steps into next scheduled async task if any is
-// scheduled before next pause. Returns success when async task is actually
-// scheduled, returns error if no task were scheduled or another
-// scheduleStepIntoAsync was called.
+// ScheduleStepIntoAsyncParams this method is deprecated - use
+// Debugger.stepInto with breakOnAsyncCall and Debugger.pauseOnAsyncTask
+// instead. Steps into next scheduled async task if any is scheduled before next
+// pause. Returns success when async task is actually scheduled, returns error
+// if no task were scheduled or another scheduleStepIntoAsync was called.
 type ScheduleStepIntoAsyncParams struct{}
 
-// ScheduleStepIntoAsync steps into next scheduled async task if any is
-// scheduled before next pause. Returns success when async task is actually
-// scheduled, returns error if no task were scheduled or another
-// scheduleStepIntoAsync was called.
+// ScheduleStepIntoAsync this method is deprecated - use Debugger.stepInto
+// with breakOnAsyncCall and Debugger.pauseOnAsyncTask instead. Steps into next
+// scheduled async task if any is scheduled before next pause. Returns success
+// when async task is actually scheduled, returns error if no task were
+// scheduled or another scheduleStepIntoAsync was called.
 func ScheduleStepIntoAsync() *ScheduleStepIntoAsyncParams {
 	return &ScheduleStepIntoAsyncParams{}
 }
@@ -742,6 +776,29 @@ func SetVariableValue(scopeNumber int64, variableName string, newValue *runtime.
 // target handler.
 func (p *SetVariableValueParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandDebuggerSetVariableValue, p, nil)
+}
+
+// SetReturnValueParams changes return value in top frame. Available only at
+// return break position.
+type SetReturnValueParams struct {
+	NewValue *runtime.CallArgument `json:"newValue"` // New return value.
+}
+
+// SetReturnValue changes return value in top frame. Available only at return
+// break position.
+//
+// parameters:
+//   newValue - New return value.
+func SetReturnValue(newValue *runtime.CallArgument) *SetReturnValueParams {
+	return &SetReturnValueParams{
+		NewValue: newValue,
+	}
+}
+
+// Do executes Debugger.setReturnValue against the provided context and
+// target handler.
+func (p *SetReturnValueParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDebuggerSetReturnValue, p, nil)
 }
 
 // SetAsyncCallStackDepthParams enables or disables async call stacks

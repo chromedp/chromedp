@@ -54,18 +54,26 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPerformance(out *jwriter.Write
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"name\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Name))
 	}
-	first = false
-	out.RawString("\"name\":")
-	out.String(string(in.Name))
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"value\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Float64(float64(in.Value))
 	}
-	first = false
-	out.RawString("\"value\":")
-	out.Float64(float64(in.Value))
 	out.RawByte('}')
 }
 
@@ -157,14 +165,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPerformance1(out *jwriter.Writ
 	first := true
 	_ = first
 	if len(in.Metrics) != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"metrics\":")
-		if in.Metrics == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-			out.RawString("null")
+		const prefix string = ",\"metrics\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
 		} else {
+			out.RawString(prefix)
+		}
+		{
 			out.RawByte('[')
 			for v2, v3 := range in.Metrics {
 				if v2 > 0 {
@@ -330,33 +338,41 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPerformance3(out *jwriter.Writ
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"metrics\":")
-	if in.Metrics == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-		out.RawString("null")
-	} else {
-		out.RawByte('[')
-		for v5, v6 := range in.Metrics {
-			if v5 > 0 {
-				out.RawByte(',')
-			}
-			if v6 == nil {
-				out.RawString("null")
-			} else {
-				(*v6).MarshalEasyJSON(out)
-			}
+	{
+		const prefix string = ",\"metrics\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		out.RawByte(']')
+		if in.Metrics == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			out.RawString("null")
+		} else {
+			out.RawByte('[')
+			for v5, v6 := range in.Metrics {
+				if v5 > 0 {
+					out.RawByte(',')
+				}
+				if v6 == nil {
+					out.RawString("null")
+				} else {
+					(*v6).MarshalEasyJSON(out)
+				}
+			}
+			out.RawByte(']')
+		}
 	}
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"title\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Title))
 	}
-	first = false
-	out.RawString("\"title\":")
-	out.String(string(in.Title))
 	out.RawByte('}')
 }
 

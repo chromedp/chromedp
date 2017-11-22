@@ -52,12 +52,16 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpMemory(out *jwriter.Writer, in
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"level\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(in.Level).MarshalEasyJSON(out)
 	}
-	first = false
-	out.RawString("\"level\":")
-	(in.Level).MarshalEasyJSON(out)
 	out.RawByte('}')
 }
 
@@ -119,12 +123,16 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpMemory1(out *jwriter.Writer, i
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"suppressed\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Bool(bool(in.Suppressed))
 	}
-	first = false
-	out.RawString("\"suppressed\":")
-	out.Bool(bool(in.Suppressed))
 	out.RawByte('}')
 }
 
@@ -250,27 +258,33 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpMemory3(out *jwriter.Writer, i
 	first := true
 	_ = first
 	if in.Documents != 0 {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"documents\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"documents\":")
 		out.Int64(int64(in.Documents))
 	}
 	if in.Nodes != 0 {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"nodes\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"nodes\":")
 		out.Int64(int64(in.Nodes))
 	}
 	if in.JsEventListeners != 0 {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"jsEventListeners\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"jsEventListeners\":")
 		out.Int64(int64(in.JsEventListeners))
 	}
 	out.RawByte('}')

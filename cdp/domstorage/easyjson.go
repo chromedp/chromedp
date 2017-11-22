@@ -54,18 +54,26 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDomstorage(out *jwriter.Writer
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"securityOrigin\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.SecurityOrigin))
 	}
-	first = false
-	out.RawString("\"securityOrigin\":")
-	out.String(string(in.SecurityOrigin))
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"isLocalStorage\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Bool(bool(in.IsLocalStorage))
 	}
-	first = false
-	out.RawString("\"isLocalStorage\":")
-	out.Bool(bool(in.IsLocalStorage))
 	out.RawByte('}')
 }
 
@@ -139,28 +147,40 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDomstorage1(out *jwriter.Write
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"storageId\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		if in.StorageID == nil {
+			out.RawString("null")
+		} else {
+			(*in.StorageID).MarshalEasyJSON(out)
+		}
 	}
-	first = false
-	out.RawString("\"storageId\":")
-	if in.StorageID == nil {
-		out.RawString("null")
-	} else {
-		(*in.StorageID).MarshalEasyJSON(out)
+	{
+		const prefix string = ",\"key\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Key))
 	}
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"value\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Value))
 	}
-	first = false
-	out.RawString("\"key\":")
-	out.String(string(in.Key))
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"value\":")
-	out.String(string(in.Value))
 	out.RawByte('}')
 }
 
@@ -232,22 +252,30 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDomstorage2(out *jwriter.Write
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"storageId\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		if in.StorageID == nil {
+			out.RawString("null")
+		} else {
+			(*in.StorageID).MarshalEasyJSON(out)
+		}
 	}
-	first = false
-	out.RawString("\"storageId\":")
-	if in.StorageID == nil {
-		out.RawString("null")
-	} else {
-		(*in.StorageID).MarshalEasyJSON(out)
+	{
+		const prefix string = ",\"key\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Key))
 	}
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"key\":")
-	out.String(string(in.Key))
 	out.RawByte('}')
 }
 
@@ -352,14 +380,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDomstorage3(out *jwriter.Write
 	first := true
 	_ = first
 	if len(in.Entries) != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"entries\":")
-		if in.Entries == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-			out.RawString("null")
+		const prefix string = ",\"entries\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
 		} else {
+			out.RawString(prefix)
+		}
+		{
 			out.RawByte('[')
 			for v3, v4 := range in.Entries {
 				if v3 > 0 {
@@ -450,15 +478,19 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDomstorage4(out *jwriter.Write
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"storageId\":")
-	if in.StorageID == nil {
-		out.RawString("null")
-	} else {
-		(*in.StorageID).MarshalEasyJSON(out)
+	{
+		const prefix string = ",\"storageId\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		if in.StorageID == nil {
+			out.RawString("null")
+		} else {
+			(*in.StorageID).MarshalEasyJSON(out)
+		}
 	}
 	out.RawByte('}')
 }
@@ -529,15 +561,19 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDomstorage5(out *jwriter.Write
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"storageId\":")
-	if in.StorageID == nil {
-		out.RawString("null")
-	} else {
-		(*in.StorageID).MarshalEasyJSON(out)
+	{
+		const prefix string = ",\"storageId\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		if in.StorageID == nil {
+			out.RawString("null")
+		} else {
+			(*in.StorageID).MarshalEasyJSON(out)
+		}
 	}
 	out.RawByte('}')
 }
@@ -614,34 +650,50 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDomstorage6(out *jwriter.Write
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"storageId\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		if in.StorageID == nil {
+			out.RawString("null")
+		} else {
+			(*in.StorageID).MarshalEasyJSON(out)
+		}
 	}
-	first = false
-	out.RawString("\"storageId\":")
-	if in.StorageID == nil {
-		out.RawString("null")
-	} else {
-		(*in.StorageID).MarshalEasyJSON(out)
+	{
+		const prefix string = ",\"key\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Key))
 	}
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"oldValue\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.OldValue))
 	}
-	first = false
-	out.RawString("\"key\":")
-	out.String(string(in.Key))
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"newValue\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.NewValue))
 	}
-	first = false
-	out.RawString("\"oldValue\":")
-	out.String(string(in.OldValue))
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"newValue\":")
-	out.String(string(in.NewValue))
 	out.RawByte('}')
 }
 
@@ -713,22 +765,30 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDomstorage7(out *jwriter.Write
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"storageId\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		if in.StorageID == nil {
+			out.RawString("null")
+		} else {
+			(*in.StorageID).MarshalEasyJSON(out)
+		}
 	}
-	first = false
-	out.RawString("\"storageId\":")
-	if in.StorageID == nil {
-		out.RawString("null")
-	} else {
-		(*in.StorageID).MarshalEasyJSON(out)
+	{
+		const prefix string = ",\"key\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Key))
 	}
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"key\":")
-	out.String(string(in.Key))
 	out.RawByte('}')
 }
 
@@ -802,28 +862,40 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDomstorage8(out *jwriter.Write
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"storageId\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		if in.StorageID == nil {
+			out.RawString("null")
+		} else {
+			(*in.StorageID).MarshalEasyJSON(out)
+		}
 	}
-	first = false
-	out.RawString("\"storageId\":")
-	if in.StorageID == nil {
-		out.RawString("null")
-	} else {
-		(*in.StorageID).MarshalEasyJSON(out)
+	{
+		const prefix string = ",\"key\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Key))
 	}
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"newValue\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.NewValue))
 	}
-	first = false
-	out.RawString("\"key\":")
-	out.String(string(in.Key))
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"newValue\":")
-	out.String(string(in.NewValue))
 	out.RawByte('}')
 }
 
@@ -1011,15 +1083,19 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpDomstorage11(out *jwriter.Writ
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"storageId\":")
-	if in.StorageID == nil {
-		out.RawString("null")
-	} else {
-		(*in.StorageID).MarshalEasyJSON(out)
+	{
+		const prefix string = ",\"storageId\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		if in.StorageID == nil {
+			out.RawString("null")
+		} else {
+			(*in.StorageID).MarshalEasyJSON(out)
+		}
 	}
 	out.RawByte('}')
 }

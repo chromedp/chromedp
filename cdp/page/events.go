@@ -108,12 +108,13 @@ type EventInterstitialShown struct{}
 // EventInterstitialHidden fired when interstitial page was hidden.
 type EventInterstitialHidden struct{}
 
-// EventWindowOpen fired when window.open() was called.
+// EventWindowOpen fired when a new window is going to be opened, via
+// window.open(), link click, form submission, etc.
 type EventWindowOpen struct {
-	URL            string `json:"url"`            // The URL for the new window.
-	WindowName     string `json:"windowName"`     // Window name passed to window.open().
-	WindowFeatures string `json:"windowFeatures"` // Window features passed to window.open().
-	UserGesture    bool   `json:"userGesture"`    // Whether or not window.open() was triggered by user gesture.
+	URL            string   `json:"url"`            // The URL for the new window.
+	WindowName     string   `json:"windowName"`     // Window name.
+	WindowFeatures []string `json:"windowFeatures"` // An array of enabled window features.
+	UserGesture    bool     `json:"userGesture"`    // Whether or not it was triggered by user gesture.
 }
 
 // EventTypes all event types in the domain.

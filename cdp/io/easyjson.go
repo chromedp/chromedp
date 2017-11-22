@@ -54,11 +54,13 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpIo(out *jwriter.Writer, in Res
 	first := true
 	_ = first
 	if in.UUID != "" {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"uuid\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"uuid\":")
 		out.String(string(in.UUID))
 	}
 	out.RawByte('}')
@@ -122,12 +124,16 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpIo1(out *jwriter.Writer, in Re
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"objectId\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.ObjectID))
 	}
-	first = false
-	out.RawString("\"objectId\":")
-	out.String(string(in.ObjectID))
 	out.RawByte('}')
 }
 
@@ -194,27 +200,33 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpIo2(out *jwriter.Writer, in Re
 	first := true
 	_ = first
 	if in.Base64encoded {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"base64Encoded\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"base64Encoded\":")
 		out.Bool(bool(in.Base64encoded))
 	}
 	if in.Data != "" {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"data\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"data\":")
 		out.String(string(in.Data))
 	}
 	if in.EOF {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"eof\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"eof\":")
 		out.Bool(bool(in.EOF))
 	}
 	out.RawByte('}')
@@ -282,26 +294,34 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpIo3(out *jwriter.Writer, in Re
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"handle\":")
-	out.String(string(in.Handle))
-	if in.Offset != 0 {
-		if !first {
-			out.RawByte(',')
+	{
+		const prefix string = ",\"handle\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"offset\":")
+		out.String(string(in.Handle))
+	}
+	if in.Offset != 0 {
+		const prefix string = ",\"offset\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		out.Int64(int64(in.Offset))
 	}
 	if in.Size != 0 {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"size\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"size\":")
 		out.Int64(int64(in.Size))
 	}
 	out.RawByte('}')
@@ -365,12 +385,16 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpIo4(out *jwriter.Writer, in Cl
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"handle\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Handle))
 	}
-	first = false
-	out.RawString("\"handle\":")
-	out.String(string(in.Handle))
 	out.RawByte('}')
 }
 

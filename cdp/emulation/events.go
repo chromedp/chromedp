@@ -13,13 +13,13 @@ type EventVirtualTimeBudgetExpired struct{}
 // EventVirtualTimeAdvanced notification sent after the virtual time has
 // advanced.
 type EventVirtualTimeAdvanced struct {
-	VirtualTimeElapsed int64 `json:"virtualTimeElapsed"` // The amount of virtual time that has elapsed in milliseconds since virtual time was first enabled.
+	VirtualTimeElapsed float64 `json:"virtualTimeElapsed"` // The amount of virtual time that has elapsed in milliseconds since virtual time was first enabled.
 }
 
 // EventVirtualTimePaused notification sent after the virtual time has
 // paused.
 type EventVirtualTimePaused struct {
-	VirtualTimeElapsed int64 `json:"virtualTimeElapsed"` // The amount of virtual time that has elapsed in milliseconds since virtual time was first enabled.
+	VirtualTimeElapsed float64 `json:"virtualTimeElapsed"` // The amount of virtual time that has elapsed in milliseconds since virtual time was first enabled.
 }
 
 // EventTypes all event types in the domain.

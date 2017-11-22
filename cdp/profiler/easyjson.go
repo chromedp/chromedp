@@ -85,32 +85,40 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpProfiler(out *jwriter.Writer, 
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"offset\":")
-	out.Int64(int64(in.Offset))
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"types\":")
-	if in.Types == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-		out.RawString("null")
-	} else {
-		out.RawByte('[')
-		for v2, v3 := range in.Types {
-			if v2 > 0 {
-				out.RawByte(',')
-			}
-			if v3 == nil {
-				out.RawString("null")
-			} else {
-				(*v3).MarshalEasyJSON(out)
-			}
+	{
+		const prefix string = ",\"offset\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		out.RawByte(']')
+		out.Int64(int64(in.Offset))
+	}
+	{
+		const prefix string = ",\"types\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		if in.Types == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			out.RawString("null")
+		} else {
+			out.RawByte('[')
+			for v2, v3 := range in.Types {
+				if v2 > 0 {
+					out.RawByte(',')
+				}
+				if v3 == nil {
+					out.RawString("null")
+				} else {
+					(*v3).MarshalEasyJSON(out)
+				}
+			}
+			out.RawByte(']')
+		}
 	}
 	out.RawByte('}')
 }
@@ -173,12 +181,16 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpProfiler1(out *jwriter.Writer,
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"name\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Name))
 	}
-	first = false
-	out.RawString("\"name\":")
-	out.String(string(in.Name))
 	out.RawByte('}')
 }
 
@@ -270,14 +282,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpProfiler2(out *jwriter.Writer,
 	first := true
 	_ = first
 	if len(in.Result) != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"result\":")
-		if in.Result == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-			out.RawString("null")
+		const prefix string = ",\"result\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
 		} else {
+			out.RawString(prefix)
+		}
+		{
 			out.RawByte('[')
 			for v5, v6 := range in.Result {
 				if v5 > 0 {
@@ -442,14 +454,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpProfiler4(out *jwriter.Writer,
 	first := true
 	_ = first
 	if len(in.Result) != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"result\":")
-		if in.Result == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-			out.RawString("null")
+		const prefix string = ",\"result\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
 		} else {
+			out.RawString(prefix)
+		}
+		{
 			out.RawByte('[')
 			for v8, v9 := range in.Result {
 				if v8 > 0 {
@@ -652,16 +664,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpProfiler7(out *jwriter.Writer,
 	first := true
 	_ = first
 	if in.Profile != nil {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"profile\":")
-		if in.Profile == nil {
-			out.RawString("null")
+		const prefix string = ",\"profile\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
 		} else {
-			(*in.Profile).MarshalEasyJSON(out)
+			out.RawString(prefix)
 		}
+		(*in.Profile).MarshalEasyJSON(out)
 	}
 	out.RawByte('}')
 }
@@ -904,19 +914,23 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpProfiler11(out *jwriter.Writer
 	first := true
 	_ = first
 	if in.CallCount {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"callCount\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"callCount\":")
 		out.Bool(bool(in.CallCount))
 	}
 	if in.Detailed {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"detailed\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"detailed\":")
 		out.Bool(bool(in.Detailed))
 	}
 	out.RawByte('}')
@@ -1039,12 +1053,16 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpProfiler13(out *jwriter.Writer
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"interval\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Int64(int64(in.Interval))
 	}
-	first = false
-	out.RawString("\"interval\":")
-	out.Int64(int64(in.Interval))
 	out.RawByte('}')
 }
 
@@ -1139,38 +1157,50 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpProfiler14(out *jwriter.Writer
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"scriptId\":")
-	out.String(string(in.ScriptID))
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"url\":")
-	out.String(string(in.URL))
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"entries\":")
-	if in.Entries == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-		out.RawString("null")
-	} else {
-		out.RawByte('[')
-		for v11, v12 := range in.Entries {
-			if v11 > 0 {
-				out.RawByte(',')
-			}
-			if v12 == nil {
-				out.RawString("null")
-			} else {
-				(*v12).MarshalEasyJSON(out)
-			}
+	{
+		const prefix string = ",\"scriptId\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		out.RawByte(']')
+		out.String(string(in.ScriptID))
+	}
+	{
+		const prefix string = ",\"url\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.URL))
+	}
+	{
+		const prefix string = ",\"entries\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		if in.Entries == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			out.RawString("null")
+		} else {
+			out.RawByte('[')
+			for v11, v12 := range in.Entries {
+				if v11 > 0 {
+					out.RawByte(',')
+				}
+				if v12 == nil {
+					out.RawString("null")
+				} else {
+					(*v12).MarshalEasyJSON(out)
+				}
+			}
+			out.RawByte(']')
+		}
 	}
 	out.RawByte('}')
 }
@@ -1266,38 +1296,50 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpProfiler15(out *jwriter.Writer
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"scriptId\":")
-	out.String(string(in.ScriptID))
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"url\":")
-	out.String(string(in.URL))
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"functions\":")
-	if in.Functions == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-		out.RawString("null")
-	} else {
-		out.RawByte('[')
-		for v14, v15 := range in.Functions {
-			if v14 > 0 {
-				out.RawByte(',')
-			}
-			if v15 == nil {
-				out.RawString("null")
-			} else {
-				(*v15).MarshalEasyJSON(out)
-			}
+	{
+		const prefix string = ",\"scriptId\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		out.RawByte(']')
+		out.String(string(in.ScriptID))
+	}
+	{
+		const prefix string = ",\"url\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.URL))
+	}
+	{
+		const prefix string = ",\"functions\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		if in.Functions == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			out.RawString("null")
+		} else {
+			out.RawByte('[')
+			for v14, v15 := range in.Functions {
+				if v14 > 0 {
+					out.RawByte(',')
+				}
+				if v15 == nil {
+					out.RawString("null")
+				} else {
+					(*v15).MarshalEasyJSON(out)
+				}
+			}
+			out.RawByte(']')
+		}
 	}
 	out.RawByte('}')
 }
@@ -1428,39 +1470,49 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpProfiler16(out *jwriter.Writer
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"id\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Int64(int64(in.ID))
 	}
-	first = false
-	out.RawString("\"id\":")
-	out.Int64(int64(in.ID))
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"callFrame\":")
-	if in.CallFrame == nil {
-		out.RawString("null")
-	} else {
-		(*in.CallFrame).MarshalEasyJSON(out)
+	{
+		const prefix string = ",\"callFrame\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		if in.CallFrame == nil {
+			out.RawString("null")
+		} else {
+			(*in.CallFrame).MarshalEasyJSON(out)
+		}
 	}
 	if in.HitCount != 0 {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"hitCount\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"hitCount\":")
 		out.Int64(int64(in.HitCount))
 	}
 	if len(in.Children) != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"children\":")
-		if in.Children == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-			out.RawString("null")
+		const prefix string = ",\"children\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
 		} else {
+			out.RawString(prefix)
+		}
+		{
 			out.RawByte('[')
 			for v18, v19 := range in.Children {
 				if v18 > 0 {
@@ -1472,22 +1524,24 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpProfiler16(out *jwriter.Writer
 		}
 	}
 	if in.DeoptReason != "" {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"deoptReason\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"deoptReason\":")
 		out.String(string(in.DeoptReason))
 	}
 	if len(in.PositionTicks) != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"positionTicks\":")
-		if in.PositionTicks == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-			out.RawString("null")
+		const prefix string = ",\"positionTicks\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
 		} else {
+			out.RawString(prefix)
+		}
+		{
 			out.RawByte('[')
 			for v20, v21 := range in.PositionTicks {
 				if v20 > 0 {
@@ -1642,48 +1696,60 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpProfiler17(out *jwriter.Writer
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"nodes\":")
-	if in.Nodes == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-		out.RawString("null")
-	} else {
-		out.RawByte('[')
-		for v25, v26 := range in.Nodes {
-			if v25 > 0 {
-				out.RawByte(',')
-			}
-			if v26 == nil {
-				out.RawString("null")
-			} else {
-				(*v26).MarshalEasyJSON(out)
-			}
+	{
+		const prefix string = ",\"nodes\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		out.RawByte(']')
-	}
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"startTime\":")
-	out.Float64(float64(in.StartTime))
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"endTime\":")
-	out.Float64(float64(in.EndTime))
-	if len(in.Samples) != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"samples\":")
-		if in.Samples == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+		if in.Nodes == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
 			out.RawString("null")
 		} else {
+			out.RawByte('[')
+			for v25, v26 := range in.Nodes {
+				if v25 > 0 {
+					out.RawByte(',')
+				}
+				if v26 == nil {
+					out.RawString("null")
+				} else {
+					(*v26).MarshalEasyJSON(out)
+				}
+			}
+			out.RawByte(']')
+		}
+	}
+	{
+		const prefix string = ",\"startTime\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Float64(float64(in.StartTime))
+	}
+	{
+		const prefix string = ",\"endTime\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Float64(float64(in.EndTime))
+	}
+	if len(in.Samples) != 0 {
+		const prefix string = ",\"samples\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		{
 			out.RawByte('[')
 			for v27, v28 := range in.Samples {
 				if v27 > 0 {
@@ -1695,14 +1761,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpProfiler17(out *jwriter.Writer
 		}
 	}
 	if len(in.TimeDeltas) != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"timeDeltas\":")
-		if in.TimeDeltas == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-			out.RawString("null")
+		const prefix string = ",\"timeDeltas\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
 		} else {
+			out.RawString(prefix)
+		}
+		{
 			out.RawByte('[')
 			for v29, v30 := range in.TimeDeltas {
 				if v29 > 0 {
@@ -1776,18 +1842,26 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpProfiler18(out *jwriter.Writer
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"line\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Int64(int64(in.Line))
 	}
-	first = false
-	out.RawString("\"line\":")
-	out.Int64(int64(in.Line))
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"ticks\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Int64(int64(in.Ticks))
 	}
-	first = false
-	out.RawString("\"ticks\":")
-	out.Int64(int64(in.Ticks))
 	out.RawByte('}')
 }
 
@@ -1879,14 +1953,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpProfiler19(out *jwriter.Writer
 	first := true
 	_ = first
 	if len(in.Result) != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"result\":")
-		if in.Result == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-			out.RawString("null")
+		const prefix string = ",\"result\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
 		} else {
+			out.RawString(prefix)
+		}
+		{
 			out.RawByte('[')
 			for v32, v33 := range in.Result {
 				if v32 > 0 {
@@ -2054,39 +2128,51 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpProfiler21(out *jwriter.Writer
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"functionName\":")
-	out.String(string(in.FunctionName))
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"ranges\":")
-	if in.Ranges == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-		out.RawString("null")
-	} else {
-		out.RawByte('[')
-		for v35, v36 := range in.Ranges {
-			if v35 > 0 {
-				out.RawByte(',')
-			}
-			if v36 == nil {
-				out.RawString("null")
-			} else {
-				(*v36).MarshalEasyJSON(out)
-			}
+	{
+		const prefix string = ",\"functionName\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		out.RawByte(']')
+		out.String(string(in.FunctionName))
 	}
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"ranges\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		if in.Ranges == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			out.RawString("null")
+		} else {
+			out.RawByte('[')
+			for v35, v36 := range in.Ranges {
+				if v35 > 0 {
+					out.RawByte(',')
+				}
+				if v36 == nil {
+					out.RawString("null")
+				} else {
+					(*v36).MarshalEasyJSON(out)
+				}
+			}
+			out.RawByte(']')
+		}
 	}
-	first = false
-	out.RawString("\"isBlockCoverage\":")
-	out.Bool(bool(in.IsBlockCoverage))
+	{
+		const prefix string = ",\"isBlockCoverage\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Bool(bool(in.IsBlockCoverage))
+	}
 	out.RawByte('}')
 }
 
@@ -2160,28 +2246,38 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpProfiler22(out *jwriter.Writer
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"id\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.ID))
 	}
-	first = false
-	out.RawString("\"id\":")
-	out.String(string(in.ID))
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"location\":")
-	if in.Location == nil {
-		out.RawString("null")
-	} else {
-		(*in.Location).MarshalEasyJSON(out)
+	{
+		const prefix string = ",\"location\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		if in.Location == nil {
+			out.RawString("null")
+		} else {
+			(*in.Location).MarshalEasyJSON(out)
+		}
 	}
 	if in.Title != "" {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"title\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"title\":")
 		out.String(string(in.Title))
 	}
 	out.RawByte('}')
@@ -2267,38 +2363,52 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpProfiler23(out *jwriter.Writer
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"id\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.ID))
 	}
-	first = false
-	out.RawString("\"id\":")
-	out.String(string(in.ID))
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"location\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		if in.Location == nil {
+			out.RawString("null")
+		} else {
+			(*in.Location).MarshalEasyJSON(out)
+		}
 	}
-	first = false
-	out.RawString("\"location\":")
-	if in.Location == nil {
-		out.RawString("null")
-	} else {
-		(*in.Location).MarshalEasyJSON(out)
-	}
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"profile\":")
-	if in.Profile == nil {
-		out.RawString("null")
-	} else {
-		(*in.Profile).MarshalEasyJSON(out)
+	{
+		const prefix string = ",\"profile\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		if in.Profile == nil {
+			out.RawString("null")
+		} else {
+			(*in.Profile).MarshalEasyJSON(out)
+		}
 	}
 	if in.Title != "" {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"title\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"title\":")
 		out.String(string(in.Title))
 	}
 	out.RawByte('}')
@@ -2484,24 +2594,36 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpProfiler26(out *jwriter.Writer
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"startOffset\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Int64(int64(in.StartOffset))
 	}
-	first = false
-	out.RawString("\"startOffset\":")
-	out.Int64(int64(in.StartOffset))
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"endOffset\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Int64(int64(in.EndOffset))
 	}
-	first = false
-	out.RawString("\"endOffset\":")
-	out.Int64(int64(in.EndOffset))
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"count\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Int64(int64(in.Count))
 	}
-	first = false
-	out.RawString("\"count\":")
-	out.Int64(int64(in.Count))
 	out.RawByte('}')
 }
 

@@ -56,19 +56,23 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpHeadlessexperimental(out *jwri
 	first := true
 	_ = first
 	if in.Format != "" {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"format\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"format\":")
 		(in.Format).MarshalEasyJSON(out)
 	}
 	if in.Quality != 0 {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"quality\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"quality\":")
 		out.Int64(int64(in.Quality))
 	}
 	out.RawByte('}')
@@ -132,12 +136,16 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpHeadlessexperimental1(out *jwr
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"needsBeginFrames\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Bool(bool(in.NeedsBeginFrames))
 	}
-	first = false
-	out.RawString("\"needsBeginFrames\":")
-	out.Bool(bool(in.NeedsBeginFrames))
 	out.RawByte('}')
 }
 
@@ -381,27 +389,33 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpHeadlessexperimental5(out *jwr
 	first := true
 	_ = first
 	if in.HasDamage {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"hasDamage\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"hasDamage\":")
 		out.Bool(bool(in.HasDamage))
 	}
 	if in.MainFrameContentUpdated {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"mainFrameContentUpdated\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"mainFrameContentUpdated\":")
 		out.Bool(bool(in.MainFrameContentUpdated))
 	}
 	if in.ScreenshotData != "" {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"screenshotData\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"screenshotData\":")
 		out.String(string(in.ScreenshotData))
 	}
 	out.RawByte('}')
@@ -496,48 +510,44 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpHeadlessexperimental6(out *jwr
 	first := true
 	_ = first
 	if in.FrameTime != nil {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"frameTime\":")
-		if in.FrameTime == nil {
-			out.RawString("null")
+		const prefix string = ",\"frameTime\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
 		} else {
-			(*in.FrameTime).MarshalEasyJSON(out)
+			out.RawString(prefix)
 		}
+		(*in.FrameTime).MarshalEasyJSON(out)
 	}
 	if in.Deadline != nil {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"deadline\":")
-		if in.Deadline == nil {
-			out.RawString("null")
+		const prefix string = ",\"deadline\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
 		} else {
-			(*in.Deadline).MarshalEasyJSON(out)
+			out.RawString(prefix)
 		}
+		(*in.Deadline).MarshalEasyJSON(out)
 	}
 	if in.Interval != 0 {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"interval\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"interval\":")
 		out.Float64(float64(in.Interval))
 	}
 	if in.Screenshot != nil {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"screenshot\":")
-		if in.Screenshot == nil {
-			out.RawString("null")
+		const prefix string = ",\"screenshot\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
 		} else {
-			(*in.Screenshot).MarshalEasyJSON(out)
+			out.RawString(prefix)
 		}
+		(*in.Screenshot).MarshalEasyJSON(out)
 	}
 	out.RawByte('}')
 }

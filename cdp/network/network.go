@@ -15,6 +15,7 @@ import (
 	"encoding/base64"
 
 	cdp "github.com/knq/chromedp/cdp"
+	"github.com/knq/chromedp/cdp/debugger"
 )
 
 // EnableParams enables network tracking, network events will now be
@@ -88,6 +89,59 @@ func SetUserAgentOverride(userAgent string) *SetUserAgentOverrideParams {
 // target handler.
 func (p *SetUserAgentOverrideParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandNetworkSetUserAgentOverride, p, nil)
+}
+
+// SearchInResponseBodyParams searches for given string in response content.
+type SearchInResponseBodyParams struct {
+	RequestID     RequestID `json:"requestId"`               // Identifier of the network response to search.
+	Query         string    `json:"query"`                   // String to search for.
+	CaseSensitive bool      `json:"caseSensitive,omitempty"` // If true, search is case sensitive.
+	IsRegex       bool      `json:"isRegex,omitempty"`       // If true, treats string parameter as regex.
+}
+
+// SearchInResponseBody searches for given string in response content.
+//
+// parameters:
+//   requestID - Identifier of the network response to search.
+//   query - String to search for.
+func SearchInResponseBody(requestID RequestID, query string) *SearchInResponseBodyParams {
+	return &SearchInResponseBodyParams{
+		RequestID: requestID,
+		Query:     query,
+	}
+}
+
+// WithCaseSensitive if true, search is case sensitive.
+func (p SearchInResponseBodyParams) WithCaseSensitive(caseSensitive bool) *SearchInResponseBodyParams {
+	p.CaseSensitive = caseSensitive
+	return &p
+}
+
+// WithIsRegex if true, treats string parameter as regex.
+func (p SearchInResponseBodyParams) WithIsRegex(isRegex bool) *SearchInResponseBodyParams {
+	p.IsRegex = isRegex
+	return &p
+}
+
+// SearchInResponseBodyReturns return values.
+type SearchInResponseBodyReturns struct {
+	Result []*debugger.SearchMatch `json:"result,omitempty"` // List of search matches.
+}
+
+// Do executes Network.searchInResponseBody against the provided context and
+// target handler.
+//
+// returns:
+//   result - List of search matches.
+func (p *SearchInResponseBodyParams) Do(ctxt context.Context, h cdp.Handler) (result []*debugger.SearchMatch, err error) {
+	// execute
+	var res SearchInResponseBodyReturns
+	err = h.Execute(ctxt, cdp.CommandNetworkSearchInResponseBody, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Result, nil
 }
 
 // SetExtraHTTPHeadersParams specifies whether to always send extra HTTP
@@ -208,36 +262,6 @@ func (p *ReplayXHRParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandNetworkReplayXHR, p, nil)
 }
 
-// CanClearBrowserCacheParams tells whether clearing browser cache is
-// supported.
-type CanClearBrowserCacheParams struct{}
-
-// CanClearBrowserCache tells whether clearing browser cache is supported.
-func CanClearBrowserCache() *CanClearBrowserCacheParams {
-	return &CanClearBrowserCacheParams{}
-}
-
-// CanClearBrowserCacheReturns return values.
-type CanClearBrowserCacheReturns struct {
-	Result bool `json:"result,omitempty"` // True if browser cache can be cleared.
-}
-
-// Do executes Network.canClearBrowserCache against the provided context and
-// target handler.
-//
-// returns:
-//   result - True if browser cache can be cleared.
-func (p *CanClearBrowserCacheParams) Do(ctxt context.Context, h cdp.Handler) (result bool, err error) {
-	// execute
-	var res CanClearBrowserCacheReturns
-	err = h.Execute(ctxt, cdp.CommandNetworkCanClearBrowserCache, nil, &res)
-	if err != nil {
-		return false, err
-	}
-
-	return res.Result, nil
-}
-
 // ClearBrowserCacheParams clears browser cache.
 type ClearBrowserCacheParams struct{}
 
@@ -250,37 +274,6 @@ func ClearBrowserCache() *ClearBrowserCacheParams {
 // target handler.
 func (p *ClearBrowserCacheParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandNetworkClearBrowserCache, nil, nil)
-}
-
-// CanClearBrowserCookiesParams tells whether clearing browser cookies is
-// supported.
-type CanClearBrowserCookiesParams struct{}
-
-// CanClearBrowserCookies tells whether clearing browser cookies is
-// supported.
-func CanClearBrowserCookies() *CanClearBrowserCookiesParams {
-	return &CanClearBrowserCookiesParams{}
-}
-
-// CanClearBrowserCookiesReturns return values.
-type CanClearBrowserCookiesReturns struct {
-	Result bool `json:"result,omitempty"` // True if browser cookies can be cleared.
-}
-
-// Do executes Network.canClearBrowserCookies against the provided context and
-// target handler.
-//
-// returns:
-//   result - True if browser cookies can be cleared.
-func (p *CanClearBrowserCookiesParams) Do(ctxt context.Context, h cdp.Handler) (result bool, err error) {
-	// execute
-	var res CanClearBrowserCookiesReturns
-	err = h.Execute(ctxt, cdp.CommandNetworkCanClearBrowserCookies, nil, &res)
-	if err != nil {
-		return false, err
-	}
-
-	return res.Result, nil
 }
 
 // ClearBrowserCookiesParams clears browser cookies.
@@ -526,37 +519,6 @@ func SetCookies(cookies []*CookieParam) *SetCookiesParams {
 // target handler.
 func (p *SetCookiesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandNetworkSetCookies, p, nil)
-}
-
-// CanEmulateNetworkConditionsParams tells whether emulation of network
-// conditions is supported.
-type CanEmulateNetworkConditionsParams struct{}
-
-// CanEmulateNetworkConditions tells whether emulation of network conditions
-// is supported.
-func CanEmulateNetworkConditions() *CanEmulateNetworkConditionsParams {
-	return &CanEmulateNetworkConditionsParams{}
-}
-
-// CanEmulateNetworkConditionsReturns return values.
-type CanEmulateNetworkConditionsReturns struct {
-	Result bool `json:"result,omitempty"` // True if emulation of network conditions is supported.
-}
-
-// Do executes Network.canEmulateNetworkConditions against the provided context and
-// target handler.
-//
-// returns:
-//   result - True if emulation of network conditions is supported.
-func (p *CanEmulateNetworkConditionsParams) Do(ctxt context.Context, h cdp.Handler) (result bool, err error) {
-	// execute
-	var res CanEmulateNetworkConditionsReturns
-	err = h.Execute(ctxt, cdp.CommandNetworkCanEmulateNetworkConditions, nil, &res)
-	if err != nil {
-		return false, err
-	}
-
-	return res.Result, nil
 }
 
 // EmulateNetworkConditionsParams activates emulation of network conditions.
@@ -810,4 +772,53 @@ func (p ContinueInterceptedRequestParams) WithAuthChallengeResponse(authChalleng
 // target handler.
 func (p *ContinueInterceptedRequestParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandNetworkContinueInterceptedRequest, p, nil)
+}
+
+// GetResponseBodyForInterceptionParams returns content served for the given
+// currently intercepted request.
+type GetResponseBodyForInterceptionParams struct {
+	InterceptionID InterceptionID `json:"interceptionId"` // Identifier for the intercepted request to get body for.
+}
+
+// GetResponseBodyForInterception returns content served for the given
+// currently intercepted request.
+//
+// parameters:
+//   interceptionID - Identifier for the intercepted request to get body for.
+func GetResponseBodyForInterception(interceptionID InterceptionID) *GetResponseBodyForInterceptionParams {
+	return &GetResponseBodyForInterceptionParams{
+		InterceptionID: interceptionID,
+	}
+}
+
+// GetResponseBodyForInterceptionReturns return values.
+type GetResponseBodyForInterceptionReturns struct {
+	Body          string `json:"body,omitempty"`          // Response body.
+	Base64encoded bool   `json:"base64Encoded,omitempty"` // True, if content was sent as base64.
+}
+
+// Do executes Network.getResponseBodyForInterception against the provided context and
+// target handler.
+//
+// returns:
+//   body - Response body.
+func (p *GetResponseBodyForInterceptionParams) Do(ctxt context.Context, h cdp.Handler) (body []byte, err error) {
+	// execute
+	var res GetResponseBodyForInterceptionReturns
+	err = h.Execute(ctxt, cdp.CommandNetworkGetResponseBodyForInterception, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	// decode
+	var dec []byte
+	if res.Base64encoded {
+		dec, err = base64.StdEncoding.DecodeString(res.Body)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		dec = []byte(res.Body)
+	}
+	return dec, nil
 }

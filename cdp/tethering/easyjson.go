@@ -52,12 +52,16 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpTethering(out *jwriter.Writer,
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"port\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Int64(int64(in.Port))
 	}
-	first = false
-	out.RawString("\"port\":")
-	out.Int64(int64(in.Port))
 	out.RawByte('}')
 }
 
@@ -121,18 +125,26 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpTethering1(out *jwriter.Writer
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"port\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Int64(int64(in.Port))
 	}
-	first = false
-	out.RawString("\"port\":")
-	out.Int64(int64(in.Port))
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"connectionId\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.ConnectionID))
 	}
-	first = false
-	out.RawString("\"connectionId\":")
-	out.String(string(in.ConnectionID))
 	out.RawByte('}')
 }
 
@@ -194,12 +206,16 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpTethering2(out *jwriter.Writer
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"port\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Int64(int64(in.Port))
 	}
-	first = false
-	out.RawString("\"port\":")
-	out.Int64(int64(in.Port))
 	out.RawByte('}')
 }
 

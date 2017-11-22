@@ -58,27 +58,33 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpAudits(out *jwriter.Writer, in
 	first := true
 	_ = first
 	if in.Body != "" {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"body\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"body\":")
 		out.String(string(in.Body))
 	}
 	if in.OriginalSize != 0 {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"originalSize\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"originalSize\":")
 		out.Int64(int64(in.OriginalSize))
 	}
 	if in.EncodedSize != 0 {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"encodedSize\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"encodedSize\":")
 		out.Int64(int64(in.EncodedSize))
 	}
 	out.RawByte('}')
@@ -148,32 +154,44 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpAudits1(out *jwriter.Writer, i
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"requestId\":")
-	out.String(string(in.RequestID))
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"encoding\":")
-	(in.Encoding).MarshalEasyJSON(out)
-	if in.Quality != 0 {
-		if !first {
-			out.RawByte(',')
+	{
+		const prefix string = ",\"requestId\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"quality\":")
+		out.String(string(in.RequestID))
+	}
+	{
+		const prefix string = ",\"encoding\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(in.Encoding).MarshalEasyJSON(out)
+	}
+	if in.Quality != 0 {
+		const prefix string = ",\"quality\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		out.Float64(float64(in.Quality))
 	}
 	if in.SizeOnly {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"sizeOnly\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"sizeOnly\":")
 		out.Bool(bool(in.SizeOnly))
 	}
 	out.RawByte('}')

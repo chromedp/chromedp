@@ -84,6 +84,7 @@ const (
 	CommandPageAddScriptToEvaluateOnNewDocument            MethodType = "Page.addScriptToEvaluateOnNewDocument"
 	CommandPageRemoveScriptToEvaluateOnNewDocument         MethodType = "Page.removeScriptToEvaluateOnNewDocument"
 	CommandPageSetAutoAttachToCreatedPages                 MethodType = "Page.setAutoAttachToCreatedPages"
+	CommandPageSetLifecycleEventsEnabled                   MethodType = "Page.setLifecycleEventsEnabled"
 	CommandPageReload                                      MethodType = "Page.reload"
 	CommandPageSetAdBlockingEnabled                        MethodType = "Page.setAdBlockingEnabled"
 	CommandPageNavigate                                    MethodType = "Page.navigate"
@@ -170,20 +171,18 @@ const (
 	CommandNetworkEnable                                   MethodType = "Network.enable"
 	CommandNetworkDisable                                  MethodType = "Network.disable"
 	CommandNetworkSetUserAgentOverride                     MethodType = "Network.setUserAgentOverride"
+	CommandNetworkSearchInResponseBody                     MethodType = "Network.searchInResponseBody"
 	CommandNetworkSetExtraHTTPHeaders                      MethodType = "Network.setExtraHTTPHeaders"
 	CommandNetworkGetResponseBody                          MethodType = "Network.getResponseBody"
 	CommandNetworkSetBlockedURLS                           MethodType = "Network.setBlockedURLs"
 	CommandNetworkReplayXHR                                MethodType = "Network.replayXHR"
-	CommandNetworkCanClearBrowserCache                     MethodType = "Network.canClearBrowserCache"
 	CommandNetworkClearBrowserCache                        MethodType = "Network.clearBrowserCache"
-	CommandNetworkCanClearBrowserCookies                   MethodType = "Network.canClearBrowserCookies"
 	CommandNetworkClearBrowserCookies                      MethodType = "Network.clearBrowserCookies"
 	CommandNetworkGetCookies                               MethodType = "Network.getCookies"
 	CommandNetworkGetAllCookies                            MethodType = "Network.getAllCookies"
 	CommandNetworkDeleteCookies                            MethodType = "Network.deleteCookies"
 	CommandNetworkSetCookie                                MethodType = "Network.setCookie"
 	CommandNetworkSetCookies                               MethodType = "Network.setCookies"
-	CommandNetworkCanEmulateNetworkConditions              MethodType = "Network.canEmulateNetworkConditions"
 	CommandNetworkEmulateNetworkConditions                 MethodType = "Network.emulateNetworkConditions"
 	CommandNetworkSetCacheDisabled                         MethodType = "Network.setCacheDisabled"
 	CommandNetworkSetBypassServiceWorker                   MethodType = "Network.setBypassServiceWorker"
@@ -191,6 +190,7 @@ const (
 	CommandNetworkGetCertificate                           MethodType = "Network.getCertificate"
 	CommandNetworkSetRequestInterception                   MethodType = "Network.setRequestInterception"
 	CommandNetworkContinueInterceptedRequest               MethodType = "Network.continueInterceptedRequest"
+	CommandNetworkGetResponseBodyForInterception           MethodType = "Network.getResponseBodyForInterception"
 	EventDatabaseAddDatabase                               MethodType = "Database.addDatabase"
 	CommandDatabaseEnable                                  MethodType = "Database.enable"
 	CommandDatabaseDisable                                 MethodType = "Database.disable"
@@ -459,6 +459,7 @@ const (
 	CommandDebuggerRemoveBreakpoint                        MethodType = "Debugger.removeBreakpoint"
 	CommandDebuggerGetPossibleBreakpoints                  MethodType = "Debugger.getPossibleBreakpoints"
 	CommandDebuggerContinueToLocation                      MethodType = "Debugger.continueToLocation"
+	CommandDebuggerPauseOnAsyncTask                        MethodType = "Debugger.pauseOnAsyncTask"
 	CommandDebuggerStepOver                                MethodType = "Debugger.stepOver"
 	CommandDebuggerStepInto                                MethodType = "Debugger.stepInto"
 	CommandDebuggerStepOut                                 MethodType = "Debugger.stepOut"
@@ -472,6 +473,7 @@ const (
 	CommandDebuggerSetPauseOnExceptions                    MethodType = "Debugger.setPauseOnExceptions"
 	CommandDebuggerEvaluateOnCallFrame                     MethodType = "Debugger.evaluateOnCallFrame"
 	CommandDebuggerSetVariableValue                        MethodType = "Debugger.setVariableValue"
+	CommandDebuggerSetReturnValue                          MethodType = "Debugger.setReturnValue"
 	CommandDebuggerSetAsyncCallStackDepth                  MethodType = "Debugger.setAsyncCallStackDepth"
 	CommandDebuggerSetBlackboxPatterns                     MethodType = "Debugger.setBlackboxPatterns"
 	CommandDebuggerSetBlackboxedRanges                     MethodType = "Debugger.setBlackboxedRanges"
@@ -505,6 +507,7 @@ const (
 	CommandHeapProfilerGetHeapObjectID                     MethodType = "HeapProfiler.getHeapObjectId"
 	CommandHeapProfilerStartSampling                       MethodType = "HeapProfiler.startSampling"
 	CommandHeapProfilerStopSampling                        MethodType = "HeapProfiler.stopSampling"
+	CommandHeapProfilerGetSamplingProfile                  MethodType = "HeapProfiler.getSamplingProfile"
 )
 
 // MarshalEasyJSON satisfies easyjson.Marshaler.
@@ -590,6 +593,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandPageRemoveScriptToEvaluateOnNewDocument
 	case CommandPageSetAutoAttachToCreatedPages:
 		*t = CommandPageSetAutoAttachToCreatedPages
+	case CommandPageSetLifecycleEventsEnabled:
+		*t = CommandPageSetLifecycleEventsEnabled
 	case CommandPageReload:
 		*t = CommandPageReload
 	case CommandPageSetAdBlockingEnabled:
@@ -762,6 +767,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandNetworkDisable
 	case CommandNetworkSetUserAgentOverride:
 		*t = CommandNetworkSetUserAgentOverride
+	case CommandNetworkSearchInResponseBody:
+		*t = CommandNetworkSearchInResponseBody
 	case CommandNetworkSetExtraHTTPHeaders:
 		*t = CommandNetworkSetExtraHTTPHeaders
 	case CommandNetworkGetResponseBody:
@@ -770,12 +777,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandNetworkSetBlockedURLS
 	case CommandNetworkReplayXHR:
 		*t = CommandNetworkReplayXHR
-	case CommandNetworkCanClearBrowserCache:
-		*t = CommandNetworkCanClearBrowserCache
 	case CommandNetworkClearBrowserCache:
 		*t = CommandNetworkClearBrowserCache
-	case CommandNetworkCanClearBrowserCookies:
-		*t = CommandNetworkCanClearBrowserCookies
 	case CommandNetworkClearBrowserCookies:
 		*t = CommandNetworkClearBrowserCookies
 	case CommandNetworkGetCookies:
@@ -788,8 +791,6 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandNetworkSetCookie
 	case CommandNetworkSetCookies:
 		*t = CommandNetworkSetCookies
-	case CommandNetworkCanEmulateNetworkConditions:
-		*t = CommandNetworkCanEmulateNetworkConditions
 	case CommandNetworkEmulateNetworkConditions:
 		*t = CommandNetworkEmulateNetworkConditions
 	case CommandNetworkSetCacheDisabled:
@@ -804,6 +805,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandNetworkSetRequestInterception
 	case CommandNetworkContinueInterceptedRequest:
 		*t = CommandNetworkContinueInterceptedRequest
+	case CommandNetworkGetResponseBodyForInterception:
+		*t = CommandNetworkGetResponseBodyForInterception
 	case EventDatabaseAddDatabase:
 		*t = EventDatabaseAddDatabase
 	case CommandDatabaseEnable:
@@ -1340,6 +1343,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandDebuggerGetPossibleBreakpoints
 	case CommandDebuggerContinueToLocation:
 		*t = CommandDebuggerContinueToLocation
+	case CommandDebuggerPauseOnAsyncTask:
+		*t = CommandDebuggerPauseOnAsyncTask
 	case CommandDebuggerStepOver:
 		*t = CommandDebuggerStepOver
 	case CommandDebuggerStepInto:
@@ -1366,6 +1371,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandDebuggerEvaluateOnCallFrame
 	case CommandDebuggerSetVariableValue:
 		*t = CommandDebuggerSetVariableValue
+	case CommandDebuggerSetReturnValue:
+		*t = CommandDebuggerSetReturnValue
 	case CommandDebuggerSetAsyncCallStackDepth:
 		*t = CommandDebuggerSetAsyncCallStackDepth
 	case CommandDebuggerSetBlackboxPatterns:
@@ -1432,6 +1439,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandHeapProfilerStartSampling
 	case CommandHeapProfilerStopSampling:
 		*t = CommandHeapProfilerStopSampling
+	case CommandHeapProfilerGetSamplingProfile:
+		*t = CommandHeapProfilerGetSamplingProfile
 
 	default:
 		in.AddError(errors.New("unknown MethodType value"))

@@ -57,11 +57,12 @@ type EventBreakpointResolved struct {
 // EventPaused fired when the virtual machine stopped on breakpoint or
 // exception or any other stop criteria.
 type EventPaused struct {
-	CallFrames      []*CallFrame        `json:"callFrames"` // Call stack the virtual machine stopped on.
-	Reason          PausedReason        `json:"reason"`     // Pause reason.
-	Data            easyjson.RawMessage `json:"data,omitempty"`
-	HitBreakpoints  []string            `json:"hitBreakpoints,omitempty"`  // Hit breakpoints IDs
-	AsyncStackTrace *runtime.StackTrace `json:"asyncStackTrace,omitempty"` // Async stack trace, if any.
+	CallFrames           []*CallFrame        `json:"callFrames"` // Call stack the virtual machine stopped on.
+	Reason               PausedReason        `json:"reason"`     // Pause reason.
+	Data                 easyjson.RawMessage `json:"data,omitempty"`
+	HitBreakpoints       []string            `json:"hitBreakpoints,omitempty"`       // Hit breakpoints IDs
+	AsyncStackTrace      *runtime.StackTrace `json:"asyncStackTrace,omitempty"`      // Async stack trace, if any.
+	ScheduledAsyncTaskID runtime.AsyncTaskID `json:"scheduledAsyncTaskId,omitempty"` // Scheduled async task id.
 }
 
 // EventResumed fired when the virtual machine resumed execution.

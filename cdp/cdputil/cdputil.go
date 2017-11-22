@@ -104,6 +104,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandPageSetAutoAttachToCreatedPages:
 		return emptyVal, nil
 
+	case cdp.CommandPageSetLifecycleEventsEnabled:
+		return emptyVal, nil
+
 	case cdp.CommandPageReload:
 		return emptyVal, nil
 
@@ -321,7 +324,7 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 		v = new(emulation.CanEmulateReturns)
 
 	case cdp.CommandEmulationSetVirtualTimePolicy:
-		return emptyVal, nil
+		v = new(emulation.SetVirtualTimePolicyReturns)
 
 	case cdp.CommandEmulationSetNavigatorOverrides:
 		return emptyVal, nil
@@ -368,6 +371,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandNetworkSetUserAgentOverride:
 		return emptyVal, nil
 
+	case cdp.CommandNetworkSearchInResponseBody:
+		v = new(network.SearchInResponseBodyReturns)
+
 	case cdp.CommandNetworkSetExtraHTTPHeaders:
 		return emptyVal, nil
 
@@ -380,14 +386,8 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandNetworkReplayXHR:
 		return emptyVal, nil
 
-	case cdp.CommandNetworkCanClearBrowserCache:
-		v = new(network.CanClearBrowserCacheReturns)
-
 	case cdp.CommandNetworkClearBrowserCache:
 		return emptyVal, nil
-
-	case cdp.CommandNetworkCanClearBrowserCookies:
-		v = new(network.CanClearBrowserCookiesReturns)
 
 	case cdp.CommandNetworkClearBrowserCookies:
 		return emptyVal, nil
@@ -406,9 +406,6 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 
 	case cdp.CommandNetworkSetCookies:
 		return emptyVal, nil
-
-	case cdp.CommandNetworkCanEmulateNetworkConditions:
-		v = new(network.CanEmulateNetworkConditionsReturns)
 
 	case cdp.CommandNetworkEmulateNetworkConditions:
 		return emptyVal, nil
@@ -430,6 +427,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 
 	case cdp.CommandNetworkContinueInterceptedRequest:
 		return emptyVal, nil
+
+	case cdp.CommandNetworkGetResponseBodyForInterception:
+		v = new(network.GetResponseBodyForInterceptionReturns)
 
 	case cdp.EventNetworkResourceChangedPriority:
 		v = new(network.EventResourceChangedPriority)
@@ -1268,6 +1268,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandDebuggerContinueToLocation:
 		return emptyVal, nil
 
+	case cdp.CommandDebuggerPauseOnAsyncTask:
+		return emptyVal, nil
+
 	case cdp.CommandDebuggerStepOver:
 		return emptyVal, nil
 
@@ -1305,6 +1308,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 		v = new(debugger.EvaluateOnCallFrameReturns)
 
 	case cdp.CommandDebuggerSetVariableValue:
+		return emptyVal, nil
+
+	case cdp.CommandDebuggerSetReturnValue:
 		return emptyVal, nil
 
 	case cdp.CommandDebuggerSetAsyncCallStackDepth:
@@ -1405,6 +1411,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 
 	case cdp.CommandHeapProfilerStopSampling:
 		v = new(heapprofiler.StopSamplingReturns)
+
+	case cdp.CommandHeapProfilerGetSamplingProfile:
+		v = new(heapprofiler.GetSamplingProfileReturns)
 
 	case cdp.EventHeapProfilerAddHeapSnapshotChunk:
 		v = new(heapprofiler.EventAddHeapSnapshotChunk)

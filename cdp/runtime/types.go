@@ -233,10 +233,17 @@ type CallFrame struct {
 
 // StackTrace call frames for assertions or error messages.
 type StackTrace struct {
-	Description          string       `json:"description,omitempty"`          // String label of this stack trace. For async traces this may be a name of the function that initiated the async call.
-	CallFrames           []*CallFrame `json:"callFrames"`                     // JavaScript function name.
-	Parent               *StackTrace  `json:"parent,omitempty"`               // Asynchronous JavaScript stack trace that preceded this stack, if available.
-	PromiseCreationFrame *CallFrame   `json:"promiseCreationFrame,omitempty"` // Creation frame of the Promise which produced the next synchronous trace when resolved, if available.
+	Description string       `json:"description,omitempty"` // String label of this stack trace. For async traces this may be a name of the function that initiated the async call.
+	CallFrames  []*CallFrame `json:"callFrames"`            // JavaScript function name.
+	Parent      *StackTrace  `json:"parent,omitempty"`      // Asynchronous JavaScript stack trace that preceded this stack, if available.
+}
+
+// AsyncTaskID [no description].
+type AsyncTaskID string
+
+// String returns the AsyncTaskID as string value.
+func (t AsyncTaskID) String() string {
+	return string(t)
 }
 
 // Type object type.

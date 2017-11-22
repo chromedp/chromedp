@@ -82,14 +82,14 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpSchema(out *jwriter.Writer, in
 	first := true
 	_ = first
 	if len(in.Domains) != 0 {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"domains\":")
-		if in.Domains == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-			out.RawString("null")
+		const prefix string = ",\"domains\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
 		} else {
+			out.RawString(prefix)
+		}
+		{
 			out.RawByte('[')
 			for v2, v3 := range in.Domains {
 				if v2 > 0 {
@@ -226,18 +226,26 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpSchema2(out *jwriter.Writer, i
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"name\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Name))
 	}
-	first = false
-	out.RawString("\"name\":")
-	out.String(string(in.Name))
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"version\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Version))
 	}
-	first = false
-	out.RawString("\"version\":")
-	out.String(string(in.Version))
 	out.RawByte('}')
 }
 

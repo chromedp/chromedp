@@ -130,6 +130,29 @@ func (p *SetAutoAttachToCreatedPagesParams) Do(ctxt context.Context, h cdp.Handl
 	return h.Execute(ctxt, cdp.CommandPageSetAutoAttachToCreatedPages, p, nil)
 }
 
+// SetLifecycleEventsEnabledParams controls whether page will emit lifecycle
+// events.
+type SetLifecycleEventsEnabledParams struct {
+	Enabled bool `json:"enabled"` // If true, starts emitting lifecycle events.
+}
+
+// SetLifecycleEventsEnabled controls whether page will emit lifecycle
+// events.
+//
+// parameters:
+//   enabled - If true, starts emitting lifecycle events.
+func SetLifecycleEventsEnabled(enabled bool) *SetLifecycleEventsEnabledParams {
+	return &SetLifecycleEventsEnabledParams{
+		Enabled: enabled,
+	}
+}
+
+// Do executes Page.setLifecycleEventsEnabled against the provided context and
+// target handler.
+func (p *SetLifecycleEventsEnabledParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandPageSetLifecycleEventsEnabled, p, nil)
+}
+
 // ReloadParams reloads given page optionally ignoring the cache.
 type ReloadParams struct {
 	IgnoreCache            bool   `json:"ignoreCache,omitempty"`            // If true, browser cache is ignored (as if the user pressed Shift+refresh).
@@ -216,23 +239,27 @@ func (p NavigateParams) WithTransitionType(transitionType TransitionType) *Navig
 
 // NavigateReturns return values.
 type NavigateReturns struct {
-	FrameID cdp.FrameID `json:"frameId,omitempty"` // Frame id that will be navigated.
+	FrameID   cdp.FrameID  `json:"frameId,omitempty"`   // Frame id that has navigated (or failed to navigate)
+	LoaderID  cdp.LoaderID `json:"loaderId,omitempty"`  // Loader identifier.
+	ErrorText string       `json:"errorText,omitempty"` // User friendly error message, present if and only if navigation has failed.
 }
 
 // Do executes Page.navigate against the provided context and
 // target handler.
 //
 // returns:
-//   frameID - Frame id that will be navigated.
-func (p *NavigateParams) Do(ctxt context.Context, h cdp.Handler) (frameID cdp.FrameID, err error) {
+//   frameID - Frame id that has navigated (or failed to navigate)
+//   loaderID - Loader identifier.
+//   errorText - User friendly error message, present if and only if navigation has failed.
+func (p *NavigateParams) Do(ctxt context.Context, h cdp.Handler) (frameID cdp.FrameID, loaderID cdp.LoaderID, errorText string, err error) {
 	// execute
 	var res NavigateReturns
 	err = h.Execute(ctxt, cdp.CommandPageNavigate, p, &res)
 	if err != nil {
-		return "", err
+		return "", "", "", err
 	}
 
-	return res.FrameID, nil
+	return res.FrameID, res.LoaderID, res.ErrorText, nil
 }
 
 // StopLoadingParams force the page stop all navigations and pending resource

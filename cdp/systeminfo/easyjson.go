@@ -67,39 +67,43 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpSysteminfo(out *jwriter.Writer
 	first := true
 	_ = first
 	if in.Gpu != nil {
-		if !first {
-			out.RawByte(',')
-		}
-		first = false
-		out.RawString("\"gpu\":")
-		if in.Gpu == nil {
-			out.RawString("null")
+		const prefix string = ",\"gpu\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
 		} else {
-			(*in.Gpu).MarshalEasyJSON(out)
+			out.RawString(prefix)
 		}
+		(*in.Gpu).MarshalEasyJSON(out)
 	}
 	if in.ModelName != "" {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"modelName\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"modelName\":")
 		out.String(string(in.ModelName))
 	}
 	if in.ModelVersion != "" {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"modelVersion\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"modelVersion\":")
 		out.String(string(in.ModelVersion))
 	}
 	if in.CommandLine != "" {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"commandLine\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"commandLine\":")
 		out.String(string(in.CommandLine))
 	}
 	out.RawByte('}')
@@ -278,59 +282,71 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpSysteminfo2(out *jwriter.Write
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"devices\":")
-	if in.Devices == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-		out.RawString("null")
-	} else {
-		out.RawByte('[')
-		for v3, v4 := range in.Devices {
-			if v3 > 0 {
-				out.RawByte(',')
-			}
-			if v4 == nil {
-				out.RawString("null")
-			} else {
-				(*v4).MarshalEasyJSON(out)
-			}
+	{
+		const prefix string = ",\"devices\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		out.RawByte(']')
+		if in.Devices == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			out.RawString("null")
+		} else {
+			out.RawByte('[')
+			for v3, v4 := range in.Devices {
+				if v3 > 0 {
+					out.RawByte(',')
+				}
+				if v4 == nil {
+					out.RawString("null")
+				} else {
+					(*v4).MarshalEasyJSON(out)
+				}
+			}
+			out.RawByte(']')
+		}
 	}
 	if (in.AuxAttributes).IsDefined() {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"auxAttributes\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"auxAttributes\":")
 		(in.AuxAttributes).MarshalEasyJSON(out)
 	}
 	if (in.FeatureStatus).IsDefined() {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"featureStatus\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"featureStatus\":")
 		(in.FeatureStatus).MarshalEasyJSON(out)
 	}
-	if !first {
-		out.RawByte(',')
-	}
-	first = false
-	out.RawString("\"driverBugWorkarounds\":")
-	if in.DriverBugWorkarounds == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
-		out.RawString("null")
-	} else {
-		out.RawByte('[')
-		for v5, v6 := range in.DriverBugWorkarounds {
-			if v5 > 0 {
-				out.RawByte(',')
-			}
-			out.String(string(v6))
+	{
+		const prefix string = ",\"driverBugWorkarounds\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		out.RawByte(']')
+		if in.DriverBugWorkarounds == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			out.RawString("null")
+		} else {
+			out.RawByte('[')
+			for v5, v6 := range in.DriverBugWorkarounds {
+				if v5 > 0 {
+					out.RawByte(',')
+				}
+				out.String(string(v6))
+			}
+			out.RawByte(']')
+		}
 	}
 	out.RawByte('}')
 }
@@ -399,30 +415,46 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpSysteminfo3(out *jwriter.Write
 	out.RawByte('{')
 	first := true
 	_ = first
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"vendorId\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Float64(float64(in.VendorID))
 	}
-	first = false
-	out.RawString("\"vendorId\":")
-	out.Float64(float64(in.VendorID))
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"deviceId\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.Float64(float64(in.DeviceID))
 	}
-	first = false
-	out.RawString("\"deviceId\":")
-	out.Float64(float64(in.DeviceID))
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"vendorString\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.VendorString))
 	}
-	first = false
-	out.RawString("\"vendorString\":")
-	out.String(string(in.VendorString))
-	if !first {
-		out.RawByte(',')
+	{
+		const prefix string = ",\"deviceString\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.DeviceString))
 	}
-	first = false
-	out.RawString("\"deviceString\":")
-	out.String(string(in.DeviceString))
 	out.RawByte('}')
 }
 

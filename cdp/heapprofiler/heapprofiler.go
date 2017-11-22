@@ -285,3 +285,32 @@ func (p *StopSamplingParams) Do(ctxt context.Context, h cdp.Handler) (profile *S
 
 	return res.Profile, nil
 }
+
+// GetSamplingProfileParams [no description].
+type GetSamplingProfileParams struct{}
+
+// GetSamplingProfile [no description].
+func GetSamplingProfile() *GetSamplingProfileParams {
+	return &GetSamplingProfileParams{}
+}
+
+// GetSamplingProfileReturns return values.
+type GetSamplingProfileReturns struct {
+	Profile *SamplingHeapProfile `json:"profile,omitempty"` // Return the sampling profile being collected.
+}
+
+// Do executes HeapProfiler.getSamplingProfile against the provided context and
+// target handler.
+//
+// returns:
+//   profile - Return the sampling profile being collected.
+func (p *GetSamplingProfileParams) Do(ctxt context.Context, h cdp.Handler) (profile *SamplingHeapProfile, err error) {
+	// execute
+	var res GetSamplingProfileReturns
+	err = h.Execute(ctxt, cdp.CommandHeapProfilerGetSamplingProfile, nil, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Profile, nil
+}

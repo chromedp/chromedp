@@ -481,10 +481,55 @@ type AuthChallengeResponse struct {
 	Password string                        `json:"password,omitempty"` // The password to provide, possibly empty. Should only be set if response is ProvideCredentials.
 }
 
+// InterceptionStage stages of the interception to begin intercepting.
+// Request will intercept before the request is sent. Response will intercept
+// after the response is received.
+type InterceptionStage string
+
+// String returns the InterceptionStage as string value.
+func (t InterceptionStage) String() string {
+	return string(t)
+}
+
+// InterceptionStage values.
+const (
+	InterceptionStageRequest         InterceptionStage = "Request"
+	InterceptionStageHeadersReceived InterceptionStage = "HeadersReceived"
+)
+
+// MarshalEasyJSON satisfies easyjson.Marshaler.
+func (t InterceptionStage) MarshalEasyJSON(out *jwriter.Writer) {
+	out.String(string(t))
+}
+
+// MarshalJSON satisfies json.Marshaler.
+func (t InterceptionStage) MarshalJSON() ([]byte, error) {
+	return easyjson.Marshal(t)
+}
+
+// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
+func (t *InterceptionStage) UnmarshalEasyJSON(in *jlexer.Lexer) {
+	switch InterceptionStage(in.String()) {
+	case InterceptionStageRequest:
+		*t = InterceptionStageRequest
+	case InterceptionStageHeadersReceived:
+		*t = InterceptionStageHeadersReceived
+
+	default:
+		in.AddError(errors.New("unknown InterceptionStage value"))
+	}
+}
+
+// UnmarshalJSON satisfies json.Unmarshaler.
+func (t *InterceptionStage) UnmarshalJSON(buf []byte) error {
+	return easyjson.Unmarshal(buf, t)
+}
+
 // RequestPattern request pattern for interception.
 type RequestPattern struct {
-	URLPattern   string            `json:"urlPattern,omitempty"`   // Wildcards ('*' -> zero or more, '?' -> exactly one) are allowed. Escape character is backslash. Omitting is equivalent to "*".
-	ResourceType page.ResourceType `json:"resourceType,omitempty"` // If set, only requests for matching resource types will be intercepted.
+	URLPattern        string            `json:"urlPattern,omitempty"`        // Wildcards ('*' -> zero or more, '?' -> exactly one) are allowed. Escape character is backslash. Omitting is equivalent to "*".
+	ResourceType      page.ResourceType `json:"resourceType,omitempty"`      // If set, only requests for matching resource types will be intercepted.
+	InterceptionStage InterceptionStage `json:"interceptionStage,omitempty"` // Stage at which to begin intercepting requests. Default is Request.
 }
 
 // ReferrerPolicy the referrer policy of the request, as defined in
