@@ -1,7 +1,7 @@
 language: go
 go:
-  - 1.8
-  - 1.9
+  - 1.8.x
+  - 1.9.x
   - tip
 addons:
   apt:
@@ -10,7 +10,7 @@ addons:
     packages:
       - libstdc++6
 before_install:
-  - go get github.com/mattn/goveralls
+  - go get -u github.com/mattn/goveralls
   - ./contrib/grab-headless_shell.sh $HOME/hs
 script:
   - export PATH=$PATH:$HOME/hs
