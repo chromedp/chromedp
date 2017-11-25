@@ -85,7 +85,6 @@ func New(ctxt context.Context, opts ...Option) (*CDP, error) {
 	// TODO: fix this
 	timeout := time.After(defaultNewTargetTimeout)
 
-loop:
 	// wait until at least one target active
 	for {
 		select {
@@ -104,11 +103,9 @@ loop:
 			return nil, ctxt.Err()
 
 		case <-timeout:
-			break loop
+			return nil, errors.New("timeout waiting for initial target")
 		}
 	}
-
-	return nil, errors.New("timeout waiting for initial target")
 }
 
 // AddTarget adds a target using the supplied context.
@@ -243,7 +240,6 @@ func (c *CDP) newTarget(ctxt context.Context, opts ...client.Option) (string, er
 
 	timeout := time.After(DefaultNewTargetTimeout)
 
-loop:
 	for {
 		select {
 		default:
@@ -262,11 +258,9 @@ loop:
 			return "", ctxt.Err()
 
 		case <-timeout:
-			break loop
+			return "", errors.New("timeout waiting for new target to be available")
 		}
 	}
-
-	return "", errors.New("timeout waiting for new target to be available")
 }
 
 // SetTarget is an action that sets the active Chrome handler to the specified
