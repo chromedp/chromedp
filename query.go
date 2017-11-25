@@ -415,8 +415,6 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
-		var err error
-
 		// get box model
 		box, err := dom.GetBoxModel().WithNodeID(nodes[0].NodeID).Do(ctxt, h)
 		if err != nil {
@@ -566,9 +564,8 @@ func ScrollIntoView(sel interface{}, opts ...QueryOption) Action {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
-		var err error
 		var pos []int
-		err = EvaluateAsDevTools(fmt.Sprintf(scrollIntoViewJS, nodes[0].FullXPath()), &pos).Do(ctxt, h)
+		err := EvaluateAsDevTools(fmt.Sprintf(scrollIntoViewJS, nodes[0].FullXPath()), &pos).Do(ctxt, h)
 		if err != nil {
 			return err
 		}
