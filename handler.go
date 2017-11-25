@@ -397,7 +397,6 @@ func (h *TargetHandler) next() int64 {
 func (h *TargetHandler) GetRoot(ctxt context.Context) (*cdp.Node, error) {
 	var root *cdp.Node
 
-loop:
 	for {
 		var cur *cdp.Frame
 		select {
@@ -412,7 +411,7 @@ loop:
 			h.RUnlock()
 
 			if cur != nil && root != nil {
-				break loop
+				return root, nil
 			}
 
 			time.Sleep(DefaultCheckDuration)
@@ -421,8 +420,6 @@ loop:
 			return nil, ctxt.Err()
 		}
 	}
-
-	return root, nil
 }
 
 // SetActive sets the currently active frame after a successful navigation.
@@ -448,7 +445,6 @@ func (h *TargetHandler) WaitFrame(ctxt context.Context, id cdp.FrameID) (*cdp.Fr
 	// TODO: fix this
 	timeout := time.After(10 * time.Second)
 
-loop:
 	for {
 		select {
 		default:
@@ -473,11 +469,9 @@ loop:
 			return nil, ctxt.Err()
 
 		case <-timeout:
-			break loop
+			return nil, fmt.Errorf("timeout waiting for frame `%s`", id)
 		}
 	}
-
-	return nil, fmt.Errorf("timeout waiting for frame `%s`", id)
 }
 
 // WaitNode waits for a node to be loaded using the provided context.
@@ -485,7 +479,6 @@ func (h *TargetHandler) WaitNode(ctxt context.Context, f *cdp.Frame, id cdp.Node
 	// TODO: fix this
 	timeout := time.After(10 * time.Second)
 
-loop:
 	for {
 		select {
 		default:
@@ -506,11 +499,9 @@ loop:
 			return nil, ctxt.Err()
 
 		case <-timeout:
-			break loop
+			return nil, fmt.Errorf("timeout waiting for node `%d`", id)
 		}
 	}
-
-	return nil, fmt.Errorf("timeout waiting for node `%d`", id)
 }
 
 // pageEvent handles incoming page events.
