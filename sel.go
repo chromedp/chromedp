@@ -221,9 +221,8 @@ func ByNodeID(s *Selector) {
 	}
 
 	ByFunc(func(ctxt context.Context, h cdp.Handler, n *cdp.Node) ([]cdp.NodeID, error) {
-		var err error
 		for _, id := range ids {
-			err = dom.RequestChildNodes(id).WithPierce(true).Do(ctxt, h)
+			err := dom.RequestChildNodes(id).WithPierce(true).Do(ctxt, h)
 			if err != nil {
 				return nil, err
 			}
@@ -296,10 +295,8 @@ func NodeReady(s *Selector) {
 // NodeVisible is a query option to wait until the element is visible.
 func NodeVisible(s *Selector) {
 	WaitFunc(s.waitReady(func(ctxt context.Context, h cdp.Handler, n *cdp.Node) error {
-		var err error
-
 		// check box model
-		_, err = dom.GetBoxModel().WithNodeID(n.NodeID).Do(ctxt, h)
+		_, err := dom.GetBoxModel().WithNodeID(n.NodeID).Do(ctxt, h)
 		if err != nil {
 			if isCouldNotComputeBoxModelError(err) {
 				return ErrNotVisible
@@ -324,10 +321,8 @@ func NodeVisible(s *Selector) {
 // NodeNotVisible is a query option to wait until the element is not visible.
 func NodeNotVisible(s *Selector) {
 	WaitFunc(s.waitReady(func(ctxt context.Context, h cdp.Handler, n *cdp.Node) error {
-		var err error
-
 		// check box model
-		_, err = dom.GetBoxModel().WithNodeID(n.NodeID).Do(ctxt, h)
+		_, err := dom.GetBoxModel().WithNodeID(n.NodeID).Do(ctxt, h)
 		if err != nil {
 			if isCouldNotComputeBoxModelError(err) {
 				return nil

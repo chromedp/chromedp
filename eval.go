@@ -28,8 +28,6 @@ func Evaluate(expression string, res interface{}, opts ...EvaluateOption) Action
 	}
 
 	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
-		var err error
-
 		// set up parameters
 		p := rundom.Evaluate(expression)
 		switch res.(type) {

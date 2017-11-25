@@ -42,8 +42,6 @@ type CDP struct {
 
 // New creates and starts a new CDP instance.
 func New(ctxt context.Context, opts ...Option) (*CDP, error) {
-	var err error
-
 	c := &CDP{
 		handlers:   make([]*TargetHandler, 0),
 		handlerMap: make(map[string]int),
@@ -54,14 +52,14 @@ func New(ctxt context.Context, opts ...Option) (*CDP, error) {
 
 	// apply options
 	for _, o := range opts {
-		err = o(c)
-		if err != nil {
+		if err := o(c); err != nil {
 			return nil, err
 		}
 	}
 
 	// check for supplied runner, if none then create one
 	if c.r == nil && c.watch == nil {
+		var err error
 		c.r, err = runner.Run(ctxt, c.opts...)
 		if err != nil {
 			return nil, err
@@ -121,8 +119,7 @@ func (c *CDP) AddTarget(ctxt context.Context, t client.Target) {
 	}
 
 	// run
-	err = h.Run(ctxt)
-	if err != nil {
+	if err := h.Run(ctxt); err != nil {
 		c.errorf("could not start handler for %s: %v", t, err)
 		return
 	}

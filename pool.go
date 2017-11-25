@@ -28,8 +28,6 @@ type Pool struct {
 
 // NewPool creates a new Chrome runner pool.
 func NewPool(opts ...PoolOption) (*Pool, error) {
-	var err error
-
 	p := &Pool{
 		start:  DefaultPoolStartPort,
 		end:    DefaultPoolEndPort,
@@ -41,13 +39,12 @@ func NewPool(opts ...PoolOption) (*Pool, error) {
 
 	// apply opts
 	for _, o := range opts {
-		err = o(p)
-		if err != nil {
+		if err := o(p); err != nil {
 			return nil, err
 		}
 	}
 
-	return p, err
+	return p, nil
 }
 
 // Shutdown releases all the pool resources.
