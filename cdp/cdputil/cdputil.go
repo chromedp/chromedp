@@ -34,7 +34,6 @@ import (
 	"github.com/knq/chromedp/cdp/performance"
 	"github.com/knq/chromedp/cdp/profiler"
 	"github.com/knq/chromedp/cdp/runtime"
-	"github.com/knq/chromedp/cdp/schema"
 	"github.com/knq/chromedp/cdp/security"
 	"github.com/knq/chromedp/cdp/serviceworker"
 	"github.com/knq/chromedp/cdp/storage"
@@ -1172,9 +1171,6 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandBrowserGetWindowBounds:
 		v = new(browser.GetWindowBoundsReturns)
 
-	case cdp.CommandSchemaGetDomains:
-		v = new(schema.GetDomainsReturns)
-
 	case cdp.CommandRuntimeEvaluate:
 		v = new(runtime.EvaluateReturns)
 
@@ -1242,7 +1238,7 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 		v = new(runtime.EventInspectRequested)
 
 	case cdp.CommandDebuggerEnable:
-		return emptyVal, nil
+		v = new(debugger.EnableReturns)
 
 	case cdp.CommandDebuggerDisable:
 		return emptyVal, nil
@@ -1268,7 +1264,7 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandDebuggerContinueToLocation:
 		return emptyVal, nil
 
-	case cdp.CommandDebuggerPauseOnAsyncTask:
+	case cdp.CommandDebuggerPauseOnAsyncCall:
 		return emptyVal, nil
 
 	case cdp.CommandDebuggerStepOver:
@@ -1288,6 +1284,9 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 
 	case cdp.CommandDebuggerResume:
 		return emptyVal, nil
+
+	case cdp.CommandDebuggerGetStackTrace:
+		v = new(debugger.GetStackTraceReturns)
 
 	case cdp.CommandDebuggerSearchInContent:
 		v = new(debugger.SearchInContentReturns)

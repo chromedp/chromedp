@@ -422,7 +422,6 @@ const (
 	CommandBrowserGetVersion                               MethodType = "Browser.getVersion"
 	CommandBrowserSetWindowBounds                          MethodType = "Browser.setWindowBounds"
 	CommandBrowserGetWindowBounds                          MethodType = "Browser.getWindowBounds"
-	CommandSchemaGetDomains                                MethodType = "Schema.getDomains"
 	EventRuntimeExecutionContextCreated                    MethodType = "Runtime.executionContextCreated"
 	EventRuntimeExecutionContextDestroyed                  MethodType = "Runtime.executionContextDestroyed"
 	EventRuntimeExecutionContextsCleared                   MethodType = "Runtime.executionContextsCleared"
@@ -459,13 +458,14 @@ const (
 	CommandDebuggerRemoveBreakpoint                        MethodType = "Debugger.removeBreakpoint"
 	CommandDebuggerGetPossibleBreakpoints                  MethodType = "Debugger.getPossibleBreakpoints"
 	CommandDebuggerContinueToLocation                      MethodType = "Debugger.continueToLocation"
-	CommandDebuggerPauseOnAsyncTask                        MethodType = "Debugger.pauseOnAsyncTask"
+	CommandDebuggerPauseOnAsyncCall                        MethodType = "Debugger.pauseOnAsyncCall"
 	CommandDebuggerStepOver                                MethodType = "Debugger.stepOver"
 	CommandDebuggerStepInto                                MethodType = "Debugger.stepInto"
 	CommandDebuggerStepOut                                 MethodType = "Debugger.stepOut"
 	CommandDebuggerPause                                   MethodType = "Debugger.pause"
 	CommandDebuggerScheduleStepIntoAsync                   MethodType = "Debugger.scheduleStepIntoAsync"
 	CommandDebuggerResume                                  MethodType = "Debugger.resume"
+	CommandDebuggerGetStackTrace                           MethodType = "Debugger.getStackTrace"
 	CommandDebuggerSearchInContent                         MethodType = "Debugger.searchInContent"
 	CommandDebuggerSetScriptSource                         MethodType = "Debugger.setScriptSource"
 	CommandDebuggerRestartFrame                            MethodType = "Debugger.restartFrame"
@@ -1269,8 +1269,6 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandBrowserSetWindowBounds
 	case CommandBrowserGetWindowBounds:
 		*t = CommandBrowserGetWindowBounds
-	case CommandSchemaGetDomains:
-		*t = CommandSchemaGetDomains
 	case EventRuntimeExecutionContextCreated:
 		*t = EventRuntimeExecutionContextCreated
 	case EventRuntimeExecutionContextDestroyed:
@@ -1343,8 +1341,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandDebuggerGetPossibleBreakpoints
 	case CommandDebuggerContinueToLocation:
 		*t = CommandDebuggerContinueToLocation
-	case CommandDebuggerPauseOnAsyncTask:
-		*t = CommandDebuggerPauseOnAsyncTask
+	case CommandDebuggerPauseOnAsyncCall:
+		*t = CommandDebuggerPauseOnAsyncCall
 	case CommandDebuggerStepOver:
 		*t = CommandDebuggerStepOver
 	case CommandDebuggerStepInto:
@@ -1357,6 +1355,8 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandDebuggerScheduleStepIntoAsync
 	case CommandDebuggerResume:
 		*t = CommandDebuggerResume
+	case CommandDebuggerGetStackTrace:
+		*t = CommandDebuggerGetStackTrace
 	case CommandDebuggerSearchInContent:
 		*t = CommandDebuggerSearchInContent
 	case CommandDebuggerSetScriptSource:

@@ -28,10 +28,25 @@ func Enable() *EnableParams {
 	return &EnableParams{}
 }
 
+// EnableReturns return values.
+type EnableReturns struct {
+	DebuggerID runtime.UniqueDebuggerID `json:"debuggerId,omitempty"` // Unique identifier of the debugger.
+}
+
 // Do executes Debugger.enable against the provided context and
 // target handler.
-func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDebuggerEnable, nil, nil)
+//
+// returns:
+//   debuggerID - Unique identifier of the debugger.
+func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (debuggerID runtime.UniqueDebuggerID, err error) {
+	// execute
+	var res EnableReturns
+	err = h.Execute(ctxt, cdp.CommandDebuggerEnable, nil, &res)
+	if err != nil {
+		return "", err
+	}
+
+	return res.DebuggerID, nil
 }
 
 // DisableParams disables debugger for given page.
@@ -329,25 +344,25 @@ func (p *ContinueToLocationParams) Do(ctxt context.Context, h cdp.Handler) (err 
 	return h.Execute(ctxt, cdp.CommandDebuggerContinueToLocation, p, nil)
 }
 
-// PauseOnAsyncTaskParams [no description].
-type PauseOnAsyncTaskParams struct {
-	AsyncTaskID runtime.AsyncTaskID `json:"asyncTaskId"` // Debugger will pause when given async task is started.
+// PauseOnAsyncCallParams [no description].
+type PauseOnAsyncCallParams struct {
+	ParentStackTraceID *runtime.StackTraceID `json:"parentStackTraceId"` // Debugger will pause when async call with given stack trace is started.
 }
 
-// PauseOnAsyncTask [no description].
+// PauseOnAsyncCall [no description].
 //
 // parameters:
-//   asyncTaskID - Debugger will pause when given async task is started.
-func PauseOnAsyncTask(asyncTaskID runtime.AsyncTaskID) *PauseOnAsyncTaskParams {
-	return &PauseOnAsyncTaskParams{
-		AsyncTaskID: asyncTaskID,
+//   parentStackTraceID - Debugger will pause when async call with given stack trace is started.
+func PauseOnAsyncCall(parentStackTraceID *runtime.StackTraceID) *PauseOnAsyncCallParams {
+	return &PauseOnAsyncCallParams{
+		ParentStackTraceID: parentStackTraceID,
 	}
 }
 
-// Do executes Debugger.pauseOnAsyncTask against the provided context and
+// Do executes Debugger.pauseOnAsyncCall against the provided context and
 // target handler.
-func (p *PauseOnAsyncTaskParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDebuggerPauseOnAsyncTask, p, nil)
+func (p *PauseOnAsyncCallParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDebuggerPauseOnAsyncCall, p, nil)
 }
 
 // StepOverParams steps over the statement.
@@ -453,6 +468,42 @@ func (p *ResumeParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandDebuggerResume, nil, nil)
 }
 
+// GetStackTraceParams returns stack trace with given stackTraceId.
+type GetStackTraceParams struct {
+	StackTraceID *runtime.StackTraceID `json:"stackTraceId"`
+}
+
+// GetStackTrace returns stack trace with given stackTraceId.
+//
+// parameters:
+//   stackTraceID
+func GetStackTrace(stackTraceID *runtime.StackTraceID) *GetStackTraceParams {
+	return &GetStackTraceParams{
+		StackTraceID: stackTraceID,
+	}
+}
+
+// GetStackTraceReturns return values.
+type GetStackTraceReturns struct {
+	StackTrace *runtime.StackTrace `json:"stackTrace,omitempty"`
+}
+
+// Do executes Debugger.getStackTrace against the provided context and
+// target handler.
+//
+// returns:
+//   stackTrace
+func (p *GetStackTraceParams) Do(ctxt context.Context, h cdp.Handler) (stackTrace *runtime.StackTrace, err error) {
+	// execute
+	var res GetStackTraceReturns
+	err = h.Execute(ctxt, cdp.CommandDebuggerGetStackTrace, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.StackTrace, nil
+}
+
 // SearchInContentParams searches for given string in script content.
 type SearchInContentParams struct {
 	ScriptID      runtime.ScriptID `json:"scriptId"`                // Id of the script to search in.
@@ -534,10 +585,11 @@ func (p SetScriptSourceParams) WithDryRun(dryRun bool) *SetScriptSourceParams {
 
 // SetScriptSourceReturns return values.
 type SetScriptSourceReturns struct {
-	CallFrames       []*CallFrame              `json:"callFrames,omitempty"`       // New stack trace in case editing has happened while VM was stopped.
-	StackChanged     bool                      `json:"stackChanged,omitempty"`     // Whether current call stack  was modified after applying the changes.
-	AsyncStackTrace  *runtime.StackTrace       `json:"asyncStackTrace,omitempty"`  // Async stack trace, if any.
-	ExceptionDetails *runtime.ExceptionDetails `json:"exceptionDetails,omitempty"` // Exception details if any.
+	CallFrames        []*CallFrame              `json:"callFrames,omitempty"`        // New stack trace in case editing has happened while VM was stopped.
+	StackChanged      bool                      `json:"stackChanged,omitempty"`      // Whether current call stack  was modified after applying the changes.
+	AsyncStackTrace   *runtime.StackTrace       `json:"asyncStackTrace,omitempty"`   // Async stack trace, if any.
+	AsyncStackTraceID *runtime.StackTraceID     `json:"asyncStackTraceId,omitempty"` // Async stack trace, if any.
+	ExceptionDetails  *runtime.ExceptionDetails `json:"exceptionDetails,omitempty"`  // Exception details if any.
 }
 
 // Do executes Debugger.setScriptSource against the provided context and
@@ -547,16 +599,17 @@ type SetScriptSourceReturns struct {
 //   callFrames - New stack trace in case editing has happened while VM was stopped.
 //   stackChanged - Whether current call stack  was modified after applying the changes.
 //   asyncStackTrace - Async stack trace, if any.
+//   asyncStackTraceID - Async stack trace, if any.
 //   exceptionDetails - Exception details if any.
-func (p *SetScriptSourceParams) Do(ctxt context.Context, h cdp.Handler) (callFrames []*CallFrame, stackChanged bool, asyncStackTrace *runtime.StackTrace, exceptionDetails *runtime.ExceptionDetails, err error) {
+func (p *SetScriptSourceParams) Do(ctxt context.Context, h cdp.Handler) (callFrames []*CallFrame, stackChanged bool, asyncStackTrace *runtime.StackTrace, asyncStackTraceID *runtime.StackTraceID, exceptionDetails *runtime.ExceptionDetails, err error) {
 	// execute
 	var res SetScriptSourceReturns
 	err = h.Execute(ctxt, cdp.CommandDebuggerSetScriptSource, p, &res)
 	if err != nil {
-		return nil, false, nil, nil, err
+		return nil, false, nil, nil, nil, err
 	}
 
-	return res.CallFrames, res.StackChanged, res.AsyncStackTrace, res.ExceptionDetails, nil
+	return res.CallFrames, res.StackChanged, res.AsyncStackTrace, res.AsyncStackTraceID, res.ExceptionDetails, nil
 }
 
 // RestartFrameParams restarts particular call frame from the beginning.
@@ -576,8 +629,9 @@ func RestartFrame(callFrameID CallFrameID) *RestartFrameParams {
 
 // RestartFrameReturns return values.
 type RestartFrameReturns struct {
-	CallFrames      []*CallFrame        `json:"callFrames,omitempty"`      // New stack trace.
-	AsyncStackTrace *runtime.StackTrace `json:"asyncStackTrace,omitempty"` // Async stack trace, if any.
+	CallFrames        []*CallFrame          `json:"callFrames,omitempty"`        // New stack trace.
+	AsyncStackTrace   *runtime.StackTrace   `json:"asyncStackTrace,omitempty"`   // Async stack trace, if any.
+	AsyncStackTraceID *runtime.StackTraceID `json:"asyncStackTraceId,omitempty"` // Async stack trace, if any.
 }
 
 // Do executes Debugger.restartFrame against the provided context and
@@ -586,15 +640,16 @@ type RestartFrameReturns struct {
 // returns:
 //   callFrames - New stack trace.
 //   asyncStackTrace - Async stack trace, if any.
-func (p *RestartFrameParams) Do(ctxt context.Context, h cdp.Handler) (callFrames []*CallFrame, asyncStackTrace *runtime.StackTrace, err error) {
+//   asyncStackTraceID - Async stack trace, if any.
+func (p *RestartFrameParams) Do(ctxt context.Context, h cdp.Handler) (callFrames []*CallFrame, asyncStackTrace *runtime.StackTrace, asyncStackTraceID *runtime.StackTraceID, err error) {
 	// execute
 	var res RestartFrameReturns
 	err = h.Execute(ctxt, cdp.CommandDebuggerRestartFrame, p, &res)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 
-	return res.CallFrames, res.AsyncStackTrace, nil
+	return res.CallFrames, res.AsyncStackTrace, res.AsyncStackTraceID, nil
 }
 
 // GetScriptSourceParams returns source for the script with given id.

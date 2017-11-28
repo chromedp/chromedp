@@ -233,17 +233,26 @@ type CallFrame struct {
 
 // StackTrace call frames for assertions or error messages.
 type StackTrace struct {
-	Description string       `json:"description,omitempty"` // String label of this stack trace. For async traces this may be a name of the function that initiated the async call.
-	CallFrames  []*CallFrame `json:"callFrames"`            // JavaScript function name.
-	Parent      *StackTrace  `json:"parent,omitempty"`      // Asynchronous JavaScript stack trace that preceded this stack, if available.
+	Description string        `json:"description,omitempty"` // String label of this stack trace. For async traces this may be a name of the function that initiated the async call.
+	CallFrames  []*CallFrame  `json:"callFrames"`            // JavaScript function name.
+	Parent      *StackTrace   `json:"parent,omitempty"`      // Asynchronous JavaScript stack trace that preceded this stack, if available.
+	ParentID    *StackTraceID `json:"parentId,omitempty"`    // Asynchronous JavaScript stack trace that preceded this stack, if available.
 }
 
-// AsyncTaskID [no description].
-type AsyncTaskID string
+// UniqueDebuggerID unique identifier of current debugger.
+type UniqueDebuggerID string
 
-// String returns the AsyncTaskID as string value.
-func (t AsyncTaskID) String() string {
+// String returns the UniqueDebuggerID as string value.
+func (t UniqueDebuggerID) String() string {
 	return string(t)
+}
+
+// StackTraceID if debuggerId is set stack trace comes from another debugger
+// and can be resolved there. This allows to track cross-debugger calls. See
+// Runtime.StackTrace and Debugger.paused for usages.
+type StackTraceID struct {
+	ID         string           `json:"id"`
+	DebuggerID UniqueDebuggerID `json:"debuggerId,omitempty"`
 }
 
 // Type object type.
