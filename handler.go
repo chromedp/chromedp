@@ -22,6 +22,12 @@ import (
 	"github.com/knq/chromedp/client"
 )
 
+// event wraps a page or dom event with a context.
+type event struct {
+	ctxt context.Context
+	ev   interface{}
+}
+
 // TargetHandler manages a Chrome Debugging Protocol target.
 type TargetHandler struct {
 	conn client.Transport
@@ -44,6 +50,9 @@ type TargetHandler struct {
 	// detached is closed when the detached event is received.
 	detached chan *inspector.EventDetached
 
+	// pageEvents and domEvents are channels for those specific events that
+	// will be processed in order.
+	pageEvents, domEvents       chan *event
 	pageWaitGroup, domWaitGroup *sync.WaitGroup
 
 	// last is the last sent message identifier.
@@ -90,12 +99,29 @@ func (h *TargetHandler) Run(ctxt context.Context) error {
 	h.qevents = make(chan *cdp.Message)
 	h.res = make(map[int64]chan *cdp.Message)
 	h.detached = make(chan *inspector.EventDetached)
+	h.pageEvents = make(chan *event)
+	// make domEvents buffered so that we can continue to process other events
+	// while we perform the updates.
+	h.domEvents = make(chan *event, 32)
 	h.pageWaitGroup = new(sync.WaitGroup)
 	h.domWaitGroup = new(sync.WaitGroup)
 	h.Unlock()
 
 	// run
 	go h.run(ctxt)
+
+	// process pageEvents
+	go func() {
+		for evnt := range h.pageEvents {
+			h.pageEvent(evnt.ctxt, evnt.ev)
+		}
+	}()
+	// process domEvents
+	go func() {
+		for evnt := range h.domEvents {
+			h.domEvent(evnt.ctxt, evnt.ev)
+		}
+	}()
 
 	// enable domains
 	for _, a := range []Action{
@@ -138,6 +164,8 @@ func (h *TargetHandler) Run(ctxt context.Context) error {
 // run handles the actual message processing to / from the web socket connection.
 func (h *TargetHandler) run(ctxt context.Context) {
 	defer h.conn.Close()
+	defer close(h.pageEvents)
+	defer close(h.domEvents)
 
 	// add cancel to context
 	ctxt, cancel := context.WithCancel(ctxt)
@@ -249,19 +277,13 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdp.Message) err
 		return nil
 	}
 
-	d := msg.Method.Domain()
-	if d != "Page" && d != "DOM" {
-		return nil
-	}
-
-	switch d {
+	switch msg.Method.Domain() {
 	case "Page":
 		h.pageWaitGroup.Add(1)
-		go h.pageEvent(ctxt, ev)
-
+		h.pageEvents <- &event{ctxt, ev}
 	case "DOM":
 		h.domWaitGroup.Add(1)
-		go h.domEvent(ctxt, ev)
+		h.domEvents <- &event{ctxt, ev}
 	}
 
 	return nil
