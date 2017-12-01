@@ -19,12 +19,28 @@ const (
 	Base64EncodedDescriptionPrefix = "Base64-encoded"
 )
 
-// MisspellReplacer is the misspelling replacer
-var MisspellReplacer *misspell.Replacer
+// misspellReplacer is the misspelling replacer
+var misspellReplacer *misspell.Replacer
 
 func init() {
-	MisspellReplacer = misspell.New()
-	MisspellReplacer.Compile()
+	misspellReplacer = misspell.New()
+	misspellReplacer.Compile()
+}
+
+var badHTMLReplacer = strings.NewReplacer(
+	"&lt;", "<",
+	"&gt;", ">",
+	"&gt", ">",
+)
+
+// codeRE is a regexp to match <code> and </code> tags.
+var codeRE = regexp.MustCompile(`<\/?code>`)
+
+// CleanDesc cleans comments / descriptions of "<code>" and "</code>" strings
+// and "`" characters, and fixes common misspellings.
+func CleanDesc(s string) string {
+	s, _ = misspellReplacer.Replace(strings.Replace(codeRE.ReplaceAllString(s, ""), "`", "", -1))
+	return badHTMLReplacer.Replace(s)
 }
 
 // ForceCamel forces camel case specific to go.
@@ -48,9 +64,6 @@ func ForceCamelWithFirstLower(s string) string {
 
 	return strings.ToLower(first) + s[len(first):]
 }
-
-// CodeRE is a regexp to match <code> and </code> tags.
-var CodeRE = regexp.MustCompile(`<\/?code>`)
 
 // resolve finds the ref in the provided domains, relative to domain d when ref
 // is not namespaced.
@@ -123,9 +136,7 @@ func structDef(types []*Type, d *Domain, domains []*Domain, noExposeOverride, om
 
 		// add comment
 		if v.Type != TypeObject && v.Description != "" {
-			comment := CodeRE.ReplaceAllString(v.Description, "")
-			comment, _ = MisspellReplacer.Replace(comment)
-			s += " // " + comment
+			s += " // " + CleanDesc(v.Description)
 		}
 	}
 	if len(types) > 0 {

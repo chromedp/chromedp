@@ -25,17 +25,10 @@ var keep = map[string]bool{
 	"JavaScript": true,
 }
 
-var badHTMLReplacer = strings.NewReplacer(
-	"&lt;", "<",
-	"&gt;", ">",
-	"&gt", ">",
-)
-
 // formatComment formats a comment.
 func formatComment(s, chop, newstr string) string {
 	s = strings.TrimPrefix(s, chop)
-	s = strings.TrimSpace(internal.CodeRE.ReplaceAllString(s, ""))
-	s = badHTMLReplacer.Replace(s)
+	s = strings.TrimSpace(internal.CleanDesc(s))
 
 	l := len(s)
 	if newstr != "" && l > 0 {
@@ -56,8 +49,6 @@ func formatComment(s, chop, newstr string) string {
 		s += "[no description]"
 	}
 	s += "."
-
-	s, _ = internal.MisspellReplacer.Replace(s)
 
 	return wrap(s, commentWidth-len(commentPrefix), commentPrefix)
 }
