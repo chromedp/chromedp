@@ -336,12 +336,21 @@ func Path(path string) CommandLineOption {
 	}
 }
 
-// Headless is the Chrome command line option to set the default settings for
-// running the headless_shell executable. If path is empty, then an attempt
-// will be made to find headless_shell on the path.
+// Headless uses the --headless command line option to run without a visible
+// window, if it is available (Chrome 59 onwards). If that does not work,
+// `headless_shell` is used as a fallback. If the path passed is an empty
+// string, an attempt is made to search for a suitable chrome/chromium binary to
+// invoke.
 func Headless(path string, port int) CommandLineOption {
+	var haveHeadless bool
 	if path == "" {
-		path, _ = exec.LookPath("headless_shell")
+		// Check for native --headless support, introduced in Chrome 59.
+		path = findChromePath()
+		haveHeadless = checkHeadlessSupport(path)
+		if !haveHeadless {
+			// Fall back to headless_shell script.
+			path, _ = exec.LookPath("headless_shell")
+		}
 	}
 
 	return func(m map[string]interface{}) error {
@@ -350,6 +359,10 @@ func Headless(path string, port int) CommandLineOption {
 
 		if os.Getenv("CHROMEDP_NO_SANDBOX") != "" {
 			m["no-sandbox"] = true
+		}
+
+		if haveHeadless {
+			m["headless"] = ""
 		}
 
 		return nil
