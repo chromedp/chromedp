@@ -123,8 +123,6 @@ func (te TypeEnum) GoType() string {
 	default:
 		panic(fmt.Sprintf("called GoType on non primitive type %s", te.String()))
 	}
-
-	return ""
 }
 
 // GoEmptyValue returns the Go empty value for the TypeEnum.

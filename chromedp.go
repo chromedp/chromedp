@@ -42,8 +42,6 @@ type CDP struct {
 
 // New creates and starts a new CDP instance.
 func New(ctxt context.Context, opts ...Option) (*CDP, error) {
-	var err error
-
 	c := &CDP{
 		handlers:   make([]*TargetHandler, 0),
 		handlerMap: make(map[string]int),
@@ -54,14 +52,14 @@ func New(ctxt context.Context, opts ...Option) (*CDP, error) {
 
 	// apply options
 	for _, o := range opts {
-		err = o(c)
-		if err != nil {
+		if err := o(c); err != nil {
 			return nil, err
 		}
 	}
 
 	// check for supplied runner, if none then create one
 	if c.r == nil && c.watch == nil {
+		var err error
 		c.r, err = runner.Run(ctxt, c.opts...)
 		if err != nil {
 			return nil, err
@@ -85,7 +83,6 @@ func New(ctxt context.Context, opts ...Option) (*CDP, error) {
 	// TODO: fix this
 	timeout := time.After(DefaultNewTargetTimeout)
 
-loop:
 	// wait until at least one target active
 	for {
 		select {
@@ -104,11 +101,9 @@ loop:
 			return nil, ctxt.Err()
 
 		case <-timeout:
-			break loop
+			return nil, errors.New("timeout waiting for initial target")
 		}
 	}
-
-	return nil, errors.New("timeout waiting for initial target")
 }
 
 // AddTarget adds a target using the supplied context.
@@ -124,8 +119,7 @@ func (c *CDP) AddTarget(ctxt context.Context, t client.Target) {
 	}
 
 	// run
-	err = h.Run(ctxt)
-	if err != nil {
+	if err := h.Run(ctxt); err != nil {
 		c.errorf("could not start handler for %s: %v", t, err)
 		return
 	}
@@ -243,7 +237,6 @@ func (c *CDP) newTarget(ctxt context.Context, opts ...client.Option) (string, er
 
 	timeout := time.After(DefaultNewTargetTimeout)
 
-loop:
 	for {
 		select {
 		default:
@@ -262,11 +255,9 @@ loop:
 			return "", ctxt.Err()
 
 		case <-timeout:
-			break loop
+			return "", errors.New("timeout waiting for new target to be available")
 		}
 	}
-
-	return "", errors.New("timeout waiting for new target to be available")
 }
 
 // SetTarget is an action that sets the active Chrome handler to the specified

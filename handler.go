@@ -80,8 +80,6 @@ func NewTargetHandler(t client.Target, logf, debugf, errorf LogFunc) (*TargetHan
 //
 // Callers can stop Run by closing the passed context.
 func (h *TargetHandler) Run(ctxt context.Context) error {
-	var err error
-
 	// reset
 	h.Lock()
 	h.frames = make(map[cdp.FrameID]*cdp.Frame)
@@ -107,8 +105,7 @@ func (h *TargetHandler) Run(ctxt context.Context) error {
 		dom.Enable(),
 		css.Enable(),
 	} {
-		err = a.Do(ctxt, h)
-		if err != nil {
+		if err := a.Do(ctxt, h); err != nil {
 			return fmt.Errorf("unable to execute %s: %v", reflect.TypeOf(a), err)
 		}
 	}
@@ -175,25 +172,23 @@ func (h *TargetHandler) run(ctxt context.Context) {
 		}
 	}()
 
-	var err error
-
 	// process queues
 	for {
 		select {
 		case ev := <-h.qevents:
-			err = h.processEvent(ctxt, ev)
+			err := h.processEvent(ctxt, ev)
 			if err != nil {
 				h.errorf("could not process event %s: %v", ev.Method, err)
 			}
 
 		case res := <-h.qres:
-			err = h.processResult(res)
+			err := h.processResult(res)
 			if err != nil {
 				h.errorf("could not process result for message %d: %v", res.ID, err)
 			}
 
 		case cmd := <-h.qcmd:
-			err = h.processCommand(cmd)
+			err := h.processCommand(cmd)
 			if err != nil {
 				h.errorf("could not process command message %d: %v", cmd.ID, err)
 			}
@@ -397,7 +392,6 @@ func (h *TargetHandler) next() int64 {
 func (h *TargetHandler) GetRoot(ctxt context.Context) (*cdp.Node, error) {
 	var root *cdp.Node
 
-loop:
 	for {
 		var cur *cdp.Frame
 		select {
@@ -412,7 +406,7 @@ loop:
 			h.RUnlock()
 
 			if cur != nil && root != nil {
-				break loop
+				return root, nil
 			}
 
 			time.Sleep(DefaultCheckDuration)
@@ -421,8 +415,6 @@ loop:
 			return nil, ctxt.Err()
 		}
 	}
-
-	return root, nil
 }
 
 // SetActive sets the currently active frame after a successful navigation.
@@ -448,7 +440,6 @@ func (h *TargetHandler) WaitFrame(ctxt context.Context, id cdp.FrameID) (*cdp.Fr
 	// TODO: fix this
 	timeout := time.After(10 * time.Second)
 
-loop:
 	for {
 		select {
 		default:
@@ -473,11 +464,9 @@ loop:
 			return nil, ctxt.Err()
 
 		case <-timeout:
-			break loop
+			return nil, fmt.Errorf("timeout waiting for frame `%s`", id)
 		}
 	}
-
-	return nil, fmt.Errorf("timeout waiting for frame `%s`", id)
 }
 
 // WaitNode waits for a node to be loaded using the provided context.
@@ -485,7 +474,6 @@ func (h *TargetHandler) WaitNode(ctxt context.Context, f *cdp.Frame, id cdp.Node
 	// TODO: fix this
 	timeout := time.After(10 * time.Second)
 
-loop:
 	for {
 		select {
 		default:
@@ -506,11 +494,9 @@ loop:
 			return nil, ctxt.Err()
 
 		case <-timeout:
-			break loop
+			return nil, fmt.Errorf("timeout waiting for node `%d`", id)
 		}
 	}
-
-	return nil, fmt.Errorf("timeout waiting for node `%d`", id)
 }
 
 // pageEvent handles incoming page events.
