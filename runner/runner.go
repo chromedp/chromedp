@@ -341,10 +341,11 @@ func Path(path string) CommandLineOption {
 // will be made to find headless_shell on the path.
 func Headless(path string, port int) CommandLineOption {
 	if path == "" {
-		path, _ = exec.LookPath("headless_shell")
+		path = findChromePath()
 	}
 
 	return func(m map[string]interface{}) error {
+		m["headless"] = true
 		m["exec-path"] = path
 		m["remote-debugging-port"] = port
 
