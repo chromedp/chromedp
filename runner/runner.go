@@ -337,14 +337,15 @@ func Path(path string) CommandLineOption {
 }
 
 // Headless is the Chrome command line option to set the default settings for
-// running the headless_shell executable. If path is empty, then an attempt
-// will be made to find headless_shell on the path.
+// running Chrome in headless mode. If path is empty, then an attempt will be
+// made to find Chrome on the path.
 func Headless(path string, port int) CommandLineOption {
 	if path == "" {
-		path, _ = exec.LookPath("headless_shell")
+		path = findChromePath()
 	}
 
 	return func(m map[string]interface{}) error {
+		m["headless"] = true
 		m["exec-path"] = path
 		m["remote-debugging-port"] = port
 

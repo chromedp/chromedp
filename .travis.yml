@@ -9,9 +9,9 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - libstdc++6
+  chrome: stable
 before_install:
   - go get github.com/mattn/goveralls
-  - ./contrib/grab-headless_shell.sh $HOME/hs
 script:
   - export PATH=$PATH:$HOME/hs
   - CHROMEDP_NO_SANDBOX=true go test -v -coverprofile=coverage.out
