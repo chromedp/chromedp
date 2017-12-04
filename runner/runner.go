@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"regexp"
@@ -341,11 +340,9 @@ func Path(path string) CommandLineOption {
 // running Chrome in headless mode. If path is empty, then an attempt will be
 // made to find Chrome on the path.
 func Headless(path string, port int) CommandLineOption {
-	log.Println("ASDKLJ")
 	if path == "" {
 		path = findChromePath()
 	}
-	log.Println("ASDKLJ2")
 
 	return func(m map[string]interface{}) error {
 		m["headless"] = true
