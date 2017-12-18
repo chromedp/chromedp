@@ -87,7 +87,15 @@ func (h *TargetHandler) Run(ctxt context.Context) error {
 	h.frames = make(map[cdp.FrameID]*cdp.Frame)
 	h.qcmd = make(chan *cdp.Message)
 	h.qres = make(chan *cdp.Message)
-	h.qevents = make(chan *cdp.Message)
+	// The events channel needs to be big enough to buffer as many events as
+	// we might recieve at once while processing one event. This is
+	// necessary because the event handling may do requests which require
+	// reading from the qmsg channel. This can't happen if the network
+	// handler is blocked writing to qevents. See discussion in #75. In
+	// practice I haven't seen the buffer get bigger than one or two. But we
+	// make it large just to be safe, and panic if it is ever full, rather
+	// than deadlocking.
+	h.qevents = make(chan *cdp.Message, 1024)
 	h.res = make(map[int64]chan *cdp.Message)
 	h.detached = make(chan *inspector.EventDetached)
 	h.pageWaitGroup = new(sync.WaitGroup)
@@ -156,7 +164,12 @@ func (h *TargetHandler) run(ctxt context.Context) {
 
 				switch {
 				case msg.Method != "":
-					h.qevents <- msg
+					select {
+					case h.qevents <- msg:
+					default:
+						// See discussion in #75.
+						panic("h.qevents is blocked!")
+					}
 
 				case msg.ID != 0:
 					h.qres <- msg
@@ -175,33 +188,58 @@ func (h *TargetHandler) run(ctxt context.Context) {
 		}
 	}()
 
-	var err error
+	var wg sync.WaitGroup
+	defer wg.Wait()
 
 	// process queues
-	for {
-		select {
-		case ev := <-h.qevents:
-			err = h.processEvent(ctxt, ev)
-			if err != nil {
-				h.errorf("could not process event %s: %v", ev.Method, err)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case ev := <-h.qevents:
+				err := h.processEvent(ctxt, ev)
+				if err != nil {
+					h.errorf("could not process event %s: %v", ev.Method, err)
+				}
+			case <-ctxt.Done():
+				return
 			}
-
-		case res := <-h.qres:
-			err = h.processResult(res)
-			if err != nil {
-				h.errorf("could not process result for message %d: %v", res.ID, err)
-			}
-
-		case cmd := <-h.qcmd:
-			err = h.processCommand(cmd)
-			if err != nil {
-				h.errorf("could not process command message %d: %v", cmd.ID, err)
-			}
-
-		case <-ctxt.Done():
-			return
 		}
-	}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case res := <-h.qres:
+				err := h.processResult(res)
+				if err != nil {
+					h.errorf("could not process result for message %d: %v", res.ID, err)
+				}
+			case <-ctxt.Done():
+				return
+			}
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case cmd := <-h.qcmd:
+				err := h.processCommand(cmd)
+				if err != nil {
+					h.errorf("could not process command message %d: %v", cmd.ID, err)
+				}
+
+			case <-ctxt.Done():
+				return
+			}
+		}
+	}()
 }
 
 // read reads a message from the client connection.
@@ -239,13 +277,13 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdp.Message) err
 	switch e := ev.(type) {
 	case *inspector.EventDetached:
 		h.Lock()
-		defer h.Unlock()
 		h.detached <- e
+		h.Unlock()
 		return nil
 
 	case *dom.EventDocumentUpdated:
 		h.domWaitGroup.Wait()
-		go h.documentUpdated(ctxt)
+		h.documentUpdated(ctxt)
 		return nil
 	}
 
@@ -257,11 +295,11 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdp.Message) err
 	switch d {
 	case "Page":
 		h.pageWaitGroup.Add(1)
-		go h.pageEvent(ctxt, ev)
+		h.pageEvent(ctxt, ev)
 
 	case "DOM":
 		h.domWaitGroup.Add(1)
-		go h.domEvent(ctxt, ev)
+		h.domEvent(ctxt, ev)
 	}
 
 	return nil
@@ -531,22 +569,30 @@ func (h *TargetHandler) pageEvent(ctxt context.Context, ev interface{}) {
 		return
 
 	case *page.EventFrameAttached:
-		id, op = e.FrameID, frameAttached(e.ParentFrameID)
+		// NOTE(pwaller):
+		//   This happens before we have the frame object for
+		//   e.FrameID - that only occurs in EventFrameNavigated.
+		//   so there isn't a frame to update yet.
+		//   I'm not sure of the use of this state - see #75.
+
+		//   Another issue is that events like EventFrameStoppedLoading
+		//   can happen even though EventFrameNavigated *never fires*,
+		//   so these events can end up calling WaitFrame on a frame
+		//   that never comes into existence.
+
+		// id, op = e.FrameID, frameAttached(e.ParentFrameID)
+		return
 
 	case *page.EventFrameDetached:
-		id, op = e.FrameID, frameDetached
-
+		return // See note above.
 	case *page.EventFrameStartedLoading:
-		id, op = e.FrameID, frameStartedLoading
-
+		return // See note above.
 	case *page.EventFrameStoppedLoading:
-		id, op = e.FrameID, frameStoppedLoading
-
+		return // See note above.
 	case *page.EventFrameScheduledNavigation:
-		id, op = e.FrameID, frameScheduledNavigation
-
+		return // See note above.
 	case *page.EventFrameClearedScheduledNavigation:
-		id, op = e.FrameID, frameClearedScheduledNavigation
+		return // See note above.
 
 	case *page.EventDomContentEventFired:
 		return
