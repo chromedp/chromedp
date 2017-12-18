@@ -14,34 +14,6 @@ import (
 	"github.com/mailru/easyjson"
 )
 
-// EnableParams enables compositing tree inspection.
-type EnableParams struct{}
-
-// Enable enables compositing tree inspection.
-func Enable() *EnableParams {
-	return &EnableParams{}
-}
-
-// Do executes LayerTree.enable against the provided context and
-// target handler.
-func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandLayerTreeEnable, nil, nil)
-}
-
-// DisableParams disables compositing tree inspection.
-type DisableParams struct{}
-
-// Disable disables compositing tree inspection.
-func Disable() *DisableParams {
-	return &DisableParams{}
-}
-
-// Do executes LayerTree.disable against the provided context and
-// target handler.
-func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandLayerTreeDisable, nil, nil)
-}
-
 // CompositingReasonsParams provides the reasons why the given layer was
 // composited.
 type CompositingReasonsParams struct {
@@ -80,40 +52,32 @@ func (p *CompositingReasonsParams) Do(ctxt context.Context, h cdp.Handler) (comp
 	return res.CompositingReasons, nil
 }
 
-// MakeSnapshotParams returns the layer snapshot identifier.
-type MakeSnapshotParams struct {
-	LayerID LayerID `json:"layerId"` // The id of the layer.
+// DisableParams disables compositing tree inspection.
+type DisableParams struct{}
+
+// Disable disables compositing tree inspection.
+func Disable() *DisableParams {
+	return &DisableParams{}
 }
 
-// MakeSnapshot returns the layer snapshot identifier.
-//
-// parameters:
-//   layerID - The id of the layer.
-func MakeSnapshot(layerID LayerID) *MakeSnapshotParams {
-	return &MakeSnapshotParams{
-		LayerID: layerID,
-	}
-}
-
-// MakeSnapshotReturns return values.
-type MakeSnapshotReturns struct {
-	SnapshotID SnapshotID `json:"snapshotId,omitempty"` // The id of the layer snapshot.
-}
-
-// Do executes LayerTree.makeSnapshot against the provided context and
+// Do executes LayerTree.disable against the provided context and
 // target handler.
-//
-// returns:
-//   snapshotID - The id of the layer snapshot.
-func (p *MakeSnapshotParams) Do(ctxt context.Context, h cdp.Handler) (snapshotID SnapshotID, err error) {
-	// execute
-	var res MakeSnapshotReturns
-	err = h.Execute(ctxt, cdp.CommandLayerTreeMakeSnapshot, p, &res)
-	if err != nil {
-		return "", err
-	}
+func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandLayerTreeDisable, nil, nil)
+}
 
-	return res.SnapshotID, nil
+// EnableParams enables compositing tree inspection.
+type EnableParams struct{}
+
+// Enable enables compositing tree inspection.
+func Enable() *EnableParams {
+	return &EnableParams{}
+}
+
+// Do executes LayerTree.enable against the provided context and
+// target handler.
+func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandLayerTreeEnable, nil, nil)
 }
 
 // LoadSnapshotParams returns the snapshot identifier.
@@ -152,25 +116,40 @@ func (p *LoadSnapshotParams) Do(ctxt context.Context, h cdp.Handler) (snapshotID
 	return res.SnapshotID, nil
 }
 
-// ReleaseSnapshotParams releases layer snapshot captured by the back-end.
-type ReleaseSnapshotParams struct {
-	SnapshotID SnapshotID `json:"snapshotId"` // The id of the layer snapshot.
+// MakeSnapshotParams returns the layer snapshot identifier.
+type MakeSnapshotParams struct {
+	LayerID LayerID `json:"layerId"` // The id of the layer.
 }
 
-// ReleaseSnapshot releases layer snapshot captured by the back-end.
+// MakeSnapshot returns the layer snapshot identifier.
 //
 // parameters:
-//   snapshotID - The id of the layer snapshot.
-func ReleaseSnapshot(snapshotID SnapshotID) *ReleaseSnapshotParams {
-	return &ReleaseSnapshotParams{
-		SnapshotID: snapshotID,
+//   layerID - The id of the layer.
+func MakeSnapshot(layerID LayerID) *MakeSnapshotParams {
+	return &MakeSnapshotParams{
+		LayerID: layerID,
 	}
 }
 
-// Do executes LayerTree.releaseSnapshot against the provided context and
+// MakeSnapshotReturns return values.
+type MakeSnapshotReturns struct {
+	SnapshotID SnapshotID `json:"snapshotId,omitempty"` // The id of the layer snapshot.
+}
+
+// Do executes LayerTree.makeSnapshot against the provided context and
 // target handler.
-func (p *ReleaseSnapshotParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandLayerTreeReleaseSnapshot, p, nil)
+//
+// returns:
+//   snapshotID - The id of the layer snapshot.
+func (p *MakeSnapshotParams) Do(ctxt context.Context, h cdp.Handler) (snapshotID SnapshotID, err error) {
+	// execute
+	var res MakeSnapshotReturns
+	err = h.Execute(ctxt, cdp.CommandLayerTreeMakeSnapshot, p, &res)
+	if err != nil {
+		return "", err
+	}
+
+	return res.SnapshotID, nil
 }
 
 // ProfileSnapshotParams [no description].
@@ -229,6 +208,27 @@ func (p *ProfileSnapshotParams) Do(ctxt context.Context, h cdp.Handler) (timings
 	}
 
 	return res.Timings, nil
+}
+
+// ReleaseSnapshotParams releases layer snapshot captured by the back-end.
+type ReleaseSnapshotParams struct {
+	SnapshotID SnapshotID `json:"snapshotId"` // The id of the layer snapshot.
+}
+
+// ReleaseSnapshot releases layer snapshot captured by the back-end.
+//
+// parameters:
+//   snapshotID - The id of the layer snapshot.
+func ReleaseSnapshot(snapshotID SnapshotID) *ReleaseSnapshotParams {
+	return &ReleaseSnapshotParams{
+		SnapshotID: snapshotID,
+	}
+}
+
+// Do executes LayerTree.releaseSnapshot against the provided context and
+// target handler.
+func (p *ReleaseSnapshotParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandLayerTreeReleaseSnapshot, p, nil)
 }
 
 // ReplaySnapshotParams replays the layer snapshot and returns the resulting

@@ -12,28 +12,6 @@ import (
 	cdp "github.com/knq/chromedp/cdp"
 )
 
-// SetIgnoreInputEventsParams ignores input events (useful while auditing
-// page).
-type SetIgnoreInputEventsParams struct {
-	Ignore bool `json:"ignore"` // Ignores input events processing when set to true.
-}
-
-// SetIgnoreInputEvents ignores input events (useful while auditing page).
-//
-// parameters:
-//   ignore - Ignores input events processing when set to true.
-func SetIgnoreInputEvents(ignore bool) *SetIgnoreInputEventsParams {
-	return &SetIgnoreInputEventsParams{
-		Ignore: ignore,
-	}
-}
-
-// Do executes Input.setIgnoreInputEvents against the provided context and
-// target handler.
-func (p *SetIgnoreInputEventsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandInputSetIgnoreInputEvents, p, nil)
-}
-
 // DispatchKeyEventParams dispatches a key event to the page.
 type DispatchKeyEventParams struct {
 	Type                  KeyType         `json:"type"`                            // Type of the key event.
@@ -328,6 +306,28 @@ func (p EmulateTouchFromMouseEventParams) WithClickCount(clickCount int64) *Emul
 // target handler.
 func (p *EmulateTouchFromMouseEventParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandInputEmulateTouchFromMouseEvent, p, nil)
+}
+
+// SetIgnoreInputEventsParams ignores input events (useful while auditing
+// page).
+type SetIgnoreInputEventsParams struct {
+	Ignore bool `json:"ignore"` // Ignores input events processing when set to true.
+}
+
+// SetIgnoreInputEvents ignores input events (useful while auditing page).
+//
+// parameters:
+//   ignore - Ignores input events processing when set to true.
+func SetIgnoreInputEvents(ignore bool) *SetIgnoreInputEventsParams {
+	return &SetIgnoreInputEventsParams{
+		Ignore: ignore,
+	}
+}
+
+// Do executes Input.setIgnoreInputEvents against the provided context and
+// target handler.
+func (p *SetIgnoreInputEventsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandInputSetIgnoreInputEvents, p, nil)
 }
 
 // SynthesizePinchGestureParams synthesizes a pinch gesture over a time

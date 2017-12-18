@@ -8,6 +8,13 @@ import (
 	"github.com/mailru/easyjson"
 )
 
+// EventBufferUsage [no description].
+type EventBufferUsage struct {
+	PercentFull float64 `json:"percentFull,omitempty"` // A number in range [0..1] that indicates the used size of event buffer as a fraction of its total size.
+	EventCount  float64 `json:"eventCount,omitempty"`  // An approximate number of events in the trace log.
+	Value       float64 `json:"value,omitempty"`       // A number in range [0..1] that indicates the used size of event buffer as a fraction of its total size.
+}
+
 // EventDataCollected contains an bucket of collected trace events. When
 // tracing is stopped collected events will be send as a sequence of
 // dataCollected events followed by tracingComplete event.
@@ -18,19 +25,13 @@ type EventDataCollected struct {
 // EventTracingComplete signals that tracing is stopped and there is no trace
 // buffers pending flush, all data were delivered via dataCollected events.
 type EventTracingComplete struct {
-	Stream io.StreamHandle `json:"stream,omitempty"` // A handle of the stream that holds resulting trace data.
-}
-
-// EventBufferUsage [no description].
-type EventBufferUsage struct {
-	PercentFull float64 `json:"percentFull,omitempty"` // A number in range [0..1] that indicates the used size of event buffer as a fraction of its total size.
-	EventCount  float64 `json:"eventCount,omitempty"`  // An approximate number of events in the trace log.
-	Value       float64 `json:"value,omitempty"`       // A number in range [0..1] that indicates the used size of event buffer as a fraction of its total size.
+	Stream            io.StreamHandle   `json:"stream,omitempty"`            // A handle of the stream that holds resulting trace data.
+	StreamCompression StreamCompression `json:"streamCompression,omitempty"` // Compression format of returned stream.
 }
 
 // EventTypes all event types in the domain.
 var EventTypes = []cdp.MethodType{
+	cdp.EventTracingBufferUsage,
 	cdp.EventTracingDataCollected,
 	cdp.EventTracingTracingComplete,
-	cdp.EventTracingBufferUsage,
 }

@@ -6,6 +6,11 @@ import (
 	cdp "github.com/knq/chromedp/cdp"
 )
 
+// EventWorkerErrorReported [no description].
+type EventWorkerErrorReported struct {
+	ErrorMessage *ErrorMessage `json:"errorMessage"`
+}
+
 // EventWorkerRegistrationUpdated [no description].
 type EventWorkerRegistrationUpdated struct {
 	Registrations []*Registration `json:"registrations"`
@@ -16,14 +21,9 @@ type EventWorkerVersionUpdated struct {
 	Versions []*Version `json:"versions"`
 }
 
-// EventWorkerErrorReported [no description].
-type EventWorkerErrorReported struct {
-	ErrorMessage *ErrorMessage `json:"errorMessage"`
-}
-
 // EventTypes all event types in the domain.
 var EventTypes = []cdp.MethodType{
+	cdp.EventServiceWorkerWorkerErrorReported,
 	cdp.EventServiceWorkerWorkerRegistrationUpdated,
 	cdp.EventServiceWorkerWorkerVersionUpdated,
-	cdp.EventServiceWorkerWorkerErrorReported,
 }

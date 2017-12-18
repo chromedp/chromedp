@@ -12,18 +12,86 @@ import (
 	cdp "github.com/knq/chromedp/cdp"
 )
 
-// EnableParams enables events from backend.
-type EnableParams struct{}
-
-// Enable enables events from backend.
-func Enable() *EnableParams {
-	return &EnableParams{}
+// ClearObjectStoreParams clears all entries from an object store.
+type ClearObjectStoreParams struct {
+	SecurityOrigin  string `json:"securityOrigin"`  // Security origin.
+	DatabaseName    string `json:"databaseName"`    // Database name.
+	ObjectStoreName string `json:"objectStoreName"` // Object store name.
 }
 
-// Do executes IndexedDB.enable against the provided context and
+// ClearObjectStore clears all entries from an object store.
+//
+// parameters:
+//   securityOrigin - Security origin.
+//   databaseName - Database name.
+//   objectStoreName - Object store name.
+func ClearObjectStore(securityOrigin string, databaseName string, objectStoreName string) *ClearObjectStoreParams {
+	return &ClearObjectStoreParams{
+		SecurityOrigin:  securityOrigin,
+		DatabaseName:    databaseName,
+		ObjectStoreName: objectStoreName,
+	}
+}
+
+// Do executes IndexedDB.clearObjectStore against the provided context and
 // target handler.
-func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandIndexedDBEnable, nil, nil)
+func (p *ClearObjectStoreParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandIndexedDBClearObjectStore, p, nil)
+}
+
+// DeleteDatabaseParams deletes a database.
+type DeleteDatabaseParams struct {
+	SecurityOrigin string `json:"securityOrigin"` // Security origin.
+	DatabaseName   string `json:"databaseName"`   // Database name.
+}
+
+// DeleteDatabase deletes a database.
+//
+// parameters:
+//   securityOrigin - Security origin.
+//   databaseName - Database name.
+func DeleteDatabase(securityOrigin string, databaseName string) *DeleteDatabaseParams {
+	return &DeleteDatabaseParams{
+		SecurityOrigin: securityOrigin,
+		DatabaseName:   databaseName,
+	}
+}
+
+// Do executes IndexedDB.deleteDatabase against the provided context and
+// target handler.
+func (p *DeleteDatabaseParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandIndexedDBDeleteDatabase, p, nil)
+}
+
+// DeleteObjectStoreEntriesParams delete a range of entries from an object
+// store.
+type DeleteObjectStoreEntriesParams struct {
+	SecurityOrigin  string    `json:"securityOrigin"`
+	DatabaseName    string    `json:"databaseName"`
+	ObjectStoreName string    `json:"objectStoreName"`
+	KeyRange        *KeyRange `json:"keyRange"` // Range of entry keys to delete
+}
+
+// DeleteObjectStoreEntries delete a range of entries from an object store.
+//
+// parameters:
+//   securityOrigin
+//   databaseName
+//   objectStoreName
+//   keyRange - Range of entry keys to delete
+func DeleteObjectStoreEntries(securityOrigin string, databaseName string, objectStoreName string, keyRange *KeyRange) *DeleteObjectStoreEntriesParams {
+	return &DeleteObjectStoreEntriesParams{
+		SecurityOrigin:  securityOrigin,
+		DatabaseName:    databaseName,
+		ObjectStoreName: objectStoreName,
+		KeyRange:        keyRange,
+	}
+}
+
+// Do executes IndexedDB.deleteObjectStoreEntries against the provided context and
+// target handler.
+func (p *DeleteObjectStoreEntriesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandIndexedDBDeleteObjectStoreEntries, p, nil)
 }
 
 // DisableParams disables events from backend.
@@ -40,80 +108,18 @@ func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandIndexedDBDisable, nil, nil)
 }
 
-// RequestDatabaseNamesParams requests database names for given security
-// origin.
-type RequestDatabaseNamesParams struct {
-	SecurityOrigin string `json:"securityOrigin"` // Security origin.
+// EnableParams enables events from backend.
+type EnableParams struct{}
+
+// Enable enables events from backend.
+func Enable() *EnableParams {
+	return &EnableParams{}
 }
 
-// RequestDatabaseNames requests database names for given security origin.
-//
-// parameters:
-//   securityOrigin - Security origin.
-func RequestDatabaseNames(securityOrigin string) *RequestDatabaseNamesParams {
-	return &RequestDatabaseNamesParams{
-		SecurityOrigin: securityOrigin,
-	}
-}
-
-// RequestDatabaseNamesReturns return values.
-type RequestDatabaseNamesReturns struct {
-	DatabaseNames []string `json:"databaseNames,omitempty"` // Database names for origin.
-}
-
-// Do executes IndexedDB.requestDatabaseNames against the provided context and
+// Do executes IndexedDB.enable against the provided context and
 // target handler.
-//
-// returns:
-//   databaseNames - Database names for origin.
-func (p *RequestDatabaseNamesParams) Do(ctxt context.Context, h cdp.Handler) (databaseNames []string, err error) {
-	// execute
-	var res RequestDatabaseNamesReturns
-	err = h.Execute(ctxt, cdp.CommandIndexedDBRequestDatabaseNames, p, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	return res.DatabaseNames, nil
-}
-
-// RequestDatabaseParams requests database with given name in given frame.
-type RequestDatabaseParams struct {
-	SecurityOrigin string `json:"securityOrigin"` // Security origin.
-	DatabaseName   string `json:"databaseName"`   // Database name.
-}
-
-// RequestDatabase requests database with given name in given frame.
-//
-// parameters:
-//   securityOrigin - Security origin.
-//   databaseName - Database name.
-func RequestDatabase(securityOrigin string, databaseName string) *RequestDatabaseParams {
-	return &RequestDatabaseParams{
-		SecurityOrigin: securityOrigin,
-		DatabaseName:   databaseName,
-	}
-}
-
-// RequestDatabaseReturns return values.
-type RequestDatabaseReturns struct {
-	DatabaseWithObjectStores *DatabaseWithObjectStores `json:"databaseWithObjectStores,omitempty"` // Database with an array of object stores.
-}
-
-// Do executes IndexedDB.requestDatabase against the provided context and
-// target handler.
-//
-// returns:
-//   databaseWithObjectStores - Database with an array of object stores.
-func (p *RequestDatabaseParams) Do(ctxt context.Context, h cdp.Handler) (databaseWithObjectStores *DatabaseWithObjectStores, err error) {
-	// execute
-	var res RequestDatabaseReturns
-	err = h.Execute(ctxt, cdp.CommandIndexedDBRequestDatabase, p, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	return res.DatabaseWithObjectStores, nil
+func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandIndexedDBEnable, nil, nil)
 }
 
 // RequestDataParams requests data from object store or index.
@@ -176,53 +182,78 @@ func (p *RequestDataParams) Do(ctxt context.Context, h cdp.Handler) (objectStore
 	return res.ObjectStoreDataEntries, res.HasMore, nil
 }
 
-// ClearObjectStoreParams clears all entries from an object store.
-type ClearObjectStoreParams struct {
-	SecurityOrigin  string `json:"securityOrigin"`  // Security origin.
-	DatabaseName    string `json:"databaseName"`    // Database name.
-	ObjectStoreName string `json:"objectStoreName"` // Object store name.
-}
-
-// ClearObjectStore clears all entries from an object store.
-//
-// parameters:
-//   securityOrigin - Security origin.
-//   databaseName - Database name.
-//   objectStoreName - Object store name.
-func ClearObjectStore(securityOrigin string, databaseName string, objectStoreName string) *ClearObjectStoreParams {
-	return &ClearObjectStoreParams{
-		SecurityOrigin:  securityOrigin,
-		DatabaseName:    databaseName,
-		ObjectStoreName: objectStoreName,
-	}
-}
-
-// Do executes IndexedDB.clearObjectStore against the provided context and
-// target handler.
-func (p *ClearObjectStoreParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandIndexedDBClearObjectStore, p, nil)
-}
-
-// DeleteDatabaseParams deletes a database.
-type DeleteDatabaseParams struct {
+// RequestDatabaseParams requests database with given name in given frame.
+type RequestDatabaseParams struct {
 	SecurityOrigin string `json:"securityOrigin"` // Security origin.
 	DatabaseName   string `json:"databaseName"`   // Database name.
 }
 
-// DeleteDatabase deletes a database.
+// RequestDatabase requests database with given name in given frame.
 //
 // parameters:
 //   securityOrigin - Security origin.
 //   databaseName - Database name.
-func DeleteDatabase(securityOrigin string, databaseName string) *DeleteDatabaseParams {
-	return &DeleteDatabaseParams{
+func RequestDatabase(securityOrigin string, databaseName string) *RequestDatabaseParams {
+	return &RequestDatabaseParams{
 		SecurityOrigin: securityOrigin,
 		DatabaseName:   databaseName,
 	}
 }
 
-// Do executes IndexedDB.deleteDatabase against the provided context and
+// RequestDatabaseReturns return values.
+type RequestDatabaseReturns struct {
+	DatabaseWithObjectStores *DatabaseWithObjectStores `json:"databaseWithObjectStores,omitempty"` // Database with an array of object stores.
+}
+
+// Do executes IndexedDB.requestDatabase against the provided context and
 // target handler.
-func (p *DeleteDatabaseParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandIndexedDBDeleteDatabase, p, nil)
+//
+// returns:
+//   databaseWithObjectStores - Database with an array of object stores.
+func (p *RequestDatabaseParams) Do(ctxt context.Context, h cdp.Handler) (databaseWithObjectStores *DatabaseWithObjectStores, err error) {
+	// execute
+	var res RequestDatabaseReturns
+	err = h.Execute(ctxt, cdp.CommandIndexedDBRequestDatabase, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.DatabaseWithObjectStores, nil
+}
+
+// RequestDatabaseNamesParams requests database names for given security
+// origin.
+type RequestDatabaseNamesParams struct {
+	SecurityOrigin string `json:"securityOrigin"` // Security origin.
+}
+
+// RequestDatabaseNames requests database names for given security origin.
+//
+// parameters:
+//   securityOrigin - Security origin.
+func RequestDatabaseNames(securityOrigin string) *RequestDatabaseNamesParams {
+	return &RequestDatabaseNamesParams{
+		SecurityOrigin: securityOrigin,
+	}
+}
+
+// RequestDatabaseNamesReturns return values.
+type RequestDatabaseNamesReturns struct {
+	DatabaseNames []string `json:"databaseNames,omitempty"` // Database names for origin.
+}
+
+// Do executes IndexedDB.requestDatabaseNames against the provided context and
+// target handler.
+//
+// returns:
+//   databaseNames - Database names for origin.
+func (p *RequestDatabaseNamesParams) Do(ctxt context.Context, h cdp.Handler) (databaseNames []string, err error) {
+	// execute
+	var res RequestDatabaseNamesReturns
+	err = h.Execute(ctxt, cdp.CommandIndexedDBRequestDatabaseNames, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.DatabaseNames, nil
 }

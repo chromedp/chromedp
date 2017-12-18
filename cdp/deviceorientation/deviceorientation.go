@@ -12,6 +12,21 @@ import (
 	cdp "github.com/knq/chromedp/cdp"
 )
 
+// ClearDeviceOrientationOverrideParams clears the overridden Device
+// Orientation.
+type ClearDeviceOrientationOverrideParams struct{}
+
+// ClearDeviceOrientationOverride clears the overridden Device Orientation.
+func ClearDeviceOrientationOverride() *ClearDeviceOrientationOverrideParams {
+	return &ClearDeviceOrientationOverrideParams{}
+}
+
+// Do executes DeviceOrientation.clearDeviceOrientationOverride against the provided context and
+// target handler.
+func (p *ClearDeviceOrientationOverrideParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDeviceOrientationClearDeviceOrientationOverride, nil, nil)
+}
+
 // SetDeviceOrientationOverrideParams overrides the Device Orientation.
 type SetDeviceOrientationOverrideParams struct {
 	Alpha float64 `json:"alpha"` // Mock alpha
@@ -37,19 +52,4 @@ func SetDeviceOrientationOverride(alpha float64, beta float64, gamma float64) *S
 // target handler.
 func (p *SetDeviceOrientationOverrideParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandDeviceOrientationSetDeviceOrientationOverride, p, nil)
-}
-
-// ClearDeviceOrientationOverrideParams clears the overridden Device
-// Orientation.
-type ClearDeviceOrientationOverrideParams struct{}
-
-// ClearDeviceOrientationOverride clears the overridden Device Orientation.
-func ClearDeviceOrientationOverride() *ClearDeviceOrientationOverrideParams {
-	return &ClearDeviceOrientationOverrideParams{}
-}
-
-// Do executes DeviceOrientation.clearDeviceOrientationOverride against the provided context and
-// target handler.
-func (p *ClearDeviceOrientationOverrideParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDeviceOrientationClearDeviceOrientationOverride, nil, nil)
 }

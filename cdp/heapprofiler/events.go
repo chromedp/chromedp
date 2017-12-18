@@ -11,14 +11,10 @@ type EventAddHeapSnapshotChunk struct {
 	Chunk string `json:"chunk"`
 }
 
-// EventResetProfiles [no description].
-type EventResetProfiles struct{}
-
-// EventReportHeapSnapshotProgress [no description].
-type EventReportHeapSnapshotProgress struct {
-	Done     int64 `json:"done"`
-	Total    int64 `json:"total"`
-	Finished bool  `json:"finished,omitempty"`
+// EventHeapStatsUpdate if heap objects tracking has been started then
+// backend may send update for one or more fragments.
+type EventHeapStatsUpdate struct {
+	StatsUpdate []int64 `json:"statsUpdate"` // An array of triplets. Each triplet describes a fragment. The first integer is the fragment index, the second integer is a total count of objects for the fragment, the third integer is a total size of the objects for the fragment.
 }
 
 // EventLastSeenObjectID if heap objects tracking has been started then
@@ -31,17 +27,21 @@ type EventLastSeenObjectID struct {
 	Timestamp        float64 `json:"timestamp"`
 }
 
-// EventHeapStatsUpdate if heap objects tracking has been started then
-// backend may send update for one or more fragments.
-type EventHeapStatsUpdate struct {
-	StatsUpdate []int64 `json:"statsUpdate"` // An array of triplets. Each triplet describes a fragment. The first integer is the fragment index, the second integer is a total count of objects for the fragment, the third integer is a total size of the objects for the fragment.
+// EventReportHeapSnapshotProgress [no description].
+type EventReportHeapSnapshotProgress struct {
+	Done     int64 `json:"done"`
+	Total    int64 `json:"total"`
+	Finished bool  `json:"finished,omitempty"`
 }
+
+// EventResetProfiles [no description].
+type EventResetProfiles struct{}
 
 // EventTypes all event types in the domain.
 var EventTypes = []cdp.MethodType{
 	cdp.EventHeapProfilerAddHeapSnapshotChunk,
-	cdp.EventHeapProfilerResetProfiles,
-	cdp.EventHeapProfilerReportHeapSnapshotProgress,
-	cdp.EventHeapProfilerLastSeenObjectID,
 	cdp.EventHeapProfilerHeapStatsUpdate,
+	cdp.EventHeapProfilerLastSeenObjectID,
+	cdp.EventHeapProfilerReportHeapSnapshotProgress,
+	cdp.EventHeapProfilerResetProfiles,
 }

@@ -21,6 +21,138 @@ import (
 	cdp "github.com/knq/chromedp/cdp"
 )
 
+// AddRuleParams inserts a new rule with the given ruleText in a stylesheet
+// with given styleSheetId, at the position specified by location.
+type AddRuleParams struct {
+	StyleSheetID StyleSheetID `json:"styleSheetId"` // The css style sheet identifier where a new rule should be inserted.
+	RuleText     string       `json:"ruleText"`     // The text of a new rule.
+	Location     *SourceRange `json:"location"`     // Text position of a new rule in the target style sheet.
+}
+
+// AddRule inserts a new rule with the given ruleText in a stylesheet with
+// given styleSheetId, at the position specified by location.
+//
+// parameters:
+//   styleSheetID - The css style sheet identifier where a new rule should be inserted.
+//   ruleText - The text of a new rule.
+//   location - Text position of a new rule in the target style sheet.
+func AddRule(styleSheetID StyleSheetID, ruleText string, location *SourceRange) *AddRuleParams {
+	return &AddRuleParams{
+		StyleSheetID: styleSheetID,
+		RuleText:     ruleText,
+		Location:     location,
+	}
+}
+
+// AddRuleReturns return values.
+type AddRuleReturns struct {
+	Rule *Rule `json:"rule,omitempty"` // The newly created rule.
+}
+
+// Do executes CSS.addRule against the provided context and
+// target handler.
+//
+// returns:
+//   rule - The newly created rule.
+func (p *AddRuleParams) Do(ctxt context.Context, h cdp.Handler) (rule *Rule, err error) {
+	// execute
+	var res AddRuleReturns
+	err = h.Execute(ctxt, cdp.CommandCSSAddRule, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Rule, nil
+}
+
+// CollectClassNamesParams returns all class names from specified stylesheet.
+type CollectClassNamesParams struct {
+	StyleSheetID StyleSheetID `json:"styleSheetId"`
+}
+
+// CollectClassNames returns all class names from specified stylesheet.
+//
+// parameters:
+//   styleSheetID
+func CollectClassNames(styleSheetID StyleSheetID) *CollectClassNamesParams {
+	return &CollectClassNamesParams{
+		StyleSheetID: styleSheetID,
+	}
+}
+
+// CollectClassNamesReturns return values.
+type CollectClassNamesReturns struct {
+	ClassNames []string `json:"classNames,omitempty"` // Class name list.
+}
+
+// Do executes CSS.collectClassNames against the provided context and
+// target handler.
+//
+// returns:
+//   classNames - Class name list.
+func (p *CollectClassNamesParams) Do(ctxt context.Context, h cdp.Handler) (classNames []string, err error) {
+	// execute
+	var res CollectClassNamesReturns
+	err = h.Execute(ctxt, cdp.CommandCSSCollectClassNames, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.ClassNames, nil
+}
+
+// CreateStyleSheetParams creates a new special "via-inspector" stylesheet in
+// the frame with given frameId.
+type CreateStyleSheetParams struct {
+	FrameID cdp.FrameID `json:"frameId"` // Identifier of the frame where "via-inspector" stylesheet should be created.
+}
+
+// CreateStyleSheet creates a new special "via-inspector" stylesheet in the
+// frame with given frameId.
+//
+// parameters:
+//   frameID - Identifier of the frame where "via-inspector" stylesheet should be created.
+func CreateStyleSheet(frameID cdp.FrameID) *CreateStyleSheetParams {
+	return &CreateStyleSheetParams{
+		FrameID: frameID,
+	}
+}
+
+// CreateStyleSheetReturns return values.
+type CreateStyleSheetReturns struct {
+	StyleSheetID StyleSheetID `json:"styleSheetId,omitempty"` // Identifier of the created "via-inspector" stylesheet.
+}
+
+// Do executes CSS.createStyleSheet against the provided context and
+// target handler.
+//
+// returns:
+//   styleSheetID - Identifier of the created "via-inspector" stylesheet.
+func (p *CreateStyleSheetParams) Do(ctxt context.Context, h cdp.Handler) (styleSheetID StyleSheetID, err error) {
+	// execute
+	var res CreateStyleSheetReturns
+	err = h.Execute(ctxt, cdp.CommandCSSCreateStyleSheet, p, &res)
+	if err != nil {
+		return "", err
+	}
+
+	return res.StyleSheetID, nil
+}
+
+// DisableParams disables the CSS agent for the given page.
+type DisableParams struct{}
+
+// Disable disables the CSS agent for the given page.
+func Disable() *DisableParams {
+	return &DisableParams{}
+}
+
+// Do executes CSS.disable against the provided context and
+// target handler.
+func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandCSSDisable, nil, nil)
+}
+
 // EnableParams enables the CSS agent for the given page. Clients should not
 // assume that the CSS agent has been enabled until the result of this command
 // is received.
@@ -39,18 +171,152 @@ func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandCSSEnable, nil, nil)
 }
 
-// DisableParams disables the CSS agent for the given page.
-type DisableParams struct{}
-
-// Disable disables the CSS agent for the given page.
-func Disable() *DisableParams {
-	return &DisableParams{}
+// ForcePseudoStateParams ensures that the given node will have specified
+// pseudo-classes whenever its style is computed by the browser.
+type ForcePseudoStateParams struct {
+	NodeID              cdp.NodeID `json:"nodeId"`              // The element id for which to force the pseudo state.
+	ForcedPseudoClasses []string   `json:"forcedPseudoClasses"` // Element pseudo classes to force when computing the element's style.
 }
 
-// Do executes CSS.disable against the provided context and
+// ForcePseudoState ensures that the given node will have specified
+// pseudo-classes whenever its style is computed by the browser.
+//
+// parameters:
+//   nodeID - The element id for which to force the pseudo state.
+//   forcedPseudoClasses - Element pseudo classes to force when computing the element's style.
+func ForcePseudoState(nodeID cdp.NodeID, forcedPseudoClasses []string) *ForcePseudoStateParams {
+	return &ForcePseudoStateParams{
+		NodeID:              nodeID,
+		ForcedPseudoClasses: forcedPseudoClasses,
+	}
+}
+
+// Do executes CSS.forcePseudoState against the provided context and
 // target handler.
-func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandCSSDisable, nil, nil)
+func (p *ForcePseudoStateParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandCSSForcePseudoState, p, nil)
+}
+
+// GetBackgroundColorsParams [no description].
+type GetBackgroundColorsParams struct {
+	NodeID cdp.NodeID `json:"nodeId"` // Id of the node to get background colors for.
+}
+
+// GetBackgroundColors [no description].
+//
+// parameters:
+//   nodeID - Id of the node to get background colors for.
+func GetBackgroundColors(nodeID cdp.NodeID) *GetBackgroundColorsParams {
+	return &GetBackgroundColorsParams{
+		NodeID: nodeID,
+	}
+}
+
+// GetBackgroundColorsReturns return values.
+type GetBackgroundColorsReturns struct {
+	BackgroundColors     []string `json:"backgroundColors,omitempty"`     // The range of background colors behind this element, if it contains any visible text. If no visible text is present, this will be undefined. In the case of a flat background color, this will consist of simply that color. In the case of a gradient, this will consist of each of the color stops. For anything more complicated, this will be an empty array. Images will be ignored (as if the image had failed to load).
+	ComputedFontSize     string   `json:"computedFontSize,omitempty"`     // The computed font size for this node, as a CSS computed value string (e.g. '12px').
+	ComputedFontWeight   string   `json:"computedFontWeight,omitempty"`   // The computed font weight for this node, as a CSS computed value string (e.g. 'normal' or '100').
+	ComputedBodyFontSize string   `json:"computedBodyFontSize,omitempty"` // The computed font size for the document body, as a computed CSS value string (e.g. '16px').
+}
+
+// Do executes CSS.getBackgroundColors against the provided context and
+// target handler.
+//
+// returns:
+//   backgroundColors - The range of background colors behind this element, if it contains any visible text. If no visible text is present, this will be undefined. In the case of a flat background color, this will consist of simply that color. In the case of a gradient, this will consist of each of the color stops. For anything more complicated, this will be an empty array. Images will be ignored (as if the image had failed to load).
+//   computedFontSize - The computed font size for this node, as a CSS computed value string (e.g. '12px').
+//   computedFontWeight - The computed font weight for this node, as a CSS computed value string (e.g. 'normal' or '100').
+//   computedBodyFontSize - The computed font size for the document body, as a computed CSS value string (e.g. '16px').
+func (p *GetBackgroundColorsParams) Do(ctxt context.Context, h cdp.Handler) (backgroundColors []string, computedFontSize string, computedFontWeight string, computedBodyFontSize string, err error) {
+	// execute
+	var res GetBackgroundColorsReturns
+	err = h.Execute(ctxt, cdp.CommandCSSGetBackgroundColors, p, &res)
+	if err != nil {
+		return nil, "", "", "", err
+	}
+
+	return res.BackgroundColors, res.ComputedFontSize, res.ComputedFontWeight, res.ComputedBodyFontSize, nil
+}
+
+// GetComputedStyleForNodeParams returns the computed style for a DOM node
+// identified by nodeId.
+type GetComputedStyleForNodeParams struct {
+	NodeID cdp.NodeID `json:"nodeId"`
+}
+
+// GetComputedStyleForNode returns the computed style for a DOM node
+// identified by nodeId.
+//
+// parameters:
+//   nodeID
+func GetComputedStyleForNode(nodeID cdp.NodeID) *GetComputedStyleForNodeParams {
+	return &GetComputedStyleForNodeParams{
+		NodeID: nodeID,
+	}
+}
+
+// GetComputedStyleForNodeReturns return values.
+type GetComputedStyleForNodeReturns struct {
+	ComputedStyle []*ComputedProperty `json:"computedStyle,omitempty"` // Computed style for the specified DOM node.
+}
+
+// Do executes CSS.getComputedStyleForNode against the provided context and
+// target handler.
+//
+// returns:
+//   computedStyle - Computed style for the specified DOM node.
+func (p *GetComputedStyleForNodeParams) Do(ctxt context.Context, h cdp.Handler) (computedStyle []*ComputedProperty, err error) {
+	// execute
+	var res GetComputedStyleForNodeReturns
+	err = h.Execute(ctxt, cdp.CommandCSSGetComputedStyleForNode, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.ComputedStyle, nil
+}
+
+// GetInlineStylesForNodeParams returns the styles defined inline (explicitly
+// in the "style" attribute and implicitly, using DOM attributes) for a DOM node
+// identified by nodeId.
+type GetInlineStylesForNodeParams struct {
+	NodeID cdp.NodeID `json:"nodeId"`
+}
+
+// GetInlineStylesForNode returns the styles defined inline (explicitly in
+// the "style" attribute and implicitly, using DOM attributes) for a DOM node
+// identified by nodeId.
+//
+// parameters:
+//   nodeID
+func GetInlineStylesForNode(nodeID cdp.NodeID) *GetInlineStylesForNodeParams {
+	return &GetInlineStylesForNodeParams{
+		NodeID: nodeID,
+	}
+}
+
+// GetInlineStylesForNodeReturns return values.
+type GetInlineStylesForNodeReturns struct {
+	InlineStyle     *Style `json:"inlineStyle,omitempty"`     // Inline style for the specified DOM node.
+	AttributesStyle *Style `json:"attributesStyle,omitempty"` // Attribute-defined element style (e.g. resulting from "width=20 height=100%").
+}
+
+// Do executes CSS.getInlineStylesForNode against the provided context and
+// target handler.
+//
+// returns:
+//   inlineStyle - Inline style for the specified DOM node.
+//   attributesStyle - Attribute-defined element style (e.g. resulting from "width=20 height=100%").
+func (p *GetInlineStylesForNodeParams) Do(ctxt context.Context, h cdp.Handler) (inlineStyle *Style, attributesStyle *Style, err error) {
+	// execute
+	var res GetInlineStylesForNodeReturns
+	err = h.Execute(ctxt, cdp.CommandCSSGetInlineStylesForNode, p, &res)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return res.InlineStyle, res.AttributesStyle, nil
 }
 
 // GetMatchedStylesForNodeParams returns requested styles for a DOM node
@@ -101,84 +367,34 @@ func (p *GetMatchedStylesForNodeParams) Do(ctxt context.Context, h cdp.Handler) 
 	return res.InlineStyle, res.AttributesStyle, res.MatchedCSSRules, res.PseudoElements, res.Inherited, res.CSSKeyframesRules, nil
 }
 
-// GetInlineStylesForNodeParams returns the styles defined inline (explicitly
-// in the "style" attribute and implicitly, using DOM attributes) for a DOM node
-// identified by nodeId.
-type GetInlineStylesForNodeParams struct {
-	NodeID cdp.NodeID `json:"nodeId"`
+// GetMediaQueriesParams returns all media queries parsed by the rendering
+// engine.
+type GetMediaQueriesParams struct{}
+
+// GetMediaQueries returns all media queries parsed by the rendering engine.
+func GetMediaQueries() *GetMediaQueriesParams {
+	return &GetMediaQueriesParams{}
 }
 
-// GetInlineStylesForNode returns the styles defined inline (explicitly in
-// the "style" attribute and implicitly, using DOM attributes) for a DOM node
-// identified by nodeId.
-//
-// parameters:
-//   nodeID
-func GetInlineStylesForNode(nodeID cdp.NodeID) *GetInlineStylesForNodeParams {
-	return &GetInlineStylesForNodeParams{
-		NodeID: nodeID,
-	}
+// GetMediaQueriesReturns return values.
+type GetMediaQueriesReturns struct {
+	Medias []*Media `json:"medias,omitempty"`
 }
 
-// GetInlineStylesForNodeReturns return values.
-type GetInlineStylesForNodeReturns struct {
-	InlineStyle     *Style `json:"inlineStyle,omitempty"`     // Inline style for the specified DOM node.
-	AttributesStyle *Style `json:"attributesStyle,omitempty"` // Attribute-defined element style (e.g. resulting from "width=20 height=100%").
-}
-
-// Do executes CSS.getInlineStylesForNode against the provided context and
+// Do executes CSS.getMediaQueries against the provided context and
 // target handler.
 //
 // returns:
-//   inlineStyle - Inline style for the specified DOM node.
-//   attributesStyle - Attribute-defined element style (e.g. resulting from "width=20 height=100%").
-func (p *GetInlineStylesForNodeParams) Do(ctxt context.Context, h cdp.Handler) (inlineStyle *Style, attributesStyle *Style, err error) {
+//   medias
+func (p *GetMediaQueriesParams) Do(ctxt context.Context, h cdp.Handler) (medias []*Media, err error) {
 	// execute
-	var res GetInlineStylesForNodeReturns
-	err = h.Execute(ctxt, cdp.CommandCSSGetInlineStylesForNode, p, &res)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return res.InlineStyle, res.AttributesStyle, nil
-}
-
-// GetComputedStyleForNodeParams returns the computed style for a DOM node
-// identified by nodeId.
-type GetComputedStyleForNodeParams struct {
-	NodeID cdp.NodeID `json:"nodeId"`
-}
-
-// GetComputedStyleForNode returns the computed style for a DOM node
-// identified by nodeId.
-//
-// parameters:
-//   nodeID
-func GetComputedStyleForNode(nodeID cdp.NodeID) *GetComputedStyleForNodeParams {
-	return &GetComputedStyleForNodeParams{
-		NodeID: nodeID,
-	}
-}
-
-// GetComputedStyleForNodeReturns return values.
-type GetComputedStyleForNodeReturns struct {
-	ComputedStyle []*ComputedProperty `json:"computedStyle,omitempty"` // Computed style for the specified DOM node.
-}
-
-// Do executes CSS.getComputedStyleForNode against the provided context and
-// target handler.
-//
-// returns:
-//   computedStyle - Computed style for the specified DOM node.
-func (p *GetComputedStyleForNodeParams) Do(ctxt context.Context, h cdp.Handler) (computedStyle []*ComputedProperty, err error) {
-	// execute
-	var res GetComputedStyleForNodeReturns
-	err = h.Execute(ctxt, cdp.CommandCSSGetComputedStyleForNode, p, &res)
+	var res GetMediaQueriesReturns
+	err = h.Execute(ctxt, cdp.CommandCSSGetMediaQueries, nil, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	return res.ComputedStyle, nil
+	return res.Medias, nil
 }
 
 // GetPlatformFontsForNodeParams requests information about platform fonts
@@ -257,121 +473,33 @@ func (p *GetStyleSheetTextParams) Do(ctxt context.Context, h cdp.Handler) (text 
 	return res.Text, nil
 }
 
-// CollectClassNamesParams returns all class names from specified stylesheet.
-type CollectClassNamesParams struct {
-	StyleSheetID StyleSheetID `json:"styleSheetId"`
+// SetEffectivePropertyValueForNodeParams find a rule with the given active
+// property for the given node and set the new value for this property.
+type SetEffectivePropertyValueForNodeParams struct {
+	NodeID       cdp.NodeID `json:"nodeId"` // The element id for which to set property.
+	PropertyName string     `json:"propertyName"`
+	Value        string     `json:"value"`
 }
 
-// CollectClassNames returns all class names from specified stylesheet.
+// SetEffectivePropertyValueForNode find a rule with the given active
+// property for the given node and set the new value for this property.
 //
 // parameters:
-//   styleSheetID
-func CollectClassNames(styleSheetID StyleSheetID) *CollectClassNamesParams {
-	return &CollectClassNamesParams{
-		StyleSheetID: styleSheetID,
+//   nodeID - The element id for which to set property.
+//   propertyName
+//   value
+func SetEffectivePropertyValueForNode(nodeID cdp.NodeID, propertyName string, value string) *SetEffectivePropertyValueForNodeParams {
+	return &SetEffectivePropertyValueForNodeParams{
+		NodeID:       nodeID,
+		PropertyName: propertyName,
+		Value:        value,
 	}
 }
 
-// CollectClassNamesReturns return values.
-type CollectClassNamesReturns struct {
-	ClassNames []string `json:"classNames,omitempty"` // Class name list.
-}
-
-// Do executes CSS.collectClassNames against the provided context and
+// Do executes CSS.setEffectivePropertyValueForNode against the provided context and
 // target handler.
-//
-// returns:
-//   classNames - Class name list.
-func (p *CollectClassNamesParams) Do(ctxt context.Context, h cdp.Handler) (classNames []string, err error) {
-	// execute
-	var res CollectClassNamesReturns
-	err = h.Execute(ctxt, cdp.CommandCSSCollectClassNames, p, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	return res.ClassNames, nil
-}
-
-// SetStyleSheetTextParams sets the new stylesheet text.
-type SetStyleSheetTextParams struct {
-	StyleSheetID StyleSheetID `json:"styleSheetId"`
-	Text         string       `json:"text"`
-}
-
-// SetStyleSheetText sets the new stylesheet text.
-//
-// parameters:
-//   styleSheetID
-//   text
-func SetStyleSheetText(styleSheetID StyleSheetID, text string) *SetStyleSheetTextParams {
-	return &SetStyleSheetTextParams{
-		StyleSheetID: styleSheetID,
-		Text:         text,
-	}
-}
-
-// SetStyleSheetTextReturns return values.
-type SetStyleSheetTextReturns struct {
-	SourceMapURL string `json:"sourceMapURL,omitempty"` // URL of source map associated with script (if any).
-}
-
-// Do executes CSS.setStyleSheetText against the provided context and
-// target handler.
-//
-// returns:
-//   sourceMapURL - URL of source map associated with script (if any).
-func (p *SetStyleSheetTextParams) Do(ctxt context.Context, h cdp.Handler) (sourceMapURL string, err error) {
-	// execute
-	var res SetStyleSheetTextReturns
-	err = h.Execute(ctxt, cdp.CommandCSSSetStyleSheetText, p, &res)
-	if err != nil {
-		return "", err
-	}
-
-	return res.SourceMapURL, nil
-}
-
-// SetRuleSelectorParams modifies the rule selector.
-type SetRuleSelectorParams struct {
-	StyleSheetID StyleSheetID `json:"styleSheetId"`
-	Range        *SourceRange `json:"range"`
-	Selector     string       `json:"selector"`
-}
-
-// SetRuleSelector modifies the rule selector.
-//
-// parameters:
-//   styleSheetID
-//   range
-//   selector
-func SetRuleSelector(styleSheetID StyleSheetID, rangeVal *SourceRange, selector string) *SetRuleSelectorParams {
-	return &SetRuleSelectorParams{
-		StyleSheetID: styleSheetID,
-		Range:        rangeVal,
-		Selector:     selector,
-	}
-}
-
-// SetRuleSelectorReturns return values.
-type SetRuleSelectorReturns struct {
-	SelectorList *SelectorList `json:"selectorList,omitempty"` // The resulting selector list after modification.
-}
-
-// Do executes CSS.setRuleSelector against the provided context and
-// target handler.
-//
-// returns:
-//   selectorList - The resulting selector list after modification.
-func (p *SetRuleSelectorParams) Do(ctxt context.Context, h cdp.Handler) (selectorList *SelectorList, err error) {
-	// execute
-	var res SetRuleSelectorReturns
-	err = h.Execute(ctxt, cdp.CommandCSSSetRuleSelector, p, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	return res.SelectorList, nil
+func (p *SetEffectivePropertyValueForNodeParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandCSSSetEffectivePropertyValueForNode, p, nil)
 }
 
 // SetKeyframeKeyParams modifies the keyframe rule key text.
@@ -416,44 +544,6 @@ func (p *SetKeyframeKeyParams) Do(ctxt context.Context, h cdp.Handler) (keyText 
 	return res.KeyText, nil
 }
 
-// SetStyleTextsParams applies specified style edits one after another in the
-// given order.
-type SetStyleTextsParams struct {
-	Edits []*StyleDeclarationEdit `json:"edits"`
-}
-
-// SetStyleTexts applies specified style edits one after another in the given
-// order.
-//
-// parameters:
-//   edits
-func SetStyleTexts(edits []*StyleDeclarationEdit) *SetStyleTextsParams {
-	return &SetStyleTextsParams{
-		Edits: edits,
-	}
-}
-
-// SetStyleTextsReturns return values.
-type SetStyleTextsReturns struct {
-	Styles []*Style `json:"styles,omitempty"` // The resulting styles after modification.
-}
-
-// Do executes CSS.setStyleTexts against the provided context and
-// target handler.
-//
-// returns:
-//   styles - The resulting styles after modification.
-func (p *SetStyleTextsParams) Do(ctxt context.Context, h cdp.Handler) (styles []*Style, err error) {
-	// execute
-	var res SetStyleTextsReturns
-	err = h.Execute(ctxt, cdp.CommandCSSSetStyleTexts, p, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	return res.Styles, nil
-}
-
 // SetMediaTextParams modifies the rule selector.
 type SetMediaTextParams struct {
 	StyleSheetID StyleSheetID `json:"styleSheetId"`
@@ -496,213 +586,123 @@ func (p *SetMediaTextParams) Do(ctxt context.Context, h cdp.Handler) (media *Med
 	return res.Media, nil
 }
 
-// CreateStyleSheetParams creates a new special "via-inspector" stylesheet in
-// the frame with given frameId.
-type CreateStyleSheetParams struct {
-	FrameID cdp.FrameID `json:"frameId"` // Identifier of the frame where "via-inspector" stylesheet should be created.
+// SetRuleSelectorParams modifies the rule selector.
+type SetRuleSelectorParams struct {
+	StyleSheetID StyleSheetID `json:"styleSheetId"`
+	Range        *SourceRange `json:"range"`
+	Selector     string       `json:"selector"`
 }
 
-// CreateStyleSheet creates a new special "via-inspector" stylesheet in the
-// frame with given frameId.
+// SetRuleSelector modifies the rule selector.
 //
 // parameters:
-//   frameID - Identifier of the frame where "via-inspector" stylesheet should be created.
-func CreateStyleSheet(frameID cdp.FrameID) *CreateStyleSheetParams {
-	return &CreateStyleSheetParams{
-		FrameID: frameID,
+//   styleSheetID
+//   range
+//   selector
+func SetRuleSelector(styleSheetID StyleSheetID, rangeVal *SourceRange, selector string) *SetRuleSelectorParams {
+	return &SetRuleSelectorParams{
+		StyleSheetID: styleSheetID,
+		Range:        rangeVal,
+		Selector:     selector,
 	}
 }
 
-// CreateStyleSheetReturns return values.
-type CreateStyleSheetReturns struct {
-	StyleSheetID StyleSheetID `json:"styleSheetId,omitempty"` // Identifier of the created "via-inspector" stylesheet.
+// SetRuleSelectorReturns return values.
+type SetRuleSelectorReturns struct {
+	SelectorList *SelectorList `json:"selectorList,omitempty"` // The resulting selector list after modification.
 }
 
-// Do executes CSS.createStyleSheet against the provided context and
+// Do executes CSS.setRuleSelector against the provided context and
 // target handler.
 //
 // returns:
-//   styleSheetID - Identifier of the created "via-inspector" stylesheet.
-func (p *CreateStyleSheetParams) Do(ctxt context.Context, h cdp.Handler) (styleSheetID StyleSheetID, err error) {
+//   selectorList - The resulting selector list after modification.
+func (p *SetRuleSelectorParams) Do(ctxt context.Context, h cdp.Handler) (selectorList *SelectorList, err error) {
 	// execute
-	var res CreateStyleSheetReturns
-	err = h.Execute(ctxt, cdp.CommandCSSCreateStyleSheet, p, &res)
+	var res SetRuleSelectorReturns
+	err = h.Execute(ctxt, cdp.CommandCSSSetRuleSelector, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.SelectorList, nil
+}
+
+// SetStyleSheetTextParams sets the new stylesheet text.
+type SetStyleSheetTextParams struct {
+	StyleSheetID StyleSheetID `json:"styleSheetId"`
+	Text         string       `json:"text"`
+}
+
+// SetStyleSheetText sets the new stylesheet text.
+//
+// parameters:
+//   styleSheetID
+//   text
+func SetStyleSheetText(styleSheetID StyleSheetID, text string) *SetStyleSheetTextParams {
+	return &SetStyleSheetTextParams{
+		StyleSheetID: styleSheetID,
+		Text:         text,
+	}
+}
+
+// SetStyleSheetTextReturns return values.
+type SetStyleSheetTextReturns struct {
+	SourceMapURL string `json:"sourceMapURL,omitempty"` // URL of source map associated with script (if any).
+}
+
+// Do executes CSS.setStyleSheetText against the provided context and
+// target handler.
+//
+// returns:
+//   sourceMapURL - URL of source map associated with script (if any).
+func (p *SetStyleSheetTextParams) Do(ctxt context.Context, h cdp.Handler) (sourceMapURL string, err error) {
+	// execute
+	var res SetStyleSheetTextReturns
+	err = h.Execute(ctxt, cdp.CommandCSSSetStyleSheetText, p, &res)
 	if err != nil {
 		return "", err
 	}
 
-	return res.StyleSheetID, nil
+	return res.SourceMapURL, nil
 }
 
-// AddRuleParams inserts a new rule with the given ruleText in a stylesheet
-// with given styleSheetId, at the position specified by location.
-type AddRuleParams struct {
-	StyleSheetID StyleSheetID `json:"styleSheetId"` // The css style sheet identifier where a new rule should be inserted.
-	RuleText     string       `json:"ruleText"`     // The text of a new rule.
-	Location     *SourceRange `json:"location"`     // Text position of a new rule in the target style sheet.
+// SetStyleTextsParams applies specified style edits one after another in the
+// given order.
+type SetStyleTextsParams struct {
+	Edits []*StyleDeclarationEdit `json:"edits"`
 }
 
-// AddRule inserts a new rule with the given ruleText in a stylesheet with
-// given styleSheetId, at the position specified by location.
+// SetStyleTexts applies specified style edits one after another in the given
+// order.
 //
 // parameters:
-//   styleSheetID - The css style sheet identifier where a new rule should be inserted.
-//   ruleText - The text of a new rule.
-//   location - Text position of a new rule in the target style sheet.
-func AddRule(styleSheetID StyleSheetID, ruleText string, location *SourceRange) *AddRuleParams {
-	return &AddRuleParams{
-		StyleSheetID: styleSheetID,
-		RuleText:     ruleText,
-		Location:     location,
+//   edits
+func SetStyleTexts(edits []*StyleDeclarationEdit) *SetStyleTextsParams {
+	return &SetStyleTextsParams{
+		Edits: edits,
 	}
 }
 
-// AddRuleReturns return values.
-type AddRuleReturns struct {
-	Rule *Rule `json:"rule,omitempty"` // The newly created rule.
+// SetStyleTextsReturns return values.
+type SetStyleTextsReturns struct {
+	Styles []*Style `json:"styles,omitempty"` // The resulting styles after modification.
 }
 
-// Do executes CSS.addRule against the provided context and
+// Do executes CSS.setStyleTexts against the provided context and
 // target handler.
 //
 // returns:
-//   rule - The newly created rule.
-func (p *AddRuleParams) Do(ctxt context.Context, h cdp.Handler) (rule *Rule, err error) {
+//   styles - The resulting styles after modification.
+func (p *SetStyleTextsParams) Do(ctxt context.Context, h cdp.Handler) (styles []*Style, err error) {
 	// execute
-	var res AddRuleReturns
-	err = h.Execute(ctxt, cdp.CommandCSSAddRule, p, &res)
+	var res SetStyleTextsReturns
+	err = h.Execute(ctxt, cdp.CommandCSSSetStyleTexts, p, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	return res.Rule, nil
-}
-
-// ForcePseudoStateParams ensures that the given node will have specified
-// pseudo-classes whenever its style is computed by the browser.
-type ForcePseudoStateParams struct {
-	NodeID              cdp.NodeID    `json:"nodeId"`              // The element id for which to force the pseudo state.
-	ForcedPseudoClasses []PseudoClass `json:"forcedPseudoClasses"` // Element pseudo classes to force when computing the element's style.
-}
-
-// ForcePseudoState ensures that the given node will have specified
-// pseudo-classes whenever its style is computed by the browser.
-//
-// parameters:
-//   nodeID - The element id for which to force the pseudo state.
-//   forcedPseudoClasses - Element pseudo classes to force when computing the element's style.
-func ForcePseudoState(nodeID cdp.NodeID, forcedPseudoClasses []PseudoClass) *ForcePseudoStateParams {
-	return &ForcePseudoStateParams{
-		NodeID:              nodeID,
-		ForcedPseudoClasses: forcedPseudoClasses,
-	}
-}
-
-// Do executes CSS.forcePseudoState against the provided context and
-// target handler.
-func (p *ForcePseudoStateParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandCSSForcePseudoState, p, nil)
-}
-
-// GetMediaQueriesParams returns all media queries parsed by the rendering
-// engine.
-type GetMediaQueriesParams struct{}
-
-// GetMediaQueries returns all media queries parsed by the rendering engine.
-func GetMediaQueries() *GetMediaQueriesParams {
-	return &GetMediaQueriesParams{}
-}
-
-// GetMediaQueriesReturns return values.
-type GetMediaQueriesReturns struct {
-	Medias []*Media `json:"medias,omitempty"`
-}
-
-// Do executes CSS.getMediaQueries against the provided context and
-// target handler.
-//
-// returns:
-//   medias
-func (p *GetMediaQueriesParams) Do(ctxt context.Context, h cdp.Handler) (medias []*Media, err error) {
-	// execute
-	var res GetMediaQueriesReturns
-	err = h.Execute(ctxt, cdp.CommandCSSGetMediaQueries, nil, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	return res.Medias, nil
-}
-
-// SetEffectivePropertyValueForNodeParams find a rule with the given active
-// property for the given node and set the new value for this property.
-type SetEffectivePropertyValueForNodeParams struct {
-	NodeID       cdp.NodeID `json:"nodeId"` // The element id for which to set property.
-	PropertyName string     `json:"propertyName"`
-	Value        string     `json:"value"`
-}
-
-// SetEffectivePropertyValueForNode find a rule with the given active
-// property for the given node and set the new value for this property.
-//
-// parameters:
-//   nodeID - The element id for which to set property.
-//   propertyName
-//   value
-func SetEffectivePropertyValueForNode(nodeID cdp.NodeID, propertyName string, value string) *SetEffectivePropertyValueForNodeParams {
-	return &SetEffectivePropertyValueForNodeParams{
-		NodeID:       nodeID,
-		PropertyName: propertyName,
-		Value:        value,
-	}
-}
-
-// Do executes CSS.setEffectivePropertyValueForNode against the provided context and
-// target handler.
-func (p *SetEffectivePropertyValueForNodeParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandCSSSetEffectivePropertyValueForNode, p, nil)
-}
-
-// GetBackgroundColorsParams [no description].
-type GetBackgroundColorsParams struct {
-	NodeID cdp.NodeID `json:"nodeId"` // Id of the node to get background colors for.
-}
-
-// GetBackgroundColors [no description].
-//
-// parameters:
-//   nodeID - Id of the node to get background colors for.
-func GetBackgroundColors(nodeID cdp.NodeID) *GetBackgroundColorsParams {
-	return &GetBackgroundColorsParams{
-		NodeID: nodeID,
-	}
-}
-
-// GetBackgroundColorsReturns return values.
-type GetBackgroundColorsReturns struct {
-	BackgroundColors     []string `json:"backgroundColors,omitempty"`     // The range of background colors behind this element, if it contains any visible text. If no visible text is present, this will be undefined. In the case of a flat background color, this will consist of simply that color. In the case of a gradient, this will consist of each of the color stops. For anything more complicated, this will be an empty array. Images will be ignored (as if the image had failed to load).
-	ComputedFontSize     string   `json:"computedFontSize,omitempty"`     // The computed font size for this node, as a CSS computed value string (e.g. '12px').
-	ComputedFontWeight   string   `json:"computedFontWeight,omitempty"`   // The computed font weight for this node, as a CSS computed value string (e.g. 'normal' or '100').
-	ComputedBodyFontSize string   `json:"computedBodyFontSize,omitempty"` // The computed font size for the document body, as a computed CSS value string (e.g. '16px').
-}
-
-// Do executes CSS.getBackgroundColors against the provided context and
-// target handler.
-//
-// returns:
-//   backgroundColors - The range of background colors behind this element, if it contains any visible text. If no visible text is present, this will be undefined. In the case of a flat background color, this will consist of simply that color. In the case of a gradient, this will consist of each of the color stops. For anything more complicated, this will be an empty array. Images will be ignored (as if the image had failed to load).
-//   computedFontSize - The computed font size for this node, as a CSS computed value string (e.g. '12px').
-//   computedFontWeight - The computed font weight for this node, as a CSS computed value string (e.g. 'normal' or '100').
-//   computedBodyFontSize - The computed font size for the document body, as a computed CSS value string (e.g. '16px').
-func (p *GetBackgroundColorsParams) Do(ctxt context.Context, h cdp.Handler) (backgroundColors []string, computedFontSize string, computedFontWeight string, computedBodyFontSize string, err error) {
-	// execute
-	var res GetBackgroundColorsReturns
-	err = h.Execute(ctxt, cdp.CommandCSSGetBackgroundColors, p, &res)
-	if err != nil {
-		return nil, "", "", "", err
-	}
-
-	return res.BackgroundColors, res.ComputedFontSize, res.ComputedFontWeight, res.ComputedBodyFontSize, nil
+	return res.Styles, nil
 }
 
 // StartRuleUsageTrackingParams enables the selector recording.
@@ -717,37 +717,6 @@ func StartRuleUsageTracking() *StartRuleUsageTrackingParams {
 // target handler.
 func (p *StartRuleUsageTrackingParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandCSSStartRuleUsageTracking, nil, nil)
-}
-
-// TakeCoverageDeltaParams obtain list of rules that became used since last
-// call to this method (or since start of coverage instrumentation).
-type TakeCoverageDeltaParams struct{}
-
-// TakeCoverageDelta obtain list of rules that became used since last call to
-// this method (or since start of coverage instrumentation).
-func TakeCoverageDelta() *TakeCoverageDeltaParams {
-	return &TakeCoverageDeltaParams{}
-}
-
-// TakeCoverageDeltaReturns return values.
-type TakeCoverageDeltaReturns struct {
-	Coverage []*RuleUsage `json:"coverage,omitempty"`
-}
-
-// Do executes CSS.takeCoverageDelta against the provided context and
-// target handler.
-//
-// returns:
-//   coverage
-func (p *TakeCoverageDeltaParams) Do(ctxt context.Context, h cdp.Handler) (coverage []*RuleUsage, err error) {
-	// execute
-	var res TakeCoverageDeltaReturns
-	err = h.Execute(ctxt, cdp.CommandCSSTakeCoverageDelta, nil, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	return res.Coverage, nil
 }
 
 // StopRuleUsageTrackingParams the list of rules with an indication of
@@ -779,4 +748,35 @@ func (p *StopRuleUsageTrackingParams) Do(ctxt context.Context, h cdp.Handler) (r
 	}
 
 	return res.RuleUsage, nil
+}
+
+// TakeCoverageDeltaParams obtain list of rules that became used since last
+// call to this method (or since start of coverage instrumentation).
+type TakeCoverageDeltaParams struct{}
+
+// TakeCoverageDelta obtain list of rules that became used since last call to
+// this method (or since start of coverage instrumentation).
+func TakeCoverageDelta() *TakeCoverageDeltaParams {
+	return &TakeCoverageDeltaParams{}
+}
+
+// TakeCoverageDeltaReturns return values.
+type TakeCoverageDeltaReturns struct {
+	Coverage []*RuleUsage `json:"coverage,omitempty"`
+}
+
+// Do executes CSS.takeCoverageDelta against the provided context and
+// target handler.
+//
+// returns:
+//   coverage
+func (p *TakeCoverageDeltaParams) Do(ctxt context.Context, h cdp.Handler) (coverage []*RuleUsage, err error) {
+	// execute
+	var res TakeCoverageDeltaReturns
+	err = h.Execute(ctxt, cdp.CommandCSSTakeCoverageDelta, nil, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Coverage, nil
 }

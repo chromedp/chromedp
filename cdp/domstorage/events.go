@@ -6,22 +6,17 @@ import (
 	cdp "github.com/knq/chromedp/cdp"
 )
 
-// EventDomStorageItemsCleared [no description].
-type EventDomStorageItemsCleared struct {
+// EventDomStorageItemAdded [no description].
+type EventDomStorageItemAdded struct {
 	StorageID *StorageID `json:"storageId"`
+	Key       string     `json:"key"`
+	NewValue  string     `json:"newValue"`
 }
 
 // EventDomStorageItemRemoved [no description].
 type EventDomStorageItemRemoved struct {
 	StorageID *StorageID `json:"storageId"`
 	Key       string     `json:"key"`
-}
-
-// EventDomStorageItemAdded [no description].
-type EventDomStorageItemAdded struct {
-	StorageID *StorageID `json:"storageId"`
-	Key       string     `json:"key"`
-	NewValue  string     `json:"newValue"`
 }
 
 // EventDomStorageItemUpdated [no description].
@@ -32,10 +27,15 @@ type EventDomStorageItemUpdated struct {
 	NewValue  string     `json:"newValue"`
 }
 
+// EventDomStorageItemsCleared [no description].
+type EventDomStorageItemsCleared struct {
+	StorageID *StorageID `json:"storageId"`
+}
+
 // EventTypes all event types in the domain.
 var EventTypes = []cdp.MethodType{
-	cdp.EventDOMStorageDomStorageItemsCleared,
-	cdp.EventDOMStorageDomStorageItemRemoved,
 	cdp.EventDOMStorageDomStorageItemAdded,
+	cdp.EventDOMStorageDomStorageItemRemoved,
 	cdp.EventDOMStorageDomStorageItemUpdated,
+	cdp.EventDOMStorageDomStorageItemsCleared,
 }

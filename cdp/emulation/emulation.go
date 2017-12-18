@@ -16,6 +16,131 @@ import (
 	"github.com/knq/chromedp/cdp/runtime"
 )
 
+// CanEmulateParams tells whether emulation is supported.
+type CanEmulateParams struct{}
+
+// CanEmulate tells whether emulation is supported.
+func CanEmulate() *CanEmulateParams {
+	return &CanEmulateParams{}
+}
+
+// CanEmulateReturns return values.
+type CanEmulateReturns struct {
+	Result bool `json:"result,omitempty"` // True if emulation is supported.
+}
+
+// Do executes Emulation.canEmulate against the provided context and
+// target handler.
+//
+// returns:
+//   result - True if emulation is supported.
+func (p *CanEmulateParams) Do(ctxt context.Context, h cdp.Handler) (result bool, err error) {
+	// execute
+	var res CanEmulateReturns
+	err = h.Execute(ctxt, cdp.CommandEmulationCanEmulate, nil, &res)
+	if err != nil {
+		return false, err
+	}
+
+	return res.Result, nil
+}
+
+// ClearDeviceMetricsOverrideParams clears the overridden device metrics.
+type ClearDeviceMetricsOverrideParams struct{}
+
+// ClearDeviceMetricsOverride clears the overridden device metrics.
+func ClearDeviceMetricsOverride() *ClearDeviceMetricsOverrideParams {
+	return &ClearDeviceMetricsOverrideParams{}
+}
+
+// Do executes Emulation.clearDeviceMetricsOverride against the provided context and
+// target handler.
+func (p *ClearDeviceMetricsOverrideParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandEmulationClearDeviceMetricsOverride, nil, nil)
+}
+
+// ClearGeolocationOverrideParams clears the overridden Geolocation Position
+// and Error.
+type ClearGeolocationOverrideParams struct{}
+
+// ClearGeolocationOverride clears the overridden Geolocation Position and
+// Error.
+func ClearGeolocationOverride() *ClearGeolocationOverrideParams {
+	return &ClearGeolocationOverrideParams{}
+}
+
+// Do executes Emulation.clearGeolocationOverride against the provided context and
+// target handler.
+func (p *ClearGeolocationOverrideParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandEmulationClearGeolocationOverride, nil, nil)
+}
+
+// ResetPageScaleFactorParams requests that page scale factor is reset to
+// initial values.
+type ResetPageScaleFactorParams struct{}
+
+// ResetPageScaleFactor requests that page scale factor is reset to initial
+// values.
+func ResetPageScaleFactor() *ResetPageScaleFactorParams {
+	return &ResetPageScaleFactorParams{}
+}
+
+// Do executes Emulation.resetPageScaleFactor against the provided context and
+// target handler.
+func (p *ResetPageScaleFactorParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandEmulationResetPageScaleFactor, nil, nil)
+}
+
+// SetCPUThrottlingRateParams enables CPU throttling to emulate slow CPUs.
+type SetCPUThrottlingRateParams struct {
+	Rate float64 `json:"rate"` // Throttling rate as a slowdown factor (1 is no throttle, 2 is 2x slowdown, etc).
+}
+
+// SetCPUThrottlingRate enables CPU throttling to emulate slow CPUs.
+//
+// parameters:
+//   rate - Throttling rate as a slowdown factor (1 is no throttle, 2 is 2x slowdown, etc).
+func SetCPUThrottlingRate(rate float64) *SetCPUThrottlingRateParams {
+	return &SetCPUThrottlingRateParams{
+		Rate: rate,
+	}
+}
+
+// Do executes Emulation.setCPUThrottlingRate against the provided context and
+// target handler.
+func (p *SetCPUThrottlingRateParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandEmulationSetCPUThrottlingRate, p, nil)
+}
+
+// SetDefaultBackgroundColorOverrideParams sets or clears an override of the
+// default background color of the frame. This override is used if the content
+// does not specify one.
+type SetDefaultBackgroundColorOverrideParams struct {
+	Color *cdp.RGBA `json:"color,omitempty"` // RGBA of the default background color. If not specified, any existing override will be cleared.
+}
+
+// SetDefaultBackgroundColorOverride sets or clears an override of the
+// default background color of the frame. This override is used if the content
+// does not specify one.
+//
+// parameters:
+func SetDefaultBackgroundColorOverride() *SetDefaultBackgroundColorOverrideParams {
+	return &SetDefaultBackgroundColorOverrideParams{}
+}
+
+// WithColor rGBA of the default background color. If not specified, any
+// existing override will be cleared.
+func (p SetDefaultBackgroundColorOverrideParams) WithColor(color *cdp.RGBA) *SetDefaultBackgroundColorOverrideParams {
+	p.Color = color
+	return &p
+}
+
+// Do executes Emulation.setDefaultBackgroundColorOverride against the provided context and
+// target handler.
+func (p *SetDefaultBackgroundColorOverrideParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandEmulationSetDefaultBackgroundColorOverride, p, nil)
+}
+
 // SetDeviceMetricsOverrideParams overrides the values of device screen
 // dimensions (window.screen.width, window.screen.height, window.innerWidth,
 // window.innerHeight, and "device-width"/"device-height"-related CSS media
@@ -115,164 +240,6 @@ func (p *SetDeviceMetricsOverrideParams) Do(ctxt context.Context, h cdp.Handler)
 	return h.Execute(ctxt, cdp.CommandEmulationSetDeviceMetricsOverride, p, nil)
 }
 
-// ClearDeviceMetricsOverrideParams clears the overridden device metrics.
-type ClearDeviceMetricsOverrideParams struct{}
-
-// ClearDeviceMetricsOverride clears the overridden device metrics.
-func ClearDeviceMetricsOverride() *ClearDeviceMetricsOverrideParams {
-	return &ClearDeviceMetricsOverrideParams{}
-}
-
-// Do executes Emulation.clearDeviceMetricsOverride against the provided context and
-// target handler.
-func (p *ClearDeviceMetricsOverrideParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandEmulationClearDeviceMetricsOverride, nil, nil)
-}
-
-// ResetPageScaleFactorParams requests that page scale factor is reset to
-// initial values.
-type ResetPageScaleFactorParams struct{}
-
-// ResetPageScaleFactor requests that page scale factor is reset to initial
-// values.
-func ResetPageScaleFactor() *ResetPageScaleFactorParams {
-	return &ResetPageScaleFactorParams{}
-}
-
-// Do executes Emulation.resetPageScaleFactor against the provided context and
-// target handler.
-func (p *ResetPageScaleFactorParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandEmulationResetPageScaleFactor, nil, nil)
-}
-
-// SetPageScaleFactorParams sets a specified page scale factor.
-type SetPageScaleFactorParams struct {
-	PageScaleFactor float64 `json:"pageScaleFactor"` // Page scale factor.
-}
-
-// SetPageScaleFactor sets a specified page scale factor.
-//
-// parameters:
-//   pageScaleFactor - Page scale factor.
-func SetPageScaleFactor(pageScaleFactor float64) *SetPageScaleFactorParams {
-	return &SetPageScaleFactorParams{
-		PageScaleFactor: pageScaleFactor,
-	}
-}
-
-// Do executes Emulation.setPageScaleFactor against the provided context and
-// target handler.
-func (p *SetPageScaleFactorParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandEmulationSetPageScaleFactor, p, nil)
-}
-
-// SetScriptExecutionDisabledParams switches script execution in the page.
-type SetScriptExecutionDisabledParams struct {
-	Value bool `json:"value"` // Whether script execution should be disabled in the page.
-}
-
-// SetScriptExecutionDisabled switches script execution in the page.
-//
-// parameters:
-//   value - Whether script execution should be disabled in the page.
-func SetScriptExecutionDisabled(value bool) *SetScriptExecutionDisabledParams {
-	return &SetScriptExecutionDisabledParams{
-		Value: value,
-	}
-}
-
-// Do executes Emulation.setScriptExecutionDisabled against the provided context and
-// target handler.
-func (p *SetScriptExecutionDisabledParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandEmulationSetScriptExecutionDisabled, p, nil)
-}
-
-// SetGeolocationOverrideParams overrides the Geolocation Position or Error.
-// Omitting any of the parameters emulates position unavailable.
-type SetGeolocationOverrideParams struct {
-	Latitude  float64 `json:"latitude,omitempty"`  // Mock latitude
-	Longitude float64 `json:"longitude,omitempty"` // Mock longitude
-	Accuracy  float64 `json:"accuracy,omitempty"`  // Mock accuracy
-}
-
-// SetGeolocationOverride overrides the Geolocation Position or Error.
-// Omitting any of the parameters emulates position unavailable.
-//
-// parameters:
-func SetGeolocationOverride() *SetGeolocationOverrideParams {
-	return &SetGeolocationOverrideParams{}
-}
-
-// WithLatitude mock latitude.
-func (p SetGeolocationOverrideParams) WithLatitude(latitude float64) *SetGeolocationOverrideParams {
-	p.Latitude = latitude
-	return &p
-}
-
-// WithLongitude mock longitude.
-func (p SetGeolocationOverrideParams) WithLongitude(longitude float64) *SetGeolocationOverrideParams {
-	p.Longitude = longitude
-	return &p
-}
-
-// WithAccuracy mock accuracy.
-func (p SetGeolocationOverrideParams) WithAccuracy(accuracy float64) *SetGeolocationOverrideParams {
-	p.Accuracy = accuracy
-	return &p
-}
-
-// Do executes Emulation.setGeolocationOverride against the provided context and
-// target handler.
-func (p *SetGeolocationOverrideParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandEmulationSetGeolocationOverride, p, nil)
-}
-
-// ClearGeolocationOverrideParams clears the overridden Geolocation Position
-// and Error.
-type ClearGeolocationOverrideParams struct{}
-
-// ClearGeolocationOverride clears the overridden Geolocation Position and
-// Error.
-func ClearGeolocationOverride() *ClearGeolocationOverrideParams {
-	return &ClearGeolocationOverrideParams{}
-}
-
-// Do executes Emulation.clearGeolocationOverride against the provided context and
-// target handler.
-func (p *ClearGeolocationOverrideParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandEmulationClearGeolocationOverride, nil, nil)
-}
-
-// SetTouchEmulationEnabledParams enables touch on platforms which do not
-// support them.
-type SetTouchEmulationEnabledParams struct {
-	Enabled        bool  `json:"enabled"`                  // Whether the touch event emulation should be enabled.
-	MaxTouchPoints int64 `json:"maxTouchPoints,omitempty"` // Maximum touch points supported. Defaults to one.
-}
-
-// SetTouchEmulationEnabled enables touch on platforms which do not support
-// them.
-//
-// parameters:
-//   enabled - Whether the touch event emulation should be enabled.
-func SetTouchEmulationEnabled(enabled bool) *SetTouchEmulationEnabledParams {
-	return &SetTouchEmulationEnabledParams{
-		Enabled: enabled,
-	}
-}
-
-// WithMaxTouchPoints maximum touch points supported. Defaults to one.
-func (p SetTouchEmulationEnabledParams) WithMaxTouchPoints(maxTouchPoints int64) *SetTouchEmulationEnabledParams {
-	p.MaxTouchPoints = maxTouchPoints
-	return &p
-}
-
-// Do executes Emulation.setTouchEmulationEnabled against the provided context and
-// target handler.
-func (p *SetTouchEmulationEnabledParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandEmulationSetTouchEmulationEnabled, p, nil)
-}
-
 // SetEmitTouchEventsForMouseParams [no description].
 type SetEmitTouchEventsForMouseParams struct {
 	Enabled       bool                                    `json:"enabled"`                 // Whether touch emulation based on mouse input should be enabled.
@@ -323,54 +290,139 @@ func (p *SetEmulatedMediaParams) Do(ctxt context.Context, h cdp.Handler) (err er
 	return h.Execute(ctxt, cdp.CommandEmulationSetEmulatedMedia, p, nil)
 }
 
-// SetCPUThrottlingRateParams enables CPU throttling to emulate slow CPUs.
-type SetCPUThrottlingRateParams struct {
-	Rate float64 `json:"rate"` // Throttling rate as a slowdown factor (1 is no throttle, 2 is 2x slowdown, etc).
+// SetGeolocationOverrideParams overrides the Geolocation Position or Error.
+// Omitting any of the parameters emulates position unavailable.
+type SetGeolocationOverrideParams struct {
+	Latitude  float64 `json:"latitude,omitempty"`  // Mock latitude
+	Longitude float64 `json:"longitude,omitempty"` // Mock longitude
+	Accuracy  float64 `json:"accuracy,omitempty"`  // Mock accuracy
 }
 
-// SetCPUThrottlingRate enables CPU throttling to emulate slow CPUs.
+// SetGeolocationOverride overrides the Geolocation Position or Error.
+// Omitting any of the parameters emulates position unavailable.
 //
 // parameters:
-//   rate - Throttling rate as a slowdown factor (1 is no throttle, 2 is 2x slowdown, etc).
-func SetCPUThrottlingRate(rate float64) *SetCPUThrottlingRateParams {
-	return &SetCPUThrottlingRateParams{
-		Rate: rate,
-	}
+func SetGeolocationOverride() *SetGeolocationOverrideParams {
+	return &SetGeolocationOverrideParams{}
 }
 
-// Do executes Emulation.setCPUThrottlingRate against the provided context and
+// WithLatitude mock latitude.
+func (p SetGeolocationOverrideParams) WithLatitude(latitude float64) *SetGeolocationOverrideParams {
+	p.Latitude = latitude
+	return &p
+}
+
+// WithLongitude mock longitude.
+func (p SetGeolocationOverrideParams) WithLongitude(longitude float64) *SetGeolocationOverrideParams {
+	p.Longitude = longitude
+	return &p
+}
+
+// WithAccuracy mock accuracy.
+func (p SetGeolocationOverrideParams) WithAccuracy(accuracy float64) *SetGeolocationOverrideParams {
+	p.Accuracy = accuracy
+	return &p
+}
+
+// Do executes Emulation.setGeolocationOverride against the provided context and
 // target handler.
-func (p *SetCPUThrottlingRateParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandEmulationSetCPUThrottlingRate, p, nil)
+func (p *SetGeolocationOverrideParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandEmulationSetGeolocationOverride, p, nil)
 }
 
-// CanEmulateParams tells whether emulation is supported.
-type CanEmulateParams struct{}
-
-// CanEmulate tells whether emulation is supported.
-func CanEmulate() *CanEmulateParams {
-	return &CanEmulateParams{}
+// SetNavigatorOverridesParams overrides value returned by the javascript
+// navigator object.
+type SetNavigatorOverridesParams struct {
+	Platform string `json:"platform"` // The platform navigator.platform should return.
 }
 
-// CanEmulateReturns return values.
-type CanEmulateReturns struct {
-	Result bool `json:"result,omitempty"` // True if emulation is supported.
-}
-
-// Do executes Emulation.canEmulate against the provided context and
-// target handler.
+// SetNavigatorOverrides overrides value returned by the javascript navigator
+// object.
 //
-// returns:
-//   result - True if emulation is supported.
-func (p *CanEmulateParams) Do(ctxt context.Context, h cdp.Handler) (result bool, err error) {
-	// execute
-	var res CanEmulateReturns
-	err = h.Execute(ctxt, cdp.CommandEmulationCanEmulate, nil, &res)
-	if err != nil {
-		return false, err
+// parameters:
+//   platform - The platform navigator.platform should return.
+func SetNavigatorOverrides(platform string) *SetNavigatorOverridesParams {
+	return &SetNavigatorOverridesParams{
+		Platform: platform,
 	}
+}
 
-	return res.Result, nil
+// Do executes Emulation.setNavigatorOverrides against the provided context and
+// target handler.
+func (p *SetNavigatorOverridesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandEmulationSetNavigatorOverrides, p, nil)
+}
+
+// SetPageScaleFactorParams sets a specified page scale factor.
+type SetPageScaleFactorParams struct {
+	PageScaleFactor float64 `json:"pageScaleFactor"` // Page scale factor.
+}
+
+// SetPageScaleFactor sets a specified page scale factor.
+//
+// parameters:
+//   pageScaleFactor - Page scale factor.
+func SetPageScaleFactor(pageScaleFactor float64) *SetPageScaleFactorParams {
+	return &SetPageScaleFactorParams{
+		PageScaleFactor: pageScaleFactor,
+	}
+}
+
+// Do executes Emulation.setPageScaleFactor against the provided context and
+// target handler.
+func (p *SetPageScaleFactorParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandEmulationSetPageScaleFactor, p, nil)
+}
+
+// SetScriptExecutionDisabledParams switches script execution in the page.
+type SetScriptExecutionDisabledParams struct {
+	Value bool `json:"value"` // Whether script execution should be disabled in the page.
+}
+
+// SetScriptExecutionDisabled switches script execution in the page.
+//
+// parameters:
+//   value - Whether script execution should be disabled in the page.
+func SetScriptExecutionDisabled(value bool) *SetScriptExecutionDisabledParams {
+	return &SetScriptExecutionDisabledParams{
+		Value: value,
+	}
+}
+
+// Do executes Emulation.setScriptExecutionDisabled against the provided context and
+// target handler.
+func (p *SetScriptExecutionDisabledParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandEmulationSetScriptExecutionDisabled, p, nil)
+}
+
+// SetTouchEmulationEnabledParams enables touch on platforms which do not
+// support them.
+type SetTouchEmulationEnabledParams struct {
+	Enabled        bool  `json:"enabled"`                  // Whether the touch event emulation should be enabled.
+	MaxTouchPoints int64 `json:"maxTouchPoints,omitempty"` // Maximum touch points supported. Defaults to one.
+}
+
+// SetTouchEmulationEnabled enables touch on platforms which do not support
+// them.
+//
+// parameters:
+//   enabled - Whether the touch event emulation should be enabled.
+func SetTouchEmulationEnabled(enabled bool) *SetTouchEmulationEnabledParams {
+	return &SetTouchEmulationEnabledParams{
+		Enabled: enabled,
+	}
+}
+
+// WithMaxTouchPoints maximum touch points supported. Defaults to one.
+func (p SetTouchEmulationEnabledParams) WithMaxTouchPoints(maxTouchPoints int64) *SetTouchEmulationEnabledParams {
+	p.MaxTouchPoints = maxTouchPoints
+	return &p
+}
+
+// Do executes Emulation.setTouchEmulationEnabled against the provided context and
+// target handler.
+func (p *SetTouchEmulationEnabledParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandEmulationSetTouchEmulationEnabled, p, nil)
 }
 
 // SetVirtualTimePolicyParams turns on virtual time for all frames (replacing
@@ -428,56 +480,4 @@ func (p *SetVirtualTimePolicyParams) Do(ctxt context.Context, h cdp.Handler) (vi
 	}
 
 	return res.VirtualTimeBase, nil
-}
-
-// SetNavigatorOverridesParams overrides value returned by the javascript
-// navigator object.
-type SetNavigatorOverridesParams struct {
-	Platform string `json:"platform"` // The platform navigator.platform should return.
-}
-
-// SetNavigatorOverrides overrides value returned by the javascript navigator
-// object.
-//
-// parameters:
-//   platform - The platform navigator.platform should return.
-func SetNavigatorOverrides(platform string) *SetNavigatorOverridesParams {
-	return &SetNavigatorOverridesParams{
-		Platform: platform,
-	}
-}
-
-// Do executes Emulation.setNavigatorOverrides against the provided context and
-// target handler.
-func (p *SetNavigatorOverridesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandEmulationSetNavigatorOverrides, p, nil)
-}
-
-// SetDefaultBackgroundColorOverrideParams sets or clears an override of the
-// default background color of the frame. This override is used if the content
-// does not specify one.
-type SetDefaultBackgroundColorOverrideParams struct {
-	Color *cdp.RGBA `json:"color,omitempty"` // RGBA of the default background color. If not specified, any existing override will be cleared.
-}
-
-// SetDefaultBackgroundColorOverride sets or clears an override of the
-// default background color of the frame. This override is used if the content
-// does not specify one.
-//
-// parameters:
-func SetDefaultBackgroundColorOverride() *SetDefaultBackgroundColorOverrideParams {
-	return &SetDefaultBackgroundColorOverrideParams{}
-}
-
-// WithColor rGBA of the default background color. If not specified, any
-// existing override will be cleared.
-func (p SetDefaultBackgroundColorOverrideParams) WithColor(color *cdp.RGBA) *SetDefaultBackgroundColorOverrideParams {
-	p.Color = color
-	return &p
-}
-
-// Do executes Emulation.setDefaultBackgroundColorOverride against the provided context and
-// target handler.
-func (p *SetDefaultBackgroundColorOverrideParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandEmulationSetDefaultBackgroundColorOverride, p, nil)
 }

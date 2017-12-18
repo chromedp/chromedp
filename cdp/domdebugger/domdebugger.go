@@ -17,201 +17,6 @@ import (
 	"github.com/knq/chromedp/cdp/runtime"
 )
 
-// SetDOMBreakpointParams sets breakpoint on particular operation with DOM.
-type SetDOMBreakpointParams struct {
-	NodeID cdp.NodeID        `json:"nodeId"` // Identifier of the node to set breakpoint on.
-	Type   DOMBreakpointType `json:"type"`   // Type of the operation to stop upon.
-}
-
-// SetDOMBreakpoint sets breakpoint on particular operation with DOM.
-//
-// parameters:
-//   nodeID - Identifier of the node to set breakpoint on.
-//   type - Type of the operation to stop upon.
-func SetDOMBreakpoint(nodeID cdp.NodeID, typeVal DOMBreakpointType) *SetDOMBreakpointParams {
-	return &SetDOMBreakpointParams{
-		NodeID: nodeID,
-		Type:   typeVal,
-	}
-}
-
-// Do executes DOMDebugger.setDOMBreakpoint against the provided context and
-// target handler.
-func (p *SetDOMBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDOMDebuggerSetDOMBreakpoint, p, nil)
-}
-
-// RemoveDOMBreakpointParams removes DOM breakpoint that was set using
-// setDOMBreakpoint.
-type RemoveDOMBreakpointParams struct {
-	NodeID cdp.NodeID        `json:"nodeId"` // Identifier of the node to remove breakpoint from.
-	Type   DOMBreakpointType `json:"type"`   // Type of the breakpoint to remove.
-}
-
-// RemoveDOMBreakpoint removes DOM breakpoint that was set using
-// setDOMBreakpoint.
-//
-// parameters:
-//   nodeID - Identifier of the node to remove breakpoint from.
-//   type - Type of the breakpoint to remove.
-func RemoveDOMBreakpoint(nodeID cdp.NodeID, typeVal DOMBreakpointType) *RemoveDOMBreakpointParams {
-	return &RemoveDOMBreakpointParams{
-		NodeID: nodeID,
-		Type:   typeVal,
-	}
-}
-
-// Do executes DOMDebugger.removeDOMBreakpoint against the provided context and
-// target handler.
-func (p *RemoveDOMBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDOMDebuggerRemoveDOMBreakpoint, p, nil)
-}
-
-// SetEventListenerBreakpointParams sets breakpoint on particular DOM event.
-type SetEventListenerBreakpointParams struct {
-	EventName  string `json:"eventName"`            // DOM Event name to stop on (any DOM event will do).
-	TargetName string `json:"targetName,omitempty"` // EventTarget interface name to stop on. If equal to "*" or not provided, will stop on any EventTarget.
-}
-
-// SetEventListenerBreakpoint sets breakpoint on particular DOM event.
-//
-// parameters:
-//   eventName - DOM Event name to stop on (any DOM event will do).
-func SetEventListenerBreakpoint(eventName string) *SetEventListenerBreakpointParams {
-	return &SetEventListenerBreakpointParams{
-		EventName: eventName,
-	}
-}
-
-// WithTargetName eventTarget interface name to stop on. If equal to "*" or
-// not provided, will stop on any EventTarget.
-func (p SetEventListenerBreakpointParams) WithTargetName(targetName string) *SetEventListenerBreakpointParams {
-	p.TargetName = targetName
-	return &p
-}
-
-// Do executes DOMDebugger.setEventListenerBreakpoint against the provided context and
-// target handler.
-func (p *SetEventListenerBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDOMDebuggerSetEventListenerBreakpoint, p, nil)
-}
-
-// RemoveEventListenerBreakpointParams removes breakpoint on particular DOM
-// event.
-type RemoveEventListenerBreakpointParams struct {
-	EventName  string `json:"eventName"`            // Event name.
-	TargetName string `json:"targetName,omitempty"` // EventTarget interface name.
-}
-
-// RemoveEventListenerBreakpoint removes breakpoint on particular DOM event.
-//
-// parameters:
-//   eventName - Event name.
-func RemoveEventListenerBreakpoint(eventName string) *RemoveEventListenerBreakpointParams {
-	return &RemoveEventListenerBreakpointParams{
-		EventName: eventName,
-	}
-}
-
-// WithTargetName eventTarget interface name.
-func (p RemoveEventListenerBreakpointParams) WithTargetName(targetName string) *RemoveEventListenerBreakpointParams {
-	p.TargetName = targetName
-	return &p
-}
-
-// Do executes DOMDebugger.removeEventListenerBreakpoint against the provided context and
-// target handler.
-func (p *RemoveEventListenerBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDOMDebuggerRemoveEventListenerBreakpoint, p, nil)
-}
-
-// SetInstrumentationBreakpointParams sets breakpoint on particular native
-// event.
-type SetInstrumentationBreakpointParams struct {
-	EventName string `json:"eventName"` // Instrumentation name to stop on.
-}
-
-// SetInstrumentationBreakpoint sets breakpoint on particular native event.
-//
-// parameters:
-//   eventName - Instrumentation name to stop on.
-func SetInstrumentationBreakpoint(eventName string) *SetInstrumentationBreakpointParams {
-	return &SetInstrumentationBreakpointParams{
-		EventName: eventName,
-	}
-}
-
-// Do executes DOMDebugger.setInstrumentationBreakpoint against the provided context and
-// target handler.
-func (p *SetInstrumentationBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDOMDebuggerSetInstrumentationBreakpoint, p, nil)
-}
-
-// RemoveInstrumentationBreakpointParams removes breakpoint on particular
-// native event.
-type RemoveInstrumentationBreakpointParams struct {
-	EventName string `json:"eventName"` // Instrumentation name to stop on.
-}
-
-// RemoveInstrumentationBreakpoint removes breakpoint on particular native
-// event.
-//
-// parameters:
-//   eventName - Instrumentation name to stop on.
-func RemoveInstrumentationBreakpoint(eventName string) *RemoveInstrumentationBreakpointParams {
-	return &RemoveInstrumentationBreakpointParams{
-		EventName: eventName,
-	}
-}
-
-// Do executes DOMDebugger.removeInstrumentationBreakpoint against the provided context and
-// target handler.
-func (p *RemoveInstrumentationBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDOMDebuggerRemoveInstrumentationBreakpoint, p, nil)
-}
-
-// SetXHRBreakpointParams sets breakpoint on XMLHttpRequest.
-type SetXHRBreakpointParams struct {
-	URL string `json:"url"` // Resource URL substring. All XHRs having this substring in the URL will get stopped upon.
-}
-
-// SetXHRBreakpoint sets breakpoint on XMLHttpRequest.
-//
-// parameters:
-//   url - Resource URL substring. All XHRs having this substring in the URL will get stopped upon.
-func SetXHRBreakpoint(url string) *SetXHRBreakpointParams {
-	return &SetXHRBreakpointParams{
-		URL: url,
-	}
-}
-
-// Do executes DOMDebugger.setXHRBreakpoint against the provided context and
-// target handler.
-func (p *SetXHRBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDOMDebuggerSetXHRBreakpoint, p, nil)
-}
-
-// RemoveXHRBreakpointParams removes breakpoint from XMLHttpRequest.
-type RemoveXHRBreakpointParams struct {
-	URL string `json:"url"` // Resource URL substring.
-}
-
-// RemoveXHRBreakpoint removes breakpoint from XMLHttpRequest.
-//
-// parameters:
-//   url - Resource URL substring.
-func RemoveXHRBreakpoint(url string) *RemoveXHRBreakpointParams {
-	return &RemoveXHRBreakpointParams{
-		URL: url,
-	}
-}
-
-// Do executes DOMDebugger.removeXHRBreakpoint against the provided context and
-// target handler.
-func (p *RemoveXHRBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDOMDebuggerRemoveXHRBreakpoint, p, nil)
-}
-
 // GetEventListenersParams returns event listeners of the given object.
 type GetEventListenersParams struct {
 	ObjectID runtime.RemoteObjectID `json:"objectId"`         // Identifier of the object to return listeners for.
@@ -264,4 +69,199 @@ func (p *GetEventListenersParams) Do(ctxt context.Context, h cdp.Handler) (liste
 	}
 
 	return res.Listeners, nil
+}
+
+// RemoveDOMBreakpointParams removes DOM breakpoint that was set using
+// setDOMBreakpoint.
+type RemoveDOMBreakpointParams struct {
+	NodeID cdp.NodeID        `json:"nodeId"` // Identifier of the node to remove breakpoint from.
+	Type   DOMBreakpointType `json:"type"`   // Type of the breakpoint to remove.
+}
+
+// RemoveDOMBreakpoint removes DOM breakpoint that was set using
+// setDOMBreakpoint.
+//
+// parameters:
+//   nodeID - Identifier of the node to remove breakpoint from.
+//   type - Type of the breakpoint to remove.
+func RemoveDOMBreakpoint(nodeID cdp.NodeID, typeVal DOMBreakpointType) *RemoveDOMBreakpointParams {
+	return &RemoveDOMBreakpointParams{
+		NodeID: nodeID,
+		Type:   typeVal,
+	}
+}
+
+// Do executes DOMDebugger.removeDOMBreakpoint against the provided context and
+// target handler.
+func (p *RemoveDOMBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDOMDebuggerRemoveDOMBreakpoint, p, nil)
+}
+
+// RemoveEventListenerBreakpointParams removes breakpoint on particular DOM
+// event.
+type RemoveEventListenerBreakpointParams struct {
+	EventName  string `json:"eventName"`            // Event name.
+	TargetName string `json:"targetName,omitempty"` // EventTarget interface name.
+}
+
+// RemoveEventListenerBreakpoint removes breakpoint on particular DOM event.
+//
+// parameters:
+//   eventName - Event name.
+func RemoveEventListenerBreakpoint(eventName string) *RemoveEventListenerBreakpointParams {
+	return &RemoveEventListenerBreakpointParams{
+		EventName: eventName,
+	}
+}
+
+// WithTargetName eventTarget interface name.
+func (p RemoveEventListenerBreakpointParams) WithTargetName(targetName string) *RemoveEventListenerBreakpointParams {
+	p.TargetName = targetName
+	return &p
+}
+
+// Do executes DOMDebugger.removeEventListenerBreakpoint against the provided context and
+// target handler.
+func (p *RemoveEventListenerBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDOMDebuggerRemoveEventListenerBreakpoint, p, nil)
+}
+
+// RemoveInstrumentationBreakpointParams removes breakpoint on particular
+// native event.
+type RemoveInstrumentationBreakpointParams struct {
+	EventName string `json:"eventName"` // Instrumentation name to stop on.
+}
+
+// RemoveInstrumentationBreakpoint removes breakpoint on particular native
+// event.
+//
+// parameters:
+//   eventName - Instrumentation name to stop on.
+func RemoveInstrumentationBreakpoint(eventName string) *RemoveInstrumentationBreakpointParams {
+	return &RemoveInstrumentationBreakpointParams{
+		EventName: eventName,
+	}
+}
+
+// Do executes DOMDebugger.removeInstrumentationBreakpoint against the provided context and
+// target handler.
+func (p *RemoveInstrumentationBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDOMDebuggerRemoveInstrumentationBreakpoint, p, nil)
+}
+
+// RemoveXHRBreakpointParams removes breakpoint from XMLHttpRequest.
+type RemoveXHRBreakpointParams struct {
+	URL string `json:"url"` // Resource URL substring.
+}
+
+// RemoveXHRBreakpoint removes breakpoint from XMLHttpRequest.
+//
+// parameters:
+//   url - Resource URL substring.
+func RemoveXHRBreakpoint(url string) *RemoveXHRBreakpointParams {
+	return &RemoveXHRBreakpointParams{
+		URL: url,
+	}
+}
+
+// Do executes DOMDebugger.removeXHRBreakpoint against the provided context and
+// target handler.
+func (p *RemoveXHRBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDOMDebuggerRemoveXHRBreakpoint, p, nil)
+}
+
+// SetDOMBreakpointParams sets breakpoint on particular operation with DOM.
+type SetDOMBreakpointParams struct {
+	NodeID cdp.NodeID        `json:"nodeId"` // Identifier of the node to set breakpoint on.
+	Type   DOMBreakpointType `json:"type"`   // Type of the operation to stop upon.
+}
+
+// SetDOMBreakpoint sets breakpoint on particular operation with DOM.
+//
+// parameters:
+//   nodeID - Identifier of the node to set breakpoint on.
+//   type - Type of the operation to stop upon.
+func SetDOMBreakpoint(nodeID cdp.NodeID, typeVal DOMBreakpointType) *SetDOMBreakpointParams {
+	return &SetDOMBreakpointParams{
+		NodeID: nodeID,
+		Type:   typeVal,
+	}
+}
+
+// Do executes DOMDebugger.setDOMBreakpoint against the provided context and
+// target handler.
+func (p *SetDOMBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDOMDebuggerSetDOMBreakpoint, p, nil)
+}
+
+// SetEventListenerBreakpointParams sets breakpoint on particular DOM event.
+type SetEventListenerBreakpointParams struct {
+	EventName  string `json:"eventName"`            // DOM Event name to stop on (any DOM event will do).
+	TargetName string `json:"targetName,omitempty"` // EventTarget interface name to stop on. If equal to "*" or not provided, will stop on any EventTarget.
+}
+
+// SetEventListenerBreakpoint sets breakpoint on particular DOM event.
+//
+// parameters:
+//   eventName - DOM Event name to stop on (any DOM event will do).
+func SetEventListenerBreakpoint(eventName string) *SetEventListenerBreakpointParams {
+	return &SetEventListenerBreakpointParams{
+		EventName: eventName,
+	}
+}
+
+// WithTargetName eventTarget interface name to stop on. If equal to "*" or
+// not provided, will stop on any EventTarget.
+func (p SetEventListenerBreakpointParams) WithTargetName(targetName string) *SetEventListenerBreakpointParams {
+	p.TargetName = targetName
+	return &p
+}
+
+// Do executes DOMDebugger.setEventListenerBreakpoint against the provided context and
+// target handler.
+func (p *SetEventListenerBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDOMDebuggerSetEventListenerBreakpoint, p, nil)
+}
+
+// SetInstrumentationBreakpointParams sets breakpoint on particular native
+// event.
+type SetInstrumentationBreakpointParams struct {
+	EventName string `json:"eventName"` // Instrumentation name to stop on.
+}
+
+// SetInstrumentationBreakpoint sets breakpoint on particular native event.
+//
+// parameters:
+//   eventName - Instrumentation name to stop on.
+func SetInstrumentationBreakpoint(eventName string) *SetInstrumentationBreakpointParams {
+	return &SetInstrumentationBreakpointParams{
+		EventName: eventName,
+	}
+}
+
+// Do executes DOMDebugger.setInstrumentationBreakpoint against the provided context and
+// target handler.
+func (p *SetInstrumentationBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDOMDebuggerSetInstrumentationBreakpoint, p, nil)
+}
+
+// SetXHRBreakpointParams sets breakpoint on XMLHttpRequest.
+type SetXHRBreakpointParams struct {
+	URL string `json:"url"` // Resource URL substring. All XHRs having this substring in the URL will get stopped upon.
+}
+
+// SetXHRBreakpoint sets breakpoint on XMLHttpRequest.
+//
+// parameters:
+//   url - Resource URL substring. All XHRs having this substring in the URL will get stopped upon.
+func SetXHRBreakpoint(url string) *SetXHRBreakpointParams {
+	return &SetXHRBreakpointParams{
+		URL: url,
+	}
+}
+
+// Do executes DOMDebugger.setXHRBreakpoint against the provided context and
+// target handler.
+func (p *SetXHRBreakpointParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDOMDebuggerSetXHRBreakpoint, p, nil)
 }

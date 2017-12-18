@@ -128,7 +128,7 @@ type Version struct {
 	RunningStatus      VersionRunningStatus `json:"runningStatus"`
 	Status             VersionStatus        `json:"status"`
 	ScriptLastModified float64              `json:"scriptLastModified,omitempty"` // The Last-Modified header value of the main script.
-	ScriptResponseTime float64              `json:"scriptResponseTime,omitempty"` // The time at which the response headers of the main script were received from the server.  For cached script it is the last time the cache entry was validated.
+	ScriptResponseTime float64              `json:"scriptResponseTime,omitempty"` // The time at which the response headers of the main script were received from the server. For cached script it is the last time the cache entry was validated.
 	ControlledClients  []target.ID          `json:"controlledClients,omitempty"`
 	TargetID           target.ID            `json:"targetId,omitempty"`
 }

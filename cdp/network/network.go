@@ -18,6 +18,219 @@ import (
 	"github.com/knq/chromedp/cdp/debugger"
 )
 
+// ClearBrowserCacheParams clears browser cache.
+type ClearBrowserCacheParams struct{}
+
+// ClearBrowserCache clears browser cache.
+func ClearBrowserCache() *ClearBrowserCacheParams {
+	return &ClearBrowserCacheParams{}
+}
+
+// Do executes Network.clearBrowserCache against the provided context and
+// target handler.
+func (p *ClearBrowserCacheParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandNetworkClearBrowserCache, nil, nil)
+}
+
+// ClearBrowserCookiesParams clears browser cookies.
+type ClearBrowserCookiesParams struct{}
+
+// ClearBrowserCookies clears browser cookies.
+func ClearBrowserCookies() *ClearBrowserCookiesParams {
+	return &ClearBrowserCookiesParams{}
+}
+
+// Do executes Network.clearBrowserCookies against the provided context and
+// target handler.
+func (p *ClearBrowserCookiesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandNetworkClearBrowserCookies, nil, nil)
+}
+
+// ContinueInterceptedRequestParams response to Network.requestIntercepted
+// which either modifies the request to continue with any modifications, or
+// blocks it, or completes it with the provided response bytes. If a network
+// fetch occurs as a result which encounters a redirect an additional
+// Network.requestIntercepted event will be sent with the same InterceptionId.
+type ContinueInterceptedRequestParams struct {
+	InterceptionID        InterceptionID         `json:"interceptionId"`
+	ErrorReason           ErrorReason            `json:"errorReason,omitempty"`           // If set this causes the request to fail with the given reason. Passing Aborted for requests marked with isNavigationRequest also cancels the navigation. Must not be set in response to an authChallenge.
+	RawResponse           string                 `json:"rawResponse,omitempty"`           // If set the requests completes using with the provided base64 encoded raw response, including HTTP status line and headers etc... Must not be set in response to an authChallenge.
+	URL                   string                 `json:"url,omitempty"`                   // If set the request url will be modified in a way that's not observable by page. Must not be set in response to an authChallenge.
+	Method                string                 `json:"method,omitempty"`                // If set this allows the request method to be overridden. Must not be set in response to an authChallenge.
+	PostData              string                 `json:"postData,omitempty"`              // If set this allows postData to be set. Must not be set in response to an authChallenge.
+	Headers               Headers                `json:"headers,omitempty"`               // If set this allows the request headers to be changed. Must not be set in response to an authChallenge.
+	AuthChallengeResponse *AuthChallengeResponse `json:"authChallengeResponse,omitempty"` // Response to a requestIntercepted with an authChallenge. Must not be set otherwise.
+}
+
+// ContinueInterceptedRequest response to Network.requestIntercepted which
+// either modifies the request to continue with any modifications, or blocks it,
+// or completes it with the provided response bytes. If a network fetch occurs
+// as a result which encounters a redirect an additional
+// Network.requestIntercepted event will be sent with the same InterceptionId.
+//
+// parameters:
+//   interceptionID
+func ContinueInterceptedRequest(interceptionID InterceptionID) *ContinueInterceptedRequestParams {
+	return &ContinueInterceptedRequestParams{
+		InterceptionID: interceptionID,
+	}
+}
+
+// WithErrorReason if set this causes the request to fail with the given
+// reason. Passing Aborted for requests marked with isNavigationRequest also
+// cancels the navigation. Must not be set in response to an authChallenge.
+func (p ContinueInterceptedRequestParams) WithErrorReason(errorReason ErrorReason) *ContinueInterceptedRequestParams {
+	p.ErrorReason = errorReason
+	return &p
+}
+
+// WithRawResponse if set the requests completes using with the provided
+// base64 encoded raw response, including HTTP status line and headers etc...
+// Must not be set in response to an authChallenge.
+func (p ContinueInterceptedRequestParams) WithRawResponse(rawResponse string) *ContinueInterceptedRequestParams {
+	p.RawResponse = rawResponse
+	return &p
+}
+
+// WithURL if set the request url will be modified in a way that's not
+// observable by page. Must not be set in response to an authChallenge.
+func (p ContinueInterceptedRequestParams) WithURL(url string) *ContinueInterceptedRequestParams {
+	p.URL = url
+	return &p
+}
+
+// WithMethod if set this allows the request method to be overridden. Must
+// not be set in response to an authChallenge.
+func (p ContinueInterceptedRequestParams) WithMethod(method string) *ContinueInterceptedRequestParams {
+	p.Method = method
+	return &p
+}
+
+// WithPostData if set this allows postData to be set. Must not be set in
+// response to an authChallenge.
+func (p ContinueInterceptedRequestParams) WithPostData(postData string) *ContinueInterceptedRequestParams {
+	p.PostData = postData
+	return &p
+}
+
+// WithHeaders if set this allows the request headers to be changed. Must not
+// be set in response to an authChallenge.
+func (p ContinueInterceptedRequestParams) WithHeaders(headers Headers) *ContinueInterceptedRequestParams {
+	p.Headers = headers
+	return &p
+}
+
+// WithAuthChallengeResponse response to a requestIntercepted with an
+// authChallenge. Must not be set otherwise.
+func (p ContinueInterceptedRequestParams) WithAuthChallengeResponse(authChallengeResponse *AuthChallengeResponse) *ContinueInterceptedRequestParams {
+	p.AuthChallengeResponse = authChallengeResponse
+	return &p
+}
+
+// Do executes Network.continueInterceptedRequest against the provided context and
+// target handler.
+func (p *ContinueInterceptedRequestParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandNetworkContinueInterceptedRequest, p, nil)
+}
+
+// DeleteCookiesParams deletes browser cookies with matching name and url or
+// domain/path pair.
+type DeleteCookiesParams struct {
+	Name   string `json:"name"`             // Name of the cookies to remove.
+	URL    string `json:"url,omitempty"`    // If specified, deletes all the cookies with the given name where domain and path match provided URL.
+	Domain string `json:"domain,omitempty"` // If specified, deletes only cookies with the exact domain.
+	Path   string `json:"path,omitempty"`   // If specified, deletes only cookies with the exact path.
+}
+
+// DeleteCookies deletes browser cookies with matching name and url or
+// domain/path pair.
+//
+// parameters:
+//   name - Name of the cookies to remove.
+func DeleteCookies(name string) *DeleteCookiesParams {
+	return &DeleteCookiesParams{
+		Name: name,
+	}
+}
+
+// WithURL if specified, deletes all the cookies with the given name where
+// domain and path match provided URL.
+func (p DeleteCookiesParams) WithURL(url string) *DeleteCookiesParams {
+	p.URL = url
+	return &p
+}
+
+// WithDomain if specified, deletes only cookies with the exact domain.
+func (p DeleteCookiesParams) WithDomain(domain string) *DeleteCookiesParams {
+	p.Domain = domain
+	return &p
+}
+
+// WithPath if specified, deletes only cookies with the exact path.
+func (p DeleteCookiesParams) WithPath(path string) *DeleteCookiesParams {
+	p.Path = path
+	return &p
+}
+
+// Do executes Network.deleteCookies against the provided context and
+// target handler.
+func (p *DeleteCookiesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandNetworkDeleteCookies, p, nil)
+}
+
+// DisableParams disables network tracking, prevents network events from
+// being sent to the client.
+type DisableParams struct{}
+
+// Disable disables network tracking, prevents network events from being sent
+// to the client.
+func Disable() *DisableParams {
+	return &DisableParams{}
+}
+
+// Do executes Network.disable against the provided context and
+// target handler.
+func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandNetworkDisable, nil, nil)
+}
+
+// EmulateNetworkConditionsParams activates emulation of network conditions.
+type EmulateNetworkConditionsParams struct {
+	Offline            bool           `json:"offline"`                  // True to emulate internet disconnection.
+	Latency            float64        `json:"latency"`                  // Minimum latency from request sent to response headers received (ms).
+	DownloadThroughput float64        `json:"downloadThroughput"`       // Maximal aggregated download throughput (bytes/sec). -1 disables download throttling.
+	UploadThroughput   float64        `json:"uploadThroughput"`         // Maximal aggregated upload throughput (bytes/sec).  -1 disables upload throttling.
+	ConnectionType     ConnectionType `json:"connectionType,omitempty"` // Connection type if known.
+}
+
+// EmulateNetworkConditions activates emulation of network conditions.
+//
+// parameters:
+//   offline - True to emulate internet disconnection.
+//   latency - Minimum latency from request sent to response headers received (ms).
+//   downloadThroughput - Maximal aggregated download throughput (bytes/sec). -1 disables download throttling.
+//   uploadThroughput - Maximal aggregated upload throughput (bytes/sec).  -1 disables upload throttling.
+func EmulateNetworkConditions(offline bool, latency float64, downloadThroughput float64, uploadThroughput float64) *EmulateNetworkConditionsParams {
+	return &EmulateNetworkConditionsParams{
+		Offline:            offline,
+		Latency:            latency,
+		DownloadThroughput: downloadThroughput,
+		UploadThroughput:   uploadThroughput,
+	}
+}
+
+// WithConnectionType connection type if known.
+func (p EmulateNetworkConditionsParams) WithConnectionType(connectionType ConnectionType) *EmulateNetworkConditionsParams {
+	p.ConnectionType = connectionType
+	return &p
+}
+
+// Do executes Network.emulateNetworkConditions against the provided context and
+// target handler.
+func (p *EmulateNetworkConditionsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandNetworkEmulateNetworkConditions, p, nil)
+}
+
 // EnableParams enables network tracking, network events will now be
 // delivered to the client.
 type EnableParams struct {
@@ -53,42 +266,237 @@ func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandNetworkEnable, p, nil)
 }
 
-// DisableParams disables network tracking, prevents network events from
-// being sent to the client.
-type DisableParams struct{}
+// GetAllCookiesParams returns all browser cookies. Depending on the backend
+// support, will return detailed cookie information in the cookies field.
+type GetAllCookiesParams struct{}
 
-// Disable disables network tracking, prevents network events from being sent
-// to the client.
-func Disable() *DisableParams {
-	return &DisableParams{}
+// GetAllCookies returns all browser cookies. Depending on the backend
+// support, will return detailed cookie information in the cookies field.
+func GetAllCookies() *GetAllCookiesParams {
+	return &GetAllCookiesParams{}
 }
 
-// Do executes Network.disable against the provided context and
+// GetAllCookiesReturns return values.
+type GetAllCookiesReturns struct {
+	Cookies []*Cookie `json:"cookies,omitempty"` // Array of cookie objects.
+}
+
+// Do executes Network.getAllCookies against the provided context and
 // target handler.
-func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandNetworkDisable, nil, nil)
+//
+// returns:
+//   cookies - Array of cookie objects.
+func (p *GetAllCookiesParams) Do(ctxt context.Context, h cdp.Handler) (cookies []*Cookie, err error) {
+	// execute
+	var res GetAllCookiesReturns
+	err = h.Execute(ctxt, cdp.CommandNetworkGetAllCookies, nil, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Cookies, nil
 }
 
-// SetUserAgentOverrideParams allows overriding user agent with the given
-// string.
-type SetUserAgentOverrideParams struct {
-	UserAgent string `json:"userAgent"` // User agent to use.
+// GetCertificateParams returns the DER-encoded certificate.
+type GetCertificateParams struct {
+	Origin string `json:"origin"` // Origin to get certificate for.
 }
 
-// SetUserAgentOverride allows overriding user agent with the given string.
+// GetCertificate returns the DER-encoded certificate.
 //
 // parameters:
-//   userAgent - User agent to use.
-func SetUserAgentOverride(userAgent string) *SetUserAgentOverrideParams {
-	return &SetUserAgentOverrideParams{
-		UserAgent: userAgent,
+//   origin - Origin to get certificate for.
+func GetCertificate(origin string) *GetCertificateParams {
+	return &GetCertificateParams{
+		Origin: origin,
 	}
 }
 
-// Do executes Network.setUserAgentOverride against the provided context and
+// GetCertificateReturns return values.
+type GetCertificateReturns struct {
+	TableNames []string `json:"tableNames,omitempty"`
+}
+
+// Do executes Network.getCertificate against the provided context and
 // target handler.
-func (p *SetUserAgentOverrideParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandNetworkSetUserAgentOverride, p, nil)
+//
+// returns:
+//   tableNames
+func (p *GetCertificateParams) Do(ctxt context.Context, h cdp.Handler) (tableNames []string, err error) {
+	// execute
+	var res GetCertificateReturns
+	err = h.Execute(ctxt, cdp.CommandNetworkGetCertificate, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.TableNames, nil
+}
+
+// GetCookiesParams returns all browser cookies for the current URL.
+// Depending on the backend support, will return detailed cookie information in
+// the cookies field.
+type GetCookiesParams struct {
+	Urls []string `json:"urls,omitempty"` // The list of URLs for which applicable cookies will be fetched
+}
+
+// GetCookies returns all browser cookies for the current URL. Depending on
+// the backend support, will return detailed cookie information in the cookies
+// field.
+//
+// parameters:
+func GetCookies() *GetCookiesParams {
+	return &GetCookiesParams{}
+}
+
+// WithUrls the list of URLs for which applicable cookies will be fetched.
+func (p GetCookiesParams) WithUrls(urls []string) *GetCookiesParams {
+	p.Urls = urls
+	return &p
+}
+
+// GetCookiesReturns return values.
+type GetCookiesReturns struct {
+	Cookies []*Cookie `json:"cookies,omitempty"` // Array of cookie objects.
+}
+
+// Do executes Network.getCookies against the provided context and
+// target handler.
+//
+// returns:
+//   cookies - Array of cookie objects.
+func (p *GetCookiesParams) Do(ctxt context.Context, h cdp.Handler) (cookies []*Cookie, err error) {
+	// execute
+	var res GetCookiesReturns
+	err = h.Execute(ctxt, cdp.CommandNetworkGetCookies, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Cookies, nil
+}
+
+// GetResponseBodyParams returns content served for the given request.
+type GetResponseBodyParams struct {
+	RequestID RequestID `json:"requestId"` // Identifier of the network request to get content for.
+}
+
+// GetResponseBody returns content served for the given request.
+//
+// parameters:
+//   requestID - Identifier of the network request to get content for.
+func GetResponseBody(requestID RequestID) *GetResponseBodyParams {
+	return &GetResponseBodyParams{
+		RequestID: requestID,
+	}
+}
+
+// GetResponseBodyReturns return values.
+type GetResponseBodyReturns struct {
+	Body          string `json:"body,omitempty"`          // Response body.
+	Base64encoded bool   `json:"base64Encoded,omitempty"` // True, if content was sent as base64.
+}
+
+// Do executes Network.getResponseBody against the provided context and
+// target handler.
+//
+// returns:
+//   body - Response body.
+func (p *GetResponseBodyParams) Do(ctxt context.Context, h cdp.Handler) (body []byte, err error) {
+	// execute
+	var res GetResponseBodyReturns
+	err = h.Execute(ctxt, cdp.CommandNetworkGetResponseBody, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	// decode
+	var dec []byte
+	if res.Base64encoded {
+		dec, err = base64.StdEncoding.DecodeString(res.Body)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		dec = []byte(res.Body)
+	}
+	return dec, nil
+}
+
+// GetResponseBodyForInterceptionParams returns content served for the given
+// currently intercepted request.
+type GetResponseBodyForInterceptionParams struct {
+	InterceptionID InterceptionID `json:"interceptionId"` // Identifier for the intercepted request to get body for.
+}
+
+// GetResponseBodyForInterception returns content served for the given
+// currently intercepted request.
+//
+// parameters:
+//   interceptionID - Identifier for the intercepted request to get body for.
+func GetResponseBodyForInterception(interceptionID InterceptionID) *GetResponseBodyForInterceptionParams {
+	return &GetResponseBodyForInterceptionParams{
+		InterceptionID: interceptionID,
+	}
+}
+
+// GetResponseBodyForInterceptionReturns return values.
+type GetResponseBodyForInterceptionReturns struct {
+	Body          string `json:"body,omitempty"`          // Response body.
+	Base64encoded bool   `json:"base64Encoded,omitempty"` // True, if content was sent as base64.
+}
+
+// Do executes Network.getResponseBodyForInterception against the provided context and
+// target handler.
+//
+// returns:
+//   body - Response body.
+func (p *GetResponseBodyForInterceptionParams) Do(ctxt context.Context, h cdp.Handler) (body []byte, err error) {
+	// execute
+	var res GetResponseBodyForInterceptionReturns
+	err = h.Execute(ctxt, cdp.CommandNetworkGetResponseBodyForInterception, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	// decode
+	var dec []byte
+	if res.Base64encoded {
+		dec, err = base64.StdEncoding.DecodeString(res.Body)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		dec = []byte(res.Body)
+	}
+	return dec, nil
+}
+
+// ReplayXHRParams this method sends a new XMLHttpRequest which is identical
+// to the original one. The following parameters should be identical: method,
+// url, async, request body, extra headers, withCredentials attribute, user,
+// password.
+type ReplayXHRParams struct {
+	RequestID RequestID `json:"requestId"` // Identifier of XHR to replay.
+}
+
+// ReplayXHR this method sends a new XMLHttpRequest which is identical to the
+// original one. The following parameters should be identical: method, url,
+// async, request body, extra headers, withCredentials attribute, user,
+// password.
+//
+// parameters:
+//   requestID - Identifier of XHR to replay.
+func ReplayXHR(requestID RequestID) *ReplayXHRParams {
+	return &ReplayXHRParams{
+		RequestID: requestID,
+	}
+}
+
+// Do executes Network.replayXHR against the provided context and
+// target handler.
+func (p *ReplayXHRParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandNetworkReplayXHR, p, nil)
 }
 
 // SearchInResponseBodyParams searches for given string in response content.
@@ -144,76 +552,6 @@ func (p *SearchInResponseBodyParams) Do(ctxt context.Context, h cdp.Handler) (re
 	return res.Result, nil
 }
 
-// SetExtraHTTPHeadersParams specifies whether to always send extra HTTP
-// headers with the requests from this page.
-type SetExtraHTTPHeadersParams struct {
-	Headers Headers `json:"headers"` // Map with extra HTTP headers.
-}
-
-// SetExtraHTTPHeaders specifies whether to always send extra HTTP headers
-// with the requests from this page.
-//
-// parameters:
-//   headers - Map with extra HTTP headers.
-func SetExtraHTTPHeaders(headers Headers) *SetExtraHTTPHeadersParams {
-	return &SetExtraHTTPHeadersParams{
-		Headers: headers,
-	}
-}
-
-// Do executes Network.setExtraHTTPHeaders against the provided context and
-// target handler.
-func (p *SetExtraHTTPHeadersParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandNetworkSetExtraHTTPHeaders, p, nil)
-}
-
-// GetResponseBodyParams returns content served for the given request.
-type GetResponseBodyParams struct {
-	RequestID RequestID `json:"requestId"` // Identifier of the network request to get content for.
-}
-
-// GetResponseBody returns content served for the given request.
-//
-// parameters:
-//   requestID - Identifier of the network request to get content for.
-func GetResponseBody(requestID RequestID) *GetResponseBodyParams {
-	return &GetResponseBodyParams{
-		RequestID: requestID,
-	}
-}
-
-// GetResponseBodyReturns return values.
-type GetResponseBodyReturns struct {
-	Body          string `json:"body,omitempty"`          // Response body.
-	Base64encoded bool   `json:"base64Encoded,omitempty"` // True, if content was sent as base64.
-}
-
-// Do executes Network.getResponseBody against the provided context and
-// target handler.
-//
-// returns:
-//   body - Response body.
-func (p *GetResponseBodyParams) Do(ctxt context.Context, h cdp.Handler) (body []byte, err error) {
-	// execute
-	var res GetResponseBodyReturns
-	err = h.Execute(ctxt, cdp.CommandNetworkGetResponseBody, p, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	// decode
-	var dec []byte
-	if res.Base64encoded {
-		dec, err = base64.StdEncoding.DecodeString(res.Body)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		dec = []byte(res.Body)
-	}
-	return dec, nil
-}
-
 // SetBlockedURLSParams blocks URLs from loading.
 type SetBlockedURLSParams struct {
 	Urls []string `json:"urls"` // URL patterns to block. Wildcards ('*') are allowed.
@@ -235,178 +573,50 @@ func (p *SetBlockedURLSParams) Do(ctxt context.Context, h cdp.Handler) (err erro
 	return h.Execute(ctxt, cdp.CommandNetworkSetBlockedURLS, p, nil)
 }
 
-// ReplayXHRParams this method sends a new XMLHttpRequest which is identical
-// to the original one. The following parameters should be identical: method,
-// url, async, request body, extra headers, withCredentials attribute, user,
-// password.
-type ReplayXHRParams struct {
-	RequestID RequestID `json:"requestId"` // Identifier of XHR to replay.
+// SetBypassServiceWorkerParams toggles ignoring of service worker for each
+// request.
+type SetBypassServiceWorkerParams struct {
+	Bypass bool `json:"bypass"` // Bypass service worker and load from network.
 }
 
-// ReplayXHR this method sends a new XMLHttpRequest which is identical to the
-// original one. The following parameters should be identical: method, url,
-// async, request body, extra headers, withCredentials attribute, user,
-// password.
+// SetBypassServiceWorker toggles ignoring of service worker for each
+// request.
 //
 // parameters:
-//   requestID - Identifier of XHR to replay.
-func ReplayXHR(requestID RequestID) *ReplayXHRParams {
-	return &ReplayXHRParams{
-		RequestID: requestID,
+//   bypass - Bypass service worker and load from network.
+func SetBypassServiceWorker(bypass bool) *SetBypassServiceWorkerParams {
+	return &SetBypassServiceWorkerParams{
+		Bypass: bypass,
 	}
 }
 
-// Do executes Network.replayXHR against the provided context and
+// Do executes Network.setBypassServiceWorker against the provided context and
 // target handler.
-func (p *ReplayXHRParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandNetworkReplayXHR, p, nil)
+func (p *SetBypassServiceWorkerParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandNetworkSetBypassServiceWorker, p, nil)
 }
 
-// ClearBrowserCacheParams clears browser cache.
-type ClearBrowserCacheParams struct{}
-
-// ClearBrowserCache clears browser cache.
-func ClearBrowserCache() *ClearBrowserCacheParams {
-	return &ClearBrowserCacheParams{}
+// SetCacheDisabledParams toggles ignoring cache for each request. If true,
+// cache will not be used.
+type SetCacheDisabledParams struct {
+	CacheDisabled bool `json:"cacheDisabled"` // Cache disabled state.
 }
 
-// Do executes Network.clearBrowserCache against the provided context and
-// target handler.
-func (p *ClearBrowserCacheParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandNetworkClearBrowserCache, nil, nil)
-}
-
-// ClearBrowserCookiesParams clears browser cookies.
-type ClearBrowserCookiesParams struct{}
-
-// ClearBrowserCookies clears browser cookies.
-func ClearBrowserCookies() *ClearBrowserCookiesParams {
-	return &ClearBrowserCookiesParams{}
-}
-
-// Do executes Network.clearBrowserCookies against the provided context and
-// target handler.
-func (p *ClearBrowserCookiesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandNetworkClearBrowserCookies, nil, nil)
-}
-
-// GetCookiesParams returns all browser cookies for the current URL.
-// Depending on the backend support, will return detailed cookie information in
-// the cookies field.
-type GetCookiesParams struct {
-	Urls []string `json:"urls,omitempty"` // The list of URLs for which applicable cookies will be fetched
-}
-
-// GetCookies returns all browser cookies for the current URL. Depending on
-// the backend support, will return detailed cookie information in the cookies
-// field.
+// SetCacheDisabled toggles ignoring cache for each request. If true, cache
+// will not be used.
 //
 // parameters:
-func GetCookies() *GetCookiesParams {
-	return &GetCookiesParams{}
-}
-
-// WithUrls the list of URLs for which applicable cookies will be fetched.
-func (p GetCookiesParams) WithUrls(urls []string) *GetCookiesParams {
-	p.Urls = urls
-	return &p
-}
-
-// GetCookiesReturns return values.
-type GetCookiesReturns struct {
-	Cookies []*Cookie `json:"cookies,omitempty"` // Array of cookie objects.
-}
-
-// Do executes Network.getCookies against the provided context and
-// target handler.
-//
-// returns:
-//   cookies - Array of cookie objects.
-func (p *GetCookiesParams) Do(ctxt context.Context, h cdp.Handler) (cookies []*Cookie, err error) {
-	// execute
-	var res GetCookiesReturns
-	err = h.Execute(ctxt, cdp.CommandNetworkGetCookies, p, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	return res.Cookies, nil
-}
-
-// GetAllCookiesParams returns all browser cookies. Depending on the backend
-// support, will return detailed cookie information in the cookies field.
-type GetAllCookiesParams struct{}
-
-// GetAllCookies returns all browser cookies. Depending on the backend
-// support, will return detailed cookie information in the cookies field.
-func GetAllCookies() *GetAllCookiesParams {
-	return &GetAllCookiesParams{}
-}
-
-// GetAllCookiesReturns return values.
-type GetAllCookiesReturns struct {
-	Cookies []*Cookie `json:"cookies,omitempty"` // Array of cookie objects.
-}
-
-// Do executes Network.getAllCookies against the provided context and
-// target handler.
-//
-// returns:
-//   cookies - Array of cookie objects.
-func (p *GetAllCookiesParams) Do(ctxt context.Context, h cdp.Handler) (cookies []*Cookie, err error) {
-	// execute
-	var res GetAllCookiesReturns
-	err = h.Execute(ctxt, cdp.CommandNetworkGetAllCookies, nil, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	return res.Cookies, nil
-}
-
-// DeleteCookiesParams deletes browser cookies with matching name and url or
-// domain/path pair.
-type DeleteCookiesParams struct {
-	Name   string `json:"name"`             // Name of the cookies to remove.
-	URL    string `json:"url,omitempty"`    // If specified, deletes all the cookies with the given name where domain and path match provided URL.
-	Domain string `json:"domain,omitempty"` // If specified, deletes only cookies with the exact domain.
-	Path   string `json:"path,omitempty"`   // If specified, deletes only cookies with the exact path.
-}
-
-// DeleteCookies deletes browser cookies with matching name and url or
-// domain/path pair.
-//
-// parameters:
-//   name - Name of the cookies to remove.
-func DeleteCookies(name string) *DeleteCookiesParams {
-	return &DeleteCookiesParams{
-		Name: name,
+//   cacheDisabled - Cache disabled state.
+func SetCacheDisabled(cacheDisabled bool) *SetCacheDisabledParams {
+	return &SetCacheDisabledParams{
+		CacheDisabled: cacheDisabled,
 	}
 }
 
-// WithURL if specified, deletes all the cookies with the given name where
-// domain and path match provided URL.
-func (p DeleteCookiesParams) WithURL(url string) *DeleteCookiesParams {
-	p.URL = url
-	return &p
-}
-
-// WithDomain if specified, deletes only cookies with the exact domain.
-func (p DeleteCookiesParams) WithDomain(domain string) *DeleteCookiesParams {
-	p.Domain = domain
-	return &p
-}
-
-// WithPath if specified, deletes only cookies with the exact path.
-func (p DeleteCookiesParams) WithPath(path string) *DeleteCookiesParams {
-	p.Path = path
-	return &p
-}
-
-// Do executes Network.deleteCookies against the provided context and
+// Do executes Network.setCacheDisabled against the provided context and
 // target handler.
-func (p *DeleteCookiesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandNetworkDeleteCookies, p, nil)
+func (p *SetCacheDisabledParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandNetworkSetCacheDisabled, p, nil)
 }
 
 // SetCookieParams sets a cookie with the given cookie data; may overwrite
@@ -521,89 +731,6 @@ func (p *SetCookiesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandNetworkSetCookies, p, nil)
 }
 
-// EmulateNetworkConditionsParams activates emulation of network conditions.
-type EmulateNetworkConditionsParams struct {
-	Offline            bool           `json:"offline"`                  // True to emulate internet disconnection.
-	Latency            float64        `json:"latency"`                  // Minimum latency from request sent to response headers received (ms).
-	DownloadThroughput float64        `json:"downloadThroughput"`       // Maximal aggregated download throughput (bytes/sec). -1 disables download throttling.
-	UploadThroughput   float64        `json:"uploadThroughput"`         // Maximal aggregated upload throughput (bytes/sec).  -1 disables upload throttling.
-	ConnectionType     ConnectionType `json:"connectionType,omitempty"` // Connection type if known.
-}
-
-// EmulateNetworkConditions activates emulation of network conditions.
-//
-// parameters:
-//   offline - True to emulate internet disconnection.
-//   latency - Minimum latency from request sent to response headers received (ms).
-//   downloadThroughput - Maximal aggregated download throughput (bytes/sec). -1 disables download throttling.
-//   uploadThroughput - Maximal aggregated upload throughput (bytes/sec).  -1 disables upload throttling.
-func EmulateNetworkConditions(offline bool, latency float64, downloadThroughput float64, uploadThroughput float64) *EmulateNetworkConditionsParams {
-	return &EmulateNetworkConditionsParams{
-		Offline:            offline,
-		Latency:            latency,
-		DownloadThroughput: downloadThroughput,
-		UploadThroughput:   uploadThroughput,
-	}
-}
-
-// WithConnectionType connection type if known.
-func (p EmulateNetworkConditionsParams) WithConnectionType(connectionType ConnectionType) *EmulateNetworkConditionsParams {
-	p.ConnectionType = connectionType
-	return &p
-}
-
-// Do executes Network.emulateNetworkConditions against the provided context and
-// target handler.
-func (p *EmulateNetworkConditionsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandNetworkEmulateNetworkConditions, p, nil)
-}
-
-// SetCacheDisabledParams toggles ignoring cache for each request. If true,
-// cache will not be used.
-type SetCacheDisabledParams struct {
-	CacheDisabled bool `json:"cacheDisabled"` // Cache disabled state.
-}
-
-// SetCacheDisabled toggles ignoring cache for each request. If true, cache
-// will not be used.
-//
-// parameters:
-//   cacheDisabled - Cache disabled state.
-func SetCacheDisabled(cacheDisabled bool) *SetCacheDisabledParams {
-	return &SetCacheDisabledParams{
-		CacheDisabled: cacheDisabled,
-	}
-}
-
-// Do executes Network.setCacheDisabled against the provided context and
-// target handler.
-func (p *SetCacheDisabledParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandNetworkSetCacheDisabled, p, nil)
-}
-
-// SetBypassServiceWorkerParams toggles ignoring of service worker for each
-// request.
-type SetBypassServiceWorkerParams struct {
-	Bypass bool `json:"bypass"` // Bypass service worker and load from network.
-}
-
-// SetBypassServiceWorker toggles ignoring of service worker for each
-// request.
-//
-// parameters:
-//   bypass - Bypass service worker and load from network.
-func SetBypassServiceWorker(bypass bool) *SetBypassServiceWorkerParams {
-	return &SetBypassServiceWorkerParams{
-		Bypass: bypass,
-	}
-}
-
-// Do executes Network.setBypassServiceWorker against the provided context and
-// target handler.
-func (p *SetBypassServiceWorkerParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandNetworkSetBypassServiceWorker, p, nil)
-}
-
 // SetDataSizeLimitsForTestParams for testing.
 type SetDataSizeLimitsForTestParams struct {
 	MaxTotalSize    int64 `json:"maxTotalSize"`    // Maximum total buffer size.
@@ -628,40 +755,27 @@ func (p *SetDataSizeLimitsForTestParams) Do(ctxt context.Context, h cdp.Handler)
 	return h.Execute(ctxt, cdp.CommandNetworkSetDataSizeLimitsForTest, p, nil)
 }
 
-// GetCertificateParams returns the DER-encoded certificate.
-type GetCertificateParams struct {
-	Origin string `json:"origin"` // Origin to get certificate for.
+// SetExtraHTTPHeadersParams specifies whether to always send extra HTTP
+// headers with the requests from this page.
+type SetExtraHTTPHeadersParams struct {
+	Headers Headers `json:"headers"` // Map with extra HTTP headers.
 }
 
-// GetCertificate returns the DER-encoded certificate.
+// SetExtraHTTPHeaders specifies whether to always send extra HTTP headers
+// with the requests from this page.
 //
 // parameters:
-//   origin - Origin to get certificate for.
-func GetCertificate(origin string) *GetCertificateParams {
-	return &GetCertificateParams{
-		Origin: origin,
+//   headers - Map with extra HTTP headers.
+func SetExtraHTTPHeaders(headers Headers) *SetExtraHTTPHeadersParams {
+	return &SetExtraHTTPHeadersParams{
+		Headers: headers,
 	}
 }
 
-// GetCertificateReturns return values.
-type GetCertificateReturns struct {
-	TableNames []string `json:"tableNames,omitempty"`
-}
-
-// Do executes Network.getCertificate against the provided context and
+// Do executes Network.setExtraHTTPHeaders against the provided context and
 // target handler.
-//
-// returns:
-//   tableNames
-func (p *GetCertificateParams) Do(ctxt context.Context, h cdp.Handler) (tableNames []string, err error) {
-	// execute
-	var res GetCertificateReturns
-	err = h.Execute(ctxt, cdp.CommandNetworkGetCertificate, p, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	return res.TableNames, nil
+func (p *SetExtraHTTPHeadersParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandNetworkSetExtraHTTPHeaders, p, nil)
 }
 
 // SetRequestInterceptionParams sets the requests to intercept that match a
@@ -687,138 +801,24 @@ func (p *SetRequestInterceptionParams) Do(ctxt context.Context, h cdp.Handler) (
 	return h.Execute(ctxt, cdp.CommandNetworkSetRequestInterception, p, nil)
 }
 
-// ContinueInterceptedRequestParams response to Network.requestIntercepted
-// which either modifies the request to continue with any modifications, or
-// blocks it, or completes it with the provided response bytes. If a network
-// fetch occurs as a result which encounters a redirect an additional
-// Network.requestIntercepted event will be sent with the same InterceptionId.
-type ContinueInterceptedRequestParams struct {
-	InterceptionID        InterceptionID         `json:"interceptionId"`
-	ErrorReason           ErrorReason            `json:"errorReason,omitempty"`           // If set this causes the request to fail with the given reason. Passing Aborted for requests marked with isNavigationRequest also cancels the navigation. Must not be set in response to an authChallenge.
-	RawResponse           string                 `json:"rawResponse,omitempty"`           // If set the requests completes using with the provided base64 encoded raw response, including HTTP status line and headers etc... Must not be set in response to an authChallenge.
-	URL                   string                 `json:"url,omitempty"`                   // If set the request url will be modified in a way that's not observable by page. Must not be set in response to an authChallenge.
-	Method                string                 `json:"method,omitempty"`                // If set this allows the request method to be overridden. Must not be set in response to an authChallenge.
-	PostData              string                 `json:"postData,omitempty"`              // If set this allows postData to be set. Must not be set in response to an authChallenge.
-	Headers               Headers                `json:"headers,omitempty"`               // If set this allows the request headers to be changed. Must not be set in response to an authChallenge.
-	AuthChallengeResponse *AuthChallengeResponse `json:"authChallengeResponse,omitempty"` // Response to a requestIntercepted with an authChallenge. Must not be set otherwise.
+// SetUserAgentOverrideParams allows overriding user agent with the given
+// string.
+type SetUserAgentOverrideParams struct {
+	UserAgent string `json:"userAgent"` // User agent to use.
 }
 
-// ContinueInterceptedRequest response to Network.requestIntercepted which
-// either modifies the request to continue with any modifications, or blocks it,
-// or completes it with the provided response bytes. If a network fetch occurs
-// as a result which encounters a redirect an additional
-// Network.requestIntercepted event will be sent with the same InterceptionId.
+// SetUserAgentOverride allows overriding user agent with the given string.
 //
 // parameters:
-//   interceptionID
-func ContinueInterceptedRequest(interceptionID InterceptionID) *ContinueInterceptedRequestParams {
-	return &ContinueInterceptedRequestParams{
-		InterceptionID: interceptionID,
+//   userAgent - User agent to use.
+func SetUserAgentOverride(userAgent string) *SetUserAgentOverrideParams {
+	return &SetUserAgentOverrideParams{
+		UserAgent: userAgent,
 	}
 }
 
-// WithErrorReason if set this causes the request to fail with the given
-// reason. Passing Aborted for requests marked with isNavigationRequest also
-// cancels the navigation. Must not be set in response to an authChallenge.
-func (p ContinueInterceptedRequestParams) WithErrorReason(errorReason ErrorReason) *ContinueInterceptedRequestParams {
-	p.ErrorReason = errorReason
-	return &p
-}
-
-// WithRawResponse if set the requests completes using with the provided
-// base64 encoded raw response, including HTTP status line and headers etc...
-// Must not be set in response to an authChallenge.
-func (p ContinueInterceptedRequestParams) WithRawResponse(rawResponse string) *ContinueInterceptedRequestParams {
-	p.RawResponse = rawResponse
-	return &p
-}
-
-// WithURL if set the request url will be modified in a way that's not
-// observable by page. Must not be set in response to an authChallenge.
-func (p ContinueInterceptedRequestParams) WithURL(url string) *ContinueInterceptedRequestParams {
-	p.URL = url
-	return &p
-}
-
-// WithMethod if set this allows the request method to be overridden. Must
-// not be set in response to an authChallenge.
-func (p ContinueInterceptedRequestParams) WithMethod(method string) *ContinueInterceptedRequestParams {
-	p.Method = method
-	return &p
-}
-
-// WithPostData if set this allows postData to be set. Must not be set in
-// response to an authChallenge.
-func (p ContinueInterceptedRequestParams) WithPostData(postData string) *ContinueInterceptedRequestParams {
-	p.PostData = postData
-	return &p
-}
-
-// WithHeaders if set this allows the request headers to be changed. Must not
-// be set in response to an authChallenge.
-func (p ContinueInterceptedRequestParams) WithHeaders(headers Headers) *ContinueInterceptedRequestParams {
-	p.Headers = headers
-	return &p
-}
-
-// WithAuthChallengeResponse response to a requestIntercepted with an
-// authChallenge. Must not be set otherwise.
-func (p ContinueInterceptedRequestParams) WithAuthChallengeResponse(authChallengeResponse *AuthChallengeResponse) *ContinueInterceptedRequestParams {
-	p.AuthChallengeResponse = authChallengeResponse
-	return &p
-}
-
-// Do executes Network.continueInterceptedRequest against the provided context and
+// Do executes Network.setUserAgentOverride against the provided context and
 // target handler.
-func (p *ContinueInterceptedRequestParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandNetworkContinueInterceptedRequest, p, nil)
-}
-
-// GetResponseBodyForInterceptionParams returns content served for the given
-// currently intercepted request.
-type GetResponseBodyForInterceptionParams struct {
-	InterceptionID InterceptionID `json:"interceptionId"` // Identifier for the intercepted request to get body for.
-}
-
-// GetResponseBodyForInterception returns content served for the given
-// currently intercepted request.
-//
-// parameters:
-//   interceptionID - Identifier for the intercepted request to get body for.
-func GetResponseBodyForInterception(interceptionID InterceptionID) *GetResponseBodyForInterceptionParams {
-	return &GetResponseBodyForInterceptionParams{
-		InterceptionID: interceptionID,
-	}
-}
-
-// GetResponseBodyForInterceptionReturns return values.
-type GetResponseBodyForInterceptionReturns struct {
-	Body          string `json:"body,omitempty"`          // Response body.
-	Base64encoded bool   `json:"base64Encoded,omitempty"` // True, if content was sent as base64.
-}
-
-// Do executes Network.getResponseBodyForInterception against the provided context and
-// target handler.
-//
-// returns:
-//   body - Response body.
-func (p *GetResponseBodyForInterceptionParams) Do(ctxt context.Context, h cdp.Handler) (body []byte, err error) {
-	// execute
-	var res GetResponseBodyForInterceptionReturns
-	err = h.Execute(ctxt, cdp.CommandNetworkGetResponseBodyForInterception, p, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	// decode
-	var dec []byte
-	if res.Base64encoded {
-		dec, err = base64.StdEncoding.DecodeString(res.Body)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		dec = []byte(res.Body)
-	}
-	return dec, nil
+func (p *SetUserAgentOverrideParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandNetworkSetUserAgentOverride, p, nil)
 }

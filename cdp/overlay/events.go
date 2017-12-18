@@ -7,17 +7,17 @@ import (
 	"github.com/knq/chromedp/cdp/page"
 )
 
-// EventNodeHighlightRequested fired when the node should be highlighted.
-// This happens after call to setInspectMode.
-type EventNodeHighlightRequested struct {
-	NodeID cdp.NodeID `json:"nodeId"`
-}
-
 // EventInspectNodeRequested fired when the node should be inspected. This
 // happens after call to setInspectMode or when user manually inspects an
 // element.
 type EventInspectNodeRequested struct {
 	BackendNodeID cdp.BackendNodeID `json:"backendNodeId"` // Id of the node to inspect.
+}
+
+// EventNodeHighlightRequested fired when the node should be highlighted.
+// This happens after call to setInspectMode.
+type EventNodeHighlightRequested struct {
+	NodeID cdp.NodeID `json:"nodeId"`
 }
 
 // EventScreenshotRequested fired when user asks to capture screenshot of
@@ -28,7 +28,7 @@ type EventScreenshotRequested struct {
 
 // EventTypes all event types in the domain.
 var EventTypes = []cdp.MethodType{
-	cdp.EventOverlayNodeHighlightRequested,
 	cdp.EventOverlayInspectNodeRequested,
+	cdp.EventOverlayNodeHighlightRequested,
 	cdp.EventOverlayScreenshotRequested,
 }

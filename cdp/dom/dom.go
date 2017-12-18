@@ -23,18 +23,163 @@ import (
 	"github.com/knq/chromedp/cdp/runtime"
 )
 
-// EnableParams enables DOM agent for the given page.
-type EnableParams struct{}
-
-// Enable enables DOM agent for the given page.
-func Enable() *EnableParams {
-	return &EnableParams{}
+// CollectClassNamesFromSubtreeParams collects class names for the node with
+// given id and all of it's child nodes.
+type CollectClassNamesFromSubtreeParams struct {
+	NodeID cdp.NodeID `json:"nodeId"` // Id of the node to collect class names.
 }
 
-// Do executes DOM.enable against the provided context and
+// CollectClassNamesFromSubtree collects class names for the node with given
+// id and all of it's child nodes.
+//
+// parameters:
+//   nodeID - Id of the node to collect class names.
+func CollectClassNamesFromSubtree(nodeID cdp.NodeID) *CollectClassNamesFromSubtreeParams {
+	return &CollectClassNamesFromSubtreeParams{
+		NodeID: nodeID,
+	}
+}
+
+// CollectClassNamesFromSubtreeReturns return values.
+type CollectClassNamesFromSubtreeReturns struct {
+	ClassNames []string `json:"classNames,omitempty"` // Class name list.
+}
+
+// Do executes DOM.collectClassNamesFromSubtree against the provided context and
 // target handler.
-func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDOMEnable, nil, nil)
+//
+// returns:
+//   classNames - Class name list.
+func (p *CollectClassNamesFromSubtreeParams) Do(ctxt context.Context, h cdp.Handler) (classNames []string, err error) {
+	// execute
+	var res CollectClassNamesFromSubtreeReturns
+	err = h.Execute(ctxt, cdp.CommandDOMCollectClassNamesFromSubtree, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.ClassNames, nil
+}
+
+// CopyToParams creates a deep copy of the specified node and places it into
+// the target container before the given anchor.
+type CopyToParams struct {
+	NodeID             cdp.NodeID `json:"nodeId"`                       // Id of the node to copy.
+	TargetNodeID       cdp.NodeID `json:"targetNodeId"`                 // Id of the element to drop the copy into.
+	InsertBeforeNodeID cdp.NodeID `json:"insertBeforeNodeId,omitempty"` // Drop the copy before this node (if absent, the copy becomes the last child of targetNodeId).
+}
+
+// CopyTo creates a deep copy of the specified node and places it into the
+// target container before the given anchor.
+//
+// parameters:
+//   nodeID - Id of the node to copy.
+//   targetNodeID - Id of the element to drop the copy into.
+func CopyTo(nodeID cdp.NodeID, targetNodeID cdp.NodeID) *CopyToParams {
+	return &CopyToParams{
+		NodeID:       nodeID,
+		TargetNodeID: targetNodeID,
+	}
+}
+
+// WithInsertBeforeNodeID drop the copy before this node (if absent, the copy
+// becomes the last child of targetNodeId).
+func (p CopyToParams) WithInsertBeforeNodeID(insertBeforeNodeID cdp.NodeID) *CopyToParams {
+	p.InsertBeforeNodeID = insertBeforeNodeID
+	return &p
+}
+
+// CopyToReturns return values.
+type CopyToReturns struct {
+	NodeID cdp.NodeID `json:"nodeId,omitempty"` // Id of the node clone.
+}
+
+// Do executes DOM.copyTo against the provided context and
+// target handler.
+//
+// returns:
+//   nodeID - Id of the node clone.
+func (p *CopyToParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
+	// execute
+	var res CopyToReturns
+	err = h.Execute(ctxt, cdp.CommandDOMCopyTo, p, &res)
+	if err != nil {
+		return 0, err
+	}
+
+	return res.NodeID, nil
+}
+
+// DescribeNodeParams describes node given its id, does not require domain to
+// be enabled. Does not start tracking any objects, can be used for automation.
+type DescribeNodeParams struct {
+	NodeID        cdp.NodeID             `json:"nodeId,omitempty"`        // Identifier of the node.
+	BackendNodeID cdp.BackendNodeID      `json:"backendNodeId,omitempty"` // Identifier of the backend node.
+	ObjectID      runtime.RemoteObjectID `json:"objectId,omitempty"`      // JavaScript object id of the node wrapper.
+	Depth         int64                  `json:"depth,omitempty"`         // The maximum depth at which children should be retrieved, defaults to 1. Use -1 for the entire subtree or provide an integer larger than 0.
+	Pierce        bool                   `json:"pierce,omitempty"`        // Whether or not iframes and shadow roots should be traversed when returning the subtree (default is false).
+}
+
+// DescribeNode describes node given its id, does not require domain to be
+// enabled. Does not start tracking any objects, can be used for automation.
+//
+// parameters:
+func DescribeNode() *DescribeNodeParams {
+	return &DescribeNodeParams{}
+}
+
+// WithNodeID identifier of the node.
+func (p DescribeNodeParams) WithNodeID(nodeID cdp.NodeID) *DescribeNodeParams {
+	p.NodeID = nodeID
+	return &p
+}
+
+// WithBackendNodeID identifier of the backend node.
+func (p DescribeNodeParams) WithBackendNodeID(backendNodeID cdp.BackendNodeID) *DescribeNodeParams {
+	p.BackendNodeID = backendNodeID
+	return &p
+}
+
+// WithObjectID JavaScript object id of the node wrapper.
+func (p DescribeNodeParams) WithObjectID(objectID runtime.RemoteObjectID) *DescribeNodeParams {
+	p.ObjectID = objectID
+	return &p
+}
+
+// WithDepth the maximum depth at which children should be retrieved,
+// defaults to 1. Use -1 for the entire subtree or provide an integer larger
+// than 0.
+func (p DescribeNodeParams) WithDepth(depth int64) *DescribeNodeParams {
+	p.Depth = depth
+	return &p
+}
+
+// WithPierce whether or not iframes and shadow roots should be traversed
+// when returning the subtree (default is false).
+func (p DescribeNodeParams) WithPierce(pierce bool) *DescribeNodeParams {
+	p.Pierce = pierce
+	return &p
+}
+
+// DescribeNodeReturns return values.
+type DescribeNodeReturns struct {
+	Node *cdp.Node `json:"node,omitempty"` // Node description.
+}
+
+// Do executes DOM.describeNode against the provided context and
+// target handler.
+//
+// returns:
+//   node - Node description.
+func (p *DescribeNodeParams) Do(ctxt context.Context, h cdp.Handler) (node *cdp.Node, err error) {
+	// execute
+	var res DescribeNodeReturns
+	err = h.Execute(ctxt, cdp.CommandDOMDescribeNode, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Node, nil
 }
 
 // DisableParams disables DOM agent for the given page.
@@ -49,6 +194,170 @@ func Disable() *DisableParams {
 // target handler.
 func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandDOMDisable, nil, nil)
+}
+
+// DiscardSearchResultsParams discards search results from the session with
+// the given id. getSearchResults should no longer be called for that search.
+type DiscardSearchResultsParams struct {
+	SearchID string `json:"searchId"` // Unique search session identifier.
+}
+
+// DiscardSearchResults discards search results from the session with the
+// given id. getSearchResults should no longer be called for that search.
+//
+// parameters:
+//   searchID - Unique search session identifier.
+func DiscardSearchResults(searchID string) *DiscardSearchResultsParams {
+	return &DiscardSearchResultsParams{
+		SearchID: searchID,
+	}
+}
+
+// Do executes DOM.discardSearchResults against the provided context and
+// target handler.
+func (p *DiscardSearchResultsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDOMDiscardSearchResults, p, nil)
+}
+
+// EnableParams enables DOM agent for the given page.
+type EnableParams struct{}
+
+// Enable enables DOM agent for the given page.
+func Enable() *EnableParams {
+	return &EnableParams{}
+}
+
+// Do executes DOM.enable against the provided context and
+// target handler.
+func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDOMEnable, nil, nil)
+}
+
+// FocusParams focuses the given element.
+type FocusParams struct {
+	NodeID        cdp.NodeID             `json:"nodeId,omitempty"`        // Identifier of the node.
+	BackendNodeID cdp.BackendNodeID      `json:"backendNodeId,omitempty"` // Identifier of the backend node.
+	ObjectID      runtime.RemoteObjectID `json:"objectId,omitempty"`      // JavaScript object id of the node wrapper.
+}
+
+// Focus focuses the given element.
+//
+// parameters:
+func Focus() *FocusParams {
+	return &FocusParams{}
+}
+
+// WithNodeID identifier of the node.
+func (p FocusParams) WithNodeID(nodeID cdp.NodeID) *FocusParams {
+	p.NodeID = nodeID
+	return &p
+}
+
+// WithBackendNodeID identifier of the backend node.
+func (p FocusParams) WithBackendNodeID(backendNodeID cdp.BackendNodeID) *FocusParams {
+	p.BackendNodeID = backendNodeID
+	return &p
+}
+
+// WithObjectID JavaScript object id of the node wrapper.
+func (p FocusParams) WithObjectID(objectID runtime.RemoteObjectID) *FocusParams {
+	p.ObjectID = objectID
+	return &p
+}
+
+// Do executes DOM.focus against the provided context and
+// target handler.
+func (p *FocusParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDOMFocus, p, nil)
+}
+
+// GetAttributesParams returns attributes for the specified node.
+type GetAttributesParams struct {
+	NodeID cdp.NodeID `json:"nodeId"` // Id of the node to retrieve attibutes for.
+}
+
+// GetAttributes returns attributes for the specified node.
+//
+// parameters:
+//   nodeID - Id of the node to retrieve attibutes for.
+func GetAttributes(nodeID cdp.NodeID) *GetAttributesParams {
+	return &GetAttributesParams{
+		NodeID: nodeID,
+	}
+}
+
+// GetAttributesReturns return values.
+type GetAttributesReturns struct {
+	Attributes []string `json:"attributes,omitempty"` // An interleaved array of node attribute names and values.
+}
+
+// Do executes DOM.getAttributes against the provided context and
+// target handler.
+//
+// returns:
+//   attributes - An interleaved array of node attribute names and values.
+func (p *GetAttributesParams) Do(ctxt context.Context, h cdp.Handler) (attributes []string, err error) {
+	// execute
+	var res GetAttributesReturns
+	err = h.Execute(ctxt, cdp.CommandDOMGetAttributes, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Attributes, nil
+}
+
+// GetBoxModelParams returns boxes for the given node.
+type GetBoxModelParams struct {
+	NodeID        cdp.NodeID             `json:"nodeId,omitempty"`        // Identifier of the node.
+	BackendNodeID cdp.BackendNodeID      `json:"backendNodeId,omitempty"` // Identifier of the backend node.
+	ObjectID      runtime.RemoteObjectID `json:"objectId,omitempty"`      // JavaScript object id of the node wrapper.
+}
+
+// GetBoxModel returns boxes for the given node.
+//
+// parameters:
+func GetBoxModel() *GetBoxModelParams {
+	return &GetBoxModelParams{}
+}
+
+// WithNodeID identifier of the node.
+func (p GetBoxModelParams) WithNodeID(nodeID cdp.NodeID) *GetBoxModelParams {
+	p.NodeID = nodeID
+	return &p
+}
+
+// WithBackendNodeID identifier of the backend node.
+func (p GetBoxModelParams) WithBackendNodeID(backendNodeID cdp.BackendNodeID) *GetBoxModelParams {
+	p.BackendNodeID = backendNodeID
+	return &p
+}
+
+// WithObjectID JavaScript object id of the node wrapper.
+func (p GetBoxModelParams) WithObjectID(objectID runtime.RemoteObjectID) *GetBoxModelParams {
+	p.ObjectID = objectID
+	return &p
+}
+
+// GetBoxModelReturns return values.
+type GetBoxModelReturns struct {
+	Model *BoxModel `json:"model,omitempty"` // Box model for the node.
+}
+
+// Do executes DOM.getBoxModel against the provided context and
+// target handler.
+//
+// returns:
+//   model - Box model for the node.
+func (p *GetBoxModelParams) Do(ctxt context.Context, h cdp.Handler) (model *BoxModel, err error) {
+	// execute
+	var res GetBoxModelReturns
+	err = h.Execute(ctxt, cdp.CommandDOMGetBoxModel, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Model, nil
 }
 
 // GetDocumentParams returns the root DOM node (and optionally the subtree)
@@ -153,86 +462,374 @@ func (p *GetFlattenedDocumentParams) Do(ctxt context.Context, h cdp.Handler) (no
 	return res.Nodes, nil
 }
 
-// CollectClassNamesFromSubtreeParams collects class names for the node with
-// given id and all of it's child nodes.
-type CollectClassNamesFromSubtreeParams struct {
-	NodeID cdp.NodeID `json:"nodeId"` // Id of the node to collect class names.
+// GetNodeForLocationParams returns node id at given location.
+type GetNodeForLocationParams struct {
+	X                         int64 `json:"x"`                                   // X coordinate.
+	Y                         int64 `json:"y"`                                   // Y coordinate.
+	IncludeUserAgentShadowDOM bool  `json:"includeUserAgentShadowDOM,omitempty"` // False to skip to the nearest non-UA shadow root ancestor (default: false).
 }
 
-// CollectClassNamesFromSubtree collects class names for the node with given
-// id and all of it's child nodes.
+// GetNodeForLocation returns node id at given location.
 //
 // parameters:
-//   nodeID - Id of the node to collect class names.
-func CollectClassNamesFromSubtree(nodeID cdp.NodeID) *CollectClassNamesFromSubtreeParams {
-	return &CollectClassNamesFromSubtreeParams{
+//   x - X coordinate.
+//   y - Y coordinate.
+func GetNodeForLocation(x int64, y int64) *GetNodeForLocationParams {
+	return &GetNodeForLocationParams{
+		X: x,
+		Y: y,
+	}
+}
+
+// WithIncludeUserAgentShadowDOM false to skip to the nearest non-UA shadow
+// root ancestor (default: false).
+func (p GetNodeForLocationParams) WithIncludeUserAgentShadowDOM(includeUserAgentShadowDOM bool) *GetNodeForLocationParams {
+	p.IncludeUserAgentShadowDOM = includeUserAgentShadowDOM
+	return &p
+}
+
+// GetNodeForLocationReturns return values.
+type GetNodeForLocationReturns struct {
+	NodeID cdp.NodeID `json:"nodeId,omitempty"` // Id of the node at given coordinates.
+}
+
+// Do executes DOM.getNodeForLocation against the provided context and
+// target handler.
+//
+// returns:
+//   nodeID - Id of the node at given coordinates.
+func (p *GetNodeForLocationParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
+	// execute
+	var res GetNodeForLocationReturns
+	err = h.Execute(ctxt, cdp.CommandDOMGetNodeForLocation, p, &res)
+	if err != nil {
+		return 0, err
+	}
+
+	return res.NodeID, nil
+}
+
+// GetOuterHTMLParams returns node's HTML markup.
+type GetOuterHTMLParams struct {
+	NodeID        cdp.NodeID             `json:"nodeId,omitempty"`        // Identifier of the node.
+	BackendNodeID cdp.BackendNodeID      `json:"backendNodeId,omitempty"` // Identifier of the backend node.
+	ObjectID      runtime.RemoteObjectID `json:"objectId,omitempty"`      // JavaScript object id of the node wrapper.
+}
+
+// GetOuterHTML returns node's HTML markup.
+//
+// parameters:
+func GetOuterHTML() *GetOuterHTMLParams {
+	return &GetOuterHTMLParams{}
+}
+
+// WithNodeID identifier of the node.
+func (p GetOuterHTMLParams) WithNodeID(nodeID cdp.NodeID) *GetOuterHTMLParams {
+	p.NodeID = nodeID
+	return &p
+}
+
+// WithBackendNodeID identifier of the backend node.
+func (p GetOuterHTMLParams) WithBackendNodeID(backendNodeID cdp.BackendNodeID) *GetOuterHTMLParams {
+	p.BackendNodeID = backendNodeID
+	return &p
+}
+
+// WithObjectID JavaScript object id of the node wrapper.
+func (p GetOuterHTMLParams) WithObjectID(objectID runtime.RemoteObjectID) *GetOuterHTMLParams {
+	p.ObjectID = objectID
+	return &p
+}
+
+// GetOuterHTMLReturns return values.
+type GetOuterHTMLReturns struct {
+	OuterHTML string `json:"outerHTML,omitempty"` // Outer HTML markup.
+}
+
+// Do executes DOM.getOuterHTML against the provided context and
+// target handler.
+//
+// returns:
+//   outerHTML - Outer HTML markup.
+func (p *GetOuterHTMLParams) Do(ctxt context.Context, h cdp.Handler) (outerHTML string, err error) {
+	// execute
+	var res GetOuterHTMLReturns
+	err = h.Execute(ctxt, cdp.CommandDOMGetOuterHTML, p, &res)
+	if err != nil {
+		return "", err
+	}
+
+	return res.OuterHTML, nil
+}
+
+// GetRelayoutBoundaryParams returns the id of the nearest ancestor that is a
+// relayout boundary.
+type GetRelayoutBoundaryParams struct {
+	NodeID cdp.NodeID `json:"nodeId"` // Id of the node.
+}
+
+// GetRelayoutBoundary returns the id of the nearest ancestor that is a
+// relayout boundary.
+//
+// parameters:
+//   nodeID - Id of the node.
+func GetRelayoutBoundary(nodeID cdp.NodeID) *GetRelayoutBoundaryParams {
+	return &GetRelayoutBoundaryParams{
 		NodeID: nodeID,
 	}
 }
 
-// CollectClassNamesFromSubtreeReturns return values.
-type CollectClassNamesFromSubtreeReturns struct {
-	ClassNames []string `json:"classNames,omitempty"` // Class name list.
+// GetRelayoutBoundaryReturns return values.
+type GetRelayoutBoundaryReturns struct {
+	NodeID cdp.NodeID `json:"nodeId,omitempty"` // Relayout boundary node id for the given node.
 }
 
-// Do executes DOM.collectClassNamesFromSubtree against the provided context and
+// Do executes DOM.getRelayoutBoundary against the provided context and
 // target handler.
 //
 // returns:
-//   classNames - Class name list.
-func (p *CollectClassNamesFromSubtreeParams) Do(ctxt context.Context, h cdp.Handler) (classNames []string, err error) {
+//   nodeID - Relayout boundary node id for the given node.
+func (p *GetRelayoutBoundaryParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
 	// execute
-	var res CollectClassNamesFromSubtreeReturns
-	err = h.Execute(ctxt, cdp.CommandDOMCollectClassNamesFromSubtree, p, &res)
+	var res GetRelayoutBoundaryReturns
+	err = h.Execute(ctxt, cdp.CommandDOMGetRelayoutBoundary, p, &res)
+	if err != nil {
+		return 0, err
+	}
+
+	return res.NodeID, nil
+}
+
+// GetSearchResultsParams returns search results from given fromIndex to
+// given toIndex from the search with the given identifier.
+type GetSearchResultsParams struct {
+	SearchID  string `json:"searchId"`  // Unique search session identifier.
+	FromIndex int64  `json:"fromIndex"` // Start index of the search result to be returned.
+	ToIndex   int64  `json:"toIndex"`   // End index of the search result to be returned.
+}
+
+// GetSearchResults returns search results from given fromIndex to given
+// toIndex from the search with the given identifier.
+//
+// parameters:
+//   searchID - Unique search session identifier.
+//   fromIndex - Start index of the search result to be returned.
+//   toIndex - End index of the search result to be returned.
+func GetSearchResults(searchID string, fromIndex int64, toIndex int64) *GetSearchResultsParams {
+	return &GetSearchResultsParams{
+		SearchID:  searchID,
+		FromIndex: fromIndex,
+		ToIndex:   toIndex,
+	}
+}
+
+// GetSearchResultsReturns return values.
+type GetSearchResultsReturns struct {
+	NodeIds []cdp.NodeID `json:"nodeIds,omitempty"` // Ids of the search result nodes.
+}
+
+// Do executes DOM.getSearchResults against the provided context and
+// target handler.
+//
+// returns:
+//   nodeIds - Ids of the search result nodes.
+func (p *GetSearchResultsParams) Do(ctxt context.Context, h cdp.Handler) (nodeIds []cdp.NodeID, err error) {
+	// execute
+	var res GetSearchResultsReturns
+	err = h.Execute(ctxt, cdp.CommandDOMGetSearchResults, p, &res)
 	if err != nil {
 		return nil, err
 	}
 
-	return res.ClassNames, nil
+	return res.NodeIds, nil
 }
 
-// RequestChildNodesParams requests that children of the node with given id
-// are returned to the caller in form of setChildNodes events where not only
-// immediate children are retrieved, but all children down to the specified
-// depth.
-type RequestChildNodesParams struct {
-	NodeID cdp.NodeID `json:"nodeId"`           // Id of the node to get children for.
-	Depth  int64      `json:"depth,omitempty"`  // The maximum depth at which children should be retrieved, defaults to 1. Use -1 for the entire subtree or provide an integer larger than 0.
-	Pierce bool       `json:"pierce,omitempty"` // Whether or not iframes and shadow roots should be traversed when returning the sub-tree (default is false).
+// MarkUndoableStateParams marks last undoable state.
+type MarkUndoableStateParams struct{}
+
+// MarkUndoableState marks last undoable state.
+func MarkUndoableState() *MarkUndoableStateParams {
+	return &MarkUndoableStateParams{}
 }
 
-// RequestChildNodes requests that children of the node with given id are
-// returned to the caller in form of setChildNodes events where not only
-// immediate children are retrieved, but all children down to the specified
-// depth.
+// Do executes DOM.markUndoableState against the provided context and
+// target handler.
+func (p *MarkUndoableStateParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDOMMarkUndoableState, nil, nil)
+}
+
+// MoveToParams moves node into the new container, places it before the given
+// anchor.
+type MoveToParams struct {
+	NodeID             cdp.NodeID `json:"nodeId"`                       // Id of the node to move.
+	TargetNodeID       cdp.NodeID `json:"targetNodeId"`                 // Id of the element to drop the moved node into.
+	InsertBeforeNodeID cdp.NodeID `json:"insertBeforeNodeId,omitempty"` // Drop node before this one (if absent, the moved node becomes the last child of targetNodeId).
+}
+
+// MoveTo moves node into the new container, places it before the given
+// anchor.
 //
 // parameters:
-//   nodeID - Id of the node to get children for.
-func RequestChildNodes(nodeID cdp.NodeID) *RequestChildNodesParams {
-	return &RequestChildNodesParams{
-		NodeID: nodeID,
+//   nodeID - Id of the node to move.
+//   targetNodeID - Id of the element to drop the moved node into.
+func MoveTo(nodeID cdp.NodeID, targetNodeID cdp.NodeID) *MoveToParams {
+	return &MoveToParams{
+		NodeID:       nodeID,
+		TargetNodeID: targetNodeID,
 	}
 }
 
-// WithDepth the maximum depth at which children should be retrieved,
-// defaults to 1. Use -1 for the entire subtree or provide an integer larger
-// than 0.
-func (p RequestChildNodesParams) WithDepth(depth int64) *RequestChildNodesParams {
-	p.Depth = depth
+// WithInsertBeforeNodeID drop node before this one (if absent, the moved
+// node becomes the last child of targetNodeId).
+func (p MoveToParams) WithInsertBeforeNodeID(insertBeforeNodeID cdp.NodeID) *MoveToParams {
+	p.InsertBeforeNodeID = insertBeforeNodeID
 	return &p
 }
 
-// WithPierce whether or not iframes and shadow roots should be traversed
-// when returning the sub-tree (default is false).
-func (p RequestChildNodesParams) WithPierce(pierce bool) *RequestChildNodesParams {
-	p.Pierce = pierce
-	return &p
+// MoveToReturns return values.
+type MoveToReturns struct {
+	NodeID cdp.NodeID `json:"nodeId,omitempty"` // New id of the moved node.
 }
 
-// Do executes DOM.requestChildNodes against the provided context and
+// Do executes DOM.moveTo against the provided context and
 // target handler.
-func (p *RequestChildNodesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDOMRequestChildNodes, p, nil)
+//
+// returns:
+//   nodeID - New id of the moved node.
+func (p *MoveToParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
+	// execute
+	var res MoveToReturns
+	err = h.Execute(ctxt, cdp.CommandDOMMoveTo, p, &res)
+	if err != nil {
+		return 0, err
+	}
+
+	return res.NodeID, nil
+}
+
+// PerformSearchParams searches for a given string in the DOM tree. Use
+// getSearchResults to access search results or cancelSearch to end this search
+// session.
+type PerformSearchParams struct {
+	Query                     string `json:"query"`                               // Plain text or query selector or XPath search query.
+	IncludeUserAgentShadowDOM bool   `json:"includeUserAgentShadowDOM,omitempty"` // True to search in user agent shadow DOM.
+}
+
+// PerformSearch searches for a given string in the DOM tree. Use
+// getSearchResults to access search results or cancelSearch to end this search
+// session.
+//
+// parameters:
+//   query - Plain text or query selector or XPath search query.
+func PerformSearch(query string) *PerformSearchParams {
+	return &PerformSearchParams{
+		Query: query,
+	}
+}
+
+// WithIncludeUserAgentShadowDOM true to search in user agent shadow DOM.
+func (p PerformSearchParams) WithIncludeUserAgentShadowDOM(includeUserAgentShadowDOM bool) *PerformSearchParams {
+	p.IncludeUserAgentShadowDOM = includeUserAgentShadowDOM
+	return &p
+}
+
+// PerformSearchReturns return values.
+type PerformSearchReturns struct {
+	SearchID    string `json:"searchId,omitempty"`    // Unique search session identifier.
+	ResultCount int64  `json:"resultCount,omitempty"` // Number of search results.
+}
+
+// Do executes DOM.performSearch against the provided context and
+// target handler.
+//
+// returns:
+//   searchID - Unique search session identifier.
+//   resultCount - Number of search results.
+func (p *PerformSearchParams) Do(ctxt context.Context, h cdp.Handler) (searchID string, resultCount int64, err error) {
+	// execute
+	var res PerformSearchReturns
+	err = h.Execute(ctxt, cdp.CommandDOMPerformSearch, p, &res)
+	if err != nil {
+		return "", 0, err
+	}
+
+	return res.SearchID, res.ResultCount, nil
+}
+
+// PushNodeByPathToFrontendParams requests that the node is sent to the
+// caller given its path. // FIXME, use XPath.
+type PushNodeByPathToFrontendParams struct {
+	Path string `json:"path"` // Path to node in the proprietary format.
+}
+
+// PushNodeByPathToFrontend requests that the node is sent to the caller
+// given its path. // FIXME, use XPath.
+//
+// parameters:
+//   path - Path to node in the proprietary format.
+func PushNodeByPathToFrontend(path string) *PushNodeByPathToFrontendParams {
+	return &PushNodeByPathToFrontendParams{
+		Path: path,
+	}
+}
+
+// PushNodeByPathToFrontendReturns return values.
+type PushNodeByPathToFrontendReturns struct {
+	NodeID cdp.NodeID `json:"nodeId,omitempty"` // Id of the node for given path.
+}
+
+// Do executes DOM.pushNodeByPathToFrontend against the provided context and
+// target handler.
+//
+// returns:
+//   nodeID - Id of the node for given path.
+func (p *PushNodeByPathToFrontendParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
+	// execute
+	var res PushNodeByPathToFrontendReturns
+	err = h.Execute(ctxt, cdp.CommandDOMPushNodeByPathToFrontend, p, &res)
+	if err != nil {
+		return 0, err
+	}
+
+	return res.NodeID, nil
+}
+
+// PushNodesByBackendIdsToFrontendParams requests that a batch of nodes is
+// sent to the caller given their backend node ids.
+type PushNodesByBackendIdsToFrontendParams struct {
+	BackendNodeIds []cdp.BackendNodeID `json:"backendNodeIds"` // The array of backend node ids.
+}
+
+// PushNodesByBackendIdsToFrontend requests that a batch of nodes is sent to
+// the caller given their backend node ids.
+//
+// parameters:
+//   backendNodeIds - The array of backend node ids.
+func PushNodesByBackendIdsToFrontend(backendNodeIds []cdp.BackendNodeID) *PushNodesByBackendIdsToFrontendParams {
+	return &PushNodesByBackendIdsToFrontendParams{
+		BackendNodeIds: backendNodeIds,
+	}
+}
+
+// PushNodesByBackendIdsToFrontendReturns return values.
+type PushNodesByBackendIdsToFrontendReturns struct {
+	NodeIds []cdp.NodeID `json:"nodeIds,omitempty"` // The array of ids of pushed nodes that correspond to the backend ids specified in backendNodeIds.
+}
+
+// Do executes DOM.pushNodesByBackendIdsToFrontend against the provided context and
+// target handler.
+//
+// returns:
+//   nodeIds - The array of ids of pushed nodes that correspond to the backend ids specified in backendNodeIds.
+func (p *PushNodesByBackendIdsToFrontendParams) Do(ctxt context.Context, h cdp.Handler) (nodeIds []cdp.NodeID, err error) {
+	// execute
+	var res PushNodesByBackendIdsToFrontendReturns
+	err = h.Execute(ctxt, cdp.CommandDOMPushNodesByBackendIdsToFrontend, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.NodeIds, nil
 }
 
 // QuerySelectorParams executes querySelector on a given node.
@@ -313,67 +910,44 @@ func (p *QuerySelectorAllParams) Do(ctxt context.Context, h cdp.Handler) (nodeId
 	return res.NodeIds, nil
 }
 
-// SetNodeNameParams sets node name for a node with given id.
-type SetNodeNameParams struct {
-	NodeID cdp.NodeID `json:"nodeId"` // Id of the node to set name for.
-	Name   string     `json:"name"`   // New node's name.
+// RedoParams re-does the last undone action.
+type RedoParams struct{}
+
+// Redo re-does the last undone action.
+func Redo() *RedoParams {
+	return &RedoParams{}
 }
 
-// SetNodeName sets node name for a node with given id.
+// Do executes DOM.redo against the provided context and
+// target handler.
+func (p *RedoParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDOMRedo, nil, nil)
+}
+
+// RemoveAttributeParams removes attribute with given name from an element
+// with given id.
+type RemoveAttributeParams struct {
+	NodeID cdp.NodeID `json:"nodeId"` // Id of the element to remove attribute from.
+	Name   string     `json:"name"`   // Name of the attribute to remove.
+}
+
+// RemoveAttribute removes attribute with given name from an element with
+// given id.
 //
 // parameters:
-//   nodeID - Id of the node to set name for.
-//   name - New node's name.
-func SetNodeName(nodeID cdp.NodeID, name string) *SetNodeNameParams {
-	return &SetNodeNameParams{
+//   nodeID - Id of the element to remove attribute from.
+//   name - Name of the attribute to remove.
+func RemoveAttribute(nodeID cdp.NodeID, name string) *RemoveAttributeParams {
+	return &RemoveAttributeParams{
 		NodeID: nodeID,
 		Name:   name,
 	}
 }
 
-// SetNodeNameReturns return values.
-type SetNodeNameReturns struct {
-	NodeID cdp.NodeID `json:"nodeId,omitempty"` // New node's id.
-}
-
-// Do executes DOM.setNodeName against the provided context and
+// Do executes DOM.removeAttribute against the provided context and
 // target handler.
-//
-// returns:
-//   nodeID - New node's id.
-func (p *SetNodeNameParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
-	// execute
-	var res SetNodeNameReturns
-	err = h.Execute(ctxt, cdp.CommandDOMSetNodeName, p, &res)
-	if err != nil {
-		return 0, err
-	}
-
-	return res.NodeID, nil
-}
-
-// SetNodeValueParams sets node value for a node with given id.
-type SetNodeValueParams struct {
-	NodeID cdp.NodeID `json:"nodeId"` // Id of the node to set value for.
-	Value  string     `json:"value"`  // New node's value.
-}
-
-// SetNodeValue sets node value for a node with given id.
-//
-// parameters:
-//   nodeID - Id of the node to set value for.
-//   value - New node's value.
-func SetNodeValue(nodeID cdp.NodeID, value string) *SetNodeValueParams {
-	return &SetNodeValueParams{
-		NodeID: nodeID,
-		Value:  value,
-	}
-}
-
-// Do executes DOM.setNodeValue against the provided context and
-// target handler.
-func (p *SetNodeValueParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDOMSetNodeValue, p, nil)
+func (p *RemoveAttributeParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDOMRemoveAttribute, p, nil)
 }
 
 // RemoveNodeParams removes node with given id.
@@ -395,6 +969,148 @@ func RemoveNode(nodeID cdp.NodeID) *RemoveNodeParams {
 // target handler.
 func (p *RemoveNodeParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandDOMRemoveNode, p, nil)
+}
+
+// RequestChildNodesParams requests that children of the node with given id
+// are returned to the caller in form of setChildNodes events where not only
+// immediate children are retrieved, but all children down to the specified
+// depth.
+type RequestChildNodesParams struct {
+	NodeID cdp.NodeID `json:"nodeId"`           // Id of the node to get children for.
+	Depth  int64      `json:"depth,omitempty"`  // The maximum depth at which children should be retrieved, defaults to 1. Use -1 for the entire subtree or provide an integer larger than 0.
+	Pierce bool       `json:"pierce,omitempty"` // Whether or not iframes and shadow roots should be traversed when returning the sub-tree (default is false).
+}
+
+// RequestChildNodes requests that children of the node with given id are
+// returned to the caller in form of setChildNodes events where not only
+// immediate children are retrieved, but all children down to the specified
+// depth.
+//
+// parameters:
+//   nodeID - Id of the node to get children for.
+func RequestChildNodes(nodeID cdp.NodeID) *RequestChildNodesParams {
+	return &RequestChildNodesParams{
+		NodeID: nodeID,
+	}
+}
+
+// WithDepth the maximum depth at which children should be retrieved,
+// defaults to 1. Use -1 for the entire subtree or provide an integer larger
+// than 0.
+func (p RequestChildNodesParams) WithDepth(depth int64) *RequestChildNodesParams {
+	p.Depth = depth
+	return &p
+}
+
+// WithPierce whether or not iframes and shadow roots should be traversed
+// when returning the sub-tree (default is false).
+func (p RequestChildNodesParams) WithPierce(pierce bool) *RequestChildNodesParams {
+	p.Pierce = pierce
+	return &p
+}
+
+// Do executes DOM.requestChildNodes against the provided context and
+// target handler.
+func (p *RequestChildNodesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDOMRequestChildNodes, p, nil)
+}
+
+// RequestNodeParams requests that the node is sent to the caller given the
+// JavaScript node object reference. All nodes that form the path from the node
+// to the root are also sent to the client as a series of setChildNodes
+// notifications.
+type RequestNodeParams struct {
+	ObjectID runtime.RemoteObjectID `json:"objectId"` // JavaScript object id to convert into node.
+}
+
+// RequestNode requests that the node is sent to the caller given the
+// JavaScript node object reference. All nodes that form the path from the node
+// to the root are also sent to the client as a series of setChildNodes
+// notifications.
+//
+// parameters:
+//   objectID - JavaScript object id to convert into node.
+func RequestNode(objectID runtime.RemoteObjectID) *RequestNodeParams {
+	return &RequestNodeParams{
+		ObjectID: objectID,
+	}
+}
+
+// RequestNodeReturns return values.
+type RequestNodeReturns struct {
+	NodeID cdp.NodeID `json:"nodeId,omitempty"` // Node id for given object.
+}
+
+// Do executes DOM.requestNode against the provided context and
+// target handler.
+//
+// returns:
+//   nodeID - Node id for given object.
+func (p *RequestNodeParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
+	// execute
+	var res RequestNodeReturns
+	err = h.Execute(ctxt, cdp.CommandDOMRequestNode, p, &res)
+	if err != nil {
+		return 0, err
+	}
+
+	return res.NodeID, nil
+}
+
+// ResolveNodeParams resolves the JavaScript node object for a given NodeId
+// or BackendNodeId.
+type ResolveNodeParams struct {
+	NodeID        cdp.NodeID        `json:"nodeId,omitempty"`        // Id of the node to resolve.
+	BackendNodeID cdp.BackendNodeID `json:"backendNodeId,omitempty"` // Backend identifier of the node to resolve.
+	ObjectGroup   string            `json:"objectGroup,omitempty"`   // Symbolic group name that can be used to release multiple objects.
+}
+
+// ResolveNode resolves the JavaScript node object for a given NodeId or
+// BackendNodeId.
+//
+// parameters:
+func ResolveNode() *ResolveNodeParams {
+	return &ResolveNodeParams{}
+}
+
+// WithNodeID ID of the node to resolve.
+func (p ResolveNodeParams) WithNodeID(nodeID cdp.NodeID) *ResolveNodeParams {
+	p.NodeID = nodeID
+	return &p
+}
+
+// WithBackendNodeID backend identifier of the node to resolve.
+func (p ResolveNodeParams) WithBackendNodeID(backendNodeID cdp.BackendNodeID) *ResolveNodeParams {
+	p.BackendNodeID = backendNodeID
+	return &p
+}
+
+// WithObjectGroup symbolic group name that can be used to release multiple
+// objects.
+func (p ResolveNodeParams) WithObjectGroup(objectGroup string) *ResolveNodeParams {
+	p.ObjectGroup = objectGroup
+	return &p
+}
+
+// ResolveNodeReturns return values.
+type ResolveNodeReturns struct {
+	Object *runtime.RemoteObject `json:"object,omitempty"` // JavaScript object wrapper for given node.
+}
+
+// Do executes DOM.resolveNode against the provided context and
+// target handler.
+//
+// returns:
+//   object - JavaScript object wrapper for given node.
+func (p *ResolveNodeParams) Do(ctxt context.Context, h cdp.Handler) (object *runtime.RemoteObject, err error) {
+	// execute
+	var res ResolveNodeReturns
+	err = h.Execute(ctxt, cdp.CommandDOMResolveNode, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Object, nil
 }
 
 // SetAttributeValueParams sets attribute for an element with given id.
@@ -460,636 +1176,6 @@ func (p *SetAttributesAsTextParams) Do(ctxt context.Context, h cdp.Handler) (err
 	return h.Execute(ctxt, cdp.CommandDOMSetAttributesAsText, p, nil)
 }
 
-// RemoveAttributeParams removes attribute with given name from an element
-// with given id.
-type RemoveAttributeParams struct {
-	NodeID cdp.NodeID `json:"nodeId"` // Id of the element to remove attribute from.
-	Name   string     `json:"name"`   // Name of the attribute to remove.
-}
-
-// RemoveAttribute removes attribute with given name from an element with
-// given id.
-//
-// parameters:
-//   nodeID - Id of the element to remove attribute from.
-//   name - Name of the attribute to remove.
-func RemoveAttribute(nodeID cdp.NodeID, name string) *RemoveAttributeParams {
-	return &RemoveAttributeParams{
-		NodeID: nodeID,
-		Name:   name,
-	}
-}
-
-// Do executes DOM.removeAttribute against the provided context and
-// target handler.
-func (p *RemoveAttributeParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDOMRemoveAttribute, p, nil)
-}
-
-// GetOuterHTMLParams returns node's HTML markup.
-type GetOuterHTMLParams struct {
-	NodeID        cdp.NodeID             `json:"nodeId,omitempty"`        // Identifier of the node.
-	BackendNodeID cdp.BackendNodeID      `json:"backendNodeId,omitempty"` // Identifier of the backend node.
-	ObjectID      runtime.RemoteObjectID `json:"objectId,omitempty"`      // JavaScript object id of the node wrapper.
-}
-
-// GetOuterHTML returns node's HTML markup.
-//
-// parameters:
-func GetOuterHTML() *GetOuterHTMLParams {
-	return &GetOuterHTMLParams{}
-}
-
-// WithNodeID identifier of the node.
-func (p GetOuterHTMLParams) WithNodeID(nodeID cdp.NodeID) *GetOuterHTMLParams {
-	p.NodeID = nodeID
-	return &p
-}
-
-// WithBackendNodeID identifier of the backend node.
-func (p GetOuterHTMLParams) WithBackendNodeID(backendNodeID cdp.BackendNodeID) *GetOuterHTMLParams {
-	p.BackendNodeID = backendNodeID
-	return &p
-}
-
-// WithObjectID JavaScript object id of the node wrapper.
-func (p GetOuterHTMLParams) WithObjectID(objectID runtime.RemoteObjectID) *GetOuterHTMLParams {
-	p.ObjectID = objectID
-	return &p
-}
-
-// GetOuterHTMLReturns return values.
-type GetOuterHTMLReturns struct {
-	OuterHTML string `json:"outerHTML,omitempty"` // Outer HTML markup.
-}
-
-// Do executes DOM.getOuterHTML against the provided context and
-// target handler.
-//
-// returns:
-//   outerHTML - Outer HTML markup.
-func (p *GetOuterHTMLParams) Do(ctxt context.Context, h cdp.Handler) (outerHTML string, err error) {
-	// execute
-	var res GetOuterHTMLReturns
-	err = h.Execute(ctxt, cdp.CommandDOMGetOuterHTML, p, &res)
-	if err != nil {
-		return "", err
-	}
-
-	return res.OuterHTML, nil
-}
-
-// SetOuterHTMLParams sets node HTML markup, returns new node id.
-type SetOuterHTMLParams struct {
-	NodeID    cdp.NodeID `json:"nodeId"`    // Id of the node to set markup for.
-	OuterHTML string     `json:"outerHTML"` // Outer HTML markup to set.
-}
-
-// SetOuterHTML sets node HTML markup, returns new node id.
-//
-// parameters:
-//   nodeID - Id of the node to set markup for.
-//   outerHTML - Outer HTML markup to set.
-func SetOuterHTML(nodeID cdp.NodeID, outerHTML string) *SetOuterHTMLParams {
-	return &SetOuterHTMLParams{
-		NodeID:    nodeID,
-		OuterHTML: outerHTML,
-	}
-}
-
-// Do executes DOM.setOuterHTML against the provided context and
-// target handler.
-func (p *SetOuterHTMLParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDOMSetOuterHTML, p, nil)
-}
-
-// PerformSearchParams searches for a given string in the DOM tree. Use
-// getSearchResults to access search results or cancelSearch to end this search
-// session.
-type PerformSearchParams struct {
-	Query                     string `json:"query"`                               // Plain text or query selector or XPath search query.
-	IncludeUserAgentShadowDOM bool   `json:"includeUserAgentShadowDOM,omitempty"` // True to search in user agent shadow DOM.
-}
-
-// PerformSearch searches for a given string in the DOM tree. Use
-// getSearchResults to access search results or cancelSearch to end this search
-// session.
-//
-// parameters:
-//   query - Plain text or query selector or XPath search query.
-func PerformSearch(query string) *PerformSearchParams {
-	return &PerformSearchParams{
-		Query: query,
-	}
-}
-
-// WithIncludeUserAgentShadowDOM true to search in user agent shadow DOM.
-func (p PerformSearchParams) WithIncludeUserAgentShadowDOM(includeUserAgentShadowDOM bool) *PerformSearchParams {
-	p.IncludeUserAgentShadowDOM = includeUserAgentShadowDOM
-	return &p
-}
-
-// PerformSearchReturns return values.
-type PerformSearchReturns struct {
-	SearchID    string `json:"searchId,omitempty"`    // Unique search session identifier.
-	ResultCount int64  `json:"resultCount,omitempty"` // Number of search results.
-}
-
-// Do executes DOM.performSearch against the provided context and
-// target handler.
-//
-// returns:
-//   searchID - Unique search session identifier.
-//   resultCount - Number of search results.
-func (p *PerformSearchParams) Do(ctxt context.Context, h cdp.Handler) (searchID string, resultCount int64, err error) {
-	// execute
-	var res PerformSearchReturns
-	err = h.Execute(ctxt, cdp.CommandDOMPerformSearch, p, &res)
-	if err != nil {
-		return "", 0, err
-	}
-
-	return res.SearchID, res.ResultCount, nil
-}
-
-// GetSearchResultsParams returns search results from given fromIndex to
-// given toIndex from the search with the given identifier.
-type GetSearchResultsParams struct {
-	SearchID  string `json:"searchId"`  // Unique search session identifier.
-	FromIndex int64  `json:"fromIndex"` // Start index of the search result to be returned.
-	ToIndex   int64  `json:"toIndex"`   // End index of the search result to be returned.
-}
-
-// GetSearchResults returns search results from given fromIndex to given
-// toIndex from the search with the given identifier.
-//
-// parameters:
-//   searchID - Unique search session identifier.
-//   fromIndex - Start index of the search result to be returned.
-//   toIndex - End index of the search result to be returned.
-func GetSearchResults(searchID string, fromIndex int64, toIndex int64) *GetSearchResultsParams {
-	return &GetSearchResultsParams{
-		SearchID:  searchID,
-		FromIndex: fromIndex,
-		ToIndex:   toIndex,
-	}
-}
-
-// GetSearchResultsReturns return values.
-type GetSearchResultsReturns struct {
-	NodeIds []cdp.NodeID `json:"nodeIds,omitempty"` // Ids of the search result nodes.
-}
-
-// Do executes DOM.getSearchResults against the provided context and
-// target handler.
-//
-// returns:
-//   nodeIds - Ids of the search result nodes.
-func (p *GetSearchResultsParams) Do(ctxt context.Context, h cdp.Handler) (nodeIds []cdp.NodeID, err error) {
-	// execute
-	var res GetSearchResultsReturns
-	err = h.Execute(ctxt, cdp.CommandDOMGetSearchResults, p, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	return res.NodeIds, nil
-}
-
-// DiscardSearchResultsParams discards search results from the session with
-// the given id. getSearchResults should no longer be called for that search.
-type DiscardSearchResultsParams struct {
-	SearchID string `json:"searchId"` // Unique search session identifier.
-}
-
-// DiscardSearchResults discards search results from the session with the
-// given id. getSearchResults should no longer be called for that search.
-//
-// parameters:
-//   searchID - Unique search session identifier.
-func DiscardSearchResults(searchID string) *DiscardSearchResultsParams {
-	return &DiscardSearchResultsParams{
-		SearchID: searchID,
-	}
-}
-
-// Do executes DOM.discardSearchResults against the provided context and
-// target handler.
-func (p *DiscardSearchResultsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDOMDiscardSearchResults, p, nil)
-}
-
-// RequestNodeParams requests that the node is sent to the caller given the
-// JavaScript node object reference. All nodes that form the path from the node
-// to the root are also sent to the client as a series of setChildNodes
-// notifications.
-type RequestNodeParams struct {
-	ObjectID runtime.RemoteObjectID `json:"objectId"` // JavaScript object id to convert into node.
-}
-
-// RequestNode requests that the node is sent to the caller given the
-// JavaScript node object reference. All nodes that form the path from the node
-// to the root are also sent to the client as a series of setChildNodes
-// notifications.
-//
-// parameters:
-//   objectID - JavaScript object id to convert into node.
-func RequestNode(objectID runtime.RemoteObjectID) *RequestNodeParams {
-	return &RequestNodeParams{
-		ObjectID: objectID,
-	}
-}
-
-// RequestNodeReturns return values.
-type RequestNodeReturns struct {
-	NodeID cdp.NodeID `json:"nodeId,omitempty"` // Node id for given object.
-}
-
-// Do executes DOM.requestNode against the provided context and
-// target handler.
-//
-// returns:
-//   nodeID - Node id for given object.
-func (p *RequestNodeParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
-	// execute
-	var res RequestNodeReturns
-	err = h.Execute(ctxt, cdp.CommandDOMRequestNode, p, &res)
-	if err != nil {
-		return 0, err
-	}
-
-	return res.NodeID, nil
-}
-
-// PushNodeByPathToFrontendParams requests that the node is sent to the
-// caller given its path. // FIXME, use XPath.
-type PushNodeByPathToFrontendParams struct {
-	Path string `json:"path"` // Path to node in the proprietary format.
-}
-
-// PushNodeByPathToFrontend requests that the node is sent to the caller
-// given its path. // FIXME, use XPath.
-//
-// parameters:
-//   path - Path to node in the proprietary format.
-func PushNodeByPathToFrontend(path string) *PushNodeByPathToFrontendParams {
-	return &PushNodeByPathToFrontendParams{
-		Path: path,
-	}
-}
-
-// PushNodeByPathToFrontendReturns return values.
-type PushNodeByPathToFrontendReturns struct {
-	NodeID cdp.NodeID `json:"nodeId,omitempty"` // Id of the node for given path.
-}
-
-// Do executes DOM.pushNodeByPathToFrontend against the provided context and
-// target handler.
-//
-// returns:
-//   nodeID - Id of the node for given path.
-func (p *PushNodeByPathToFrontendParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
-	// execute
-	var res PushNodeByPathToFrontendReturns
-	err = h.Execute(ctxt, cdp.CommandDOMPushNodeByPathToFrontend, p, &res)
-	if err != nil {
-		return 0, err
-	}
-
-	return res.NodeID, nil
-}
-
-// PushNodesByBackendIdsToFrontendParams requests that a batch of nodes is
-// sent to the caller given their backend node ids.
-type PushNodesByBackendIdsToFrontendParams struct {
-	BackendNodeIds []cdp.BackendNodeID `json:"backendNodeIds"` // The array of backend node ids.
-}
-
-// PushNodesByBackendIdsToFrontend requests that a batch of nodes is sent to
-// the caller given their backend node ids.
-//
-// parameters:
-//   backendNodeIds - The array of backend node ids.
-func PushNodesByBackendIdsToFrontend(backendNodeIds []cdp.BackendNodeID) *PushNodesByBackendIdsToFrontendParams {
-	return &PushNodesByBackendIdsToFrontendParams{
-		BackendNodeIds: backendNodeIds,
-	}
-}
-
-// PushNodesByBackendIdsToFrontendReturns return values.
-type PushNodesByBackendIdsToFrontendReturns struct {
-	NodeIds []cdp.NodeID `json:"nodeIds,omitempty"` // The array of ids of pushed nodes that correspond to the backend ids specified in backendNodeIds.
-}
-
-// Do executes DOM.pushNodesByBackendIdsToFrontend against the provided context and
-// target handler.
-//
-// returns:
-//   nodeIds - The array of ids of pushed nodes that correspond to the backend ids specified in backendNodeIds.
-func (p *PushNodesByBackendIdsToFrontendParams) Do(ctxt context.Context, h cdp.Handler) (nodeIds []cdp.NodeID, err error) {
-	// execute
-	var res PushNodesByBackendIdsToFrontendReturns
-	err = h.Execute(ctxt, cdp.CommandDOMPushNodesByBackendIdsToFrontend, p, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	return res.NodeIds, nil
-}
-
-// SetInspectedNodeParams enables console to refer to the node with given id
-// via $x (see Command Line API for more details $x functions).
-type SetInspectedNodeParams struct {
-	NodeID cdp.NodeID `json:"nodeId"` // DOM node id to be accessible by means of $x command line API.
-}
-
-// SetInspectedNode enables console to refer to the node with given id via $x
-// (see Command Line API for more details $x functions).
-//
-// parameters:
-//   nodeID - DOM node id to be accessible by means of $x command line API.
-func SetInspectedNode(nodeID cdp.NodeID) *SetInspectedNodeParams {
-	return &SetInspectedNodeParams{
-		NodeID: nodeID,
-	}
-}
-
-// Do executes DOM.setInspectedNode against the provided context and
-// target handler.
-func (p *SetInspectedNodeParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDOMSetInspectedNode, p, nil)
-}
-
-// ResolveNodeParams resolves the JavaScript node object for a given NodeId
-// or BackendNodeId.
-type ResolveNodeParams struct {
-	NodeID        cdp.NodeID        `json:"nodeId,omitempty"`        // Id of the node to resolve.
-	BackendNodeID cdp.BackendNodeID `json:"backendNodeId,omitempty"` // Backend identifier of the node to resolve.
-	ObjectGroup   string            `json:"objectGroup,omitempty"`   // Symbolic group name that can be used to release multiple objects.
-}
-
-// ResolveNode resolves the JavaScript node object for a given NodeId or
-// BackendNodeId.
-//
-// parameters:
-func ResolveNode() *ResolveNodeParams {
-	return &ResolveNodeParams{}
-}
-
-// WithNodeID ID of the node to resolve.
-func (p ResolveNodeParams) WithNodeID(nodeID cdp.NodeID) *ResolveNodeParams {
-	p.NodeID = nodeID
-	return &p
-}
-
-// WithBackendNodeID backend identifier of the node to resolve.
-func (p ResolveNodeParams) WithBackendNodeID(backendNodeID cdp.BackendNodeID) *ResolveNodeParams {
-	p.BackendNodeID = backendNodeID
-	return &p
-}
-
-// WithObjectGroup symbolic group name that can be used to release multiple
-// objects.
-func (p ResolveNodeParams) WithObjectGroup(objectGroup string) *ResolveNodeParams {
-	p.ObjectGroup = objectGroup
-	return &p
-}
-
-// ResolveNodeReturns return values.
-type ResolveNodeReturns struct {
-	Object *runtime.RemoteObject `json:"object,omitempty"` // JavaScript object wrapper for given node.
-}
-
-// Do executes DOM.resolveNode against the provided context and
-// target handler.
-//
-// returns:
-//   object - JavaScript object wrapper for given node.
-func (p *ResolveNodeParams) Do(ctxt context.Context, h cdp.Handler) (object *runtime.RemoteObject, err error) {
-	// execute
-	var res ResolveNodeReturns
-	err = h.Execute(ctxt, cdp.CommandDOMResolveNode, p, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	return res.Object, nil
-}
-
-// GetAttributesParams returns attributes for the specified node.
-type GetAttributesParams struct {
-	NodeID cdp.NodeID `json:"nodeId"` // Id of the node to retrieve attibutes for.
-}
-
-// GetAttributes returns attributes for the specified node.
-//
-// parameters:
-//   nodeID - Id of the node to retrieve attibutes for.
-func GetAttributes(nodeID cdp.NodeID) *GetAttributesParams {
-	return &GetAttributesParams{
-		NodeID: nodeID,
-	}
-}
-
-// GetAttributesReturns return values.
-type GetAttributesReturns struct {
-	Attributes []string `json:"attributes,omitempty"` // An interleaved array of node attribute names and values.
-}
-
-// Do executes DOM.getAttributes against the provided context and
-// target handler.
-//
-// returns:
-//   attributes - An interleaved array of node attribute names and values.
-func (p *GetAttributesParams) Do(ctxt context.Context, h cdp.Handler) (attributes []string, err error) {
-	// execute
-	var res GetAttributesReturns
-	err = h.Execute(ctxt, cdp.CommandDOMGetAttributes, p, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	return res.Attributes, nil
-}
-
-// CopyToParams creates a deep copy of the specified node and places it into
-// the target container before the given anchor.
-type CopyToParams struct {
-	NodeID             cdp.NodeID `json:"nodeId"`                       // Id of the node to copy.
-	TargetNodeID       cdp.NodeID `json:"targetNodeId"`                 // Id of the element to drop the copy into.
-	InsertBeforeNodeID cdp.NodeID `json:"insertBeforeNodeId,omitempty"` // Drop the copy before this node (if absent, the copy becomes the last child of targetNodeId).
-}
-
-// CopyTo creates a deep copy of the specified node and places it into the
-// target container before the given anchor.
-//
-// parameters:
-//   nodeID - Id of the node to copy.
-//   targetNodeID - Id of the element to drop the copy into.
-func CopyTo(nodeID cdp.NodeID, targetNodeID cdp.NodeID) *CopyToParams {
-	return &CopyToParams{
-		NodeID:       nodeID,
-		TargetNodeID: targetNodeID,
-	}
-}
-
-// WithInsertBeforeNodeID drop the copy before this node (if absent, the copy
-// becomes the last child of targetNodeId).
-func (p CopyToParams) WithInsertBeforeNodeID(insertBeforeNodeID cdp.NodeID) *CopyToParams {
-	p.InsertBeforeNodeID = insertBeforeNodeID
-	return &p
-}
-
-// CopyToReturns return values.
-type CopyToReturns struct {
-	NodeID cdp.NodeID `json:"nodeId,omitempty"` // Id of the node clone.
-}
-
-// Do executes DOM.copyTo against the provided context and
-// target handler.
-//
-// returns:
-//   nodeID - Id of the node clone.
-func (p *CopyToParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
-	// execute
-	var res CopyToReturns
-	err = h.Execute(ctxt, cdp.CommandDOMCopyTo, p, &res)
-	if err != nil {
-		return 0, err
-	}
-
-	return res.NodeID, nil
-}
-
-// MoveToParams moves node into the new container, places it before the given
-// anchor.
-type MoveToParams struct {
-	NodeID             cdp.NodeID `json:"nodeId"`                       // Id of the node to move.
-	TargetNodeID       cdp.NodeID `json:"targetNodeId"`                 // Id of the element to drop the moved node into.
-	InsertBeforeNodeID cdp.NodeID `json:"insertBeforeNodeId,omitempty"` // Drop node before this one (if absent, the moved node becomes the last child of targetNodeId).
-}
-
-// MoveTo moves node into the new container, places it before the given
-// anchor.
-//
-// parameters:
-//   nodeID - Id of the node to move.
-//   targetNodeID - Id of the element to drop the moved node into.
-func MoveTo(nodeID cdp.NodeID, targetNodeID cdp.NodeID) *MoveToParams {
-	return &MoveToParams{
-		NodeID:       nodeID,
-		TargetNodeID: targetNodeID,
-	}
-}
-
-// WithInsertBeforeNodeID drop node before this one (if absent, the moved
-// node becomes the last child of targetNodeId).
-func (p MoveToParams) WithInsertBeforeNodeID(insertBeforeNodeID cdp.NodeID) *MoveToParams {
-	p.InsertBeforeNodeID = insertBeforeNodeID
-	return &p
-}
-
-// MoveToReturns return values.
-type MoveToReturns struct {
-	NodeID cdp.NodeID `json:"nodeId,omitempty"` // New id of the moved node.
-}
-
-// Do executes DOM.moveTo against the provided context and
-// target handler.
-//
-// returns:
-//   nodeID - New id of the moved node.
-func (p *MoveToParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
-	// execute
-	var res MoveToReturns
-	err = h.Execute(ctxt, cdp.CommandDOMMoveTo, p, &res)
-	if err != nil {
-		return 0, err
-	}
-
-	return res.NodeID, nil
-}
-
-// UndoParams undoes the last performed action.
-type UndoParams struct{}
-
-// Undo undoes the last performed action.
-func Undo() *UndoParams {
-	return &UndoParams{}
-}
-
-// Do executes DOM.undo against the provided context and
-// target handler.
-func (p *UndoParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDOMUndo, nil, nil)
-}
-
-// RedoParams re-does the last undone action.
-type RedoParams struct{}
-
-// Redo re-does the last undone action.
-func Redo() *RedoParams {
-	return &RedoParams{}
-}
-
-// Do executes DOM.redo against the provided context and
-// target handler.
-func (p *RedoParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDOMRedo, nil, nil)
-}
-
-// MarkUndoableStateParams marks last undoable state.
-type MarkUndoableStateParams struct{}
-
-// MarkUndoableState marks last undoable state.
-func MarkUndoableState() *MarkUndoableStateParams {
-	return &MarkUndoableStateParams{}
-}
-
-// Do executes DOM.markUndoableState against the provided context and
-// target handler.
-func (p *MarkUndoableStateParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDOMMarkUndoableState, nil, nil)
-}
-
-// FocusParams focuses the given element.
-type FocusParams struct {
-	NodeID        cdp.NodeID             `json:"nodeId,omitempty"`        // Identifier of the node.
-	BackendNodeID cdp.BackendNodeID      `json:"backendNodeId,omitempty"` // Identifier of the backend node.
-	ObjectID      runtime.RemoteObjectID `json:"objectId,omitempty"`      // JavaScript object id of the node wrapper.
-}
-
-// Focus focuses the given element.
-//
-// parameters:
-func Focus() *FocusParams {
-	return &FocusParams{}
-}
-
-// WithNodeID identifier of the node.
-func (p FocusParams) WithNodeID(nodeID cdp.NodeID) *FocusParams {
-	p.NodeID = nodeID
-	return &p
-}
-
-// WithBackendNodeID identifier of the backend node.
-func (p FocusParams) WithBackendNodeID(backendNodeID cdp.BackendNodeID) *FocusParams {
-	p.BackendNodeID = backendNodeID
-	return &p
-}
-
-// WithObjectID JavaScript object id of the node wrapper.
-func (p FocusParams) WithObjectID(objectID runtime.RemoteObjectID) *FocusParams {
-	p.ObjectID = objectID
-	return &p
-}
-
-// Do executes DOM.focus against the provided context and
-// target handler.
-func (p *FocusParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDOMFocus, p, nil)
-}
-
 // SetFileInputFilesParams sets files for the given file input element.
 type SetFileInputFilesParams struct {
 	Files         []string               `json:"files"`                   // Array of file paths to set.
@@ -1132,137 +1218,61 @@ func (p *SetFileInputFilesParams) Do(ctxt context.Context, h cdp.Handler) (err e
 	return h.Execute(ctxt, cdp.CommandDOMSetFileInputFiles, p, nil)
 }
 
-// GetBoxModelParams returns boxes for the given node.
-type GetBoxModelParams struct {
-	NodeID        cdp.NodeID             `json:"nodeId,omitempty"`        // Identifier of the node.
-	BackendNodeID cdp.BackendNodeID      `json:"backendNodeId,omitempty"` // Identifier of the backend node.
-	ObjectID      runtime.RemoteObjectID `json:"objectId,omitempty"`      // JavaScript object id of the node wrapper.
+// SetInspectedNodeParams enables console to refer to the node with given id
+// via $x (see Command Line API for more details $x functions).
+type SetInspectedNodeParams struct {
+	NodeID cdp.NodeID `json:"nodeId"` // DOM node id to be accessible by means of $x command line API.
 }
 
-// GetBoxModel returns boxes for the given node.
+// SetInspectedNode enables console to refer to the node with given id via $x
+// (see Command Line API for more details $x functions).
 //
 // parameters:
-func GetBoxModel() *GetBoxModelParams {
-	return &GetBoxModelParams{}
-}
-
-// WithNodeID identifier of the node.
-func (p GetBoxModelParams) WithNodeID(nodeID cdp.NodeID) *GetBoxModelParams {
-	p.NodeID = nodeID
-	return &p
-}
-
-// WithBackendNodeID identifier of the backend node.
-func (p GetBoxModelParams) WithBackendNodeID(backendNodeID cdp.BackendNodeID) *GetBoxModelParams {
-	p.BackendNodeID = backendNodeID
-	return &p
-}
-
-// WithObjectID JavaScript object id of the node wrapper.
-func (p GetBoxModelParams) WithObjectID(objectID runtime.RemoteObjectID) *GetBoxModelParams {
-	p.ObjectID = objectID
-	return &p
-}
-
-// GetBoxModelReturns return values.
-type GetBoxModelReturns struct {
-	Model *BoxModel `json:"model,omitempty"` // Box model for the node.
-}
-
-// Do executes DOM.getBoxModel against the provided context and
-// target handler.
-//
-// returns:
-//   model - Box model for the node.
-func (p *GetBoxModelParams) Do(ctxt context.Context, h cdp.Handler) (model *BoxModel, err error) {
-	// execute
-	var res GetBoxModelReturns
-	err = h.Execute(ctxt, cdp.CommandDOMGetBoxModel, p, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	return res.Model, nil
-}
-
-// GetNodeForLocationParams returns node id at given location.
-type GetNodeForLocationParams struct {
-	X                         int64 `json:"x"`                                   // X coordinate.
-	Y                         int64 `json:"y"`                                   // Y coordinate.
-	IncludeUserAgentShadowDOM bool  `json:"includeUserAgentShadowDOM,omitempty"` // False to skip to the nearest non-UA shadow root ancestor (default: false).
-}
-
-// GetNodeForLocation returns node id at given location.
-//
-// parameters:
-//   x - X coordinate.
-//   y - Y coordinate.
-func GetNodeForLocation(x int64, y int64) *GetNodeForLocationParams {
-	return &GetNodeForLocationParams{
-		X: x,
-		Y: y,
-	}
-}
-
-// WithIncludeUserAgentShadowDOM false to skip to the nearest non-UA shadow
-// root ancestor (default: false).
-func (p GetNodeForLocationParams) WithIncludeUserAgentShadowDOM(includeUserAgentShadowDOM bool) *GetNodeForLocationParams {
-	p.IncludeUserAgentShadowDOM = includeUserAgentShadowDOM
-	return &p
-}
-
-// GetNodeForLocationReturns return values.
-type GetNodeForLocationReturns struct {
-	NodeID cdp.NodeID `json:"nodeId,omitempty"` // Id of the node at given coordinates.
-}
-
-// Do executes DOM.getNodeForLocation against the provided context and
-// target handler.
-//
-// returns:
-//   nodeID - Id of the node at given coordinates.
-func (p *GetNodeForLocationParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
-	// execute
-	var res GetNodeForLocationReturns
-	err = h.Execute(ctxt, cdp.CommandDOMGetNodeForLocation, p, &res)
-	if err != nil {
-		return 0, err
-	}
-
-	return res.NodeID, nil
-}
-
-// GetRelayoutBoundaryParams returns the id of the nearest ancestor that is a
-// relayout boundary.
-type GetRelayoutBoundaryParams struct {
-	NodeID cdp.NodeID `json:"nodeId"` // Id of the node.
-}
-
-// GetRelayoutBoundary returns the id of the nearest ancestor that is a
-// relayout boundary.
-//
-// parameters:
-//   nodeID - Id of the node.
-func GetRelayoutBoundary(nodeID cdp.NodeID) *GetRelayoutBoundaryParams {
-	return &GetRelayoutBoundaryParams{
+//   nodeID - DOM node id to be accessible by means of $x command line API.
+func SetInspectedNode(nodeID cdp.NodeID) *SetInspectedNodeParams {
+	return &SetInspectedNodeParams{
 		NodeID: nodeID,
 	}
 }
 
-// GetRelayoutBoundaryReturns return values.
-type GetRelayoutBoundaryReturns struct {
-	NodeID cdp.NodeID `json:"nodeId,omitempty"` // Relayout boundary node id for the given node.
+// Do executes DOM.setInspectedNode against the provided context and
+// target handler.
+func (p *SetInspectedNodeParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDOMSetInspectedNode, p, nil)
 }
 
-// Do executes DOM.getRelayoutBoundary against the provided context and
+// SetNodeNameParams sets node name for a node with given id.
+type SetNodeNameParams struct {
+	NodeID cdp.NodeID `json:"nodeId"` // Id of the node to set name for.
+	Name   string     `json:"name"`   // New node's name.
+}
+
+// SetNodeName sets node name for a node with given id.
+//
+// parameters:
+//   nodeID - Id of the node to set name for.
+//   name - New node's name.
+func SetNodeName(nodeID cdp.NodeID, name string) *SetNodeNameParams {
+	return &SetNodeNameParams{
+		NodeID: nodeID,
+		Name:   name,
+	}
+}
+
+// SetNodeNameReturns return values.
+type SetNodeNameReturns struct {
+	NodeID cdp.NodeID `json:"nodeId,omitempty"` // New node's id.
+}
+
+// Do executes DOM.setNodeName against the provided context and
 // target handler.
 //
 // returns:
-//   nodeID - Relayout boundary node id for the given node.
-func (p *GetRelayoutBoundaryParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
+//   nodeID - New node's id.
+func (p *SetNodeNameParams) Do(ctxt context.Context, h cdp.Handler) (nodeID cdp.NodeID, err error) {
 	// execute
-	var res GetRelayoutBoundaryReturns
-	err = h.Execute(ctxt, cdp.CommandDOMGetRelayoutBoundary, p, &res)
+	var res SetNodeNameReturns
+	err = h.Execute(ctxt, cdp.CommandDOMSetNodeName, p, &res)
 	if err != nil {
 		return 0, err
 	}
@@ -1270,74 +1280,64 @@ func (p *GetRelayoutBoundaryParams) Do(ctxt context.Context, h cdp.Handler) (nod
 	return res.NodeID, nil
 }
 
-// DescribeNodeParams describes node given its id, does not require domain to
-// be enabled. Does not start tracking any objects, can be used for automation.
-type DescribeNodeParams struct {
-	NodeID        cdp.NodeID             `json:"nodeId,omitempty"`        // Identifier of the node.
-	BackendNodeID cdp.BackendNodeID      `json:"backendNodeId,omitempty"` // Identifier of the backend node.
-	ObjectID      runtime.RemoteObjectID `json:"objectId,omitempty"`      // JavaScript object id of the node wrapper.
-	Depth         int64                  `json:"depth,omitempty"`         // The maximum depth at which children should be retrieved, defaults to 1. Use -1 for the entire subtree or provide an integer larger than 0.
-	Pierce        bool                   `json:"pierce,omitempty"`        // Whether or not iframes and shadow roots should be traversed when returning the subtree (default is false).
+// SetNodeValueParams sets node value for a node with given id.
+type SetNodeValueParams struct {
+	NodeID cdp.NodeID `json:"nodeId"` // Id of the node to set value for.
+	Value  string     `json:"value"`  // New node's value.
 }
 
-// DescribeNode describes node given its id, does not require domain to be
-// enabled. Does not start tracking any objects, can be used for automation.
+// SetNodeValue sets node value for a node with given id.
 //
 // parameters:
-func DescribeNode() *DescribeNodeParams {
-	return &DescribeNodeParams{}
-}
-
-// WithNodeID identifier of the node.
-func (p DescribeNodeParams) WithNodeID(nodeID cdp.NodeID) *DescribeNodeParams {
-	p.NodeID = nodeID
-	return &p
-}
-
-// WithBackendNodeID identifier of the backend node.
-func (p DescribeNodeParams) WithBackendNodeID(backendNodeID cdp.BackendNodeID) *DescribeNodeParams {
-	p.BackendNodeID = backendNodeID
-	return &p
-}
-
-// WithObjectID JavaScript object id of the node wrapper.
-func (p DescribeNodeParams) WithObjectID(objectID runtime.RemoteObjectID) *DescribeNodeParams {
-	p.ObjectID = objectID
-	return &p
-}
-
-// WithDepth the maximum depth at which children should be retrieved,
-// defaults to 1. Use -1 for the entire subtree or provide an integer larger
-// than 0.
-func (p DescribeNodeParams) WithDepth(depth int64) *DescribeNodeParams {
-	p.Depth = depth
-	return &p
-}
-
-// WithPierce whether or not iframes and shadow roots should be traversed
-// when returning the subtree (default is false).
-func (p DescribeNodeParams) WithPierce(pierce bool) *DescribeNodeParams {
-	p.Pierce = pierce
-	return &p
-}
-
-// DescribeNodeReturns return values.
-type DescribeNodeReturns struct {
-	Node *cdp.Node `json:"node,omitempty"` // Node description.
-}
-
-// Do executes DOM.describeNode against the provided context and
-// target handler.
-//
-// returns:
-//   node - Node description.
-func (p *DescribeNodeParams) Do(ctxt context.Context, h cdp.Handler) (node *cdp.Node, err error) {
-	// execute
-	var res DescribeNodeReturns
-	err = h.Execute(ctxt, cdp.CommandDOMDescribeNode, p, &res)
-	if err != nil {
-		return nil, err
+//   nodeID - Id of the node to set value for.
+//   value - New node's value.
+func SetNodeValue(nodeID cdp.NodeID, value string) *SetNodeValueParams {
+	return &SetNodeValueParams{
+		NodeID: nodeID,
+		Value:  value,
 	}
+}
 
-	return res.Node, nil
+// Do executes DOM.setNodeValue against the provided context and
+// target handler.
+func (p *SetNodeValueParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDOMSetNodeValue, p, nil)
+}
+
+// SetOuterHTMLParams sets node HTML markup, returns new node id.
+type SetOuterHTMLParams struct {
+	NodeID    cdp.NodeID `json:"nodeId"`    // Id of the node to set markup for.
+	OuterHTML string     `json:"outerHTML"` // Outer HTML markup to set.
+}
+
+// SetOuterHTML sets node HTML markup, returns new node id.
+//
+// parameters:
+//   nodeID - Id of the node to set markup for.
+//   outerHTML - Outer HTML markup to set.
+func SetOuterHTML(nodeID cdp.NodeID, outerHTML string) *SetOuterHTMLParams {
+	return &SetOuterHTMLParams{
+		NodeID:    nodeID,
+		OuterHTML: outerHTML,
+	}
+}
+
+// Do executes DOM.setOuterHTML against the provided context and
+// target handler.
+func (p *SetOuterHTMLParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDOMSetOuterHTML, p, nil)
+}
+
+// UndoParams undoes the last performed action.
+type UndoParams struct{}
+
+// Undo undoes the last performed action.
+func Undo() *UndoParams {
+	return &UndoParams{}
+}
+
+// Do executes DOM.undo against the provided context and
+// target handler.
+func (p *UndoParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDOMUndo, nil, nil)
 }

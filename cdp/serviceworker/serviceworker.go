@@ -12,18 +12,31 @@ import (
 	cdp "github.com/knq/chromedp/cdp"
 )
 
-// EnableParams [no description].
-type EnableParams struct{}
-
-// Enable [no description].
-func Enable() *EnableParams {
-	return &EnableParams{}
+// DeliverPushMessageParams [no description].
+type DeliverPushMessageParams struct {
+	Origin         string `json:"origin"`
+	RegistrationID string `json:"registrationId"`
+	Data           string `json:"data"`
 }
 
-// Do executes ServiceWorker.enable against the provided context and
+// DeliverPushMessage [no description].
+//
+// parameters:
+//   origin
+//   registrationID
+//   data
+func DeliverPushMessage(origin string, registrationID string, data string) *DeliverPushMessageParams {
+	return &DeliverPushMessageParams{
+		Origin:         origin,
+		RegistrationID: registrationID,
+		Data:           data,
+	}
+}
+
+// Do executes ServiceWorker.deliverPushMessage against the provided context and
 // target handler.
-func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandServiceWorkerEnable, nil, nil)
+func (p *DeliverPushMessageParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandServiceWorkerDeliverPushMessage, p, nil)
 }
 
 // DisableParams [no description].
@@ -40,123 +53,48 @@ func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandServiceWorkerDisable, nil, nil)
 }
 
-// UnregisterParams [no description].
-type UnregisterParams struct {
-	ScopeURL string `json:"scopeURL"`
+// DispatchSyncEventParams [no description].
+type DispatchSyncEventParams struct {
+	Origin         string `json:"origin"`
+	RegistrationID string `json:"registrationId"`
+	Tag            string `json:"tag"`
+	LastChance     bool   `json:"lastChance"`
 }
 
-// Unregister [no description].
+// DispatchSyncEvent [no description].
 //
 // parameters:
-//   scopeURL
-func Unregister(scopeURL string) *UnregisterParams {
-	return &UnregisterParams{
-		ScopeURL: scopeURL,
+//   origin
+//   registrationID
+//   tag
+//   lastChance
+func DispatchSyncEvent(origin string, registrationID string, tag string, lastChance bool) *DispatchSyncEventParams {
+	return &DispatchSyncEventParams{
+		Origin:         origin,
+		RegistrationID: registrationID,
+		Tag:            tag,
+		LastChance:     lastChance,
 	}
 }
 
-// Do executes ServiceWorker.unregister against the provided context and
+// Do executes ServiceWorker.dispatchSyncEvent against the provided context and
 // target handler.
-func (p *UnregisterParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandServiceWorkerUnregister, p, nil)
+func (p *DispatchSyncEventParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandServiceWorkerDispatchSyncEvent, p, nil)
 }
 
-// UpdateRegistrationParams [no description].
-type UpdateRegistrationParams struct {
-	ScopeURL string `json:"scopeURL"`
+// EnableParams [no description].
+type EnableParams struct{}
+
+// Enable [no description].
+func Enable() *EnableParams {
+	return &EnableParams{}
 }
 
-// UpdateRegistration [no description].
-//
-// parameters:
-//   scopeURL
-func UpdateRegistration(scopeURL string) *UpdateRegistrationParams {
-	return &UpdateRegistrationParams{
-		ScopeURL: scopeURL,
-	}
-}
-
-// Do executes ServiceWorker.updateRegistration against the provided context and
+// Do executes ServiceWorker.enable against the provided context and
 // target handler.
-func (p *UpdateRegistrationParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandServiceWorkerUpdateRegistration, p, nil)
-}
-
-// StartWorkerParams [no description].
-type StartWorkerParams struct {
-	ScopeURL string `json:"scopeURL"`
-}
-
-// StartWorker [no description].
-//
-// parameters:
-//   scopeURL
-func StartWorker(scopeURL string) *StartWorkerParams {
-	return &StartWorkerParams{
-		ScopeURL: scopeURL,
-	}
-}
-
-// Do executes ServiceWorker.startWorker against the provided context and
-// target handler.
-func (p *StartWorkerParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandServiceWorkerStartWorker, p, nil)
-}
-
-// SkipWaitingParams [no description].
-type SkipWaitingParams struct {
-	ScopeURL string `json:"scopeURL"`
-}
-
-// SkipWaiting [no description].
-//
-// parameters:
-//   scopeURL
-func SkipWaiting(scopeURL string) *SkipWaitingParams {
-	return &SkipWaitingParams{
-		ScopeURL: scopeURL,
-	}
-}
-
-// Do executes ServiceWorker.skipWaiting against the provided context and
-// target handler.
-func (p *SkipWaitingParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandServiceWorkerSkipWaiting, p, nil)
-}
-
-// StopWorkerParams [no description].
-type StopWorkerParams struct {
-	VersionID string `json:"versionId"`
-}
-
-// StopWorker [no description].
-//
-// parameters:
-//   versionID
-func StopWorker(versionID string) *StopWorkerParams {
-	return &StopWorkerParams{
-		VersionID: versionID,
-	}
-}
-
-// Do executes ServiceWorker.stopWorker against the provided context and
-// target handler.
-func (p *StopWorkerParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandServiceWorkerStopWorker, p, nil)
-}
-
-// StopAllWorkersParams [no description].
-type StopAllWorkersParams struct{}
-
-// StopAllWorkers [no description].
-func StopAllWorkers() *StopAllWorkersParams {
-	return &StopAllWorkersParams{}
-}
-
-// Do executes ServiceWorker.stopAllWorkers against the provided context and
-// target handler.
-func (p *StopAllWorkersParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandServiceWorkerStopAllWorkers, nil, nil)
+func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandServiceWorkerEnable, nil, nil)
 }
 
 // InspectWorkerParams [no description].
@@ -201,59 +139,121 @@ func (p *SetForceUpdateOnPageLoadParams) Do(ctxt context.Context, h cdp.Handler)
 	return h.Execute(ctxt, cdp.CommandServiceWorkerSetForceUpdateOnPageLoad, p, nil)
 }
 
-// DeliverPushMessageParams [no description].
-type DeliverPushMessageParams struct {
-	Origin         string `json:"origin"`
-	RegistrationID string `json:"registrationId"`
-	Data           string `json:"data"`
+// SkipWaitingParams [no description].
+type SkipWaitingParams struct {
+	ScopeURL string `json:"scopeURL"`
 }
 
-// DeliverPushMessage [no description].
+// SkipWaiting [no description].
 //
 // parameters:
-//   origin
-//   registrationID
-//   data
-func DeliverPushMessage(origin string, registrationID string, data string) *DeliverPushMessageParams {
-	return &DeliverPushMessageParams{
-		Origin:         origin,
-		RegistrationID: registrationID,
-		Data:           data,
+//   scopeURL
+func SkipWaiting(scopeURL string) *SkipWaitingParams {
+	return &SkipWaitingParams{
+		ScopeURL: scopeURL,
 	}
 }
 
-// Do executes ServiceWorker.deliverPushMessage against the provided context and
+// Do executes ServiceWorker.skipWaiting against the provided context and
 // target handler.
-func (p *DeliverPushMessageParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandServiceWorkerDeliverPushMessage, p, nil)
+func (p *SkipWaitingParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandServiceWorkerSkipWaiting, p, nil)
 }
 
-// DispatchSyncEventParams [no description].
-type DispatchSyncEventParams struct {
-	Origin         string `json:"origin"`
-	RegistrationID string `json:"registrationId"`
-	Tag            string `json:"tag"`
-	LastChance     bool   `json:"lastChance"`
+// StartWorkerParams [no description].
+type StartWorkerParams struct {
+	ScopeURL string `json:"scopeURL"`
 }
 
-// DispatchSyncEvent [no description].
+// StartWorker [no description].
 //
 // parameters:
-//   origin
-//   registrationID
-//   tag
-//   lastChance
-func DispatchSyncEvent(origin string, registrationID string, tag string, lastChance bool) *DispatchSyncEventParams {
-	return &DispatchSyncEventParams{
-		Origin:         origin,
-		RegistrationID: registrationID,
-		Tag:            tag,
-		LastChance:     lastChance,
+//   scopeURL
+func StartWorker(scopeURL string) *StartWorkerParams {
+	return &StartWorkerParams{
+		ScopeURL: scopeURL,
 	}
 }
 
-// Do executes ServiceWorker.dispatchSyncEvent against the provided context and
+// Do executes ServiceWorker.startWorker against the provided context and
 // target handler.
-func (p *DispatchSyncEventParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandServiceWorkerDispatchSyncEvent, p, nil)
+func (p *StartWorkerParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandServiceWorkerStartWorker, p, nil)
+}
+
+// StopAllWorkersParams [no description].
+type StopAllWorkersParams struct{}
+
+// StopAllWorkers [no description].
+func StopAllWorkers() *StopAllWorkersParams {
+	return &StopAllWorkersParams{}
+}
+
+// Do executes ServiceWorker.stopAllWorkers against the provided context and
+// target handler.
+func (p *StopAllWorkersParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandServiceWorkerStopAllWorkers, nil, nil)
+}
+
+// StopWorkerParams [no description].
+type StopWorkerParams struct {
+	VersionID string `json:"versionId"`
+}
+
+// StopWorker [no description].
+//
+// parameters:
+//   versionID
+func StopWorker(versionID string) *StopWorkerParams {
+	return &StopWorkerParams{
+		VersionID: versionID,
+	}
+}
+
+// Do executes ServiceWorker.stopWorker against the provided context and
+// target handler.
+func (p *StopWorkerParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandServiceWorkerStopWorker, p, nil)
+}
+
+// UnregisterParams [no description].
+type UnregisterParams struct {
+	ScopeURL string `json:"scopeURL"`
+}
+
+// Unregister [no description].
+//
+// parameters:
+//   scopeURL
+func Unregister(scopeURL string) *UnregisterParams {
+	return &UnregisterParams{
+		ScopeURL: scopeURL,
+	}
+}
+
+// Do executes ServiceWorker.unregister against the provided context and
+// target handler.
+func (p *UnregisterParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandServiceWorkerUnregister, p, nil)
+}
+
+// UpdateRegistrationParams [no description].
+type UpdateRegistrationParams struct {
+	ScopeURL string `json:"scopeURL"`
+}
+
+// UpdateRegistration [no description].
+//
+// parameters:
+//   scopeURL
+func UpdateRegistration(scopeURL string) *UpdateRegistrationParams {
+	return &UpdateRegistrationParams{
+		ScopeURL: scopeURL,
+	}
+}
+
+// Do executes ServiceWorker.updateRegistration against the provided context and
+// target handler.
+func (p *UpdateRegistrationParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandServiceWorkerUpdateRegistration, p, nil)
 }

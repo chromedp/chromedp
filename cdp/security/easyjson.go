@@ -38,6 +38,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpSecurity(in *jlexer.Lexer, out
 		switch key {
 		case "securityState":
 			(out.SecurityState).UnmarshalEasyJSON(in)
+		case "title":
+			out.Title = string(in.String())
 		case "summary":
 			out.Summary = string(in.String())
 		case "description":
@@ -90,6 +92,16 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpSecurity(out *jwriter.Writer, 
 			out.RawString(prefix)
 		}
 		(in.SecurityState).MarshalEasyJSON(out)
+	}
+	{
+		const prefix string = ",\"title\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Title))
 	}
 	{
 		const prefix string = ",\"summary\":"

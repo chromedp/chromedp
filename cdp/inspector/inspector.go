@@ -12,20 +12,6 @@ import (
 	cdp "github.com/knq/chromedp/cdp"
 )
 
-// EnableParams enables inspector domain notifications.
-type EnableParams struct{}
-
-// Enable enables inspector domain notifications.
-func Enable() *EnableParams {
-	return &EnableParams{}
-}
-
-// Do executes Inspector.enable against the provided context and
-// target handler.
-func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandInspectorEnable, nil, nil)
-}
-
 // DisableParams disables inspector domain notifications.
 type DisableParams struct{}
 
@@ -38,4 +24,18 @@ func Disable() *DisableParams {
 // target handler.
 func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandInspectorDisable, nil, nil)
+}
+
+// EnableParams enables inspector domain notifications.
+type EnableParams struct{}
+
+// Enable enables inspector domain notifications.
+func Enable() *EnableParams {
+	return &EnableParams{}
+}
+
+// Do executes Inspector.enable against the provided context and
+// target handler.
+func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandInspectorEnable, nil, nil)
 }

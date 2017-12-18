@@ -394,48 +394,6 @@ func (t *CaptureScreenshotFormat) UnmarshalJSON(buf []byte) error {
 	return easyjson.Unmarshal(buf, t)
 }
 
-// ScreencastFormat image compression format.
-type ScreencastFormat string
-
-// String returns the ScreencastFormat as string value.
-func (t ScreencastFormat) String() string {
-	return string(t)
-}
-
-// ScreencastFormat values.
-const (
-	ScreencastFormatJpeg ScreencastFormat = "jpeg"
-	ScreencastFormatPng  ScreencastFormat = "png"
-)
-
-// MarshalEasyJSON satisfies easyjson.Marshaler.
-func (t ScreencastFormat) MarshalEasyJSON(out *jwriter.Writer) {
-	out.String(string(t))
-}
-
-// MarshalJSON satisfies json.Marshaler.
-func (t ScreencastFormat) MarshalJSON() ([]byte, error) {
-	return easyjson.Marshal(t)
-}
-
-// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
-func (t *ScreencastFormat) UnmarshalEasyJSON(in *jlexer.Lexer) {
-	switch ScreencastFormat(in.String()) {
-	case ScreencastFormatJpeg:
-		*t = ScreencastFormatJpeg
-	case ScreencastFormatPng:
-		*t = ScreencastFormatPng
-
-	default:
-		in.AddError(errors.New("unknown ScreencastFormat value"))
-	}
-}
-
-// UnmarshalJSON satisfies json.Unmarshaler.
-func (t *ScreencastFormat) UnmarshalJSON(buf []byte) error {
-	return easyjson.Unmarshal(buf, t)
-}
-
 // SetDownloadBehaviorBehavior whether to allow all or deny all download
 // requests, or use default Chrome behavior if available (otherwise deny).
 type SetDownloadBehaviorBehavior string
@@ -479,5 +437,47 @@ func (t *SetDownloadBehaviorBehavior) UnmarshalEasyJSON(in *jlexer.Lexer) {
 
 // UnmarshalJSON satisfies json.Unmarshaler.
 func (t *SetDownloadBehaviorBehavior) UnmarshalJSON(buf []byte) error {
+	return easyjson.Unmarshal(buf, t)
+}
+
+// ScreencastFormat image compression format.
+type ScreencastFormat string
+
+// String returns the ScreencastFormat as string value.
+func (t ScreencastFormat) String() string {
+	return string(t)
+}
+
+// ScreencastFormat values.
+const (
+	ScreencastFormatJpeg ScreencastFormat = "jpeg"
+	ScreencastFormatPng  ScreencastFormat = "png"
+)
+
+// MarshalEasyJSON satisfies easyjson.Marshaler.
+func (t ScreencastFormat) MarshalEasyJSON(out *jwriter.Writer) {
+	out.String(string(t))
+}
+
+// MarshalJSON satisfies json.Marshaler.
+func (t ScreencastFormat) MarshalJSON() ([]byte, error) {
+	return easyjson.Marshal(t)
+}
+
+// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
+func (t *ScreencastFormat) UnmarshalEasyJSON(in *jlexer.Lexer) {
+	switch ScreencastFormat(in.String()) {
+	case ScreencastFormatJpeg:
+		*t = ScreencastFormatJpeg
+	case ScreencastFormatPng:
+		*t = ScreencastFormatPng
+
+	default:
+		in.AddError(errors.New("unknown ScreencastFormat value"))
+	}
+}
+
+// UnmarshalJSON satisfies json.Unmarshaler.
+func (t *ScreencastFormat) UnmarshalJSON(buf []byte) error {
 	return easyjson.Unmarshal(buf, t)
 }

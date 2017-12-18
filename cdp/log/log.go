@@ -14,20 +14,18 @@ import (
 	cdp "github.com/knq/chromedp/cdp"
 )
 
-// EnableParams enables log domain, sends the entries collected so far to the
-// client by means of the entryAdded notification.
-type EnableParams struct{}
+// ClearParams clears the log.
+type ClearParams struct{}
 
-// Enable enables log domain, sends the entries collected so far to the
-// client by means of the entryAdded notification.
-func Enable() *EnableParams {
-	return &EnableParams{}
+// Clear clears the log.
+func Clear() *ClearParams {
+	return &ClearParams{}
 }
 
-// Do executes Log.enable against the provided context and
+// Do executes Log.clear against the provided context and
 // target handler.
-func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandLogEnable, nil, nil)
+func (p *ClearParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandLogClear, nil, nil)
 }
 
 // DisableParams disables log domain, prevents further log entries from being
@@ -46,18 +44,20 @@ func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandLogDisable, nil, nil)
 }
 
-// ClearParams clears the log.
-type ClearParams struct{}
+// EnableParams enables log domain, sends the entries collected so far to the
+// client by means of the entryAdded notification.
+type EnableParams struct{}
 
-// Clear clears the log.
-func Clear() *ClearParams {
-	return &ClearParams{}
+// Enable enables log domain, sends the entries collected so far to the
+// client by means of the entryAdded notification.
+func Enable() *EnableParams {
+	return &EnableParams{}
 }
 
-// Do executes Log.clear against the provided context and
+// Do executes Log.enable against the provided context and
 // target handler.
-func (p *ClearParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandLogClear, nil, nil)
+func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandLogEnable, nil, nil)
 }
 
 // StartViolationsReportParams start violation reporting.

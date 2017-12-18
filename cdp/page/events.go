@@ -12,25 +12,22 @@ type EventDomContentEventFired struct {
 	Timestamp *cdp.MonotonicTime `json:"timestamp"`
 }
 
-// EventLoadEventFired [no description].
-type EventLoadEventFired struct {
-	Timestamp *cdp.MonotonicTime `json:"timestamp"`
-}
-
-// EventLifecycleEvent fired for top level page lifecycle events such as
-// navigation, load, paint, etc.
-type EventLifecycleEvent struct {
-	FrameID   cdp.FrameID        `json:"frameId"`  // Id of the frame.
-	LoaderID  cdp.LoaderID       `json:"loaderId"` // Loader identifier. Empty string if the request is fetched from worker.
-	Name      string             `json:"name"`
-	Timestamp *cdp.MonotonicTime `json:"timestamp"`
-}
-
 // EventFrameAttached fired when frame has been attached to its parent.
 type EventFrameAttached struct {
 	FrameID       cdp.FrameID         `json:"frameId"`         // Id of the frame that has been attached.
 	ParentFrameID cdp.FrameID         `json:"parentFrameId"`   // Parent frame identifier.
 	Stack         *runtime.StackTrace `json:"stack,omitempty"` // JavaScript stack trace of when frame was attached, only set if frame initiated from script.
+}
+
+// EventFrameClearedScheduledNavigation fired when frame no longer has a
+// scheduled navigation.
+type EventFrameClearedScheduledNavigation struct {
+	FrameID cdp.FrameID `json:"frameId"` // Id of the frame that has cleared its scheduled navigation.
+}
+
+// EventFrameDetached fired when frame has been detached from its parent.
+type EventFrameDetached struct {
+	FrameID cdp.FrameID `json:"frameId"` // Id of the frame that has been detached.
 }
 
 // EventFrameNavigated fired once navigation of the frame has completed.
@@ -39,9 +36,16 @@ type EventFrameNavigated struct {
 	Frame *cdp.Frame `json:"frame"` // Frame object.
 }
 
-// EventFrameDetached fired when frame has been detached from its parent.
-type EventFrameDetached struct {
-	FrameID cdp.FrameID `json:"frameId"` // Id of the frame that has been detached.
+// EventFrameResized [no description].
+type EventFrameResized struct{}
+
+// EventFrameScheduledNavigation fired when frame schedules a potential
+// navigation.
+type EventFrameScheduledNavigation struct {
+	FrameID cdp.FrameID                    `json:"frameId"` // Id of the frame that has scheduled a navigation.
+	Delay   float64                        `json:"delay"`   // Delay (in seconds) until the navigation is scheduled to begin. The navigation is not guaranteed to start.
+	Reason  FrameScheduledNavigationReason `json:"reason"`  // The reason for the navigation.
+	URL     string                         `json:"url"`     // The destination URL for the scheduled navigation.
 }
 
 // EventFrameStartedLoading fired when frame has started loading.
@@ -54,23 +58,18 @@ type EventFrameStoppedLoading struct {
 	FrameID cdp.FrameID `json:"frameId"` // Id of the frame that has stopped loading.
 }
 
-// EventFrameScheduledNavigation fired when frame schedules a potential
-// navigation.
-type EventFrameScheduledNavigation struct {
-	FrameID cdp.FrameID                    `json:"frameId"` // Id of the frame that has scheduled a navigation.
-	Delay   float64                        `json:"delay"`   // Delay (in seconds) until the navigation is scheduled to begin. The navigation is not guaranteed to start.
-	Reason  FrameScheduledNavigationReason `json:"reason"`  // The reason for the navigation.
-	URL     string                         `json:"url"`     // The destination URL for the scheduled navigation.
-}
+// EventInterstitialHidden fired when interstitial page was hidden.
+type EventInterstitialHidden struct{}
 
-// EventFrameClearedScheduledNavigation fired when frame no longer has a
-// scheduled navigation.
-type EventFrameClearedScheduledNavigation struct {
-	FrameID cdp.FrameID `json:"frameId"` // Id of the frame that has cleared its scheduled navigation.
-}
+// EventInterstitialShown fired when interstitial page was shown.
+type EventInterstitialShown struct{}
 
-// EventFrameResized [no description].
-type EventFrameResized struct{}
+// EventJavascriptDialogClosed fired when a JavaScript initiated dialog
+// (alert, confirm, prompt, or onbeforeunload) has been closed.
+type EventJavascriptDialogClosed struct {
+	Result    bool   `json:"result"`    // Whether dialog was confirmed.
+	UserInput string `json:"userInput"` // User input in case of prompt.
+}
 
 // EventJavascriptDialogOpening fired when a JavaScript initiated dialog
 // (alert, confirm, prompt, or onbeforeunload) is about to open.
@@ -81,11 +80,18 @@ type EventJavascriptDialogOpening struct {
 	DefaultPrompt string     `json:"defaultPrompt,omitempty"` // Default dialog prompt.
 }
 
-// EventJavascriptDialogClosed fired when a JavaScript initiated dialog
-// (alert, confirm, prompt, or onbeforeunload) has been closed.
-type EventJavascriptDialogClosed struct {
-	Result    bool   `json:"result"`    // Whether dialog was confirmed.
-	UserInput string `json:"userInput"` // User input in case of prompt.
+// EventLifecycleEvent fired for top level page lifecycle events such as
+// navigation, load, paint, etc.
+type EventLifecycleEvent struct {
+	FrameID   cdp.FrameID        `json:"frameId"`  // Id of the frame.
+	LoaderID  cdp.LoaderID       `json:"loaderId"` // Loader identifier. Empty string if the request is fetched from worker.
+	Name      string             `json:"name"`
+	Timestamp *cdp.MonotonicTime `json:"timestamp"`
+}
+
+// EventLoadEventFired [no description].
+type EventLoadEventFired struct {
+	Timestamp *cdp.MonotonicTime `json:"timestamp"`
 }
 
 // EventScreencastFrame compressed image data requested by the
@@ -102,12 +108,6 @@ type EventScreencastVisibilityChanged struct {
 	Visible bool `json:"visible"` // True if the page is visible.
 }
 
-// EventInterstitialShown fired when interstitial page was shown.
-type EventInterstitialShown struct{}
-
-// EventInterstitialHidden fired when interstitial page was hidden.
-type EventInterstitialHidden struct{}
-
 // EventWindowOpen fired when a new window is going to be opened, via
 // window.open(), link click, form submission, etc.
 type EventWindowOpen struct {
@@ -120,21 +120,21 @@ type EventWindowOpen struct {
 // EventTypes all event types in the domain.
 var EventTypes = []cdp.MethodType{
 	cdp.EventPageDomContentEventFired,
-	cdp.EventPageLoadEventFired,
-	cdp.EventPageLifecycleEvent,
 	cdp.EventPageFrameAttached,
-	cdp.EventPageFrameNavigated,
+	cdp.EventPageFrameClearedScheduledNavigation,
 	cdp.EventPageFrameDetached,
+	cdp.EventPageFrameNavigated,
+	cdp.EventPageFrameResized,
+	cdp.EventPageFrameScheduledNavigation,
 	cdp.EventPageFrameStartedLoading,
 	cdp.EventPageFrameStoppedLoading,
-	cdp.EventPageFrameScheduledNavigation,
-	cdp.EventPageFrameClearedScheduledNavigation,
-	cdp.EventPageFrameResized,
-	cdp.EventPageJavascriptDialogOpening,
+	cdp.EventPageInterstitialHidden,
+	cdp.EventPageInterstitialShown,
 	cdp.EventPageJavascriptDialogClosed,
+	cdp.EventPageJavascriptDialogOpening,
+	cdp.EventPageLifecycleEvent,
+	cdp.EventPageLoadEventFired,
 	cdp.EventPageScreencastFrame,
 	cdp.EventPageScreencastVisibilityChanged,
-	cdp.EventPageInterstitialShown,
-	cdp.EventPageInterstitialHidden,
 	cdp.EventPageWindowOpen,
 }

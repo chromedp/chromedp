@@ -6,22 +6,6 @@ import (
 	cdp "github.com/knq/chromedp/cdp"
 )
 
-// EventTargetCreated issued when a possible inspection target is created.
-type EventTargetCreated struct {
-	TargetInfo *Info `json:"targetInfo"`
-}
-
-// EventTargetInfoChanged issued when some information about a target has
-// changed. This only happens between targetCreated and targetDestroyed.
-type EventTargetInfoChanged struct {
-	TargetInfo *Info `json:"targetInfo"`
-}
-
-// EventTargetDestroyed issued when a target is destroyed.
-type EventTargetDestroyed struct {
-	TargetID ID `json:"targetId"`
-}
-
 // EventAttachedToTarget issued when attached to target because of
 // auto-attach or attachToTarget command.
 type EventAttachedToTarget struct {
@@ -44,12 +28,28 @@ type EventReceivedMessageFromTarget struct {
 	Message   string    `json:"message"`
 }
 
+// EventTargetCreated issued when a possible inspection target is created.
+type EventTargetCreated struct {
+	TargetInfo *Info `json:"targetInfo"`
+}
+
+// EventTargetDestroyed issued when a target is destroyed.
+type EventTargetDestroyed struct {
+	TargetID ID `json:"targetId"`
+}
+
+// EventTargetInfoChanged issued when some information about a target has
+// changed. This only happens between targetCreated and targetDestroyed.
+type EventTargetInfoChanged struct {
+	TargetInfo *Info `json:"targetInfo"`
+}
+
 // EventTypes all event types in the domain.
 var EventTypes = []cdp.MethodType{
-	cdp.EventTargetTargetCreated,
-	cdp.EventTargetTargetInfoChanged,
-	cdp.EventTargetTargetDestroyed,
 	cdp.EventTargetAttachedToTarget,
 	cdp.EventTargetDetachedFromTarget,
 	cdp.EventTargetReceivedMessageFromTarget,
+	cdp.EventTargetTargetCreated,
+	cdp.EventTargetTargetDestroyed,
+	cdp.EventTargetTargetInfoChanged,
 }

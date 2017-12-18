@@ -29,6 +29,79 @@ func (p *CloseParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandBrowserClose, nil, nil)
 }
 
+// GetVersionParams returns version information.
+type GetVersionParams struct{}
+
+// GetVersion returns version information.
+func GetVersion() *GetVersionParams {
+	return &GetVersionParams{}
+}
+
+// GetVersionReturns return values.
+type GetVersionReturns struct {
+	ProtocolVersion string `json:"protocolVersion,omitempty"` // Protocol version.
+	Product         string `json:"product,omitempty"`         // Product name.
+	Revision        string `json:"revision,omitempty"`        // Product revision.
+	UserAgent       string `json:"userAgent,omitempty"`       // User-Agent.
+	JsVersion       string `json:"jsVersion,omitempty"`       // V8 version.
+}
+
+// Do executes Browser.getVersion against the provided context and
+// target handler.
+//
+// returns:
+//   protocolVersion - Protocol version.
+//   product - Product name.
+//   revision - Product revision.
+//   userAgent - User-Agent.
+//   jsVersion - V8 version.
+func (p *GetVersionParams) Do(ctxt context.Context, h cdp.Handler) (protocolVersion string, product string, revision string, userAgent string, jsVersion string, err error) {
+	// execute
+	var res GetVersionReturns
+	err = h.Execute(ctxt, cdp.CommandBrowserGetVersion, nil, &res)
+	if err != nil {
+		return "", "", "", "", "", err
+	}
+
+	return res.ProtocolVersion, res.Product, res.Revision, res.UserAgent, res.JsVersion, nil
+}
+
+// GetWindowBoundsParams get position and size of the browser window.
+type GetWindowBoundsParams struct {
+	WindowID WindowID `json:"windowId"` // Browser window id.
+}
+
+// GetWindowBounds get position and size of the browser window.
+//
+// parameters:
+//   windowID - Browser window id.
+func GetWindowBounds(windowID WindowID) *GetWindowBoundsParams {
+	return &GetWindowBoundsParams{
+		WindowID: windowID,
+	}
+}
+
+// GetWindowBoundsReturns return values.
+type GetWindowBoundsReturns struct {
+	Bounds *Bounds `json:"bounds,omitempty"` // Bounds information of the window. When window state is 'minimized', the restored window position and size are returned.
+}
+
+// Do executes Browser.getWindowBounds against the provided context and
+// target handler.
+//
+// returns:
+//   bounds - Bounds information of the window. When window state is 'minimized', the restored window position and size are returned.
+func (p *GetWindowBoundsParams) Do(ctxt context.Context, h cdp.Handler) (bounds *Bounds, err error) {
+	// execute
+	var res GetWindowBoundsReturns
+	err = h.Execute(ctxt, cdp.CommandBrowserGetWindowBounds, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Bounds, nil
+}
+
 // GetWindowForTargetParams get the browser window that contains the devtools
 // target.
 type GetWindowForTargetParams struct {
@@ -69,43 +142,6 @@ func (p *GetWindowForTargetParams) Do(ctxt context.Context, h cdp.Handler) (wind
 	return res.WindowID, res.Bounds, nil
 }
 
-// GetVersionParams returns version information.
-type GetVersionParams struct{}
-
-// GetVersion returns version information.
-func GetVersion() *GetVersionParams {
-	return &GetVersionParams{}
-}
-
-// GetVersionReturns return values.
-type GetVersionReturns struct {
-	ProtocolVersion string `json:"protocolVersion,omitempty"` // Protocol version.
-	Product         string `json:"product,omitempty"`         // Product name.
-	Revision        string `json:"revision,omitempty"`        // Product revision.
-	UserAgent       string `json:"userAgent,omitempty"`       // User-Agent.
-	JsVersion       string `json:"jsVersion,omitempty"`       // V8 version.
-}
-
-// Do executes Browser.getVersion against the provided context and
-// target handler.
-//
-// returns:
-//   protocolVersion - Protocol version.
-//   product - Product name.
-//   revision - Product revision.
-//   userAgent - User-Agent.
-//   jsVersion - V8 version.
-func (p *GetVersionParams) Do(ctxt context.Context, h cdp.Handler) (protocolVersion string, product string, revision string, userAgent string, jsVersion string, err error) {
-	// execute
-	var res GetVersionReturns
-	err = h.Execute(ctxt, cdp.CommandBrowserGetVersion, nil, &res)
-	if err != nil {
-		return "", "", "", "", "", err
-	}
-
-	return res.ProtocolVersion, res.Product, res.Revision, res.UserAgent, res.JsVersion, nil
-}
-
 // SetWindowBoundsParams set position and/or size of the browser window.
 type SetWindowBoundsParams struct {
 	WindowID WindowID `json:"windowId"` // Browser window id.
@@ -128,40 +164,4 @@ func SetWindowBounds(windowID WindowID, bounds *Bounds) *SetWindowBoundsParams {
 // target handler.
 func (p *SetWindowBoundsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandBrowserSetWindowBounds, p, nil)
-}
-
-// GetWindowBoundsParams get position and size of the browser window.
-type GetWindowBoundsParams struct {
-	WindowID WindowID `json:"windowId"` // Browser window id.
-}
-
-// GetWindowBounds get position and size of the browser window.
-//
-// parameters:
-//   windowID - Browser window id.
-func GetWindowBounds(windowID WindowID) *GetWindowBoundsParams {
-	return &GetWindowBoundsParams{
-		WindowID: windowID,
-	}
-}
-
-// GetWindowBoundsReturns return values.
-type GetWindowBoundsReturns struct {
-	Bounds *Bounds `json:"bounds,omitempty"` // Bounds information of the window. When window state is 'minimized', the restored window position and size are returned.
-}
-
-// Do executes Browser.getWindowBounds against the provided context and
-// target handler.
-//
-// returns:
-//   bounds - Bounds information of the window. When window state is 'minimized', the restored window position and size are returned.
-func (p *GetWindowBoundsParams) Do(ctxt context.Context, h cdp.Handler) (bounds *Bounds, err error) {
-	// execute
-	var res GetWindowBoundsReturns
-	err = h.Execute(ctxt, cdp.CommandBrowserGetWindowBounds, p, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	return res.Bounds, nil
 }

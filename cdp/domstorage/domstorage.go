@@ -14,38 +14,6 @@ import (
 	cdp "github.com/knq/chromedp/cdp"
 )
 
-// EnableParams enables storage tracking, storage events will now be
-// delivered to the client.
-type EnableParams struct{}
-
-// Enable enables storage tracking, storage events will now be delivered to
-// the client.
-func Enable() *EnableParams {
-	return &EnableParams{}
-}
-
-// Do executes DOMStorage.enable against the provided context and
-// target handler.
-func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDOMStorageEnable, nil, nil)
-}
-
-// DisableParams disables storage tracking, prevents storage events from
-// being sent to the client.
-type DisableParams struct{}
-
-// Disable disables storage tracking, prevents storage events from being sent
-// to the client.
-func Disable() *DisableParams {
-	return &DisableParams{}
-}
-
-// Do executes DOMStorage.disable against the provided context and
-// target handler.
-func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDOMStorageDisable, nil, nil)
-}
-
 // ClearParams [no description].
 type ClearParams struct {
 	StorageID *StorageID `json:"storageId"`
@@ -65,6 +33,38 @@ func Clear(storageID *StorageID) *ClearParams {
 // target handler.
 func (p *ClearParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandDOMStorageClear, p, nil)
+}
+
+// DisableParams disables storage tracking, prevents storage events from
+// being sent to the client.
+type DisableParams struct{}
+
+// Disable disables storage tracking, prevents storage events from being sent
+// to the client.
+func Disable() *DisableParams {
+	return &DisableParams{}
+}
+
+// Do executes DOMStorage.disable against the provided context and
+// target handler.
+func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDOMStorageDisable, nil, nil)
+}
+
+// EnableParams enables storage tracking, storage events will now be
+// delivered to the client.
+type EnableParams struct{}
+
+// Enable enables storage tracking, storage events will now be delivered to
+// the client.
+func Enable() *EnableParams {
+	return &EnableParams{}
+}
+
+// Do executes DOMStorage.enable against the provided context and
+// target handler.
+func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDOMStorageEnable, nil, nil)
 }
 
 // GetDOMStorageItemsParams [no description].
@@ -103,6 +103,30 @@ func (p *GetDOMStorageItemsParams) Do(ctxt context.Context, h cdp.Handler) (entr
 	return res.Entries, nil
 }
 
+// RemoveDOMStorageItemParams [no description].
+type RemoveDOMStorageItemParams struct {
+	StorageID *StorageID `json:"storageId"`
+	Key       string     `json:"key"`
+}
+
+// RemoveDOMStorageItem [no description].
+//
+// parameters:
+//   storageID
+//   key
+func RemoveDOMStorageItem(storageID *StorageID, key string) *RemoveDOMStorageItemParams {
+	return &RemoveDOMStorageItemParams{
+		StorageID: storageID,
+		Key:       key,
+	}
+}
+
+// Do executes DOMStorage.removeDOMStorageItem against the provided context and
+// target handler.
+func (p *RemoveDOMStorageItemParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDOMStorageRemoveDOMStorageItem, p, nil)
+}
+
 // SetDOMStorageItemParams [no description].
 type SetDOMStorageItemParams struct {
 	StorageID *StorageID `json:"storageId"`
@@ -128,28 +152,4 @@ func SetDOMStorageItem(storageID *StorageID, key string, value string) *SetDOMSt
 // target handler.
 func (p *SetDOMStorageItemParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandDOMStorageSetDOMStorageItem, p, nil)
-}
-
-// RemoveDOMStorageItemParams [no description].
-type RemoveDOMStorageItemParams struct {
-	StorageID *StorageID `json:"storageId"`
-	Key       string     `json:"key"`
-}
-
-// RemoveDOMStorageItem [no description].
-//
-// parameters:
-//   storageID
-//   key
-func RemoveDOMStorageItem(storageID *StorageID, key string) *RemoveDOMStorageItemParams {
-	return &RemoveDOMStorageItemParams{
-		StorageID: storageID,
-		Key:       key,
-	}
-}
-
-// Do executes DOMStorage.removeDOMStorageItem against the provided context and
-// target handler.
-func (p *RemoveDOMStorageItemParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDOMStorageRemoveDOMStorageItem, p, nil)
 }

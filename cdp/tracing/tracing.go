@@ -12,46 +12,6 @@ import (
 	cdp "github.com/knq/chromedp/cdp"
 )
 
-// StartParams start trace events collection.
-type StartParams struct {
-	BufferUsageReportingInterval float64      `json:"bufferUsageReportingInterval,omitempty"` // If set, the agent will issue bufferUsage events at this interval, specified in milliseconds
-	TransferMode                 TransferMode `json:"transferMode,omitempty"`                 // Whether to report trace events as series of dataCollected events or to save trace to a stream (defaults to ReportEvents).
-	TraceConfig                  *TraceConfig `json:"traceConfig,omitempty"`
-}
-
-// Start start trace events collection.
-//
-// parameters:
-func Start() *StartParams {
-	return &StartParams{}
-}
-
-// WithBufferUsageReportingInterval if set, the agent will issue bufferUsage
-// events at this interval, specified in milliseconds.
-func (p StartParams) WithBufferUsageReportingInterval(bufferUsageReportingInterval float64) *StartParams {
-	p.BufferUsageReportingInterval = bufferUsageReportingInterval
-	return &p
-}
-
-// WithTransferMode whether to report trace events as series of dataCollected
-// events or to save trace to a stream (defaults to ReportEvents).
-func (p StartParams) WithTransferMode(transferMode TransferMode) *StartParams {
-	p.TransferMode = transferMode
-	return &p
-}
-
-// WithTraceConfig [no description].
-func (p StartParams) WithTraceConfig(traceConfig *TraceConfig) *StartParams {
-	p.TraceConfig = traceConfig
-	return &p
-}
-
-// Do executes Tracing.start against the provided context and
-// target handler.
-func (p *StartParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandTracingStart, p, nil)
-}
-
 // EndParams stop trace events collection.
 type EndParams struct{}
 
@@ -95,6 +55,27 @@ func (p *GetCategoriesParams) Do(ctxt context.Context, h cdp.Handler) (categorie
 	return res.Categories, nil
 }
 
+// RecordClockSyncMarkerParams record a clock sync marker in the trace.
+type RecordClockSyncMarkerParams struct {
+	SyncID string `json:"syncId"` // The ID of this clock sync marker
+}
+
+// RecordClockSyncMarker record a clock sync marker in the trace.
+//
+// parameters:
+//   syncID - The ID of this clock sync marker
+func RecordClockSyncMarker(syncID string) *RecordClockSyncMarkerParams {
+	return &RecordClockSyncMarkerParams{
+		SyncID: syncID,
+	}
+}
+
+// Do executes Tracing.recordClockSyncMarker against the provided context and
+// target handler.
+func (p *RecordClockSyncMarkerParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandTracingRecordClockSyncMarker, p, nil)
+}
+
 // RequestMemoryDumpParams request a global memory dump.
 type RequestMemoryDumpParams struct{}
 
@@ -126,23 +107,50 @@ func (p *RequestMemoryDumpParams) Do(ctxt context.Context, h cdp.Handler) (dumpG
 	return res.DumpGUID, res.Success, nil
 }
 
-// RecordClockSyncMarkerParams record a clock sync marker in the trace.
-type RecordClockSyncMarkerParams struct {
-	SyncID string `json:"syncId"` // The ID of this clock sync marker
+// StartParams start trace events collection.
+type StartParams struct {
+	BufferUsageReportingInterval float64           `json:"bufferUsageReportingInterval,omitempty"` // If set, the agent will issue bufferUsage events at this interval, specified in milliseconds
+	TransferMode                 TransferMode      `json:"transferMode,omitempty"`                 // Whether to report trace events as series of dataCollected events or to save trace to a stream (defaults to ReportEvents).
+	StreamCompression            StreamCompression `json:"streamCompression,omitempty"`            // Compression format to use. This only applies when using ReturnAsStream transfer mode (defaults to none)
+	TraceConfig                  *TraceConfig      `json:"traceConfig,omitempty"`
 }
 
-// RecordClockSyncMarker record a clock sync marker in the trace.
+// Start start trace events collection.
 //
 // parameters:
-//   syncID - The ID of this clock sync marker
-func RecordClockSyncMarker(syncID string) *RecordClockSyncMarkerParams {
-	return &RecordClockSyncMarkerParams{
-		SyncID: syncID,
-	}
+func Start() *StartParams {
+	return &StartParams{}
 }
 
-// Do executes Tracing.recordClockSyncMarker against the provided context and
+// WithBufferUsageReportingInterval if set, the agent will issue bufferUsage
+// events at this interval, specified in milliseconds.
+func (p StartParams) WithBufferUsageReportingInterval(bufferUsageReportingInterval float64) *StartParams {
+	p.BufferUsageReportingInterval = bufferUsageReportingInterval
+	return &p
+}
+
+// WithTransferMode whether to report trace events as series of dataCollected
+// events or to save trace to a stream (defaults to ReportEvents).
+func (p StartParams) WithTransferMode(transferMode TransferMode) *StartParams {
+	p.TransferMode = transferMode
+	return &p
+}
+
+// WithStreamCompression compression format to use. This only applies when
+// using ReturnAsStream transfer mode (defaults to none).
+func (p StartParams) WithStreamCompression(streamCompression StreamCompression) *StartParams {
+	p.StreamCompression = streamCompression
+	return &p
+}
+
+// WithTraceConfig [no description].
+func (p StartParams) WithTraceConfig(traceConfig *TraceConfig) *StartParams {
+	p.TraceConfig = traceConfig
+	return &p
+}
+
+// Do executes Tracing.start against the provided context and
 // target handler.
-func (p *RecordClockSyncMarkerParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandTracingRecordClockSyncMarker, p, nil)
+func (p *StartParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandTracingStart, p, nil)
 }

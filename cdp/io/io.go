@@ -15,6 +15,27 @@ import (
 	"github.com/knq/chromedp/cdp/runtime"
 )
 
+// CloseParams close the stream, discard any temporary backing storage.
+type CloseParams struct {
+	Handle StreamHandle `json:"handle"` // Handle of the stream to close.
+}
+
+// Close close the stream, discard any temporary backing storage.
+//
+// parameters:
+//   handle - Handle of the stream to close.
+func Close(handle StreamHandle) *CloseParams {
+	return &CloseParams{
+		Handle: handle,
+	}
+}
+
+// Do executes IO.close against the provided context and
+// target handler.
+func (p *CloseParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandIOClose, p, nil)
+}
+
 // ReadParams read a chunk of the stream.
 type ReadParams struct {
 	Handle StreamHandle `json:"handle"`           // Handle of the stream to read.
@@ -68,27 +89,6 @@ func (p *ReadParams) Do(ctxt context.Context, h cdp.Handler) (data string, eof b
 	}
 
 	return res.Data, res.EOF, nil
-}
-
-// CloseParams close the stream, discard any temporary backing storage.
-type CloseParams struct {
-	Handle StreamHandle `json:"handle"` // Handle of the stream to close.
-}
-
-// Close close the stream, discard any temporary backing storage.
-//
-// parameters:
-//   handle - Handle of the stream to close.
-func Close(handle StreamHandle) *CloseParams {
-	return &CloseParams{
-		Handle: handle,
-	}
-}
-
-// Do executes IO.close against the provided context and
-// target handler.
-func (p *CloseParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandIOClose, p, nil)
 }
 
 // ResolveBlobParams return UUID of Blob object specified by a remote object

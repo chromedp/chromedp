@@ -17,34 +17,6 @@ import (
 	"github.com/knq/chromedp/cdp/runtime"
 )
 
-// EnableParams enables headless events for the target.
-type EnableParams struct{}
-
-// Enable enables headless events for the target.
-func Enable() *EnableParams {
-	return &EnableParams{}
-}
-
-// Do executes HeadlessExperimental.enable against the provided context and
-// target handler.
-func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandHeadlessExperimentalEnable, nil, nil)
-}
-
-// DisableParams disables headless events for the target.
-type DisableParams struct{}
-
-// Disable disables headless events for the target.
-func Disable() *DisableParams {
-	return &DisableParams{}
-}
-
-// Do executes HeadlessExperimental.disable against the provided context and
-// target handler.
-func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandHeadlessExperimentalDisable, nil, nil)
-}
-
 // BeginFrameParams sends a BeginFrame to the target and returns when the
 // frame was completed. Optionally captures a screenshot from the resulting
 // frame. Requires that the target was created with enabled BeginFrameControl.
@@ -122,4 +94,32 @@ func (p *BeginFrameParams) Do(ctxt context.Context, h cdp.Handler) (hasDamage bo
 		return false, false, nil, err
 	}
 	return res.HasDamage, res.MainFrameContentUpdated, dec, nil
+}
+
+// DisableParams disables headless events for the target.
+type DisableParams struct{}
+
+// Disable disables headless events for the target.
+func Disable() *DisableParams {
+	return &DisableParams{}
+}
+
+// Do executes HeadlessExperimental.disable against the provided context and
+// target handler.
+func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandHeadlessExperimentalDisable, nil, nil)
+}
+
+// EnableParams enables headless events for the target.
+type EnableParams struct{}
+
+// Enable enables headless events for the target.
+func Enable() *EnableParams {
+	return &EnableParams{}
+}
+
+// Do executes HeadlessExperimental.enable against the provided context and
+// target handler.
+func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandHeadlessExperimentalEnable, nil, nil)
 }

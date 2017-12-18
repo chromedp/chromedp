@@ -14,168 +14,6 @@ import (
 	cdp "github.com/knq/chromedp/cdp"
 )
 
-// SetDiscoverTargetsParams controls whether to discover available targets
-// and notify via targetCreated/targetInfoChanged/targetDestroyed events.
-type SetDiscoverTargetsParams struct {
-	Discover bool `json:"discover"` // Whether to discover available targets.
-}
-
-// SetDiscoverTargets controls whether to discover available targets and
-// notify via targetCreated/targetInfoChanged/targetDestroyed events.
-//
-// parameters:
-//   discover - Whether to discover available targets.
-func SetDiscoverTargets(discover bool) *SetDiscoverTargetsParams {
-	return &SetDiscoverTargetsParams{
-		Discover: discover,
-	}
-}
-
-// Do executes Target.setDiscoverTargets against the provided context and
-// target handler.
-func (p *SetDiscoverTargetsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandTargetSetDiscoverTargets, p, nil)
-}
-
-// SetAutoAttachParams controls whether to automatically attach to new
-// targets which are considered to be related to this one. When turned on,
-// attaches to all existing related targets as well. When turned off,
-// automatically detaches from all currently attached targets.
-type SetAutoAttachParams struct {
-	AutoAttach             bool `json:"autoAttach"`             // Whether to auto-attach to related targets.
-	WaitForDebuggerOnStart bool `json:"waitForDebuggerOnStart"` // Whether to pause new targets when attaching to them. Use Runtime.runIfWaitingForDebugger to run paused targets.
-}
-
-// SetAutoAttach controls whether to automatically attach to new targets
-// which are considered to be related to this one. When turned on, attaches to
-// all existing related targets as well. When turned off, automatically detaches
-// from all currently attached targets.
-//
-// parameters:
-//   autoAttach - Whether to auto-attach to related targets.
-//   waitForDebuggerOnStart - Whether to pause new targets when attaching to them. Use Runtime.runIfWaitingForDebugger to run paused targets.
-func SetAutoAttach(autoAttach bool, waitForDebuggerOnStart bool) *SetAutoAttachParams {
-	return &SetAutoAttachParams{
-		AutoAttach:             autoAttach,
-		WaitForDebuggerOnStart: waitForDebuggerOnStart,
-	}
-}
-
-// Do executes Target.setAutoAttach against the provided context and
-// target handler.
-func (p *SetAutoAttachParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandTargetSetAutoAttach, p, nil)
-}
-
-// SetAttachToFramesParams [no description].
-type SetAttachToFramesParams struct {
-	Value bool `json:"value"` // Whether to attach to frames.
-}
-
-// SetAttachToFrames [no description].
-//
-// parameters:
-//   value - Whether to attach to frames.
-func SetAttachToFrames(value bool) *SetAttachToFramesParams {
-	return &SetAttachToFramesParams{
-		Value: value,
-	}
-}
-
-// Do executes Target.setAttachToFrames against the provided context and
-// target handler.
-func (p *SetAttachToFramesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandTargetSetAttachToFrames, p, nil)
-}
-
-// SetRemoteLocationsParams enables target discovery for the specified
-// locations, when setDiscoverTargets was set to true.
-type SetRemoteLocationsParams struct {
-	Locations []*RemoteLocation `json:"locations"` // List of remote locations.
-}
-
-// SetRemoteLocations enables target discovery for the specified locations,
-// when setDiscoverTargets was set to true.
-//
-// parameters:
-//   locations - List of remote locations.
-func SetRemoteLocations(locations []*RemoteLocation) *SetRemoteLocationsParams {
-	return &SetRemoteLocationsParams{
-		Locations: locations,
-	}
-}
-
-// Do executes Target.setRemoteLocations against the provided context and
-// target handler.
-func (p *SetRemoteLocationsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandTargetSetRemoteLocations, p, nil)
-}
-
-// SendMessageToTargetParams sends protocol message over session with given
-// id.
-type SendMessageToTargetParams struct {
-	Message   string    `json:"message"`
-	SessionID SessionID `json:"sessionId,omitempty"` // Identifier of the session.
-}
-
-// SendMessageToTarget sends protocol message over session with given id.
-//
-// parameters:
-//   message
-func SendMessageToTarget(message string) *SendMessageToTargetParams {
-	return &SendMessageToTargetParams{
-		Message: message,
-	}
-}
-
-// WithSessionID identifier of the session.
-func (p SendMessageToTargetParams) WithSessionID(sessionID SessionID) *SendMessageToTargetParams {
-	p.SessionID = sessionID
-	return &p
-}
-
-// Do executes Target.sendMessageToTarget against the provided context and
-// target handler.
-func (p *SendMessageToTargetParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandTargetSendMessageToTarget, p, nil)
-}
-
-// GetTargetInfoParams returns information about a target.
-type GetTargetInfoParams struct {
-	TargetID ID `json:"targetId"`
-}
-
-// GetTargetInfo returns information about a target.
-//
-// parameters:
-//   targetID
-func GetTargetInfo(targetID ID) *GetTargetInfoParams {
-	return &GetTargetInfoParams{
-		TargetID: targetID,
-	}
-}
-
-// GetTargetInfoReturns return values.
-type GetTargetInfoReturns struct {
-	TargetInfo *Info `json:"targetInfo,omitempty"`
-}
-
-// Do executes Target.getTargetInfo against the provided context and
-// target handler.
-//
-// returns:
-//   targetInfo
-func (p *GetTargetInfoParams) Do(ctxt context.Context, h cdp.Handler) (targetInfo *Info, err error) {
-	// execute
-	var res GetTargetInfoReturns
-	err = h.Execute(ctxt, cdp.CommandTargetGetTargetInfo, p, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	return res.TargetInfo, nil
-}
-
 // ActivateTargetParams activates (focuses) the target.
 type ActivateTargetParams struct {
 	TargetID ID `json:"targetId"`
@@ -195,6 +33,42 @@ func ActivateTarget(targetID ID) *ActivateTargetParams {
 // target handler.
 func (p *ActivateTargetParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandTargetActivateTarget, p, nil)
+}
+
+// AttachToTargetParams attaches to the target with given id.
+type AttachToTargetParams struct {
+	TargetID ID `json:"targetId"`
+}
+
+// AttachToTarget attaches to the target with given id.
+//
+// parameters:
+//   targetID
+func AttachToTarget(targetID ID) *AttachToTargetParams {
+	return &AttachToTargetParams{
+		TargetID: targetID,
+	}
+}
+
+// AttachToTargetReturns return values.
+type AttachToTargetReturns struct {
+	SessionID SessionID `json:"sessionId,omitempty"` // Id assigned to the session.
+}
+
+// Do executes Target.attachToTarget against the provided context and
+// target handler.
+//
+// returns:
+//   sessionID - Id assigned to the session.
+func (p *AttachToTargetParams) Do(ctxt context.Context, h cdp.Handler) (sessionID SessionID, err error) {
+	// execute
+	var res AttachToTargetReturns
+	err = h.Execute(ctxt, cdp.CommandTargetAttachToTarget, p, &res)
+	if err != nil {
+		return "", err
+	}
+
+	return res.SessionID, nil
 }
 
 // CloseTargetParams closes the target. If the target is a page that gets
@@ -235,66 +109,6 @@ func (p *CloseTargetParams) Do(ctxt context.Context, h cdp.Handler) (success boo
 	return res.Success, nil
 }
 
-// AttachToTargetParams attaches to the target with given id.
-type AttachToTargetParams struct {
-	TargetID ID `json:"targetId"`
-}
-
-// AttachToTarget attaches to the target with given id.
-//
-// parameters:
-//   targetID
-func AttachToTarget(targetID ID) *AttachToTargetParams {
-	return &AttachToTargetParams{
-		TargetID: targetID,
-	}
-}
-
-// AttachToTargetReturns return values.
-type AttachToTargetReturns struct {
-	SessionID SessionID `json:"sessionId,omitempty"` // Id assigned to the session.
-}
-
-// Do executes Target.attachToTarget against the provided context and
-// target handler.
-//
-// returns:
-//   sessionID - Id assigned to the session.
-func (p *AttachToTargetParams) Do(ctxt context.Context, h cdp.Handler) (sessionID SessionID, err error) {
-	// execute
-	var res AttachToTargetReturns
-	err = h.Execute(ctxt, cdp.CommandTargetAttachToTarget, p, &res)
-	if err != nil {
-		return "", err
-	}
-
-	return res.SessionID, nil
-}
-
-// DetachFromTargetParams detaches session with given id.
-type DetachFromTargetParams struct {
-	SessionID SessionID `json:"sessionId,omitempty"` // Session to detach.
-}
-
-// DetachFromTarget detaches session with given id.
-//
-// parameters:
-func DetachFromTarget() *DetachFromTargetParams {
-	return &DetachFromTargetParams{}
-}
-
-// WithSessionID session to detach.
-func (p DetachFromTargetParams) WithSessionID(sessionID SessionID) *DetachFromTargetParams {
-	p.SessionID = sessionID
-	return &p
-}
-
-// Do executes Target.detachFromTarget against the provided context and
-// target handler.
-func (p *DetachFromTargetParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandTargetDetachFromTarget, p, nil)
-}
-
 // CreateBrowserContextParams creates a new empty BrowserContext. Similar to
 // an incognito profile but you can have more than one.
 type CreateBrowserContextParams struct{}
@@ -324,44 +138,6 @@ func (p *CreateBrowserContextParams) Do(ctxt context.Context, h cdp.Handler) (br
 	}
 
 	return res.BrowserContextID, nil
-}
-
-// DisposeBrowserContextParams deletes a BrowserContext, will fail of any
-// open page uses it.
-type DisposeBrowserContextParams struct {
-	BrowserContextID BrowserContextID `json:"browserContextId"`
-}
-
-// DisposeBrowserContext deletes a BrowserContext, will fail of any open page
-// uses it.
-//
-// parameters:
-//   browserContextID
-func DisposeBrowserContext(browserContextID BrowserContextID) *DisposeBrowserContextParams {
-	return &DisposeBrowserContextParams{
-		BrowserContextID: browserContextID,
-	}
-}
-
-// DisposeBrowserContextReturns return values.
-type DisposeBrowserContextReturns struct {
-	Success bool `json:"success,omitempty"`
-}
-
-// Do executes Target.disposeBrowserContext against the provided context and
-// target handler.
-//
-// returns:
-//   success
-func (p *DisposeBrowserContextParams) Do(ctxt context.Context, h cdp.Handler) (success bool, err error) {
-	// execute
-	var res DisposeBrowserContextReturns
-	err = h.Execute(ctxt, cdp.CommandTargetDisposeBrowserContext, p, &res)
-	if err != nil {
-		return false, err
-	}
-
-	return res.Success, nil
 }
 
 // CreateTargetParams creates a new page.
@@ -431,6 +207,104 @@ func (p *CreateTargetParams) Do(ctxt context.Context, h cdp.Handler) (targetID I
 	return res.TargetID, nil
 }
 
+// DetachFromTargetParams detaches session with given id.
+type DetachFromTargetParams struct {
+	SessionID SessionID `json:"sessionId,omitempty"` // Session to detach.
+}
+
+// DetachFromTarget detaches session with given id.
+//
+// parameters:
+func DetachFromTarget() *DetachFromTargetParams {
+	return &DetachFromTargetParams{}
+}
+
+// WithSessionID session to detach.
+func (p DetachFromTargetParams) WithSessionID(sessionID SessionID) *DetachFromTargetParams {
+	p.SessionID = sessionID
+	return &p
+}
+
+// Do executes Target.detachFromTarget against the provided context and
+// target handler.
+func (p *DetachFromTargetParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandTargetDetachFromTarget, p, nil)
+}
+
+// DisposeBrowserContextParams deletes a BrowserContext, will fail of any
+// open page uses it.
+type DisposeBrowserContextParams struct {
+	BrowserContextID BrowserContextID `json:"browserContextId"`
+}
+
+// DisposeBrowserContext deletes a BrowserContext, will fail of any open page
+// uses it.
+//
+// parameters:
+//   browserContextID
+func DisposeBrowserContext(browserContextID BrowserContextID) *DisposeBrowserContextParams {
+	return &DisposeBrowserContextParams{
+		BrowserContextID: browserContextID,
+	}
+}
+
+// DisposeBrowserContextReturns return values.
+type DisposeBrowserContextReturns struct {
+	Success bool `json:"success,omitempty"`
+}
+
+// Do executes Target.disposeBrowserContext against the provided context and
+// target handler.
+//
+// returns:
+//   success
+func (p *DisposeBrowserContextParams) Do(ctxt context.Context, h cdp.Handler) (success bool, err error) {
+	// execute
+	var res DisposeBrowserContextReturns
+	err = h.Execute(ctxt, cdp.CommandTargetDisposeBrowserContext, p, &res)
+	if err != nil {
+		return false, err
+	}
+
+	return res.Success, nil
+}
+
+// GetTargetInfoParams returns information about a target.
+type GetTargetInfoParams struct {
+	TargetID ID `json:"targetId"`
+}
+
+// GetTargetInfo returns information about a target.
+//
+// parameters:
+//   targetID
+func GetTargetInfo(targetID ID) *GetTargetInfoParams {
+	return &GetTargetInfoParams{
+		TargetID: targetID,
+	}
+}
+
+// GetTargetInfoReturns return values.
+type GetTargetInfoReturns struct {
+	TargetInfo *Info `json:"targetInfo,omitempty"`
+}
+
+// Do executes Target.getTargetInfo against the provided context and
+// target handler.
+//
+// returns:
+//   targetInfo
+func (p *GetTargetInfoParams) Do(ctxt context.Context, h cdp.Handler) (targetInfo *Info, err error) {
+	// execute
+	var res GetTargetInfoReturns
+	err = h.Execute(ctxt, cdp.CommandTargetGetTargetInfo, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.TargetInfo, nil
+}
+
 // GetTargetsParams retrieves a list of available targets.
 type GetTargetsParams struct{}
 
@@ -458,4 +332,130 @@ func (p *GetTargetsParams) Do(ctxt context.Context, h cdp.Handler) (targetInfos 
 	}
 
 	return res.TargetInfos, nil
+}
+
+// SendMessageToTargetParams sends protocol message over session with given
+// id.
+type SendMessageToTargetParams struct {
+	Message   string    `json:"message"`
+	SessionID SessionID `json:"sessionId,omitempty"` // Identifier of the session.
+}
+
+// SendMessageToTarget sends protocol message over session with given id.
+//
+// parameters:
+//   message
+func SendMessageToTarget(message string) *SendMessageToTargetParams {
+	return &SendMessageToTargetParams{
+		Message: message,
+	}
+}
+
+// WithSessionID identifier of the session.
+func (p SendMessageToTargetParams) WithSessionID(sessionID SessionID) *SendMessageToTargetParams {
+	p.SessionID = sessionID
+	return &p
+}
+
+// Do executes Target.sendMessageToTarget against the provided context and
+// target handler.
+func (p *SendMessageToTargetParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandTargetSendMessageToTarget, p, nil)
+}
+
+// SetAttachToFramesParams [no description].
+type SetAttachToFramesParams struct {
+	Value bool `json:"value"` // Whether to attach to frames.
+}
+
+// SetAttachToFrames [no description].
+//
+// parameters:
+//   value - Whether to attach to frames.
+func SetAttachToFrames(value bool) *SetAttachToFramesParams {
+	return &SetAttachToFramesParams{
+		Value: value,
+	}
+}
+
+// Do executes Target.setAttachToFrames against the provided context and
+// target handler.
+func (p *SetAttachToFramesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandTargetSetAttachToFrames, p, nil)
+}
+
+// SetAutoAttachParams controls whether to automatically attach to new
+// targets which are considered to be related to this one. When turned on,
+// attaches to all existing related targets as well. When turned off,
+// automatically detaches from all currently attached targets.
+type SetAutoAttachParams struct {
+	AutoAttach             bool `json:"autoAttach"`             // Whether to auto-attach to related targets.
+	WaitForDebuggerOnStart bool `json:"waitForDebuggerOnStart"` // Whether to pause new targets when attaching to them. Use Runtime.runIfWaitingForDebugger to run paused targets.
+}
+
+// SetAutoAttach controls whether to automatically attach to new targets
+// which are considered to be related to this one. When turned on, attaches to
+// all existing related targets as well. When turned off, automatically detaches
+// from all currently attached targets.
+//
+// parameters:
+//   autoAttach - Whether to auto-attach to related targets.
+//   waitForDebuggerOnStart - Whether to pause new targets when attaching to them. Use Runtime.runIfWaitingForDebugger to run paused targets.
+func SetAutoAttach(autoAttach bool, waitForDebuggerOnStart bool) *SetAutoAttachParams {
+	return &SetAutoAttachParams{
+		AutoAttach:             autoAttach,
+		WaitForDebuggerOnStart: waitForDebuggerOnStart,
+	}
+}
+
+// Do executes Target.setAutoAttach against the provided context and
+// target handler.
+func (p *SetAutoAttachParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandTargetSetAutoAttach, p, nil)
+}
+
+// SetDiscoverTargetsParams controls whether to discover available targets
+// and notify via targetCreated/targetInfoChanged/targetDestroyed events.
+type SetDiscoverTargetsParams struct {
+	Discover bool `json:"discover"` // Whether to discover available targets.
+}
+
+// SetDiscoverTargets controls whether to discover available targets and
+// notify via targetCreated/targetInfoChanged/targetDestroyed events.
+//
+// parameters:
+//   discover - Whether to discover available targets.
+func SetDiscoverTargets(discover bool) *SetDiscoverTargetsParams {
+	return &SetDiscoverTargetsParams{
+		Discover: discover,
+	}
+}
+
+// Do executes Target.setDiscoverTargets against the provided context and
+// target handler.
+func (p *SetDiscoverTargetsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandTargetSetDiscoverTargets, p, nil)
+}
+
+// SetRemoteLocationsParams enables target discovery for the specified
+// locations, when setDiscoverTargets was set to true.
+type SetRemoteLocationsParams struct {
+	Locations []*RemoteLocation `json:"locations"` // List of remote locations.
+}
+
+// SetRemoteLocations enables target discovery for the specified locations,
+// when setDiscoverTargets was set to true.
+//
+// parameters:
+//   locations - List of remote locations.
+func SetRemoteLocations(locations []*RemoteLocation) *SetRemoteLocationsParams {
+	return &SetRemoteLocationsParams{
+		Locations: locations,
+	}
+}
+
+// Do executes Target.setRemoteLocations against the provided context and
+// target handler.
+func (p *SetRemoteLocationsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandTargetSetRemoteLocations, p, nil)
 }

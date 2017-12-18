@@ -6,18 +6,6 @@ import (
 	cdp "github.com/knq/chromedp/cdp"
 )
 
-// EventDocumentUpdated fired when Document has been totally updated. Node
-// ids are no longer valid.
-type EventDocumentUpdated struct{}
-
-// EventSetChildNodes fired when backend wants to provide client with the
-// missing DOM structure. This happens upon most of the calls requesting node
-// ids.
-type EventSetChildNodes struct {
-	ParentID cdp.NodeID  `json:"parentId"` // Parent node id to populate with children.
-	Nodes    []*cdp.Node `json:"nodes"`    // Child nodes array.
-}
-
 // EventAttributeModified fired when Element's attribute is modified.
 type EventAttributeModified struct {
 	NodeID cdp.NodeID `json:"nodeId"` // Id of the node that has changed.
@@ -29,12 +17,6 @@ type EventAttributeModified struct {
 type EventAttributeRemoved struct {
 	NodeID cdp.NodeID `json:"nodeId"` // Id of the node that has changed.
 	Name   string     `json:"name"`   // A ttribute name.
-}
-
-// EventInlineStyleInvalidated fired when Element's inline style is modified
-// via a CSS property modification.
-type EventInlineStyleInvalidated struct {
-	NodeIds []cdp.NodeID `json:"nodeIds"` // Ids of the nodes for which the inline styles have been invalidated.
 }
 
 // EventCharacterDataModified mirrors DOMCharacterDataModified event.
@@ -63,16 +45,20 @@ type EventChildNodeRemoved struct {
 	NodeID       cdp.NodeID `json:"nodeId"`       // Id of the node that has been removed.
 }
 
-// EventShadowRootPushed called when shadow root is pushed into the element.
-type EventShadowRootPushed struct {
-	HostID cdp.NodeID `json:"hostId"` // Host element id.
-	Root   *cdp.Node  `json:"root"`   // Shadow root.
+// EventDistributedNodesUpdated called when distribution is changed.
+type EventDistributedNodesUpdated struct {
+	InsertionPointID cdp.NodeID         `json:"insertionPointId"` // Insertion point where distributed nodes were updated.
+	DistributedNodes []*cdp.BackendNode `json:"distributedNodes"` // Distributed nodes for given insertion point.
 }
 
-// EventShadowRootPopped called when shadow root is popped from the element.
-type EventShadowRootPopped struct {
-	HostID cdp.NodeID `json:"hostId"` // Host element id.
-	RootID cdp.NodeID `json:"rootId"` // Shadow root id.
+// EventDocumentUpdated fired when Document has been totally updated. Node
+// ids are no longer valid.
+type EventDocumentUpdated struct{}
+
+// EventInlineStyleInvalidated fired when Element's inline style is modified
+// via a CSS property modification.
+type EventInlineStyleInvalidated struct {
+	NodeIds []cdp.NodeID `json:"nodeIds"` // Ids of the nodes for which the inline styles have been invalidated.
 }
 
 // EventPseudoElementAdded called when a pseudo element is added to an
@@ -89,26 +75,40 @@ type EventPseudoElementRemoved struct {
 	PseudoElementID cdp.NodeID `json:"pseudoElementId"` // The removed pseudo element id.
 }
 
-// EventDistributedNodesUpdated called when distribution is changed.
-type EventDistributedNodesUpdated struct {
-	InsertionPointID cdp.NodeID         `json:"insertionPointId"` // Insertion point where distributed nodes were updated.
-	DistributedNodes []*cdp.BackendNode `json:"distributedNodes"` // Distributed nodes for given insertion point.
+// EventSetChildNodes fired when backend wants to provide client with the
+// missing DOM structure. This happens upon most of the calls requesting node
+// ids.
+type EventSetChildNodes struct {
+	ParentID cdp.NodeID  `json:"parentId"` // Parent node id to populate with children.
+	Nodes    []*cdp.Node `json:"nodes"`    // Child nodes array.
+}
+
+// EventShadowRootPopped called when shadow root is popped from the element.
+type EventShadowRootPopped struct {
+	HostID cdp.NodeID `json:"hostId"` // Host element id.
+	RootID cdp.NodeID `json:"rootId"` // Shadow root id.
+}
+
+// EventShadowRootPushed called when shadow root is pushed into the element.
+type EventShadowRootPushed struct {
+	HostID cdp.NodeID `json:"hostId"` // Host element id.
+	Root   *cdp.Node  `json:"root"`   // Shadow root.
 }
 
 // EventTypes all event types in the domain.
 var EventTypes = []cdp.MethodType{
-	cdp.EventDOMDocumentUpdated,
-	cdp.EventDOMSetChildNodes,
 	cdp.EventDOMAttributeModified,
 	cdp.EventDOMAttributeRemoved,
-	cdp.EventDOMInlineStyleInvalidated,
 	cdp.EventDOMCharacterDataModified,
 	cdp.EventDOMChildNodeCountUpdated,
 	cdp.EventDOMChildNodeInserted,
 	cdp.EventDOMChildNodeRemoved,
-	cdp.EventDOMShadowRootPushed,
-	cdp.EventDOMShadowRootPopped,
+	cdp.EventDOMDistributedNodesUpdated,
+	cdp.EventDOMDocumentUpdated,
+	cdp.EventDOMInlineStyleInvalidated,
 	cdp.EventDOMPseudoElementAdded,
 	cdp.EventDOMPseudoElementRemoved,
-	cdp.EventDOMDistributedNodesUpdated,
+	cdp.EventDOMSetChildNodes,
+	cdp.EventDOMShadowRootPopped,
+	cdp.EventDOMShadowRootPushed,
 }

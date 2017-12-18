@@ -12,20 +12,6 @@ import (
 	cdp "github.com/knq/chromedp/cdp"
 )
 
-// EnableParams enable collecting and reporting metrics.
-type EnableParams struct{}
-
-// Enable enable collecting and reporting metrics.
-func Enable() *EnableParams {
-	return &EnableParams{}
-}
-
-// Do executes Performance.enable against the provided context and
-// target handler.
-func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandPerformanceEnable, nil, nil)
-}
-
 // DisableParams disable collecting and reporting metrics.
 type DisableParams struct{}
 
@@ -38,6 +24,20 @@ func Disable() *DisableParams {
 // target handler.
 func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandPerformanceDisable, nil, nil)
+}
+
+// EnableParams enable collecting and reporting metrics.
+type EnableParams struct{}
+
+// Enable enable collecting and reporting metrics.
+func Enable() *EnableParams {
+	return &EnableParams{}
+}
+
+// Do executes Performance.enable against the provided context and
+// target handler.
+func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandPerformanceEnable, nil, nil)
 }
 
 // GetMetricsParams retrieve current values of run-time metrics.

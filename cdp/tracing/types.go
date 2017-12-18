@@ -26,6 +26,48 @@ type TraceConfig struct {
 	MemoryDumpConfig     *MemoryDumpConfig `json:"memoryDumpConfig,omitempty"`     // Configuration for memory dump triggers. Used only when "memory-infra" category is enabled.
 }
 
+// StreamCompression compression type to use for traces returned via streams.
+type StreamCompression string
+
+// String returns the StreamCompression as string value.
+func (t StreamCompression) String() string {
+	return string(t)
+}
+
+// StreamCompression values.
+const (
+	StreamCompressionNone StreamCompression = "none"
+	StreamCompressionGzip StreamCompression = "gzip"
+)
+
+// MarshalEasyJSON satisfies easyjson.Marshaler.
+func (t StreamCompression) MarshalEasyJSON(out *jwriter.Writer) {
+	out.String(string(t))
+}
+
+// MarshalJSON satisfies json.Marshaler.
+func (t StreamCompression) MarshalJSON() ([]byte, error) {
+	return easyjson.Marshal(t)
+}
+
+// UnmarshalEasyJSON satisfies easyjson.Unmarshaler.
+func (t *StreamCompression) UnmarshalEasyJSON(in *jlexer.Lexer) {
+	switch StreamCompression(in.String()) {
+	case StreamCompressionNone:
+		*t = StreamCompressionNone
+	case StreamCompressionGzip:
+		*t = StreamCompressionGzip
+
+	default:
+		in.AddError(errors.New("unknown StreamCompression value"))
+	}
+}
+
+// UnmarshalJSON satisfies json.Unmarshaler.
+func (t *StreamCompression) UnmarshalJSON(buf []byte) error {
+	return easyjson.Unmarshal(buf, t)
+}
+
 // RecordMode controls how the trace buffer stores data.
 type RecordMode string
 

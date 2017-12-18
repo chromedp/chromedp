@@ -1680,6 +1680,10 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpPage18(in *jlexer.Lexer, out *
 			out.PageRanges = string(in.String())
 		case "ignoreInvalidPageRanges":
 			out.IgnoreInvalidPageRanges = bool(in.Bool())
+		case "headerTemplate":
+			out.HeaderTemplate = string(in.String())
+		case "footerTemplate":
+			out.FooterTemplate = string(in.String())
 		default:
 			in.SkipRecursive()
 		}
@@ -1813,6 +1817,26 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpPage18(out *jwriter.Writer, in
 			out.RawString(prefix)
 		}
 		out.Bool(bool(in.IgnoreInvalidPageRanges))
+	}
+	if in.HeaderTemplate != "" {
+		const prefix string = ",\"headerTemplate\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.HeaderTemplate))
+	}
+	if in.FooterTemplate != "" {
+		const prefix string = ",\"footerTemplate\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.FooterTemplate))
 	}
 	out.RawByte('}')
 }

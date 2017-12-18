@@ -19,108 +19,6 @@ import (
 	cdp "github.com/knq/chromedp/cdp"
 )
 
-// EvaluateParams evaluates expression on global object.
-type EvaluateParams struct {
-	Expression            string             `json:"expression"`                      // Expression to evaluate.
-	ObjectGroup           string             `json:"objectGroup,omitempty"`           // Symbolic group name that can be used to release multiple objects.
-	IncludeCommandLineAPI bool               `json:"includeCommandLineAPI,omitempty"` // Determines whether Command Line API should be available during the evaluation.
-	Silent                bool               `json:"silent,omitempty"`                // In silent mode exceptions thrown during evaluation are not reported and do not pause execution. Overrides setPauseOnException state.
-	ContextID             ExecutionContextID `json:"contextId,omitempty"`             // Specifies in which execution context to perform evaluation. If the parameter is omitted the evaluation will be performed in the context of the inspected page.
-	ReturnByValue         bool               `json:"returnByValue,omitempty"`         // Whether the result is expected to be a JSON object that should be sent by value.
-	GeneratePreview       bool               `json:"generatePreview,omitempty"`       // Whether preview should be generated for the result.
-	UserGesture           bool               `json:"userGesture,omitempty"`           // Whether execution should be treated as initiated by user in the UI.
-	AwaitPromise          bool               `json:"awaitPromise,omitempty"`          // Whether execution should await for resulting value and return once awaited promise is resolved.
-}
-
-// Evaluate evaluates expression on global object.
-//
-// parameters:
-//   expression - Expression to evaluate.
-func Evaluate(expression string) *EvaluateParams {
-	return &EvaluateParams{
-		Expression: expression,
-	}
-}
-
-// WithObjectGroup symbolic group name that can be used to release multiple
-// objects.
-func (p EvaluateParams) WithObjectGroup(objectGroup string) *EvaluateParams {
-	p.ObjectGroup = objectGroup
-	return &p
-}
-
-// WithIncludeCommandLineAPI determines whether Command Line API should be
-// available during the evaluation.
-func (p EvaluateParams) WithIncludeCommandLineAPI(includeCommandLineAPI bool) *EvaluateParams {
-	p.IncludeCommandLineAPI = includeCommandLineAPI
-	return &p
-}
-
-// WithSilent in silent mode exceptions thrown during evaluation are not
-// reported and do not pause execution. Overrides setPauseOnException state.
-func (p EvaluateParams) WithSilent(silent bool) *EvaluateParams {
-	p.Silent = silent
-	return &p
-}
-
-// WithContextID specifies in which execution context to perform evaluation.
-// If the parameter is omitted the evaluation will be performed in the context
-// of the inspected page.
-func (p EvaluateParams) WithContextID(contextID ExecutionContextID) *EvaluateParams {
-	p.ContextID = contextID
-	return &p
-}
-
-// WithReturnByValue whether the result is expected to be a JSON object that
-// should be sent by value.
-func (p EvaluateParams) WithReturnByValue(returnByValue bool) *EvaluateParams {
-	p.ReturnByValue = returnByValue
-	return &p
-}
-
-// WithGeneratePreview whether preview should be generated for the result.
-func (p EvaluateParams) WithGeneratePreview(generatePreview bool) *EvaluateParams {
-	p.GeneratePreview = generatePreview
-	return &p
-}
-
-// WithUserGesture whether execution should be treated as initiated by user
-// in the UI.
-func (p EvaluateParams) WithUserGesture(userGesture bool) *EvaluateParams {
-	p.UserGesture = userGesture
-	return &p
-}
-
-// WithAwaitPromise whether execution should await for resulting value and
-// return once awaited promise is resolved.
-func (p EvaluateParams) WithAwaitPromise(awaitPromise bool) *EvaluateParams {
-	p.AwaitPromise = awaitPromise
-	return &p
-}
-
-// EvaluateReturns return values.
-type EvaluateReturns struct {
-	Result           *RemoteObject     `json:"result,omitempty"`           // Evaluation result.
-	ExceptionDetails *ExceptionDetails `json:"exceptionDetails,omitempty"` // Exception details.
-}
-
-// Do executes Runtime.evaluate against the provided context and
-// target handler.
-//
-// returns:
-//   result - Evaluation result.
-//   exceptionDetails - Exception details.
-func (p *EvaluateParams) Do(ctxt context.Context, h cdp.Handler) (result *RemoteObject, exceptionDetails *ExceptionDetails, err error) {
-	// execute
-	var res EvaluateReturns
-	err = h.Execute(ctxt, cdp.CommandRuntimeEvaluate, p, &res)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return res.Result, res.ExceptionDetails, nil
-}
-
 // AwaitPromiseParams add handler to promise with given promise object id.
 type AwaitPromiseParams struct {
 	PromiseObjectID RemoteObjectID `json:"promiseObjectId"`           // Identifier of the promise.
@@ -287,6 +185,208 @@ func (p *CallFunctionOnParams) Do(ctxt context.Context, h cdp.Handler) (result *
 	return res.Result, res.ExceptionDetails, nil
 }
 
+// CompileScriptParams compiles expression.
+type CompileScriptParams struct {
+	Expression         string             `json:"expression"`                   // Expression to compile.
+	SourceURL          string             `json:"sourceURL"`                    // Source url to be set for the script.
+	PersistScript      bool               `json:"persistScript"`                // Specifies whether the compiled script should be persisted.
+	ExecutionContextID ExecutionContextID `json:"executionContextId,omitempty"` // Specifies in which execution context to perform script run. If the parameter is omitted the evaluation will be performed in the context of the inspected page.
+}
+
+// CompileScript compiles expression.
+//
+// parameters:
+//   expression - Expression to compile.
+//   sourceURL - Source url to be set for the script.
+//   persistScript - Specifies whether the compiled script should be persisted.
+func CompileScript(expression string, sourceURL string, persistScript bool) *CompileScriptParams {
+	return &CompileScriptParams{
+		Expression:    expression,
+		SourceURL:     sourceURL,
+		PersistScript: persistScript,
+	}
+}
+
+// WithExecutionContextID specifies in which execution context to perform
+// script run. If the parameter is omitted the evaluation will be performed in
+// the context of the inspected page.
+func (p CompileScriptParams) WithExecutionContextID(executionContextID ExecutionContextID) *CompileScriptParams {
+	p.ExecutionContextID = executionContextID
+	return &p
+}
+
+// CompileScriptReturns return values.
+type CompileScriptReturns struct {
+	ScriptID         ScriptID          `json:"scriptId,omitempty"`         // Id of the script.
+	ExceptionDetails *ExceptionDetails `json:"exceptionDetails,omitempty"` // Exception details.
+}
+
+// Do executes Runtime.compileScript against the provided context and
+// target handler.
+//
+// returns:
+//   scriptID - Id of the script.
+//   exceptionDetails - Exception details.
+func (p *CompileScriptParams) Do(ctxt context.Context, h cdp.Handler) (scriptID ScriptID, exceptionDetails *ExceptionDetails, err error) {
+	// execute
+	var res CompileScriptReturns
+	err = h.Execute(ctxt, cdp.CommandRuntimeCompileScript, p, &res)
+	if err != nil {
+		return "", nil, err
+	}
+
+	return res.ScriptID, res.ExceptionDetails, nil
+}
+
+// DisableParams disables reporting of execution contexts creation.
+type DisableParams struct{}
+
+// Disable disables reporting of execution contexts creation.
+func Disable() *DisableParams {
+	return &DisableParams{}
+}
+
+// Do executes Runtime.disable against the provided context and
+// target handler.
+func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandRuntimeDisable, nil, nil)
+}
+
+// DiscardConsoleEntriesParams discards collected exceptions and console API
+// calls.
+type DiscardConsoleEntriesParams struct{}
+
+// DiscardConsoleEntries discards collected exceptions and console API calls.
+func DiscardConsoleEntries() *DiscardConsoleEntriesParams {
+	return &DiscardConsoleEntriesParams{}
+}
+
+// Do executes Runtime.discardConsoleEntries against the provided context and
+// target handler.
+func (p *DiscardConsoleEntriesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandRuntimeDiscardConsoleEntries, nil, nil)
+}
+
+// EnableParams enables reporting of execution contexts creation by means of
+// executionContextCreated event. When the reporting gets enabled the event will
+// be sent immediately for each existing execution context.
+type EnableParams struct{}
+
+// Enable enables reporting of execution contexts creation by means of
+// executionContextCreated event. When the reporting gets enabled the event will
+// be sent immediately for each existing execution context.
+func Enable() *EnableParams {
+	return &EnableParams{}
+}
+
+// Do executes Runtime.enable against the provided context and
+// target handler.
+func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandRuntimeEnable, nil, nil)
+}
+
+// EvaluateParams evaluates expression on global object.
+type EvaluateParams struct {
+	Expression            string             `json:"expression"`                      // Expression to evaluate.
+	ObjectGroup           string             `json:"objectGroup,omitempty"`           // Symbolic group name that can be used to release multiple objects.
+	IncludeCommandLineAPI bool               `json:"includeCommandLineAPI,omitempty"` // Determines whether Command Line API should be available during the evaluation.
+	Silent                bool               `json:"silent,omitempty"`                // In silent mode exceptions thrown during evaluation are not reported and do not pause execution. Overrides setPauseOnException state.
+	ContextID             ExecutionContextID `json:"contextId,omitempty"`             // Specifies in which execution context to perform evaluation. If the parameter is omitted the evaluation will be performed in the context of the inspected page.
+	ReturnByValue         bool               `json:"returnByValue,omitempty"`         // Whether the result is expected to be a JSON object that should be sent by value.
+	GeneratePreview       bool               `json:"generatePreview,omitempty"`       // Whether preview should be generated for the result.
+	UserGesture           bool               `json:"userGesture,omitempty"`           // Whether execution should be treated as initiated by user in the UI.
+	AwaitPromise          bool               `json:"awaitPromise,omitempty"`          // Whether execution should await for resulting value and return once awaited promise is resolved.
+}
+
+// Evaluate evaluates expression on global object.
+//
+// parameters:
+//   expression - Expression to evaluate.
+func Evaluate(expression string) *EvaluateParams {
+	return &EvaluateParams{
+		Expression: expression,
+	}
+}
+
+// WithObjectGroup symbolic group name that can be used to release multiple
+// objects.
+func (p EvaluateParams) WithObjectGroup(objectGroup string) *EvaluateParams {
+	p.ObjectGroup = objectGroup
+	return &p
+}
+
+// WithIncludeCommandLineAPI determines whether Command Line API should be
+// available during the evaluation.
+func (p EvaluateParams) WithIncludeCommandLineAPI(includeCommandLineAPI bool) *EvaluateParams {
+	p.IncludeCommandLineAPI = includeCommandLineAPI
+	return &p
+}
+
+// WithSilent in silent mode exceptions thrown during evaluation are not
+// reported and do not pause execution. Overrides setPauseOnException state.
+func (p EvaluateParams) WithSilent(silent bool) *EvaluateParams {
+	p.Silent = silent
+	return &p
+}
+
+// WithContextID specifies in which execution context to perform evaluation.
+// If the parameter is omitted the evaluation will be performed in the context
+// of the inspected page.
+func (p EvaluateParams) WithContextID(contextID ExecutionContextID) *EvaluateParams {
+	p.ContextID = contextID
+	return &p
+}
+
+// WithReturnByValue whether the result is expected to be a JSON object that
+// should be sent by value.
+func (p EvaluateParams) WithReturnByValue(returnByValue bool) *EvaluateParams {
+	p.ReturnByValue = returnByValue
+	return &p
+}
+
+// WithGeneratePreview whether preview should be generated for the result.
+func (p EvaluateParams) WithGeneratePreview(generatePreview bool) *EvaluateParams {
+	p.GeneratePreview = generatePreview
+	return &p
+}
+
+// WithUserGesture whether execution should be treated as initiated by user
+// in the UI.
+func (p EvaluateParams) WithUserGesture(userGesture bool) *EvaluateParams {
+	p.UserGesture = userGesture
+	return &p
+}
+
+// WithAwaitPromise whether execution should await for resulting value and
+// return once awaited promise is resolved.
+func (p EvaluateParams) WithAwaitPromise(awaitPromise bool) *EvaluateParams {
+	p.AwaitPromise = awaitPromise
+	return &p
+}
+
+// EvaluateReturns return values.
+type EvaluateReturns struct {
+	Result           *RemoteObject     `json:"result,omitempty"`           // Evaluation result.
+	ExceptionDetails *ExceptionDetails `json:"exceptionDetails,omitempty"` // Exception details.
+}
+
+// Do executes Runtime.evaluate against the provided context and
+// target handler.
+//
+// returns:
+//   result - Evaluation result.
+//   exceptionDetails - Exception details.
+func (p *EvaluateParams) Do(ctxt context.Context, h cdp.Handler) (result *RemoteObject, exceptionDetails *ExceptionDetails, err error) {
+	// execute
+	var res EvaluateReturns
+	err = h.Execute(ctxt, cdp.CommandRuntimeEvaluate, p, &res)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return res.Result, res.ExceptionDetails, nil
+}
+
 // GetPropertiesParams returns properties of a given object. Object group of
 // the result is inherited from the target object.
 type GetPropertiesParams struct {
@@ -352,6 +452,84 @@ func (p *GetPropertiesParams) Do(ctxt context.Context, h cdp.Handler) (result []
 	return res.Result, res.InternalProperties, res.ExceptionDetails, nil
 }
 
+// GlobalLexicalScopeNamesParams returns all let, const and class variables
+// from global scope.
+type GlobalLexicalScopeNamesParams struct {
+	ExecutionContextID ExecutionContextID `json:"executionContextId,omitempty"` // Specifies in which execution context to lookup global scope variables.
+}
+
+// GlobalLexicalScopeNames returns all let, const and class variables from
+// global scope.
+//
+// parameters:
+func GlobalLexicalScopeNames() *GlobalLexicalScopeNamesParams {
+	return &GlobalLexicalScopeNamesParams{}
+}
+
+// WithExecutionContextID specifies in which execution context to lookup
+// global scope variables.
+func (p GlobalLexicalScopeNamesParams) WithExecutionContextID(executionContextID ExecutionContextID) *GlobalLexicalScopeNamesParams {
+	p.ExecutionContextID = executionContextID
+	return &p
+}
+
+// GlobalLexicalScopeNamesReturns return values.
+type GlobalLexicalScopeNamesReturns struct {
+	Names []string `json:"names,omitempty"`
+}
+
+// Do executes Runtime.globalLexicalScopeNames against the provided context and
+// target handler.
+//
+// returns:
+//   names
+func (p *GlobalLexicalScopeNamesParams) Do(ctxt context.Context, h cdp.Handler) (names []string, err error) {
+	// execute
+	var res GlobalLexicalScopeNamesReturns
+	err = h.Execute(ctxt, cdp.CommandRuntimeGlobalLexicalScopeNames, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Names, nil
+}
+
+// QueryObjectsParams [no description].
+type QueryObjectsParams struct {
+	PrototypeObjectID RemoteObjectID `json:"prototypeObjectId"` // Identifier of the prototype to return objects for.
+}
+
+// QueryObjects [no description].
+//
+// parameters:
+//   prototypeObjectID - Identifier of the prototype to return objects for.
+func QueryObjects(prototypeObjectID RemoteObjectID) *QueryObjectsParams {
+	return &QueryObjectsParams{
+		PrototypeObjectID: prototypeObjectID,
+	}
+}
+
+// QueryObjectsReturns return values.
+type QueryObjectsReturns struct {
+	Objects *RemoteObject `json:"objects,omitempty"` // Array with objects.
+}
+
+// Do executes Runtime.queryObjects against the provided context and
+// target handler.
+//
+// returns:
+//   objects - Array with objects.
+func (p *QueryObjectsParams) Do(ctxt context.Context, h cdp.Handler) (objects *RemoteObject, err error) {
+	// execute
+	var res QueryObjectsReturns
+	err = h.Execute(ctxt, cdp.CommandRuntimeQueryObjects, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Objects, nil
+}
+
 // ReleaseObjectParams releases remote object with given id.
 type ReleaseObjectParams struct {
 	ObjectID RemoteObjectID `json:"objectId"` // Identifier of the object to release.
@@ -410,127 +588,6 @@ func RunIfWaitingForDebugger() *RunIfWaitingForDebuggerParams {
 // target handler.
 func (p *RunIfWaitingForDebuggerParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandRuntimeRunIfWaitingForDebugger, nil, nil)
-}
-
-// EnableParams enables reporting of execution contexts creation by means of
-// executionContextCreated event. When the reporting gets enabled the event will
-// be sent immediately for each existing execution context.
-type EnableParams struct{}
-
-// Enable enables reporting of execution contexts creation by means of
-// executionContextCreated event. When the reporting gets enabled the event will
-// be sent immediately for each existing execution context.
-func Enable() *EnableParams {
-	return &EnableParams{}
-}
-
-// Do executes Runtime.enable against the provided context and
-// target handler.
-func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandRuntimeEnable, nil, nil)
-}
-
-// DisableParams disables reporting of execution contexts creation.
-type DisableParams struct{}
-
-// Disable disables reporting of execution contexts creation.
-func Disable() *DisableParams {
-	return &DisableParams{}
-}
-
-// Do executes Runtime.disable against the provided context and
-// target handler.
-func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandRuntimeDisable, nil, nil)
-}
-
-// DiscardConsoleEntriesParams discards collected exceptions and console API
-// calls.
-type DiscardConsoleEntriesParams struct{}
-
-// DiscardConsoleEntries discards collected exceptions and console API calls.
-func DiscardConsoleEntries() *DiscardConsoleEntriesParams {
-	return &DiscardConsoleEntriesParams{}
-}
-
-// Do executes Runtime.discardConsoleEntries against the provided context and
-// target handler.
-func (p *DiscardConsoleEntriesParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandRuntimeDiscardConsoleEntries, nil, nil)
-}
-
-// SetCustomObjectFormatterEnabledParams [no description].
-type SetCustomObjectFormatterEnabledParams struct {
-	Enabled bool `json:"enabled"`
-}
-
-// SetCustomObjectFormatterEnabled [no description].
-//
-// parameters:
-//   enabled
-func SetCustomObjectFormatterEnabled(enabled bool) *SetCustomObjectFormatterEnabledParams {
-	return &SetCustomObjectFormatterEnabledParams{
-		Enabled: enabled,
-	}
-}
-
-// Do executes Runtime.setCustomObjectFormatterEnabled against the provided context and
-// target handler.
-func (p *SetCustomObjectFormatterEnabledParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandRuntimeSetCustomObjectFormatterEnabled, p, nil)
-}
-
-// CompileScriptParams compiles expression.
-type CompileScriptParams struct {
-	Expression         string             `json:"expression"`                   // Expression to compile.
-	SourceURL          string             `json:"sourceURL"`                    // Source url to be set for the script.
-	PersistScript      bool               `json:"persistScript"`                // Specifies whether the compiled script should be persisted.
-	ExecutionContextID ExecutionContextID `json:"executionContextId,omitempty"` // Specifies in which execution context to perform script run. If the parameter is omitted the evaluation will be performed in the context of the inspected page.
-}
-
-// CompileScript compiles expression.
-//
-// parameters:
-//   expression - Expression to compile.
-//   sourceURL - Source url to be set for the script.
-//   persistScript - Specifies whether the compiled script should be persisted.
-func CompileScript(expression string, sourceURL string, persistScript bool) *CompileScriptParams {
-	return &CompileScriptParams{
-		Expression:    expression,
-		SourceURL:     sourceURL,
-		PersistScript: persistScript,
-	}
-}
-
-// WithExecutionContextID specifies in which execution context to perform
-// script run. If the parameter is omitted the evaluation will be performed in
-// the context of the inspected page.
-func (p CompileScriptParams) WithExecutionContextID(executionContextID ExecutionContextID) *CompileScriptParams {
-	p.ExecutionContextID = executionContextID
-	return &p
-}
-
-// CompileScriptReturns return values.
-type CompileScriptReturns struct {
-	ScriptID         ScriptID          `json:"scriptId,omitempty"`         // Id of the script.
-	ExceptionDetails *ExceptionDetails `json:"exceptionDetails,omitempty"` // Exception details.
-}
-
-// Do executes Runtime.compileScript against the provided context and
-// target handler.
-//
-// returns:
-//   scriptID - Id of the script.
-//   exceptionDetails - Exception details.
-func (p *CompileScriptParams) Do(ctxt context.Context, h cdp.Handler) (scriptID ScriptID, exceptionDetails *ExceptionDetails, err error) {
-	// execute
-	var res CompileScriptReturns
-	err = h.Execute(ctxt, cdp.CommandRuntimeCompileScript, p, &res)
-	if err != nil {
-		return "", nil, err
-	}
-
-	return res.ScriptID, res.ExceptionDetails, nil
 }
 
 // RunScriptParams runs script with given id in a given context.
@@ -627,80 +684,23 @@ func (p *RunScriptParams) Do(ctxt context.Context, h cdp.Handler) (result *Remot
 	return res.Result, res.ExceptionDetails, nil
 }
 
-// QueryObjectsParams [no description].
-type QueryObjectsParams struct {
-	PrototypeObjectID RemoteObjectID `json:"prototypeObjectId"` // Identifier of the prototype to return objects for.
+// SetCustomObjectFormatterEnabledParams [no description].
+type SetCustomObjectFormatterEnabledParams struct {
+	Enabled bool `json:"enabled"`
 }
 
-// QueryObjects [no description].
+// SetCustomObjectFormatterEnabled [no description].
 //
 // parameters:
-//   prototypeObjectID - Identifier of the prototype to return objects for.
-func QueryObjects(prototypeObjectID RemoteObjectID) *QueryObjectsParams {
-	return &QueryObjectsParams{
-		PrototypeObjectID: prototypeObjectID,
+//   enabled
+func SetCustomObjectFormatterEnabled(enabled bool) *SetCustomObjectFormatterEnabledParams {
+	return &SetCustomObjectFormatterEnabledParams{
+		Enabled: enabled,
 	}
 }
 
-// QueryObjectsReturns return values.
-type QueryObjectsReturns struct {
-	Objects *RemoteObject `json:"objects,omitempty"` // Array with objects.
-}
-
-// Do executes Runtime.queryObjects against the provided context and
+// Do executes Runtime.setCustomObjectFormatterEnabled against the provided context and
 // target handler.
-//
-// returns:
-//   objects - Array with objects.
-func (p *QueryObjectsParams) Do(ctxt context.Context, h cdp.Handler) (objects *RemoteObject, err error) {
-	// execute
-	var res QueryObjectsReturns
-	err = h.Execute(ctxt, cdp.CommandRuntimeQueryObjects, p, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	return res.Objects, nil
-}
-
-// GlobalLexicalScopeNamesParams returns all let, const and class variables
-// from global scope.
-type GlobalLexicalScopeNamesParams struct {
-	ExecutionContextID ExecutionContextID `json:"executionContextId,omitempty"` // Specifies in which execution context to lookup global scope variables.
-}
-
-// GlobalLexicalScopeNames returns all let, const and class variables from
-// global scope.
-//
-// parameters:
-func GlobalLexicalScopeNames() *GlobalLexicalScopeNamesParams {
-	return &GlobalLexicalScopeNamesParams{}
-}
-
-// WithExecutionContextID specifies in which execution context to lookup
-// global scope variables.
-func (p GlobalLexicalScopeNamesParams) WithExecutionContextID(executionContextID ExecutionContextID) *GlobalLexicalScopeNamesParams {
-	p.ExecutionContextID = executionContextID
-	return &p
-}
-
-// GlobalLexicalScopeNamesReturns return values.
-type GlobalLexicalScopeNamesReturns struct {
-	Names []string `json:"names,omitempty"`
-}
-
-// Do executes Runtime.globalLexicalScopeNames against the provided context and
-// target handler.
-//
-// returns:
-//   names
-func (p *GlobalLexicalScopeNamesParams) Do(ctxt context.Context, h cdp.Handler) (names []string, err error) {
-	// execute
-	var res GlobalLexicalScopeNamesReturns
-	err = h.Execute(ctxt, cdp.CommandRuntimeGlobalLexicalScopeNames, p, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	return res.Names, nil
+func (p *SetCustomObjectFormatterEnabledParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandRuntimeSetCustomObjectFormatterEnabled, p, nil)
 }

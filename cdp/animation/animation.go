@@ -13,20 +13,6 @@ import (
 	"github.com/knq/chromedp/cdp/runtime"
 )
 
-// EnableParams enables animation domain notifications.
-type EnableParams struct{}
-
-// Enable enables animation domain notifications.
-func Enable() *EnableParams {
-	return &EnableParams{}
-}
-
-// Do executes Animation.enable against the provided context and
-// target handler.
-func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandAnimationEnable, nil, nil)
-}
-
 // DisableParams disables animation domain notifications.
 type DisableParams struct{}
 
@@ -41,54 +27,18 @@ func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandAnimationDisable, nil, nil)
 }
 
-// GetPlaybackRateParams gets the playback rate of the document timeline.
-type GetPlaybackRateParams struct{}
+// EnableParams enables animation domain notifications.
+type EnableParams struct{}
 
-// GetPlaybackRate gets the playback rate of the document timeline.
-func GetPlaybackRate() *GetPlaybackRateParams {
-	return &GetPlaybackRateParams{}
+// Enable enables animation domain notifications.
+func Enable() *EnableParams {
+	return &EnableParams{}
 }
 
-// GetPlaybackRateReturns return values.
-type GetPlaybackRateReturns struct {
-	PlaybackRate float64 `json:"playbackRate,omitempty"` // Playback rate for animations on page.
-}
-
-// Do executes Animation.getPlaybackRate against the provided context and
+// Do executes Animation.enable against the provided context and
 // target handler.
-//
-// returns:
-//   playbackRate - Playback rate for animations on page.
-func (p *GetPlaybackRateParams) Do(ctxt context.Context, h cdp.Handler) (playbackRate float64, err error) {
-	// execute
-	var res GetPlaybackRateReturns
-	err = h.Execute(ctxt, cdp.CommandAnimationGetPlaybackRate, nil, &res)
-	if err != nil {
-		return 0, err
-	}
-
-	return res.PlaybackRate, nil
-}
-
-// SetPlaybackRateParams sets the playback rate of the document timeline.
-type SetPlaybackRateParams struct {
-	PlaybackRate float64 `json:"playbackRate"` // Playback rate for animations on page
-}
-
-// SetPlaybackRate sets the playback rate of the document timeline.
-//
-// parameters:
-//   playbackRate - Playback rate for animations on page
-func SetPlaybackRate(playbackRate float64) *SetPlaybackRateParams {
-	return &SetPlaybackRateParams{
-		PlaybackRate: playbackRate,
-	}
-}
-
-// Do executes Animation.setPlaybackRate against the provided context and
-// target handler.
-func (p *SetPlaybackRateParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandAnimationSetPlaybackRate, p, nil)
+func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandAnimationEnable, nil, nil)
 }
 
 // GetCurrentTimeParams returns the current time of the an animation.
@@ -127,81 +77,33 @@ func (p *GetCurrentTimeParams) Do(ctxt context.Context, h cdp.Handler) (currentT
 	return res.CurrentTime, nil
 }
 
-// SetPausedParams sets the paused state of a set of animations.
-type SetPausedParams struct {
-	Animations []string `json:"animations"` // Animations to set the pause state of.
-	Paused     bool     `json:"paused"`     // Paused state to set to.
+// GetPlaybackRateParams gets the playback rate of the document timeline.
+type GetPlaybackRateParams struct{}
+
+// GetPlaybackRate gets the playback rate of the document timeline.
+func GetPlaybackRate() *GetPlaybackRateParams {
+	return &GetPlaybackRateParams{}
 }
 
-// SetPaused sets the paused state of a set of animations.
-//
-// parameters:
-//   animations - Animations to set the pause state of.
-//   paused - Paused state to set to.
-func SetPaused(animations []string, paused bool) *SetPausedParams {
-	return &SetPausedParams{
-		Animations: animations,
-		Paused:     paused,
-	}
+// GetPlaybackRateReturns return values.
+type GetPlaybackRateReturns struct {
+	PlaybackRate float64 `json:"playbackRate,omitempty"` // Playback rate for animations on page.
 }
 
-// Do executes Animation.setPaused against the provided context and
+// Do executes Animation.getPlaybackRate against the provided context and
 // target handler.
-func (p *SetPausedParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandAnimationSetPaused, p, nil)
-}
-
-// SetTimingParams sets the timing of an animation node.
-type SetTimingParams struct {
-	AnimationID string  `json:"animationId"` // Animation id.
-	Duration    float64 `json:"duration"`    // Duration of the animation.
-	Delay       float64 `json:"delay"`       // Delay of the animation.
-}
-
-// SetTiming sets the timing of an animation node.
 //
-// parameters:
-//   animationID - Animation id.
-//   duration - Duration of the animation.
-//   delay - Delay of the animation.
-func SetTiming(animationID string, duration float64, delay float64) *SetTimingParams {
-	return &SetTimingParams{
-		AnimationID: animationID,
-		Duration:    duration,
-		Delay:       delay,
+// returns:
+//   playbackRate - Playback rate for animations on page.
+func (p *GetPlaybackRateParams) Do(ctxt context.Context, h cdp.Handler) (playbackRate float64, err error) {
+	// execute
+	var res GetPlaybackRateReturns
+	err = h.Execute(ctxt, cdp.CommandAnimationGetPlaybackRate, nil, &res)
+	if err != nil {
+		return 0, err
 	}
-}
 
-// Do executes Animation.setTiming against the provided context and
-// target handler.
-func (p *SetTimingParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandAnimationSetTiming, p, nil)
-}
-
-// SeekAnimationsParams seek a set of animations to a particular time within
-// each animation.
-type SeekAnimationsParams struct {
-	Animations  []string `json:"animations"`  // List of animation ids to seek.
-	CurrentTime float64  `json:"currentTime"` // Set the current time of each animation.
-}
-
-// SeekAnimations seek a set of animations to a particular time within each
-// animation.
-//
-// parameters:
-//   animations - List of animation ids to seek.
-//   currentTime - Set the current time of each animation.
-func SeekAnimations(animations []string, currentTime float64) *SeekAnimationsParams {
-	return &SeekAnimationsParams{
-		Animations:  animations,
-		CurrentTime: currentTime,
-	}
-}
-
-// Do executes Animation.seekAnimations against the provided context and
-// target handler.
-func (p *SeekAnimationsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandAnimationSeekAnimations, p, nil)
+	return res.PlaybackRate, nil
 }
 
 // ReleaseAnimationsParams releases a set of animations to no longer be
@@ -261,4 +163,102 @@ func (p *ResolveAnimationParams) Do(ctxt context.Context, h cdp.Handler) (remote
 	}
 
 	return res.RemoteObject, nil
+}
+
+// SeekAnimationsParams seek a set of animations to a particular time within
+// each animation.
+type SeekAnimationsParams struct {
+	Animations  []string `json:"animations"`  // List of animation ids to seek.
+	CurrentTime float64  `json:"currentTime"` // Set the current time of each animation.
+}
+
+// SeekAnimations seek a set of animations to a particular time within each
+// animation.
+//
+// parameters:
+//   animations - List of animation ids to seek.
+//   currentTime - Set the current time of each animation.
+func SeekAnimations(animations []string, currentTime float64) *SeekAnimationsParams {
+	return &SeekAnimationsParams{
+		Animations:  animations,
+		CurrentTime: currentTime,
+	}
+}
+
+// Do executes Animation.seekAnimations against the provided context and
+// target handler.
+func (p *SeekAnimationsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandAnimationSeekAnimations, p, nil)
+}
+
+// SetPausedParams sets the paused state of a set of animations.
+type SetPausedParams struct {
+	Animations []string `json:"animations"` // Animations to set the pause state of.
+	Paused     bool     `json:"paused"`     // Paused state to set to.
+}
+
+// SetPaused sets the paused state of a set of animations.
+//
+// parameters:
+//   animations - Animations to set the pause state of.
+//   paused - Paused state to set to.
+func SetPaused(animations []string, paused bool) *SetPausedParams {
+	return &SetPausedParams{
+		Animations: animations,
+		Paused:     paused,
+	}
+}
+
+// Do executes Animation.setPaused against the provided context and
+// target handler.
+func (p *SetPausedParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandAnimationSetPaused, p, nil)
+}
+
+// SetPlaybackRateParams sets the playback rate of the document timeline.
+type SetPlaybackRateParams struct {
+	PlaybackRate float64 `json:"playbackRate"` // Playback rate for animations on page
+}
+
+// SetPlaybackRate sets the playback rate of the document timeline.
+//
+// parameters:
+//   playbackRate - Playback rate for animations on page
+func SetPlaybackRate(playbackRate float64) *SetPlaybackRateParams {
+	return &SetPlaybackRateParams{
+		PlaybackRate: playbackRate,
+	}
+}
+
+// Do executes Animation.setPlaybackRate against the provided context and
+// target handler.
+func (p *SetPlaybackRateParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandAnimationSetPlaybackRate, p, nil)
+}
+
+// SetTimingParams sets the timing of an animation node.
+type SetTimingParams struct {
+	AnimationID string  `json:"animationId"` // Animation id.
+	Duration    float64 `json:"duration"`    // Duration of the animation.
+	Delay       float64 `json:"delay"`       // Delay of the animation.
+}
+
+// SetTiming sets the timing of an animation node.
+//
+// parameters:
+//   animationID - Animation id.
+//   duration - Duration of the animation.
+//   delay - Delay of the animation.
+func SetTiming(animationID string, duration float64, delay float64) *SetTimingParams {
+	return &SetTimingParams{
+		AnimationID: animationID,
+		Duration:    duration,
+		Delay:       delay,
+	}
+}
+
+// Do executes Animation.setTiming against the provided context and
+// target handler.
+func (p *SetTimingParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandAnimationSetTiming, p, nil)
 }

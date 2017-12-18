@@ -13,18 +13,41 @@ import (
 	"github.com/knq/chromedp/cdp/runtime"
 )
 
-// EnableParams [no description].
-type EnableParams struct{}
-
-// Enable [no description].
-func Enable() *EnableParams {
-	return &EnableParams{}
+// AddInspectedHeapObjectParams enables console to refer to the node with
+// given id via $x (see Command Line API for more details $x functions).
+type AddInspectedHeapObjectParams struct {
+	HeapObjectID HeapSnapshotObjectID `json:"heapObjectId"` // Heap snapshot object id to be accessible by means of $x command line API.
 }
 
-// Do executes HeapProfiler.enable against the provided context and
+// AddInspectedHeapObject enables console to refer to the node with given id
+// via $x (see Command Line API for more details $x functions).
+//
+// parameters:
+//   heapObjectID - Heap snapshot object id to be accessible by means of $x command line API.
+func AddInspectedHeapObject(heapObjectID HeapSnapshotObjectID) *AddInspectedHeapObjectParams {
+	return &AddInspectedHeapObjectParams{
+		HeapObjectID: heapObjectID,
+	}
+}
+
+// Do executes HeapProfiler.addInspectedHeapObject against the provided context and
 // target handler.
-func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandHeapProfilerEnable, nil, nil)
+func (p *AddInspectedHeapObjectParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandHeapProfilerAddInspectedHeapObject, p, nil)
+}
+
+// CollectGarbageParams [no description].
+type CollectGarbageParams struct{}
+
+// CollectGarbage [no description].
+func CollectGarbage() *CollectGarbageParams {
+	return &CollectGarbageParams{}
+}
+
+// Do executes HeapProfiler.collectGarbage against the provided context and
+// target handler.
+func (p *CollectGarbageParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandHeapProfilerCollectGarbage, nil, nil)
 }
 
 // DisableParams [no description].
@@ -39,6 +62,154 @@ func Disable() *DisableParams {
 // target handler.
 func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandHeapProfilerDisable, nil, nil)
+}
+
+// EnableParams [no description].
+type EnableParams struct{}
+
+// Enable [no description].
+func Enable() *EnableParams {
+	return &EnableParams{}
+}
+
+// Do executes HeapProfiler.enable against the provided context and
+// target handler.
+func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandHeapProfilerEnable, nil, nil)
+}
+
+// GetHeapObjectIDParams [no description].
+type GetHeapObjectIDParams struct {
+	ObjectID runtime.RemoteObjectID `json:"objectId"` // Identifier of the object to get heap object id for.
+}
+
+// GetHeapObjectID [no description].
+//
+// parameters:
+//   objectID - Identifier of the object to get heap object id for.
+func GetHeapObjectID(objectID runtime.RemoteObjectID) *GetHeapObjectIDParams {
+	return &GetHeapObjectIDParams{
+		ObjectID: objectID,
+	}
+}
+
+// GetHeapObjectIDReturns return values.
+type GetHeapObjectIDReturns struct {
+	HeapSnapshotObjectID HeapSnapshotObjectID `json:"heapSnapshotObjectId,omitempty"` // Id of the heap snapshot object corresponding to the passed remote object id.
+}
+
+// Do executes HeapProfiler.getHeapObjectId against the provided context and
+// target handler.
+//
+// returns:
+//   heapSnapshotObjectID - Id of the heap snapshot object corresponding to the passed remote object id.
+func (p *GetHeapObjectIDParams) Do(ctxt context.Context, h cdp.Handler) (heapSnapshotObjectID HeapSnapshotObjectID, err error) {
+	// execute
+	var res GetHeapObjectIDReturns
+	err = h.Execute(ctxt, cdp.CommandHeapProfilerGetHeapObjectID, p, &res)
+	if err != nil {
+		return "", err
+	}
+
+	return res.HeapSnapshotObjectID, nil
+}
+
+// GetObjectByHeapObjectIDParams [no description].
+type GetObjectByHeapObjectIDParams struct {
+	ObjectID    HeapSnapshotObjectID `json:"objectId"`
+	ObjectGroup string               `json:"objectGroup,omitempty"` // Symbolic group name that can be used to release multiple objects.
+}
+
+// GetObjectByHeapObjectID [no description].
+//
+// parameters:
+//   objectID
+func GetObjectByHeapObjectID(objectID HeapSnapshotObjectID) *GetObjectByHeapObjectIDParams {
+	return &GetObjectByHeapObjectIDParams{
+		ObjectID: objectID,
+	}
+}
+
+// WithObjectGroup symbolic group name that can be used to release multiple
+// objects.
+func (p GetObjectByHeapObjectIDParams) WithObjectGroup(objectGroup string) *GetObjectByHeapObjectIDParams {
+	p.ObjectGroup = objectGroup
+	return &p
+}
+
+// GetObjectByHeapObjectIDReturns return values.
+type GetObjectByHeapObjectIDReturns struct {
+	Result *runtime.RemoteObject `json:"result,omitempty"` // Evaluation result.
+}
+
+// Do executes HeapProfiler.getObjectByHeapObjectId against the provided context and
+// target handler.
+//
+// returns:
+//   result - Evaluation result.
+func (p *GetObjectByHeapObjectIDParams) Do(ctxt context.Context, h cdp.Handler) (result *runtime.RemoteObject, err error) {
+	// execute
+	var res GetObjectByHeapObjectIDReturns
+	err = h.Execute(ctxt, cdp.CommandHeapProfilerGetObjectByHeapObjectID, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Result, nil
+}
+
+// GetSamplingProfileParams [no description].
+type GetSamplingProfileParams struct{}
+
+// GetSamplingProfile [no description].
+func GetSamplingProfile() *GetSamplingProfileParams {
+	return &GetSamplingProfileParams{}
+}
+
+// GetSamplingProfileReturns return values.
+type GetSamplingProfileReturns struct {
+	Profile *SamplingHeapProfile `json:"profile,omitempty"` // Return the sampling profile being collected.
+}
+
+// Do executes HeapProfiler.getSamplingProfile against the provided context and
+// target handler.
+//
+// returns:
+//   profile - Return the sampling profile being collected.
+func (p *GetSamplingProfileParams) Do(ctxt context.Context, h cdp.Handler) (profile *SamplingHeapProfile, err error) {
+	// execute
+	var res GetSamplingProfileReturns
+	err = h.Execute(ctxt, cdp.CommandHeapProfilerGetSamplingProfile, nil, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Profile, nil
+}
+
+// StartSamplingParams [no description].
+type StartSamplingParams struct {
+	SamplingInterval float64 `json:"samplingInterval,omitempty"` // Average sample interval in bytes. Poisson distribution is used for the intervals. The default value is 32768 bytes.
+}
+
+// StartSampling [no description].
+//
+// parameters:
+func StartSampling() *StartSamplingParams {
+	return &StartSamplingParams{}
+}
+
+// WithSamplingInterval average sample interval in bytes. Poisson
+// distribution is used for the intervals. The default value is 32768 bytes.
+func (p StartSamplingParams) WithSamplingInterval(samplingInterval float64) *StartSamplingParams {
+	p.SamplingInterval = samplingInterval
+	return &p
+}
+
+// Do executes HeapProfiler.startSampling against the provided context and
+// target handler.
+func (p *StartSamplingParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandHeapProfilerStartSampling, p, nil)
 }
 
 // StartTrackingHeapObjectsParams [no description].
@@ -63,6 +234,35 @@ func (p StartTrackingHeapObjectsParams) WithTrackAllocations(trackAllocations bo
 // target handler.
 func (p *StartTrackingHeapObjectsParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandHeapProfilerStartTrackingHeapObjects, p, nil)
+}
+
+// StopSamplingParams [no description].
+type StopSamplingParams struct{}
+
+// StopSampling [no description].
+func StopSampling() *StopSamplingParams {
+	return &StopSamplingParams{}
+}
+
+// StopSamplingReturns return values.
+type StopSamplingReturns struct {
+	Profile *SamplingHeapProfile `json:"profile,omitempty"` // Recorded sampling heap profile.
+}
+
+// Do executes HeapProfiler.stopSampling against the provided context and
+// target handler.
+//
+// returns:
+//   profile - Recorded sampling heap profile.
+func (p *StopSamplingParams) Do(ctxt context.Context, h cdp.Handler) (profile *SamplingHeapProfile, err error) {
+	// execute
+	var res StopSamplingReturns
+	err = h.Execute(ctxt, cdp.CommandHeapProfilerStopSampling, nil, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Profile, nil
 }
 
 // StopTrackingHeapObjectsParams [no description].
@@ -113,204 +313,4 @@ func (p TakeHeapSnapshotParams) WithReportProgress(reportProgress bool) *TakeHea
 // target handler.
 func (p *TakeHeapSnapshotParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandHeapProfilerTakeHeapSnapshot, p, nil)
-}
-
-// CollectGarbageParams [no description].
-type CollectGarbageParams struct{}
-
-// CollectGarbage [no description].
-func CollectGarbage() *CollectGarbageParams {
-	return &CollectGarbageParams{}
-}
-
-// Do executes HeapProfiler.collectGarbage against the provided context and
-// target handler.
-func (p *CollectGarbageParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandHeapProfilerCollectGarbage, nil, nil)
-}
-
-// GetObjectByHeapObjectIDParams [no description].
-type GetObjectByHeapObjectIDParams struct {
-	ObjectID    HeapSnapshotObjectID `json:"objectId"`
-	ObjectGroup string               `json:"objectGroup,omitempty"` // Symbolic group name that can be used to release multiple objects.
-}
-
-// GetObjectByHeapObjectID [no description].
-//
-// parameters:
-//   objectID
-func GetObjectByHeapObjectID(objectID HeapSnapshotObjectID) *GetObjectByHeapObjectIDParams {
-	return &GetObjectByHeapObjectIDParams{
-		ObjectID: objectID,
-	}
-}
-
-// WithObjectGroup symbolic group name that can be used to release multiple
-// objects.
-func (p GetObjectByHeapObjectIDParams) WithObjectGroup(objectGroup string) *GetObjectByHeapObjectIDParams {
-	p.ObjectGroup = objectGroup
-	return &p
-}
-
-// GetObjectByHeapObjectIDReturns return values.
-type GetObjectByHeapObjectIDReturns struct {
-	Result *runtime.RemoteObject `json:"result,omitempty"` // Evaluation result.
-}
-
-// Do executes HeapProfiler.getObjectByHeapObjectId against the provided context and
-// target handler.
-//
-// returns:
-//   result - Evaluation result.
-func (p *GetObjectByHeapObjectIDParams) Do(ctxt context.Context, h cdp.Handler) (result *runtime.RemoteObject, err error) {
-	// execute
-	var res GetObjectByHeapObjectIDReturns
-	err = h.Execute(ctxt, cdp.CommandHeapProfilerGetObjectByHeapObjectID, p, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	return res.Result, nil
-}
-
-// AddInspectedHeapObjectParams enables console to refer to the node with
-// given id via $x (see Command Line API for more details $x functions).
-type AddInspectedHeapObjectParams struct {
-	HeapObjectID HeapSnapshotObjectID `json:"heapObjectId"` // Heap snapshot object id to be accessible by means of $x command line API.
-}
-
-// AddInspectedHeapObject enables console to refer to the node with given id
-// via $x (see Command Line API for more details $x functions).
-//
-// parameters:
-//   heapObjectID - Heap snapshot object id to be accessible by means of $x command line API.
-func AddInspectedHeapObject(heapObjectID HeapSnapshotObjectID) *AddInspectedHeapObjectParams {
-	return &AddInspectedHeapObjectParams{
-		HeapObjectID: heapObjectID,
-	}
-}
-
-// Do executes HeapProfiler.addInspectedHeapObject against the provided context and
-// target handler.
-func (p *AddInspectedHeapObjectParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandHeapProfilerAddInspectedHeapObject, p, nil)
-}
-
-// GetHeapObjectIDParams [no description].
-type GetHeapObjectIDParams struct {
-	ObjectID runtime.RemoteObjectID `json:"objectId"` // Identifier of the object to get heap object id for.
-}
-
-// GetHeapObjectID [no description].
-//
-// parameters:
-//   objectID - Identifier of the object to get heap object id for.
-func GetHeapObjectID(objectID runtime.RemoteObjectID) *GetHeapObjectIDParams {
-	return &GetHeapObjectIDParams{
-		ObjectID: objectID,
-	}
-}
-
-// GetHeapObjectIDReturns return values.
-type GetHeapObjectIDReturns struct {
-	HeapSnapshotObjectID HeapSnapshotObjectID `json:"heapSnapshotObjectId,omitempty"` // Id of the heap snapshot object corresponding to the passed remote object id.
-}
-
-// Do executes HeapProfiler.getHeapObjectId against the provided context and
-// target handler.
-//
-// returns:
-//   heapSnapshotObjectID - Id of the heap snapshot object corresponding to the passed remote object id.
-func (p *GetHeapObjectIDParams) Do(ctxt context.Context, h cdp.Handler) (heapSnapshotObjectID HeapSnapshotObjectID, err error) {
-	// execute
-	var res GetHeapObjectIDReturns
-	err = h.Execute(ctxt, cdp.CommandHeapProfilerGetHeapObjectID, p, &res)
-	if err != nil {
-		return "", err
-	}
-
-	return res.HeapSnapshotObjectID, nil
-}
-
-// StartSamplingParams [no description].
-type StartSamplingParams struct {
-	SamplingInterval float64 `json:"samplingInterval,omitempty"` // Average sample interval in bytes. Poisson distribution is used for the intervals. The default value is 32768 bytes.
-}
-
-// StartSampling [no description].
-//
-// parameters:
-func StartSampling() *StartSamplingParams {
-	return &StartSamplingParams{}
-}
-
-// WithSamplingInterval average sample interval in bytes. Poisson
-// distribution is used for the intervals. The default value is 32768 bytes.
-func (p StartSamplingParams) WithSamplingInterval(samplingInterval float64) *StartSamplingParams {
-	p.SamplingInterval = samplingInterval
-	return &p
-}
-
-// Do executes HeapProfiler.startSampling against the provided context and
-// target handler.
-func (p *StartSamplingParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandHeapProfilerStartSampling, p, nil)
-}
-
-// StopSamplingParams [no description].
-type StopSamplingParams struct{}
-
-// StopSampling [no description].
-func StopSampling() *StopSamplingParams {
-	return &StopSamplingParams{}
-}
-
-// StopSamplingReturns return values.
-type StopSamplingReturns struct {
-	Profile *SamplingHeapProfile `json:"profile,omitempty"` // Recorded sampling heap profile.
-}
-
-// Do executes HeapProfiler.stopSampling against the provided context and
-// target handler.
-//
-// returns:
-//   profile - Recorded sampling heap profile.
-func (p *StopSamplingParams) Do(ctxt context.Context, h cdp.Handler) (profile *SamplingHeapProfile, err error) {
-	// execute
-	var res StopSamplingReturns
-	err = h.Execute(ctxt, cdp.CommandHeapProfilerStopSampling, nil, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	return res.Profile, nil
-}
-
-// GetSamplingProfileParams [no description].
-type GetSamplingProfileParams struct{}
-
-// GetSamplingProfile [no description].
-func GetSamplingProfile() *GetSamplingProfileParams {
-	return &GetSamplingProfileParams{}
-}
-
-// GetSamplingProfileReturns return values.
-type GetSamplingProfileReturns struct {
-	Profile *SamplingHeapProfile `json:"profile,omitempty"` // Return the sampling profile being collected.
-}
-
-// Do executes HeapProfiler.getSamplingProfile against the provided context and
-// target handler.
-//
-// returns:
-//   profile - Return the sampling profile being collected.
-func (p *GetSamplingProfileParams) Do(ctxt context.Context, h cdp.Handler) (profile *SamplingHeapProfile, err error) {
-	// execute
-	var res GetSamplingProfileReturns
-	err = h.Execute(ctxt, cdp.CommandHeapProfilerGetSamplingProfile, nil, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	return res.Profile, nil
 }

@@ -12,6 +12,20 @@ import (
 	cdp "github.com/knq/chromedp/cdp"
 )
 
+// DisableParams [no description].
+type DisableParams struct{}
+
+// Disable [no description].
+func Disable() *DisableParams {
+	return &DisableParams{}
+}
+
+// Do executes Profiler.disable against the provided context and
+// target handler.
+func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandProfilerDisable, nil, nil)
+}
+
 // EnableParams [no description].
 type EnableParams struct{}
 
@@ -26,18 +40,35 @@ func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandProfilerEnable, nil, nil)
 }
 
-// DisableParams [no description].
-type DisableParams struct{}
+// GetBestEffortCoverageParams collect coverage data for the current isolate.
+// The coverage data may be incomplete due to garbage collection.
+type GetBestEffortCoverageParams struct{}
 
-// Disable [no description].
-func Disable() *DisableParams {
-	return &DisableParams{}
+// GetBestEffortCoverage collect coverage data for the current isolate. The
+// coverage data may be incomplete due to garbage collection.
+func GetBestEffortCoverage() *GetBestEffortCoverageParams {
+	return &GetBestEffortCoverageParams{}
 }
 
-// Do executes Profiler.disable against the provided context and
+// GetBestEffortCoverageReturns return values.
+type GetBestEffortCoverageReturns struct {
+	Result []*ScriptCoverage `json:"result,omitempty"` // Coverage data for the current isolate.
+}
+
+// Do executes Profiler.getBestEffortCoverage against the provided context and
 // target handler.
-func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandProfilerDisable, nil, nil)
+//
+// returns:
+//   result - Coverage data for the current isolate.
+func (p *GetBestEffortCoverageParams) Do(ctxt context.Context, h cdp.Handler) (result []*ScriptCoverage, err error) {
+	// execute
+	var res GetBestEffortCoverageReturns
+	err = h.Execute(ctxt, cdp.CommandProfilerGetBestEffortCoverage, nil, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Result, nil
 }
 
 // SetSamplingIntervalParams changes CPU profiler sampling interval. Must be
@@ -77,35 +108,6 @@ func (p *StartParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandProfilerStart, nil, nil)
 }
 
-// StopParams [no description].
-type StopParams struct{}
-
-// Stop [no description].
-func Stop() *StopParams {
-	return &StopParams{}
-}
-
-// StopReturns return values.
-type StopReturns struct {
-	Profile *Profile `json:"profile,omitempty"` // Recorded profile.
-}
-
-// Do executes Profiler.stop against the provided context and
-// target handler.
-//
-// returns:
-//   profile - Recorded profile.
-func (p *StopParams) Do(ctxt context.Context, h cdp.Handler) (profile *Profile, err error) {
-	// execute
-	var res StopReturns
-	err = h.Execute(ctxt, cdp.CommandProfilerStop, nil, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	return res.Profile, nil
-}
-
 // StartPreciseCoverageParams enable precise code coverage. Coverage data for
 // JavaScript executed before enabling precise code coverage may be incomplete.
 // Enabling prevents running optimized code and resets execution counters.
@@ -142,6 +144,49 @@ func (p *StartPreciseCoverageParams) Do(ctxt context.Context, h cdp.Handler) (er
 	return h.Execute(ctxt, cdp.CommandProfilerStartPreciseCoverage, p, nil)
 }
 
+// StartTypeProfileParams enable type profile.
+type StartTypeProfileParams struct{}
+
+// StartTypeProfile enable type profile.
+func StartTypeProfile() *StartTypeProfileParams {
+	return &StartTypeProfileParams{}
+}
+
+// Do executes Profiler.startTypeProfile against the provided context and
+// target handler.
+func (p *StartTypeProfileParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandProfilerStartTypeProfile, nil, nil)
+}
+
+// StopParams [no description].
+type StopParams struct{}
+
+// Stop [no description].
+func Stop() *StopParams {
+	return &StopParams{}
+}
+
+// StopReturns return values.
+type StopReturns struct {
+	Profile *Profile `json:"profile,omitempty"` // Recorded profile.
+}
+
+// Do executes Profiler.stop against the provided context and
+// target handler.
+//
+// returns:
+//   profile - Recorded profile.
+func (p *StopParams) Do(ctxt context.Context, h cdp.Handler) (profile *Profile, err error) {
+	// execute
+	var res StopReturns
+	err = h.Execute(ctxt, cdp.CommandProfilerStop, nil, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Profile, nil
+}
+
 // StopPreciseCoverageParams disable precise code coverage. Disabling
 // releases unnecessary execution count records and allows executing optimized
 // code.
@@ -157,6 +202,22 @@ func StopPreciseCoverage() *StopPreciseCoverageParams {
 // target handler.
 func (p *StopPreciseCoverageParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandProfilerStopPreciseCoverage, nil, nil)
+}
+
+// StopTypeProfileParams disable type profile. Disabling releases type
+// profile data collected so far.
+type StopTypeProfileParams struct{}
+
+// StopTypeProfile disable type profile. Disabling releases type profile data
+// collected so far.
+func StopTypeProfile() *StopTypeProfileParams {
+	return &StopTypeProfileParams{}
+}
+
+// Do executes Profiler.stopTypeProfile against the provided context and
+// target handler.
+func (p *StopTypeProfileParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandProfilerStopTypeProfile, nil, nil)
 }
 
 // TakePreciseCoverageParams collect coverage data for the current isolate,
@@ -188,67 +249,6 @@ func (p *TakePreciseCoverageParams) Do(ctxt context.Context, h cdp.Handler) (res
 	}
 
 	return res.Result, nil
-}
-
-// GetBestEffortCoverageParams collect coverage data for the current isolate.
-// The coverage data may be incomplete due to garbage collection.
-type GetBestEffortCoverageParams struct{}
-
-// GetBestEffortCoverage collect coverage data for the current isolate. The
-// coverage data may be incomplete due to garbage collection.
-func GetBestEffortCoverage() *GetBestEffortCoverageParams {
-	return &GetBestEffortCoverageParams{}
-}
-
-// GetBestEffortCoverageReturns return values.
-type GetBestEffortCoverageReturns struct {
-	Result []*ScriptCoverage `json:"result,omitempty"` // Coverage data for the current isolate.
-}
-
-// Do executes Profiler.getBestEffortCoverage against the provided context and
-// target handler.
-//
-// returns:
-//   result - Coverage data for the current isolate.
-func (p *GetBestEffortCoverageParams) Do(ctxt context.Context, h cdp.Handler) (result []*ScriptCoverage, err error) {
-	// execute
-	var res GetBestEffortCoverageReturns
-	err = h.Execute(ctxt, cdp.CommandProfilerGetBestEffortCoverage, nil, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	return res.Result, nil
-}
-
-// StartTypeProfileParams enable type profile.
-type StartTypeProfileParams struct{}
-
-// StartTypeProfile enable type profile.
-func StartTypeProfile() *StartTypeProfileParams {
-	return &StartTypeProfileParams{}
-}
-
-// Do executes Profiler.startTypeProfile against the provided context and
-// target handler.
-func (p *StartTypeProfileParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandProfilerStartTypeProfile, nil, nil)
-}
-
-// StopTypeProfileParams disable type profile. Disabling releases type
-// profile data collected so far.
-type StopTypeProfileParams struct{}
-
-// StopTypeProfile disable type profile. Disabling releases type profile data
-// collected so far.
-func StopTypeProfile() *StopTypeProfileParams {
-	return &StopTypeProfileParams{}
-}
-
-// Do executes Profiler.stopTypeProfile against the provided context and
-// target handler.
-func (p *StopTypeProfileParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandProfilerStopTypeProfile, nil, nil)
 }
 
 // TakeTypeProfileParams collect type profile.

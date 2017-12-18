@@ -294,6 +294,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpTracing1(in *jlexer.Lexer, out
 			out.BufferUsageReportingInterval = float64(in.Float64())
 		case "transferMode":
 			(out.TransferMode).UnmarshalEasyJSON(in)
+		case "streamCompression":
+			(out.StreamCompression).UnmarshalEasyJSON(in)
 		case "traceConfig":
 			if in.IsNull() {
 				in.Skip()
@@ -337,6 +339,16 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpTracing1(out *jwriter.Writer, 
 			out.RawString(prefix)
 		}
 		(in.TransferMode).MarshalEasyJSON(out)
+	}
+	if in.StreamCompression != "" {
+		const prefix string = ",\"streamCompression\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(in.StreamCompression).MarshalEasyJSON(out)
 	}
 	if in.TraceConfig != nil {
 		const prefix string = ",\"traceConfig\":"
@@ -827,6 +839,8 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpTracing8(in *jlexer.Lexer, out
 		switch key {
 		case "stream":
 			out.Stream = io.StreamHandle(in.String())
+		case "streamCompression":
+			(out.StreamCompression).UnmarshalEasyJSON(in)
 		default:
 			in.SkipRecursive()
 		}
@@ -850,6 +864,16 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpTracing8(out *jwriter.Writer, 
 			out.RawString(prefix)
 		}
 		out.String(string(in.Stream))
+	}
+	if in.StreamCompression != "" {
+		const prefix string = ",\"streamCompression\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		(in.StreamCompression).MarshalEasyJSON(out)
 	}
 	out.RawByte('}')
 }

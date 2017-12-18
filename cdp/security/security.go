@@ -14,20 +14,6 @@ import (
 	cdp "github.com/knq/chromedp/cdp"
 )
 
-// EnableParams enables tracking security state changes.
-type EnableParams struct{}
-
-// Enable enables tracking security state changes.
-func Enable() *EnableParams {
-	return &EnableParams{}
-}
-
-// Do executes Security.enable against the provided context and
-// target handler.
-func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandSecurityEnable, nil, nil)
-}
-
 // DisableParams disables tracking security state changes.
 type DisableParams struct{}
 
@@ -40,6 +26,20 @@ func Disable() *DisableParams {
 // target handler.
 func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandSecurityDisable, nil, nil)
+}
+
+// EnableParams enables tracking security state changes.
+type EnableParams struct{}
+
+// Enable enables tracking security state changes.
+func Enable() *EnableParams {
+	return &EnableParams{}
+}
+
+// Do executes Security.enable against the provided context and
+// target handler.
+func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandSecurityEnable, nil, nil)
 }
 
 // HandleCertificateErrorParams handles a certificate error that fired a

@@ -5531,16 +5531,16 @@ func easyjsonC5a4559bDecodeGithubComKnqChromedpCdpCss49(in *jlexer.Lexer, out *F
 				in.Delim('[')
 				if out.ForcedPseudoClasses == nil {
 					if !in.IsDelim(']') {
-						out.ForcedPseudoClasses = make([]PseudoClass, 0, 4)
+						out.ForcedPseudoClasses = make([]string, 0, 4)
 					} else {
-						out.ForcedPseudoClasses = []PseudoClass{}
+						out.ForcedPseudoClasses = []string{}
 					}
 				} else {
 					out.ForcedPseudoClasses = (out.ForcedPseudoClasses)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v67 PseudoClass
-					(v67).UnmarshalEasyJSON(in)
+					var v67 string
+					v67 = string(in.String())
 					out.ForcedPseudoClasses = append(out.ForcedPseudoClasses, v67)
 					in.WantComma()
 				}
@@ -5586,7 +5586,7 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpCdpCss49(out *jwriter.Writer, in 
 				if v68 > 0 {
 					out.RawByte(',')
 				}
-				(v69).MarshalEasyJSON(out)
+				out.String(string(v69))
 			}
 			out.RawByte(']')
 		}

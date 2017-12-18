@@ -13,22 +13,6 @@ import (
 	"github.com/mailru/easyjson"
 )
 
-// EnableParams enables database tracking, database events will now be
-// delivered to the client.
-type EnableParams struct{}
-
-// Enable enables database tracking, database events will now be delivered to
-// the client.
-func Enable() *EnableParams {
-	return &EnableParams{}
-}
-
-// Do executes Database.enable against the provided context and
-// target handler.
-func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
-	return h.Execute(ctxt, cdp.CommandDatabaseEnable, nil, nil)
-}
-
 // DisableParams disables database tracking, prevents database events from
 // being sent to the client.
 type DisableParams struct{}
@@ -45,40 +29,20 @@ func (p *DisableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
 	return h.Execute(ctxt, cdp.CommandDatabaseDisable, nil, nil)
 }
 
-// GetDatabaseTableNamesParams [no description].
-type GetDatabaseTableNamesParams struct {
-	DatabaseID ID `json:"databaseId"`
+// EnableParams enables database tracking, database events will now be
+// delivered to the client.
+type EnableParams struct{}
+
+// Enable enables database tracking, database events will now be delivered to
+// the client.
+func Enable() *EnableParams {
+	return &EnableParams{}
 }
 
-// GetDatabaseTableNames [no description].
-//
-// parameters:
-//   databaseID
-func GetDatabaseTableNames(databaseID ID) *GetDatabaseTableNamesParams {
-	return &GetDatabaseTableNamesParams{
-		DatabaseID: databaseID,
-	}
-}
-
-// GetDatabaseTableNamesReturns return values.
-type GetDatabaseTableNamesReturns struct {
-	TableNames []string `json:"tableNames,omitempty"`
-}
-
-// Do executes Database.getDatabaseTableNames against the provided context and
+// Do executes Database.enable against the provided context and
 // target handler.
-//
-// returns:
-//   tableNames
-func (p *GetDatabaseTableNamesParams) Do(ctxt context.Context, h cdp.Handler) (tableNames []string, err error) {
-	// execute
-	var res GetDatabaseTableNamesReturns
-	err = h.Execute(ctxt, cdp.CommandDatabaseGetDatabaseTableNames, p, &res)
-	if err != nil {
-		return nil, err
-	}
-
-	return res.TableNames, nil
+func (p *EnableParams) Do(ctxt context.Context, h cdp.Handler) (err error) {
+	return h.Execute(ctxt, cdp.CommandDatabaseEnable, nil, nil)
 }
 
 // ExecuteSQLParams [no description].
@@ -122,4 +86,40 @@ func (p *ExecuteSQLParams) Do(ctxt context.Context, h cdp.Handler) (columnNames 
 	}
 
 	return res.ColumnNames, res.Values, res.SQLError, nil
+}
+
+// GetDatabaseTableNamesParams [no description].
+type GetDatabaseTableNamesParams struct {
+	DatabaseID ID `json:"databaseId"`
+}
+
+// GetDatabaseTableNames [no description].
+//
+// parameters:
+//   databaseID
+func GetDatabaseTableNames(databaseID ID) *GetDatabaseTableNamesParams {
+	return &GetDatabaseTableNamesParams{
+		DatabaseID: databaseID,
+	}
+}
+
+// GetDatabaseTableNamesReturns return values.
+type GetDatabaseTableNamesReturns struct {
+	TableNames []string `json:"tableNames,omitempty"`
+}
+
+// Do executes Database.getDatabaseTableNames against the provided context and
+// target handler.
+//
+// returns:
+//   tableNames
+func (p *GetDatabaseTableNamesParams) Do(ctxt context.Context, h cdp.Handler) (tableNames []string, err error) {
+	// execute
+	var res GetDatabaseTableNamesReturns
+	err = h.Execute(ctxt, cdp.CommandDatabaseGetDatabaseTableNames, p, &res)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.TableNames, nil
 }
