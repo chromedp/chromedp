@@ -448,14 +448,14 @@ func TestSetAttributes(t *testing.T) {
 		exp   map[string]string
 	}{
 		{`//*[@id="icon-brankas"]`, BySearch,
-		 map[string]string{"data-url": "brankas"},
+			map[string]string{"data-url": "brankas"},
 			map[string]string{
 				"alt":      "Brankas - Easy Money Management",
 				"id":       "icon-brankas",
 				"src":      "images/brankas.png",
 				"data-url": "brankas"}},
 		{"body > img:first-child", ByQuery,
-		 map[string]string{"data-url": "brankas"},
+			map[string]string{"data-url": "brankas"},
 			map[string]string{
 				"alt":      "Brankas - Easy Money Management",
 				"id":       "icon-brankas",
@@ -463,7 +463,7 @@ func TestSetAttributes(t *testing.T) {
 				"data-url": "brankas",
 			}},
 		{"body > img:nth-child(2)", ByQueryAll,
-		 map[string]string{"width": "100", "height": "200"},
+			map[string]string{"width": "100", "height": "200"},
 			map[string]string{
 				"alt":    `How people build software`,
 				"id":     "icon-github",
@@ -472,7 +472,7 @@ func TestSetAttributes(t *testing.T) {
 				"height": "200",
 			}},
 		{"#icon-github", ByID,
-		 map[string]string{"width": "100", "height": "200"},
+			map[string]string{"width": "100", "height": "200"},
 			map[string]string{
 				"alt":    "How people build software",
 				"id":     "icon-github",

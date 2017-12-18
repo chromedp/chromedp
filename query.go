@@ -209,9 +209,10 @@ func Attributes(sel interface{}, attributes *map[string]string, opts ...QueryOpt
 	}, opts...)
 }
 
-// AttributesAll retrieves the element attributes for every nodes matching the
+// AttributesAll retrieves the element attributes for all nodes matching the
 // selector.
-// selector should be ByQueryAll
+//
+// Note: this should be used with the ByQueryAll selector option.
 func AttributesAll(sel interface{}, attributes *[]map[string]string, opts ...QueryOption) Action {
 	if attributes == nil {
 		panic("attributes cannot be nil")
