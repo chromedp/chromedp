@@ -53,7 +53,7 @@ func googleSearch(q, text string, site, res *string) cdp.Tasks {
 	return cdp.Tasks{
 		cdp.Navigate(`https://www.google.com`),
 		cdp.WaitVisible(`#hplogo`, cdp.ByID),
-		cdp.SendKeys(`#lst-ib`, q+"\n", cdp.ByID),
+		cdp.SendKeys(`#lst-ib`, text +"\n", cdp.ByID),
 		cdp.WaitVisible(`#res`, cdp.ByID),
 		cdp.Text(sel, res),
 		cdp.Click(sel),
