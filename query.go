@@ -209,6 +209,35 @@ func Attributes(sel interface{}, attributes *map[string]string, opts ...QueryOpt
 	}, opts...)
 }
 
+// AttributesAll retrieves the element attributes for every nodes matching the
+// selector.
+// selector should be ByQueryAll
+func AttributesAll(sel interface{}, attributes *[]map[string]string, opts ...QueryOption) Action {
+	if attributes == nil {
+		panic("attributes cannot be nil")
+	}
+
+	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+		if len(nodes) < 1 {
+			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+		}
+
+		for _, node := range nodes {
+			node.RLock()
+			defer node.RUnlock()
+
+			m := make(map[string]string)
+			attrs := node.Attributes
+			for i := 0; i < len(attrs); i += 2 {
+				m[attrs[i]] = attrs[i+1]
+			}
+
+			*attributes = append(*attributes, m)
+		}
+		return nil
+	}, opts...)
+}
+
 // SetAttributes sets the element attributes for the first node matching the
 // selector.
 func SetAttributes(sel interface{}, attributes map[string]string, opts ...QueryOption) Action {
