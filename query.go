@@ -456,13 +456,17 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 			return ErrInvalidBoxModel
 		}
 
-		// scroll to node position
+		var pixRatio float64
+		err = EvaluateAsDevTools(getWindowDevicePixelRatioJS, &pixRatio).Do(ctxt, h)
+		if err != nil {
+			return err
+		}
+
 		var pos []int
 		err = EvaluateAsDevTools(fmt.Sprintf(scrollJS, int64(box.Margin[0]), int64(box.Margin[1])), &pos).Do(ctxt, h)
 		if err != nil {
 			return err
 		}
-
 		// take page screenshot
 		buf, err := page.CaptureScreenshot().Do(ctxt, h)
 		if err != nil {
@@ -475,10 +479,12 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 			return err
 		}
 
+		s := pixRatio
+
 		// crop to box model contents.
 		cropped := imaging.Crop(img, image.Rect(
-			int(box.Margin[0])-pos[0], int(box.Margin[1])-pos[1],
-			int(box.Margin[4])-pos[0], int(box.Margin[5])-pos[1],
+			int(box.Margin[0]*s)-int(float64(pos[0])*s), int(box.Margin[1]*s)-int(float64(pos[1])*s),
+			int(box.Margin[4]*s)-int(float64(pos[0])*s), int(box.Margin[5]*s)-int(float64(pos[1])*s),
 		))
 
 		// encode
