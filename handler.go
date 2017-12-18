@@ -534,11 +534,14 @@ func (h *TargetHandler) pageEvent(ctxt context.Context, ev interface{}) {
 	case *page.EventFrameClearedScheduledNavigation:
 		id, op = e.FrameID, frameClearedScheduledNavigation
 
+		// ignored events
 	case *page.EventDomContentEventFired:
 		return
 	case *page.EventLoadEventFired:
 		return
 	case *page.EventFrameResized:
+		return
+	case *page.EventLifecycleEvent:
 		return
 
 	default:
