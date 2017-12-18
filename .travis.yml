@@ -13,7 +13,6 @@ addons:
 before_install:
   - go get github.com/mattn/goveralls
 script:
-  - export PATH=$PATH:$HOME/hs
   - export CHROMEDP_TEST_RUNNER=google-chrome-stable
   - export CHROMEDP_DISABLE_GPU=true
   - go test -v -coverprofile=coverage.out
