@@ -27,10 +27,12 @@ func init() {
 	misspellReplacer.Compile()
 }
 
-var badHTMLReplacer = strings.NewReplacer(
+var descReplacer = strings.NewReplacer(
 	"&lt;", "<",
 	"&gt;", ">",
 	"&gt", ">",
+	"`", "",
+	"\n", " ",
 )
 
 // codeRE is a regexp to match <code> and </code> tags.
@@ -39,8 +41,8 @@ var codeRE = regexp.MustCompile(`<\/?code>`)
 // CleanDesc cleans comments / descriptions of "<code>" and "</code>" strings
 // and "`" characters, and fixes common misspellings.
 func CleanDesc(s string) string {
-	s, _ = misspellReplacer.Replace(strings.Replace(codeRE.ReplaceAllString(s, ""), "`", "", -1))
-	return badHTMLReplacer.Replace(s)
+	s, _ = misspellReplacer.Replace(codeRE.ReplaceAllString(s, ""))
+	return descReplacer.Replace(s)
 }
 
 // ForceCamel forces camel case specific to go.

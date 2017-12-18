@@ -83,7 +83,7 @@ func New(ctxt context.Context, opts ...Option) (*CDP, error) {
 	}()
 
 	// TODO: fix this
-	timeout := time.After(DefaultNewTargetTimeout)
+	timeout := time.After(defaultNewTargetTimeout)
 
 loop:
 	// wait until at least one target active
@@ -430,3 +430,9 @@ func WithConsolef(f LogFunc) Option {
 		return nil
 	}
 }
+
+var (
+	// defaultNewTargetTimeout is the default target timeout -- used by
+	// testing.
+	defaultNewTargetTimeout = DefaultNewTargetTimeout
+)

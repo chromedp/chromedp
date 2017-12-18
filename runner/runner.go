@@ -336,10 +336,10 @@ func Path(path string) CommandLineOption {
 	}
 }
 
-// Headless is the Chrome command line option to set the default settings for
-// running the headless_shell executable. If path is empty, then an attempt
-// will be made to find headless_shell on the path.
-func Headless(path string, port int) CommandLineOption {
+// HeadlessPathPort is the Chrome command line option to set the default
+// settings for running the headless_shell executable. If path is empty, then
+// an attempt will be made to find headless_shell on the path.
+func HeadlessPathPort(path string, port int) CommandLineOption {
 	if path == "" {
 		path, _ = exec.LookPath("headless_shell")
 	}
@@ -347,11 +347,7 @@ func Headless(path string, port int) CommandLineOption {
 	return func(m map[string]interface{}) error {
 		m["exec-path"] = path
 		m["remote-debugging-port"] = port
-
-		if os.Getenv("CHROMEDP_NO_SANDBOX") != "" {
-			m["no-sandbox"] = true
-		}
-
+		m["headless"] = true
 		return nil
 	}
 }
@@ -367,6 +363,10 @@ func Port(port int) CommandLineOption {
 }
 
 // UserDataDir is the Chrome command line option to set the user data dir.
+//
+// Note: set this option to manually set the profile directory used by Chrome.
+// When this is not set, then a default path will be created in the /tmp
+// directory.
 func UserDataDir(dir string) CommandLineOption {
 	return Flag("user-data-dir", dir)
 }
@@ -400,6 +400,23 @@ func UserAgent(userAgent string) CommandLineOption {
 // NoSandbox is the Chrome comamnd line option to disable the sandbox.
 func NoSandbox(m map[string]interface{}) error {
 	return Flag("no-sandbox", true)(m)
+}
+
+// NoFirstRun is the Chrome comamnd line option to disable the first run
+// dialog.
+func NoFirstRun(m map[string]interface{}) error {
+	return Flag("no-first-run", true)(m)
+}
+
+// NoDefaultBrowserCheck is the Chrome comamnd line option to disable the
+// default browser check.
+func NoDefaultBrowserCheck(m map[string]interface{}) error {
+	return Flag("no-default-browser-check", true)(m)
+}
+
+// DisableGPU is the Chrome command line option to disable the GPU process.
+func DisableGPU(m map[string]interface{}) error {
+	return Flag("disable-gpu", true)(m)
 }
 
 // CmdOpt is a Chrome command line option to modify the underlying exec.Cmd

@@ -5,14 +5,16 @@ go:
   - tip
 addons:
   apt:
+    chrome: stable
     sources:
       - ubuntu-toolchain-r-test
     packages:
       - libstdc++6
 before_install:
   - go get github.com/mattn/goveralls
-  - ./contrib/grab-headless_shell.sh $HOME/hs
 script:
   - export PATH=$PATH:$HOME/hs
-  - CHROMEDP_NO_SANDBOX=true go test -v -coverprofile=coverage.out
+  - export CHROMEDP_TEST_RUNNER=google-chrome-stable
+  - export CHROMEDP_DISABLE_GPU=true
+  - go test -v -coverprofile=coverage.out
   - goveralls -service=travis-ci -coverprofile=coverage.out
