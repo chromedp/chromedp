@@ -21,6 +21,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"regexp"
 
 	"github.com/gorilla/websocket"
 )
@@ -170,11 +171,15 @@ func checkVersion() ([]byte, error) {
 	return body, nil
 }
 
+var (
+	cleanRE = regexp.MustCompile(`[^a-zA-Z0-9_\-\.]`)
+)
+
 func createLog(id string) (io.Closer, *log.Logger) {
 	var f io.Closer
 	var w io.Writer = os.Stdout
 	if !*flagNoLog && *flagLogMask != "" {
-		l, err := os.OpenFile(fmt.Sprintf(*flagLogMask, id), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+		l, err := os.OpenFile(fmt.Sprintf(*flagLogMask, cleanRE.ReplaceAllString(id, "")), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 		if err != nil {
 			log.Fatal(err)
 		}
