@@ -82,7 +82,9 @@ func Reload() Action {
 	return page.Reload()
 }
 
-// CaptureScreenshot captures takes a full page screenshot.
+// CaptureScreenshot captures takes a screenshot of the current viewport.
+//
+// Note: this an alias for page.CaptureScreenshot.
 func CaptureScreenshot(res *[]byte) Action {
 	if res == nil {
 		panic("res cannot be nil")
