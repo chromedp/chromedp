@@ -41,6 +41,9 @@ type TargetHandler struct {
 	// qevents is the incoming event queue.
 	qevents chan *cdp.Message
 
+	// listeners is a pool of event listeners
+	listeners map[cdp.MethodType][]chan interface{}
+
 	// detached is closed when the detached event is received.
 	detached chan *inspector.EventDetached
 
@@ -242,6 +245,13 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdp.Message) err
 		h.domWaitGroup.Wait()
 		go h.documentUpdated(ctxt)
 		return nil
+	}
+
+	// Trigger registered event listeners by giving the event
+	if listeners, ok := h.listeners[msg.Method]; ok {
+		for _, listener := range listeners {
+			listener <- ev
+		}
 	}
 
 	d := msg.Method.Domain()
@@ -656,7 +666,18 @@ func (h *TargetHandler) domEvent(ctxt context.Context, ev interface{}) {
 
 // Listen creates a listener for the specified event types.
 func (h *TargetHandler) Listen(eventTypes ...cdp.MethodType) <-chan interface{} {
-	return nil
+	out := make(chan interface{})
+
+	// Initialise listeners if it has not been initialised yet
+	if len(h.listeners) == 0 {
+		h.listeners = make(map[cdp.MethodType][]chan interface{})
+	}
+
+	// Register the listener
+	for _, eventType := range eventTypes {
+		h.listeners[eventType] = append(h.listeners[eventType], out)
+	}
+	return out
 }
 
 // Release releases a channel returned from Listen.
