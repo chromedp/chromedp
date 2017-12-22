@@ -23,8 +23,8 @@ func main() {
 	// run task list
 	var res []string
 	err = c.Run(ctxt, cdp.Tasks{
-		cdp.Navigate(`https://www.brank.as`),
-		cdp.WaitVisible(`#footer`, cdp.ByID),
+		cdp.Navigate(`https://www.google.com/`),
+		cdp.WaitVisible(`#main`, cdp.ByID),
 		cdp.Evaluate(`Object.keys(window);`, &res),
 	})
 	if err != nil {
