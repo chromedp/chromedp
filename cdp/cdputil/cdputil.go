@@ -991,14 +991,8 @@ func UnmarshalMessage(msg *cdp.Message) (interface{}, error) {
 	case cdp.CommandSecurityEnable:
 		return emptyVal, nil
 
-	case cdp.CommandSecurityHandleCertificateError:
+	case cdp.CommandSecuritySetIgnoreCertificateErrors:
 		return emptyVal, nil
-
-	case cdp.CommandSecuritySetOverrideCertificateErrors:
-		return emptyVal, nil
-
-	case cdp.EventSecurityCertificateError:
-		v = new(security.EventCertificateError)
 
 	case cdp.EventSecuritySecurityStateChanged:
 		v = new(security.EventSecurityStateChanged)

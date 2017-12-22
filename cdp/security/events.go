@@ -6,16 +6,6 @@ import (
 	cdp "github.com/knq/chromedp/cdp"
 )
 
-// EventCertificateError there is a certificate error. If overriding
-// certificate errors is enabled, then it should be handled with the
-// handleCertificateError command. Note: this event does not fire if the
-// certificate error has been allowed internally.
-type EventCertificateError struct {
-	EventID    int64  `json:"eventId"`    // The ID of the event.
-	ErrorType  string `json:"errorType"`  // The type of the error.
-	RequestURL string `json:"requestURL"` // The url that was requested.
-}
-
 // EventSecurityStateChanged the security state of the page changed.
 type EventSecurityStateChanged struct {
 	SecurityState         State                  `json:"securityState"`         // Security state.
@@ -27,6 +17,5 @@ type EventSecurityStateChanged struct {
 
 // EventTypes all event types in the domain.
 var EventTypes = []cdp.MethodType{
-	cdp.EventSecurityCertificateError,
 	cdp.EventSecuritySecurityStateChanged,
 }

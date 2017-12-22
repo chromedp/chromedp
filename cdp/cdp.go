@@ -813,12 +813,10 @@ const (
 	CommandPerformanceDisable                              MethodType = "Performance.disable"
 	CommandPerformanceEnable                               MethodType = "Performance.enable"
 	CommandPerformanceGetMetrics                           MethodType = "Performance.getMetrics"
-	EventSecurityCertificateError                          MethodType = "Security.certificateError"
 	EventSecuritySecurityStateChanged                      MethodType = "Security.securityStateChanged"
 	CommandSecurityDisable                                 MethodType = "Security.disable"
 	CommandSecurityEnable                                  MethodType = "Security.enable"
-	CommandSecurityHandleCertificateError                  MethodType = "Security.handleCertificateError"
-	CommandSecuritySetOverrideCertificateErrors            MethodType = "Security.setOverrideCertificateErrors"
+	CommandSecuritySetIgnoreCertificateErrors              MethodType = "Security.setIgnoreCertificateErrors"
 	EventServiceWorkerWorkerErrorReported                  MethodType = "ServiceWorker.workerErrorReported"
 	EventServiceWorkerWorkerRegistrationUpdated            MethodType = "ServiceWorker.workerRegistrationUpdated"
 	EventServiceWorkerWorkerVersionUpdated                 MethodType = "ServiceWorker.workerVersionUpdated"
@@ -1599,18 +1597,14 @@ func (t *MethodType) UnmarshalEasyJSON(in *jlexer.Lexer) {
 		*t = CommandPerformanceEnable
 	case CommandPerformanceGetMetrics:
 		*t = CommandPerformanceGetMetrics
-	case EventSecurityCertificateError:
-		*t = EventSecurityCertificateError
 	case EventSecuritySecurityStateChanged:
 		*t = EventSecuritySecurityStateChanged
 	case CommandSecurityDisable:
 		*t = CommandSecurityDisable
 	case CommandSecurityEnable:
 		*t = CommandSecurityEnable
-	case CommandSecurityHandleCertificateError:
-		*t = CommandSecurityHandleCertificateError
-	case CommandSecuritySetOverrideCertificateErrors:
-		*t = CommandSecuritySetOverrideCertificateErrors
+	case CommandSecuritySetIgnoreCertificateErrors:
+		*t = CommandSecuritySetIgnoreCertificateErrors
 	case EventServiceWorkerWorkerErrorReported:
 		*t = EventServiceWorkerWorkerErrorReported
 	case EventServiceWorkerWorkerRegistrationUpdated:
