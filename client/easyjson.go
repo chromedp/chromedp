@@ -67,67 +67,83 @@ func easyjsonC5a4559bEncodeGithubComKnqChromedpClient(out *jwriter.Writer, in Ch
 	first := true
 	_ = first
 	if in.Description != "" {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"description\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"description\":")
 		out.String(string(in.Description))
 	}
 	if in.DevtoolsURL != "" {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"devtoolsFrontendUrl\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"devtoolsFrontendUrl\":")
 		out.String(string(in.DevtoolsURL))
 	}
 	if in.ID != "" {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"id\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"id\":")
 		out.String(string(in.ID))
 	}
 	if in.Title != "" {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"title\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"title\":")
 		out.String(string(in.Title))
 	}
 	if in.Type != "" {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"type\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"type\":")
 		(in.Type).MarshalEasyJSON(out)
 	}
 	if in.URL != "" {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"url\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"url\":")
 		out.String(string(in.URL))
 	}
 	if in.WebsocketURL != "" {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"webSocketDebuggerUrl\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"webSocketDebuggerUrl\":")
 		out.String(string(in.WebsocketURL))
 	}
 	if in.FaviconURL != "" {
-		if !first {
-			out.RawByte(',')
+		const prefix string = ",\"faviconURL\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
 		}
-		first = false
-		out.RawString("\"faviconURL\":")
 		out.String(string(in.FaviconURL))
 	}
 	out.RawByte('}')

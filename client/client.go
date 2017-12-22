@@ -2,6 +2,8 @@
 // and related funcs.
 package client
 
+//go:generate go run gen.go
+
 import (
 	"context"
 	"encoding/json"
@@ -34,6 +36,14 @@ var (
 	// ErrUnsupportedProtocolVersion is the unsupported protocol version error.
 	ErrUnsupportedProtocolVersion = errors.New("unsupported protocol version")
 )
+
+// Target is the common interface for a Chrome Debugging Protocol target.
+type Target interface {
+	String() string
+	GetID() string
+	GetType() TargetType
+	GetWebsocketURL() string
+}
 
 // Client is a Chrome Debugging Protocol client.
 type Client struct {

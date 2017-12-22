@@ -2,7 +2,7 @@ package client
 
 import "fmt"
 
-//go:generate easyjson -omit_empty -pkg -output_filename easyjson.go
+//go:generate easyjson -omit_empty -output_filename easyjson.go chrome.go
 
 // Chrome holds connection information for a Chrome, Edge, or Safari target.
 //
