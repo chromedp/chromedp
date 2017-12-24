@@ -57,7 +57,6 @@ func googleSearch(q, text string, site, res *string) cdp.Tasks {
 		cdp.WaitVisible(`#res`, cdp.ByID),
 		cdp.Text(sel, res),
 		cdp.Click(sel),
-		cdp.WaitVisible(`a[href="/brankas-for-business"]`, cdp.ByQuery),
 		cdp.WaitNotVisible(`.preloader-content`, cdp.ByQuery),
 		cdp.Location(site),
 		cdp.ScrollIntoView(`.banner-section.third-section`, cdp.ByQuery),
