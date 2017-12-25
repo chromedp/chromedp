@@ -137,8 +137,7 @@ func (h *TargetHandler) run(ctxt context.Context) {
 	defer h.conn.Close()
 
 	// add cancel to context
-	ctxt, cancel := context.WithCancel(ctxt)
-	defer cancel()
+	child, cancel := context.WithCancel(ctxt)
 
 	go func() {
 		defer cancel()
@@ -193,7 +192,7 @@ func (h *TargetHandler) run(ctxt context.Context) {
 				h.errorf("could not process command message %d: %v", cmd.ID, err)
 			}
 
-		case <-ctxt.Done():
+		case <-child.Done():
 			return
 		}
 	}
@@ -344,10 +343,13 @@ func (h *TargetHandler) Execute(ctxt context.Context, commandType cdp.MethodType
 	h.resrw.Unlock()
 
 	// queue message
-	h.qcmd <- &cdp.Message{
+	select {
+	case h.qcmd <- &cdp.Message{
 		ID:     id,
 		Method: commandType,
 		Params: paramsBuf,
+	}:
+	case <-ctxt.Done():
 	}
 
 	errch := make(chan error, 1)
