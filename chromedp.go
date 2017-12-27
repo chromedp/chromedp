@@ -14,9 +14,24 @@ import (
 	"sync"
 	"time"
 
-	"github.com/knq/chromedp/cdp"
-	"github.com/knq/chromedp/client"
-	"github.com/knq/chromedp/runner"
+	"github.com/chromedp/cdproto/cdp"
+	"github.com/chromedp/chromedp/client"
+	"github.com/chromedp/chromedp/runner"
+)
+
+const (
+	// DefaultNewTargetTimeout is the default time to wait for a new target to
+	// be started.
+	DefaultNewTargetTimeout = 3 * time.Second
+
+	// DefaultCheckDuration is the default time to sleep between a check.
+	DefaultCheckDuration = 50 * time.Millisecond
+
+	// DefaultPoolStartPort is the default start port number.
+	DefaultPoolStartPort = 9000
+
+	// DefaultPoolEndPort is the default end port number.
+	DefaultPoolEndPort = 10000
 )
 
 // CDP contains information for managing a Chrome process runner, low level
@@ -32,7 +47,7 @@ type CDP struct {
 	watch <-chan client.Target
 
 	// cur is the current active target's handler.
-	cur cdp.Handler
+	cur cdp.Executor
 
 	// handlers is the active handlers.
 	handlers []*TargetHandler
@@ -178,7 +193,7 @@ func (c *CDP) ListTargets() []string {
 }
 
 // GetHandlerByIndex retrieves the domains manager for the specified index.
-func (c *CDP) GetHandlerByIndex(i int) cdp.Handler {
+func (c *CDP) GetHandlerByIndex(i int) cdp.Executor {
 	c.RLock()
 	defer c.RUnlock()
 
@@ -190,7 +205,7 @@ func (c *CDP) GetHandlerByIndex(i int) cdp.Handler {
 }
 
 // GetHandlerByID retrieves the domains manager for the specified target ID.
-func (c *CDP) GetHandlerByID(id string) cdp.Handler {
+func (c *CDP) GetHandlerByID(id string) cdp.Executor {
 	c.RLock()
 	defer c.RUnlock()
 
@@ -269,7 +284,7 @@ func (c *CDP) newTarget(ctxt context.Context, opts ...client.Option) (string, er
 // SetTarget is an action that sets the active Chrome handler to the specified
 // index i.
 func (c *CDP) SetTarget(i int) Action {
-	return ActionFunc(func(context.Context, cdp.Handler) error {
+	return ActionFunc(func(context.Context, cdp.Executor) error {
 		return c.SetHandler(i)
 	})
 }
@@ -277,7 +292,7 @@ func (c *CDP) SetTarget(i int) Action {
 // SetTargetByID is an action that sets the active Chrome handler to the handler
 // associated with the specified id.
 func (c *CDP) SetTargetByID(id string) Action {
-	return ActionFunc(func(context.Context, cdp.Handler) error {
+	return ActionFunc(func(context.Context, cdp.Executor) error {
 		return c.SetHandlerByID(id)
 	})
 }
@@ -285,7 +300,7 @@ func (c *CDP) SetTargetByID(id string) Action {
 // NewTarget is an action that creates a new Chrome target, and sets it as the
 // active target.
 func (c *CDP) NewTarget(id *string, opts ...client.Option) Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
+	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
 		n, err := c.newTarget(ctxt, opts...)
 		if err != nil {
 			return err
@@ -299,43 +314,16 @@ func (c *CDP) NewTarget(id *string, opts ...client.Option) Action {
 	})
 }
 
-// NewTargetWithURL creates a new Chrome target, sets it as the active target,
-// and then navigates to the specified url.
-//func (c *CDP) NewTargetWithURL(urlstr string, id *string, opts ...client.Option) Action {
-//	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
-//		n, err := c.newTarget(ctxt, opts...)
-//		if err != nil {
-//			return err
-//		}
-//
-//		l := c.GetHandlerByID(n)
-//		if l == nil {
-//			return errors.New("could not retrieve newly created target")
-//		}
-//
-//		/*err = Navigate(l, urlstr).Do(ctxt)
-//		if err != nil {
-//			return err
-//		}
-//
-//		if id != nil {
-//			*id = n
-//		}*/
-//
-//		return nil
-//	})
-//}
-
 // CloseByIndex closes the Chrome target with specified index i.
 func (c *CDP) CloseByIndex(i int) Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
+	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
 		return nil
 	})
 }
 
 // CloseByID closes the Chrome target with the specified id.
 func (c *CDP) CloseByID(id string) Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
+	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
 		return nil
 	})
 }
