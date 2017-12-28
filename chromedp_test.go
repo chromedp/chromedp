@@ -5,10 +5,11 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path"
 	"testing"
 	"time"
 
-	"github.com/knq/chromedp/runner"
+	"github.com/chromedp/chromedp/runner"
 )
 
 var (
@@ -69,7 +70,12 @@ func testAllocate(t *testing.T, path string) *Res {
 func TestMain(m *testing.M) {
 	var err error
 
-	testdataDir = "file://" + os.Getenv("GOPATH") + "/src/github.com/knq/chromedp/testdata"
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("could not get working directory: %v", err)
+		os.Exit(1)
+	}
+	testdataDir = "file://" + path.Join(wd, "testdata")
 
 	// its worth noting that newer versions of chrome (64+) run much faster
 	// than older ones -- same for headless_shell ...

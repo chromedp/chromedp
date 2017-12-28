@@ -4,21 +4,21 @@ import (
 	"context"
 	"time"
 
-	"github.com/knq/chromedp/cdp"
+	"github.com/chromedp/cdproto/cdp"
 )
 
 // Action is the common interface for an action that will be executed against a
 // context and frame handler.
 type Action interface {
 	// Do executes the action using the provided context and frame handler.
-	Do(context.Context, cdp.Handler) error
+	Do(context.Context, cdp.Executor) error
 }
 
 // ActionFunc is a adapter to allow the use of ordinary func's as an Action.
-type ActionFunc func(context.Context, cdp.Handler) error
+type ActionFunc func(context.Context, cdp.Executor) error
 
 // Do executes the func f using the provided context and frame handler.
-func (f ActionFunc) Do(ctxt context.Context, h cdp.Handler) error {
+func (f ActionFunc) Do(ctxt context.Context, h cdp.Executor) error {
 	return f(ctxt, h)
 }
 
@@ -27,7 +27,7 @@ type Tasks []Action
 
 // Do executes the list of Actions sequentially, using the provided context and
 // frame handler.
-func (t Tasks) Do(ctxt context.Context, h cdp.Handler) error {
+func (t Tasks) Do(ctxt context.Context, h cdp.Executor) error {
 	// TODO: put individual task timeouts from context here
 	for _, a := range t {
 		// ctxt, cancel = context.WithTimeout(ctxt, timeout)
@@ -46,7 +46,7 @@ func (t Tasks) Do(ctxt context.Context, h cdp.Handler) error {
 // be marked for deprecation in the future, after the remaining Actions have
 // been able to be written/tested.
 func Sleep(d time.Duration) Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
+	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
 		select {
 		case <-time.After(d):
 

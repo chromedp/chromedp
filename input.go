@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/knq/chromedp/cdp"
-	"github.com/knq/chromedp/cdp/dom"
-	"github.com/knq/chromedp/cdp/input"
-	"github.com/knq/chromedp/kb"
+	"github.com/chromedp/cdproto/cdp"
+	"github.com/chromedp/cdproto/dom"
+	"github.com/chromedp/cdproto/input"
+	"github.com/chromedp/chromedp/kb"
 )
 
 // MouseAction is a mouse action.
@@ -26,7 +26,7 @@ func MouseAction(typ input.MouseType, x, y int64, opts ...MouseOption) Action {
 // MouseClickXY sends a left mouse button click (ie, mousePressed and
 // mouseReleased event) at the X, Y location.
 func MouseClickXY(x, y int64, opts ...MouseOption) Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
+	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
 		me := &input.DispatchMouseEventParams{
 			Type:       input.MousePressed,
 			X:          float64(x),
@@ -56,7 +56,7 @@ func MouseClickXY(x, y int64, opts ...MouseOption) Action {
 // Note that the window will be scrolled if the node is not within the window's
 // viewport.
 func MouseClickNode(n *cdp.Node, opts ...MouseOption) Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
+	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
 		var err error
 
 		var pos []int
@@ -152,7 +152,7 @@ func ClickCount(n int) MouseOption {
 // Please see the chromedp/kb package for implementation details and the list
 // of well-known keys.
 func KeyAction(keys string, opts ...KeyOption) Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
+	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
 		var err error
 
 		for _, r := range keys {
@@ -173,7 +173,7 @@ func KeyAction(keys string, opts ...KeyOption) Action {
 
 // KeyActionNode dispatches a key event on a node.
 func KeyActionNode(n *cdp.Node, keys string, opts ...KeyOption) Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
+	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
 		err := dom.Focus().WithNodeID(n.NodeID).Do(ctxt, h)
 		if err != nil {
 			return err
