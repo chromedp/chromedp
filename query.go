@@ -11,11 +11,11 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/chromedp/cdproto/cdp"
+	"github.com/chromedp/cdproto/css"
+	"github.com/chromedp/cdproto/dom"
+	"github.com/chromedp/cdproto/page"
 	"github.com/disintegration/imaging"
-	"github.com/knq/chromedp/cdp"
-	"github.com/knq/chromedp/cdp/css"
-	"github.com/knq/chromedp/cdp/dom"
-	"github.com/knq/chromedp/cdp/page"
 )
 
 // Nodes retrieves the document nodes matching the selector.
@@ -24,7 +24,7 @@ func Nodes(sel interface{}, nodes *[]*cdp.Node, opts ...QueryOption) Action {
 		panic("nodes cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, n ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h *TargetHandler, n ...*cdp.Node) error {
 		*nodes = n
 		return nil
 	}, opts...)
@@ -36,7 +36,7 @@ func NodeIDs(sel interface{}, ids *[]cdp.NodeID, opts ...QueryOption) Action {
 		panic("nodes cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h *TargetHandler, nodes ...*cdp.Node) error {
 		nodeIDs := make([]cdp.NodeID, len(nodes))
 		for i, n := range nodes {
 			nodeIDs[i] = n.NodeID
@@ -50,7 +50,7 @@ func NodeIDs(sel interface{}, ids *[]cdp.NodeID, opts ...QueryOption) Action {
 
 // Focus focuses the first node matching the selector.
 func Focus(sel interface{}, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h *TargetHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -61,7 +61,7 @@ func Focus(sel interface{}, opts ...QueryOption) Action {
 
 // Blur unfocuses (blurs) the first node matching the selector.
 func Blur(sel interface{}, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h *TargetHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -86,7 +86,7 @@ func Dimensions(sel interface{}, model **dom.BoxModel, opts ...QueryOption) Acti
 	if model == nil {
 		panic("model cannot be nil")
 	}
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h *TargetHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -102,7 +102,7 @@ func Text(sel interface{}, text *string, opts ...QueryOption) Action {
 		panic("text cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h *TargetHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -113,7 +113,7 @@ func Text(sel interface{}, text *string, opts ...QueryOption) Action {
 
 // Clear clears the values of any input/textarea nodes matching the selector.
 func Clear(sel interface{}, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h *TargetHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -189,7 +189,7 @@ func Attributes(sel interface{}, attributes *map[string]string, opts ...QueryOpt
 		panic("attributes cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h *TargetHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -218,7 +218,7 @@ func AttributesAll(sel interface{}, attributes *[]map[string]string, opts ...Que
 		panic("attributes cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h *TargetHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -242,7 +242,7 @@ func AttributesAll(sel interface{}, attributes *[]map[string]string, opts ...Que
 // SetAttributes sets the element attributes for the first node matching the
 // selector.
 func SetAttributes(sel interface{}, attributes map[string]string, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h *TargetHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return errors.New("expected at least one element")
 		}
@@ -264,7 +264,7 @@ func AttributeValue(sel interface{}, name string, value *string, ok *bool, opts 
 		panic("value cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h *TargetHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return errors.New("expected at least one element")
 		}
@@ -294,7 +294,7 @@ func AttributeValue(sel interface{}, name string, value *string, ok *bool, opts 
 // SetAttributeValue sets the element attribute with name to value for the
 // first node matching the selector.
 func SetAttributeValue(sel interface{}, name, value string, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h *TargetHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -306,7 +306,7 @@ func SetAttributeValue(sel interface{}, name, value string, opts ...QueryOption)
 // RemoveAttribute removes the element attribute with name from the first node
 // matching the selector.
 func RemoveAttribute(sel interface{}, name string, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h *TargetHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -321,7 +321,7 @@ func JavascriptAttribute(sel interface{}, name string, res interface{}, opts ...
 	if res == nil {
 		panic("res cannot be nil")
 	}
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h *TargetHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -333,7 +333,7 @@ func JavascriptAttribute(sel interface{}, name string, res interface{}, opts ...
 // SetJavascriptAttribute sets the javascript attribute for the first node
 // matching the selector.
 func SetJavascriptAttribute(sel interface{}, name, value string, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h *TargetHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -369,7 +369,7 @@ func InnerHTML(sel interface{}, html *string, opts ...QueryOption) Action {
 
 // Click sends a mouse click event to the first node matching the selector.
 func Click(sel interface{}, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h *TargetHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -381,7 +381,7 @@ func Click(sel interface{}, opts ...QueryOption) Action {
 // DoubleClick sends a mouse double click event to the first node matching the
 // selector.
 func DoubleClick(sel interface{}, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h *TargetHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -396,7 +396,7 @@ func DoubleClick(sel interface{}, opts ...QueryOption) Action {
 // Note: when selector matches a input[type="file"] node, then dom.SetFileInputFiles
 // is used to set the upload path of the input node to v.
 func SendKeys(sel interface{}, v string, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h *TargetHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -425,7 +425,7 @@ func SendKeys(sel interface{}, v string, opts ...QueryOption) Action {
 // SetUploadFiles sets the files to upload (ie, for a input[type="file"] node)
 // for the first node matching the selector.
 func SetUploadFiles(sel interface{}, files []string, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h *TargetHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -440,7 +440,7 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 		panic("picbuf cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h *TargetHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -497,7 +497,7 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 // Submit is an action that submits the form of the first node matching the
 // selector belongs to.
 func Submit(sel interface{}, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h *TargetHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -519,7 +519,7 @@ func Submit(sel interface{}, opts ...QueryOption) Action {
 // Reset is an action that resets the form of the first node matching the
 // selector belongs to.
 func Reset(sel interface{}, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h *TargetHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -544,7 +544,7 @@ func ComputedStyle(sel interface{}, style *[]*css.ComputedProperty, opts ...Quer
 		panic("style cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h *TargetHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -567,7 +567,7 @@ func MatchedStyle(sel interface{}, style **css.GetMatchedStylesForNodeReturns, o
 		panic("style cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h *TargetHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -589,7 +589,7 @@ func MatchedStyle(sel interface{}, style **css.GetMatchedStylesForNodeReturns, o
 
 // ScrollIntoView scrolls the window to the first node matching the selector.
 func ScrollIntoView(sel interface{}, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h cdp.Handler, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctxt context.Context, h *TargetHandler, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}

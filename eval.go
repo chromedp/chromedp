@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/knq/chromedp/cdp"
-	rundom "github.com/knq/chromedp/cdp/runtime"
+	"github.com/chromedp/cdproto/cdp"
+	rundom "github.com/chromedp/cdproto/runtime"
 )
 
 // Evaluate is an action to evaluate the Javascript expression, unmarshaling
@@ -27,7 +27,7 @@ func Evaluate(expression string, res interface{}, opts ...EvaluateOption) Action
 		panic("res cannot be nil")
 	}
 
-	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
+	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
 		// set up parameters
 		p := rundom.Evaluate(expression)
 		switch res.(type) {

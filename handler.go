@@ -2,24 +2,26 @@ package chromedp
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"reflect"
-	"runtime"
+	goruntime "runtime"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/mailru/easyjson"
 
-	"github.com/knq/chromedp/cdp"
-	"github.com/knq/chromedp/cdp/cdputil"
-	"github.com/knq/chromedp/cdp/css"
-	"github.com/knq/chromedp/cdp/dom"
-	"github.com/knq/chromedp/cdp/inspector"
-	logdom "github.com/knq/chromedp/cdp/log"
-	"github.com/knq/chromedp/cdp/page"
-	rundom "github.com/knq/chromedp/cdp/runtime"
-	"github.com/knq/chromedp/client"
+	"github.com/chromedp/cdproto"
+	"github.com/chromedp/cdproto/cdp"
+	"github.com/chromedp/cdproto/css"
+	"github.com/chromedp/cdproto/dom"
+	"github.com/chromedp/cdproto/inspector"
+	"github.com/chromedp/cdproto/log"
+	"github.com/chromedp/cdproto/page"
+	"github.com/chromedp/cdproto/runtime"
+
+	"github.com/chromedp/chromedp/client"
 )
 
 // TargetHandler manages a Chrome Debugging Protocol target.
@@ -33,13 +35,13 @@ type TargetHandler struct {
 	cur *cdp.Frame
 
 	// qcmd is the outgoing message queue.
-	qcmd chan *cdp.Message
+	qcmd chan *cdproto.Message
 
 	// qres is the incoming command result queue.
-	qres chan *cdp.Message
+	qres chan *cdproto.Message
 
 	// qevents is the incoming event queue.
-	qevents chan *cdp.Message
+	qevents chan *cdproto.Message
 
 	// detached is closed when the detached event is received.
 	detached chan *inspector.EventDetached
@@ -51,7 +53,7 @@ type TargetHandler struct {
 	lastm sync.Mutex
 
 	// res is the id->result channel map.
-	res   map[int64]chan *cdp.Message
+	res   map[int64]chan *cdproto.Message
 	resrw sync.RWMutex
 
 	// logging funcs
@@ -83,10 +85,10 @@ func (h *TargetHandler) Run(ctxt context.Context) error {
 	// reset
 	h.Lock()
 	h.frames = make(map[cdp.FrameID]*cdp.Frame)
-	h.qcmd = make(chan *cdp.Message)
-	h.qres = make(chan *cdp.Message)
-	h.qevents = make(chan *cdp.Message)
-	h.res = make(map[int64]chan *cdp.Message)
+	h.qcmd = make(chan *cdproto.Message)
+	h.qres = make(chan *cdproto.Message)
+	h.qevents = make(chan *cdproto.Message)
+	h.res = make(map[int64]chan *cdproto.Message)
 	h.detached = make(chan *inspector.EventDetached)
 	h.pageWaitGroup = new(sync.WaitGroup)
 	h.domWaitGroup = new(sync.WaitGroup)
@@ -97,8 +99,8 @@ func (h *TargetHandler) Run(ctxt context.Context) error {
 
 	// enable domains
 	for _, a := range []Action{
-		logdom.Enable(),
-		rundom.Enable(),
+		log.Enable(),
+		runtime.Enable(),
 		//network.Enable(),
 		inspector.Enable(),
 		page.Enable(),
@@ -200,7 +202,7 @@ func (h *TargetHandler) run(ctxt context.Context) {
 }
 
 // read reads a message from the client connection.
-func (h *TargetHandler) read() (*cdp.Message, error) {
+func (h *TargetHandler) read() (*cdproto.Message, error) {
 	// read
 	buf, err := h.conn.Read()
 	if err != nil {
@@ -210,8 +212,8 @@ func (h *TargetHandler) read() (*cdp.Message, error) {
 	h.debugf("-> %s", string(buf))
 
 	// unmarshal
-	msg := new(cdp.Message)
-	err = easyjson.Unmarshal(buf, msg)
+	msg := new(cdproto.Message)
+	err = json.Unmarshal(buf, msg)
 	if err != nil {
 		return nil, err
 	}
@@ -220,13 +222,13 @@ func (h *TargetHandler) read() (*cdp.Message, error) {
 }
 
 // processEvent processes an incoming event.
-func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdp.Message) error {
+func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdproto.Message) error {
 	if msg == nil {
-		return cdp.ErrChannelClosed
+		return ErrChannelClosed
 	}
 
 	// unmarshal
-	ev, err := cdputil.UnmarshalMessage(msg)
+	ev, err := cdproto.UnmarshalMessage(msg)
 	if err != nil {
 		return err
 	}
@@ -290,7 +292,7 @@ func (h *TargetHandler) documentUpdated(ctxt context.Context) {
 }
 
 // processResult processes an incoming command result.
-func (h *TargetHandler) processResult(msg *cdp.Message) error {
+func (h *TargetHandler) processResult(msg *cdproto.Message) error {
 	h.resrw.RLock()
 	defer h.resrw.RUnlock()
 
@@ -306,9 +308,9 @@ func (h *TargetHandler) processResult(msg *cdp.Message) error {
 }
 
 // processCommand writes a command to the client connection.
-func (h *TargetHandler) processCommand(cmd *cdp.Message) error {
+func (h *TargetHandler) processCommand(cmd *cdproto.Message) error {
 	// marshal
-	buf, err := easyjson.Marshal(cmd)
+	buf, err := json.Marshal(cmd)
 	if err != nil {
 		return err
 	}
@@ -323,13 +325,13 @@ var emptyObj = easyjson.RawMessage([]byte(`{}`))
 
 // Execute executes commandType against the endpoint passed to Run, using the
 // provided context and params, decoding the result of the command to res.
-func (h *TargetHandler) Execute(ctxt context.Context, commandType cdp.MethodType, params easyjson.Marshaler, res easyjson.Unmarshaler) error {
+func (h *TargetHandler) Execute(ctxt context.Context, methodType string, params json.Marshaler, res json.Unmarshaler) error {
 	var paramsBuf easyjson.RawMessage
 	if params == nil {
 		paramsBuf = emptyObj
 	} else {
 		var err error
-		paramsBuf, err = easyjson.Marshal(params)
+		paramsBuf, err = json.Marshal(params)
 		if err != nil {
 			return err
 		}
@@ -338,15 +340,15 @@ func (h *TargetHandler) Execute(ctxt context.Context, commandType cdp.MethodType
 	id := h.next()
 
 	// save channel
-	ch := make(chan *cdp.Message, 1)
+	ch := make(chan *cdproto.Message, 1)
 	h.resrw.Lock()
 	h.res[id] = ch
 	h.resrw.Unlock()
 
 	// queue message
-	h.qcmd <- &cdp.Message{
+	h.qcmd <- &cdproto.Message{
 		ID:     id,
-		Method: commandType,
+		Method: cdproto.MethodType(methodType),
 		Params: paramsBuf,
 	}
 
@@ -358,13 +360,13 @@ func (h *TargetHandler) Execute(ctxt context.Context, commandType cdp.MethodType
 		case msg := <-ch:
 			switch {
 			case msg == nil:
-				errch <- cdp.ErrChannelClosed
+				errch <- ErrChannelClosed
 
 			case msg.Error != nil:
 				errch <- msg.Error
 
 			case res != nil:
-				errch <- easyjson.Unmarshal(msg.Result, res)
+				errch <- json.Unmarshal(msg.Result, res)
 			}
 
 		case <-ctxt.Done():
@@ -636,7 +638,7 @@ func (h *TargetHandler) domEvent(ctxt context.Context, ev interface{}) {
 	// retrieve node
 	n, err := h.WaitNode(ctxt, f, id)
 	if err != nil {
-		s := strings.TrimSuffix(runtime.FuncForPC(reflect.ValueOf(op).Pointer()).Name(), ".func1")
+		s := strings.TrimSuffix(goruntime.FuncForPC(reflect.ValueOf(op).Pointer()).Name(), ".func1")
 		i := strings.LastIndex(s, ".")
 		if i != -1 {
 			s = s[i+1:]
@@ -652,14 +654,4 @@ func (h *TargetHandler) domEvent(ctxt context.Context, ev interface{}) {
 	defer f.Unlock()
 
 	op(n)
-}
-
-// Listen creates a listener for the specified event types.
-func (h *TargetHandler) Listen(eventTypes ...cdp.MethodType) <-chan interface{} {
-	return nil
-}
-
-// Release releases a channel returned from Listen.
-func (h *TargetHandler) Release(ch <-chan interface{}) {
-
 }

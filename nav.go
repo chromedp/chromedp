@@ -4,19 +4,24 @@ import (
 	"context"
 	"errors"
 
-	"github.com/knq/chromedp/cdp"
-	"github.com/knq/chromedp/cdp/page"
+	"github.com/chromedp/cdproto/cdp"
+	"github.com/chromedp/cdproto/page"
 )
 
 // Navigate navigates the current frame.
 func Navigate(urlstr string) Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
-		frameID, _, _, err := page.Navigate(urlstr).Do(ctxt, h)
+	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
+		th, ok := h.(*TargetHandler)
+		if !ok {
+			return ErrInvalidHandler
+		}
+
+		frameID, _, _, err := page.Navigate(urlstr).Do(ctxt, th)
 		if err != nil {
 			return err
 		}
 
-		return h.SetActive(ctxt, frameID)
+		return th.SetActive(ctxt, frameID)
 	})
 }
 
@@ -27,7 +32,7 @@ func NavigationEntries(currentIndex *int64, entries *[]*page.NavigationEntry) Ac
 		panic("currentIndex and entries cannot be nil")
 	}
 
-	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
+	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
 		var err error
 		*currentIndex, *entries, err = page.GetNavigationHistory().Do(ctxt, h)
 		return err
@@ -42,7 +47,7 @@ func NavigateToHistoryEntry(entryID int64) Action {
 
 // NavigateBack navigates the current frame backwards in its history.
 func NavigateBack() Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
+	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
 		cur, entries, err := page.GetNavigationHistory().Do(ctxt, h)
 		if err != nil {
 			return err
@@ -58,7 +63,7 @@ func NavigateBack() Action {
 
 // NavigateForward navigates the current frame forwards in its history.
 func NavigateForward() Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
+	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
 		cur, entries, err := page.GetNavigationHistory().Do(ctxt, h)
 		if err != nil {
 			return err
@@ -90,7 +95,7 @@ func CaptureScreenshot(res *[]byte) Action {
 		panic("res cannot be nil")
 	}
 
-	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
+	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
 		var err error
 		*res, err = page.CaptureScreenshot().Do(ctxt, h)
 		return err
@@ -103,7 +108,7 @@ func CaptureScreenshot(res *[]byte) Action {
 		panic("id cannot be nil")
 	}
 
-	return ActionFunc(func(ctxt context.Context, h cdp.Handler) error {
+	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
 		var err error
 		*id, err = page.AddScriptToEvaluateOnLoad(source).Do(ctxt, h)
 		return err

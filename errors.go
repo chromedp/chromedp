@@ -1,39 +1,42 @@
 package chromedp
 
-import (
-	"errors"
-)
+// Error is a chromedp error.
+type Error string
+
+// Error satisfies the error interface.
+func (e Error) Error() string {
+	return string(e)
+}
 
 // Error types.
-var (
-	// ErrInvalidDimensions is the error returned when the retrieved box model is
-	// invalid.
-	ErrInvalidDimensions = errors.New("invalid dimensions")
+const (
+	// ErrInvalidDimensions is the invalid dimensions error.
+	ErrInvalidDimensions Error = "invalid dimensions"
 
-	// ErrNoResults is the error returned when there are no matching nodes.
-	ErrNoResults = errors.New("no results")
+	// ErrNoResults is the no results error.
+	ErrNoResults Error = "no results"
 
-	// ErrHasResults is the error returned when there should not be any
-	// matching nodes.
-	ErrHasResults = errors.New("has results")
+	// ErrHasResults is the has results error.
+	ErrHasResults Error = "has results"
 
-	// ErrNotVisible is the error returned when a non-visible node should be
-	// visible.
-	ErrNotVisible = errors.New("not visible")
+	// ErrNotVisible is the not visible error.
+	ErrNotVisible Error = "not visible"
 
-	// ErrVisible is the error returned when a visible node should be
-	// non-visible.
-	ErrVisible = errors.New("visible")
+	// ErrVisible is the visible error.
+	ErrVisible Error = "visible"
 
-	// ErrDisabled is the error returned when a disabled node should be
-	// enabled.
-	ErrDisabled = errors.New("disabled")
+	// ErrDisabled is the disabled error.
+	ErrDisabled Error = "disabled"
 
-	// ErrNotSelected is the error returned when a non-selected node should be
-	// selected.
-	ErrNotSelected = errors.New("not selected")
+	// ErrNotSelected is the not selected error.
+	ErrNotSelected Error = "not selected"
 
-	// ErrInvalidBoxModel is the error returned when the retrieved box model
-	// data is invalid.
-	ErrInvalidBoxModel = errors.New("invalid box model")
+	// ErrInvalidBoxModel is the invalid box model error.
+	ErrInvalidBoxModel Error = "invalid box model"
+
+	// ErrChannelClosed is the channel closed error.
+	ErrChannelClosed Error = "channel closed"
+
+	// ErrInvalidHandler is the invalid handler error.
+	ErrInvalidHandler Error = "invalid handler"
 )
