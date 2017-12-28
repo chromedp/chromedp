@@ -18,6 +18,7 @@ import (
 	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/cdproto/inspector"
 	"github.com/chromedp/cdproto/log"
+	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
 
@@ -348,7 +349,7 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdproto.Message)
 }
 
 // propagate propagates event to the listeners
-func propagate(h *TargetHandler, method cdp.MethodType, ev interface{}) {
+func propagate(h *TargetHandler, method cdproto.MethodType, ev interface{}) {
 	h.RLock()
 	defer h.RUnlock()
 	if lsnrs, ok := h.lsnr[method]; ok {
@@ -763,7 +764,7 @@ func (h *TargetHandler) domEvent(ctxt context.Context, ev interface{}) {
 }
 
 // Listen creates a listener for the specified event types.
-func (h *TargetHandler) Listen(eventTypes ...cdp.MethodType) <-chan interface{} {
+func (h *TargetHandler) Listen(eventTypes ...cdproto.MethodType) <-chan interface{} {
 	h.Lock()
 	defer h.Unlock()
 
@@ -776,7 +777,7 @@ func (h *TargetHandler) Listen(eventTypes ...cdp.MethodType) <-chan interface{} 
 			}
 		} else {
 			h.lsnr[evtTyp] = []chan interface{}{ch}
-			h.lsnrchs[ch] = map[cdp.MethodType]bool{evtTyp: true}
+			h.lsnrchs[ch] = map[cdproto.MethodType]bool{evtTyp: true}
 		}
 	}
 	return ch
