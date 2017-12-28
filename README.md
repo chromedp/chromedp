@@ -103,11 +103,12 @@ Please see the [examples][6] project for more examples. Please refer to the
 
 ## Resources
 
-* [chromedp: A New Way to Drive the Web][8] - GopherCon 2017 talk by Kenneth Shaw
+* [chromedp: A New Way to Drive the Web][8] - GopherCon SG 2017 talk
 * [Chrome DevTools Protocol][5] - Chrome Debugging Protocol Domain documentation
 * [chromedp examples][6] - various `chromedp` examples
-* [`github.com/chromedp/cdproto`] - GoDoc listing for
-* [`github.com/chromedp/chromedp-gen`][9] - tool used to generate
+* [`github.com/chromedp/cdproto`][9] - GoDoc listing for the CDP domains used by `chromedp`
+* [`github.com/chromedp/chromedp-gen`][10] - tool used to generate `cdproto`
+* [`github.com/chromedp/chromedp-proxy`][11] - a simple CDP proxy for logging/debugging CDP clients and browser instances
 
 ## TODO
 
@@ -125,3 +126,6 @@ Please see the [examples][6] project for more examples. Please refer to the
 [6]: https://github.com/chromedp/examples
 [7]: https://godoc.org/github.com/chromedp/chromedp
 [8]: https://www.youtube.com/watch?v=_7pWCg94sKw
+[9]: https://godoc.org/github.com/chromedp/cdproto
+[10]: https://github.com/chromedp/chromedp-gen
+[11]: https://github.com/chromedp/chromedp-proxy
