@@ -1,7 +1,10 @@
 package chromedp
 
 import (
+	"context"
+	"runtime"
 	"testing"
+	"time"
 
 	"github.com/chromedp/cdproto/cdp"
 )
@@ -224,5 +227,28 @@ func TestAtLeast(t *testing.T) {
 	}
 	if len(nodes) < 3 {
 		t.Errorf("expected to have at least 3 nodes: got %d", len(nodes))
+	}
+}
+
+func TestSelGoroutineLeak(t *testing.T) {
+	numStart := runtime.NumGoroutine()
+	c := testAllocate(t, "wait.html")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	cancel()
+
+	err := c.Run(ctx, WaitReady("id1", ByID))
+	if err == nil {
+		t.Errorf("error expected")
+	}
+
+	c.Release()
+
+	numEnd := runtime.NumGoroutine()
+
+	if numEnd > numStart {
+		buf := make([]byte, 1<<20)
+		runtime.Stack(buf, true)
+		t.Errorf("possible goroutine leak: %s", buf)
 	}
 }
