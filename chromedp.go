@@ -237,9 +237,11 @@ func (c *CDP) SetHandlerByID(id string) error {
 
 	if i, ok := c.handlerMap[id]; ok {
 		c.cur = c.handlers[i]
+	}else{
+		return fmt.Errorf("no handler associated with target id %s", id)
 	}
 
-	return fmt.Errorf("no handler associated with target id %s", id)
+	return nil
 }
 
 // newTarget creates a new target using supplied context and options, returning
