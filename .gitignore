@@ -7,14 +7,6 @@ cdp-*.txt
 coverage.out
 massif.out
 
-# binaries
-/chromedp-gen
-/chromedp-proxy
-/chromedp-cli
-/cmd/chromedp-gen/chromedp-gen
-/cmd/chromedp-gen/chromedp-proxy
-/cmd/chromedp-gen/chromedp-cli
-
 # headless_shell
 /headless_shell/
 /hs/

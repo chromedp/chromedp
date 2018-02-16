@@ -107,7 +107,7 @@ Please see the [examples][6] project for more examples. Please refer to the
 * [Chrome DevTools Protocol][5] - Chrome Debugging Protocol Domain documentation
 * [chromedp examples][6] - various `chromedp` examples
 * [`github.com/chromedp/cdproto`][9] - GoDoc listing for the CDP domains used by `chromedp`
-* [`github.com/chromedp/chromedp-gen`][10] - tool used to generate `cdproto`
+* [`github.com/chromedp/cdproto-gen`][10] - tool used to generate `cdproto`
 * [`github.com/chromedp/chromedp-proxy`][11] - a simple CDP proxy for logging/debugging CDP clients and browser instances
 
 ## TODO
@@ -127,5 +127,5 @@ Please see the [examples][6] project for more examples. Please refer to the
 [7]: https://godoc.org/github.com/chromedp/chromedp
 [8]: https://www.youtube.com/watch?v=_7pWCg94sKw
 [9]: https://godoc.org/github.com/chromedp/cdproto
-[10]: https://github.com/chromedp/chromedp-gen
+[10]: https://github.com/chromedp/cdproto-gen
 [11]: https://github.com/chromedp/chromedp-proxy
