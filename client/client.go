@@ -184,7 +184,7 @@ func (c *Client) newTarget(ctxt context.Context, buf []byte) (Target, error) {
 		return nil, err
 	}
 
-	if ver != "1.1" && ver != "1.2" {
+	if ver != "1.1" && ver != "1.2" && ver != "1.3" {
 		return nil, ErrUnsupportedProtocolVersion
 	}
 
