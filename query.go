@@ -11,11 +11,12 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/disintegration/imaging"
+
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/css"
 	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/cdproto/page"
-	"github.com/disintegration/imaging"
 )
 
 // Nodes retrieves the document nodes matching the selector.
@@ -475,7 +476,7 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 			return err
 		}
 
-		// crop to box model contents.
+		// crop to box model contents
 		cropped := imaging.Crop(img, image.Rect(
 			int(box.Margin[0])-pos[0], int(box.Margin[1])-pos[1],
 			int(box.Margin[4])-pos[0], int(box.Margin[5])-pos[1],

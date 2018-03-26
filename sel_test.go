@@ -31,7 +31,6 @@ func TestWaitReady(t *testing.T) {
 	if err != nil {
 		t.Fatalf("got error: %v", err)
 	}
-
 }
 
 func TestWaitVisible(t *testing.T) {
@@ -59,7 +58,6 @@ func TestWaitVisible(t *testing.T) {
 	if err != nil {
 		t.Fatalf("got error: %v", err)
 	}
-
 }
 
 func TestWaitNotVisible(t *testing.T) {
@@ -92,7 +90,6 @@ func TestWaitNotVisible(t *testing.T) {
 	if err != nil {
 		t.Fatalf("got error: %v", err)
 	}
-
 }
 
 func TestWaitEnabled(t *testing.T) {
@@ -141,7 +138,6 @@ func TestWaitEnabled(t *testing.T) {
 	if value != "foo" {
 		t.Fatalf("expected value to be foo, got: %s", value)
 	}
-
 }
 
 func TestWaitSelected(t *testing.T) {

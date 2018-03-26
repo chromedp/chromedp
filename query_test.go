@@ -805,7 +805,7 @@ func TestSubmit(t *testing.T) {
 				t.Fatalf("got error: %v", err)
 			}
 			if title != "this is title" {
-				t.Errorf("expected title to be 'chromedp - Google Search', got: '%s'", title)
+				t.Errorf("expected title to be 'this is title', got: '%s'", title)
 			}
 		})
 	}

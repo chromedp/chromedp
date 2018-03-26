@@ -6,10 +6,6 @@ go:
 addons:
   apt:
     chrome: stable
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - libstdc++6
 before_install:
   - go get github.com/mattn/goveralls
 script:
