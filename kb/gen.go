@@ -26,26 +26,26 @@ var (
 
 const (
 	// chromiumSrc is the base chromium source repo location
-	chromiumSrc = "https://chromium.googlesource.com/chromium/src"
+	chromiumSrc = "https://chromium.googlesource.com/chromium/src/+/master/"
 
 	// domUsLayoutDataH contains the {printable,non-printable} DomCode -> DomKey
 	// also contains DomKey -> VKEY (not used)
-	domUsLayoutDataH = chromiumSrc + "/+/master/ui/events/keycodes/dom_us_layout_data.h?format=TEXT"
+	domUsLayoutDataH = chromiumSrc + "ui/events/keycodes/dom_us_layout_data.h?format=TEXT"
 
 	// keycodeConverterDataInc contains DomKey -> Key Name
-	keycodeConverterDataInc = chromiumSrc + "/+/master/ui/events/keycodes/dom/keycode_converter_data.inc?format=TEXT"
+	keycodeConverterDataInc = chromiumSrc + "ui/events/keycodes/dom/keycode_converter_data.inc?format=TEXT"
 
 	// domKeyDataInc contains DomKey -> Key Name + unicode (non-printable)
-	domKeyDataInc = chromiumSrc + "/+/master/ui/events/keycodes/dom/dom_key_data.inc?format=TEXT"
+	domKeyDataInc = chromiumSrc + "ui/events/keycodes/dom/dom_key_data.inc?format=TEXT"
 
 	// keyboardCodesPosixH contains the scan code definitions for posix (ie native) keys.
-	keyboardCodesPosixH = chromiumSrc + "/+/master/ui/events/keycodes/keyboard_codes_posix.h?format=TEXT"
+	keyboardCodesPosixH = chromiumSrc + "ui/events/keycodes/keyboard_codes_posix.h?format=TEXT"
 
 	// keyboardCodesWinH contains the scan code definitions for windows keys.
-	keyboardCodesWinH = chromiumSrc + "/+/master/ui/events/keycodes/keyboard_codes_win.h?format=TEXT"
+	keyboardCodesWinH = chromiumSrc + "ui/events/keycodes/keyboard_codes_win.h?format=TEXT"
 
 	// windowsKeyboardCodesH contains the actual #defs for windows.
-	windowsKeyboardCodesH = chromiumSrc + "/third_party/+/master/WebKit/Source/platform/WindowsKeyboardCodes.h?format=TEXT"
+	windowsKeyboardCodesH = chromiumSrc + "third_party/blink/renderer/platform/windows_keyboard_codes.h?format=TEXT"
 )
 
 const (
@@ -64,9 +64,15 @@ var Keys = map[rune]*Key{
 )
 
 func main() {
-	var err error
-
 	flag.Parse()
+
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func run() error {
+	var err error
 
 	// special characters
 	keys := map[rune]kb.Key{
@@ -78,13 +84,13 @@ func main() {
 	// load keys
 	err = loadKeys(keys)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	// process keys
 	constBuf, mapBuf, err := processKeys(keys)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	// output
@@ -94,20 +100,22 @@ func main() {
 		0644,
 	)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	// format
 	err = exec.Command("goimports", "-w", *flagOut).Run()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	// format
 	err = exec.Command("gofmt", "-s", "-w", *flagOut).Run()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+
+	return nil
 }
 
 // loadKeys loads the dom key definitions from the chromium source tree.
