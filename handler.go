@@ -18,6 +18,7 @@ import (
 	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/cdproto/inspector"
 	"github.com/chromedp/cdproto/log"
+	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
 
@@ -30,6 +31,12 @@ type TargetHandler struct {
 
 	// frames is the set of encountered frames.
 	frames map[cdp.FrameID]*cdp.Frame
+
+	// lsnr is the map of listeners, which maps from cdp.MethodType to channels.
+	lsnr map[cdproto.MethodType][]chan interface{}
+
+	// lsnrchs is the map of channels, which maps from channel to registered cdp.MethodType(s).
+	lsnrchs map[<-chan interface{}]map[cdproto.MethodType]bool
 
 	// cur is the current top level frame.
 	cur *cdp.Frame
@@ -45,6 +52,9 @@ type TargetHandler struct {
 
 	// detached is closed when the detached event is received.
 	detached chan *inspector.EventDetached
+
+	// loaded is fired when the page load event is received.
+	loaded chan struct{}
 
 	pageWaitGroup, domWaitGroup *sync.WaitGroup
 
@@ -87,8 +97,18 @@ func (h *TargetHandler) Run(ctxt context.Context) error {
 	h.frames = make(map[cdp.FrameID]*cdp.Frame)
 	h.qcmd = make(chan *cdproto.Message)
 	h.qres = make(chan *cdproto.Message)
-	h.qevents = make(chan *cdproto.Message)
+	// The events channel needs to be big enough to buffer as many events as
+	// we might recieve at once while processing one event. This is
+	// necessary because the event handling may do requests which require
+	// reading from the qmsg channel. This can't happen if the network
+	// handler is blocked writing to qevents. See discussion in #75. In
+	// practice I haven't seen the buffer get bigger than one or two. But we
+	// make it large just to be safe, and panic if it is ever full, rather
+	// than deadlocking.
+	h.qevents = make(chan *cdproto.Message, 1024)
 	h.res = make(map[int64]chan *cdproto.Message)
+	h.lsnr = make(map[cdproto.MethodType][]chan interface{})
+	h.lsnrchs = make(map[<-chan interface{}]map[cdproto.MethodType]bool)
 	h.detached = make(chan *inspector.EventDetached)
 	h.pageWaitGroup = new(sync.WaitGroup)
 	h.domWaitGroup = new(sync.WaitGroup)
@@ -101,7 +121,7 @@ func (h *TargetHandler) Run(ctxt context.Context) error {
 	for _, a := range []Action{
 		log.Enable(),
 		runtime.Enable(),
-		//network.Enable(),
+		network.Enable(),
 		inspector.Enable(),
 		page.Enable(),
 		dom.Enable(),
@@ -155,7 +175,12 @@ func (h *TargetHandler) run(ctxt context.Context) {
 
 				switch {
 				case msg.Method != "":
-					h.qevents <- msg
+					select {
+					case h.qevents <- msg:
+					default:
+						// See discussion in #75.
+						panic("h.qevents is blocked!")
+					}
 
 				case msg.ID != 0:
 					h.qres <- msg
@@ -174,31 +199,58 @@ func (h *TargetHandler) run(ctxt context.Context) {
 		}
 	}()
 
+	var wg sync.WaitGroup
+	defer wg.Wait()
+
 	// process queues
-	for {
-		select {
-		case ev := <-h.qevents:
-			err := h.processEvent(ctxt, ev)
-			if err != nil {
-				h.errorf("could not process event %s: %v", ev.Method, err)
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case ev := <-h.qevents:
+				err := h.processEvent(ctxt, ev)
+				if err != nil {
+					h.errorf("could not process event %s: %v", ev.Method, err)
+				}
+			case <-ctxt.Done():
+				return
 			}
-
-		case res := <-h.qres:
-			err := h.processResult(res)
-			if err != nil {
-				h.errorf("could not process result for message %d: %v", res.ID, err)
-			}
-
-		case cmd := <-h.qcmd:
-			err := h.processCommand(cmd)
-			if err != nil {
-				h.errorf("could not process command message %d: %v", cmd.ID, err)
-			}
-
-		case <-ctxt.Done():
-			return
 		}
-	}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case res := <-h.qres:
+				err := h.processResult(res)
+				if err != nil {
+					h.errorf("could not process result for message %d: %v", res.ID, err)
+				}
+			case <-ctxt.Done():
+				return
+			}
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case cmd := <-h.qcmd:
+				err := h.processCommand(cmd)
+				if err != nil {
+					h.errorf("could not process command message %d: %v", cmd.ID, err)
+				}
+
+			case <-ctxt.Done():
+				return
+			}
+		}
+	}()
 }
 
 // read reads a message from the client connection.
@@ -221,6 +273,39 @@ func (h *TargetHandler) read() (*cdproto.Message, error) {
 	return msg, nil
 }
 
+// WaitEventLoad returns a channel which is closed when the page load event is
+// fired, or the next TargetHandler.Run takes place.
+func (h *TargetHandler) WaitEventLoad() <-chan struct{} {
+	h.Lock()
+	defer h.Unlock()
+	return h.loaded
+}
+
+// ResetEventLoad resets the event load trigger returned by WaitEventLoad.
+// It is called when a navigation is requested, so that the next load can take
+// place.
+func (h *TargetHandler) ResetEventLoad() {
+	h.Lock()
+	defer h.Unlock()
+
+	if h.loaded != nil {
+		select {
+		case <-h.loaded: // already closed
+		default:
+			// Before replacing h.loaded with a new pipeline,
+			// unblock previous waiters if they are still blocked.
+			// This prevents them staying deadlocked for a load
+			// event which will never come, however it means that
+			// they get a phantom load event.
+			close(h.loaded)
+			h.loaded = nil
+		}
+	}
+
+	// Make a new channel for signalling the next page load event.
+	h.loaded = make(chan struct{})
+}
+
 // processEvent processes an incoming event.
 func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdproto.Message) error {
 	if msg == nil {
@@ -233,35 +318,45 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdproto.Message)
 		return err
 	}
 
+	propagate(h, msg.Method, ev)
+
 	switch e := ev.(type) {
 	case *inspector.EventDetached:
 		h.Lock()
-		defer h.Unlock()
 		h.detached <- e
+		h.Unlock()
 		return nil
 
 	case *dom.EventDocumentUpdated:
 		h.domWaitGroup.Wait()
-		go h.documentUpdated(ctxt)
+		h.documentUpdated(ctxt)
 		return nil
 	}
 
 	d := msg.Method.Domain()
-	if d != "Page" && d != "DOM" {
-		return nil
-	}
 
 	switch d {
 	case "Page":
 		h.pageWaitGroup.Add(1)
-		go h.pageEvent(ctxt, ev)
+		h.pageEvent(ctxt, ev)
 
 	case "DOM":
 		h.domWaitGroup.Add(1)
-		go h.domEvent(ctxt, ev)
+		h.domEvent(ctxt, ev)
 	}
 
 	return nil
+}
+
+// propagate propagates event to the listeners
+func propagate(h *TargetHandler, method cdproto.MethodType, ev interface{}) {
+	h.RLock()
+	defer h.RUnlock()
+	if lsnrs, ok := h.lsnr[method]; ok {
+		for _, l := range lsnrs {
+			l <- ev
+		}
+	}
 }
 
 // documentUpdated handles the document updated event, retrieving the document
@@ -519,33 +614,45 @@ func (h *TargetHandler) pageEvent(ctxt context.Context, ev interface{}) {
 		return
 
 	case *page.EventFrameAttached:
-		id, op = e.FrameID, frameAttached(e.ParentFrameID)
+		// NOTE(pwaller):
+		//   This happens before we have the frame object for
+		//   e.FrameID - that only occurs in EventFrameNavigated.
+		//   so there isn't a frame to update yet.
+		//   I'm not sure of the use of this state - see #75.
+
+		//   Another issue is that events like EventFrameStoppedLoading
+		//   can happen even though EventFrameNavigated *never fires*,
+		//   so these events can end up calling WaitFrame on a frame
+		//   that never comes into existence.
+
+		// id, op = e.FrameID, frameAttached(e.ParentFrameID)
+		return
 
 	case *page.EventFrameDetached:
-		id, op = e.FrameID, frameDetached
-
+		return // See note above.
 	case *page.EventFrameStartedLoading:
-		id, op = e.FrameID, frameStartedLoading
-
+		return // See note above.
 	case *page.EventFrameStoppedLoading:
-		id, op = e.FrameID, frameStoppedLoading
-
+		return // See note above.
 	case *page.EventFrameScheduledNavigation:
-		id, op = e.FrameID, frameScheduledNavigation
-
+		return // See note above.
 	case *page.EventFrameClearedScheduledNavigation:
-		id, op = e.FrameID, frameClearedScheduledNavigation
+		return // See note above.
 
 		// ignored events
 	case *page.EventDomContentEventFired:
 		return
 	case *page.EventLoadEventFired:
+		if h.loaded != nil {
+			// If anyone is listening for loaded, notify them now.
+			close(h.loaded)
+			h.loaded = nil
+		}
 		return
 	case *page.EventFrameResized:
 		return
 	case *page.EventLifecycleEvent:
 		return
-
 	default:
 		h.errorf("unhandled page event %s", reflect.TypeOf(ev))
 		return
@@ -654,4 +761,48 @@ func (h *TargetHandler) domEvent(ctxt context.Context, ev interface{}) {
 	defer f.Unlock()
 
 	op(n)
+}
+
+// Listen creates a listener for the specified event types.
+func (h *TargetHandler) Listen(eventTypes ...cdproto.MethodType) <-chan interface{} {
+	h.Lock()
+	defer h.Unlock()
+
+	ch := make(chan interface{}, 16)
+	for _, evtTyp := range eventTypes {
+		if chlist, ok := h.lsnr[evtTyp]; ok {
+			chlist = append(chlist, ch)
+			if _, etok := h.lsnrchs[ch][evtTyp]; !etok {
+				h.lsnrchs[ch][evtTyp] = true
+			}
+		} else {
+			h.lsnr[evtTyp] = []chan interface{}{ch}
+			h.lsnrchs[ch] = map[cdproto.MethodType]bool{evtTyp: true}
+		}
+	}
+	return ch
+}
+
+// Release releases a channel returned from Listen.
+func (h *TargetHandler) Release(ch <-chan interface{}) {
+	h.Lock()
+	defer h.Unlock()
+
+	lsnrchs := h.lsnrchs[ch]
+	for evtTyp := range lsnrchs {
+		chs := h.lsnr[evtTyp]
+		for i := 0; i < len(chs); i++ {
+			if ch == chs[i] {
+				chs[i] = nil
+				if i == len(chs)-1 {
+					chs = chs[:len(chs)-1]
+				} else {
+					chs = append(chs[:i], chs[i+1:]...)
+				}
+				h.lsnr[evtTyp] = chs
+				break
+			}
+		}
+	}
+	delete(h.lsnrchs, ch)
 }

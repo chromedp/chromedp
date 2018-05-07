@@ -2,6 +2,7 @@ package chromedp
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/chromedp/cdproto/cdp"
@@ -55,4 +56,20 @@ func Sleep(d time.Duration) Action {
 		}
 		return nil
 	})
+}
+
+func WaitEventLoad() Action {
+	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
+		th, ok := h.(*TargetHandler)
+		if !ok {
+			log.Fatal("invalid executor type")
+		}
+		select {
+		case <-th.WaitEventLoad():
+		case <-ctxt.Done():
+			return ctxt.Err()
+		}
+		return nil
+	})
+
 }
