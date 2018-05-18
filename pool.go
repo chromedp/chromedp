@@ -21,7 +21,7 @@ type Pool struct {
 	res map[int]*Res
 
 	// logging funcs
-	logf, debugf, errorf LogFunc
+	logf, debugf, errf func(string, ...interface{})
 
 	rw sync.RWMutex
 }
@@ -34,13 +34,18 @@ func NewPool(opts ...PoolOption) (*Pool, error) {
 		res:    make(map[int]*Res),
 		logf:   log.Printf,
 		debugf: func(string, ...interface{}) {},
-		errorf: func(s string, v ...interface{}) { log.Printf("error: "+s, v...) },
 	}
 
 	// apply opts
 	for _, o := range opts {
 		if err := o(p); err != nil {
 			return nil, err
+		}
+	}
+
+	if p.errf == nil {
+		p.errf = func(s string, v ...interface{}) {
+			p.logf("ERROR: "+s, v...)
 		}
 	}
 
@@ -73,7 +78,7 @@ func (p *Pool) Allocate(ctxt context.Context, opts ...runner.CommandLineOption) 
 	}, opts...)...)
 	if err != nil {
 		defer r.Release()
-		p.errorf("pool could not allocate runner on port %d: %v", r.port, err)
+		p.errf("pool could not allocate runner on port %d: %v", r.port, err)
 		return nil, err
 	}
 
@@ -81,18 +86,18 @@ func (p *Pool) Allocate(ctxt context.Context, opts ...runner.CommandLineOption) 
 	err = r.r.Start(r.ctxt)
 	if err != nil {
 		defer r.Release()
-		p.errorf("pool could not start runner on port %d: %v", r.port, err)
+		p.errf("pool could not start runner on port %d: %v", r.port, err)
 		return nil, err
 	}
 
 	// setup cdp
 	r.c, err = New(
 		r.ctxt, WithRunner(r.r),
-		WithLogf(p.logf), WithDebugf(p.debugf), WithErrorf(p.errorf),
+		WithLogf(p.logf), WithDebugf(p.debugf), WithErrorf(p.errf),
 	)
 	if err != nil {
 		defer r.Release()
-		p.errorf("pool could not connect to %d: %v", r.port, err)
+		p.errf("pool could not connect to %d: %v", r.port, err)
 		return nil, err
 	}
 
@@ -189,11 +194,9 @@ func PortRange(start, end int) PoolOption {
 }
 
 // PoolLog is a pool option to set the logging to use for the pool.
-func PoolLog(logf, debugf, errorf LogFunc) PoolOption {
+func PoolLog(logf, debugf, errf func(string, ...interface{})) PoolOption {
 	return func(p *Pool) error {
-		p.logf = logf
-		p.debugf = debugf
-		p.errorf = errorf
+		p.logf, p.debugf, p.errf = logf, debugf, errf
 		return nil
 	}
 }

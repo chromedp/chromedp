@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/chromedp/cdproto/cdp"
+
 	"github.com/chromedp/chromedp/client"
 	"github.com/chromedp/chromedp/runner"
 )
@@ -56,7 +57,7 @@ type CDP struct {
 	handlerMap map[string]int
 
 	// logging funcs
-	logf, debugf, errorf LogFunc
+	logf, debugf, errf func(string, ...interface{})
 
 	sync.RWMutex
 }
@@ -68,7 +69,7 @@ func New(ctxt context.Context, opts ...Option) (*CDP, error) {
 		handlerMap: make(map[string]int),
 		logf:       log.Printf,
 		debugf:     func(string, ...interface{}) {},
-		errorf:     func(s string, v ...interface{}) { log.Printf("error: "+s, v...) },
+		errf:       func(s string, v ...interface{}) { log.Printf("error: "+s, v...) },
 	}
 
 	// apply options
@@ -133,15 +134,15 @@ func (c *CDP) AddTarget(ctxt context.Context, t client.Target) {
 	defer c.Unlock()
 
 	// create target manager
-	h, err := NewTargetHandler(t, c.logf, c.debugf, c.errorf)
+	h, err := NewTargetHandler(t, c.logf, c.debugf, c.errf)
 	if err != nil {
-		c.errorf("could not create handler for %s: %v", t, err)
+		c.errf("could not create handler for %s: %v", t, err)
 		return
 	}
 
 	// run
 	if err := h.Run(ctxt); err != nil {
-		c.errorf("could not start handler for %s: %v", t, err)
+		c.errf("could not start handler for %s: %v", t, err)
 		return
 	}
 
@@ -368,11 +369,8 @@ func WithRunnerOptions(opts ...runner.CommandLineOption) Option {
 	}
 }
 
-// LogFunc is the common logging func type.
-type LogFunc func(string, ...interface{})
-
 // WithLogf is a CDP option to specify a func to receive general logging.
-func WithLogf(f LogFunc) Option {
+func WithLogf(f func(string, ...interface{})) Option {
 	return func(c *CDP) error {
 		c.logf = f
 		return nil
@@ -381,7 +379,7 @@ func WithLogf(f LogFunc) Option {
 
 // WithDebugf is a CDP option to specify a func to receive debug logging (ie,
 // protocol information).
-func WithDebugf(f LogFunc) Option {
+func WithDebugf(f func(string, ...interface{})) Option {
 	return func(c *CDP) error {
 		c.debugf = f
 		return nil
@@ -389,20 +387,18 @@ func WithDebugf(f LogFunc) Option {
 }
 
 // WithErrorf is a CDP option to specify a func to receive error logging.
-func WithErrorf(f LogFunc) Option {
+func WithErrorf(f func(string, ...interface{})) Option {
 	return func(c *CDP) error {
-		c.errorf = f
+		c.errf = f
 		return nil
 	}
 }
 
 // WithLog is a CDP option that sets the logging, debugging, and error funcs to
 // f.
-func WithLog(f LogFunc) Option {
+func WithLog(f func(string, ...interface{})) Option {
 	return func(c *CDP) error {
-		c.logf = f
-		c.debugf = f
-		c.errorf = f
+		c.logf, c.debugf, c.errf = f, f, f
 		return nil
 	}
 }
@@ -410,7 +406,7 @@ func WithLog(f LogFunc) Option {
 // WithConsolef is a CDP option to specify a func to receive chrome log events.
 //
 // Note: NOT YET IMPLEMENTED.
-func WithConsolef(f LogFunc) Option {
+func WithConsolef(f func(string, ...interface{})) Option {
 	return func(c *CDP) error {
 		return nil
 	}

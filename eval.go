@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 
 	"github.com/chromedp/cdproto/cdp"
-	rundom "github.com/chromedp/cdproto/runtime"
+	"github.com/chromedp/cdproto/runtime"
 )
 
 // Evaluate is an action to evaluate the Javascript expression, unmarshaling
@@ -29,9 +29,9 @@ func Evaluate(expression string, res interface{}, opts ...EvaluateOption) Action
 
 	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
 		// set up parameters
-		p := rundom.Evaluate(expression)
+		p := runtime.Evaluate(expression)
 		switch res.(type) {
-		case **rundom.RemoteObject:
+		case **runtime.RemoteObject:
 		default:
 			p = p.WithReturnByValue(true)
 		}
@@ -51,7 +51,7 @@ func Evaluate(expression string, res interface{}, opts ...EvaluateOption) Action
 		}
 
 		switch x := res.(type) {
-		case **rundom.RemoteObject:
+		case **runtime.RemoteObject:
 			*x = v
 			return nil
 
@@ -75,11 +75,11 @@ func EvaluateAsDevTools(expression string, res interface{}, opts ...EvaluateOpti
 }
 
 // EvaluateOption is the type for script evaluation options.
-type EvaluateOption func(*rundom.EvaluateParams) *rundom.EvaluateParams
+type EvaluateOption func(*runtime.EvaluateParams) *runtime.EvaluateParams
 
 // EvalObjectGroup is a evaluate option to set the object group.
 func EvalObjectGroup(objectGroup string) EvaluateOption {
-	return func(p *rundom.EvaluateParams) *rundom.EvaluateParams {
+	return func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
 		return p.WithObjectGroup(objectGroup)
 	}
 }
@@ -88,18 +88,18 @@ func EvalObjectGroup(objectGroup string) EvaluateOption {
 // Line API available to the evaluated script.
 //
 // Note: this should not be used with untrusted Javascript.
-func EvalWithCommandLineAPI(p *rundom.EvaluateParams) *rundom.EvaluateParams {
+func EvalWithCommandLineAPI(p *runtime.EvaluateParams) *runtime.EvaluateParams {
 	return p.WithIncludeCommandLineAPI(true)
 }
 
 // EvalIgnoreExceptions is a evaluate option that will cause script evaluation
 // to ignore exceptions.
-func EvalIgnoreExceptions(p *rundom.EvaluateParams) *rundom.EvaluateParams {
+func EvalIgnoreExceptions(p *runtime.EvaluateParams) *runtime.EvaluateParams {
 	return p.WithSilent(true)
 }
 
 // EvalAsValue is a evaluate option that will cause the evaluated script to
 // encode the result of the expression as a JSON-encoded value.
-func EvalAsValue(p *rundom.EvaluateParams) *rundom.EvaluateParams {
+func EvalAsValue(p *runtime.EvaluateParams) *runtime.EvaluateParams {
 	return p.WithReturnByValue(true)
 }

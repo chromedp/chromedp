@@ -51,10 +51,9 @@ func testAllocate(t *testing.T, path string) *Res {
 		t.Fatalf("handler is invalid type")
 	}
 
-	th.logf = t.Logf
-	th.debugf = t.Logf
-	th.errorf = func(s string, v ...interface{}) {
-		t.Logf("target handler error: "+s, v...)
+	th.logf, th.debugf = t.Logf, t.Logf
+	th.errf = func(s string, v ...interface{}) {
+		t.Logf("TARGET HANDLER ERROR: "+s, v...)
 	}
 
 	if path != "" {
