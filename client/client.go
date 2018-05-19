@@ -7,8 +7,8 @@ package client
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"regexp"
 	"strings"
@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	// DefaultURL is the default Chrome URL to connect to.
-	DefaultURL = "http://localhost:9222/json"
+	// DefaultEndpoint is the default endpoint to connect to.
+	DefaultEndpoint = "http://localhost:9222/json"
 
 	// DefaultWatchInterval is the default check duration.
 	DefaultWatchInterval = 100 * time.Millisecond
@@ -29,12 +29,20 @@ const (
 	DefaultWatchTimeout = 5 * time.Second
 )
 
-var (
+// Error is a client error.
+type Error string
+
+// Error satisfies the error interface.
+func (err Error) Error() string {
+	return string(err)
+}
+
+const (
 	// ErrUnsupportedProtocolType is the unsupported protocol type error.
-	ErrUnsupportedProtocolType = errors.New("unsupported protocol type")
+	ErrUnsupportedProtocolType Error = "unsupported protocol type"
 
 	// ErrUnsupportedProtocolVersion is the unsupported protocol version error.
-	ErrUnsupportedProtocolVersion = errors.New("unsupported protocol version")
+	ErrUnsupportedProtocolVersion Error = "unsupported protocol version"
 )
 
 // Target is the common interface for a Chrome Debugging Protocol target.
@@ -58,7 +66,7 @@ type Client struct {
 // New creates a new Chrome Debugging Protocol client.
 func New(opts ...Option) *Client {
 	c := &Client{
-		url:     DefaultURL,
+		url:     DefaultEndpoint,
 		check:   DefaultWatchInterval,
 		timeout: DefaultWatchTimeout,
 	}
@@ -307,9 +315,23 @@ func (c *Client) WatchPageTargets(ctxt context.Context) <-chan Target {
 type Option func(*Client)
 
 // URL is a client option to specify the remote Chrome instance to connect to.
-func URL(url string) Option {
+func URL(urlstr string) Option {
 	return func(c *Client) {
-		c.url = url
+		// since chrome 66+, dev tools requires the host name to be either an
+		// IP address, or "localhost"
+		if strings.HasPrefix(strings.ToLower(urlstr), "http://") {
+			host, port, path := urlstr[7:], "", ""
+			if i := strings.Index(host, "/"); i != -1 {
+				host, path = host[:i], host[i:]
+			}
+			if i := strings.Index(host, ":"); i != -1 {
+				host, port = host[:i], host[i:]
+			}
+			if addr, err := net.ResolveIPAddr("ip", host); err == nil {
+				urlstr = "http://" + addr.IP.String() + port + path
+			}
+		}
+		c.url = urlstr
 	}
 }
 
