@@ -360,6 +360,20 @@ func WithTargets(watch <-chan client.Target) Option {
 	}
 }
 
+// WithClient is a CDP option to use the incoming targets from a client.
+func WithClient(ctxt context.Context, cl *client.Client) Option {
+	return func(c *CDP) error {
+		return WithTargets(cl.WatchPageTargets(ctxt))(c)
+	}
+}
+
+// WithURL is a CDP option to use a client with the specified URL.
+func WithURL(ctxt context.Context, urlstr string) Option {
+	return func(c *CDP) error {
+		return WithClient(ctxt, client.New(client.URL(urlstr)))(c)
+	}
+}
+
 // WithRunnerOptions is a CDP option to specify the options to pass to a newly
 // created Chrome process runner.
 func WithRunnerOptions(opts ...runner.CommandLineOption) Option {
