@@ -7,10 +7,10 @@ import (
 	"syscall"
 )
 
-const (
+var (
 	// DefaultUserDataTmpDir is the default directory path for created user
 	// data directories.
-	DefaultUserDataTmpDir = "/tmp"
+	defaultUserDataTmpDir = "/tmp"
 )
 
 // KillProcessGroup is a Chrome command line option that will instruct the

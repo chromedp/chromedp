@@ -2,8 +2,10 @@
 
 package runner
 
-const (
-	DefaultUserDataTmpDir = `c:\temp`
+import "os"
+
+var (
+	defaultUserDataTmpDir = os.Getenv("USERPROFILE") + `\AppData\Local`
 )
 
 // KillProcessGroup is a Chrome command line option that will instruct the

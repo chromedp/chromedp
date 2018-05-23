@@ -140,7 +140,7 @@ func (r *Runner) Start(ctxt context.Context) error {
 	_, ok = r.opts["user-data-dir"]
 	if !ok {
 		r.opts["user-data-dir"], err = ioutil.TempDir(
-			DefaultUserDataTmpDir, fmt.Sprintf(DefaultUserDataDirPrefix, r.Port()),
+			defaultUserDataTmpDir, fmt.Sprintf(DefaultUserDataDirPrefix, r.Port()),
 		)
 		if err != nil {
 			return err
