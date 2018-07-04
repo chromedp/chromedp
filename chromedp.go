@@ -238,9 +238,11 @@ func (c *CDP) SetHandlerByID(id string) error {
 
 	if i, ok := c.handlerMap[id]; ok {
 		c.cur = c.handlers[i]
+	}else{
+		return fmt.Errorf("no handler associated with target id %s", id)
 	}
 
-	return fmt.Errorf("no handler associated with target id %s", id)
+	return nil
 }
 
 // newTarget creates a new target using supplied context and options, returning
@@ -282,6 +284,44 @@ func (c *CDP) newTarget(ctxt context.Context, opts ...client.Option) (string, er
 	}
 }
 
+func (c *CDP) closeTargetByID(ctxt context.Context,id string) error{
+	c.RLock()
+	cl := c.r.Client()
+	c.RUnlock()
+
+	err := cl.CloseTarget(ctxt,TargetIDWapper(id))
+	if err != nil {
+		return err
+	}
+
+	c.Lock()
+	defer c.Unlock()
+	_, ok := c.handlerMap[id]
+	if ok {
+		return nil
+	}
+	delete(c.handlerMap,id)
+
+	return nil
+}
+
+func (c *CDP) closeTargetByIndex(ctxt context.Context,index int) error{
+	c.RLock()
+	id := ""
+	for k,v := range c.handlerMap{
+		if v == index{
+			id = k
+		}
+	}
+	c.RUnlock()
+
+	if len(id) == 0{
+		return errors.New(fmt.Sprintf("not find the index : %d",index))
+	}
+
+	return c.closeTargetByID(ctxt,id)
+}
+
 // SetTarget is an action that sets the active Chrome handler to the specified
 // index i.
 func (c *CDP) SetTarget(i int) Action {
@@ -318,14 +358,14 @@ func (c *CDP) NewTarget(id *string, opts ...client.Option) Action {
 // CloseByIndex closes the Chrome target with specified index i.
 func (c *CDP) CloseByIndex(i int) Action {
 	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
-		return nil
+		return c.closeTargetByIndex(ctxt,i)
 	})
 }
 
 // CloseByID closes the Chrome target with the specified id.
 func (c *CDP) CloseByID(id string) Action {
 	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
-		return nil
+		return c.closeTargetByID(ctxt,id)
 	})
 }
 
@@ -431,3 +471,23 @@ var (
 	// testing.
 	defaultNewTargetTimeout = DefaultNewTargetTimeout
 )
+
+type TargetIDWapper string
+
+func (t TargetIDWapper) String() string {
+	return string(t)
+}
+
+func (t TargetIDWapper) GetID() string {
+	return string(t)
+}
+
+func (t TargetIDWapper) GetType() client.TargetType {
+	panic("TargetIDWapper no implement GetType")
+}
+
+func (t TargetIDWapper) GetWebsocketURL() string {
+	panic("TargetIDWapper no implement GetWebsocketURL")
+}
+
+
