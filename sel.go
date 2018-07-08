@@ -80,7 +80,7 @@ func (s *Selector) Do(ctxt context.Context, h cdp.Executor) error {
 // are invalidated prior to finishing the selector's by, wait, check, and after
 // funcs.
 func (s *Selector) run(ctxt context.Context, h *TargetHandler) chan error {
-	ch := make(chan error)
+	ch := make(chan error, 1)
 
 	go func() {
 		defer close(ch)
