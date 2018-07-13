@@ -50,6 +50,7 @@ type Target interface {
 	String() string
 	GetID() string
 	GetType() TargetType
+	GetDevtoolsURL() string
 	GetWebsocketURL() string
 }
 

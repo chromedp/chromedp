@@ -4,7 +4,7 @@ import "fmt"
 
 //go:generate easyjson -omit_empty -output_filename easyjson.go chrome.go
 
-// Chrome holds connection information for a Chrome, Edge, or Safari target.
+// Chrome holds connection information for a Chrome target.
 //
 //easyjson:json
 type Chrome struct {
@@ -20,7 +20,7 @@ type Chrome struct {
 
 // String satisfies the stringer interface.
 func (c Chrome) String() string {
-	return fmt.Sprintf("%s (`%s`)", c.ID, c.Title)
+	return fmt.Sprintf("[%s]: %q", c.ID, c.Title)
 }
 
 // GetID returns the target ID.
@@ -31,6 +31,12 @@ func (c *Chrome) GetID() string {
 // GetType returns the target type.
 func (c *Chrome) GetType() TargetType {
 	return c.Type
+}
+
+// GetDevtoolsURL returns the devtools frontend target URL, satisfying the
+// domains.Target interface.
+func (c *Chrome) GetDevtoolsURL() string {
+	return c.DevtoolsURL
 }
 
 // GetWebsocketURL provides the websocket URL for the target, satisfying the
