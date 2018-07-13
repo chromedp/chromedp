@@ -3,7 +3,6 @@ package runner
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/url"
@@ -15,6 +14,32 @@ import (
 	"syscall"
 
 	"github.com/chromedp/chromedp/client"
+)
+
+// Error is a runner error.
+type Error string
+
+// Error satisfies the error interface.
+func (err Error) Error() string {
+	return string(err)
+}
+
+// Error values.
+const (
+	// ErrAlreadyStarted is the already started error.
+	ErrAlreadyStarted Error = "already started"
+
+	// ErrAlreadyWaiting is the already waiting error.
+	ErrAlreadyWaiting Error = "already waiting"
+
+	// ErrInvalidCmdOpts is the invalid cmd-opts error.
+	ErrInvalidCmdOpts Error = "invalid cmd-opts"
+
+	// ErrInvalidProcessOpts is the invalid process-opts error.
+	ErrInvalidProcessOpts Error = "invalid process-opts"
+
+	// ErrExecPathNotSet is the exec-path not set set error.
+	ErrExecPathNotSet Error = "exec-path command line option not set, or chrome executable not found in PATH"
 )
 
 const (
@@ -128,7 +153,7 @@ func (r *Runner) Start(ctxt context.Context) error {
 	r.rw.RUnlock()
 
 	if cmd != nil {
-		return errors.New("already started")
+		return ErrAlreadyStarted
 	}
 
 	// setup context
@@ -150,7 +175,7 @@ func (r *Runner) Start(ctxt context.Context) error {
 	// ensure exec-path set
 	execPath, ok := r.opts["exec-path"]
 	if !ok {
-		return errors.New("exec-path command line option not set, or chrome executable not found in $PATH")
+		return ErrExecPathNotSet
 	}
 
 	// create cmd
@@ -235,7 +260,7 @@ func (r *Runner) Wait() error {
 	r.rw.RUnlock()
 
 	if waiting {
-		return errors.New("already waiting")
+		return ErrAlreadyWaiting
 	}
 
 	r.rw.Lock()
@@ -427,7 +452,7 @@ func CmdOpt(o func(*exec.Cmd) error) CommandLineOption {
 		if e, ok := m["cmd-opts"]; ok {
 			opts, ok = e.([]func(*exec.Cmd) error)
 			if !ok {
-				return errors.New("cmd-opts is in invalid state")
+				return ErrInvalidCmdOpts
 			}
 		}
 
@@ -446,7 +471,7 @@ func ProcessOpt(o func(*os.Process) error) CommandLineOption {
 		if e, ok := m["process-opts"]; ok {
 			opts, ok = e.([]func(*os.Process) error)
 			if !ok {
-				return errors.New("process-opts is in invalid state")
+				return ErrInvalidProcessOpts
 			}
 		}
 
