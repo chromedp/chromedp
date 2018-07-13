@@ -121,8 +121,7 @@ func (c *Client) ListTargets(ctxt context.Context) ([]Target, error) {
 	var err error
 
 	var l []json.RawMessage
-	err = c.doReq(ctxt, "list", &l)
-	if err != nil {
+	if err = c.doReq(ctxt, "list", &l); err != nil {
 		return nil, err
 	}
 
@@ -201,8 +200,7 @@ func (c *Client) newTarget(ctxt context.Context, buf []byte) (Target, error) {
 	case "chrome", "chromium", "microsoft edge", "safari", "":
 		x := new(Chrome)
 		if buf != nil {
-			err = easyjson.Unmarshal(buf, x)
-			if err != nil {
+			if err = easyjson.Unmarshal(buf, x); err != nil {
 				return nil, err
 			}
 		}
@@ -227,8 +225,7 @@ func (c *Client) NewPageTargetWithURL(ctxt context.Context, urlstr string) (Targ
 		u += "?" + urlstr
 	}
 
-	err = c.doReq(ctxt, u, t)
-	if err != nil {
+	if err = c.doReq(ctxt, u, t); err != nil {
 		return nil, err
 	}
 
@@ -252,23 +249,15 @@ func (c *Client) CloseTarget(ctxt context.Context, t Target) error {
 
 // VersionInfo returns information about the remote debugging protocol.
 func (c *Client) VersionInfo(ctxt context.Context) (map[string]string, error) {
-	var err error
-
-	v := map[string]string{}
-	err = c.doReq(ctxt, "version", &v)
-	if err != nil {
+	v := make(map[string]string)
+	if err := c.doReq(ctxt, "version", &v); err != nil {
 		return nil, err
 	}
-
 	return v, nil
 }
 
 // WatchPageTargets watches for new page targets.
 func (c *Client) WatchPageTargets(ctxt context.Context) <-chan Target {
-	if ctxt == nil {
-		ctxt = context.Background()
-	}
-
 	ch := make(chan Target)
 	go func() {
 		defer close(ch)
