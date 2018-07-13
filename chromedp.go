@@ -90,7 +90,7 @@ func New(ctxt context.Context, opts ...Option) (*CDP, error) {
 
 	// watch handlers
 	if c.watch == nil {
-		c.watch = c.r.WatchPageTargets(ctxt)
+		c.watch = c.r.Client().WatchPageTargets(ctxt)
 	}
 
 	go func() {

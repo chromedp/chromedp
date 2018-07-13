@@ -74,7 +74,11 @@ func (p *Pool) Allocate(ctxt context.Context, opts ...runner.CommandLineOption) 
 
 	// create runner
 	r.r, err = runner.New(append([]runner.CommandLineOption{
-		runner.HeadlessPathPort("", r.port),
+		runner.ExecPath(runner.LookChromeNames("headless_shell")),
+		runner.RemoteDebuggingPort(r.port),
+		runner.NoDefaultBrowserCheck,
+		runner.NoFirstRun,
+		runner.Headless,
 	}, opts...)...)
 	if err != nil {
 		defer r.Release()
