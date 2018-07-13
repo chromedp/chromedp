@@ -1,5 +1,4 @@
-// Package client provides the low level Chrome Debugging Protocol JSON types
-// and related funcs.
+// Package client provides the low level Chrome DevTools Protocol client.
 package client
 
 //go:generate go run gen.go
@@ -45,7 +44,7 @@ const (
 	ErrUnsupportedProtocolVersion Error = "unsupported protocol version"
 )
 
-// Target is the common interface for a Chrome Debugging Protocol target.
+// Target is the common interface for a Chrome DevTools Protocol target.
 type Target interface {
 	String() string
 	GetID() string
@@ -54,7 +53,7 @@ type Target interface {
 	GetWebsocketURL() string
 }
 
-// Client is a Chrome Debugging Protocol client.
+// Client is a Chrome DevTools Protocol client.
 type Client struct {
 	url     string
 	check   time.Duration
@@ -64,7 +63,7 @@ type Client struct {
 	rw       sync.RWMutex
 }
 
-// New creates a new Chrome Debugging Protocol client.
+// New creates a new Chrome DevTools Protocol client.
 func New(opts ...Option) *Client {
 	c := &Client{
 		url:     DefaultEndpoint,
@@ -301,10 +300,11 @@ func (c *Client) WatchPageTargets(ctxt context.Context) <-chan Target {
 	return ch
 }
 
-// Option is a Chrome Debugging Protocol client option.
+// Option is a Chrome DevTools Protocol client option.
 type Option func(*Client)
 
-// URL is a client option to specify the remote Chrome instance to connect to.
+// URL is a client option to specify the remote Chrome DevTools Protocol
+// instance to connect to.
 func URL(urlstr string) Option {
 	return func(c *Client) {
 		// since chrome 66+, dev tools requires the host name to be either an

@@ -297,7 +297,7 @@ func (r *Runner) Port() int {
 	return p
 }
 
-// Client returns a Chrome Debugging Protocol client for the running Chrome
+// Client returns a Chrome DevTools Protocol client for the running Chrome
 // process.
 func (r *Runner) Client(opts ...client.Option) *client.Client {
 	return client.New(append(opts,

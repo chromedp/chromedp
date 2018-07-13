@@ -1,9 +1,9 @@
-// Package chromedp is a high level Chrome Debugging Protocol domain manager
-// that simplifies driving web browsers (Chrome, Safari, Edge, Android Web
-// Views, and others) for scraping, unit testing, or profiling web pages.
+// Package chromedp is a high level Chrome DevTools Protocol client that
+// simplifies driving browsers for scraping, unit testing, or profiling web
+// pages using the CDP.
 //
-// chromedp requires no third-party dependencies (ie, Selenium), implementing
-// the async Chrome Debugging Protocol natively.
+// chromedp requires no third-party dependencies, implementing the async Chrome
+// DevTools Protocol entirely in Go.
 package chromedp
 
 import (
@@ -35,8 +35,9 @@ const (
 	DefaultPoolEndPort = 10000
 )
 
-// CDP contains information for managing a Chrome process runner, low level
-// JSON and websocket client, and associated network, page, and DOM handling.
+// CDP is the high-level Chrome DevTools Protocol browser manager, handling the
+// browser process runner, WebSocket clients, associated targets, and network,
+// page, and DOM events.
 type CDP struct {
 	// r is the chrome runner.
 	r *runner.Runner
@@ -339,7 +340,7 @@ func (c *CDP) Run(ctxt context.Context, a Action) error {
 	return a.Do(ctxt, cur)
 }
 
-// Option is a Chrome Debugging Protocol option.
+// Option is a Chrome DevTools Protocol option.
 type Option func(*CDP) error
 
 // WithRunner is a CDP option to specify the underlying Chrome runner to
