@@ -26,17 +26,26 @@ const (
 
 var (
 	flagOut = flag.String("out", "targettype.go", "out file")
-
-	typeAsStringRE = regexp.MustCompile(`type_as_string\s+==\s+"([^"]+)"`)
 )
 
 func main() {
 	flag.Parse()
 
+	if err := run(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+var typeAsStringRE = regexp.MustCompile(`type_as_string\s+==\s+"([^"]+)"`)
+
+// run executes the generator.
+func run() error {
+	var err error
+
 	// grab source
 	buf, err := grab(devtoolsHTTPClientCc)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	// find names
@@ -55,15 +64,11 @@ func main() {
 		decodeVals += fmt.Sprintf("case %s:\n*tt=%s\n", name, name)
 	}
 
-	err = ioutil.WriteFile(*flagOut, []byte(fmt.Sprintf(targetTypeSrc, constVals, decodeVals)), 0644)
-	if err != nil {
-		log.Fatal(err)
+	if err = ioutil.WriteFile(*flagOut, []byte(fmt.Sprintf(targetTypeSrc, constVals, decodeVals)), 0644); err != nil {
+		return err
 	}
 
-	err = exec.Command("gofmt", "-w", "-s", *flagOut).Run()
-	if err != nil {
-		log.Fatal(err)
-	}
+	return exec.Command("gofmt", "-w", "-s", *flagOut).Run()
 }
 
 // grab retrieves a file from the chromium source code.
