@@ -3,6 +3,7 @@
 package runner
 
 import "os"
+import "os/exec"
 
 var (
 	defaultUserDataTmpDir = os.Getenv("USERPROFILE") + `\AppData\Local`
@@ -35,10 +36,19 @@ func EdgeDiagnosticsAdapterWithPathAndPort(path string, port int) CommandLineOpt
 	}
 }
 
+// DefaultEdgeDiagnosticsAdapterPath is the default path to use for the
+// Microsoft Edge Diagnostics Adapter if the executable is not in %PATH%.
+const defaultEdgeDiagnosticsAdapterPath = `c:\Edge\EdgeDiagnosticsAdapter\x64\EdgeDiagnosticsAdapter.exe`
+
 // EdgeDiagnosticsAdapter is a command line option to specify using the
 // Microsoft Edge Diagnostics adapter found on the path.
 //
-// If the
+// If EdgeDiagnosticsAdapter.exe is not found in %PATH%, this returns
+// a hard-coded default path as a guess.
 func EdgeDiagnosticsAdapter() CommandLineOption {
-	return EdgeDiagnosticsAdapterWithPathAndPort(findEdgePath(), 9222)
+	path, err := exec.LookPath(`EdgeDiagnosticsAdapter.exe`)
+	if err != nil {
+		path = defaultEdgeDiagnosticsAdapterPath
+	}
+	return EdgeDiagnosticsAdapterWithPathAndPort(path, 9222)
 }
