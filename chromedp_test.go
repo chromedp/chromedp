@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chromedp/chromedp/runner"
+	"github.com/BrightLocal/chromedp/runner"
 )
 
 var (

@@ -10,18 +10,17 @@ import (
 	"sync"
 	"time"
 
-	"github.com/mailru/easyjson"
-
+	"github.com/BrightLocal/chromedp/client"
 	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/css"
 	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/cdproto/inspector"
 	"github.com/chromedp/cdproto/log"
+	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
-
-	"github.com/chromedp/chromedp/client"
+	"github.com/mailru/easyjson"
 )
 
 // TargetHandler manages a Chrome DevTools Protocol target.
@@ -42,6 +41,9 @@ type TargetHandler struct {
 
 	// qevents is the incoming event queue.
 	qevents chan *cdproto.Message
+
+	// netevents is for incoming network events
+	netevents chan interface{}
 
 	// detached is closed when the detached event is received.
 	detached chan *inspector.EventDetached
@@ -101,7 +103,7 @@ func (h *TargetHandler) Run(ctxt context.Context) error {
 	for _, a := range []Action{
 		log.Enable(),
 		runtime.Enable(),
-		//network.Enable(),
+		network.Enable(),
 		inspector.Enable(),
 		page.Enable(),
 		dom.Enable(),
@@ -247,7 +249,7 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdproto.Message)
 	}
 
 	d := msg.Method.Domain()
-	if d != "Page" && d != "DOM" {
+	if d != "Page" && d != "DOM" && d != "Network" {
 		return nil
 	}
 
@@ -259,6 +261,11 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdproto.Message)
 	case "DOM":
 		h.domWaitGroup.Add(1)
 		go h.domEvent(ctxt, ev)
+
+	case "Network":
+		if h.netevents != nil {
+			h.netevents <- ev
+		}
 	}
 
 	return nil
@@ -388,6 +395,14 @@ func (h *TargetHandler) next() int64 {
 	defer h.lastm.Unlock()
 	h.last++
 	return h.last
+}
+
+// NetEvents returns read-only channel for all network events
+func (h *TargetHandler) NetEvents() <-chan interface{} {
+	if h.netevents == nil {
+		h.netevents = make(chan interface{})
+	}
+	return (<-chan interface{})(h.netevents)
 }
 
 // GetRoot returns the current top level frame's root document node.

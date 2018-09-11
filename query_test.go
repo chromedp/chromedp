@@ -14,7 +14,7 @@ import (
 	"github.com/chromedp/cdproto/css"
 	"github.com/chromedp/cdproto/dom"
 
-	"github.com/chromedp/chromedp/kb"
+	"github.com/BrightLocal/chromedp/kb"
 )
 
 func TestNodes(t *testing.T) {
