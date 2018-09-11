@@ -14,10 +14,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/BrightLocal/chromedp/client"
+	"github.com/BrightLocal/chromedp/runner"
 	"github.com/chromedp/cdproto/cdp"
-
-	"github.com/chromedp/chromedp/client"
-	"github.com/chromedp/chromedp/runner"
 )
 
 const (

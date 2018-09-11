@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/BrightLocal/chromedp/client"
 	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/css"
@@ -19,7 +20,6 @@ import (
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
-	"github.com/chromedp/chromedp/client"
 	"github.com/mailru/easyjson"
 )
 
