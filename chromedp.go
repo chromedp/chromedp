@@ -33,6 +33,10 @@ const (
 
 	// DefaultPoolEndPort is the default end port number.
 	DefaultPoolEndPort = 10000
+
+	//DefaultQueryDuration is the default duration to timeout running Query
+	//look at:  (s *Selector) Do in sel.go
+	DefaultQueryDuration = 5 * time.Second
 )
 
 // CDP is the high-level Chrome DevTools Protocol browser manager, handling the

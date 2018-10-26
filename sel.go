@@ -23,20 +23,27 @@ tagname
 */
 
 // Selector holds information pertaining to an element query select action.
+//
+// QueryTimeout option is used to set query timeout (default: DefaultQueryDuration)
+//
+// Example:
+//	chromedp.Query(sel, chromedp.QueryTimeout(1*time.Second)).Do(ctx, ex)
 type Selector struct {
-	sel   interface{}
-	exp   int
-	by    func(context.Context, *TargetHandler, *cdp.Node) ([]cdp.NodeID, error)
-	wait  func(context.Context, *TargetHandler, *cdp.Node, ...cdp.NodeID) ([]*cdp.Node, error)
-	after func(context.Context, *TargetHandler, ...*cdp.Node) error
+	sel          interface{}
+	exp          int
+	queryTimeout time.Duration //for timeout on context in func (s *Selector) Do(ctxt context.Context, h cdp.Executor) error
+	by           func(context.Context, *TargetHandler, *cdp.Node) ([]cdp.NodeID, error)
+	wait         func(context.Context, *TargetHandler, *cdp.Node, ...cdp.NodeID) ([]*cdp.Node, error)
+	after        func(context.Context, *TargetHandler, ...*cdp.Node) error
 }
 
 // Query is an action to query for document nodes match the specified sel and
 // the supplied query options.
 func Query(sel interface{}, opts ...QueryOption) Action {
 	s := &Selector{
-		sel: sel,
-		exp: 1,
+		sel:          sel,
+		exp:          1,
+		queryTimeout: DefaultQueryDuration,
 	}
 
 	// apply options
@@ -63,7 +70,7 @@ func (s *Selector) Do(ctxt context.Context, h cdp.Executor) error {
 	}
 
 	// TODO: fix this
-	ctxt, cancel := context.WithTimeout(ctxt, 100*time.Second)
+	ctxt, cancel := context.WithTimeout(ctxt, s.queryTimeout)
 	defer cancel()
 
 	var err error
@@ -163,6 +170,13 @@ type QueryOption func(*Selector)
 func ByFunc(f func(context.Context, *TargetHandler, *cdp.Node) ([]cdp.NodeID, error)) QueryOption {
 	return func(s *Selector) {
 		s.by = f
+	}
+}
+
+//QueryTimeout set timeout on query time (s *Selector) Do()
+func QueryTimeout(dur time.Duration) QueryOption {
+	return func(s *Selector) {
+		s.queryTimeout = dur
 	}
 }
 
