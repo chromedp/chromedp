@@ -59,21 +59,26 @@ type TargetHandler struct {
 	// logging funcs
 	logf, debugf, errf func(string, ...interface{})
 
+	// timeouts
+	waitNodeTimeout, waitFrameTimeout time.Duration
+
 	sync.RWMutex
 }
 
 // NewTargetHandler creates a new handler for the specified client target.
-func NewTargetHandler(t client.Target, logf, debugf, errf func(string, ...interface{})) (*TargetHandler, error) {
+func NewTargetHandler(t client.Target, logf, debugf, errf func(string, ...interface{}), wnt, wft time.Duration) (*TargetHandler, error) {
 	conn, err := client.Dial(t.GetWebsocketURL())
 	if err != nil {
 		return nil, err
 	}
 
 	return &TargetHandler{
-		conn:   conn,
-		logf:   logf,
-		debugf: debugf,
-		errf:   errf,
+		conn:             conn,
+		logf:             logf,
+		debugf:           debugf,
+		errf:             errf,
+		waitNodeTimeout:  wnt,
+		waitFrameTimeout: wft,
 	}, nil
 }
 
@@ -440,7 +445,7 @@ func (h *TargetHandler) SetActive(ctxt context.Context, id cdp.FrameID) error {
 // WaitFrame waits for a frame to be loaded using the provided context.
 func (h *TargetHandler) WaitFrame(ctxt context.Context, id cdp.FrameID) (*cdp.Frame, error) {
 	// TODO: fix this
-	timeout := time.After(10 * time.Second)
+	timeout := time.After(h.waitFrameTimeout)
 
 	for {
 		select {
@@ -474,7 +479,7 @@ func (h *TargetHandler) WaitFrame(ctxt context.Context, id cdp.FrameID) (*cdp.Fr
 // WaitNode waits for a node to be loaded using the provided context.
 func (h *TargetHandler) WaitNode(ctxt context.Context, f *cdp.Frame, id cdp.NodeID) (*cdp.Node, error) {
 	// TODO: fix this
-	timeout := time.After(10 * time.Second)
+	timeout := time.After(h.waitNodeTimeout)
 
 	for {
 		select {

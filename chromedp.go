@@ -28,6 +28,14 @@ const (
 	// DefaultCheckDuration is the default time to sleep between a check.
 	DefaultCheckDuration = 50 * time.Millisecond
 
+	// DefaultWaitFrameTimeout is the default time to wait for a new frame to
+	// be loaded
+	DefaultWaitFrameTimeout = 10 * time.Second
+
+	// DefaultWaitNodeTimeout is the default time to wait for a new node to
+	// be loaded
+	DefaultWaitNodeTimeout = 10 * time.Second
+
 	// DefaultPoolStartPort is the default start port number.
 	DefaultPoolStartPort = 9000
 
@@ -60,17 +68,27 @@ type CDP struct {
 	// logging funcs
 	logf, debugf, errf func(string, ...interface{})
 
+	// check duration
+	checkDuration time.Duration
+
+	// timeouts
+	waitFrameTimeout, waitNodeTimeout, newTargetTimeout time.Duration
+
 	sync.RWMutex
 }
 
 // New creates and starts a new CDP instance.
 func New(ctxt context.Context, opts ...Option) (*CDP, error) {
 	c := &CDP{
-		handlers:   make([]*TargetHandler, 0),
-		handlerMap: make(map[string]int),
-		logf:       log.Printf,
-		debugf:     func(string, ...interface{}) {},
-		errf:       func(s string, v ...interface{}) { log.Printf("error: "+s, v...) },
+		handlers:         make([]*TargetHandler, 0),
+		handlerMap:       make(map[string]int),
+		logf:             log.Printf,
+		debugf:           func(string, ...interface{}) {},
+		errf:             func(s string, v ...interface{}) { log.Printf("error: "+s, v...) },
+		checkDuration:    DefaultCheckDuration,
+		newTargetTimeout: DefaultNewTargetTimeout,
+		waitNodeTimeout:  DefaultWaitNodeTimeout,
+		waitFrameTimeout: DefaultWaitFrameTimeout,
 	}
 
 	// apply options
@@ -99,7 +117,7 @@ func New(ctxt context.Context, opts ...Option) (*CDP, error) {
 			if t == nil {
 				return
 			}
-			go c.AddTarget(ctxt, t)
+			go c.AddTarget(ctxt, t, c.waitNodeTimeout, c.waitFrameTimeout)
 		}
 	}()
 
@@ -118,7 +136,7 @@ func New(ctxt context.Context, opts ...Option) (*CDP, error) {
 			}
 
 			// TODO: fix this
-			time.Sleep(DefaultCheckDuration)
+			time.Sleep(c.checkDuration)
 
 		case <-ctxt.Done():
 			return nil, ctxt.Err()
@@ -130,12 +148,12 @@ func New(ctxt context.Context, opts ...Option) (*CDP, error) {
 }
 
 // AddTarget adds a target using the supplied context.
-func (c *CDP) AddTarget(ctxt context.Context, t client.Target) {
+func (c *CDP) AddTarget(ctxt context.Context, t client.Target, wnt, wft time.Duration) {
 	c.Lock()
 	defer c.Unlock()
 
 	// create target manager
-	h, err := NewTargetHandler(t, c.logf, c.debugf, c.errf)
+	h, err := NewTargetHandler(t, c.logf, c.debugf, c.errf, wnt, wft)
 	if err != nil {
 		c.errf("could not create handler for %s: %v", t, err)
 		return
@@ -414,6 +432,40 @@ func WithErrorf(f func(string, ...interface{})) Option {
 func WithLog(f func(string, ...interface{})) Option {
 	return func(c *CDP) error {
 		c.logf, c.debugf, c.errf = f, f, f
+		return nil
+	}
+}
+
+// WithNewTargetTimeout is a CDP option that update new target timeout
+func WithNewTargetTimeout(t time.Duration) Option {
+	return func(c *CDP) error {
+		c.newTargetTimeout = t
+		return nil
+	}
+}
+
+// WithWaitNodeTimeout is a CDP option that update wait node timeout of
+// the target handler
+func WithWaitNodeTimeout(t time.Duration) Option {
+	return func(c *CDP) error {
+		c.waitNodeTimeout = t
+		return nil
+	}
+}
+
+// WithWaitFrameTimeout is a CDP option that update wait frame timeout of
+// the target handler
+func WithWaitFrameTimeout(t time.Duration) Option {
+	return func(c *CDP) error {
+		c.waitFrameTimeout = t
+		return nil
+	}
+}
+
+// WithCheckDuration is a CDP option that update check duration
+func WithCheckDuration(t time.Duration) Option {
+	return func(c *CDP) error {
+		c.checkDuration = t
 		return nil
 	}
 }
