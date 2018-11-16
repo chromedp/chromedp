@@ -42,6 +42,7 @@ type TargetHandler struct {
 
 	// qevents is the incoming event queue.
 	qevents chan *cdproto.Message
+	onEvent EventFunc
 
 	// detached is closed when the detached event is received.
 	detached chan *inspector.EventDetached
@@ -221,6 +222,14 @@ func (h *TargetHandler) read() (*cdproto.Message, error) {
 	return msg, nil
 }
 
+// EventFunc is a type for a function that accepts browser events.
+type EventFunc func(ev interface{})
+
+// OnEvent sets a hook for incoming browser events.
+func (h *TargetHandler) OnEvent(hook EventFunc) {
+	h.onEvent = hook
+}
+
 // processEvent processes an incoming event.
 func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdproto.Message) error {
 	if msg == nil {
@@ -231,6 +240,9 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdproto.Message)
 	ev, err := cdproto.UnmarshalMessage(msg)
 	if err != nil {
 		return err
+	}
+	if h.onEvent != nil {
+		go h.onEvent(ev)
 	}
 
 	switch e := ev.(type) {
