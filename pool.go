@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"net"
 	"sync"
 
 	"github.com/chromedp/chromedp/runner"
@@ -69,6 +70,18 @@ func (p *Pool) Allocate(ctxt context.Context, opts ...runner.CommandLineOption) 
 	var err error
 
 	r := p.next(ctxt)
+
+	// Check if the port is available first. If it's not, Chrome will print
+	// an "address already in use" error, but it will otherwise keep
+	// running. This can lead to Allocate succeeding, while the chrome
+	// process isn't actually listening on the port we need.
+	l, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", r.port))
+	if err != nil {
+		// we can't use this port, e.g. address already in use
+		p.errf("pool could not allocate runner on port %d: %v", r.port, err)
+		return nil, err
+	}
+	l.Close()
 
 	p.debugf("pool allocating %d", r.port)
 
