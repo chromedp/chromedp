@@ -14,6 +14,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/chromedp/cdproto"
+
 	"github.com/chromedp/cdproto/cdp"
 
 	"github.com/chromedp/chromedp/client"
@@ -50,6 +52,9 @@ type CDP struct {
 
 	// cur is the current active target's handler.
 	cur cdp.Executor
+
+	// events is the channel for piping cdproto events from handler to consumer
+	events chan<- *cdproto.Message
 
 	// handlers is the active handlers.
 	handlers []*TargetHandler
@@ -140,6 +145,7 @@ func (c *CDP) AddTarget(ctxt context.Context, t client.Target) {
 		c.errf("could not create handler for %s: %v", t, err)
 		return
 	}
+	h.events = c.events
 
 	// run
 	if err := h.Run(ctxt); err != nil {
@@ -414,6 +420,15 @@ func WithErrorf(f func(string, ...interface{})) Option {
 func WithLog(f func(string, ...interface{})) Option {
 	return func(c *CDP) error {
 		c.logf, c.debugf, c.errf = f, f, f
+		return nil
+	}
+}
+
+// WithEvents is a CDP option that sets the event channel through which a
+// handler may send CDP event messages.
+func WithEvents(ev chan<- *cdproto.Message) Option {
+	return func(c *CDP) error {
+		c.events = ev
 		return nil
 	}
 }
