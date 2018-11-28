@@ -183,6 +183,10 @@ func (c *CDP) Shutdown(ctxt context.Context, opts ...client.Option) error {
 		return c.r.Shutdown(ctxt, opts...)
 	}
 
+	if c.events != nil {
+		close(c.events)
+	}
+
 	return nil
 }
 
