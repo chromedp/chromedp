@@ -54,7 +54,7 @@ type CDP struct {
 	cur cdp.Executor
 
 	// events is the channel for piping cdproto events from handler to consumer
-	events chan<- *cdproto.Message
+	events chan<- *CDPEvent
 
 	// handlers is the active handlers.
 	handlers []*TargetHandler
@@ -139,13 +139,23 @@ func (c *CDP) AddTarget(ctxt context.Context, t client.Target) {
 	c.Lock()
 	defer c.Unlock()
 
+	id := t.GetID()
+
 	// create target manager
 	h, err := NewTargetHandler(t, c.logf, c.debugf, c.errf)
 	if err != nil {
 		c.errf("could not create handler for %s: %v", t, err)
 		return
 	}
-	h.events = c.events
+	h.event = func(msg *cdproto.Message) {
+		ev := &CDPEvent{
+			id:  id,
+			msg: msg,
+		}
+		if c.events != nil {
+			c.events <- ev
+		}
+	}
 
 	// run
 	if err := h.Run(ctxt); err != nil {
@@ -155,7 +165,7 @@ func (c *CDP) AddTarget(ctxt context.Context, t client.Target) {
 
 	// add to active handlers
 	c.handlers = append(c.handlers, h)
-	c.handlerMap[t.GetID()] = len(c.handlers) - 1
+	c.handlerMap[id] = len(c.handlers) - 1
 	if c.cur == nil {
 		c.cur = h
 	}
@@ -430,7 +440,7 @@ func WithLog(f func(string, ...interface{})) Option {
 
 // WithEvents is a CDP option that sets the event channel through which a
 // handler may send CDP event messages.
-func WithEvents(ev chan<- *cdproto.Message) Option {
+func WithEvents(ev chan<- *CDPEvent) Option {
 	return func(c *CDP) error {
 		c.events = ev
 		return nil
