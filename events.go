@@ -10,6 +10,20 @@ type CDPEvent struct {
 	msg *cdproto.Message
 }
 
+// cdpEventForwarder returns a function that can be called for a target handler
+// to forward *CDPEvents over the given channel
+func cdpEventForwarder(id string, ch chan<- *CDPEvent) func(msg *cdproto.Message) {
+	return func(msg *cdproto.Message) {
+		ev := &CDPEvent{
+			id:  id,
+			msg: msg,
+		}
+		if ch != nil {
+			ch <- ev
+		}
+	}
+}
+
 // ID returns the target ID of the event
 func (e *CDPEvent) ID() string {
 	return e.id

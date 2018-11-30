@@ -14,8 +14,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/chromedp/cdproto"
-
 	"github.com/chromedp/cdproto/cdp"
 
 	"github.com/chromedp/chromedp/client"
@@ -139,23 +137,13 @@ func (c *CDP) AddTarget(ctxt context.Context, t client.Target) {
 	c.Lock()
 	defer c.Unlock()
 
-	id := t.GetID()
-
 	// create target manager
 	h, err := NewTargetHandler(t, c.logf, c.debugf, c.errf)
 	if err != nil {
 		c.errf("could not create handler for %s: %v", t, err)
 		return
 	}
-	h.event = func(msg *cdproto.Message) {
-		ev := &CDPEvent{
-			id:  id,
-			msg: msg,
-		}
-		if c.events != nil {
-			c.events <- ev
-		}
-	}
+	h.event = cdpEventForwarder(t.GetID(), c.events)
 
 	// run
 	if err := h.Run(ctxt); err != nil {
@@ -165,7 +153,7 @@ func (c *CDP) AddTarget(ctxt context.Context, t client.Target) {
 
 	// add to active handlers
 	c.handlers = append(c.handlers, h)
-	c.handlerMap[id] = len(c.handlers) - 1
+	c.handlerMap[t.GetID()] = len(c.handlers) - 1
 	if c.cur == nil {
 		c.cur = h
 	}
