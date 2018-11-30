@@ -43,8 +43,8 @@ type TargetHandler struct {
 	// qevents is the incoming event queue.
 	qevents chan *cdproto.Message
 
-	// event publishes a message to the CDP.
-	event func(msg *cdproto.Message)
+	// send publishes a message to the CDP.
+	send func(msg *cdproto.Message)
 
 	// detached is closed when the detached event is received.
 	detached chan *inspector.EventDetached
@@ -186,8 +186,8 @@ func (h *TargetHandler) run(ctxt context.Context) {
 				h.errf("could not process event %s: %v", ev.Method, err)
 			}
 
-			if h.event != nil {
-				h.event(ev)
+			if h.send != nil {
+				h.send(ev)
 			}
 
 		case res := <-h.qres:

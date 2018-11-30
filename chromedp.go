@@ -143,7 +143,7 @@ func (c *CDP) AddTarget(ctxt context.Context, t client.Target) {
 		c.errf("could not create handler for %s: %v", t, err)
 		return
 	}
-	h.event = cdpEventForwarder(t.GetID(), c.events)
+	h.send = cdpEventForwarder(t.GetID(), c.events)
 
 	// run
 	if err := h.Run(ctxt); err != nil {
