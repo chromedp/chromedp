@@ -52,7 +52,7 @@ type CDP struct {
 	cur cdp.Executor
 
 	// events is the channel for piping cdproto events from handler to consumer
-	events chan<- *CDPEvent
+	events chan<- *Event
 
 	// handlers is the active handlers.
 	handlers []*TargetHandler
@@ -146,7 +146,7 @@ func (c *CDP) AddTarget(ctxt context.Context, t client.Target) {
 
 	// add event forwarder, if we have an event channel
 	if c.events != nil {
-		h.send = cdpEventForwarder(t.GetID(), c.events)
+		h.send = eventForwarder(t.GetID(), c.events)
 	}
 
 	// run
@@ -430,9 +430,9 @@ func WithLog(f func(string, ...interface{})) Option {
 	}
 }
 
-// WithEvents is a CDP option that sets the event channel through which a
+// WithEventChannel is a CDP option that sets the event channel through which a
 // handler may send CDP event messages.
-func WithEvents(ev chan<- *CDPEvent) Option {
+func WithEventChannel(ev chan<- *Event) Option {
 	return func(c *CDP) error {
 		c.events = ev
 		return nil

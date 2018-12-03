@@ -4,32 +4,32 @@ import (
 	"github.com/chromedp/cdproto"
 )
 
-// CDPEvent is a CDP event originating from a target handler
-type CDPEvent struct {
-	id  string
-	msg *cdproto.Message
+// Event is a CDP event originating from a target handler
+type Event struct {
+	targetID string
+	msg      *cdproto.Message
 }
 
-// cdpEventForwarder returns a function that can be called for a target handler
+// eventForwarder returns a function that can be called for a target handler
 // to forward *CDPEvents over the given channel
-func cdpEventForwarder(id string, ch chan<- *CDPEvent) func(msg *cdproto.Message) {
+func eventForwarder(tid string, ch chan<- *Event) func(msg *cdproto.Message) {
 	return func(msg *cdproto.Message) {
 		if ch != nil {
-			ev := &CDPEvent{
-				id:  id,
-				msg: msg,
+			ev := &Event{
+				targetID: tid,
+				msg:      msg,
 			}
 			ch <- ev
 		}
 	}
 }
 
-// ID returns the target ID of the event
-func (e *CDPEvent) ID() string {
-	return e.id
+// Message returns the message associated with the event
+func (e *Event) Message() *cdproto.Message {
+	return e.msg
 }
 
-// Message returns the message associated with the event
-func (e *CDPEvent) Message() *cdproto.Message {
-	return e.msg
+// TargetID returns the target TargetID of the event
+func (e *Event) TargetID() string {
+	return e.targetID
 }
