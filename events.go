@@ -14,11 +14,11 @@ type CDPEvent struct {
 // to forward *CDPEvents over the given channel
 func cdpEventForwarder(id string, ch chan<- *CDPEvent) func(msg *cdproto.Message) {
 	return func(msg *cdproto.Message) {
-		ev := &CDPEvent{
-			id:  id,
-			msg: msg,
-		}
 		if ch != nil {
+			ev := &CDPEvent{
+				id:  id,
+				msg: msg,
+			}
 			ch <- ev
 		}
 	}
