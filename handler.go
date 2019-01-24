@@ -89,7 +89,7 @@ func (h *TargetHandler) Run(ctxt context.Context) error {
 	h.qres = make(chan *cdproto.Message)
 	h.qevents = make(chan *cdproto.Message)
 	h.res = make(map[int64]chan *cdproto.Message)
-	h.detached = make(chan *inspector.EventDetached)
+	h.detached = make(chan *inspector.EventDetached, 1)
 	h.pageWaitGroup = new(sync.WaitGroup)
 	h.domWaitGroup = new(sync.WaitGroup)
 	h.Unlock()
