@@ -24,7 +24,11 @@ func TestAllocatePortInUse(t *testing.T) {
 	// make the pool use the port already in use via a port range
 	_, portStr, _ := net.SplitHostPort(l.Addr().String())
 	port, _ := strconv.Atoi(portStr)
-	pool, err := NewPool(PortRange(port, port+1))
+	pool, err := NewPool(
+		PortRange(port, port+1),
+		// skip the error log from the used port
+		PoolLog(nil, nil, func(string, ...interface{}) {}),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
