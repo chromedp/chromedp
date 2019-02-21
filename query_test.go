@@ -964,9 +964,6 @@ func TestFileUpload(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	c := testAllocate(t, "")
-	defer c.Release()
-
 	tests := []struct {
 		a Action
 	}{
@@ -976,7 +973,9 @@ func TestFileUpload(t *testing.T) {
 
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
-			t.Parallel()
+			// TODO: refactor the test so the subtests can run in
+			// parallel
+			//t.Parallel()
 
 			c := testAllocate(t, "")
 			defer c.Release()
