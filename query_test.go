@@ -190,6 +190,8 @@ func TestText(t *testing.T) {
 }
 
 func TestClear(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		sel string
 		by  QueryOption
@@ -244,6 +246,8 @@ func TestClear(t *testing.T) {
 }
 
 func TestReset(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		sel   string
 		by    QueryOption
@@ -315,6 +319,8 @@ func TestValue(t *testing.T) {
 }
 
 func TestSetValue(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		sel string
 		by  QueryOption
@@ -442,6 +448,8 @@ func TestAttributesAll(t *testing.T) {
 }
 
 func TestSetAttributes(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		sel   string
 		by    QueryOption
@@ -547,6 +555,8 @@ func TestAttributeValue(t *testing.T) {
 }
 
 func TestSetAttributeValue(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		sel  string
 		by   QueryOption
@@ -589,6 +599,8 @@ func TestSetAttributeValue(t *testing.T) {
 }
 
 func TestRemoveAttribute(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		sel  string
 		by   QueryOption
@@ -626,6 +638,8 @@ func TestRemoveAttribute(t *testing.T) {
 }
 
 func TestClick(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		sel string
 		by  QueryOption
@@ -666,6 +680,8 @@ func TestClick(t *testing.T) {
 }
 
 func TestDoubleClick(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		sel string
 		by  QueryOption
@@ -703,6 +719,8 @@ func TestDoubleClick(t *testing.T) {
 }
 
 func TestSendKeys(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		sel  string
 		by   QueryOption
@@ -773,6 +791,8 @@ func TestScreenshot(t *testing.T) {
 }
 
 func TestSubmit(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		sel string
 		by  QueryOption
@@ -813,6 +833,8 @@ func TestSubmit(t *testing.T) {
 }
 
 func TestComputedStyle(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		sel string
 		by  QueryOption
@@ -870,6 +892,8 @@ func TestComputedStyle(t *testing.T) {
 }
 
 func TestMatchedStyle(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		sel string
 		by  QueryOption
@@ -952,6 +976,8 @@ func TestFileUpload(t *testing.T) {
 
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			t.Parallel()
+
 			c := testAllocate(t, "")
 			defer c.Release()
 

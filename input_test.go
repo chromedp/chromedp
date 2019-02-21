@@ -21,9 +21,9 @@ const (
 )
 
 func TestMouseClickXY(t *testing.T) {
-	var err error
-
 	t.Parallel()
+
+	var err error
 
 	c := testAllocate(t, "input.html")
 	defer c.Release()
@@ -78,6 +78,8 @@ func TestMouseClickXY(t *testing.T) {
 }
 
 func TestMouseClickNode(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		sel, exp string
 		opt      MouseOption
@@ -128,6 +130,8 @@ func TestMouseClickNode(t *testing.T) {
 }
 
 func TestMouseClickOffscreenNode(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		sel string
 		exp int
@@ -186,6 +190,8 @@ func TestMouseClickOffscreenNode(t *testing.T) {
 }
 
 func TestKeyAction(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		sel, exp string
 		by       QueryOption
@@ -238,6 +244,8 @@ func TestKeyAction(t *testing.T) {
 }
 
 func TestKeyActionNode(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		sel, exp string
 		by       QueryOption
