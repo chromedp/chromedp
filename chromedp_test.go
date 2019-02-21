@@ -4,7 +4,6 @@ import (
 	"context"
 	"log"
 	"os"
-	"os/exec"
 	"path"
 	"testing"
 	"time"
@@ -78,16 +77,9 @@ func TestMain(m *testing.M) {
 
 	// its worth noting that newer versions of chrome (64+) run much faster
 	// than older ones -- same for headless_shell ...
-	execPath := runner.DefaultChromePath
-	if testRunner := os.Getenv("CHROMEDP_TEST_RUNNER"); testRunner != "" {
-		execPath = testRunner
-	} else {
-		// use headless_shell, if on path
-		var hsPath string
-		hsPath, err = exec.LookPath("headless_shell")
-		if err == nil {
-			execPath = hsPath
-		}
+	execPath := os.Getenv("CHROMEDP_TEST_RUNNER")
+	if execPath == "" {
+		execPath = runner.LookChromeNames("headless_shell")
 	}
 	cliOpts = append(cliOpts, runner.ExecPath(execPath))
 
