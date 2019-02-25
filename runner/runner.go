@@ -241,12 +241,15 @@ func (r *Runner) Shutdown(ctxt context.Context, opts ...client.Option) error {
 		}
 	}
 
-	// osx applications do not automatically exit when all windows (ie, tabs)
+	// osx and linux applications do not automatically exit when all windows (ie, tabs)
 	// closed, so send SIGTERM.
 	//
 	// TODO: add other behavior here for more process options on shutdown?
-	if runtime.GOOS == "darwin" && r.cmd != nil && r.cmd.Process != nil {
-		return r.cmd.Process.Signal(syscall.SIGTERM)
+	if r.cmd != nil && r.cmd.Process != nil {
+		switch runtime.GOOS {
+		case "darwin", "linux":
+			return r.cmd.Process.Signal(syscall.SIGTERM)
+		}
 	}
 
 	return nil
