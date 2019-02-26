@@ -213,7 +213,8 @@ func (r *Runner) Start(ctxt context.Context, opts ...string) error {
 	return nil
 }
 
-// Shutdown shuts down the Chrome process.
+// Shutdown shuts down the Chrome process.  Currently only has support for
+// SIGTERM in darwin and linux systems
 func (r *Runner) Shutdown(ctxt context.Context, opts ...client.Option) error {
 	var err error
 
