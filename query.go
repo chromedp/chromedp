@@ -484,8 +484,7 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 
 		// encode
 		var croppedBuf bytes.Buffer
-		err = png.Encode(&croppedBuf, cropped)
-		if err != nil {
+		if err := png.Encode(&croppedBuf, cropped); err != nil {
 			return err
 		}
 

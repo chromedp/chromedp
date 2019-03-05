@@ -11,37 +11,31 @@ import (
 func TestNavigate(t *testing.T) {
 	t.Parallel()
 
-	var err error
-
-	c := testAllocate(t, "")
-	defer c.Release()
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
 
 	expurl, exptitle := testdataDir+"/image.html", "this is title"
-
-	err = c.Run(defaultContext, Navigate(expurl))
-	if err != nil {
+	if err := Run(ctx, Navigate(expurl)); err != nil {
 		t.Fatal(err)
 	}
-
-	err = c.Run(defaultContext, WaitVisible(`#icon-brankas`, ByID))
-	if err != nil {
+	if err := Run(ctx, WaitVisible(`#icon-brankas`, ByID)); err != nil {
 		t.Fatal(err)
 	}
 
 	var urlstr string
-	err = c.Run(defaultContext, Location(&urlstr))
-	if err != nil {
+	if err := Run(ctx, Location(&urlstr)); err != nil {
 		t.Fatal(err)
 	}
+
 	if !strings.HasPrefix(urlstr, expurl) {
 		t.Errorf("expected to be on image.html, at: %s", urlstr)
 	}
 
 	var title string
-	err = c.Run(defaultContext, Title(&title))
-	if err != nil {
+	if err := Run(ctx, Title(&title)); err != nil {
 		t.Fatal(err)
 	}
+
 	if title != exptitle {
 		t.Errorf("expected title to contain google, instead title is: %s", title)
 	}
@@ -50,10 +44,9 @@ func TestNavigate(t *testing.T) {
 func TestNavigationEntries(t *testing.T) {
 	t.Parallel()
 
-	var err error
-
-	c := testAllocate(t, "")
-	defer c.Release()
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+	time.Sleep(50 * time.Millisecond)
 
 	tests := []string{
 		"form.html",
@@ -62,38 +55,33 @@ func TestNavigationEntries(t *testing.T) {
 
 	var entries []*page.NavigationEntry
 	var index int64
-
-	err = c.Run(defaultContext, NavigationEntries(&index, &entries))
-	if err != nil {
+	if err := Run(ctx, NavigationEntries(&index, &entries)); err != nil {
 		t.Fatal(err)
 	}
 
-	if len(entries) != 1 {
-		t.Errorf("expected to have 1 navigation entry: got %d", len(entries))
+	if len(entries) != 2 {
+		t.Errorf("expected to have 2 navigation entry: got %d", len(entries))
 	}
-	if index != 0 {
-		t.Errorf("expected navigation index is 0, got: %d", index)
+	if index != 1 {
+		t.Errorf("expected navigation index is 1, got: %d", index)
 	}
 
-	expIdx, expEntries := 1, 2
+	expIdx, expEntries := 2, 3
 	for i, url := range tests {
-		err = c.Run(defaultContext, Navigate(testdataDir+"/"+url))
-		if err != nil {
+		if err := Run(ctx, Navigate(testdataDir+"/"+url)); err != nil {
 			t.Fatal(err)
 		}
 
 		time.Sleep(50 * time.Millisecond)
-
-		err = c.Run(defaultContext, NavigationEntries(&index, &entries))
-		if err != nil {
+		if err := Run(ctx, NavigationEntries(&index, &entries)); err != nil {
 			t.Fatal(err)
 		}
 
 		if len(entries) != expEntries {
 			t.Errorf("test %d expected to have %d navigation entry: got %d", i, expEntries, len(entries))
 		}
-		if index != int64(i+1) {
-			t.Errorf("test %d expected navigation index is %d, got: %d", i, i, index)
+		if want := int64(i + 2); index != want {
+			t.Errorf("test %d expected navigation index is %d, got: %d", i, want, index)
 		}
 
 		expIdx++
@@ -104,44 +92,36 @@ func TestNavigationEntries(t *testing.T) {
 func TestNavigateToHistoryEntry(t *testing.T) {
 	t.Parallel()
 
-	var err error
-
-	c := testAllocate(t, "")
-	defer c.Release()
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
 
 	var entries []*page.NavigationEntry
 	var index int64
-	err = c.Run(defaultContext, Navigate(testdataDir+"/image.html"))
-	if err != nil {
+	if err := Run(ctx, Navigate(testdataDir+"/image.html")); err != nil {
 		t.Fatal(err)
 	}
 
 	time.Sleep(50 * time.Millisecond)
-
-	err = c.Run(defaultContext, NavigationEntries(&index, &entries))
-	if err != nil {
+	if err := Run(ctx, NavigationEntries(&index, &entries)); err != nil {
 		t.Fatal(err)
 	}
 
-	err = c.Run(defaultContext, Navigate(testdataDir+"/form.html"))
-	if err != nil {
+	if err := Run(ctx, Navigate(testdataDir+"/form.html")); err != nil {
 		t.Fatal(err)
 	}
 
 	time.Sleep(50 * time.Millisecond)
-
-	err = c.Run(defaultContext, NavigateToHistoryEntry(entries[index].ID))
-	if err != nil {
+	if err := Run(ctx, NavigateToHistoryEntry(entries[index].ID)); err != nil {
 		t.Fatal(err)
 	}
 
 	time.Sleep(50 * time.Millisecond)
 
 	var title string
-	err = c.Run(defaultContext, Title(&title))
-	if err != nil {
+	if err := Run(ctx, Title(&title)); err != nil {
 		t.Fatal(err)
 	}
+
 	if title != entries[index].Title {
 		t.Errorf("expected title to be %s, instead title is: %s", entries[index].Title, title)
 	}
@@ -150,43 +130,35 @@ func TestNavigateToHistoryEntry(t *testing.T) {
 func TestNavigateBack(t *testing.T) {
 	t.Parallel()
 
-	var err error
-
-	c := testAllocate(t, "")
-	defer c.Release()
-
-	err = c.Run(defaultContext, Navigate(testdataDir+"/form.html"))
-	if err != nil {
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+	if err := Run(ctx, Navigate(testdataDir+"/form.html")); err != nil {
 		t.Fatal(err)
 	}
 
 	time.Sleep(50 * time.Millisecond)
 
 	var exptitle string
-	err = c.Run(defaultContext, Title(&exptitle))
-	if err != nil {
+	if err := Run(ctx, Title(&exptitle)); err != nil {
 		t.Fatal(err)
 	}
 
-	err = c.Run(defaultContext, Navigate(testdataDir+"/image.html"))
-	if err != nil {
+	if err := Run(ctx, Navigate(testdataDir+"/image.html")); err != nil {
 		t.Fatal(err)
 	}
 
 	time.Sleep(50 * time.Millisecond)
-
-	err = c.Run(defaultContext, NavigateBack())
-	if err != nil {
+	if err := Run(ctx, NavigateBack()); err != nil {
 		t.Fatal(err)
 	}
 
 	time.Sleep(50 * time.Millisecond)
 
 	var title string
-	err = c.Run(defaultContext, Title(&title))
-	if err != nil {
+	if err := Run(ctx, Title(&title)); err != nil {
 		t.Fatal(err)
 	}
+
 	if title != exptitle {
 		t.Errorf("expected title to be %s, instead title is: %s", exptitle, title)
 	}
@@ -195,50 +167,39 @@ func TestNavigateBack(t *testing.T) {
 func TestNavigateForward(t *testing.T) {
 	t.Parallel()
 
-	var err error
-
-	c := testAllocate(t, "")
-	defer c.Release()
-
-	err = c.Run(defaultContext, Navigate(testdataDir+"/form.html"))
-	if err != nil {
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+	if err := Run(ctx, Navigate(testdataDir+"/form.html")); err != nil {
 		t.Fatal(err)
 	}
 
 	time.Sleep(50 * time.Millisecond)
-
-	err = c.Run(defaultContext, Navigate(testdataDir+"/image.html"))
-	if err != nil {
+	if err := Run(ctx, Navigate(testdataDir+"/image.html")); err != nil {
 		t.Fatal(err)
 	}
 
 	time.Sleep(50 * time.Millisecond)
 
 	var exptitle string
-	err = c.Run(defaultContext, Title(&exptitle))
-	if err != nil {
+	if err := Run(ctx, Title(&exptitle)); err != nil {
 		t.Fatal(err)
 	}
-
-	err = c.Run(defaultContext, NavigateBack())
-	if err != nil {
+	if err := Run(ctx, NavigateBack()); err != nil {
 		t.Fatal(err)
 	}
 
 	time.Sleep(50 * time.Millisecond)
-
-	err = c.Run(defaultContext, NavigateForward())
-	if err != nil {
+	if err := Run(ctx, NavigateForward()); err != nil {
 		t.Fatal(err)
 	}
 
 	time.Sleep(50 * time.Millisecond)
 
 	var title string
-	err = c.Run(defaultContext, Title(&title))
-	if err != nil {
+	if err := Run(ctx, Title(&title)); err != nil {
 		t.Fatal(err)
 	}
+
 	if title != exptitle {
 		t.Errorf("expected title to be %s, instead title is: %s", exptitle, title)
 	}
@@ -247,55 +208,44 @@ func TestNavigateForward(t *testing.T) {
 func TestStop(t *testing.T) {
 	t.Parallel()
 
-	var err error
-
-	c := testAllocate(t, "")
-	defer c.Release()
-
-	err = c.Run(defaultContext, Navigate(testdataDir+"/form.html"))
-	if err != nil {
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+	if err := Run(ctx, Navigate(testdataDir+"/form.html")); err != nil {
+		t.Fatal(err)
+	}
+	if err := Run(ctx, Stop()); err != nil {
 		t.Fatal(err)
 	}
 
-	err = c.Run(defaultContext, Stop())
-	if err != nil {
-		t.Fatal(err)
-	}
 }
 
 func TestReload(t *testing.T) {
 	t.Parallel()
 
-	var err error
-
-	c := testAllocate(t, "")
-	defer c.Release()
-
-	err = c.Run(defaultContext, Navigate(testdataDir+"/form.html"))
-	if err != nil {
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+	if err := Run(ctx, Navigate(testdataDir+"/form.html")); err != nil {
 		t.Fatal(err)
 	}
 
 	time.Sleep(50 * time.Millisecond)
 
 	var exptitle string
-	err = c.Run(defaultContext, Title(&exptitle))
-	if err != nil {
+	if err := Run(ctx, Title(&exptitle)); err != nil {
 		t.Fatal(err)
 	}
 
-	err = c.Run(defaultContext, Reload())
-	if err != nil {
+	if err := Run(ctx, Reload()); err != nil {
 		t.Fatal(err)
 	}
 
 	time.Sleep(50 * time.Millisecond)
 
 	var title string
-	err = c.Run(defaultContext, Title(&title))
-	if err != nil {
+	if err := Run(ctx, Title(&title)); err != nil {
 		t.Fatal(err)
 	}
+
 	if title != exptitle {
 		t.Errorf("expected title to be %s, instead title is: %s", exptitle, title)
 	}
@@ -304,21 +254,16 @@ func TestReload(t *testing.T) {
 func TestCaptureScreenshot(t *testing.T) {
 	t.Parallel()
 
-	var err error
-
-	c := testAllocate(t, "")
-	defer c.Release()
-
-	err = c.Run(defaultContext, Navigate(testdataDir+"/image.html"))
-	if err != nil {
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+	if err := Run(ctx, Navigate(testdataDir+"/image.html")); err != nil {
 		t.Fatal(err)
 	}
 
 	time.Sleep(50 * time.Millisecond)
 
 	var buf []byte
-	err = c.Run(defaultContext, CaptureScreenshot(&buf))
-	if err != nil {
+	if err := Run(ctx, CaptureScreenshot(&buf)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -331,18 +276,16 @@ func TestCaptureScreenshot(t *testing.T) {
 /*func TestAddOnLoadScript(t *testing.T) {
 	t.Parallel()
 
-	var err error
-
-	c := testAllocate(t, "")
-	defer c.Release()
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
 
 	var scriptID page.ScriptIdentifier
-	err = c.Run(defaultContext, AddOnLoadScript(`window.alert("TEST")`, &scriptID))
+	err = Run(ctx, AddOnLoadScript(`window.alert("TEST")`, &scriptID))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = c.Run(defaultContext, Navigate(testdataDir+"/form.html"))
+	err = Run(ctx, Navigate(testdataDir+"/form.html"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -358,13 +301,11 @@ func TestCaptureScreenshot(t *testing.T) {
 func TestRemoveOnLoadScript(t *testing.T) {
 	t.Parallel()
 
-	var err error
-
-	c := testAllocate(t, "")
-	defer c.Release()
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
 
 	var scriptID page.ScriptIdentifier
-	err = c.Run(defaultContext, AddOnLoadScript(`window.alert("TEST")`, &scriptID))
+	err = Run(ctx, AddOnLoadScript(`window.alert("TEST")`, &scriptID))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -373,12 +314,12 @@ func TestRemoveOnLoadScript(t *testing.T) {
 		t.Fatal("got empty script ID")
 	}
 
-	err = c.Run(defaultContext, RemoveOnLoadScript(scriptID))
+	err = Run(ctx, RemoveOnLoadScript(scriptID))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	err = c.Run(defaultContext, Navigate(testdataDir+"/form.html"))
+	err = Run(ctx, Navigate(testdataDir+"/form.html"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -389,22 +330,18 @@ func TestRemoveOnLoadScript(t *testing.T) {
 func TestLocation(t *testing.T) {
 	t.Parallel()
 
-	var err error
 	expurl := testdataDir + "/form.html"
 
-	c := testAllocate(t, "")
-	defer c.Release()
-
-	err = c.Run(defaultContext, Navigate(expurl))
-	if err != nil {
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+	if err := Run(ctx, Navigate(expurl)); err != nil {
 		t.Fatal(err)
 	}
 
 	time.Sleep(50 * time.Millisecond)
 
 	var urlstr string
-	err = c.Run(defaultContext, Location(&urlstr))
-	if err != nil {
+	if err := Run(ctx, Location(&urlstr)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -416,22 +353,18 @@ func TestLocation(t *testing.T) {
 func TestTitle(t *testing.T) {
 	t.Parallel()
 
-	var err error
 	expurl, exptitle := testdataDir+"/image.html", "this is title"
 
-	c := testAllocate(t, "")
-	defer c.Release()
-
-	err = c.Run(defaultContext, Navigate(expurl))
-	if err != nil {
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+	if err := Run(ctx, Navigate(expurl)); err != nil {
 		t.Fatal(err)
 	}
 
 	time.Sleep(50 * time.Millisecond)
 
 	var title string
-	err = c.Run(defaultContext, Title(&title))
-	if err != nil {
+	if err := Run(ctx, Title(&title)); err != nil {
 		t.Fatal(err)
 	}
 

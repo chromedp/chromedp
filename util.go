@@ -1,8 +1,15 @@
 package chromedp
 
 import (
+	"time"
+
 	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/cdp"
+)
+
+const (
+	// DefaultCheckDuration is the default time to sleep between a check.
+	DefaultCheckDuration = 50 * time.Millisecond
 )
 
 // frameOp is a frame manipulation operation.

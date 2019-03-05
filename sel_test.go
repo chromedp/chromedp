@@ -9,132 +9,118 @@ import (
 func TestWaitReady(t *testing.T) {
 	t.Parallel()
 
-	c := testAllocate(t, "js.html")
-	defer c.Release()
+	ctx, cancel := testAllocate(t, "js.html")
+	defer cancel()
 
 	var nodeIDs []cdp.NodeID
-	err := c.Run(defaultContext, NodeIDs("#input2", &nodeIDs, ByID))
+	err := Run(ctx, NodeIDs("#input2", &nodeIDs, ByID))
 	if err != nil {
 		t.Fatalf("got error: %v", err)
 	}
 	if len(nodeIDs) != 1 {
 		t.Errorf("expected to have exactly 1 node id: got %d", len(nodeIDs))
 	}
-
-	err = c.Run(defaultContext, WaitReady("#input2", ByID))
-	if err != nil {
+	if err := Run(ctx, WaitReady("#input2", ByID)); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
 
 	var value string
-	err = c.Run(defaultContext, Value(nodeIDs, &value, ByNodeID))
-	if err != nil {
+	if err := Run(ctx, Value(nodeIDs, &value, ByNodeID)); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
+
 }
 
 func TestWaitVisible(t *testing.T) {
 	t.Parallel()
 
-	c := testAllocate(t, "js.html")
-	defer c.Release()
+	ctx, cancel := testAllocate(t, "js.html")
+	defer cancel()
 
 	var nodeIDs []cdp.NodeID
-	err := c.Run(defaultContext, NodeIDs("#input2", &nodeIDs, ByID))
+	err := Run(ctx, NodeIDs("#input2", &nodeIDs, ByID))
 	if err != nil {
 		t.Fatalf("got error: %v", err)
 	}
 	if len(nodeIDs) != 1 {
 		t.Errorf("expected to have exactly 1 node id: got %d", len(nodeIDs))
 	}
-
-	err = c.Run(defaultContext, WaitVisible("#input2", ByID))
-	if err != nil {
+	if err := Run(ctx, WaitVisible("#input2", ByID)); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
 
 	var value string
-	err = c.Run(defaultContext, Value(nodeIDs, &value, ByNodeID))
-	if err != nil {
+	if err := Run(ctx, Value(nodeIDs, &value, ByNodeID)); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
+
 }
 
 func TestWaitNotVisible(t *testing.T) {
 	t.Parallel()
 
-	c := testAllocate(t, "js.html")
-	defer c.Release()
+	ctx, cancel := testAllocate(t, "js.html")
+	defer cancel()
 
 	var nodeIDs []cdp.NodeID
-	err := c.Run(defaultContext, NodeIDs("#input2", &nodeIDs, ByID))
+	err := Run(ctx, NodeIDs("#input2", &nodeIDs, ByID))
 	if err != nil {
 		t.Fatalf("got error: %v", err)
 	}
 	if len(nodeIDs) != 1 {
 		t.Errorf("expected to have exactly 1 node id: got %d", len(nodeIDs))
 	}
-
-	err = c.Run(defaultContext, Click("#button2", ByID))
-	if err != nil {
+	if err := Run(ctx, Click("#button2", ByID)); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
-
-	err = c.Run(defaultContext, WaitNotVisible("#input2", ByID))
-	if err != nil {
+	if err := Run(ctx, WaitNotVisible("#input2", ByID)); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
 
 	var value string
-	err = c.Run(defaultContext, Value(nodeIDs, &value, ByNodeID))
-	if err != nil {
+	if err := Run(ctx, Value(nodeIDs, &value, ByNodeID)); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
+
 }
 
 func TestWaitEnabled(t *testing.T) {
 	t.Parallel()
 
-	c := testAllocate(t, "js.html")
-	defer c.Release()
+	ctx, cancel := testAllocate(t, "js.html")
+	defer cancel()
 
 	var attr string
 	var ok bool
-	err := c.Run(defaultContext, AttributeValue("#select1", "disabled", &attr, &ok, ByID))
+	err := Run(ctx, AttributeValue("#select1", "disabled", &attr, &ok, ByID))
 	if err != nil {
 		t.Fatalf("got error: %v", err)
 	}
 	if !ok {
 		t.Fatal("expected element to be disabled")
 	}
-
-	err = c.Run(defaultContext, Click("#button3", ByID))
-	if err != nil {
+	if err := Run(ctx, Click("#button3", ByID)); err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	if err := Run(ctx, WaitEnabled("#select1", ByID)); err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	if err := Run(ctx, AttributeValue("#select1", "disabled", &attr, &ok, ByID)); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
 
-	err = c.Run(defaultContext, WaitEnabled("#select1", ByID))
-	if err != nil {
-		t.Fatalf("got error: %v", err)
-	}
-	err = c.Run(defaultContext, AttributeValue("#select1", "disabled", &attr, &ok, ByID))
-	if err != nil {
-		t.Fatalf("got error: %v", err)
-	}
 	if ok {
 		t.Fatal("expected element to be enabled")
 	}
-
-	err = c.Run(defaultContext, SetAttributeValue(`//*[@id="select1"]/option[1]`, "selected", "true"))
-	if err != nil {
+	if err := Run(ctx, SetAttributeValue(`//*[@id="select1"]/option[1]`, "selected", "true")); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
 
 	var value string
-	err = c.Run(defaultContext, Value("#select1", &value, ByID))
-	if err != nil {
+	if err := Run(ctx, Value("#select1", &value, ByID)); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
+
 	if value != "foo" {
 		t.Fatalf("expected value to be foo, got: %s", value)
 	}
@@ -143,43 +129,36 @@ func TestWaitEnabled(t *testing.T) {
 func TestWaitSelected(t *testing.T) {
 	t.Parallel()
 
-	c := testAllocate(t, "js.html")
-	defer c.Release()
+	ctx, cancel := testAllocate(t, "js.html")
+	defer cancel()
 
-	err := c.Run(defaultContext, Click("#button3", ByID))
+	err := Run(ctx, Click("#button3", ByID))
 	if err != nil {
 		t.Fatalf("got error: %v", err)
 	}
-
-	err = c.Run(defaultContext, WaitEnabled("#select1", ByID))
-	if err != nil {
+	if err := Run(ctx, WaitEnabled("#select1", ByID)); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
 
 	var attr string
 	ok := false
-	err = c.Run(defaultContext, AttributeValue(`//*[@id="select1"]/option[1]`, "selected", &attr, &ok))
-	if err != nil {
+	if err := Run(ctx, AttributeValue(`//*[@id="select1"]/option[1]`, "selected", &attr, &ok)); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
+
 	if ok {
 		t.Fatal("expected element to be not selected")
 	}
-
-	err = c.Run(defaultContext, SetAttributeValue(`//*[@id="select1"]/option[1]`, "selected", "true"))
-	if err != nil {
+	if err := Run(ctx, SetAttributeValue(`//*[@id="select1"]/option[1]`, "selected", "true")); err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	if err := Run(ctx, WaitSelected(`//*[@id="select1"]/option[1]`)); err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	if err := Run(ctx, AttributeValue(`//*[@id="select1"]/option[1]`, "selected", &attr, nil)); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
 
-	err = c.Run(defaultContext, WaitSelected(`//*[@id="select1"]/option[1]`))
-	if err != nil {
-		t.Fatalf("got error: %v", err)
-	}
-
-	err = c.Run(defaultContext, AttributeValue(`//*[@id="select1"]/option[1]`, "selected", &attr, nil))
-	if err != nil {
-		t.Fatalf("got error: %v", err)
-	}
 	if attr != "true" {
 		t.Fatal("expected element to be selected")
 	}
@@ -188,33 +167,30 @@ func TestWaitSelected(t *testing.T) {
 func TestWaitNotPresent(t *testing.T) {
 	t.Parallel()
 
-	c := testAllocate(t, "js.html")
-	defer c.Release()
+	ctx, cancel := testAllocate(t, "js.html")
+	defer cancel()
 
-	err := c.Run(defaultContext, WaitVisible("#input3", ByID))
+	err := Run(ctx, WaitVisible("#input3", ByID))
 	if err != nil {
 		t.Fatalf("got error: %v", err)
 	}
-
-	err = c.Run(defaultContext, Click("#button4", ByID))
-	if err != nil {
+	if err := Run(ctx, Click("#button4", ByID)); err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	if err := Run(ctx, WaitNotPresent("#input3", ByID)); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
 
-	err = c.Run(defaultContext, WaitNotPresent("#input3", ByID))
-	if err != nil {
-		t.Fatalf("got error: %v", err)
-	}
 }
 
 func TestAtLeast(t *testing.T) {
 	t.Parallel()
 
-	c := testAllocate(t, "js.html")
-	defer c.Release()
+	ctx, cancel := testAllocate(t, "js.html")
+	defer cancel()
 
 	var nodes []*cdp.Node
-	err := c.Run(defaultContext, Nodes("//input", &nodes, AtLeast(3)))
+	err := Run(ctx, Nodes("//input", &nodes, AtLeast(3)))
 	if err != nil {
 		t.Fatalf("got error: %v", err)
 	}

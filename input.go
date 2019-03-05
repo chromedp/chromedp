@@ -58,10 +58,8 @@ func MouseClickXY(x, y int64, opts ...MouseOption) Action {
 // viewport.
 func MouseClickNode(n *cdp.Node, opts ...MouseOption) Action {
 	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
-		var err error
-
 		var pos []int
-		err = EvaluateAsDevTools(fmt.Sprintf(scrollIntoViewJS, n.FullXPath()), &pos).Do(ctxt, h)
+		err := EvaluateAsDevTools(fmt.Sprintf(scrollIntoViewJS, n.FullXPath()), &pos).Do(ctxt, h)
 		if err != nil {
 			return err
 		}
@@ -154,12 +152,9 @@ func ClickCount(n int) MouseOption {
 // of well-known keys.
 func KeyAction(keys string, opts ...KeyOption) Action {
 	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
-		var err error
-
 		for _, r := range keys {
 			for _, k := range kb.Encode(r) {
-				err = k.Do(ctxt, h)
-				if err != nil {
+				if err := k.Do(ctxt, h); err != nil {
 					return err
 				}
 			}

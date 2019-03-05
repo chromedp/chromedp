@@ -39,4 +39,7 @@ const (
 
 	// ErrInvalidHandler is the invalid handler error.
 	ErrInvalidHandler Error = "invalid handler"
+
+	// ErrInvalidContext is the invalid context error.
+	ErrInvalidContext Error = "invalid context"
 )

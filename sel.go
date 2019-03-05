@@ -107,8 +107,7 @@ func (s *Selector) run(ctxt context.Context, h *TargetHandler) chan error {
 							return
 						}
 
-						err = s.after(ctxt, h, nodes...)
-						if err != nil {
+						if err := s.after(ctxt, h, nodes...); err != nil {
 							ch <- err
 						}
 						return

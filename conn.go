@@ -1,7 +1,9 @@
-package client
+package chromedp
 
 import (
 	"io"
+	"net"
+	"strings"
 
 	"github.com/gorilla/websocket"
 )
@@ -26,7 +28,7 @@ type Conn struct {
 	*websocket.Conn
 }
 
-// Read reads the next websocket message.
+// Read reads the next message.
 func (c *Conn) Read() ([]byte, error) {
 	_, buf, err := c.ReadMessage()
 	if err != nil {
@@ -35,23 +37,16 @@ func (c *Conn) Read() ([]byte, error) {
 	return buf, nil
 }
 
-// Write writes a websocket message.
+// Write writes a message.
 func (c *Conn) Write(buf []byte) error {
 	return c.WriteMessage(websocket.TextMessage, buf)
 }
 
-// Dial dials the specified target's websocket URL.
-//
-// Note: uses gorilla/websocket.
-func Dial(urlstr string, opts ...DialOption) (Transport, error) {
+// Dial dials the specified websocket URL using gorilla/websocket.
+func Dial(urlstr string) (*Conn, error) {
 	d := &websocket.Dialer{
 		ReadBufferSize:  DefaultReadBufferSize,
 		WriteBufferSize: DefaultWriteBufferSize,
-	}
-
-	// apply opts
-	for _, o := range opts {
-		o(d)
 	}
 
 	// connect
@@ -63,5 +58,23 @@ func Dial(urlstr string, opts ...DialOption) (Transport, error) {
 	return &Conn{conn}, nil
 }
 
-// DialOption is a dial option.
-type DialOption func(*websocket.Dialer)
+// ForceIP forces the host component in urlstr to be an IP address.
+//
+// Since Chrome 66+, Chrome DevTools Protocol clients connecting to a browser
+// must send the "Host:" header as either an IP address, or "localhost".
+func ForceIP(urlstr string) string {
+	if i := strings.Index(urlstr, "://"); i != -1 {
+		scheme := urlstr[:i+3]
+		host, port, path := urlstr[len(scheme)+3:], "", ""
+		if i := strings.Index(host, "/"); i != -1 {
+			host, path = host[:i], host[i:]
+		}
+		if i := strings.Index(host, ":"); i != -1 {
+			host, port = host[:i], host[i:]
+		}
+		if addr, err := net.ResolveIPAddr("ip", host); err == nil {
+			urlstr = scheme + addr.IP.String() + port + path
+		}
+	}
+	return urlstr
+}

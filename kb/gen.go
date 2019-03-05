@@ -72,8 +72,6 @@ func main() {
 }
 
 func run() error {
-	var err error
-
 	// special characters
 	keys := map[rune]kb.Key{
 		'\b': {"Backspace", "Backspace", "", "", int64('\b'), int64('\b'), false, false},
@@ -82,8 +80,7 @@ func run() error {
 	}
 
 	// load keys
-	err = loadKeys(keys)
-	if err != nil {
+	if err := loadKeys(keys); err != nil {
 		return err
 	}
 
@@ -94,24 +91,19 @@ func run() error {
 	}
 
 	// output
-	err = ioutil.WriteFile(
-		*flagOut,
+	if err := ioutil.WriteFile(*flagOut,
 		[]byte(fmt.Sprintf(hdr, *flagPkg, string(constBuf), string(mapBuf))),
-		0644,
-	)
-	if err != nil {
+		0644); err != nil {
 		return err
 	}
 
 	// format
-	err = exec.Command("goimports", "-w", *flagOut).Run()
-	if err != nil {
+	if err := exec.Command("goimports", "-w", *flagOut).Run(); err != nil {
 		return err
 	}
 
 	// format
-	err = exec.Command("gofmt", "-s", "-w", *flagOut).Run()
-	if err != nil {
+	if err := exec.Command("gofmt", "-s", "-w", *flagOut).Run(); err != nil {
 		return err
 	}
 
@@ -120,8 +112,6 @@ func run() error {
 
 // loadKeys loads the dom key definitions from the chromium source tree.
 func loadKeys(keys map[rune]kb.Key) error {
-	var err error
-
 	// load key converter data
 	keycodeConverterMap, err := loadKeycodeConverterData()
 	if err != nil {
@@ -444,8 +434,6 @@ var defineRE = regexp.MustCompile(`(?m)^#define\s+(.+?)\s+([0-9A-Fx]+)`)
 // loadPosixWinKeyboardCodes loads the native and windows keyboard scan codes
 // mapped to the DOM key.
 func loadPosixWinKeyboardCodes() (map[string][]int64, error) {
-	var err error
-
 	lookup := map[string]string{
 		// mac alias
 		"VKEY_LWIN": "0x5B",

@@ -20,13 +20,11 @@ import (
 	"github.com/chromedp/cdproto/log"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
-
-	"github.com/chromedp/chromedp/client"
 )
 
 // TargetHandler manages a Chrome DevTools Protocol target.
 type TargetHandler struct {
-	conn client.Transport
+	conn Transport
 
 	// frames is the set of encountered frames.
 	frames map[cdp.FrameID]*cdp.Frame
@@ -63,18 +61,22 @@ type TargetHandler struct {
 }
 
 // NewTargetHandler creates a new handler for the specified client target.
-func NewTargetHandler(t client.Target, logf, debugf, errf func(string, ...interface{})) (*TargetHandler, error) {
-	conn, err := client.Dial(t.GetWebsocketURL())
+func NewTargetHandler(urlstr string, opts ...TargetHandlerOption) (*TargetHandler, error) {
+	conn, err := Dial(urlstr)
 	if err != nil {
 		return nil, err
 	}
 
-	return &TargetHandler{
-		conn:   conn,
-		logf:   logf,
-		debugf: debugf,
-		errf:   errf,
-	}, nil
+	h := &TargetHandler{
+		conn: conn,
+		errf: func(string, ...interface{}) {},
+	}
+
+	for _, o := range opts {
+		o(h)
+	}
+
+	return h, nil
 }
 
 // Run starts the processing of commands and events of the client target
@@ -217,12 +219,11 @@ func (h *TargetHandler) read() (*cdproto.Message, error) {
 		return nil, err
 	}
 
-	h.debugf("-> %s", string(buf))
+	//h.debugf("-> %s", string(buf))
 
 	// unmarshal
 	msg := new(cdproto.Message)
-	err = json.Unmarshal(buf, msg)
-	if err != nil {
+	if err := json.Unmarshal(buf, msg); err != nil {
 		return nil, err
 	}
 
@@ -332,7 +333,7 @@ func (h *TargetHandler) processCommand(cmd *cdproto.Message) error {
 		return err
 	}
 
-	h.debugf("<- %s", string(buf))
+	//h.debugf("<- %s", string(buf))
 
 	return h.conn.Write(buf)
 }
@@ -442,8 +443,6 @@ func (h *TargetHandler) GetRoot(ctxt context.Context) (*cdp.Node, error) {
 
 // SetActive sets the currently active frame after a successful navigation.
 func (h *TargetHandler) SetActive(ctxt context.Context, id cdp.FrameID) error {
-	var err error
-
 	// get frame
 	f, err := h.WaitFrame(ctxt, id)
 	if err != nil {
@@ -461,7 +460,7 @@ func (h *TargetHandler) SetActive(ctxt context.Context, id cdp.FrameID) error {
 // WaitFrame waits for a frame to be loaded using the provided context.
 func (h *TargetHandler) WaitFrame(ctxt context.Context, id cdp.FrameID) (*cdp.Frame, error) {
 	// TODO: fix this
-	timeout := time.After(10 * time.Second)
+	timeout := time.After(time.Second)
 
 	for {
 		select {
@@ -495,7 +494,7 @@ func (h *TargetHandler) WaitFrame(ctxt context.Context, id cdp.FrameID) (*cdp.Fr
 // WaitNode waits for a node to be loaded using the provided context.
 func (h *TargetHandler) WaitNode(ctxt context.Context, f *cdp.Frame, id cdp.NodeID) (*cdp.Node, error) {
 	// TODO: fix this
-	timeout := time.After(10 * time.Second)
+	timeout := time.After(time.Second)
 
 	for {
 		select {
@@ -672,3 +671,5 @@ func (h *TargetHandler) domEvent(ctxt context.Context, ev interface{}) {
 
 	op(n)
 }
+
+type TargetHandlerOption func(*TargetHandler)

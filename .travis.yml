@@ -1,14 +1,7 @@
 language: go
+
 go:
-  - 1.10.x
-  - 1.11.x
-addons:
-  apt:
-    chrome: stable
-before_install:
-  - go get github.com/mattn/goveralls golang.org/x/vgo
+  - 1.12.x
+
 script:
-  - export CHROMEDP_TEST_RUNNER=google-chrome-stable
-  - export CHROMEDP_DISABLE_GPU=true
-  - vgo test -v -coverprofile=coverage.out
-  - goveralls -service=travis-ci -coverprofile=coverage.out
+  - true

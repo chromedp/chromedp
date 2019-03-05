@@ -2,117 +2,71 @@ package chromedp
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"os"
 	"path"
 	"testing"
-	"time"
-
-	"github.com/chromedp/chromedp/runner"
 )
 
 var (
-	pool        *Pool
 	testdataDir string
 
-	defaultContext, defaultCancel = context.WithCancel(context.Background())
+	allocCtx context.Context
 
-	cliOpts = []runner.CommandLineOption{
-		runner.NoDefaultBrowserCheck,
-		runner.NoFirstRun,
+	allocOpts = []ExecAllocatorOption{
+		NoFirstRun,
+		NoDefaultBrowserCheck,
+		Headless,
 	}
 )
 
-func testAllocate(t *testing.T, path string) *Res {
-	c, err := pool.Allocate(defaultContext, cliOpts...)
-	if err != nil {
-		t.Fatalf("could not allocate from pool: %v", err)
+func testAllocate(t *testing.T, path string) (_ context.Context, cancel func()) {
+	ctx, cancel := NewContext(allocCtx)
+
+	if err := Run(ctx, Navigate(testdataDir+"/"+path)); err != nil {
+		t.Fatal(err)
 	}
 
-	err = WithLogf(t.Logf)(c.c)
-	if err != nil {
-		t.Fatalf("could not set logf: %v", err)
-	}
+	//if err := WithLogf(t.Logf)(c.c); err != nil {
+	//        t.Fatalf("could not set logf: %v", err)
+	//}
+	//if err := WithDebugf(t.Logf)(c.c); err != nil {
+	//        t.Fatalf("could not set debugf: %v", err)
+	//}
+	//if err := WithErrorf(t.Errorf)(c.c); err != nil {
+	//        t.Fatalf("could not set errorf: %v", err)
+	//}
 
-	err = WithDebugf(t.Logf)(c.c)
-	if err != nil {
-		t.Fatalf("could not set debugf: %v", err)
-	}
-
-	err = WithErrorf(t.Errorf)(c.c)
-	if err != nil {
-		t.Fatalf("could not set errorf: %v", err)
-	}
-
-	h := c.c.GetHandlerByIndex(0)
-	th, ok := h.(*TargetHandler)
-	if !ok {
-		t.Fatalf("handler is invalid type")
-	}
-
-	th.logf, th.debugf = t.Logf, t.Logf
-	th.errf = func(s string, v ...interface{}) {
-		t.Logf("TARGET HANDLER ERROR: "+s, v...)
-	}
-
-	if path != "" {
-		err = c.Run(defaultContext, Navigate(testdataDir+"/"+path))
-		if err != nil {
-			t.Fatalf("could not navigate to testdata/%s: %v", path, err)
-		}
-	}
-
-	return c
+	return ctx, cancel
 }
 
 func TestMain(m *testing.M) {
-	var err error
-
 	wd, err := os.Getwd()
 	if err != nil {
-		log.Fatalf("could not get working directory: %v", err)
-		os.Exit(1)
+		panic(fmt.Sprintf("could not get working directory: %v", err))
 	}
 	testdataDir = "file://" + path.Join(wd, "testdata")
 
-	// its worth noting that newer versions of chrome (64+) run much faster
+	// it's worth noting that newer versions of chrome (64+) run much faster
 	// than older ones -- same for headless_shell ...
-	execPath := os.Getenv("CHROMEDP_TEST_RUNNER")
-	if execPath == "" {
-		execPath = runner.LookChromeNames("headless_shell")
+	if execPath := os.Getenv("CHROMEDP_TEST_RUNNER"); execPath != "" {
+		allocOpts = append(allocOpts, ExecPath(execPath))
 	}
-	cliOpts = append(cliOpts, runner.ExecPath(execPath))
-
 	// not explicitly needed to be set, as this vastly speeds up unit tests
 	if noSandbox := os.Getenv("CHROMEDP_NO_SANDBOX"); noSandbox != "false" {
-		cliOpts = append(cliOpts, runner.NoSandbox)
+		allocOpts = append(allocOpts, NoSandbox)
 	}
 	// must be explicitly set, as disabling gpu slows unit tests
 	if disableGPU := os.Getenv("CHROMEDP_DISABLE_GPU"); disableGPU != "" && disableGPU != "false" {
-		cliOpts = append(cliOpts, runner.DisableGPU)
+		allocOpts = append(allocOpts, DisableGPU)
 	}
 
-	if targetTimeout := os.Getenv("CHROMEDP_TARGET_TIMEOUT"); targetTimeout != "" {
-		defaultNewTargetTimeout, _ = time.ParseDuration(targetTimeout)
-	}
-	if defaultNewTargetTimeout == 0 {
-		defaultNewTargetTimeout = 30 * time.Second
-	}
-
-	//pool, err = NewPool(PoolLog(log.Printf, log.Printf, log.Printf))
-	pool, err = NewPool()
-	if err != nil {
-		log.Fatal(err)
-	}
+	ctx, cancel := NewAllocator(context.Background(), WithExecAllocator(allocOpts...))
+	allocCtx = ctx
 
 	code := m.Run()
 
-	defaultCancel()
-
-	err = pool.Shutdown()
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	cancel()
+	FromContext(ctx).Wait()
 	os.Exit(code)
 }
