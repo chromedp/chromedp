@@ -1,10 +1,12 @@
 package chromedp
 
 import (
+	"context"
 	"io"
 	"net"
 	"strings"
 
+	"github.com/chromedp/cdproto"
 	"github.com/gorilla/websocket"
 )
 
@@ -18,8 +20,8 @@ var (
 
 // Transport is the common interface to send/receive messages to a target.
 type Transport interface {
-	Read() ([]byte, error)
-	Write([]byte) error
+	Read() (*cdproto.Message, error)
+	Write(*cdproto.Message) error
 	io.Closer
 }
 
@@ -29,28 +31,28 @@ type Conn struct {
 }
 
 // Read reads the next message.
-func (c *Conn) Read() ([]byte, error) {
-	_, buf, err := c.ReadMessage()
-	if err != nil {
+func (c *Conn) Read() (*cdproto.Message, error) {
+	msg := new(cdproto.Message)
+	if err := c.ReadJSON(msg); err != nil {
 		return nil, err
 	}
-	return buf, nil
+	return msg, nil
 }
 
 // Write writes a message.
-func (c *Conn) Write(buf []byte) error {
-	return c.WriteMessage(websocket.TextMessage, buf)
+func (c *Conn) Write(msg *cdproto.Message) error {
+	return c.WriteJSON(msg)
 }
 
 // Dial dials the specified websocket URL using gorilla/websocket.
-func Dial(urlstr string) (*Conn, error) {
+func DialContext(ctx context.Context, urlstr string) (*Conn, error) {
 	d := &websocket.Dialer{
 		ReadBufferSize:  DefaultReadBufferSize,
 		WriteBufferSize: DefaultWriteBufferSize,
 	}
 
 	// connect
-	conn, _, err := d.Dial(urlstr, nil)
+	conn, _, err := d.DialContext(ctx, urlstr, nil)
 	if err != nil {
 		return nil, err
 	}

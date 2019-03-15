@@ -136,11 +136,12 @@ func (p *ExecAllocator) Allocate(ctx context.Context) (*Browser, error) {
 	}
 	stderr.Close()
 
-	browser, err := NewBrowser(wsURL)
+	browser, err := NewBrowser(ctx, wsURL)
 	if err != nil {
 		return nil, err
 	}
 	browser.UserDataDir = dataDir
+	browser.Start(ctx)
 	return browser, nil
 }
 

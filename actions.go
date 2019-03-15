@@ -49,7 +49,6 @@ func Sleep(d time.Duration) Action {
 	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
 		select {
 		case <-time.After(d):
-
 		case <-ctxt.Done():
 			return ctxt.Err()
 		}

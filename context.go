@@ -3,7 +3,15 @@ package chromedp
 import (
 	"context"
 	"encoding/json"
-	"net/http"
+	"fmt"
+
+	"github.com/chromedp/cdproto/css"
+	"github.com/chromedp/cdproto/dom"
+	"github.com/chromedp/cdproto/inspector"
+	"github.com/chromedp/cdproto/log"
+	"github.com/chromedp/cdproto/page"
+	"github.com/chromedp/cdproto/runtime"
+	"github.com/chromedp/cdproto/target"
 )
 
 // Executor
@@ -16,10 +24,8 @@ type Context struct {
 	Allocator Allocator
 
 	browser *Browser
-	handler *TargetHandler
 
-	logf func(string, ...interface{})
-	errf func(string, ...interface{})
+	sessionID target.SessionID
 }
 
 // Wait can be called after cancelling the context containing Context, to block
@@ -75,40 +81,46 @@ func Run(ctx context.Context, action Action) error {
 		}
 		c.browser = browser
 	}
-	if c.handler == nil {
-		if err := c.newHandler(ctx); err != nil {
+	if c.sessionID == "" {
+		if err := c.newSession(ctx); err != nil {
 			return err
 		}
 	}
-	return action.Do(ctx, c.handler)
+	return action.Do(ctx, c.browser.executorForTarget(ctx, c.sessionID))
 }
 
-func (c *Context) newHandler(ctx context.Context) error {
-	// TODO: add RemoteAddr() to the Transport interface?
-	conn := c.browser.conn.(*Conn).Conn
-	addr := conn.RemoteAddr()
-	url := "http://" + addr.String() + "/json/new"
-	resp, err := http.Get(url)
+func (c *Context) newSession(ctx context.Context) error {
+	create := target.CreateTarget("about:blank")
+	targetID, err := create.Do(ctx, c.browser)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-	var wurl withWebsocketURL
-	if err := json.NewDecoder(resp.Body).Decode(&wurl); err != nil {
-		return err
-	}
-	c.handler, err = NewTargetHandler(wurl.WebsocketURL)
+
+	attach := target.AttachToTarget(targetID)
+	sessionID, err := attach.Do(ctx, c.browser)
 	if err != nil {
 		return err
 	}
-	if err := c.handler.Run(ctx); err != nil {
-		return err
+
+	target := c.browser.executorForTarget(ctx, sessionID)
+
+	// enable domains
+	for _, enable := range []Action{
+		log.Enable(),
+		runtime.Enable(),
+		//network.Enable(),
+		inspector.Enable(),
+		page.Enable(),
+		dom.Enable(),
+		css.Enable(),
+	} {
+		if err := enable.Do(ctx, target); err != nil {
+			return fmt.Errorf("unable to execute %T: %v", enable, err)
+		}
 	}
+
+	c.sessionID = sessionID
 	return nil
-}
-
-type withWebsocketURL struct {
-	WebsocketURL string `json:"webSocketDebuggerUrl"`
 }
 
 // ContextOption
