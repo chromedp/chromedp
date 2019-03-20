@@ -17,6 +17,7 @@ var (
 		NoFirstRun,
 		NoDefaultBrowserCheck,
 		Headless,
+		DisableGPU,
 	}
 )
 
@@ -58,10 +59,6 @@ func TestMain(m *testing.M) {
 	// not explicitly needed to be set, as this vastly speeds up unit tests
 	if noSandbox := os.Getenv("CHROMEDP_NO_SANDBOX"); noSandbox != "false" {
 		allocOpts = append(allocOpts, NoSandbox)
-	}
-	// must be explicitly set, as disabling gpu slows unit tests
-	if disableGPU := os.Getenv("CHROMEDP_DISABLE_GPU"); disableGPU != "" && disableGPU != "false" {
-		allocOpts = append(allocOpts, DisableGPU)
 	}
 
 	ctx, cancel := NewAllocator(context.Background(), WithExecAllocator(allocOpts...))
