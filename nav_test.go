@@ -43,11 +43,12 @@ func TestNavigationEntries(t *testing.T) {
 
 	ctx, cancel := testAllocate(t, "")
 	defer cancel()
-	time.Sleep(50 * time.Millisecond)
 
-	tests := []string{
-		"form.html",
-		"image.html",
+	tests := []struct {
+		file, waitID string
+	}{
+		{"form.html", "#form"},
+		{"image.html", "#icon-brankas"},
 	}
 
 	var entries []*page.NavigationEntry
@@ -64,16 +65,14 @@ func TestNavigationEntries(t *testing.T) {
 	}
 
 	expIdx, expEntries := 1, 2
-	for i, url := range tests {
-		if err := Run(ctx, Navigate(testdataDir+"/"+url)); err != nil {
+	for i, test := range tests {
+		if err := Run(ctx, Tasks{
+			Navigate(testdataDir + "/" + test.file),
+			WaitVisible(test.waitID, ByID),
+			NavigationEntries(&index, &entries),
+		}); err != nil {
 			t.Fatal(err)
 		}
-
-		time.Sleep(50 * time.Millisecond)
-		if err := Run(ctx, NavigationEntries(&index, &entries)); err != nil {
-			t.Fatal(err)
-		}
-
 		if len(entries) != expEntries {
 			t.Errorf("test %d expected to have %d navigation entry: got %d", i, expEntries, len(entries))
 		}
@@ -94,27 +93,24 @@ func TestNavigateToHistoryEntry(t *testing.T) {
 
 	var entries []*page.NavigationEntry
 	var index int64
-	time.Sleep(50 * time.Millisecond)
-	if err := Run(ctx, NavigationEntries(&index, &entries)); err != nil {
+	if err := Run(ctx, Tasks{
+		WaitVisible(`#icon-brankas`, ByID), // for image.html
+		NavigationEntries(&index, &entries),
+
+		Navigate(testdataDir + "/form.html"),
+		WaitVisible(`#form`, ByID), // for form.html
+	}); err != nil {
 		t.Fatal(err)
 	}
-
-	if err := Run(ctx, Navigate(testdataDir+"/form.html")); err != nil {
-		t.Fatal(err)
-	}
-
-	time.Sleep(50 * time.Millisecond)
-	if err := Run(ctx, NavigateToHistoryEntry(entries[index].ID)); err != nil {
-		t.Fatal(err)
-	}
-
-	time.Sleep(50 * time.Millisecond)
 
 	var title string
-	if err := Run(ctx, Title(&title)); err != nil {
+	if err := Run(ctx, Tasks{
+		NavigateToHistoryEntry(entries[index].ID),
+		WaitVisible(`#icon-brankas`, ByID), // for image.html
+		Title(&title),
+	}); err != nil {
 		t.Fatal(err)
 	}
-
 	if title != entries[index].Title {
 		t.Errorf("expected title to be %s, instead title is: %s", entries[index].Title, title)
 	}
@@ -125,26 +121,19 @@ func TestNavigateBack(t *testing.T) {
 
 	ctx, cancel := testAllocate(t, "form.html")
 	defer cancel()
-	time.Sleep(50 * time.Millisecond)
 
-	var exptitle string
-	if err := Run(ctx, Title(&exptitle)); err != nil {
-		t.Fatal(err)
-	}
+	var title, exptitle string
+	if err := Run(ctx, Tasks{
+		WaitVisible(`#form`, ByID), // for form.html
+		Title(&exptitle),
 
-	if err := Run(ctx, Navigate(testdataDir+"/image.html")); err != nil {
-		t.Fatal(err)
-	}
+		Navigate(testdataDir + "/image.html"),
+		WaitVisible(`#icon-brankas`, ByID), // for image.html
 
-	time.Sleep(50 * time.Millisecond)
-	if err := Run(ctx, NavigateBack()); err != nil {
-		t.Fatal(err)
-	}
-
-	time.Sleep(50 * time.Millisecond)
-
-	var title string
-	if err := Run(ctx, Title(&title)); err != nil {
+		NavigateBack(),
+		WaitVisible(`#form`, ByID), // for form.html
+		Title(&title),
+	}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -158,30 +147,22 @@ func TestNavigateForward(t *testing.T) {
 
 	ctx, cancel := testAllocate(t, "form.html")
 	defer cancel()
-	time.Sleep(50 * time.Millisecond)
-	if err := Run(ctx, Navigate(testdataDir+"/image.html")); err != nil {
-		t.Fatal(err)
-	}
 
-	time.Sleep(50 * time.Millisecond)
+	var title, exptitle string
+	if err := Run(ctx, Tasks{
+		WaitVisible(`#form`, ByID), // for form.html
 
-	var exptitle string
-	if err := Run(ctx, Title(&exptitle)); err != nil {
-		t.Fatal(err)
-	}
-	if err := Run(ctx, NavigateBack()); err != nil {
-		t.Fatal(err)
-	}
+		Navigate(testdataDir + "/image.html"),
+		WaitVisible(`#icon-brankas`, ByID), // for image.html
+		Title(&exptitle),
 
-	time.Sleep(50 * time.Millisecond)
-	if err := Run(ctx, NavigateForward()); err != nil {
-		t.Fatal(err)
-	}
+		NavigateBack(),
+		WaitVisible(`#form`, ByID), // for form.html
 
-	time.Sleep(50 * time.Millisecond)
-
-	var title string
-	if err := Run(ctx, Title(&title)); err != nil {
+		NavigateForward(),
+		WaitVisible(`#icon-brankas`, ByID), // for image.html
+		Title(&title),
+	}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -206,21 +187,18 @@ func TestReload(t *testing.T) {
 	ctx, cancel := testAllocate(t, "form.html")
 	defer cancel()
 
-	time.Sleep(50 * time.Millisecond)
+	var title, exptitle string
+	if err := Run(ctx, Tasks{
+		WaitVisible(`#form`, ByID), // for form.html
+		Title(&exptitle),
 
-	var exptitle string
-	if err := Run(ctx, Title(&exptitle)); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := Run(ctx, Reload()); err != nil {
-		t.Fatal(err)
-	}
-
-	time.Sleep(50 * time.Millisecond)
-
-	var title string
-	if err := Run(ctx, Title(&title)); err != nil {
+		Reload(),
+		// TODO: rewrite test to change the content after a reload, so
+		// we can wait on a selector.
+		Sleep(10 * time.Millisecond),
+		WaitVisible(`#form`, ByID), // for form.html
+		Title(&title),
+	}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -235,10 +213,11 @@ func TestCaptureScreenshot(t *testing.T) {
 	ctx, cancel := testAllocate(t, "image.html")
 	defer cancel()
 
-	time.Sleep(50 * time.Millisecond)
-
 	var buf []byte
-	if err := Run(ctx, CaptureScreenshot(&buf)); err != nil {
+	if err := Run(ctx, Tasks{
+		WaitVisible(`#icon-brankas`, ByID), // for image.html
+		CaptureScreenshot(&buf),
+	}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -264,8 +243,6 @@ func TestCaptureScreenshot(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	time.Sleep(50 * time.Millisecond)
 
 	if scriptID == "" {
 		t.Fatal("got empty script ID")
@@ -298,8 +275,6 @@ func TestRemoveOnLoadScript(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	time.Sleep(50 * time.Millisecond)
 }*/
 
 func TestLocation(t *testing.T) {
@@ -308,10 +283,11 @@ func TestLocation(t *testing.T) {
 	ctx, cancel := testAllocate(t, "form.html")
 	defer cancel()
 
-	time.Sleep(50 * time.Millisecond)
-
 	var urlstr string
-	if err := Run(ctx, Location(&urlstr)); err != nil {
+	if err := Run(ctx, Tasks{
+		WaitVisible(`#form`, ByID), // for form.html
+		Location(&urlstr),
+	}); err != nil {
 		t.Fatal(err)
 	}
 
@@ -326,10 +302,11 @@ func TestTitle(t *testing.T) {
 	ctx, cancel := testAllocate(t, "image.html")
 	defer cancel()
 
-	time.Sleep(50 * time.Millisecond)
-
 	var title string
-	if err := Run(ctx, Title(&title)); err != nil {
+	if err := Run(ctx, Tasks{
+		WaitVisible(`#icon-brankas`, ByID), // for image.html
+		Title(&title),
+	}); err != nil {
 		t.Fatal(err)
 	}
 

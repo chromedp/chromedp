@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strconv"
 	"testing"
-	"time"
 
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/input"
@@ -25,10 +24,10 @@ func TestMouseClickXY(t *testing.T) {
 
 	ctx, cancel := testAllocate(t, "input.html")
 	defer cancel()
-	if err := Run(ctx, Sleep(100*time.Millisecond)); err != nil {
+
+	if err := Run(ctx, WaitVisible(`#input1`, ByID)); err != nil {
 		t.Fatal(err)
 	}
-
 	tests := []struct {
 		x, y int64
 	}{
@@ -42,8 +41,6 @@ func TestMouseClickXY(t *testing.T) {
 		if err := Run(ctx, MouseClickXY(test.x, test.y)); err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
-
-		time.Sleep(50 * time.Millisecond)
 
 		var xstr, ystr string
 		if err := Run(ctx, Value("#input1", &xstr, ByID)); err != nil {
@@ -106,8 +103,6 @@ func TestMouseClickNode(t *testing.T) {
 				t.Fatalf("got error: %v", err)
 			}
 
-			time.Sleep(50 * time.Millisecond)
-
 			var value string
 			if err := Run(ctx, Value("#input3", &value, ByID)); err != nil {
 				t.Fatalf("got error: %v", err)
@@ -164,8 +159,6 @@ func TestMouseClickOffscreenNode(t *testing.T) {
 				}
 
 			}
-
-			time.Sleep(100 * time.Millisecond)
 
 			var value int
 			if err := Run(ctx, Evaluate("window.document.test_i", &value)); err != nil {

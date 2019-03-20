@@ -3,7 +3,6 @@ package chromedp
 import (
 	"context"
 	"fmt"
-	"time"
 
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/dom"
@@ -158,9 +157,6 @@ func KeyAction(keys string, opts ...KeyOption) Action {
 					return err
 				}
 			}
-
-			// TODO: move to context
-			time.Sleep(5 * time.Millisecond)
 		}
 
 		return nil

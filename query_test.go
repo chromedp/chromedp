@@ -8,7 +8,6 @@ import (
 	"os"
 	"reflect"
 	"testing"
-	"time"
 
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/css"
@@ -680,8 +679,6 @@ func TestDoubleClick(t *testing.T) {
 				t.Fatalf("got error: %v", err)
 			}
 
-			time.Sleep(50 * time.Millisecond)
-
 			var value string
 			if err := Run(ctx, Value("#input1", &value, ByID)); err != nil {
 				t.Fatalf("got error: %v", err)
@@ -824,8 +821,6 @@ func TestComputedStyle(t *testing.T) {
 			ctx, cancel := testAllocate(t, "js.html")
 			defer cancel()
 
-			time.Sleep(50 * time.Millisecond)
-
 			var styles []*css.ComputedProperty
 			err := Run(ctx, ComputedStyle(test.sel, &styles, test.by))
 			if err != nil {
@@ -843,7 +838,6 @@ func TestComputedStyle(t *testing.T) {
 				t.Fatalf("got error: %v", err)
 			}
 
-			time.Sleep(50 * time.Millisecond)
 			if err := Run(ctx, ComputedStyle(test.sel, &styles, test.by)); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -878,8 +872,6 @@ func TestMatchedStyle(t *testing.T) {
 
 			ctx, cancel := testAllocate(t, "js.html")
 			defer cancel()
-
-			time.Sleep(50 * time.Millisecond)
 
 			var styles *css.GetMatchedStylesForNodeReturns
 			err := Run(ctx, MatchedStyle(test.sel, &styles, test.by))
