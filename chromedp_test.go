@@ -23,8 +23,11 @@ var (
 func testAllocate(t *testing.T, path string) (_ context.Context, cancel func()) {
 	ctx, cancel := NewContext(allocCtx)
 
-	if err := Run(ctx, Navigate(testdataDir+"/"+path)); err != nil {
-		t.Fatal(err)
+	// Only navigate if we want a path, otherwise leave the blank page.
+	if path != "" {
+		if err := Run(ctx, Navigate(testdataDir+"/"+path)); err != nil {
+			t.Fatal(err)
+		}
 	}
 
 	//if err := WithLogf(t.Logf)(c.c); err != nil {

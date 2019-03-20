@@ -14,6 +14,7 @@ import (
 
 	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/cdp"
+	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
 	"github.com/mailru/easyjson"
 )
@@ -202,6 +203,14 @@ func (b *Browser) run(ctx context.Context) {
 					// TODO: are we interested in
 					// these events?
 					continue
+				}
+				if msg.Method == cdproto.EventRuntimeExceptionThrown {
+					ev := new(runtime.EventExceptionThrown)
+					if err := json.Unmarshal(msg.Params, ev); err != nil {
+						b.errf("%s", err)
+						continue
+					}
+					b.errf("%+v\n", ev.ExceptionDetails)
 				}
 
 				page, ok := b.pages[sessionID]

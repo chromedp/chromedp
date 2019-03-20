@@ -56,14 +56,14 @@ func TestNavigationEntries(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if len(entries) != 2 {
-		t.Errorf("expected to have 2 navigation entry: got %d", len(entries))
+	if len(entries) != 1 {
+		t.Errorf("expected to have 1 navigation entry: got %d", len(entries))
 	}
-	if index != 1 {
-		t.Errorf("expected navigation index is 1, got: %d", index)
+	if index != 0 {
+		t.Errorf("expected navigation index is 0, got: %d", index)
 	}
 
-	expIdx, expEntries := 2, 3
+	expIdx, expEntries := 1, 2
 	for i, url := range tests {
 		if err := Run(ctx, Navigate(testdataDir+"/"+url)); err != nil {
 			t.Fatal(err)
@@ -77,7 +77,7 @@ func TestNavigationEntries(t *testing.T) {
 		if len(entries) != expEntries {
 			t.Errorf("test %d expected to have %d navigation entry: got %d", i, expEntries, len(entries))
 		}
-		if want := int64(i + 2); index != want {
+		if want := int64(i + 1); index != want {
 			t.Errorf("test %d expected navigation index is %d, got: %d", i, want, index)
 		}
 
