@@ -3,7 +3,6 @@ package chromedp
 import (
 	"context"
 	"encoding/json"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -30,9 +29,8 @@ type Target struct {
 	// frames is the set of encountered frames.
 	frames map[cdp.FrameID]*cdp.Frame
 
-	// cur is the current top level frame. TODO: delete mutex
-	curMu sync.RWMutex
-	cur   *cdp.Frame
+	// cur is the current top level frame.
+	cur *cdp.Frame
 
 	// logging funcs
 	logf, errf func(string, ...interface{})
@@ -44,7 +42,6 @@ func (t *Target) run(ctx context.Context) {
 		case <-ctx.Done():
 			return
 		case msg := <-t.eventQueue:
-			//fmt.Printf("%d %s: %s\n", msg.ID, msg.Method, msg.Params)
 			if err := t.processEvent(ctx, msg); err != nil {
 				t.errf("could not process event: %v", err)
 				continue
@@ -56,17 +53,13 @@ func (t *Target) run(ctx context.Context) {
 			if n == 0 {
 				continue
 			}
-
-			t.curMu.RLock()
-			cur := t.cur
-			t.curMu.RUnlock()
-			if cur == nil {
+			if t.cur == nil {
 				continue
 			}
 
 			for i := 0; i < n; i++ {
 				fn := <-t.waitQueue
-				if !fn(cur) {
+				if !fn(t.cur) {
 					// try again later.
 					t.waitQueue <- fn
 				}
@@ -174,9 +167,7 @@ func (t *Target) processEvent(ctxt context.Context, msg *cdproto.Message) error 
 // documentUpdated handles the document updated event, retrieving the document
 // root for the root frame.
 func (t *Target) documentUpdated(ctxt context.Context) {
-	t.curMu.RLock()
 	f := t.cur
-	t.curMu.RUnlock()
 	f.Lock()
 	defer f.Unlock()
 
@@ -210,9 +201,7 @@ func (t *Target) pageEvent(ctxt context.Context, ev interface{}) {
 	switch e := ev.(type) {
 	case *page.EventFrameNavigated:
 		t.frames[e.Frame.ID] = e.Frame
-		t.curMu.Lock()
 		t.cur = e.Frame
-		t.curMu.Unlock()
 		return
 
 	case *page.EventFrameAttached:
@@ -257,9 +246,7 @@ func (t *Target) pageEvent(ctxt context.Context, ev interface{}) {
 
 // domEvent handles incoming DOM events.
 func (t *Target) domEvent(ctxt context.Context, ev interface{}) {
-	t.curMu.RLock()
 	f := t.cur
-	t.curMu.RUnlock()
 
 	var id cdp.NodeID
 	var op nodeOp
