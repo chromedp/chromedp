@@ -898,7 +898,7 @@ func TestFileUpload(t *testing.T) {
 	// create test server
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
-		fmt.Fprintf(res, uploadHTML)
+		fmt.Fprintf(res, "%s", uploadHTML)
 	})
 	mux.HandleFunc("/upload", func(res http.ResponseWriter, req *http.Request) {
 		f, _, err := req.FormFile("upload")

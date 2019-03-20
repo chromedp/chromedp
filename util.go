@@ -37,9 +37,9 @@ func frameDetached(f *cdp.Frame) {
 	clearFrameState(f, cdp.FrameAttached)
 }
 
-func frameStartedLoading(f *cdp.Frame) {
+/*func frameStartedLoading(f *cdp.Frame) {
 	setFrameState(f, cdp.FrameLoading)
-}
+}*/
 
 func frameStoppedLoading(f *cdp.Frame) {
 	clearFrameState(f, cdp.FrameLoading)
