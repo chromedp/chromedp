@@ -946,6 +946,8 @@ func TestFileUpload(t *testing.T) {
 			// parallel
 			//t.Parallel()
 
+			// TODO: check why moving the Navigate action below to
+			// testAllocate makes this test hang.
 			ctx, cancel := testAllocate(t, "")
 			defer cancel()
 

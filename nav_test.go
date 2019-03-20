@@ -11,13 +11,9 @@ import (
 func TestNavigate(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := testAllocate(t, "")
+	ctx, cancel := testAllocate(t, "image.html")
 	defer cancel()
 
-	expurl, exptitle := testdataDir+"/image.html", "this is title"
-	if err := Run(ctx, Navigate(expurl)); err != nil {
-		t.Fatal(err)
-	}
 	if err := Run(ctx, WaitVisible(`#icon-brankas`, ByID)); err != nil {
 		t.Fatal(err)
 	}
@@ -27,7 +23,7 @@ func TestNavigate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if !strings.HasPrefix(urlstr, expurl) {
+	if !strings.HasSuffix(urlstr, "image.html") {
 		t.Errorf("expected to be on image.html, at: %s", urlstr)
 	}
 
@@ -36,6 +32,7 @@ func TestNavigate(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	exptitle := "this is title"
 	if title != exptitle {
 		t.Errorf("expected title to contain google, instead title is: %s", title)
 	}
@@ -92,15 +89,11 @@ func TestNavigationEntries(t *testing.T) {
 func TestNavigateToHistoryEntry(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := testAllocate(t, "")
+	ctx, cancel := testAllocate(t, "image.html")
 	defer cancel()
 
 	var entries []*page.NavigationEntry
 	var index int64
-	if err := Run(ctx, Navigate(testdataDir+"/image.html")); err != nil {
-		t.Fatal(err)
-	}
-
 	time.Sleep(50 * time.Millisecond)
 	if err := Run(ctx, NavigationEntries(&index, &entries)); err != nil {
 		t.Fatal(err)
@@ -130,12 +123,8 @@ func TestNavigateToHistoryEntry(t *testing.T) {
 func TestNavigateBack(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := testAllocate(t, "")
+	ctx, cancel := testAllocate(t, "form.html")
 	defer cancel()
-	if err := Run(ctx, Navigate(testdataDir+"/form.html")); err != nil {
-		t.Fatal(err)
-	}
-
 	time.Sleep(50 * time.Millisecond)
 
 	var exptitle string
@@ -167,12 +156,8 @@ func TestNavigateBack(t *testing.T) {
 func TestNavigateForward(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := testAllocate(t, "")
+	ctx, cancel := testAllocate(t, "form.html")
 	defer cancel()
-	if err := Run(ctx, Navigate(testdataDir+"/form.html")); err != nil {
-		t.Fatal(err)
-	}
-
 	time.Sleep(50 * time.Millisecond)
 	if err := Run(ctx, Navigate(testdataDir+"/image.html")); err != nil {
 		t.Fatal(err)
@@ -208,25 +193,18 @@ func TestNavigateForward(t *testing.T) {
 func TestStop(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := testAllocate(t, "")
+	ctx, cancel := testAllocate(t, "form.html")
 	defer cancel()
-	if err := Run(ctx, Navigate(testdataDir+"/form.html")); err != nil {
-		t.Fatal(err)
-	}
 	if err := Run(ctx, Stop()); err != nil {
 		t.Fatal(err)
 	}
-
 }
 
 func TestReload(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := testAllocate(t, "")
+	ctx, cancel := testAllocate(t, "form.html")
 	defer cancel()
-	if err := Run(ctx, Navigate(testdataDir+"/form.html")); err != nil {
-		t.Fatal(err)
-	}
 
 	time.Sleep(50 * time.Millisecond)
 
@@ -254,11 +232,8 @@ func TestReload(t *testing.T) {
 func TestCaptureScreenshot(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := testAllocate(t, "")
+	ctx, cancel := testAllocate(t, "image.html")
 	defer cancel()
-	if err := Run(ctx, Navigate(testdataDir+"/image.html")); err != nil {
-		t.Fatal(err)
-	}
 
 	time.Sleep(50 * time.Millisecond)
 
@@ -330,13 +305,8 @@ func TestRemoveOnLoadScript(t *testing.T) {
 func TestLocation(t *testing.T) {
 	t.Parallel()
 
-	expurl := testdataDir + "/form.html"
-
-	ctx, cancel := testAllocate(t, "")
+	ctx, cancel := testAllocate(t, "form.html")
 	defer cancel()
-	if err := Run(ctx, Navigate(expurl)); err != nil {
-		t.Fatal(err)
-	}
 
 	time.Sleep(50 * time.Millisecond)
 
@@ -345,7 +315,7 @@ func TestLocation(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if urlstr != expurl {
+	if !strings.HasSuffix(urlstr, "form.html") {
 		t.Fatalf("expected to be on form.html, got: %s", urlstr)
 	}
 }
@@ -353,13 +323,8 @@ func TestLocation(t *testing.T) {
 func TestTitle(t *testing.T) {
 	t.Parallel()
 
-	expurl, exptitle := testdataDir+"/image.html", "this is title"
-
-	ctx, cancel := testAllocate(t, "")
+	ctx, cancel := testAllocate(t, "image.html")
 	defer cancel()
-	if err := Run(ctx, Navigate(expurl)); err != nil {
-		t.Fatal(err)
-	}
 
 	time.Sleep(50 * time.Millisecond)
 
@@ -368,6 +333,7 @@ func TestTitle(t *testing.T) {
 		t.Fatal(err)
 	}
 
+	exptitle := "this is title"
 	if title != exptitle {
 		t.Fatalf("expected title to be %s, got: %s", exptitle, title)
 	}
