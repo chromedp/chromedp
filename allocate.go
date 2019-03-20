@@ -61,26 +61,34 @@ type ExecAllocator struct {
 }
 
 func (p *ExecAllocator) Allocate(ctx context.Context) (*Browser, error) {
-	removeDir := false
-	var cmd *exec.Cmd
-
-	// TODO: figure out a nicer way to do this
-	flags := make(map[string]interface{})
+	var args []string
 	for name, value := range p.initFlags {
-		flags[name] = value
+		switch value := value.(type) {
+		case string:
+			args = append(args, fmt.Sprintf("--%s=%s", name, value))
+		case bool:
+			if value {
+				args = append(args, fmt.Sprintf("--%s", name))
+			}
+		default:
+			return nil, fmt.Errorf("invalid exec pool flag")
+		}
 	}
 
-	dataDir, ok := flags["user-data-dir"].(string)
+	removeDir := false
+	dataDir, ok := p.initFlags["user-data-dir"].(string)
 	if !ok {
 		tempDir, err := ioutil.TempDir("", "chromedp-runner")
 		if err != nil {
 			return nil, err
 		}
-		flags["user-data-dir"] = tempDir
+		args = append(args, "--user-data-dir="+tempDir)
 		dataDir = tempDir
 		removeDir = true
 	}
+	args = append(args, "--remote-debugging-port=0")
 
+	var cmd *exec.Cmd
 	p.wg.Add(1)
 	go func() {
 		<-ctx.Done()
@@ -94,22 +102,6 @@ func (p *ExecAllocator) Allocate(ctx context.Context) (*Browser, error) {
 		}
 		p.wg.Done()
 	}()
-
-	flags["remote-debugging-port"] = "0"
-
-	args := []string{}
-	for name, value := range flags {
-		switch value := value.(type) {
-		case string:
-			args = append(args, fmt.Sprintf("--%s=%s", name, value))
-		case bool:
-			if value {
-				args = append(args, fmt.Sprintf("--%s", name))
-			}
-		default:
-			return nil, fmt.Errorf("invalid exec pool flag")
-		}
-	}
 
 	cmd = exec.CommandContext(ctx, p.execPath, args...)
 	stderr, err := cmd.StderrPipe()
