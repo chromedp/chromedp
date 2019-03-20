@@ -25,7 +25,7 @@ func Nodes(sel interface{}, nodes *[]*cdp.Node, opts ...QueryOption) Action {
 		panic("nodes cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctxt context.Context, h *Target, n ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, h *Target, n ...*cdp.Node) error {
 		*nodes = n
 		return nil
 	}, opts...)
@@ -37,7 +37,7 @@ func NodeIDs(sel interface{}, ids *[]cdp.NodeID, opts ...QueryOption) Action {
 		panic("nodes cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctxt context.Context, h *Target, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, h *Target, nodes ...*cdp.Node) error {
 		nodeIDs := make([]cdp.NodeID, len(nodes))
 		for i, n := range nodes {
 			nodeIDs[i] = n.NodeID
@@ -51,24 +51,24 @@ func NodeIDs(sel interface{}, ids *[]cdp.NodeID, opts ...QueryOption) Action {
 
 // Focus focuses the first node matching the selector.
 func Focus(sel interface{}, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h *Target, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, h *Target, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
-		return dom.Focus().WithNodeID(nodes[0].NodeID).Do(ctxt, h)
+		return dom.Focus().WithNodeID(nodes[0].NodeID).Do(ctx, h)
 	}, opts...)
 }
 
 // Blur unfocuses (blurs) the first node matching the selector.
 func Blur(sel interface{}, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h *Target, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, h *Target, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
 		var res bool
-		err := EvaluateAsDevTools(fmt.Sprintf(blurJS, nodes[0].FullXPath()), &res).Do(ctxt, h)
+		err := EvaluateAsDevTools(fmt.Sprintf(blurJS, nodes[0].FullXPath()), &res).Do(ctx, h)
 		if err != nil {
 			return err
 		}
@@ -87,12 +87,12 @@ func Dimensions(sel interface{}, model **dom.BoxModel, opts ...QueryOption) Acti
 	if model == nil {
 		panic("model cannot be nil")
 	}
-	return QueryAfter(sel, func(ctxt context.Context, h *Target, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, h *Target, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 		var err error
-		*model, err = dom.GetBoxModel().WithNodeID(nodes[0].NodeID).Do(ctxt, h)
+		*model, err = dom.GetBoxModel().WithNodeID(nodes[0].NodeID).Do(ctx, h)
 		return err
 	}, opts...)
 }
@@ -103,18 +103,18 @@ func Text(sel interface{}, text *string, opts ...QueryOption) Action {
 		panic("text cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctxt context.Context, h *Target, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, h *Target, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
-		return EvaluateAsDevTools(fmt.Sprintf(textJS, nodes[0].FullXPath()), text).Do(ctxt, h)
+		return EvaluateAsDevTools(fmt.Sprintf(textJS, nodes[0].FullXPath()), text).Do(ctx, h)
 	}, opts...)
 }
 
 // Clear clears the values of any input/textarea nodes matching the selector.
 func Clear(sel interface{}, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h *Target, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, h *Target, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -154,7 +154,7 @@ func Clear(sel interface{}, opts ...QueryOption) Action {
 
 					a = dom.SetNodeValue(textID, "")
 				}
-				errs[i] = a.Do(ctxt, h)
+				errs[i] = a.Do(ctx, h)
 			}(i, n)
 		}
 		wg.Wait()
@@ -190,7 +190,7 @@ func Attributes(sel interface{}, attributes *map[string]string, opts ...QueryOpt
 		panic("attributes cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctxt context.Context, h *Target, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, h *Target, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -219,7 +219,7 @@ func AttributesAll(sel interface{}, attributes *[]map[string]string, opts ...Que
 		panic("attributes cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctxt context.Context, h *Target, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, h *Target, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -243,7 +243,7 @@ func AttributesAll(sel interface{}, attributes *[]map[string]string, opts ...Que
 // SetAttributes sets the element attributes for the first node matching the
 // selector.
 func SetAttributes(sel interface{}, attributes map[string]string, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h *Target, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, h *Target, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return errors.New("expected at least one element")
 		}
@@ -254,7 +254,7 @@ func SetAttributes(sel interface{}, attributes map[string]string, opts ...QueryO
 			i++
 		}
 
-		return dom.SetAttributesAsText(nodes[0].NodeID, strings.Join(attrs, " ")).Do(ctxt, h)
+		return dom.SetAttributesAsText(nodes[0].NodeID, strings.Join(attrs, " ")).Do(ctx, h)
 	}, opts...)
 }
 
@@ -265,7 +265,7 @@ func AttributeValue(sel interface{}, name string, value *string, ok *bool, opts 
 		panic("value cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctxt context.Context, h *Target, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, h *Target, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return errors.New("expected at least one element")
 		}
@@ -295,24 +295,24 @@ func AttributeValue(sel interface{}, name string, value *string, ok *bool, opts 
 // SetAttributeValue sets the element attribute with name to value for the
 // first node matching the selector.
 func SetAttributeValue(sel interface{}, name, value string, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h *Target, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, h *Target, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
-		return dom.SetAttributeValue(nodes[0].NodeID, name, value).Do(ctxt, h)
+		return dom.SetAttributeValue(nodes[0].NodeID, name, value).Do(ctx, h)
 	}, opts...)
 }
 
 // RemoveAttribute removes the element attribute with name from the first node
 // matching the selector.
 func RemoveAttribute(sel interface{}, name string, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h *Target, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, h *Target, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
-		return dom.RemoveAttribute(nodes[0].NodeID, name).Do(ctxt, h)
+		return dom.RemoveAttribute(nodes[0].NodeID, name).Do(ctx, h)
 	}, opts...)
 }
 
@@ -322,25 +322,25 @@ func JavascriptAttribute(sel interface{}, name string, res interface{}, opts ...
 	if res == nil {
 		panic("res cannot be nil")
 	}
-	return QueryAfter(sel, func(ctxt context.Context, h *Target, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, h *Target, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
-		return EvaluateAsDevTools(fmt.Sprintf(attributeJS, nodes[0].FullXPath(), name), res).Do(ctxt, h)
+		return EvaluateAsDevTools(fmt.Sprintf(attributeJS, nodes[0].FullXPath(), name), res).Do(ctx, h)
 	}, opts...)
 }
 
 // SetJavascriptAttribute sets the javascript attribute for the first node
 // matching the selector.
 func SetJavascriptAttribute(sel interface{}, name, value string, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h *Target, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, h *Target, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
 		var res string
-		err := EvaluateAsDevTools(fmt.Sprintf(setAttributeJS, nodes[0].FullXPath(), name, value), &res).Do(ctxt, h)
+		err := EvaluateAsDevTools(fmt.Sprintf(setAttributeJS, nodes[0].FullXPath(), name, value), &res).Do(ctx, h)
 		if err != nil {
 			return err
 		}
@@ -370,24 +370,24 @@ func InnerHTML(sel interface{}, html *string, opts ...QueryOption) Action {
 
 // Click sends a mouse click event to the first node matching the selector.
 func Click(sel interface{}, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h *Target, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, h *Target, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
-		return MouseClickNode(nodes[0]).Do(ctxt, h)
+		return MouseClickNode(nodes[0]).Do(ctx, h)
 	}, append(opts, NodeVisible)...)
 }
 
 // DoubleClick sends a mouse double click event to the first node matching the
 // selector.
 func DoubleClick(sel interface{}, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h *Target, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, h *Target, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
-		return MouseClickNode(nodes[0], ClickCount(2)).Do(ctxt, h)
+		return MouseClickNode(nodes[0], ClickCount(2)).Do(ctx, h)
 	}, append(opts, NodeVisible)...)
 }
 
@@ -397,7 +397,7 @@ func DoubleClick(sel interface{}, opts ...QueryOption) Action {
 // Note: when selector matches a input[type="file"] node, then dom.SetFileInputFiles
 // is used to set the upload path of the input node to v.
 func SendKeys(sel interface{}, v string, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h *Target, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, h *Target, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -416,22 +416,22 @@ func SendKeys(sel interface{}, v string, opts ...QueryOption) Action {
 
 		// when working with input[type="file"], call dom.SetFileInputFiles
 		if n.NodeName == "INPUT" && typ == "file" {
-			return dom.SetFileInputFiles([]string{v}).WithNodeID(n.NodeID).Do(ctxt, h)
+			return dom.SetFileInputFiles([]string{v}).WithNodeID(n.NodeID).Do(ctx, h)
 		}
 
-		return KeyActionNode(n, v).Do(ctxt, h)
+		return KeyActionNode(n, v).Do(ctx, h)
 	}, append(opts, NodeVisible)...)
 }
 
 // SetUploadFiles sets the files to upload (ie, for a input[type="file"] node)
 // for the first node matching the selector.
 func SetUploadFiles(sel interface{}, files []string, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h *Target, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, h *Target, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
-		return dom.SetFileInputFiles(files).WithNodeID(nodes[0].NodeID).Do(ctxt, h)
+		return dom.SetFileInputFiles(files).WithNodeID(nodes[0].NodeID).Do(ctx, h)
 	}, opts...)
 }
 
@@ -441,13 +441,13 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 		panic("picbuf cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctxt context.Context, h *Target, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, h *Target, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
 		// get box model
-		box, err := dom.GetBoxModel().WithNodeID(nodes[0].NodeID).Do(ctxt, h)
+		box, err := dom.GetBoxModel().WithNodeID(nodes[0].NodeID).Do(ctx, h)
 		if err != nil {
 			return err
 		}
@@ -459,13 +459,13 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 
 		// scroll to node position
 		var pos []int
-		err = EvaluateAsDevTools(fmt.Sprintf(scrollJS, int64(box.Margin[0]), int64(box.Margin[1])), &pos).Do(ctxt, h)
+		err = EvaluateAsDevTools(fmt.Sprintf(scrollJS, int64(box.Margin[0]), int64(box.Margin[1])), &pos).Do(ctx, h)
 		if err != nil {
 			return err
 		}
 
 		// take page screenshot
-		buf, err := page.CaptureScreenshot().Do(ctxt, h)
+		buf, err := page.CaptureScreenshot().Do(ctx, h)
 		if err != nil {
 			return err
 		}
@@ -497,13 +497,13 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 // Submit is an action that submits the form of the first node matching the
 // selector belongs to.
 func Submit(sel interface{}, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h *Target, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, h *Target, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
 		var res bool
-		err := EvaluateAsDevTools(fmt.Sprintf(submitJS, nodes[0].FullXPath()), &res).Do(ctxt, h)
+		err := EvaluateAsDevTools(fmt.Sprintf(submitJS, nodes[0].FullXPath()), &res).Do(ctx, h)
 		if err != nil {
 			return err
 		}
@@ -519,13 +519,13 @@ func Submit(sel interface{}, opts ...QueryOption) Action {
 // Reset is an action that resets the form of the first node matching the
 // selector belongs to.
 func Reset(sel interface{}, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h *Target, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, h *Target, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
 		var res bool
-		err := EvaluateAsDevTools(fmt.Sprintf(resetJS, nodes[0].FullXPath()), &res).Do(ctxt, h)
+		err := EvaluateAsDevTools(fmt.Sprintf(resetJS, nodes[0].FullXPath()), &res).Do(ctx, h)
 		if err != nil {
 			return err
 		}
@@ -544,12 +544,12 @@ func ComputedStyle(sel interface{}, style *[]*css.ComputedProperty, opts ...Quer
 		panic("style cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctxt context.Context, h *Target, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, h *Target, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
-		computed, err := css.GetComputedStyleForNode(nodes[0].NodeID).Do(ctxt, h)
+		computed, err := css.GetComputedStyleForNode(nodes[0].NodeID).Do(ctx, h)
 		if err != nil {
 			return err
 		}
@@ -567,7 +567,7 @@ func MatchedStyle(sel interface{}, style **css.GetMatchedStylesForNodeReturns, o
 		panic("style cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctxt context.Context, h *Target, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, h *Target, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
@@ -576,7 +576,7 @@ func MatchedStyle(sel interface{}, style **css.GetMatchedStylesForNodeReturns, o
 		ret := &css.GetMatchedStylesForNodeReturns{}
 		ret.InlineStyle, ret.AttributesStyle, ret.MatchedCSSRules,
 			ret.PseudoElements, ret.Inherited, ret.CSSKeyframesRules,
-			err = css.GetMatchedStylesForNode(nodes[0].NodeID).Do(ctxt, h)
+			err = css.GetMatchedStylesForNode(nodes[0].NodeID).Do(ctx, h)
 		if err != nil {
 			return err
 		}
@@ -589,13 +589,13 @@ func MatchedStyle(sel interface{}, style **css.GetMatchedStylesForNodeReturns, o
 
 // ScrollIntoView scrolls the window to the first node matching the selector.
 func ScrollIntoView(sel interface{}, opts ...QueryOption) Action {
-	return QueryAfter(sel, func(ctxt context.Context, h *Target, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, h *Target, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector `%s` did not return any nodes", sel)
 		}
 
 		var pos []int
-		err := EvaluateAsDevTools(fmt.Sprintf(scrollIntoViewJS, nodes[0].FullXPath()), &pos).Do(ctxt, h)
+		err := EvaluateAsDevTools(fmt.Sprintf(scrollIntoViewJS, nodes[0].FullXPath()), &pos).Do(ctx, h)
 		if err != nil {
 			return err
 		}

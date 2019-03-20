@@ -27,7 +27,7 @@ func MouseAction(typ input.MouseType, x, y int64, opts ...MouseOption) Action {
 // MouseClickXY sends a left mouse button click (ie, mousePressed and
 // mouseReleased event) at the X, Y location.
 func MouseClickXY(x, y int64, opts ...MouseOption) Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
+	return ActionFunc(func(ctx context.Context, h cdp.Executor) error {
 		me := &input.DispatchMouseEventParams{
 			Type:       input.MousePressed,
 			X:          float64(x),
@@ -41,13 +41,13 @@ func MouseClickXY(x, y int64, opts ...MouseOption) Action {
 			me = o(me)
 		}
 
-		err := me.Do(ctxt, h)
+		err := me.Do(ctx, h)
 		if err != nil {
 			return err
 		}
 
 		me.Type = input.MouseReleased
-		return me.Do(ctxt, h)
+		return me.Do(ctx, h)
 	})
 }
 
@@ -57,14 +57,14 @@ func MouseClickXY(x, y int64, opts ...MouseOption) Action {
 // Note that the window will be scrolled if the node is not within the window's
 // viewport.
 func MouseClickNode(n *cdp.Node, opts ...MouseOption) Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
+	return ActionFunc(func(ctx context.Context, h cdp.Executor) error {
 		var pos []int
-		err := EvaluateAsDevTools(fmt.Sprintf(scrollIntoViewJS, n.FullXPath()), &pos).Do(ctxt, h)
+		err := EvaluateAsDevTools(fmt.Sprintf(scrollIntoViewJS, n.FullXPath()), &pos).Do(ctx, h)
 		if err != nil {
 			return err
 		}
 
-		box, err := dom.GetBoxModel().WithNodeID(n.NodeID).Do(ctxt, h)
+		box, err := dom.GetBoxModel().WithNodeID(n.NodeID).Do(ctx, h)
 		if err != nil {
 			return err
 		}
@@ -82,7 +82,7 @@ func MouseClickNode(n *cdp.Node, opts ...MouseOption) Action {
 		x /= int64(c / 2)
 		y /= int64(c / 2)
 
-		return MouseClickXY(x, y, opts...).Do(ctxt, h)
+		return MouseClickXY(x, y, opts...).Do(ctx, h)
 	})
 }
 
@@ -151,10 +151,10 @@ func ClickCount(n int) MouseOption {
 // Please see the chromedp/kb package for implementation details and the list
 // of well-known keys.
 func KeyAction(keys string, opts ...KeyOption) Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
+	return ActionFunc(func(ctx context.Context, h cdp.Executor) error {
 		for _, r := range keys {
 			for _, k := range kb.Encode(r) {
-				if err := k.Do(ctxt, h); err != nil {
+				if err := k.Do(ctx, h); err != nil {
 					return err
 				}
 			}
@@ -169,13 +169,13 @@ func KeyAction(keys string, opts ...KeyOption) Action {
 
 // KeyActionNode dispatches a key event on a node.
 func KeyActionNode(n *cdp.Node, keys string, opts ...KeyOption) Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
-		err := dom.Focus().WithNodeID(n.NodeID).Do(ctxt, h)
+	return ActionFunc(func(ctx context.Context, h cdp.Executor) error {
+		err := dom.Focus().WithNodeID(n.NodeID).Do(ctx, h)
 		if err != nil {
 			return err
 		}
 
-		return KeyAction(keys, opts...).Do(ctxt, h)
+		return KeyAction(keys, opts...).Do(ctx, h)
 	})
 }
 

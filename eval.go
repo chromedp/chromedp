@@ -27,7 +27,7 @@ func Evaluate(expression string, res interface{}, opts ...EvaluateOption) Action
 		panic("res cannot be nil")
 	}
 
-	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
+	return ActionFunc(func(ctx context.Context, h cdp.Executor) error {
 		// set up parameters
 		p := runtime.Evaluate(expression)
 		switch res.(type) {
@@ -42,7 +42,7 @@ func Evaluate(expression string, res interface{}, opts ...EvaluateOption) Action
 		}
 
 		// evaluate
-		v, exp, err := p.Do(ctxt, h)
+		v, exp, err := p.Do(ctx, h)
 		if err != nil {
 			return err
 		}

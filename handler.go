@@ -127,7 +127,7 @@ func (t *Target) Execute(ctx context.Context, method string, params json.Marshal
 // below are the old TargetHandler methods.
 
 // processEvent processes an incoming event.
-func (t *Target) processEvent(ctxt context.Context, msg *cdproto.Message) error {
+func (t *Target) processEvent(ctx context.Context, msg *cdproto.Message) error {
 	if msg == nil {
 		return ErrChannelClosed
 	}
@@ -151,7 +151,7 @@ func (t *Target) processEvent(ctxt context.Context, msg *cdproto.Message) error 
 	case *inspector.EventDetached:
 		return nil
 	case *dom.EventDocumentUpdated:
-		t.documentUpdated(ctxt)
+		t.documentUpdated(ctx)
 		return nil
 	}
 
@@ -166,7 +166,7 @@ func (t *Target) processEvent(ctxt context.Context, msg *cdproto.Message) error 
 
 // documentUpdated handles the document updated event, retrieving the document
 // root for the root frame.
-func (t *Target) documentUpdated(ctxt context.Context) {
+func (t *Target) documentUpdated(ctx context.Context) {
 	f := t.cur
 	f.Lock()
 	defer f.Unlock()
@@ -178,7 +178,7 @@ func (t *Target) documentUpdated(ctxt context.Context) {
 
 	f.Nodes = make(map[cdp.NodeID]*cdp.Node)
 	var err error
-	f.Root, err = dom.GetDocument().WithPierce(true).Do(ctxt, t)
+	f.Root, err = dom.GetDocument().WithPierce(true).Do(ctx, t)
 	if err == context.Canceled {
 		return // TODO: perhaps not necessary, but useful to keep the tests less noisy
 	}

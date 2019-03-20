@@ -10,8 +10,8 @@ import (
 
 // Navigate navigates the current frame.
 func Navigate(urlstr string) Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
-		_, _, _, err := page.Navigate(urlstr).Do(ctxt, h)
+	return ActionFunc(func(ctx context.Context, h cdp.Executor) error {
+		_, _, _, err := page.Navigate(urlstr).Do(ctx, h)
 		return err
 	})
 }
@@ -23,9 +23,9 @@ func NavigationEntries(currentIndex *int64, entries *[]*page.NavigationEntry) Ac
 		panic("currentIndex and entries cannot be nil")
 	}
 
-	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
+	return ActionFunc(func(ctx context.Context, h cdp.Executor) error {
 		var err error
-		*currentIndex, *entries, err = page.GetNavigationHistory().Do(ctxt, h)
+		*currentIndex, *entries, err = page.GetNavigationHistory().Do(ctx, h)
 		return err
 	})
 }
@@ -38,8 +38,8 @@ func NavigateToHistoryEntry(entryID int64) Action {
 
 // NavigateBack navigates the current frame backwards in its history.
 func NavigateBack() Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
-		cur, entries, err := page.GetNavigationHistory().Do(ctxt, h)
+	return ActionFunc(func(ctx context.Context, h cdp.Executor) error {
+		cur, entries, err := page.GetNavigationHistory().Do(ctx, h)
 		if err != nil {
 			return err
 		}
@@ -48,14 +48,14 @@ func NavigateBack() Action {
 			return errors.New("invalid navigation entry")
 		}
 
-		return page.NavigateToHistoryEntry(entries[cur-1].ID).Do(ctxt, h)
+		return page.NavigateToHistoryEntry(entries[cur-1].ID).Do(ctx, h)
 	})
 }
 
 // NavigateForward navigates the current frame forwards in its history.
 func NavigateForward() Action {
-	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
-		cur, entries, err := page.GetNavigationHistory().Do(ctxt, h)
+	return ActionFunc(func(ctx context.Context, h cdp.Executor) error {
+		cur, entries, err := page.GetNavigationHistory().Do(ctx, h)
 		if err != nil {
 			return err
 		}
@@ -64,7 +64,7 @@ func NavigateForward() Action {
 			return errors.New("invalid navigation entry")
 		}
 
-		return page.NavigateToHistoryEntry(entries[cur+1].ID).Do(ctxt, h)
+		return page.NavigateToHistoryEntry(entries[cur+1].ID).Do(ctx, h)
 	})
 }
 
@@ -86,9 +86,9 @@ func CaptureScreenshot(res *[]byte) Action {
 		panic("res cannot be nil")
 	}
 
-	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
+	return ActionFunc(func(ctx context.Context, h cdp.Executor) error {
 		var err error
-		*res, err = page.CaptureScreenshot().Do(ctxt, h)
+		*res, err = page.CaptureScreenshot().Do(ctx, h)
 		return err
 	})
 }
@@ -99,9 +99,9 @@ func CaptureScreenshot(res *[]byte) Action {
 		panic("id cannot be nil")
 	}
 
-	return ActionFunc(func(ctxt context.Context, h cdp.Executor) error {
+	return ActionFunc(func(ctx context.Context, h cdp.Executor) error {
 		var err error
-		*id, err = page.AddScriptToEvaluateOnLoad(source).Do(ctxt, h)
+		*id, err = page.AddScriptToEvaluateOnLoad(source).Do(ctx, h)
 		return err
 	})
 }
