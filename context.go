@@ -28,14 +28,6 @@ type Context struct {
 	sessionID target.SessionID
 }
 
-// Wait can be called after cancelling the context containing Context, to block
-// until all the underlying resources have been cleaned up.
-func (c *Context) Wait() {
-	if c.Allocator != nil {
-		c.Allocator.Wait()
-	}
-}
-
 // NewContext creates a browser context using the parent context.
 func NewContext(parent context.Context, opts ...ContextOption) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(parent)

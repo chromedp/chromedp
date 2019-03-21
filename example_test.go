@@ -26,7 +26,7 @@ func ExampleTitle() {
 
 	// wait for the resources to be cleaned up
 	cancel()
-	chromedp.FromContext(ctx).Wait()
+	chromedp.FromContext(ctx).Allocator.Wait()
 
 	// Output:
 	// Issues · chromedp/chromedp · GitHub
@@ -70,7 +70,7 @@ func ExampleExecAllocatorOption() {
 
 	// wait for the resources to be cleaned up
 	cancel()
-	chromedp.FromContext(allocCtx).Wait()
+	chromedp.FromContext(allocCtx).Allocator.Wait()
 
 	// Output:
 	// Files in UserDataDir:

@@ -67,6 +67,6 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 
 	cancel()
-	FromContext(ctx).Wait()
+	FromContext(ctx).Allocator.Wait()
 	os.Exit(code)
 }
