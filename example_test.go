@@ -1,10 +1,12 @@
 package chromedp_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 
 	"github.com/chromedp/chromedp"
 )
@@ -59,21 +61,18 @@ func ExampleExecAllocatorOption() {
 		panic(err)
 	}
 
-	files, err := ioutil.ReadDir(dir)
+	path := filepath.Join(dir, "DevToolsActivePort")
+	bs, err := ioutil.ReadFile(path)
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("Files in UserDataDir:")
-	for _, file := range files {
-		fmt.Println(file.Name())
-	}
+	lines := bytes.Split(bs, []byte("\n"))
+	fmt.Printf("DevToolsActivePort has %d lines\n", len(lines))
 
 	// wait for the resources to be cleaned up
 	cancel()
 	chromedp.FromContext(allocCtx).Allocator.Wait()
 
 	// Output:
-	// Files in UserDataDir:
-	// Default
-	// DevToolsActivePort
+	// DevToolsActivePort has 2 lines
 }
