@@ -11,17 +11,24 @@ import (
 	"sync"
 )
 
+// An Allocator is responsible for creating and managing a number of browsers.
+//
+// This interface abstracts away how the browser process is actually run. For
+// example, an Allocator implementation may reuse browser processes, or connect
+// to already-running browsers on remote machines.
 type Allocator interface {
-	// Allocate creates a new browser from the pool. It can be cancelled via
-	// the provided context, at which point all the resources used by the
-	// browser (such as temporary directories) will be cleaned up.
+	// Allocate creates a new browser. It can be cancelled via the provided
+	// context, at which point all the resources used by the browser (such
+	// as temporary directories) will be freed.
 	Allocate(context.Context) (*Browser, error)
 
-	// Wait can be called after cancelling a pool's context, to block until
-	// all the pool's resources have been cleaned up.
+	// Wait can be called after cancelling an allocator's context, to block
+	// until all of its resources have been freed.
 	Wait()
 }
 
+// NewAllocator creates a new allocator context, suitable for use with
+// NewContext or Run.
 func NewAllocator(parent context.Context, opts ...AllocatorOption) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(parent)
 	c := &Context{}
@@ -36,6 +43,7 @@ func NewAllocator(parent context.Context, opts ...AllocatorOption) (context.Cont
 
 type AllocatorOption func(*Allocator)
 
+// WithExecAllocator returns an AllocatorOption which sets up an ExecAllocator.
 func WithExecAllocator(opts ...ExecAllocatorOption) func(*Allocator) {
 	return func(p *Allocator) {
 		ep := &ExecAllocator{
@@ -53,6 +61,8 @@ func WithExecAllocator(opts ...ExecAllocatorOption) func(*Allocator) {
 
 type ExecAllocatorOption func(*ExecAllocator)
 
+// ExecAllocator is an Allocator which starts new browser processes on the host
+// machine.
 type ExecAllocator struct {
 	execPath  string
 	initFlags map[string]interface{}
@@ -141,6 +151,9 @@ func (p *ExecAllocator) Wait() {
 	p.wg.Wait()
 }
 
+// ExecPath returns an ExecAllocatorOption which uses the given path to execute
+// browser processes. The given path can be an absolute path to a binary, or
+// just the name of the program to find via exec.LookPath.
 func ExecPath(path string) ExecAllocatorOption {
 	return func(p *ExecAllocator) {
 		if fullPath, _ := exec.LookPath(path); fullPath != "" {

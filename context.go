@@ -19,7 +19,7 @@ type Executor interface {
 	Execute(context.Context, string, json.Marshaler, json.Unmarshaler) error
 }
 
-// Context
+// Context is attached to any context.Context which is valid for use with Run.
 type Context struct {
 	Allocator Allocator
 
@@ -54,13 +54,15 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 
 type contextKey struct{}
 
-// FromContext creates a new browser context from the provided context.
+// FromContext extracts the Context data stored inside a context.Context.
 func FromContext(ctx context.Context) *Context {
 	c, _ := ctx.Value(contextKey{}).(*Context)
 	return c
 }
 
-// Run runs the action against the provided browser context.
+// Run runs an action against the provided context. The provided context must
+// contain a valid Allocator; typically, that will be created via NewContext or
+// NewAllocator.
 func Run(ctx context.Context, action Action) error {
 	c := FromContext(ctx)
 	if c == nil || c.Allocator == nil {
@@ -115,5 +117,4 @@ func (c *Context) newSession(ctx context.Context) error {
 	return nil
 }
 
-// ContextOption
 type ContextOption func(*Context)
