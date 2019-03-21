@@ -1,7 +1,10 @@
 package chromedp
 
 import (
+	"bytes"
 	"fmt"
+	"image"
+	_ "image/png"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -12,6 +15,7 @@ import (
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/css"
 	"github.com/chromedp/cdproto/dom"
+	"github.com/chromedp/cdproto/emulation"
 
 	"github.com/chromedp/chromedp/kb"
 )
@@ -739,13 +743,21 @@ func TestScreenshot(t *testing.T) {
 	defer cancel()
 
 	tests := []struct {
-		sel string
-		by  QueryOption
+		sel  string
+		by   QueryOption
+		size int
 	}{
-		{"/html/body/img", BySearch},
-		{"img", ByQueryAll},
-		{"img", ByQuery},
-		{"#icon-github", ByID},
+		{"/html/body/img", BySearch, 239},
+		{"img", ByQueryAll, 239},
+		{"#icon-github", ByID, 120},
+	}
+
+	// a smaller viewport speeds up this test
+	width, height := 650, 450
+	if err := Run(ctx, emulation.SetDeviceMetricsOverride(
+		int64(width), int64(height), 1.0, false,
+	)); err != nil {
+		t.Fatal(err)
 	}
 
 	for i, test := range tests {
@@ -757,7 +769,17 @@ func TestScreenshot(t *testing.T) {
 		if len(buf) == 0 {
 			t.Fatalf("test %d failed to capture screenshot", i)
 		}
-		//TODO: test image
+		config, format, err := image.DecodeConfig(bytes.NewReader(buf))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if want := "png"; format != want {
+			t.Fatalf("expected format to be %q, got %q", want, format)
+		}
+		if config.Width != test.size || config.Height != test.size {
+			t.Fatalf("expected dimensions to be %d*%d, got %d*%d",
+				test.size, test.size, config.Width, config.Height)
+		}
 	}
 }
 

@@ -30,8 +30,8 @@ func ExampleTitle() {
 	cancel()
 	chromedp.FromContext(ctx).Allocator.Wait()
 
-	// Output:
-	// Issues · chromedp/chromedp · GitHub
+	// no expected output, to not run this test as part of 'go test'; it's
+	// too slow, requiring internet access.
 }
 
 func ExampleExecAllocatorOption() {

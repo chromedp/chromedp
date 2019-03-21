@@ -1,10 +1,14 @@
 package chromedp
 
 import (
+	"bytes"
+	"image"
+	_ "image/png"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/chromedp/cdproto/emulation"
 	"github.com/chromedp/cdproto/page"
 )
 
@@ -213,18 +217,28 @@ func TestCaptureScreenshot(t *testing.T) {
 	ctx, cancel := testAllocate(t, "image.html")
 	defer cancel()
 
+	// set the viewport size, to know what screenshot size to expect
+	width, height := 650, 450
 	var buf []byte
 	if err := Run(ctx, Tasks{
+		emulation.SetDeviceMetricsOverride(int64(width), int64(height), 1.0, false),
 		WaitVisible(`#icon-brankas`, ByID), // for image.html
 		CaptureScreenshot(&buf),
 	}); err != nil {
 		t.Fatal(err)
 	}
 
-	if len(buf) == 0 {
-		t.Fatal("failed to capture screenshot")
+	config, format, err := image.DecodeConfig(bytes.NewReader(buf))
+	if err != nil {
+		t.Fatal(err)
 	}
-	//TODO: test image
+	if want := "png"; format != want {
+		t.Fatalf("expected format to be %q, got %q", want, format)
+	}
+	if config.Width != width || config.Height != height {
+		t.Fatalf("expected dimensions to be %d*%d, got %d*%d",
+			width, height, config.Width, config.Height)
+	}
 }
 
 /*func TestAddOnLoadScript(t *testing.T) {
