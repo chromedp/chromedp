@@ -2,11 +2,13 @@ package chromedp
 
 import (
 	"bytes"
+	"fmt"
 	"image"
 	_ "image/png"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/chromedp/cdproto/emulation"
 	"github.com/chromedp/cdproto/page"
@@ -188,19 +190,33 @@ func TestStop(t *testing.T) {
 func TestReload(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := testAllocate(t, "form.html")
+	count := 0
+	// create test server
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
+		fmt.Fprintf(res, `<html>
+<head>
+	<title>Title</title>
+</head>
+<body>
+	<div id="count%d"></div>
+</body></html`, count)
+		count++
+	})
+	s := httptest.NewServer(mux)
+	defer s.Close()
+
+	ctx, cancel := testAllocate(t, "")
 	defer cancel()
 
 	var title, exptitle string
 	if err := Run(ctx, Tasks{
-		WaitVisible(`#form`, ByID), // for form.html
+		Navigate(s.URL),
+		WaitReady(`#count0`, ByID),
 		Title(&exptitle),
 
 		Reload(),
-		// TODO: rewrite test to change the content after a reload, so
-		// we can wait on a selector.
-		Sleep(10 * time.Millisecond),
-		WaitVisible(`#form`, ByID), // for form.html
+		WaitReady(`#count1`, ByID),
 		Title(&title),
 	}); err != nil {
 		t.Fatal(err)
