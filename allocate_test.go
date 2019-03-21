@@ -30,7 +30,7 @@ func TestExecAllocator(t *testing.T) {
 		t.Fatalf("wanted %q, got %q", want, got)
 	}
 
-	tempDir := FromContext(taskCtx).browser.UserDataDir
+	tempDir := FromContext(taskCtx).Browser.userDataDir
 	pool := FromContext(taskCtx).Allocator
 
 	cancel()

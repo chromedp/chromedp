@@ -23,7 +23,7 @@ import (
 // the browser process runner, WebSocket clients, associated targets, and
 // network, page, and DOM events.
 type Browser struct {
-	UserDataDir string
+	userDataDir string
 
 	pages map[target.SessionID]*Target
 
@@ -55,9 +55,14 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 	}
 
 	b := &Browser{
-		conn:  conn,
+		conn: conn,
+
 		pages: make(map[target.SessionID]*Target, 1024),
-		logf:  log.Printf,
+
+		cmdQueue: make(chan cmdJob),
+		qres:     make(chan *cdproto.Message),
+
+		logf: log.Printf,
 	}
 
 	// apply options
@@ -72,6 +77,7 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 		b.errf = func(s string, v ...interface{}) { b.logf("ERROR: "+s, v...) }
 	}
 
+	go b.run(ctx)
 	return b, nil
 }
 
@@ -152,13 +158,6 @@ func (b *Browser) Execute(ctx context.Context, method string, params json.Marsha
 		return ctx.Err()
 	}
 	return nil
-}
-
-func (b *Browser) Start(ctx context.Context) {
-	b.cmdQueue = make(chan cmdJob)
-	b.qres = make(chan *cdproto.Message)
-
-	go b.run(ctx)
 }
 
 func (b *Browser) run(ctx context.Context) {

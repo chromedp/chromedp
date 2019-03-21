@@ -44,7 +44,7 @@ func (c *Conn) Write(msg *cdproto.Message) error {
 	return c.WriteJSON(msg)
 }
 
-// Dial dials the specified websocket URL using gorilla/websocket.
+// DialContext dials the specified websocket URL using gorilla/websocket.
 func DialContext(ctx context.Context, urlstr string) (*Conn, error) {
 	d := &websocket.Dialer{
 		ReadBufferSize:  DefaultReadBufferSize,

@@ -2,7 +2,6 @@ package chromedp
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/chromedp/cdproto/css"
@@ -14,16 +13,11 @@ import (
 	"github.com/chromedp/cdproto/target"
 )
 
-// Executor
-type Executor interface {
-	Execute(context.Context, string, json.Marshaler, json.Unmarshaler) error
-}
-
 // Context is attached to any context.Context which is valid for use with Run.
 type Context struct {
 	Allocator Allocator
 
-	browser *Browser
+	Browser *Browser
 
 	sessionID target.SessionID
 }
@@ -68,35 +62,35 @@ func Run(ctx context.Context, action Action) error {
 	if c == nil || c.Allocator == nil {
 		return ErrInvalidContext
 	}
-	if c.browser == nil {
+	if c.Browser == nil {
 		browser, err := c.Allocator.Allocate(ctx)
 		if err != nil {
 			return err
 		}
-		c.browser = browser
+		c.Browser = browser
 	}
 	if c.sessionID == "" {
 		if err := c.newSession(ctx); err != nil {
 			return err
 		}
 	}
-	return action.Do(ctx, c.browser.executorForTarget(ctx, c.sessionID))
+	return action.Do(ctx, c.Browser.executorForTarget(ctx, c.sessionID))
 }
 
 func (c *Context) newSession(ctx context.Context) error {
 	create := target.CreateTarget("about:blank")
-	targetID, err := create.Do(ctx, c.browser)
+	targetID, err := create.Do(ctx, c.Browser)
 	if err != nil {
 		return err
 	}
 
 	attach := target.AttachToTarget(targetID)
-	sessionID, err := attach.Do(ctx, c.browser)
+	sessionID, err := attach.Do(ctx, c.Browser)
 	if err != nil {
 		return err
 	}
 
-	target := c.browser.executorForTarget(ctx, sessionID)
+	target := c.Browser.executorForTarget(ctx, sessionID)
 
 	// enable domains
 	for _, enable := range []Action{
