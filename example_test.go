@@ -76,3 +76,36 @@ func ExampleExecAllocatorOption() {
 	// Output:
 	// DevToolsActivePort has 2 lines
 }
+
+func ExampleManyTabs() {
+	// new browser, first tab
+	ctx1, cancel := chromedp.NewContext(context.Background())
+	defer cancel()
+
+	// ensure the first tab is created
+	if err := chromedp.Run(ctx1, chromedp.Tasks{}); err != nil {
+		panic(err)
+	}
+
+	// same browser, second tab
+	ctx2, _ := chromedp.NewContext(ctx1)
+
+	// ensure the second tab is created
+	if err := chromedp.Run(ctx2, chromedp.Tasks{}); err != nil {
+		panic(err)
+	}
+
+	c1 := chromedp.FromContext(ctx1)
+	c2 := chromedp.FromContext(ctx2)
+
+	fmt.Printf("Same browser: %t\n", c1.Browser == c2.Browser)
+	fmt.Printf("Same tab: %t\n", c1.SessionID == c2.SessionID)
+
+	// wait for the resources to be cleaned up
+	cancel()
+	c1.Allocator.Wait()
+
+	// Output:
+	// Same browser: true
+	// Same tab: false
+}

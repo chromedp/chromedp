@@ -19,7 +19,7 @@ type Context struct {
 
 	Browser *Browser
 
-	sessionID target.SessionID
+	SessionID target.SessionID
 }
 
 // NewContext creates a browser context using the parent context.
@@ -29,6 +29,9 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 	c := &Context{}
 	if pc := FromContext(parent); pc != nil {
 		c.Allocator = pc.Allocator
+		c.Browser = pc.Browser
+		// don't inherit SessionID, so that NewContext can be used to
+		// create a new tab on the same browser.
 	}
 
 	for _, o := range opts {
@@ -69,12 +72,12 @@ func Run(ctx context.Context, action Action) error {
 		}
 		c.Browser = browser
 	}
-	if c.sessionID == "" {
+	if c.SessionID == "" {
 		if err := c.newSession(ctx); err != nil {
 			return err
 		}
 	}
-	return action.Do(ctx, c.Browser.executorForTarget(ctx, c.sessionID))
+	return action.Do(ctx, c.Browser.executorForTarget(ctx, c.SessionID))
 }
 
 func (c *Context) newSession(ctx context.Context) error {
@@ -107,7 +110,7 @@ func (c *Context) newSession(ctx context.Context) error {
 		}
 	}
 
-	c.sessionID = sessionID
+	c.SessionID = sessionID
 	return nil
 }
 
