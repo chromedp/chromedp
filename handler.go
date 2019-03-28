@@ -226,6 +226,15 @@ func (h *TargetHandler) processEvent(ctxt context.Context, msg *cdproto.Message)
 	if msg == nil {
 		return ErrChannelClosed
 	}
+	switch msg.Method {
+	case "Page.frameClearedScheduledNavigation",
+		"Page.frameScheduledNavigation":
+		// These events are now deprecated, and UnmarshalMessage panics
+		// when they are received from Chrome. For now, to avoid panics
+		// and compile errors, and to fix chromedp v0 when installed via
+		// 'go get -u', skip the events here.
+		return nil
+	}
 
 	// unmarshal
 	ev, err := cdproto.UnmarshalMessage(msg)
@@ -530,13 +539,9 @@ func (h *TargetHandler) pageEvent(ctxt context.Context, ev interface{}) {
 	case *page.EventFrameStoppedLoading:
 		id, op = e.FrameID, frameStoppedLoading
 
-	case *page.EventFrameScheduledNavigation:
-		id, op = e.FrameID, frameScheduledNavigation
-
-	case *page.EventFrameClearedScheduledNavigation:
-		id, op = e.FrameID, frameClearedScheduledNavigation
-
 		// ignored events
+	case *page.EventFrameRequestedNavigation:
+		return
 	case *page.EventDomContentEventFired:
 		return
 	case *page.EventLoadEventFired:
