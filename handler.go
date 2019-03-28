@@ -211,10 +211,7 @@ func (t *Target) pageEvent(ev interface{}) {
 		id, op = e.FrameID, frameDetached
 
 	case *page.EventFrameStartedLoading:
-		// TODO: this happens before EventFrameNavigated, so the frame
-		// isn't in t.frames yet.
-		//id, op = e.FrameID, frameStartedLoading
-		return
+		id, op = e.FrameID, frameStartedLoading
 
 	case *page.EventFrameStoppedLoading:
 		id, op = e.FrameID, frameStoppedLoading
@@ -237,6 +234,13 @@ func (t *Target) pageEvent(ev interface{}) {
 	}
 
 	f := t.frames[id]
+	if f == nil {
+		// This can happen if a frame is attached or starts loading
+		// before it's ever navigated to. We won't have all the frame
+		// details just yet, but that's okay.
+		f = &cdp.Frame{ID: id}
+		t.frames[id] = f
+	}
 
 	f.Lock()
 	defer f.Unlock()

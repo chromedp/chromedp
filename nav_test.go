@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/chromedp/cdproto/emulation"
 	"github.com/chromedp/cdproto/page"
@@ -343,5 +344,21 @@ func TestTitle(t *testing.T) {
 	exptitle := "this is title"
 	if title != exptitle {
 		t.Fatalf("expected title to be %s, got: %s", exptitle, title)
+	}
+}
+
+func TestLoadIframe(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "iframe.html")
+	defer cancel()
+
+	if err := Run(ctx, Tasks{
+		// TODO: remove the sleep once we have better support for
+		// iframes.
+		Sleep(10 * time.Millisecond),
+		//WaitVisible(`#form`, ByID), // for the nested form.html
+	}); err != nil {
+		t.Fatal(err)
 	}
 }
