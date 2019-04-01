@@ -355,30 +355,38 @@ func TestAttributes(t *testing.T) {
 		by  QueryOption
 		exp map[string]string
 	}{
-		{`//*[@id="icon-brankas"]`, BySearch,
+		{
+			`//*[@id="icon-brankas"]`, BySearch,
 			map[string]string{
 				"alt": "Brankas - Easy Money Management",
 				"id":  "icon-brankas",
 				"src": "images/brankas.png",
-			}},
-		{"body > img:first-child", ByQuery,
+			},
+		},
+		{
+			"body > img:first-child", ByQuery,
 			map[string]string{
 				"alt": "Brankas - Easy Money Management",
 				"id":  "icon-brankas",
 				"src": "images/brankas.png",
-			}},
-		{"body > img:nth-child(2)", ByQueryAll,
+			},
+		},
+		{
+			"body > img:nth-child(2)", ByQueryAll,
 			map[string]string{
 				"alt": `How people build software`,
 				"id":  "icon-github",
 				"src": "images/github.png",
-			}},
-		{"#icon-github", ByID,
+			},
+		},
+		{
+			"#icon-github", ByID,
 			map[string]string{
 				"alt": "How people build software",
 				"id":  "icon-github",
 				"src": "images/github.png",
-			}},
+			},
+		},
 	}
 
 	for i, test := range tests {
@@ -404,7 +412,8 @@ func TestAttributesAll(t *testing.T) {
 		by  QueryOption
 		exp []map[string]string
 	}{
-		{"img", ByQueryAll,
+		{
+			"img", ByQueryAll,
 			[]map[string]string{
 				{
 					"alt": "Brankas - Easy Money Management",
@@ -441,22 +450,28 @@ func TestSetAttributes(t *testing.T) {
 		attrs map[string]string
 		exp   map[string]string
 	}{
-		{`//*[@id="icon-brankas"]`, BySearch,
-			map[string]string{"data-url": "brankas"},
-			map[string]string{
-				"alt":      "Brankas - Easy Money Management",
-				"id":       "icon-brankas",
-				"src":      "images/brankas.png",
-				"data-url": "brankas"}},
-		{"body > img:first-child", ByQuery,
+		{
+			`//*[@id="icon-brankas"]`, BySearch,
 			map[string]string{"data-url": "brankas"},
 			map[string]string{
 				"alt":      "Brankas - Easy Money Management",
 				"id":       "icon-brankas",
 				"src":      "images/brankas.png",
 				"data-url": "brankas",
-			}},
-		{"body > img:nth-child(2)", ByQueryAll,
+			},
+		},
+		{
+			"body > img:first-child", ByQuery,
+			map[string]string{"data-url": "brankas"},
+			map[string]string{
+				"alt":      "Brankas - Easy Money Management",
+				"id":       "icon-brankas",
+				"src":      "images/brankas.png",
+				"data-url": "brankas",
+			},
+		},
+		{
+			"body > img:nth-child(2)", ByQueryAll,
 			map[string]string{"width": "100", "height": "200"},
 			map[string]string{
 				"alt":    `How people build software`,
@@ -464,8 +479,10 @@ func TestSetAttributes(t *testing.T) {
 				"src":    "images/github.png",
 				"width":  "100",
 				"height": "200",
-			}},
-		{"#icon-github", ByID,
+			},
+		},
+		{
+			"#icon-github", ByID,
 			map[string]string{"width": "100", "height": "200"},
 			map[string]string{
 				"alt":    "How people build software",
@@ -473,7 +490,8 @@ func TestSetAttributes(t *testing.T) {
 				"src":    "images/github.png",
 				"width":  "100",
 				"height": "200",
-			}},
+			},
+		},
 	}
 
 	for i, test := range tests {

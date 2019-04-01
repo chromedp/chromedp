@@ -28,7 +28,6 @@ func TestWaitReady(t *testing.T) {
 	if err := Run(ctx, Value(nodeIDs, &value, ByNodeID)); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
-
 }
 
 func TestWaitVisible(t *testing.T) {
@@ -53,7 +52,6 @@ func TestWaitVisible(t *testing.T) {
 	if err := Run(ctx, Value(nodeIDs, &value, ByNodeID)); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
-
 }
 
 func TestWaitNotVisible(t *testing.T) {
@@ -81,7 +79,6 @@ func TestWaitNotVisible(t *testing.T) {
 	if err := Run(ctx, Value(nodeIDs, &value, ByNodeID)); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
-
 }
 
 func TestWaitEnabled(t *testing.T) {
@@ -180,7 +177,6 @@ func TestWaitNotPresent(t *testing.T) {
 	if err := Run(ctx, WaitNotPresent("#input3", ByID)); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
-
 }
 
 func TestAtLeast(t *testing.T) {

@@ -157,7 +157,6 @@ func TestMouseClickOffscreenNode(t *testing.T) {
 				if err := Run(ctx, MouseClickNode(nodes[0])); err != nil {
 					t.Fatalf("got error: %v", err)
 				}
-
 			}
 
 			var value int
