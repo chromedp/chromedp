@@ -155,10 +155,18 @@ func (h *TargetHandler) run(ctxt context.Context) {
 
 				switch {
 				case msg.Method != "":
-					h.qevents <- msg
+					select {
+					case h.qevents <- msg:
+					case <-ctxt.Done():
+						return
+					}
 
 				case msg.ID != 0:
-					h.qres <- msg
+					select {
+					case h.qres <- msg:
+					case <-ctxt.Done():
+						return
+					}
 
 				default:
 					h.errf("ignoring malformed incoming message (missing id or method): %#v", msg)
@@ -355,10 +363,14 @@ func (h *TargetHandler) Execute(ctxt context.Context, methodType string, params 
 	h.resrw.Unlock()
 
 	// queue message
-	h.qcmd <- &cdproto.Message{
+	select {
+	case h.qcmd <- &cdproto.Message{
 		ID:     id,
 		Method: cdproto.MethodType(methodType),
 		Params: paramsBuf,
+	}:
+	case <- ctxt.Done():
+		return ctxt.Err()
 	}
 
 	errch := make(chan error, 1)
