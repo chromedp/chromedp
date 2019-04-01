@@ -11,6 +11,7 @@ import (
 	"os"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/css"
@@ -510,6 +511,9 @@ func TestSetAttributes(t *testing.T) {
 				t.Fatalf("got error: %v", err)
 			}
 
+			// TODO: figure why this test is flaky without this
+			time.Sleep(10 * time.Millisecond)
+
 			var attrs map[string]string
 			if err := Run(ctx, Attributes(test.sel, &attrs, test.by)); err != nil {
 				t.Fatalf("got error: %v", err)
@@ -585,6 +589,9 @@ func TestSetAttributeValue(t *testing.T) {
 				t.Fatalf("got error: %v", err)
 			}
 
+			// TODO: figure why this test is flaky without this
+			time.Sleep(10 * time.Millisecond)
+
 			var value string
 			var ok bool
 			if err := Run(ctx, AttributeValue(test.sel, test.attr, &value, &ok, test.by)); err != nil {
@@ -628,6 +635,9 @@ func TestRemoveAttribute(t *testing.T) {
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
+
+			// TODO: figure why this test is flaky without this
+			time.Sleep(10 * time.Millisecond)
 
 			var value string
 			var ok bool
