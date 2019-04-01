@@ -208,7 +208,7 @@ func TestClear(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
 			test := test
 			t.Parallel()
 
@@ -251,7 +251,7 @@ func TestReset(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
 			test := test
 			t.Parallel()
 
@@ -316,7 +316,7 @@ func TestSetValue(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
 			test := test
 			t.Parallel()
 
@@ -489,7 +489,7 @@ func TestSetAttributes(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
 			test := test
 			t.Parallel()
 
@@ -564,7 +564,7 @@ func TestSetAttributeValue(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
 			test := test
 			t.Parallel()
 
@@ -608,7 +608,7 @@ func TestRemoveAttribute(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
 			test := test
 			t.Parallel()
 
@@ -648,7 +648,7 @@ func TestClick(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
 			test := test
 			t.Parallel()
 
@@ -685,7 +685,7 @@ func TestDoubleClick(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
 			test := test
 			t.Parallel()
 
@@ -725,7 +725,7 @@ func TestSendKeys(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
 			test := test
 			t.Parallel()
 
@@ -808,7 +808,7 @@ func TestSubmit(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
 			test := test
 			t.Parallel()
 
@@ -845,7 +845,7 @@ func TestComputedStyle(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
 			test := test
 			t.Parallel()
 
@@ -896,7 +896,7 @@ func TestMatchedStyle(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
 			test := test
 			t.Parallel()
 
@@ -967,7 +967,7 @@ func TestFileUpload(t *testing.T) {
 	// parent must finish for the children to run, made impossible by the
 	// defers above.
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
 			ctx, cancel := testAllocate(t, "")
 			defer cancel()
 
