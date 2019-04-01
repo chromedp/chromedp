@@ -81,14 +81,12 @@ func Run(ctx context.Context, actions ...Action) error {
 }
 
 func (c *Context) newSession(ctx context.Context) error {
-	create := target.CreateTarget("about:blank")
-	targetID, err := create.Do(ctx, c.Browser)
+	targetID, err := target.CreateTarget("about:blank").Do(ctx, c.Browser)
 	if err != nil {
 		return err
 	}
 
-	attach := target.AttachToTarget(targetID)
-	sessionID, err := attach.Do(ctx, c.Browser)
+	sessionID, err := target.AttachToTarget(targetID).Do(ctx, c.Browser)
 	if err != nil {
 		return err
 	}

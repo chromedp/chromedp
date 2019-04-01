@@ -33,16 +33,6 @@ func testAllocate(t *testing.T, path string) (_ context.Context, cancel func()) 
 		}
 	}
 
-	//if err := WithLogf(t.Logf)(c.c); err != nil {
-	//        t.Fatalf("could not set logf: %v", err)
-	//}
-	//if err := WithDebugf(t.Logf)(c.c); err != nil {
-	//        t.Fatalf("could not set debugf: %v", err)
-	//}
-	//if err := WithErrorf(t.Errorf)(c.c); err != nil {
-	//        t.Fatalf("could not set errorf: %v", err)
-	//}
-
 	return ctx, cancel
 }
 
@@ -67,7 +57,7 @@ func TestMain(m *testing.M) {
 
 	// start the browser
 	browserCtx, _ = NewContext(allocCtx)
-	if err := Run(browserCtx, Tasks{}); err != nil {
+	if err := Run(browserCtx); err != nil {
 		panic(err)
 	}
 
