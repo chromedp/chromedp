@@ -210,6 +210,7 @@ func TestClear(t *testing.T) {
 
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			test := test
 			t.Parallel()
 
 			ctx, cancel := testAllocate(t, "form.html")
@@ -254,6 +255,7 @@ func TestReset(t *testing.T) {
 
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			test := test
 			t.Parallel()
 
 			ctx, cancel := testAllocate(t, "form.html")
@@ -322,6 +324,7 @@ func TestSetValue(t *testing.T) {
 
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			test := test
 			t.Parallel()
 
 			ctx, cancel := testAllocate(t, "form.html")
@@ -496,6 +499,7 @@ func TestSetAttributes(t *testing.T) {
 
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			test := test
 			t.Parallel()
 
 			ctx, cancel := testAllocate(t, "image.html")
@@ -570,6 +574,7 @@ func TestSetAttributeValue(t *testing.T) {
 
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			test := test
 			t.Parallel()
 
 			ctx, cancel := testAllocate(t, "form.html")
@@ -613,6 +618,7 @@ func TestRemoveAttribute(t *testing.T) {
 
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			test := test
 			t.Parallel()
 
 			ctx, cancel := testAllocate(t, "image.html")
@@ -651,6 +657,7 @@ func TestClick(t *testing.T) {
 
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			test := test
 			t.Parallel()
 
 			ctx, cancel := testAllocate(t, "form.html")
@@ -691,6 +698,7 @@ func TestDoubleClick(t *testing.T) {
 
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			test := test
 			t.Parallel()
 
 			ctx, cancel := testAllocate(t, "js.html")
@@ -732,6 +740,7 @@ func TestSendKeys(t *testing.T) {
 
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			test := test
 			t.Parallel()
 
 			ctx, cancel := testAllocate(t, "visible.html")
@@ -816,6 +825,7 @@ func TestSubmit(t *testing.T) {
 
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			test := test
 			t.Parallel()
 
 			ctx, cancel := testAllocate(t, "form.html")
@@ -856,6 +866,7 @@ func TestComputedStyle(t *testing.T) {
 
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			test := test
 			t.Parallel()
 
 			ctx, cancel := testAllocate(t, "js.html")
@@ -908,6 +919,7 @@ func TestMatchedStyle(t *testing.T) {
 
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			test := test
 			t.Parallel()
 
 			ctx, cancel := testAllocate(t, "js.html")

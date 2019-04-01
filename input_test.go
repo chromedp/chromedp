@@ -79,13 +79,14 @@ func TestMouseClickNode(t *testing.T) {
 		{"button2", "foo", ButtonType(input.ButtonNone), ByID},
 		{"button2", "bar", ButtonType(input.ButtonLeft), ByID},
 		{"button2", "bar-middle", ButtonType(input.ButtonMiddle), ByID},
+		{"input3", "foo", ButtonModifiers(input.ModifierNone), ByID},
 		{"input3", "bar-right", ButtonType(input.ButtonRight), ByID},
-		{"input3", "bar-right", ButtonModifiers(input.ModifierNone), ByID},
 		{"input3", "bar-right", Button("right"), ByID},
 	}
 
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			test := test
 			t.Parallel()
 
 			ctx, cancel := testAllocate(t, "input.html")
@@ -130,6 +131,7 @@ func TestMouseClickOffscreenNode(t *testing.T) {
 
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			test := test
 			t.Parallel()
 
 			ctx, cancel := testAllocate(t, "input.html")
@@ -188,6 +190,7 @@ func TestKeyAction(t *testing.T) {
 
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			test := test
 			t.Parallel()
 
 			ctx, cancel := testAllocate(t, "input.html")
@@ -237,6 +240,7 @@ func TestKeyActionNode(t *testing.T) {
 
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("test %d", i), func(t *testing.T) {
+			test := test
 			t.Parallel()
 
 			ctx, cancel := testAllocate(t, "input.html")
