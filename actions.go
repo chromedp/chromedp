@@ -47,9 +47,13 @@ func (t Tasks) Do(ctx context.Context, h cdp.Executor) error {
 // been able to be written/tested.
 func Sleep(d time.Duration) Action {
 	return ActionFunc(func(ctx context.Context, h cdp.Executor) error {
+		// Don't use time.After, to avoid a temporary goroutine leak if
+		// ctx is cancelled before the timer fires.
+		t := time.NewTimer(d)
 		select {
-		case <-time.After(d):
+		case <-t.C:
 		case <-ctx.Done():
+			t.Stop()
 			return ctx.Err()
 		}
 		return nil
