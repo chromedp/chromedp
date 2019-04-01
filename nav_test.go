@@ -21,15 +21,13 @@ func TestNavigate(t *testing.T) {
 	ctx, cancel := testAllocate(t, "image.html")
 	defer cancel()
 
-	if err := Run(ctx, WaitVisible(`#icon-brankas`, ByID)); err != nil {
-		t.Fatal(err)
-	}
-
 	var urlstr string
-	if err := Run(ctx, Location(&urlstr)); err != nil {
+	if err := Run(ctx,
+		Location(&urlstr),
+		WaitVisible(`#icon-brankas`, ByID),
+	); err != nil {
 		t.Fatal(err)
 	}
-
 	if !strings.HasSuffix(urlstr, "image.html") {
 		t.Errorf("expected to be on image.html, at: %s", urlstr)
 	}
@@ -265,13 +263,10 @@ func TestCaptureScreenshot(t *testing.T) {
 	defer cancel()
 
 	var scriptID page.ScriptIdentifier
-	err = Run(ctx, AddOnLoadScript(`window.alert("TEST")`, &scriptID))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = Run(ctx, Navigate(testdataDir+"/form.html"))
-	if err != nil {
+	if err := Run(ctx,
+		AddOnLoadScript(`window.alert("TEST")`, &scriptID),
+		Navigate(testdataDir+"/form.html"),
+	); err != nil {
 		t.Fatal(err)
 	}
 
@@ -288,22 +283,17 @@ func TestRemoveOnLoadScript(t *testing.T) {
 	defer cancel()
 
 	var scriptID page.ScriptIdentifier
-	err = Run(ctx, AddOnLoadScript(`window.alert("TEST")`, &scriptID))
-	if err != nil {
+	if err := Run(ctx, AddOnLoadScript(`window.alert("TEST")`, &scriptID)); err != nil {
 		t.Fatal(err)
 	}
-
 	if scriptID == "" {
 		t.Fatal("got empty script ID")
 	}
 
-	err = Run(ctx, RemoveOnLoadScript(scriptID))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = Run(ctx, Navigate(testdataDir+"/form.html"))
-	if err != nil {
+	if err := Run(ctx,
+		RemoveOnLoadScript(scriptID),
+		Navigate(testdataDir+"/form.html"),
+	); err != nil {
 		t.Fatal(err)
 	}
 }*/

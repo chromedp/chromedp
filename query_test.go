@@ -95,28 +95,26 @@ func TestFocusBlur(t *testing.T) {
 		{"#input1", ByID},
 	}
 
-	err := Run(ctx, Click("#input1", ByID))
-	if err != nil {
+	if err := Run(ctx, Click("#input1", ByID)); err != nil {
 		t.Fatal(err)
 	}
 
 	for i, test := range tests {
-		if err := Run(ctx, Focus(test.sel, test.by)); err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
-
 		var value string
-		if err := Run(ctx, Value(test.sel, &value, test.by)); err != nil {
+		if err := Run(ctx,
+			Focus(test.sel, test.by),
+			Value(test.sel, &value, test.by),
+		); err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
 
 		if value != "9999" {
 			t.Errorf("test %d expected value is '9999', got: '%s'", i, value)
 		}
-		if err := Run(ctx, Blur(test.sel, test.by)); err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
-		if err := Run(ctx, Value(test.sel, &value, test.by)); err != nil {
+		if err := Run(ctx,
+			Blur(test.sel, test.by),
+			Value(test.sel, &value, test.by),
+		); err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
 
@@ -218,20 +216,18 @@ func TestClear(t *testing.T) {
 			defer cancel()
 
 			var val string
-			err := Run(ctx, Value(test.sel, &val, test.by))
-			if err != nil {
+			if err := Run(ctx, Value(test.sel, &val, test.by)); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 			if val == "" {
 				t.Errorf("expected `%s` to have non empty value", test.sel)
 			}
-			if err := Run(ctx, Clear(test.sel, test.by)); err != nil {
+			if err := Run(ctx,
+				Clear(test.sel, test.by),
+				Value(test.sel, &val, test.by),
+			); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
-			if err := Run(ctx, Value(test.sel, &val, test.by)); err != nil {
-				t.Fatalf("got error: %v", err)
-			}
-
 			if val != "" {
 				t.Errorf("expected empty value for `%s`, got: %s", test.sel, val)
 			}
@@ -262,16 +258,12 @@ func TestReset(t *testing.T) {
 			ctx, cancel := testAllocate(t, "form.html")
 			defer cancel()
 
-			err := Run(ctx, SetValue(test.sel, test.value, test.by))
-			if err != nil {
-				t.Fatalf("got error: %v", err)
-			}
-			if err := Run(ctx, Reset(test.sel, test.by)); err != nil {
-				t.Fatalf("got error: %v", err)
-			}
-
 			var value string
-			if err := Run(ctx, Value(test.sel, &value, test.by)); err != nil {
+			if err := Run(ctx,
+				SetValue(test.sel, test.value, test.by),
+				Reset(test.sel, test.by),
+				Value(test.sel, &value, test.by),
+			); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
@@ -331,13 +323,11 @@ func TestSetValue(t *testing.T) {
 			ctx, cancel := testAllocate(t, "form.html")
 			defer cancel()
 
-			err := Run(ctx, SetValue(test.sel, "FOOBAR", test.by))
-			if err != nil {
-				t.Fatalf("got error: %v", err)
-			}
-
 			var value string
-			if err := Run(ctx, Value(test.sel, &value, test.by)); err != nil {
+			if err := Run(ctx,
+				SetValue(test.sel, "FOOBAR", test.by),
+				Value(test.sel, &value, test.by),
+			); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
@@ -506,8 +496,7 @@ func TestSetAttributes(t *testing.T) {
 			ctx, cancel := testAllocate(t, "image.html")
 			defer cancel()
 
-			err := Run(ctx, SetAttributes(test.sel, test.attrs, test.by))
-			if err != nil {
+			if err := Run(ctx, SetAttributes(test.sel, test.attrs, test.by)); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
@@ -550,11 +539,9 @@ func TestAttributeValue(t *testing.T) {
 		if err := Run(ctx, AttributeValue(test.sel, test.attr, &value, &ok, test.by)); err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
-
 		if !ok {
 			t.Fatalf("test %d failed to get attribute %s on %s", i, test.attr, test.sel)
 		}
-
 		if value != test.exp {
 			t.Errorf("test %d expected %s to be %s, got: %s", i, test.attr, test.exp, value)
 		}
@@ -584,8 +571,7 @@ func TestSetAttributeValue(t *testing.T) {
 			ctx, cancel := testAllocate(t, "form.html")
 			defer cancel()
 
-			err := Run(ctx, SetAttributeValue(test.sel, test.attr, test.exp, test.by))
-			if err != nil {
+			if err := Run(ctx, SetAttributeValue(test.sel, test.attr, test.exp, test.by)); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
@@ -597,11 +583,9 @@ func TestSetAttributeValue(t *testing.T) {
 			if err := Run(ctx, AttributeValue(test.sel, test.attr, &value, &ok, test.by)); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
-
 			if !ok {
 				t.Fatalf("failed to get attribute %s on %s", test.attr, test.sel)
 			}
-
 			if value != test.exp {
 				t.Errorf("expected %s to be %s, got: %s", test.attr, test.exp, value)
 			}
@@ -631,8 +615,7 @@ func TestRemoveAttribute(t *testing.T) {
 			ctx, cancel := testAllocate(t, "image.html")
 			defer cancel()
 
-			err := Run(ctx, RemoveAttribute(test.sel, test.attr))
-			if err != nil {
+			if err := Run(ctx, RemoveAttribute(test.sel, test.attr)); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
@@ -644,7 +627,6 @@ func TestRemoveAttribute(t *testing.T) {
 			if err := Run(ctx, AttributeValue(test.sel, test.attr, &value, &ok, test.by)); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
-
 			if ok || value != "" {
 				t.Fatalf("expected attribute %s removed from element %s", test.attr, test.sel)
 			}
@@ -673,16 +655,12 @@ func TestClick(t *testing.T) {
 			ctx, cancel := testAllocate(t, "form.html")
 			defer cancel()
 
-			err := Run(ctx, Click(test.sel, test.by))
-			if err != nil {
-				t.Fatalf("got error: %v", err)
-			}
-			if err := Run(ctx, WaitVisible("#icon-brankas", ByID)); err != nil {
-				t.Fatalf("got error: %v", err)
-			}
-
 			var title string
-			if err := Run(ctx, Title(&title)); err != nil {
+			if err := Run(ctx,
+				Click(test.sel, test.by),
+				WaitVisible("#icon-brankas", ByID),
+				Title(&title),
+			); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
@@ -714,13 +692,11 @@ func TestDoubleClick(t *testing.T) {
 			ctx, cancel := testAllocate(t, "js.html")
 			defer cancel()
 
-			err := Run(ctx, DoubleClick(test.sel, test.by))
-			if err != nil {
-				t.Fatalf("got error: %v", err)
-			}
-
 			var value string
-			if err := Run(ctx, Value("#input1", &value, ByID)); err != nil {
+			if err := Run(ctx,
+				DoubleClick(test.sel, test.by),
+				Value("#input1", &value, ByID),
+			); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
@@ -756,13 +732,11 @@ func TestSendKeys(t *testing.T) {
 			ctx, cancel := testAllocate(t, "visible.html")
 			defer cancel()
 
-			err := Run(ctx, SendKeys(test.sel, test.keys, test.by))
-			if err != nil {
-				t.Fatalf("got error: %v", err)
-			}
-
 			var val string
-			if err := Run(ctx, Value(test.sel, &val, test.by)); err != nil {
+			if err := Run(ctx,
+				SendKeys(test.sel, test.keys, test.by),
+				Value(test.sel, &val, test.by),
+			); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
@@ -841,16 +815,12 @@ func TestSubmit(t *testing.T) {
 			ctx, cancel := testAllocate(t, "form.html")
 			defer cancel()
 
-			err := Run(ctx, Submit(test.sel, test.by))
-			if err != nil {
-				t.Fatalf("got error: %v", err)
-			}
-			if err := Run(ctx, WaitVisible("#icon-brankas", ByID)); err != nil {
-				t.Fatalf("got error: %v", err)
-			}
-
 			var title string
-			if err := Run(ctx, Title(&title)); err != nil {
+			if err := Run(ctx,
+				Submit(test.sel, test.by),
+				WaitVisible("#icon-brankas", ByID),
+				Title(&title),
+			); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
@@ -883,8 +853,7 @@ func TestComputedStyle(t *testing.T) {
 			defer cancel()
 
 			var styles []*css.ComputedProperty
-			err := Run(ctx, ComputedStyle(test.sel, &styles, test.by))
-			if err != nil {
+			if err := Run(ctx, ComputedStyle(test.sel, &styles, test.by)); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
@@ -895,11 +864,10 @@ func TestComputedStyle(t *testing.T) {
 					}
 				}
 			}
-			if err := Run(ctx, Click("#input1", ByID)); err != nil {
-				t.Fatalf("got error: %v", err)
-			}
-
-			if err := Run(ctx, ComputedStyle(test.sel, &styles, test.by)); err != nil {
+			if err := Run(ctx,
+				Click("#input1", ByID),
+				ComputedStyle(test.sel, &styles, test.by),
+			); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
@@ -936,8 +904,7 @@ func TestMatchedStyle(t *testing.T) {
 			defer cancel()
 
 			var styles *css.GetMatchedStylesForNodeReturns
-			err := Run(ctx, MatchedStyle(test.sel, &styles, test.by))
-			if err != nil {
+			if err := Run(ctx, MatchedStyle(test.sel, &styles, test.by)); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 

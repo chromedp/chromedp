@@ -38,12 +38,11 @@ func TestMouseClickXY(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		if err := Run(ctx, MouseClickXY(test.x, test.y)); err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
-
 		var xstr, ystr string
-		if err := Run(ctx, Value("#input1", &xstr, ByID)); err != nil {
+		if err := Run(ctx,
+			MouseClickXY(test.x, test.y),
+			Value("#input1", &xstr, ByID),
+		); err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
 
@@ -96,16 +95,14 @@ func TestMouseClickNode(t *testing.T) {
 			if err := Run(ctx, Nodes(test.sel, &nodes, test.by)); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
-
 			if len(nodes) != 1 {
 				t.Fatalf("expected nodes to have exactly 1 element, got: %d", len(nodes))
 			}
-			if err := Run(ctx, MouseClickNode(nodes[0], test.opt)); err != nil {
-				t.Fatalf("got error: %v", err)
-			}
-
 			var value string
-			if err := Run(ctx, Value("#input3", &value, ByID)); err != nil {
+			if err := Run(ctx,
+				MouseClickNode(nodes[0], test.opt),
+				Value("#input3", &value, ByID),
+			); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
@@ -204,10 +201,10 @@ func TestKeyAction(t *testing.T) {
 			if len(nodes) != 1 {
 				t.Fatalf("expected nodes to have exactly 1 element, got: %d", len(nodes))
 			}
-			if err := Run(ctx, Focus(test.sel, test.by)); err != nil {
-				t.Fatalf("got error: %v", err)
-			}
-			if err := Run(ctx, KeyAction(test.exp)); err != nil {
+			if err := Run(ctx,
+				Focus(test.sel, test.by),
+				KeyAction(test.exp),
+			); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
@@ -254,12 +251,11 @@ func TestKeyActionNode(t *testing.T) {
 			if len(nodes) != 1 {
 				t.Fatalf("expected nodes to have exactly 1 element, got: %d", len(nodes))
 			}
-			if err := Run(ctx, KeyActionNode(nodes[0], test.exp)); err != nil {
-				t.Fatalf("got error: %v", err)
-			}
-
 			var value string
-			if err := Run(ctx, Value(test.sel, &value, test.by)); err != nil {
+			if err := Run(ctx,
+				KeyActionNode(nodes[0], test.exp),
+				Value(test.sel, &value, test.by),
+			); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 

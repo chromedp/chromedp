@@ -40,8 +40,7 @@ func MouseClickXY(x, y int64, opts ...MouseOption) Action {
 			me = o(me)
 		}
 
-		err := me.Do(ctx, h)
-		if err != nil {
+		if err := me.Do(ctx, h); err != nil {
 			return err
 		}
 
