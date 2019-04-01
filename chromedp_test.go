@@ -11,7 +11,7 @@ import (
 var (
 	testdataDir string
 
-	allocCtx context.Context
+	browserCtx context.Context
 
 	allocOpts = []ExecAllocatorOption{
 		NoFirstRun,
@@ -22,7 +22,9 @@ var (
 )
 
 func testAllocate(t *testing.T, path string) (_ context.Context, cancel func()) {
-	ctx, cancel := NewContext(allocCtx)
+	// Same browser, new tab; not needing to start new chrome browsers for
+	// each test gives a huge speed-up.
+	ctx, cancel := NewContext(browserCtx)
 
 	// Only navigate if we want a path, otherwise leave the blank page.
 	if path != "" {
@@ -61,12 +63,17 @@ func TestMain(m *testing.M) {
 		allocOpts = append(allocOpts, NoSandbox)
 	}
 
-	ctx, cancel := NewAllocator(context.Background(), WithExecAllocator(allocOpts...))
-	allocCtx = ctx
+	allocCtx, cancel := NewAllocator(context.Background(), WithExecAllocator(allocOpts...))
+
+	// start the browser
+	browserCtx, _ = NewContext(allocCtx)
+	if err := Run(browserCtx, Tasks{}); err != nil {
+		panic(err)
+	}
 
 	code := m.Run()
 
 	cancel()
-	FromContext(ctx).Allocator.Wait()
+	FromContext(allocCtx).Allocator.Wait()
 	os.Exit(code)
 }
