@@ -99,7 +99,7 @@ func ExampleManyTabs() {
 	c2 := chromedp.FromContext(ctx2)
 
 	fmt.Printf("Same browser: %t\n", c1.Browser == c2.Browser)
-	fmt.Printf("Same tab: %t\n", c1.SessionID == c2.SessionID)
+	fmt.Printf("Same tab: %t\n", c1.Target == c2.Target)
 
 	// wait for the resources to be cleaned up
 	cancel()

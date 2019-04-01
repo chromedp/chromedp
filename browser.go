@@ -9,6 +9,7 @@ package chromedp
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"sync/atomic"
 
@@ -102,16 +103,16 @@ func (b *Browser) send(method cdproto.MethodType, params easyjson.RawMessage) er
 	return b.conn.Write(msg)
 }
 
-func (b *Browser) executorForTarget(ctx context.Context, sessionID target.SessionID) *Target {
+func (b *Browser) newExecutorForTarget(ctx context.Context, sessionID target.SessionID) *Target {
 	if sessionID == "" {
 		panic("empty session ID")
 	}
-	if t, ok := b.pages[sessionID]; ok {
-		return t
+	if _, ok := b.pages[sessionID]; ok {
+		panic(fmt.Sprintf("executor for %q already exists", sessionID))
 	}
 	t := &Target{
 		browser:   b,
-		sessionID: sessionID,
+		SessionID: sessionID,
 
 		eventQueue: make(chan *cdproto.Message, 1024),
 		waitQueue:  make(chan func(cur *cdp.Frame) bool, 1024),

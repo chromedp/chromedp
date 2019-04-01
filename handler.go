@@ -19,7 +19,7 @@ import (
 // Target manages a Chrome DevTools Protocol target.
 type Target struct {
 	browser   *Browser
-	sessionID target.SessionID
+	SessionID target.SessionID
 
 	waitQueue  chan func(cur *cdp.Frame) bool
 	eventQueue chan *cdproto.Message
@@ -87,7 +87,7 @@ func (t *Target) Execute(ctx context.Context, method string, params json.Marshal
 		return err
 	}
 	sendParams := target.SendMessageToTarget(string(msgJSON)).
-		WithSessionID(t.sessionID)
+		WithSessionID(t.SessionID)
 	sendParamsJSON, _ := json.Marshal(sendParams)
 
 	// We want to grab the response from the inner message.

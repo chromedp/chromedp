@@ -19,7 +19,7 @@ type Context struct {
 
 	Browser *Browser
 
-	SessionID target.SessionID
+	Target *Target
 }
 
 // NewContext creates a browser context using the parent context.
@@ -72,12 +72,12 @@ func Run(ctx context.Context, action Action) error {
 		}
 		c.Browser = browser
 	}
-	if c.SessionID == "" {
+	if c.Target == nil {
 		if err := c.newSession(ctx); err != nil {
 			return err
 		}
 	}
-	return action.Do(ctx, c.Browser.executorForTarget(ctx, c.SessionID))
+	return action.Do(ctx, c.Target)
 }
 
 func (c *Context) newSession(ctx context.Context) error {
@@ -93,7 +93,7 @@ func (c *Context) newSession(ctx context.Context) error {
 		return err
 	}
 
-	target := c.Browser.executorForTarget(ctx, sessionID)
+	c.Target = c.Browser.newExecutorForTarget(ctx, sessionID)
 
 	// enable domains
 	for _, enable := range []Action{
@@ -105,12 +105,10 @@ func (c *Context) newSession(ctx context.Context) error {
 		dom.Enable(),
 		css.Enable(),
 	} {
-		if err := enable.Do(ctx, target); err != nil {
+		if err := enable.Do(ctx, c.Target); err != nil {
 			return fmt.Errorf("unable to execute %T: %v", enable, err)
 		}
 	}
-
-	c.SessionID = sessionID
 	return nil
 }
 
