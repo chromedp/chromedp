@@ -994,12 +994,12 @@ func TestFileUpload(t *testing.T) {
 			defer cancel()
 
 			var result string
-			if err := Run(ctx, Tasks{
+			if err := Run(ctx,
 				Navigate(s.URL),
 				test.a,
 				Click(`input[name="submit"]`),
 				Text(`#result`, &result, ByID, NodeVisible),
-			}); err != nil {
+			); err != nil {
 				t.Fatalf("test %d expected no error, got: %v", i, err)
 			}
 

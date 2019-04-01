@@ -60,7 +60,7 @@ func FromContext(ctx context.Context) *Context {
 // Run runs an action against the provided context. The provided context must
 // contain a valid Allocator; typically, that will be created via NewContext or
 // NewAllocator.
-func Run(ctx context.Context, action Action) error {
+func Run(ctx context.Context, actions ...Action) error {
 	c := FromContext(ctx)
 	if c == nil || c.Allocator == nil {
 		return ErrInvalidContext
@@ -77,7 +77,7 @@ func Run(ctx context.Context, action Action) error {
 			return err
 		}
 	}
-	return action.Do(ctx, c.Target)
+	return Tasks(actions).Do(ctx, c.Target)
 }
 
 func (c *Context) newSession(ctx context.Context) error {

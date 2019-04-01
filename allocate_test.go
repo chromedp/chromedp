@@ -20,10 +20,10 @@ func TestExecAllocator(t *testing.T) {
 
 	want := "insert"
 	var got string
-	if err := Run(taskCtx, Tasks{
-		Navigate(testdataDir + "/form.html"),
+	if err := Run(taskCtx,
+		Navigate(testdataDir+"/form.html"),
 		Text("#foo", &got, ByID),
-	}); err != nil {
+	); err != nil {
 		t.Fatal(err)
 	}
 	if got != want {
@@ -52,7 +52,7 @@ func TestExecAllocatorCancelParent(t *testing.T) {
 	// processes and browsers.
 
 	taskCtx, _ := NewContext(poolCtx)
-	if err := Run(taskCtx, Tasks{}); err != nil {
+	if err := Run(taskCtx); err != nil {
 		t.Fatal(err)
 	}
 

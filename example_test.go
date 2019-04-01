@@ -16,11 +16,11 @@ func ExampleTitle() {
 	defer cancel()
 
 	var title string
-	if err := chromedp.Run(ctx, chromedp.Tasks{
+	if err := chromedp.Run(ctx,
 		chromedp.Navigate("https://github.com/chromedp/chromedp/issues"),
 		chromedp.WaitVisible("#start-of-content", chromedp.ByID),
 		chromedp.Title(&title),
-	}); err != nil {
+	); err != nil {
 		panic(err)
 	}
 
@@ -57,7 +57,7 @@ func ExampleExecAllocatorOption() {
 	defer cancel()
 
 	// ensure that the browser process is started
-	if err := chromedp.Run(taskCtx, chromedp.Tasks{}); err != nil {
+	if err := chromedp.Run(taskCtx); err != nil {
 		panic(err)
 	}
 
@@ -83,7 +83,7 @@ func ExampleManyTabs() {
 	defer cancel()
 
 	// ensure the first tab is created
-	if err := chromedp.Run(ctx1, chromedp.Tasks{}); err != nil {
+	if err := chromedp.Run(ctx1); err != nil {
 		panic(err)
 	}
 
@@ -91,7 +91,7 @@ func ExampleManyTabs() {
 	ctx2, _ := chromedp.NewContext(ctx1)
 
 	// ensure the second tab is created
-	if err := chromedp.Run(ctx2, chromedp.Tasks{}); err != nil {
+	if err := chromedp.Run(ctx2); err != nil {
 		panic(err)
 	}
 

@@ -73,11 +73,11 @@ func TestNavigationEntries(t *testing.T) {
 
 	expIdx, expEntries := 1, 2
 	for i, test := range tests {
-		if err := Run(ctx, Tasks{
-			Navigate(testdataDir + "/" + test.file),
+		if err := Run(ctx,
+			Navigate(testdataDir+"/"+test.file),
 			WaitVisible(test.waitID, ByID),
 			NavigationEntries(&index, &entries),
-		}); err != nil {
+		); err != nil {
 			t.Fatal(err)
 		}
 		if len(entries) != expEntries {
@@ -100,22 +100,22 @@ func TestNavigateToHistoryEntry(t *testing.T) {
 
 	var entries []*page.NavigationEntry
 	var index int64
-	if err := Run(ctx, Tasks{
+	if err := Run(ctx,
 		WaitVisible(`#icon-brankas`, ByID), // for image.html
 		NavigationEntries(&index, &entries),
 
-		Navigate(testdataDir + "/form.html"),
+		Navigate(testdataDir+"/form.html"),
 		WaitVisible(`#form`, ByID), // for form.html
-	}); err != nil {
+	); err != nil {
 		t.Fatal(err)
 	}
 
 	var title string
-	if err := Run(ctx, Tasks{
+	if err := Run(ctx,
 		NavigateToHistoryEntry(entries[index].ID),
 		WaitVisible(`#icon-brankas`, ByID), // for image.html
 		Title(&title),
-	}); err != nil {
+	); err != nil {
 		t.Fatal(err)
 	}
 	if title != entries[index].Title {
@@ -130,17 +130,17 @@ func TestNavigateBack(t *testing.T) {
 	defer cancel()
 
 	var title, exptitle string
-	if err := Run(ctx, Tasks{
+	if err := Run(ctx,
 		WaitVisible(`#form`, ByID), // for form.html
 		Title(&exptitle),
 
-		Navigate(testdataDir + "/image.html"),
+		Navigate(testdataDir+"/image.html"),
 		WaitVisible(`#icon-brankas`, ByID), // for image.html
 
 		NavigateBack(),
 		WaitVisible(`#form`, ByID), // for form.html
 		Title(&title),
-	}); err != nil {
+	); err != nil {
 		t.Fatal(err)
 	}
 
@@ -156,10 +156,10 @@ func TestNavigateForward(t *testing.T) {
 	defer cancel()
 
 	var title, exptitle string
-	if err := Run(ctx, Tasks{
+	if err := Run(ctx,
 		WaitVisible(`#form`, ByID), // for form.html
 
-		Navigate(testdataDir + "/image.html"),
+		Navigate(testdataDir+"/image.html"),
 		WaitVisible(`#icon-brankas`, ByID), // for image.html
 		Title(&exptitle),
 
@@ -169,7 +169,7 @@ func TestNavigateForward(t *testing.T) {
 		NavigateForward(),
 		WaitVisible(`#icon-brankas`, ByID), // for image.html
 		Title(&title),
-	}); err != nil {
+	); err != nil {
 		t.Fatal(err)
 	}
 
@@ -211,7 +211,7 @@ func TestReload(t *testing.T) {
 	defer cancel()
 
 	var title, exptitle string
-	if err := Run(ctx, Tasks{
+	if err := Run(ctx,
 		Navigate(s.URL),
 		WaitReady(`#count0`, ByID),
 		Title(&exptitle),
@@ -219,7 +219,7 @@ func TestReload(t *testing.T) {
 		Reload(),
 		WaitReady(`#count1`, ByID),
 		Title(&title),
-	}); err != nil {
+	); err != nil {
 		t.Fatal(err)
 	}
 
@@ -237,11 +237,11 @@ func TestCaptureScreenshot(t *testing.T) {
 	// set the viewport size, to know what screenshot size to expect
 	width, height := 650, 450
 	var buf []byte
-	if err := Run(ctx, Tasks{
+	if err := Run(ctx,
 		emulation.SetDeviceMetricsOverride(int64(width), int64(height), 1.0, false),
 		WaitVisible(`#icon-brankas`, ByID), // for image.html
 		CaptureScreenshot(&buf),
-	}); err != nil {
+	); err != nil {
 		t.Fatal(err)
 	}
 
@@ -315,10 +315,10 @@ func TestLocation(t *testing.T) {
 	defer cancel()
 
 	var urlstr string
-	if err := Run(ctx, Tasks{
+	if err := Run(ctx,
 		WaitVisible(`#form`, ByID), // for form.html
 		Location(&urlstr),
-	}); err != nil {
+	); err != nil {
 		t.Fatal(err)
 	}
 
@@ -334,10 +334,10 @@ func TestTitle(t *testing.T) {
 	defer cancel()
 
 	var title string
-	if err := Run(ctx, Tasks{
+	if err := Run(ctx,
 		WaitVisible(`#icon-brankas`, ByID), // for image.html
 		Title(&title),
-	}); err != nil {
+	); err != nil {
 		t.Fatal(err)
 	}
 
