@@ -34,7 +34,7 @@ func ExampleTitle() {
 	// too slow, requiring internet access.
 }
 
-func ExampleExecAllocatorOption() {
+func ExampleExecAllocator() {
 	dir, err := ioutil.TempDir("", "chromedp-example")
 	if err != nil {
 		panic(err)
@@ -77,7 +77,7 @@ func ExampleExecAllocatorOption() {
 	// DevToolsActivePort has 2 lines
 }
 
-func ExampleManyTabs() {
+func ExampleNewContext_manyTabs() {
 	// new browser, first tab
 	ctx1, cancel := chromedp.NewContext(context.Background())
 	defer cancel()
