@@ -227,6 +227,8 @@ func (t *Target) pageEvent(ev interface{}) {
 		return
 	case *page.EventLifecycleEvent:
 		return
+	case *page.EventNavigatedWithinDocument:
+		return
 
 	default:
 		t.errf("unhandled page event %T", ev)

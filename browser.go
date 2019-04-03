@@ -12,11 +12,12 @@ import (
 	"log"
 	"sync/atomic"
 
+	"github.com/mailru/easyjson"
+
 	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
-	"github.com/mailru/easyjson"
 )
 
 // Browser is the high-level Chrome DevTools Protocol browser manager, handling
