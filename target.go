@@ -3,6 +3,7 @@ package chromedp
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -131,19 +132,16 @@ func (t *Target) processEvent(ctx context.Context, msg *cdproto.Message) error {
 	if msg == nil {
 		return ErrChannelClosed
 	}
-	switch msg.Method {
-	case "Page.frameClearedScheduledNavigation",
-		"Page.frameScheduledNavigation":
-		// These events are now deprecated, and UnmarshalMessage panics
-		// when they are received from Chrome. For now, to avoid panics
-		// and compile errors, and to fix chromedp v0 when installed via
-		// 'go get -u', skip the events here.
-		return nil
-	}
-
 	// unmarshal
 	ev, err := cdproto.UnmarshalMessage(msg)
 	if err != nil {
+		if strings.Contains(err.Error(), "unknown command or event") {
+			// This is most likely an event received from an older
+			// Chrome which a newer cdproto doesn't have, as it is
+			// deprecated. Ignore that error.
+			// TODO: use error wrapping once Go 1.13 is released.
+			return nil
+		}
 		return err
 	}
 
