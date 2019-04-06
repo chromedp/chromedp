@@ -124,6 +124,10 @@ func (p *ExecAllocator) Allocate(ctx context.Context) (*Browser, error) {
 		p.wg.Done()
 	}()
 
+	// force the first page to be blank, instead of the welcome page
+	// TODO: why isn't --no-first-run enough?
+	args = append(args, "about:blank")
+
 	cmd = exec.CommandContext(ctx, p.execPath, args...)
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
