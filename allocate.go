@@ -22,8 +22,12 @@ type Allocator interface {
 	// as temporary directories) will be freed.
 	Allocate(context.Context) (*Browser, error)
 
-	// Wait can be called after cancelling an allocator's context, to block
-	// until all of its resources have been freed.
+	// TODO: Wait should probably return an error, which can then be
+	// retrieved by the user if just calling cancel().
+
+	// Wait blocks until an allocator has freed all of its resources.
+	// Cancelling the context obtained via NewAllocator will already perform
+	// this operation, so normally there's no need to call Wait directly.
 	Wait()
 }
 
@@ -38,7 +42,11 @@ func NewAllocator(parent context.Context, opts ...AllocatorOption) (context.Cont
 	}
 
 	ctx = context.WithValue(ctx, contextKey{}, c)
-	return ctx, cancel
+	cancelWait := func() {
+		cancel()
+		c.Allocator.Wait()
+	}
+	return ctx, cancelWait
 }
 
 // AllocatorOption is a allocator option.

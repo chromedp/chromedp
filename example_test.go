@@ -26,10 +26,6 @@ func ExampleTitle() {
 
 	fmt.Println(title)
 
-	// wait for the resources to be cleaned up
-	cancel()
-	chromedp.FromContext(ctx).Allocator.Wait()
-
 	// no expected output, to not run this test as part of 'go test'; it's
 	// too slow, requiring internet access.
 }
@@ -69,10 +65,6 @@ func ExampleExecAllocator() {
 	lines := bytes.Split(bs, []byte("\n"))
 	fmt.Printf("DevToolsActivePort has %d lines\n", len(lines))
 
-	// wait for the resources to be cleaned up
-	cancel()
-	chromedp.FromContext(allocCtx).Allocator.Wait()
-
 	// Output:
 	// DevToolsActivePort has 2 lines
 }
@@ -100,10 +92,6 @@ func ExampleNewContext_manyTabs() {
 
 	fmt.Printf("Same browser: %t\n", c1.Browser == c2.Browser)
 	fmt.Printf("Same tab: %t\n", c1.Target == c2.Target)
-
-	// wait for the resources to be cleaned up
-	cancel()
-	c1.Allocator.Wait()
 
 	// Output:
 	// Same browser: true

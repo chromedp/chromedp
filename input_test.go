@@ -9,15 +9,13 @@ import (
 	"github.com/chromedp/cdproto/input"
 )
 
-const (
-	// inViewportJS is a javascript snippet that will get the specified node
-	// position relative to the viewport and returns true if the specified node
-	// is within the window's viewport.
-	inViewportJS = `(function(a) {
+// inViewportJS is a javascript snippet that will get the specified node
+// position relative to the viewport and returns true if the specified node
+// is within the window's viewport.
+const inViewportJS = `(function(a) {
 		var r = a[0].getBoundingClientRect();
 		return r.top >= 0 && r.left >= 0 && r.bottom <= window.innerHeight && r.right <= window.innerWidth;
 	})($x('%s'))`
-)
 
 func TestMouseClickXY(t *testing.T) {
 	t.Parallel()
