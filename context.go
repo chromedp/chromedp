@@ -114,13 +114,13 @@ func Run(ctx context.Context, actions ...Action) error {
 	if c == nil || c.Allocator == nil {
 		return ErrInvalidContext
 	}
-	c.first = c.Browser == nil
-	if c.first {
+	if c.Browser == nil {
 		browser, err := c.Allocator.Allocate(ctx)
 		if err != nil {
 			return err
 		}
 		c.Browser = browser
+		c.first = true
 	}
 	if c.Target == nil {
 		if err := c.newSession(ctx); err != nil {

@@ -41,4 +41,10 @@ func TestTargets(t *testing.T) {
 	// Cancelling the second context should close the second tab alone.
 	cancel2()
 	wantTargets(ctx1, 1)
+
+	// We used to have a bug where Run would reset the first context as if
+	// it weren't the first, breaking its cancellation.
+	if err := Run(ctx1); err != nil {
+		t.Fatal(err)
+	}
 }
