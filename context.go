@@ -115,7 +115,7 @@ func (c *Context) newSession(ctx context.Context, first bool) error {
 	if err != nil {
 		return err
 	}
-	c.Target = c.Browser.newExecutorForTarget(ctx, sessionID)
+	c.Target = c.Browser.newExecutorForTarget(ctx, targetID, sessionID)
 
 	// enable domains
 	for _, enable := range []Action{

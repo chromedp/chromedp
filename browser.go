@@ -34,7 +34,7 @@ type Browser struct {
 	// tabQueue is the queue used to create new target handlers, once a new
 	// tab is created and attached to. The newly created Target is sent back
 	// via tabResult.
-	tabQueue  chan target.SessionID
+	tabQueue  chan newTab
 	tabResult chan *Target
 
 	// cmdQueue is the outgoing command queue.
@@ -43,6 +43,11 @@ type Browser struct {
 	// logging funcs
 	logf func(string, ...interface{})
 	errf func(string, ...interface{})
+}
+
+type newTab struct {
+	targetID  target.ID
+	sessionID target.SessionID
 }
 
 type cmdJob struct {
@@ -60,7 +65,7 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 	b := &Browser{
 		conn: conn,
 
-		tabQueue:  make(chan target.SessionID, 1),
+		tabQueue:  make(chan newTab, 1),
 		tabResult: make(chan *Target, 1),
 
 		cmdQueue: make(chan cmdJob),
@@ -105,11 +110,14 @@ func (b *Browser) send(method cdproto.MethodType, params easyjson.RawMessage) er
 	return b.conn.Write(msg)
 }
 
-func (b *Browser) newExecutorForTarget(ctx context.Context, sessionID target.SessionID) *Target {
+func (b *Browser) newExecutorForTarget(ctx context.Context, targetID target.ID, sessionID target.SessionID) *Target {
+	if targetID == "" {
+		panic("empty target ID")
+	}
 	if sessionID == "" {
 		panic("empty session ID")
 	}
-	b.tabQueue <- sessionID
+	b.tabQueue <- newTab{targetID, sessionID}
 	return <-b.tabResult
 }
 
@@ -231,13 +239,14 @@ func (b *Browser) run(ctx context.Context) {
 		pages := make(map[target.SessionID]*Target, 1024)
 		for {
 			select {
-			case sessionID := <-b.tabQueue:
-				if _, ok := pages[sessionID]; ok {
-					b.errf("executor for %q already exists", sessionID)
+			case tab := <-b.tabQueue:
+				if _, ok := pages[tab.sessionID]; ok {
+					b.errf("executor for %q already exists", tab.sessionID)
 				}
 				t := &Target{
 					browser:   b,
-					SessionID: sessionID,
+					TargetID:  tab.targetID,
+					SessionID: tab.sessionID,
 
 					eventQueue: make(chan *cdproto.Message, 1024),
 					waitQueue:  make(chan func(cur *cdp.Frame) bool, 1024),
@@ -247,7 +256,7 @@ func (b *Browser) run(ctx context.Context) {
 					errf: b.errf,
 				}
 				go t.run(ctx)
-				pages[sessionID] = t
+				pages[tab.sessionID] = t
 				b.tabResult <- t
 			case event := <-tabEventQueue:
 				page, ok := pages[event.sessionID]

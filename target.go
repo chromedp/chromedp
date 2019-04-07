@@ -21,6 +21,7 @@ import (
 type Target struct {
 	browser   *Browser
 	SessionID target.SessionID
+	TargetID  target.ID
 
 	waitQueue  chan func(cur *cdp.Frame) bool
 	eventQueue chan *cdproto.Message
