@@ -30,8 +30,7 @@ func TestExecAllocator(t *testing.T) {
 		t.Fatalf("wanted %q, got %q", want, got)
 	}
 
-	// TODO: make cancel() work here too
-	poolCancel()
+	cancel()
 
 	tempDir := FromContext(taskCtx).Browser.userDataDir
 	if _, err := os.Lstat(tempDir); !os.IsNotExist(err) {

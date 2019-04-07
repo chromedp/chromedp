@@ -82,6 +82,11 @@ type ExecAllocator struct {
 
 // Allocate satisfies the Allocator interface.
 func (p *ExecAllocator) Allocate(ctx context.Context) (*Browser, error) {
+	c := FromContext(ctx)
+	if c == nil {
+		return nil, ErrInvalidContext
+	}
+
 	var args []string
 	for name, value := range p.initFlags {
 		switch value := value.(type) {
@@ -110,7 +115,8 @@ func (p *ExecAllocator) Allocate(ctx context.Context) (*Browser, error) {
 	args = append(args, "--remote-debugging-port=0")
 
 	var cmd *exec.Cmd
-	p.wg.Add(1)
+	p.wg.Add(1) // for the entire allocator
+	c.wg.Add(1) // for this browser's root context
 	go func() {
 		<-ctx.Done()
 		// First wait for the process to be finished.
@@ -122,6 +128,7 @@ func (p *ExecAllocator) Allocate(ctx context.Context) (*Browser, error) {
 			os.RemoveAll(dataDir)
 		}
 		p.wg.Done()
+		c.wg.Done()
 	}()
 
 	// force the first page to be blank, instead of the welcome page

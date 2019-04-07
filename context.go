@@ -208,6 +208,7 @@ func Targets(ctx context.Context) ([]*target.Info, error) {
 			return nil, err
 		}
 		c.Browser = browser
+		c.first = true
 	}
 	return target.GetTargets().Do(ctx, c.Browser)
 }
