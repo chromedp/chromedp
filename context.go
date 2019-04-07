@@ -3,6 +3,8 @@ package chromedp
 import (
 	"context"
 	"fmt"
+	"sync"
+	"time"
 
 	"github.com/chromedp/cdproto/css"
 	"github.com/chromedp/cdproto/dom"
@@ -15,11 +17,27 @@ import (
 
 // Context is attached to any context.Context which is valid for use with Run.
 type Context struct {
+	// Allocator is used to create new browsers. It is inherited from the
+	// parent context when using NewContext.
 	Allocator Allocator
 
+	// Browser is the browser being used in the context. It is inherited
+	// from the parent context when using NewContext.
 	Browser *Browser
 
+	// Target is the target to run actions (commands) against. It is not
+	// inherited from the parent context, and typically each context will
+	// have its own unique Target pointing to a separate browser tab (page).
 	Target *Target
+
+	// first records whether this context was the one that allocated
+	// Browser. This is important, because its cancellation will stop the
+	// entire browser handler, meaning that no further actions can be
+	// executed.
+	first bool
+
+	// wg allows waiting for a target to be closed on cancellation.
+	wg sync.WaitGroup
 }
 
 // NewContext creates a browser context using the parent context.
@@ -46,7 +64,38 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 	}
 
 	ctx = context.WithValue(ctx, contextKey{}, c)
-	return ctx, cancel
+	go func() {
+		<-ctx.Done()
+		if c.first {
+			// This is the original browser tab, so the entire
+			// browser will already be cleaned up elsewhere.
+			c.wg.Done()
+			return
+		}
+
+		// Not the original browser tab; simply detach and close it.
+		// We need a new context, as ctx is cancelled; use a 1s timeout.
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+		if id := c.Target.SessionID; id != "" {
+			action := target.DetachFromTarget().WithSessionID(id)
+			if err := action.Do(ctx, c.Browser); err != nil {
+				c.Browser.errf("%s", err)
+			}
+		}
+		if id := c.Target.TargetID; id != "" {
+			action := target.CloseTarget(id)
+			if _, err := action.Do(ctx, c.Browser); err != nil {
+				c.Browser.errf("%s", err)
+			}
+		}
+		c.wg.Done()
+	}()
+	cancelWait := func() {
+		cancel()
+		c.wg.Wait()
+	}
+	return ctx, cancelWait
 }
 
 type contextKey struct{}
@@ -65,8 +114,8 @@ func Run(ctx context.Context, actions ...Action) error {
 	if c == nil || c.Allocator == nil {
 		return ErrInvalidContext
 	}
-	first := c.Browser == nil
-	if first {
+	c.first = c.Browser == nil
+	if c.first {
 		browser, err := c.Allocator.Allocate(ctx)
 		if err != nil {
 			return err
@@ -74,16 +123,16 @@ func Run(ctx context.Context, actions ...Action) error {
 		c.Browser = browser
 	}
 	if c.Target == nil {
-		if err := c.newSession(ctx, first); err != nil {
+		if err := c.newSession(ctx); err != nil {
 			return err
 		}
 	}
 	return Tasks(actions).Do(ctx, c.Target)
 }
 
-func (c *Context) newSession(ctx context.Context, first bool) error {
+func (c *Context) newSession(ctx context.Context) error {
 	var targetID target.ID
-	if first {
+	if c.first {
 		// If we just allocated this browser, and it has a single page
 		// that's blank and not attached, use it.
 		infos, err := target.GetTargets().Do(ctx, c.Browser)
@@ -115,6 +164,8 @@ func (c *Context) newSession(ctx context.Context, first bool) error {
 	if err != nil {
 		return err
 	}
+	c.wg.Add(1)
+
 	c.Target = c.Browser.newExecutorForTarget(ctx, targetID, sessionID)
 
 	// enable domains

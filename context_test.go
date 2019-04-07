@@ -16,6 +16,7 @@ func TestTargets(t *testing.T) {
 	}
 
 	wantTargets := func(ctx context.Context, want int) {
+		t.Helper()
 		infos, err := Targets(ctx)
 		if err != nil {
 			t.Fatal(err)
@@ -36,4 +37,8 @@ func TestTargets(t *testing.T) {
 
 	// The first context should also see both targets.
 	wantTargets(ctx1, 2)
+
+	// Cancelling the second context should close the second tab alone.
+	cancel2()
+	wantTargets(ctx1, 1)
 }
