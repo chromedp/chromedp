@@ -30,6 +30,12 @@ type Context struct {
 	// have its own unique Target pointing to a separate browser tab (page).
 	Target *Target
 
+	// cancel simply cancels the context that was used to start Browser.
+	// This is useful to stop all activity and avoid deadlocks if we detect
+	// that the browser was closed or happened to crash. Note that this
+	// cancel function doesn't do any waiting.
+	cancel func()
+
 	// first records whether this context was the one that allocated
 	// Browser. This is important, because its cancellation will stop the
 	// entire browser handler, meaning that no further actions can be
@@ -44,7 +50,7 @@ type Context struct {
 func NewContext(parent context.Context, opts ...ContextOption) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(parent)
 
-	c := &Context{}
+	c := &Context{cancel: cancel}
 	if pc := FromContext(parent); pc != nil {
 		c.Allocator = pc.Allocator
 		c.Browser = pc.Browser

@@ -10,6 +10,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"os"
 	"sync/atomic"
 
 	"github.com/mailru/easyjson"
@@ -24,8 +25,6 @@ import (
 // the browser process runner, WebSocket clients, associated targets, and
 // network, page, and DOM events.
 type Browser struct {
-	userDataDir string
-
 	conn Transport
 
 	// next is the next message id.
@@ -43,6 +42,16 @@ type Browser struct {
 	// logging funcs
 	logf func(string, ...interface{})
 	errf func(string, ...interface{})
+
+	// The optional fields below are helpful for some tests.
+
+	// process can be initialized by the allocators which start a process
+	// when allocating a browser.
+	process *os.Process
+
+	// userDataDir can be initialized by the allocators which set up user
+	// data dirs directly.
+	userDataDir string
 }
 
 type newTab struct {
@@ -164,9 +173,7 @@ type tabEvent struct {
 func (b *Browser) run(ctx context.Context) {
 	defer b.conn.Close()
 
-	// add cancel to context
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
+	cancel := FromContext(ctx).cancel
 
 	// tabEventQueue is the queue of incoming target events, to be routed by
 	// their session ID.
@@ -179,10 +186,13 @@ func (b *Browser) run(ctx context.Context) {
 	// connection. The separate goroutine is needed since a websocket read
 	// is blocking, so it cannot be used in a select statement.
 	go func() {
-		defer cancel()
 		for {
 			msg, err := b.conn.Read()
 			if err != nil {
+				// If the websocket failed, most likely Chrome
+				// was closed or crashed. Cancel the entire
+				// Browser context to stop all activity.
+				cancel()
 				return
 			}
 			if msg.Method == cdproto.EventRuntimeExceptionThrown {
@@ -232,8 +242,6 @@ func (b *Browser) run(ctx context.Context) {
 	// This goroutine handles tabs, as well as routing events to each tab
 	// via the pages map.
 	go func() {
-		defer cancel()
-
 		// This map is only safe for use within this goroutine, so don't
 		// declare it as a Browser field.
 		pages := make(map[target.SessionID]*Target, 1024)

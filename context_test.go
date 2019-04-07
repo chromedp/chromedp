@@ -2,7 +2,13 @@ package chromedp
 
 import (
 	"context"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"os"
+	"runtime"
 	"testing"
+	"time"
 )
 
 func TestTargets(t *testing.T) {
@@ -46,5 +52,49 @@ func TestTargets(t *testing.T) {
 	// it weren't the first, breaking its cancellation.
 	if err := Run(ctx1); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestBrowserQuit(t *testing.T) {
+	t.Parallel()
+	if runtime.GOOS == "windows" {
+		t.Skip("os.Interrupt isn't supported on Windows")
+	}
+
+	// Simulate a scenario where we navigate to a page that's slow to
+	// respond, and the browser is closed before we can finish the
+	// navigation.
+	serve := make(chan bool, 1)
+	close := make(chan bool, 1)
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		close <- true
+		<-serve
+		fmt.Fprintf(w, "response")
+	}))
+	defer s.Close()
+
+	ctx, cancel := NewContext(context.Background())
+	defer cancel()
+	if err := Run(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	go func() {
+		<-close
+		b := FromContext(ctx).Browser
+		if err := b.process.Signal(os.Interrupt); err != nil {
+			t.Error(err)
+		}
+		serve <- true
+	}()
+
+	// Run should error with something other than "deadline exceeded" in
+	// much less than 5s.
+	ctx2, _ := context.WithTimeout(ctx, 5*time.Second)
+	switch err := Run(ctx2, Navigate(s.URL)); err {
+	case nil:
+		t.Fatal("did not expect a nil error")
+	case context.DeadlineExceeded:
+		t.Fatalf("did not expect a standard context error: %v", err)
 	}
 }

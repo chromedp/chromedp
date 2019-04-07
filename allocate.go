@@ -157,6 +157,7 @@ func (p *ExecAllocator) Allocate(ctx context.Context) (*Browser, error) {
 	if err != nil {
 		return nil, err
 	}
+	browser.process = cmd.Process
 	browser.userDataDir = dataDir
 	return browser, nil
 }
