@@ -62,11 +62,11 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 		o(c)
 	}
 	if c.Allocator == nil {
-		WithExecAllocator(
+		c.Allocator = setupExecAllocator(
 			NoFirstRun,
 			NoDefaultBrowserCheck,
 			Headless,
-		)(&c.Allocator)
+		)
 	}
 
 	ctx = context.WithValue(ctx, contextKey{}, c)
@@ -113,8 +113,8 @@ func FromContext(ctx context.Context) *Context {
 }
 
 // Run runs an action against the provided context. The provided context must
-// contain a valid Allocator; typically, that will be created via NewContext or
-// NewAllocator.
+// contain a valid Allocator; typically, that will be created via NewContext, or
+// via one of the allocator constructors like NewExecAllocator.
 func Run(ctx context.Context, actions ...Action) error {
 	c := FromContext(ctx)
 	if c == nil || c.Allocator == nil {

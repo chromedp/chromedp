@@ -45,8 +45,7 @@ func ExampleExecAllocator() {
 		chromedp.UserDataDir(dir),
 	}
 
-	allocCtx, cancel := chromedp.NewAllocator(context.Background(),
-		chromedp.WithExecAllocator(opts...))
+	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
 	defer cancel()
 
 	taskCtx, cancel := chromedp.NewContext(allocCtx)

@@ -31,15 +31,26 @@ type Allocator interface {
 	Wait()
 }
 
-// NewAllocator creates a new allocator context, suitable for use with
-// NewContext or Run.
-func NewAllocator(parent context.Context, opts ...AllocatorOption) (context.Context, context.CancelFunc) {
-	ctx, cancel := context.WithCancel(parent)
-	c := &Context{}
-
-	for _, o := range opts {
-		o(&c.Allocator)
+// setupExecAllocator is similar to NewExecAllocator, but it allows NewContext
+// to create the allocator without the unnecessary context layer.
+func setupExecAllocator(opts ...ExecAllocatorOption) *ExecAllocator {
+	ep := &ExecAllocator{
+		initFlags: make(map[string]interface{}),
 	}
+	for _, o := range opts {
+		o(ep)
+	}
+	if ep.execPath == "" {
+		ep.execPath = findExecPath()
+	}
+	return ep
+}
+
+// NewExecAllocator creates a new context set up with an ExecAllocator, suitable
+// for use with NewContext or Run.
+func NewExecAllocator(parent context.Context, opts ...ExecAllocatorOption) (context.Context, context.CancelFunc) {
+	ctx, cancel := context.WithCancel(parent)
+	c := &Context{Allocator: setupExecAllocator(opts...)}
 
 	ctx = context.WithValue(ctx, contextKey{}, c)
 	cancelWait := func() {
@@ -47,25 +58,6 @@ func NewAllocator(parent context.Context, opts ...AllocatorOption) (context.Cont
 		c.Allocator.Wait()
 	}
 	return ctx, cancelWait
-}
-
-// AllocatorOption is a allocator option.
-type AllocatorOption func(*Allocator)
-
-// WithExecAllocator returns an AllocatorOption which sets up an ExecAllocator.
-func WithExecAllocator(opts ...ExecAllocatorOption) func(*Allocator) {
-	return func(p *Allocator) {
-		ep := &ExecAllocator{
-			initFlags: make(map[string]interface{}),
-		}
-		for _, o := range opts {
-			o(ep)
-		}
-		if ep.execPath == "" {
-			ep.execPath = findExecPath()
-		}
-		*p = ep
-	}
 }
 
 // ExecAllocatorOption is a exec allocator option.

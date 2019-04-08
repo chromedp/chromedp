@@ -9,7 +9,7 @@ import (
 func TestExecAllocator(t *testing.T) {
 	t.Parallel()
 
-	poolCtx, poolCancel := NewAllocator(context.Background(), WithExecAllocator(allocOpts...))
+	poolCtx, poolCancel := NewExecAllocator(context.Background(), allocOpts...)
 	defer poolCancel()
 
 	// TODO: test that multiple child contexts are run in different
@@ -41,7 +41,7 @@ func TestExecAllocator(t *testing.T) {
 func TestExecAllocatorCancelParent(t *testing.T) {
 	t.Parallel()
 
-	poolCtx, poolCancel := NewAllocator(context.Background(), WithExecAllocator(allocOpts...))
+	poolCtx, poolCancel := NewExecAllocator(context.Background(), allocOpts...)
 	defer poolCancel()
 
 	// TODO: test that multiple child contexts are run in different

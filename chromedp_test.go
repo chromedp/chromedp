@@ -53,7 +53,7 @@ func TestMain(m *testing.M) {
 		allocOpts = append(allocOpts, NoSandbox)
 	}
 
-	allocCtx, cancel := NewAllocator(context.Background(), WithExecAllocator(allocOpts...))
+	allocCtx, cancel := NewExecAllocator(context.Background(), allocOpts...)
 
 	// start the browser
 	browserCtx, _ = NewContext(allocCtx)
