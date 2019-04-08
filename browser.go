@@ -1,9 +1,3 @@
-// Package chromedp is a high level Chrome DevTools Protocol client that
-// simplifies driving browsers for scraping, unit testing, or profiling web
-// pages using the CDP.
-//
-// chromedp requires no third-party dependencies, implementing the async Chrome
-// DevTools Protocol entirely in Go.
 package chromedp
 
 import (
