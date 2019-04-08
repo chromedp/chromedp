@@ -23,8 +23,8 @@ func TestNavigate(t *testing.T) {
 
 	var urlstr string
 	if err := Run(ctx,
-		Location(&urlstr),
 		WaitVisible(`#icon-brankas`, ByID),
+		Location(&urlstr),
 	); err != nil {
 		t.Fatal(err)
 	}
