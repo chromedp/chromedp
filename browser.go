@@ -78,9 +78,7 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 
 	// apply options
 	for _, o := range opts {
-		if err := o(b); err != nil {
-			return nil, err
-		}
+		o(b)
 	}
 
 	// ensure errf is set
@@ -322,29 +320,22 @@ func (b *Browser) run(ctx context.Context) {
 }
 
 // BrowserOption is a browser option.
-type BrowserOption func(*Browser) error
+type BrowserOption func(*Browser)
 
-// WithLogf is a browser option to specify a func to receive general logging.
-func WithLogf(f func(string, ...interface{})) BrowserOption {
-	return func(b *Browser) error {
-		b.logf = f
-		return nil
-	}
+// WithBrowserLogf is a browser option to specify a func to receive general logging.
+func WithBrowserLogf(f func(string, ...interface{})) BrowserOption {
+	return func(b *Browser) { b.logf = f }
 }
 
-// WithErrorf is a browser option to specify a func to receive error logging.
-func WithErrorf(f func(string, ...interface{})) BrowserOption {
-	return func(b *Browser) error {
-		b.errf = f
-		return nil
-	}
+// WithBrowserErrorf is a browser option to specify a func to receive error logging.
+func WithBrowserErrorf(f func(string, ...interface{})) BrowserOption {
+	return func(b *Browser) { b.errf = f }
 }
 
 // WithConsolef is a browser option to specify a func to receive chrome log events.
 //
 // Note: NOT YET IMPLEMENTED.
 func WithConsolef(f func(string, ...interface{})) BrowserOption {
-	return func(b *Browser) error {
-		return nil
+	return func(b *Browser) {
 	}
 }

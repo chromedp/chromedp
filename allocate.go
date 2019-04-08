@@ -20,7 +20,7 @@ type Allocator interface {
 	// Allocate creates a new browser. It can be cancelled via the provided
 	// context, at which point all the resources used by the browser (such
 	// as temporary directories) will be freed.
-	Allocate(context.Context) (*Browser, error)
+	Allocate(context.Context, ...BrowserOption) (*Browser, error)
 
 	// TODO: Wait should probably return an error, which can then be
 	// retrieved by the user if just calling cancel().
@@ -73,7 +73,7 @@ type ExecAllocator struct {
 }
 
 // Allocate satisfies the Allocator interface.
-func (p *ExecAllocator) Allocate(ctx context.Context) (*Browser, error) {
+func (p *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*Browser, error) {
 	c := FromContext(ctx)
 	if c == nil {
 		return nil, ErrInvalidContext
@@ -152,7 +152,7 @@ func (p *ExecAllocator) Allocate(ctx context.Context) (*Browser, error) {
 	}
 	stderr.Close()
 
-	browser, err := NewBrowser(ctx, wsURL)
+	browser, err := NewBrowser(ctx, wsURL, opts...)
 	if err != nil {
 		return nil, err
 	}

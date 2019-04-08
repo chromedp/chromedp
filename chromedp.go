@@ -36,6 +36,11 @@ type Context struct {
 	// have its own unique Target pointing to a separate browser tab (page).
 	Target *Target
 
+	// browserOpts holds the browser options passed to NewContext via
+	// WithBrowserOption, so that they can later be used when allocating a
+	// browser in Run.
+	browserOpts []BrowserOption
+
 	// cancel simply cancels the context that was used to start Browser.
 	// This is useful to stop all activity and avoid deadlocks if we detect
 	// that the browser was closed or happened to crash. Note that this
@@ -56,12 +61,14 @@ type Context struct {
 func NewContext(parent context.Context, opts ...ContextOption) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(parent)
 
-	c := &Context{cancel: cancel}
+	c := &Context{cancel: cancel, first: true}
 	if pc := FromContext(parent); pc != nil {
 		c.Allocator = pc.Allocator
 		c.Browser = pc.Browser
 		// don't inherit SessionID, so that NewContext can be used to
 		// create a new tab on the same browser.
+
+		c.first = c.Browser == nil
 	}
 
 	for _, o := range opts {
@@ -127,12 +134,11 @@ func Run(ctx context.Context, actions ...Action) error {
 		return ErrInvalidContext
 	}
 	if c.Browser == nil {
-		browser, err := c.Allocator.Allocate(ctx)
+		browser, err := c.Allocator.Allocate(ctx, c.browserOpts...)
 		if err != nil {
 			return err
 		}
 		c.Browser = browser
-		c.first = true
 	}
 	if c.Target == nil {
 		if err := c.newSession(ctx); err != nil {
@@ -197,7 +203,30 @@ func (c *Context) newSession(ctx context.Context) error {
 	return nil
 }
 
+// ContextOption is a context option.
 type ContextOption func(*Context)
+
+// WithLogf is a shortcut for WithBrowserOption(WithBrowserLogf(f)).
+func WithLogf(f func(string, ...interface{})) ContextOption {
+	return WithBrowserOption(WithBrowserLogf(f))
+}
+
+// WithErrorf is a shortcut for WithBrowserOption(WithBrowserErrorf(f)).
+func WithErrorf(f func(string, ...interface{})) ContextOption {
+	return WithBrowserOption(WithBrowserErrorf(f))
+}
+
+// WithBrowserOption allows passing a number of browser options to the allocator
+// when allocating a new browser. As such, this context option can only be used
+// when NewContext is allocating a new browser.
+func WithBrowserOption(opts ...BrowserOption) ContextOption {
+	return func(c *Context) {
+		if !c.first {
+			panic("WithBrowserOption can only be used when allocating a new browser")
+		}
+		c.browserOpts = append(c.browserOpts, opts...)
+	}
+}
 
 // Targets lists all the targets in the browser attached to the given context.
 func Targets(ctx context.Context) ([]*target.Info, error) {
@@ -209,12 +238,11 @@ func Targets(ctx context.Context) ([]*target.Info, error) {
 		return nil, ErrInvalidContext
 	}
 	if c.Browser == nil {
-		browser, err := c.Allocator.Allocate(ctx)
+		browser, err := c.Allocator.Allocate(ctx, c.browserOpts...)
 		if err != nil {
 			return nil, err
 		}
 		c.Browser = browser
-		c.first = true
 	}
 	return target.GetTargets().Do(ctx, c.Browser)
 }
