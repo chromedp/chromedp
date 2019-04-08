@@ -55,6 +55,11 @@ type Context struct {
 
 	// wg allows waiting for a target to be closed on cancellation.
 	wg sync.WaitGroup
+
+	// cancelErr is the first error encountered when cancelling this
+	// context, for example if a browser's temporary user data directory
+	// couldn't be deleted.
+	cancelErr error
 }
 
 // NewContext creates a browser context using the parent context.
@@ -98,14 +103,17 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 		defer cancel()
 		if id := c.Target.SessionID; id != "" {
 			action := target.DetachFromTarget().WithSessionID(id)
-			if err := action.Do(ctx, c.Browser); err != nil {
-				c.Browser.errf("%s", err)
+			if err := action.Do(ctx, c.Browser); c.cancelErr == nil {
+				c.cancelErr = err
 			}
 		}
 		if id := c.Target.TargetID; id != "" {
 			action := target.CloseTarget(id)
-			if _, err := action.Do(ctx, c.Browser); err != nil {
-				c.Browser.errf("%s", err)
+			if ok, err := action.Do(ctx, c.Browser); c.cancelErr == nil {
+				if !ok && err == nil {
+					err = fmt.Errorf("could not close target %q", id)
+				}
+				c.cancelErr = err
 			}
 		}
 		c.wg.Done()
@@ -123,6 +131,14 @@ type contextKey struct{}
 func FromContext(ctx context.Context) *Context {
 	c, _ := ctx.Value(contextKey{}).(*Context)
 	return c
+}
+
+func CancelError(ctx context.Context) error {
+	c := FromContext(ctx)
+	if c == nil {
+		return ErrInvalidContext
+	}
+	return c.cancelErr
 }
 
 // Run runs an action against the provided context. The provided context must

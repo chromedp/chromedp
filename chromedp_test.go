@@ -28,7 +28,7 @@ var (
 func testAllocate(t *testing.T, path string) (_ context.Context, cancel func()) {
 	// Same browser, new tab; not needing to start new chrome browsers for
 	// each test gives a huge speed-up.
-	ctx, cancel := NewContext(browserCtx)
+	ctx, cancel_ := NewContext(browserCtx)
 
 	// Only navigate if we want a path, otherwise leave the blank page.
 	if path != "" {
@@ -37,7 +37,13 @@ func testAllocate(t *testing.T, path string) (_ context.Context, cancel func()) 
 		}
 	}
 
-	return ctx, cancel
+	cancelErr := func() {
+		cancel_() // not cancel(); that's the returned one
+		if err := CancelError(ctx); err != nil {
+			t.Error(err)
+		}
+	}
+	return ctx, cancelErr
 }
 
 func TestMain(m *testing.M) {
@@ -156,5 +162,39 @@ func TestBrowserQuit(t *testing.T) {
 		t.Fatal("did not expect a nil error")
 	case context.DeadlineExceeded:
 		t.Fatalf("did not expect a standard context error: %v", err)
+	}
+}
+
+func TestCancelError(t *testing.T) {
+	t.Parallel()
+
+	ctx1, cancel1 := NewContext(context.Background())
+	defer cancel1()
+	if err := Run(ctx1); err != nil {
+		t.Fatal(err)
+	}
+
+	// Open and close a target normally; no error.
+	ctx2, cancel2 := NewContext(ctx1)
+	defer cancel2()
+	if err := Run(ctx2); err != nil {
+		t.Fatal(err)
+	}
+	cancel2()
+	if err := CancelError(ctx2); err != nil {
+		t.Fatalf("expected a nil error, got %v", err)
+	}
+
+	// Make "cancel" close the wrong target; error.
+	ctx3, cancel3 := NewContext(ctx1)
+	defer cancel3()
+	if err := Run(ctx3); err != nil {
+		t.Fatal(err)
+	}
+	FromContext(ctx3).Target.TargetID = "wrong"
+	cancel3()
+	time.Sleep(time.Second)
+	if err := CancelError(ctx3); err == nil {
+		t.Fatalf("expected a non-nil error, got %v", err)
 	}
 }

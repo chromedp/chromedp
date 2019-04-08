@@ -22,9 +22,6 @@ type Allocator interface {
 	// as temporary directories) will be freed.
 	Allocate(context.Context, ...BrowserOption) (*Browser, error)
 
-	// TODO: Wait should probably return an error, which can then be
-	// retrieved by the user if just calling cancel().
-
 	// Wait blocks until an allocator has freed all of its resources.
 	// Cancelling the context obtained via NewAllocator will already perform
 	// this operation, so normally there's no need to call Wait directly.
@@ -113,11 +110,17 @@ func (p *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		<-ctx.Done()
 		// First wait for the process to be finished.
 		if cmd != nil {
+			// TODO: do we care about this error in any scenario? if
+			// the user cancelled the context and killed chrome,
+			// this will most likely just be "signal: killed", which
+			// isn't interesting.
 			cmd.Wait()
 		}
 		// Then delete the temporary user data directory, if needed.
 		if removeDir {
-			os.RemoveAll(dataDir)
+			if err := os.RemoveAll(dataDir); c.cancelErr == nil {
+				c.cancelErr = err
+			}
 		}
 		p.wg.Done()
 		c.wg.Done()
