@@ -10,6 +10,9 @@ func (err Error) Error() string {
 
 // Error types.
 const (
+	// ErrInvalidWebsocketMessage is the invalid websocket message.
+	ErrInvalidWebsocketMessage Error = "invalid websocket message"
+
 	// ErrInvalidDimensions is the invalid dimensions error.
 	ErrInvalidDimensions Error = "invalid dimensions"
 
