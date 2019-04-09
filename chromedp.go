@@ -232,6 +232,11 @@ func WithErrorf(f func(string, ...interface{})) ContextOption {
 	return WithBrowserOption(WithBrowserErrorf(f))
 }
 
+// WithDebugf is a shortcut for WithBrowserOption(WithBrowserDebugf(f)).
+func WithDebugf(f func(string, ...interface{})) ContextOption {
+	return WithBrowserOption(WithBrowserDebugf(f))
+}
+
 // WithBrowserOption allows passing a number of browser options to the allocator
 // when allocating a new browser. As such, this context option can only be used
 // when NewContext is allocating a new browser.
@@ -248,7 +253,6 @@ func WithBrowserOption(opts ...BrowserOption) ContextOption {
 func Targets(ctx context.Context) ([]*target.Info, error) {
 	// Don't rely on Run, as that needs to be able to call Targets, and we
 	// don't want cyclic func calls.
-
 	c := FromContext(ctx)
 	if c == nil || c.Allocator == nil {
 		return nil, ErrInvalidContext

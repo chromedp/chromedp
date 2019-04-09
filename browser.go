@@ -36,6 +36,7 @@ type Browser struct {
 	// logging funcs
 	logf func(string, ...interface{})
 	errf func(string, ...interface{})
+	dbgf func(string, ...interface{})
 
 	// The optional fields below are helpful for some tests.
 
@@ -60,30 +61,26 @@ type cmdJob struct {
 
 // NewBrowser creates a new browser.
 func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Browser, error) {
-	conn, err := DialContext(ctx, ForceIP(urlstr))
-	if err != nil {
-		return nil, err
-	}
-
 	b := &Browser{
-		conn: conn,
-
 		tabQueue:  make(chan newTab, 1),
 		tabResult: make(chan *Target, 1),
-
-		cmdQueue: make(chan cmdJob),
-
-		logf: log.Printf,
+		cmdQueue:  make(chan cmdJob),
+		logf:      log.Printf,
 	}
-
 	// apply options
 	for _, o := range opts {
 		o(b)
 	}
-
 	// ensure errf is set
 	if b.errf == nil {
 		b.errf = func(s string, v ...interface{}) { b.logf("ERROR: "+s, v...) }
+	}
+
+	// dial
+	var err error
+	b.conn, err = DialContext(ctx, ForceIP(urlstr), WithConnDebugf(b.dbgf))
+	if err != nil {
+		return nil, err
 	}
 
 	go b.run(ctx)
@@ -330,6 +327,12 @@ func WithBrowserLogf(f func(string, ...interface{})) BrowserOption {
 // WithBrowserErrorf is a browser option to specify a func to receive error logging.
 func WithBrowserErrorf(f func(string, ...interface{})) BrowserOption {
 	return func(b *Browser) { b.errf = f }
+}
+
+// WithBrowserDebugf is a browser option to specify a func to log actual
+// websocket messages.
+func WithBrowserDebugf(f func(string, ...interface{})) BrowserOption {
+	return func(b *Browser) { b.dbgf = f }
 }
 
 // WithConsolef is a browser option to specify a func to receive chrome log events.
