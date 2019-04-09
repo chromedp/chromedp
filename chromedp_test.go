@@ -28,7 +28,7 @@ var (
 func testAllocate(t *testing.T, path string) (_ context.Context, cancel func()) {
 	// Same browser, new tab; not needing to start new chrome browsers for
 	// each test gives a huge speed-up.
-	ctx, cancel_ := NewContext(browserCtx)
+	ctx, _ := NewContext(browserCtx)
 
 	// Only navigate if we want a path, otherwise leave the blank page.
 	if path != "" {
@@ -38,8 +38,7 @@ func testAllocate(t *testing.T, path string) (_ context.Context, cancel func()) 
 	}
 
 	cancelErr := func() {
-		cancel_() // not cancel(); that's the returned one
-		if err := CancelError(ctx); err != nil {
+		if err := Cancel(ctx); err != nil {
 			t.Error(err)
 		}
 	}
@@ -180,8 +179,7 @@ func TestCancelError(t *testing.T) {
 	if err := Run(ctx2); err != nil {
 		t.Fatal(err)
 	}
-	cancel2()
-	if err := CancelError(ctx2); err != nil {
+	if err := Cancel(ctx2); err != nil {
 		t.Fatalf("expected a nil error, got %v", err)
 	}
 
@@ -192,9 +190,7 @@ func TestCancelError(t *testing.T) {
 		t.Fatal(err)
 	}
 	FromContext(ctx3).Target.TargetID = "wrong"
-	cancel3()
-	time.Sleep(time.Second)
-	if err := CancelError(ctx3); err == nil {
+	if err := Cancel(ctx3); err == nil {
 		t.Fatalf("expected a non-nil error, got %v", err)
 	}
 }

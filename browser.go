@@ -7,8 +7,6 @@ import (
 	"os"
 	"sync/atomic"
 
-	"github.com/mailru/easyjson"
-
 	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/runtime"
@@ -85,27 +83,6 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 
 	go b.run(ctx)
 	return b, nil
-}
-
-// Shutdown shuts down the browser.
-func (b *Browser) Shutdown() error {
-	if b.conn != nil {
-		if err := b.send(cdproto.CommandBrowserClose, nil); err != nil {
-			b.errf("could not close browser: %v", err)
-		}
-		return b.conn.Close()
-	}
-	return nil
-}
-
-// send writes the supplied message and params.
-func (b *Browser) send(method cdproto.MethodType, params easyjson.RawMessage) error {
-	msg := &cdproto.Message{
-		ID:     atomic.AddInt64(&b.next, 1),
-		Method: method,
-		Params: params,
-	}
-	return b.conn.Write(msg)
 }
 
 func (b *Browser) newExecutorForTarget(ctx context.Context, targetID target.ID, sessionID target.SessionID) *Target {

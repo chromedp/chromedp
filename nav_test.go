@@ -347,7 +347,7 @@ func TestLoadIframe(t *testing.T) {
 		// TODO: remove the sleep once we have better support for
 		// iframes.
 		Sleep(10 * time.Millisecond),
-		//WaitVisible(`#form`, ByID), // for the nested form.html
+		// WaitVisible(`#form`, ByID), // for the nested form.html
 	}); err != nil {
 		t.Fatal(err)
 	}

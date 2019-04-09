@@ -133,11 +133,19 @@ func FromContext(ctx context.Context) *Context {
 	return c
 }
 
-func CancelError(ctx context.Context) error {
+// Cancel cancels a chromedp context, waits for its resources to be cleaned up,
+// and returns any error encountered during that process.
+//
+// Usually a "defer cancel()" will be enough for most use cases. This API is
+// useful if you want to catch underlying cancel errors, such as when a
+// temporary directory cannot be deleted.
+func Cancel(ctx context.Context) error {
 	c := FromContext(ctx)
 	if c == nil {
 		return ErrInvalidContext
 	}
+	c.cancel()
+	c.wg.Wait()
 	return c.cancelErr
 }
 
@@ -206,7 +214,7 @@ func (c *Context) newSession(ctx context.Context) error {
 	for _, enable := range []Action{
 		log.Enable(),
 		runtime.Enable(),
-		//network.Enable(),
+		// network.Enable(),
 		inspector.Enable(),
 		page.Enable(),
 		dom.Enable(),
