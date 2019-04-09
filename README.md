@@ -15,7 +15,8 @@ go get -u github.com/chromedp/chromedp
 ## Examples
 
 Please see the [examples][6] project for more examples. Please refer to the
-[GoDoc API listing][7] for a summary of the API and Actions.
+[GoDoc API listing][7] for a summary of the API and Actions, which also contains
+a few simple and runnable examples.
 
 ## Resources
 
@@ -28,7 +29,6 @@ Please see the [examples][6] project for more examples. Please refer to the
 
 ## TODO
 
-* Move timeouts to context (defaults)
 * Implement more query selector options (allow over riding context timeouts)
 * Contextual actions for "dry run" (or via an accumulator?)
 * Network loader / manager
