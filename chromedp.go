@@ -154,7 +154,11 @@ func Cancel(ctx context.Context) error {
 // via one of the allocator constructors like NewExecAllocator.
 func Run(ctx context.Context, actions ...Action) error {
 	c := FromContext(ctx)
-	if c == nil || c.Allocator == nil {
+	// If c is nil, it's not a chromedp context.
+	// If c.Allocator is nil, NewContext wasn't used properly.
+	// If c.cancel is nil, Run is being called directly with an allocator
+	// context.
+	if c == nil || c.Allocator == nil || c.cancel == nil {
 		return ErrInvalidContext
 	}
 	if c.Browser == nil {
