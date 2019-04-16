@@ -149,9 +149,8 @@ func Cancel(ctx context.Context) error {
 	return c.cancelErr
 }
 
-// Run runs an action against the provided context. The provided context must
-// contain a valid Allocator; typically, that will be created via NewContext, or
-// via one of the allocator constructors like NewExecAllocator.
+// Run runs an action against context. The provided context must be a valid
+// chromedp context, typically created via NewContext.
 func Run(ctx context.Context, actions ...Action) error {
 	c := FromContext(ctx)
 	// If c is nil, it's not a chromedp context.
