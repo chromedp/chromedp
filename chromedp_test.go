@@ -17,12 +17,8 @@ var (
 
 	browserCtx context.Context
 
-	allocOpts = []ExecAllocatorOption{
-		NoFirstRun,
-		NoDefaultBrowserCheck,
-		Headless,
-		DisableGPU,
-	}
+	// allocOpts is filled in TestMain
+	allocOpts []ExecAllocatorOption
 )
 
 func testAllocate(t *testing.T, path string) (_ context.Context, cancel func()) {
@@ -51,6 +47,13 @@ func TestMain(m *testing.M) {
 		panic(fmt.Sprintf("could not get working directory: %v", err))
 	}
 	testdataDir = "file://" + path.Join(wd, "testdata")
+
+	// build on top of the default options
+	allocOpts = append(allocOpts, DefaultExecAllocatorOptions...)
+
+	// disabling the GPU helps portability with some systems like Travis,
+	// and can slightly speed up the tests on other systems
+	allocOpts = append(allocOpts, DisableGPU)
 
 	// it's worth noting that newer versions of chrome (64+) run much faster
 	// than older ones -- same for headless_shell ...

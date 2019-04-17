@@ -80,11 +80,7 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 		o(c)
 	}
 	if c.Allocator == nil {
-		c.Allocator = setupExecAllocator(
-			NoFirstRun,
-			NoDefaultBrowserCheck,
-			Headless,
-		)
+		c.Allocator = setupExecAllocator(DefaultExecAllocatorOptions...)
 	}
 
 	ctx = context.WithValue(ctx, contextKey{}, c)
