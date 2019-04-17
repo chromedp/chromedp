@@ -158,7 +158,8 @@ func TestBrowserQuit(t *testing.T) {
 
 	// Run should error with something other than "deadline exceeded" in
 	// much less than 5s.
-	ctx2, _ := context.WithTimeout(ctx, 5*time.Second)
+	ctx2, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
 	switch err := Run(ctx2, Navigate(s.URL)); err {
 	case nil:
 		t.Fatal("did not expect a nil error")
