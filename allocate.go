@@ -23,8 +23,8 @@ type Allocator interface {
 	Allocate(context.Context, ...BrowserOption) (*Browser, error)
 
 	// Wait blocks until an allocator has freed all of its resources.
-	// Cancelling the context obtained via NewAllocator will already perform
-	// this operation, so normally there's no need to call Wait directly.
+	// Cancelling the allocator context will already perform this operation,
+	// so normally there's no need to call Wait directly.
 	Wait()
 }
 
@@ -52,7 +52,7 @@ var DefaultExecAllocatorOptions = []ExecAllocatorOption{
 }
 
 // NewExecAllocator creates a new context set up with an ExecAllocator, suitable
-// for use with NewContext or Run.
+// for use with NewContext.
 func NewExecAllocator(parent context.Context, opts ...ExecAllocatorOption) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(parent)
 	c := &Context{Allocator: setupExecAllocator(opts...)}

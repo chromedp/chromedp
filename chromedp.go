@@ -62,7 +62,17 @@ type Context struct {
 	cancelErr error
 }
 
-// NewContext creates a browser context using the parent context.
+// NewContext creates a chromedp context from the parent context. The parent
+// context's Allocator is inherited, defaulting to an ExecAllocator with
+// DefaultExecAllocatorOptions.
+//
+// If the parent context contains an allocated Browser, the child context
+// inherits it, and its first Run creates a new tab on that browser. Otherwise,
+// its first Run will allocate a new browser.
+//
+// Cancelling the returned context will close a tab or an entire browser,
+// depending on the logic described above. To cancel a context while checking
+// for errors, see Cancel.
 func NewContext(parent context.Context, opts ...ContextOption) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(parent)
 
