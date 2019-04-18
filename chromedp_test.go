@@ -198,3 +198,30 @@ func TestCancelError(t *testing.T) {
 		t.Fatalf("expected a non-nil error, got %v", err)
 	}
 }
+
+func TestPrematureCancel(t *testing.T) {
+	t.Parallel()
+
+	// Cancel before the browser is allocated.
+	ctx, cancel := NewContext(context.Background())
+	cancel()
+	if err := Run(ctx); err != context.Canceled {
+		t.Fatalf("wanted canceled context error, got %v", err)
+	}
+}
+
+func TestPrematureCancelTab(t *testing.T) {
+	t.Parallel()
+
+	ctx1, cancel := NewContext(context.Background())
+	defer cancel()
+	if err := Run(ctx1); err != nil {
+		t.Fatal(err)
+	}
+
+	// Cancel after the browser is allocated, but before we've created a new
+	// tab.
+	ctx2, cancel := NewContext(ctx1)
+	cancel()
+	Run(ctx2)
+}

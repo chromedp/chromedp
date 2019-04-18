@@ -80,7 +80,7 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 	if pc := FromContext(parent); pc != nil {
 		c.Allocator = pc.Allocator
 		c.Browser = pc.Browser
-		// don't inherit SessionID, so that NewContext can be used to
+		// don't inherit Target, so that NewContext can be used to
 		// create a new tab on the same browser.
 
 		c.first = c.Browser == nil
@@ -94,11 +94,19 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 	}
 
 	ctx = context.WithValue(ctx, contextKey{}, c)
+	c.wg.Add(1)
 	go func() {
 		<-ctx.Done()
 		if c.first {
 			// This is the original browser tab, so the entire
 			// browser will already be cleaned up elsewhere.
+			c.wg.Done()
+			return
+		}
+
+		if c.Target == nil {
+			// This is a new tab, but we didn't create it and attach
+			// to it yet. Nothing to do.
 			c.wg.Done()
 			return
 		}
@@ -215,7 +223,6 @@ func (c *Context) newSession(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	c.wg.Add(1)
 
 	c.Target = c.Browser.newExecutorForTarget(ctx, targetID, sessionID)
 
