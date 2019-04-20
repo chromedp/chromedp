@@ -24,11 +24,10 @@ type Browser struct {
 	// next is the next message id.
 	next int64
 
-	// tabQueue is the queue used to create new target handlers, once a new
+	// newTabQueue is the queue used to create new target handlers, once a new
 	// tab is created and attached to. The newly created Target is sent back
-	// via tabResult.
-	tabQueue  chan newTab
-	tabResult chan *Target
+	// via newTabResult.
+	newTabQueue chan *Target
 
 	// cmdQueue is the outgoing command queue.
 	cmdQueue chan cmdJob
@@ -49,11 +48,6 @@ type Browser struct {
 	userDataDir string
 }
 
-type newTab struct {
-	targetID  target.ID
-	sessionID target.SessionID
-}
-
 type cmdJob struct {
 	// msg is the message being sent.
 	msg *cdproto.Message
@@ -70,8 +64,7 @@ type cmdJob struct {
 // NewBrowser creates a new browser.
 func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Browser, error) {
 	b := &Browser{
-		tabQueue:  make(chan newTab, 1),
-		tabResult: make(chan *Target, 1),
+		newTabQueue: make(chan *Target),
 
 		// Fit some jobs without blocking, to reduce blocking in
 		// Execute.
@@ -106,8 +99,23 @@ func (b *Browser) newExecutorForTarget(ctx context.Context, targetID target.ID, 
 	if sessionID == "" {
 		panic("empty session ID")
 	}
-	b.tabQueue <- newTab{targetID, sessionID}
-	return <-b.tabResult
+	t := &Target{
+		browser:   b,
+		TargetID:  targetID,
+		SessionID: sessionID,
+
+		eventQueue: make(chan *cdproto.Message, 1024),
+		waitQueue:  make(chan func(cur *cdp.Frame) bool, 1024),
+		frames:     make(map[cdp.FrameID]*cdp.Frame),
+
+		logf: b.logf,
+		errf: b.errf,
+	}
+	go t.run(ctx)
+	// This send should be blocking, to ensure the tab is inserted into the
+	// map before any more target events are routed.
+	b.newTabQueue <- t
+	return t
 }
 
 func (b *Browser) Execute(ctx context.Context, method string, params json.Marshaler, res json.Unmarshaler) error {
@@ -252,25 +260,11 @@ func (b *Browser) run(ctx context.Context) {
 		pages := make(map[target.SessionID]*Target, 1024)
 		for {
 			select {
-			case tab := <-b.tabQueue:
-				if _, ok := pages[tab.sessionID]; ok {
-					b.errf("executor for %q already exists", tab.sessionID)
+			case t := <-b.newTabQueue:
+				if _, ok := pages[t.SessionID]; ok {
+					b.errf("executor for %q already exists", t.SessionID)
 				}
-				t := &Target{
-					browser:   b,
-					TargetID:  tab.targetID,
-					SessionID: tab.sessionID,
-
-					eventQueue: make(chan *cdproto.Message, 1024),
-					waitQueue:  make(chan func(cur *cdp.Frame) bool, 1024),
-					frames:     make(map[cdp.FrameID]*cdp.Frame),
-
-					logf: b.logf,
-					errf: b.errf,
-				}
-				go t.run(ctx)
-				pages[tab.sessionID] = t
-				b.tabResult <- t
+				pages[t.SessionID] = t
 			case event := <-tabEventQueue:
 				page, ok := pages[event.sessionID]
 				if !ok {
