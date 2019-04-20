@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"sync"
 
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/dom"
@@ -205,6 +204,7 @@ func ByNodeID(s *Selector) {
 
 // waitReady waits for the specified nodes to be ready.
 func (s *Selector) waitReady(check func(context.Context, *Target, *cdp.Node) error) func(context.Context, *Target, *cdp.Frame, ...cdp.NodeID) ([]*cdp.Node, error) {
+	errc := make(chan error)
 	return func(ctx context.Context, h *Target, cur *cdp.Frame, ids ...cdp.NodeID) ([]*cdp.Node, error) {
 		nodes := make([]*cdp.Node, len(ids))
 		cur.RLock()
@@ -219,24 +219,24 @@ func (s *Selector) waitReady(check func(context.Context, *Target, *cdp.Node) err
 		cur.RUnlock()
 
 		if check != nil {
-			var wg sync.WaitGroup
-			errs := make([]error, len(nodes))
 			for i, n := range nodes {
-				wg.Add(1)
 				go func(i int, n *cdp.Node) {
-					defer wg.Done()
-					errs[i] = check(ctx, h, n)
+					errc <- check(ctx, h, n)
 				}(i, n)
 			}
-			wg.Wait()
 
-			for _, err := range errs {
-				if err != nil {
-					return nil, err
+			var first error
+			for range nodes {
+				if err := <-errc; first == nil {
+					first = err
 				}
+			}
+			if first != nil {
+				return nil, first
 			}
 		}
 
+		close(errc)
 		return nodes, nil
 	}
 }

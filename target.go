@@ -39,6 +39,30 @@ type Target struct {
 }
 
 func (t *Target) run(ctx context.Context) {
+	ticker := time.NewTicker(5 * time.Millisecond)
+	defer ticker.Stop()
+
+	// tryWaits runs all wait functions on the current top-level frame, if
+	// neither are empty.
+	//
+	// This function is run after each DOM event, since those are the vast
+	// majority that we wait on, and approximately every 5ms. The periodic
+	// runs are necessary to wait for events such as a node no longer being
+	// visible in Chrome.
+	tryWaits := func() {
+		n := len(t.waitQueue)
+		if n == 0 || t.cur == nil {
+			return
+		}
+		for i := 0; i < n; i++ {
+			fn := <-t.waitQueue
+			if !fn(t.cur) {
+				// try again later.
+				t.waitQueue <- fn
+			}
+		}
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -48,24 +72,11 @@ func (t *Target) run(ctx context.Context) {
 				t.errf("could not process event: %v", err)
 				continue
 			}
-		default:
-			// prevent busy spinning. TODO: do better
-			time.Sleep(5 * time.Millisecond)
-			n := len(t.waitQueue)
-			if n == 0 {
-				continue
+			if msg.Method.Domain() == "DOM" {
+				tryWaits()
 			}
-			if t.cur == nil {
-				continue
-			}
-
-			for i := 0; i < n; i++ {
-				fn := <-t.waitQueue
-				if !fn(t.cur) {
-					// try again later.
-					t.waitQueue <- fn
-				}
-			}
+		case <-ticker.C:
+			tryWaits()
 		}
 	}
 }
