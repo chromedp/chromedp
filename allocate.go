@@ -111,19 +111,21 @@ func (p *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	}
 	args = append(args, "--remote-debugging-port=0")
 
-	var cmd *exec.Cmd
+	// force the first page to be blank, instead of the welcome page
+	// TODO: why isn't --no-first-run enough?
+	args = append(args, "about:blank")
+
+	cmd := exec.CommandContext(ctx, p.execPath, args...)
+
 	p.wg.Add(1) // for the entire allocator
 	c.wg.Add(1) // for this browser's root context
 	go func() {
 		<-ctx.Done()
 		// First wait for the process to be finished.
-		if cmd != nil {
-			// TODO: do we care about this error in any scenario? if
-			// the user cancelled the context and killed chrome,
-			// this will most likely just be "signal: killed", which
-			// isn't interesting.
-			cmd.Wait()
-		}
+		// TODO: do we care about this error in any scenario? if the
+		// user cancelled the context and killed chrome, this will most
+		// likely just be "signal: killed", which isn't interesting.
+		cmd.Wait()
 		// Then delete the temporary user data directory, if needed.
 		if removeDir {
 			if err := os.RemoveAll(dataDir); c.cancelErr == nil {
@@ -133,12 +135,6 @@ func (p *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		p.wg.Done()
 		c.wg.Done()
 	}()
-
-	// force the first page to be blank, instead of the welcome page
-	// TODO: why isn't --no-first-run enough?
-	args = append(args, "about:blank")
-
-	cmd = exec.CommandContext(ctx, p.execPath, args...)
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
 		return nil, err
