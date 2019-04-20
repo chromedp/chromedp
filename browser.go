@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"sync/atomic"
+	"time"
 
 	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/cdp"
@@ -115,6 +116,8 @@ func (b *Browser) newExecutorForTarget(ctx context.Context, targetID target.ID, 
 
 		logf: b.logf,
 		errf: b.errf,
+
+		tick: make(chan time.Time, 1),
 	}
 	go t.run(ctx)
 	// This send should be blocking, to ensure the tab is inserted into the
@@ -271,6 +274,9 @@ func (b *Browser) run(ctx context.Context) {
 	// This goroutine handles tabs, as well as routing events to each tab
 	// via the pages map.
 	go func() {
+		ticker := time.NewTicker(2 * time.Millisecond)
+		defer ticker.Stop()
+
 		// This map is only safe for use within this goroutine, so don't
 		// declare it as a Browser field.
 		pages := make(map[target.SessionID]*Target, 32)
@@ -299,6 +305,20 @@ func (b *Browser) run(ctx context.Context) {
 					b.errf("executor for %q doesn't exist", sessionID)
 				}
 				delete(pages, sessionID)
+
+			case t := <-ticker.C:
+				// Roughly once every 2ms, give every target a
+				// chance to run periodic work like checking if
+				// a wait function is complete.
+				//
+				// If a target hasn't picked up the previous
+				// tick, skip it.
+				for _, target := range pages {
+					select {
+					case target.tick <- t:
+					default:
+					}
+				}
 
 			case <-ctx.Done():
 				return

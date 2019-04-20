@@ -36,12 +36,11 @@ type Target struct {
 
 	// logging funcs
 	logf, errf func(string, ...interface{})
+
+	tick chan time.Time
 }
 
 func (t *Target) run(ctx context.Context) {
-	ticker := time.NewTicker(5 * time.Millisecond)
-	defer ticker.Stop()
-
 	// tryWaits runs all wait functions on the current top-level frame, if
 	// neither are empty.
 	//
@@ -65,8 +64,6 @@ func (t *Target) run(ctx context.Context) {
 
 	for {
 		select {
-		case <-ctx.Done():
-			return
 		case msg := <-t.eventQueue:
 			if err := t.processEvent(ctx, msg); err != nil {
 				t.errf("could not process event: %v", err)
@@ -75,8 +72,10 @@ func (t *Target) run(ctx context.Context) {
 			if msg.Method.Domain() == "DOM" {
 				tryWaits()
 			}
-		case <-ticker.C:
+		case <-t.tick:
 			tryWaits()
+		case <-ctx.Done():
+			return
 		}
 	}
 }
