@@ -10,6 +10,7 @@ import (
 	"github.com/chromedp/cdproto"
 	"github.com/gorilla/websocket"
 	"github.com/mailru/easyjson"
+	jlexer "github.com/mailru/easyjson/jlexer"
 )
 
 var (
@@ -31,6 +32,7 @@ type Transport interface {
 type Conn struct {
 	*websocket.Conn
 	buf  bytes.Buffer
+	lex  jlexer.Lexer
 	dbgf func(string, ...interface{})
 }
 
@@ -91,7 +93,10 @@ func (c *Conn) Read() (*cdproto.Message, error) {
 		c.dbgf("<- %s", buf)
 	}
 	msg := new(cdproto.Message)
-	if err := easyjson.Unmarshal(buf, msg); err != nil {
+	// Reuse the easyjson lexer.
+	c.lex = jlexer.Lexer{Data: buf}
+	msg.UnmarshalEasyJSON(&c.lex)
+	if err := c.lex.Error(); err != nil {
 		return nil, err
 	}
 	msg.Result = append([]byte{}, msg.Result...)
