@@ -29,6 +29,10 @@ type Browser struct {
 	// via newTabResult.
 	newTabQueue chan *Target
 
+	// delTabQueue is used to clean up target handlers after the sessions
+	// are detached.
+	delTabQueue chan target.SessionID
+
 	// cmdQueue is the outgoing command queue.
 	cmdQueue chan cmdJob
 
@@ -65,6 +69,7 @@ type cmdJob struct {
 func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Browser, error) {
 	b := &Browser{
 		newTabQueue: make(chan *Target),
+		delTabQueue: make(chan target.SessionID, 1),
 
 		// Fit some jobs without blocking, to reduce blocking in
 		// Execute.
@@ -235,7 +240,18 @@ func (b *Browser) run(ctx context.Context) {
 			switch {
 			case msg.Method != "":
 				if sessionID == "" {
-					// TODO: are we interested in browser events?
+					switch msg.Method {
+					case cdproto.EventTargetDetachedFromTarget:
+						var ev target.EventDetachedFromTarget
+						if err := easyjson.Unmarshal(msg.Params, &ev); err != nil {
+							b.errf("%s", err)
+							continue
+						}
+						b.delTabQueue <- ev.SessionID
+					default:
+						// TODO: are any other browser
+						// events useful?
+					}
 					continue
 				}
 				tabEventQueue <- tabEvent{
@@ -257,7 +273,7 @@ func (b *Browser) run(ctx context.Context) {
 	go func() {
 		// This map is only safe for use within this goroutine, so don't
 		// declare it as a Browser field.
-		pages := make(map[target.SessionID]*Target, 1024)
+		pages := make(map[target.SessionID]*Target, 32)
 		for {
 			select {
 			case t := <-b.newTabQueue:
@@ -265,6 +281,7 @@ func (b *Browser) run(ctx context.Context) {
 					b.errf("executor for %q already exists", t.SessionID)
 				}
 				pages[t.SessionID] = t
+
 			case event := <-tabEventQueue:
 				page, ok := pages[event.sessionID]
 				if !ok {
@@ -276,6 +293,12 @@ func (b *Browser) run(ctx context.Context) {
 				default:
 					panic("eventQueue is full")
 				}
+
+			case sessionID := <-b.delTabQueue:
+				if _, ok := pages[sessionID]; !ok {
+					b.errf("executor for %q doesn't exist", sessionID)
+				}
+				delete(pages, sessionID)
 
 			case <-ctx.Done():
 				return
