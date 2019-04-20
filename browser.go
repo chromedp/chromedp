@@ -55,8 +55,16 @@ type newTab struct {
 }
 
 type cmdJob struct {
-	msg  *cdproto.Message
+	// msg is the message being sent.
+	msg *cdproto.Message
+
+	// resp is the channel to send the response to; must be non-nil.
 	resp chan *cdproto.Message
+
+	// respID is the ID to receive a response in resp for. If zero, msg.ID
+	// is used. If non-zero and different than msg.ID, msg.ID's response is
+	// discarded.
+	respID int64
 }
 
 // NewBrowser creates a new browser.
@@ -64,8 +72,12 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 	b := &Browser{
 		tabQueue:  make(chan newTab, 1),
 		tabResult: make(chan *Target, 1),
-		cmdQueue:  make(chan cmdJob),
-		logf:      log.Printf,
+
+		// Fit some jobs without blocking, to reduce blocking in
+		// Execute.
+		cmdQueue: make(chan cmdJob, 32),
+
+		logf: log.Printf,
 	}
 	// apply options
 	for _, o := range opts {
@@ -302,13 +314,13 @@ func (b *Browser) run(ctx context.Context) {
 				b.errf("id %d already present in response map", q.msg.ID)
 				continue
 			}
-			respByID[q.msg.ID] = q.resp
-
-			if q.msg.Method == "" {
-				// Only register the chananel in respByID;
-				// useful for CommandSendMessageToTarget.
-				continue
+			if q.respID > 0 {
+				respByID[q.msg.ID] = nil // discard this response
+				respByID[q.respID] = q.resp
+			} else {
+				respByID[q.msg.ID] = q.resp
 			}
+
 			if err := b.conn.Write(q.msg); err != nil {
 				b.errf("%s", err)
 				continue

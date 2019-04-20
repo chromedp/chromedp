@@ -103,15 +103,7 @@ func (t *Target) Execute(ctx context.Context, method string, params json.Marshal
 		WithSessionID(t.SessionID)
 	sendParamsJSON, _ := easyjson.Marshal(sendParams)
 
-	// We want to grab the response from the inner message.
 	ch := make(chan *cdproto.Message, 1)
-	t.browser.cmdQueue <- cmdJob{
-		msg:  &cdproto.Message{ID: innerID},
-		resp: ch,
-	}
-
-	// The response from the outer message is uninteresting; pass a nil
-	// resp channel.
 	outerID := atomic.AddInt64(&t.browser.next, 1)
 	t.browser.cmdQueue <- cmdJob{
 		msg: &cdproto.Message{
@@ -119,6 +111,9 @@ func (t *Target) Execute(ctx context.Context, method string, params json.Marshal
 			Method: target.CommandSendMessageToTarget,
 			Params: sendParamsJSON,
 		},
+		// We want to grab the response from the inner message.
+		resp:   ch,
+		respID: innerID,
 	}
 
 	select {

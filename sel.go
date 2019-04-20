@@ -204,7 +204,7 @@ func ByNodeID(s *Selector) {
 
 // waitReady waits for the specified nodes to be ready.
 func (s *Selector) waitReady(check func(context.Context, *Target, *cdp.Node) error) func(context.Context, *Target, *cdp.Frame, ...cdp.NodeID) ([]*cdp.Node, error) {
-	errc := make(chan error)
+	errc := make(chan error, 1)
 	return func(ctx context.Context, h *Target, cur *cdp.Frame, ids ...cdp.NodeID) ([]*cdp.Node, error) {
 		nodes := make([]*cdp.Node, len(ids))
 		cur.RLock()
