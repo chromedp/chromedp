@@ -126,14 +126,18 @@ func (c *Conn) Write(msg *cdproto.Message) error {
 		return err
 	}
 
+	// Write the bytes to the websocket.
+	// BuildBytes consumes the buffer, so we can't use it as well as DumpTo.
 	if c.dbgf != nil {
 		buf, _ := c.writer.BuildBytes()
 		c.dbgf("-> %s", buf)
-	}
-
-	// Write the bytes to the websocket.
-	if _, err := c.writer.DumpTo(w); err != nil {
-		return err
+		if _, err := w.Write(buf); err != nil {
+			return err
+		}
+	} else {
+		if _, err := c.writer.DumpTo(w); err != nil {
+			return err
+		}
 	}
 	return w.Close()
 }
