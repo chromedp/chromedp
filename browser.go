@@ -204,6 +204,7 @@ func (b *Browser) run(ctx context.Context) {
 	go func() {
 		// Reuse the space for the read message, since in some cases
 		// like EventTargetReceivedMessageFromTarget we throw it away.
+		var lexer jlexer.Lexer
 		readMsg := new(cdproto.Message)
 		for {
 			*readMsg = cdproto.Message{}
@@ -216,7 +217,9 @@ func (b *Browser) run(ctx context.Context) {
 			}
 			if readMsg.Method == cdproto.EventRuntimeExceptionThrown {
 				ev := new(runtime.EventExceptionThrown)
-				if err := easyjson.Unmarshal(readMsg.Params, ev); err != nil {
+				lexer = jlexer.Lexer{Data: readMsg.Params}
+				ev.UnmarshalEasyJSON(&lexer)
+				if err := lexer.Error(); err != nil {
 					b.errf("%s", err)
 					continue
 				}
@@ -228,7 +231,9 @@ func (b *Browser) run(ctx context.Context) {
 			var sessionID target.SessionID
 			if readMsg.Method == cdproto.EventTargetReceivedMessageFromTarget {
 				event := new(eventReceivedMessageFromTarget)
-				if err := easyjson.Unmarshal(readMsg.Params, event); err != nil {
+				lexer = jlexer.Lexer{Data: readMsg.Params}
+				event.UnmarshalEasyJSON(&lexer)
+				if err := lexer.Error(); err != nil {
 					b.errf("%s", err)
 					continue
 				}
@@ -246,7 +251,9 @@ func (b *Browser) run(ctx context.Context) {
 					switch msg.Method {
 					case cdproto.EventTargetDetachedFromTarget:
 						var ev target.EventDetachedFromTarget
-						if err := easyjson.Unmarshal(msg.Params, &ev); err != nil {
+						lexer = jlexer.Lexer{Data: readMsg.Params}
+						ev.UnmarshalEasyJSON(&lexer)
+						if err := lexer.Error(); err != nil {
 							b.errf("%s", err)
 							continue
 						}
