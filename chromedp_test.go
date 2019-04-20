@@ -7,7 +7,6 @@ import (
 	"net/http/httptest"
 	"os"
 	"path"
-	"runtime"
 	"testing"
 	"time"
 )
@@ -125,9 +124,6 @@ func TestTargets(t *testing.T) {
 
 func TestBrowserQuit(t *testing.T) {
 	t.Parallel()
-	if runtime.GOOS == "windows" {
-		t.Skip("os.Interrupt isn't supported on Windows")
-	}
 
 	// Simulate a scenario where we navigate to a page that's slow to
 	// respond, and the browser is closed before we can finish the
@@ -150,7 +146,7 @@ func TestBrowserQuit(t *testing.T) {
 	go func() {
 		<-close
 		b := FromContext(ctx).Browser
-		if err := b.process.Signal(os.Interrupt); err != nil {
+		if err := b.process.Signal(os.Kill); err != nil {
 			t.Error(err)
 		}
 		serve <- true
