@@ -1,9 +1,9 @@
 package chromedp
 
 import (
+	"bytes"
 	"context"
 	"io"
-	"io/ioutil"
 	"net"
 	"strings"
 
@@ -30,6 +30,7 @@ type Transport interface {
 // Conn wraps a gorilla/websocket.Conn connection.
 type Conn struct {
 	*websocket.Conn
+	buf  bytes.Buffer
 	dbgf func(string, ...interface{})
 }
 
@@ -57,6 +58,12 @@ func DialContext(ctx context.Context, urlstr string, opts ...DialOption) (*Conn,
 	return c, nil
 }
 
+func (c *Conn) bufReadAll(r io.Reader) ([]byte, error) {
+	c.buf.Reset()
+	_, err := c.buf.ReadFrom(r)
+	return c.buf.Bytes(), err
+}
+
 // Read reads the next message.
 func (c *Conn) Read() (*cdproto.Message, error) {
 	// get websocket reader
@@ -68,26 +75,26 @@ func (c *Conn) Read() (*cdproto.Message, error) {
 		return nil, ErrInvalidWebsocketMessage
 	}
 
-	// when dbgf defined, buffer, log, unmarshal
-	if c.dbgf != nil {
-		// buffer output
-		buf, err := ioutil.ReadAll(r)
-		if err != nil {
-			return nil, err
-		}
-		c.dbgf("<- %s", buf)
-		msg := new(cdproto.Message)
-		if err = easyjson.Unmarshal(buf, msg); err != nil {
-			return nil, err
-		}
-		return msg, nil
-	}
-
-	// unmarshal direct from reader
-	msg := new(cdproto.Message)
-	if err = easyjson.UnmarshalFromReader(r, msg); err != nil {
+	// Unmarshal via a bytes.Buffer. Don't use UnmarshalFromReader, as that
+	// uses ioutil.ReadAll, which uses a brand new bytes.Buffer each time.
+	// That doesn't reuse any space.
+	//
+	// bufReadAll uses the buffer space directly, and msg.Result is an
+	// easyjson.RawMessage, so we must make a copy of those bytes to prevent
+	// data races. This still allocates much less than using a new buffer
+	// each time.
+	buf, err := c.bufReadAll(r)
+	if err != nil {
 		return nil, err
 	}
+	if c.dbgf != nil {
+		c.dbgf("<- %s", buf)
+	}
+	msg := new(cdproto.Message)
+	if err := easyjson.Unmarshal(buf, msg); err != nil {
+		return nil, err
+	}
+	msg.Result = append([]byte{}, msg.Result...)
 	return msg, nil
 }
 
