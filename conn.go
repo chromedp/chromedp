@@ -75,7 +75,7 @@ func (c *Conn) Read() (*cdproto.Message, error) {
 		if err != nil {
 			return nil, err
 		}
-		c.dbgf("<- %s", string(buf))
+		c.dbgf("<- %s", buf)
 		msg := new(cdproto.Message)
 		if err = easyjson.Unmarshal(buf, msg); err != nil {
 			return nil, err

@@ -12,6 +12,7 @@ import (
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
 	"github.com/mailru/easyjson"
+	jlexer "github.com/mailru/easyjson/jlexer"
 )
 
 // Browser is the high-level Chrome DevTools Protocol browser manager, handling
@@ -137,6 +138,26 @@ type tabEvent struct {
 	msg       *cdproto.Message
 }
 
+//go:generate easyjson browser.go
+
+//easyjson:json
+type eventReceivedMessageFromTarget struct {
+	SessionID target.SessionID `json:"sessionId"`
+	Message   messageString    `json:"message"`
+}
+
+type messageString struct {
+	M cdproto.Message
+}
+
+func (m *messageString) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	if l.IsNull() {
+		l.Skip()
+	} else {
+		easyjson.Unmarshal(l.UnsafeBytes(), &m.M)
+	}
+}
+
 func (b *Browser) run(ctx context.Context) {
 	defer b.conn.Close()
 
@@ -174,17 +195,13 @@ func (b *Browser) run(ctx context.Context) {
 
 			var sessionID target.SessionID
 			if msg.Method == cdproto.EventTargetReceivedMessageFromTarget {
-				event := new(target.EventReceivedMessageFromTarget)
+				event := new(eventReceivedMessageFromTarget)
 				if err := easyjson.Unmarshal(msg.Params, event); err != nil {
 					b.errf("%s", err)
 					continue
 				}
 				sessionID = event.SessionID
-				msg = new(cdproto.Message)
-				if err := easyjson.Unmarshal([]byte(event.Message), msg); err != nil {
-					b.errf("%s", err)
-					continue
-				}
+				msg = &event.Message.M
 			}
 			switch {
 			case msg.Method != "":

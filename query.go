@@ -126,7 +126,7 @@ func Clear(sel interface{}, opts ...QueryOption) Action {
 		}
 
 		errs := make([]error, len(nodes))
-		wg := new(sync.WaitGroup)
+		var wg sync.WaitGroup
 		for i, n := range nodes {
 			wg.Add(1)
 			go func(i int, n *cdp.Node) {
