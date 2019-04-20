@@ -139,6 +139,7 @@ func (p *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	if err != nil {
 		return nil, err
 	}
+	defer stderr.Close()
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}

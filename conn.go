@@ -9,8 +9,8 @@ import (
 
 	"github.com/chromedp/cdproto"
 	"github.com/gorilla/websocket"
-	"github.com/mailru/easyjson"
-	jlexer "github.com/mailru/easyjson/jlexer"
+	"github.com/mailru/easyjson/jlexer"
+	"github.com/mailru/easyjson/jwriter"
 )
 
 var (
@@ -31,8 +31,14 @@ type Transport interface {
 // Conn wraps a gorilla/websocket.Conn connection.
 type Conn struct {
 	*websocket.Conn
-	buf  bytes.Buffer
-	lex  jlexer.Lexer
+
+	// buf helps us reuse space when reading from the websocket.
+	buf bytes.Buffer
+
+	// reuse the easyjson structs to avoid allocs per Read/Write.
+	lexer  jlexer.Lexer
+	writer jwriter.Writer
+
 	dbgf func(string, ...interface{})
 }
 
@@ -80,11 +86,6 @@ func (c *Conn) Read() (*cdproto.Message, error) {
 	// Unmarshal via a bytes.Buffer. Don't use UnmarshalFromReader, as that
 	// uses ioutil.ReadAll, which uses a brand new bytes.Buffer each time.
 	// That doesn't reuse any space.
-	//
-	// bufReadAll uses the buffer space directly, and msg.Result is an
-	// easyjson.RawMessage, so we must make a copy of those bytes to prevent
-	// data races. This still allocates much less than using a new buffer
-	// each time.
 	buf, err := c.bufReadAll(r)
 	if err != nil {
 		return nil, err
@@ -93,12 +94,18 @@ func (c *Conn) Read() (*cdproto.Message, error) {
 		c.dbgf("<- %s", buf)
 	}
 	msg := new(cdproto.Message)
+
 	// Reuse the easyjson lexer.
-	c.lex = jlexer.Lexer{Data: buf}
-	msg.UnmarshalEasyJSON(&c.lex)
-	if err := c.lex.Error(); err != nil {
+	c.lexer = jlexer.Lexer{Data: buf}
+	msg.UnmarshalEasyJSON(&c.lexer)
+	if err := c.lexer.Error(); err != nil {
 		return nil, err
 	}
+
+	// bufReadAll uses the buffer space directly, and msg.Result is an
+	// easyjson.RawMessage, so we must make a copy of those bytes to prevent
+	// data races. This still allocates much less than using a new buffer
+	// each time.
 	msg.Result = append([]byte{}, msg.Result...)
 	return msg, nil
 }
@@ -109,26 +116,26 @@ func (c *Conn) Write(msg *cdproto.Message) error {
 	if err != nil {
 		return err
 	}
+	defer w.Close()
 
-	if c.dbgf != nil {
-		var buf []byte
-		buf, err = easyjson.Marshal(msg)
-		if err != nil {
-			return err
-		}
-		c.dbgf("-> %s", string(buf))
-		_, err = w.Write(buf)
-		if err != nil {
-			return err
-		}
-	} else {
-		// direct marshal
-		_, err = easyjson.MarshalToWriter(msg, w)
-		if err != nil {
-			return err
-		}
+	// Reuse the easyjson writer.
+	c.writer = jwriter.Writer{}
+
+	// Perform the marshal.
+	msg.MarshalEasyJSON(&c.writer)
+	if err := c.writer.Error; err != nil {
+		return err
 	}
 
+	if c.dbgf != nil {
+		buf, _ := c.writer.BuildBytes()
+		c.dbgf("-> %s", buf)
+	}
+
+	// Write the bytes to the websocket.
+	if _, err := c.writer.DumpTo(w); err != nil {
+		return err
+	}
 	return w.Close()
 }
 
