@@ -84,13 +84,13 @@ func (t *Target) Execute(ctx context.Context, method string, params json.Marshal
 		Method: cdproto.MethodType(method),
 		Params: paramsMsg,
 	}
-	msgJSON, err := json.Marshal(msg)
+	msgJSON, err := easyjson.Marshal(msg)
 	if err != nil {
 		return err
 	}
 	sendParams := target.SendMessageToTarget(string(msgJSON)).
 		WithSessionID(t.SessionID)
-	sendParamsJSON, _ := json.Marshal(sendParams)
+	sendParamsJSON, _ := easyjson.Marshal(sendParams)
 
 	// We want to grab the response from the inner message.
 	ch := make(chan *cdproto.Message, 1)

@@ -11,6 +11,7 @@ import (
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
+	"github.com/mailru/easyjson"
 )
 
 // Browser is the high-level Chrome DevTools Protocol browser manager, handling
@@ -163,7 +164,7 @@ func (b *Browser) run(ctx context.Context) {
 			}
 			if msg.Method == cdproto.EventRuntimeExceptionThrown {
 				ev := new(runtime.EventExceptionThrown)
-				if err := json.Unmarshal(msg.Params, ev); err != nil {
+				if err := easyjson.Unmarshal(msg.Params, ev); err != nil {
 					b.errf("%s", err)
 					continue
 				}
@@ -174,13 +175,13 @@ func (b *Browser) run(ctx context.Context) {
 			var sessionID target.SessionID
 			if msg.Method == cdproto.EventTargetReceivedMessageFromTarget {
 				event := new(target.EventReceivedMessageFromTarget)
-				if err := json.Unmarshal(msg.Params, event); err != nil {
+				if err := easyjson.Unmarshal(msg.Params, event); err != nil {
 					b.errf("%s", err)
 					continue
 				}
 				sessionID = event.SessionID
 				msg = new(cdproto.Message)
-				if err := json.Unmarshal([]byte(event.Message), msg); err != nil {
+				if err := easyjson.Unmarshal([]byte(event.Message), msg); err != nil {
 					b.errf("%s", err)
 					continue
 				}
