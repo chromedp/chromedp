@@ -8,4 +8,5 @@ addons:
     chrome: stable
 
 script:
+  - export CHROMEDP_DEBUG=1
   - go test -v ./...

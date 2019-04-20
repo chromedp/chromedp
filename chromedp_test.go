@@ -3,6 +3,7 @@ package chromedp
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -66,8 +67,13 @@ func TestMain(m *testing.M) {
 
 	allocCtx, cancel := NewExecAllocator(context.Background(), allocOpts...)
 
+	var browserOpts []ContextOption
+	if debug := os.Getenv("CHROMEDP_DEBUG"); debug != "" && debug != "false" {
+		browserOpts = append(browserOpts, WithDebugf(log.Printf))
+	}
+
 	// start the browser
-	browserCtx, _ = NewContext(allocCtx)
+	browserCtx, _ = NewContext(allocCtx, browserOpts...)
 	if err := Run(browserCtx); err != nil {
 		panic(err)
 	}
