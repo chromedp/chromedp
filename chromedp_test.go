@@ -21,7 +21,7 @@ var (
 	allocOpts []ExecAllocatorOption
 )
 
-func testAllocate(t *testing.T, path string) (_ context.Context, cancel func()) {
+func testAllocate(tb testing.TB, path string) (_ context.Context, cancel func()) {
 	// Same browser, new tab; not needing to start new chrome browsers for
 	// each test gives a huge speed-up.
 	ctx, _ := NewContext(browserCtx)
@@ -29,13 +29,13 @@ func testAllocate(t *testing.T, path string) (_ context.Context, cancel func()) 
 	// Only navigate if we want a path, otherwise leave the blank page.
 	if path != "" {
 		if err := Run(ctx, Navigate(testdataDir+"/"+path)); err != nil {
-			t.Fatal(err)
+			tb.Fatal(err)
 		}
 	}
 
 	cancelErr := func() {
 		if err := Cancel(ctx); err != nil {
-			t.Error(err)
+			tb.Error(err)
 		}
 	}
 	return ctx, cancelErr
