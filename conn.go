@@ -9,6 +9,7 @@ import (
 
 	"github.com/chromedp/cdproto"
 	"github.com/gorilla/websocket"
+	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"
 )
@@ -72,6 +73,12 @@ func (c *Conn) bufReadAll(r io.Reader) ([]byte, error) {
 	return c.buf.Bytes(), err
 }
 
+func unmarshal(lex *jlexer.Lexer, data []byte, v easyjson.Unmarshaler) error {
+	*lex = jlexer.Lexer{Data: data}
+	v.UnmarshalEasyJSON(lex)
+	return lex.Error()
+}
+
 // Read reads the next message.
 func (c *Conn) Read(msg *cdproto.Message) error {
 	// get websocket reader
@@ -95,9 +102,7 @@ func (c *Conn) Read(msg *cdproto.Message) error {
 	}
 
 	// Reuse the easyjson lexer.
-	c.lexer = jlexer.Lexer{Data: buf}
-	msg.UnmarshalEasyJSON(&c.lexer)
-	if err := c.lexer.Error(); err != nil {
+	if err := unmarshal(&c.lexer, buf, msg); err != nil {
 		return err
 	}
 

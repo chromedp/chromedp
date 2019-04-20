@@ -12,7 +12,6 @@ import (
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
-	"github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 )
 
@@ -175,14 +174,15 @@ type eventReceivedMessageFromTarget struct {
 }
 
 type messageString struct {
-	M cdproto.Message
+	lexer jlexer.Lexer // to avoid an alloc
+	M     cdproto.Message
 }
 
 func (m *messageString) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	if l.IsNull() {
 		l.Skip()
 	} else {
-		easyjson.Unmarshal(l.UnsafeBytes(), &m.M)
+		l.AddError(unmarshal(&m.lexer, l.UnsafeBytes(), &m.M))
 	}
 }
 
@@ -204,7 +204,7 @@ func (b *Browser) run(ctx context.Context) {
 	go func() {
 		// Reuse the space for the read message, since in some cases
 		// like EventTargetReceivedMessageFromTarget we throw it away.
-		var lexer jlexer.Lexer
+		lexer := new(jlexer.Lexer)
 		readMsg := new(cdproto.Message)
 		for {
 			*readMsg = cdproto.Message{}
@@ -217,9 +217,7 @@ func (b *Browser) run(ctx context.Context) {
 			}
 			if readMsg.Method == cdproto.EventRuntimeExceptionThrown {
 				ev := new(runtime.EventExceptionThrown)
-				lexer = jlexer.Lexer{Data: readMsg.Params}
-				ev.UnmarshalEasyJSON(&lexer)
-				if err := lexer.Error(); err != nil {
+				if err := unmarshal(lexer, readMsg.Params, ev); err != nil {
 					b.errf("%s", err)
 					continue
 				}
@@ -230,15 +228,13 @@ func (b *Browser) run(ctx context.Context) {
 			var msg *cdproto.Message
 			var sessionID target.SessionID
 			if readMsg.Method == cdproto.EventTargetReceivedMessageFromTarget {
-				event := new(eventReceivedMessageFromTarget)
-				lexer = jlexer.Lexer{Data: readMsg.Params}
-				event.UnmarshalEasyJSON(&lexer)
-				if err := lexer.Error(); err != nil {
+				ev := new(eventReceivedMessageFromTarget)
+				if err := unmarshal(lexer, readMsg.Params, ev); err != nil {
 					b.errf("%s", err)
 					continue
 				}
-				sessionID = event.SessionID
-				msg = &event.Message.M
+				sessionID = ev.SessionID
+				msg = &ev.Message.M
 			} else {
 				// We're passing along readMsg to another
 				// goroutine, so we must make a copy of it.
@@ -251,9 +247,7 @@ func (b *Browser) run(ctx context.Context) {
 					switch msg.Method {
 					case cdproto.EventTargetDetachedFromTarget:
 						var ev target.EventDetachedFromTarget
-						lexer = jlexer.Lexer{Data: readMsg.Params}
-						ev.UnmarshalEasyJSON(&lexer)
-						if err := lexer.Error(); err != nil {
+						if err := unmarshal(lexer, readMsg.Params, &ev); err != nil {
 							b.errf("%s", err)
 							continue
 						}
