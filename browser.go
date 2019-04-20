@@ -174,18 +174,21 @@ func (b *Browser) run(ctx context.Context) {
 	// connection. The separate goroutine is needed since a websocket read
 	// is blocking, so it cannot be used in a select statement.
 	go func() {
+		// Reuse the space for the read message, since in some cases
+		// like EventTargetReceivedMessageFromTarget we throw it away.
+		readMsg := new(cdproto.Message)
 		for {
-			msg, err := b.conn.Read()
-			if err != nil {
+			*readMsg = cdproto.Message{}
+			if err := b.conn.Read(readMsg); err != nil {
 				// If the websocket failed, most likely Chrome
 				// was closed or crashed. Cancel the entire
 				// Browser context to stop all activity.
 				cancel()
 				return
 			}
-			if msg.Method == cdproto.EventRuntimeExceptionThrown {
+			if readMsg.Method == cdproto.EventRuntimeExceptionThrown {
 				ev := new(runtime.EventExceptionThrown)
-				if err := easyjson.Unmarshal(msg.Params, ev); err != nil {
+				if err := easyjson.Unmarshal(readMsg.Params, ev); err != nil {
 					b.errf("%s", err)
 					continue
 				}
@@ -193,15 +196,21 @@ func (b *Browser) run(ctx context.Context) {
 				continue
 			}
 
+			var msg *cdproto.Message
 			var sessionID target.SessionID
-			if msg.Method == cdproto.EventTargetReceivedMessageFromTarget {
+			if readMsg.Method == cdproto.EventTargetReceivedMessageFromTarget {
 				event := new(eventReceivedMessageFromTarget)
-				if err := easyjson.Unmarshal(msg.Params, event); err != nil {
+				if err := easyjson.Unmarshal(readMsg.Params, event); err != nil {
 					b.errf("%s", err)
 					continue
 				}
 				sessionID = event.SessionID
 				msg = &event.Message.M
+			} else {
+				// We're passing along readMsg to another
+				// goroutine, so we must make a copy of it.
+				msg = new(cdproto.Message)
+				*msg = *readMsg
 			}
 			switch {
 			case msg.Method != "":

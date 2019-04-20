@@ -23,7 +23,7 @@ var (
 
 // Transport is the common interface to send/receive messages to a target.
 type Transport interface {
-	Read() (*cdproto.Message, error)
+	Read(*cdproto.Message) error
 	Write(*cdproto.Message) error
 	io.Closer
 }
@@ -73,14 +73,14 @@ func (c *Conn) bufReadAll(r io.Reader) ([]byte, error) {
 }
 
 // Read reads the next message.
-func (c *Conn) Read() (*cdproto.Message, error) {
+func (c *Conn) Read(msg *cdproto.Message) error {
 	// get websocket reader
 	typ, r, err := c.NextReader()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if typ != websocket.TextMessage {
-		return nil, ErrInvalidWebsocketMessage
+		return ErrInvalidWebsocketMessage
 	}
 
 	// Unmarshal via a bytes.Buffer. Don't use UnmarshalFromReader, as that
@@ -88,18 +88,17 @@ func (c *Conn) Read() (*cdproto.Message, error) {
 	// That doesn't reuse any space.
 	buf, err := c.bufReadAll(r)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if c.dbgf != nil {
 		c.dbgf("<- %s", buf)
 	}
-	msg := new(cdproto.Message)
 
 	// Reuse the easyjson lexer.
 	c.lexer = jlexer.Lexer{Data: buf}
 	msg.UnmarshalEasyJSON(&c.lexer)
 	if err := c.lexer.Error(); err != nil {
-		return nil, err
+		return err
 	}
 
 	// bufReadAll uses the buffer space directly, and msg.Result is an
@@ -107,7 +106,7 @@ func (c *Conn) Read() (*cdproto.Message, error) {
 	// data races. This still allocates much less than using a new buffer
 	// each time.
 	msg.Result = append([]byte{}, msg.Result...)
-	return msg, nil
+	return nil
 }
 
 // Write writes a message.
