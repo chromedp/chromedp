@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -111,8 +112,8 @@ func (p *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	}
 	args = append(args, "--remote-debugging-port=0")
 
-	// force the first page to be blank, instead of the welcome page
-	// TODO: why isn't --no-first-run enough?
+	// Force the first page to be blank, instead of the welcome page;
+	// --no-first-run doesn't enforce that.
 	args = append(args, "about:blank")
 
 	cmd := exec.CommandContext(ctx, p.execPath, args...)
@@ -143,22 +144,10 @@ func (p *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
-
-	// Pick up the browser's websocket URL from stderr.
-	wsURL := ""
-	scanner := bufio.NewScanner(stderr)
-	prefix := "DevTools listening on"
-	for scanner.Scan() {
-		line := scanner.Text()
-		if s := strings.TrimPrefix(line, prefix); s != line {
-			wsURL = strings.TrimSpace(s)
-			break
-		}
-	}
-	if err := scanner.Err(); err != nil {
+	wsURL, err := portFromStderr(stderr)
+	if err != nil {
 		return nil, err
 	}
-	stderr.Close()
 
 	browser, err := NewBrowser(ctx, wsURL, opts...)
 	if err != nil {
@@ -167,6 +156,27 @@ func (p *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	browser.process = cmd.Process
 	browser.userDataDir = dataDir
 	return browser, nil
+}
+
+// portFromStderr finds the free port that Chrome selected for the debugging
+// protocol. This should be hooked up to a new Chrome process's Stderr pipe
+// right after it is started.
+func portFromStderr(rc io.ReadCloser) (string, error) {
+	url := ""
+	scanner := bufio.NewScanner(rc)
+	prefix := "DevTools listening on"
+	for scanner.Scan() {
+		line := scanner.Text()
+		if s := strings.TrimPrefix(line, prefix); s != line {
+			url = strings.TrimSpace(s)
+			break
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return "", err
+	}
+	rc.Close()
+	return url, nil
 }
 
 // Wait satisfies the Allocator interface.
@@ -179,12 +189,13 @@ func (p *ExecAllocator) Wait() {
 // just the name of the program to find via exec.LookPath.
 func ExecPath(path string) ExecAllocatorOption {
 	return func(p *ExecAllocator) {
+		// Convert to an absolute path if possible, to avoid
+		// repeated LookPath calls in each Allocate.
 		if fullPath, _ := exec.LookPath(path); fullPath != "" {
-			// Convert to an absolute path if possible, to avoid
-			// repeated LookPath calls in each Allocate.
-			path = fullPath
+			p.execPath = fullPath
+		} else {
+			p.execPath = path
 		}
-		p.execPath = path
 	}
 }
 
@@ -283,3 +294,28 @@ func Headless(p *ExecAllocator) {
 func DisableGPU(p *ExecAllocator) {
 	Flag("disable-gpu", true)(p)
 }
+
+// NewRemoteAllocator creates a new context set up with a RemoteAllocator,
+// suitable for use with NewContext.
+func NewRemoteAllocator(parent context.Context, url string) (context.Context, context.CancelFunc) {
+	ctx, cancel := context.WithCancel(parent)
+	c := &Context{Allocator: &RemoteAllocator{
+		wsURL: url,
+	}}
+	ctx = context.WithValue(ctx, contextKey{}, c)
+	return ctx, cancel
+}
+
+// RemoteAllocator is an Allocator which connects to an already running Chrome
+// process via a websocket URL.
+type RemoteAllocator struct {
+	wsURL string
+}
+
+// Allocate satisfies the Allocator interface.
+func (p *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*Browser, error) {
+	return NewBrowser(ctx, p.wsURL, opts...)
+}
+
+// Wait satisfies the Allocator interface.
+func (p *RemoteAllocator) Wait() {}

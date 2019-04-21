@@ -8,11 +8,15 @@ import (
 	"net/http/httptest"
 	"os"
 	"path"
+	"strings"
 	"testing"
 	"time"
+
+	"github.com/chromedp/cdproto/target"
 )
 
 var (
+	execPath    string
 	testdataDir string
 
 	browserCtx context.Context
@@ -55,11 +59,15 @@ func TestMain(m *testing.M) {
 	// and can slightly speed up the tests on other systems
 	allocOpts = append(allocOpts, DisableGPU)
 
+	// find the exec path once at startup
 	// it's worth noting that newer versions of chrome (64+) run much faster
 	// than older ones -- same for headless_shell ...
-	if execPath := os.Getenv("CHROMEDP_TEST_RUNNER"); execPath != "" {
-		allocOpts = append(allocOpts, ExecPath(execPath))
+	execPath = os.Getenv("CHROMEDP_TEST_RUNNER")
+	if execPath == "" {
+		execPath = findExecPath()
 	}
+	allocOpts = append(allocOpts, ExecPath(execPath))
+
 	// not explicitly needed to be set, as this vastly speeds up unit tests
 	if noSandbox := os.Getenv("CHROMEDP_NO_SANDBOX"); noSandbox != "false" {
 		allocOpts = append(allocOpts, NoSandbox)
@@ -84,6 +92,30 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+// checkPages fatals if the browser behind the chromedp context has an
+// unexpected number of pages (tabs).
+func checkTargets(tb testing.TB, ctx context.Context, want int) {
+	tb.Helper()
+	infos, err := Targets(ctx)
+	if err != nil {
+		tb.Fatal(err)
+	}
+	var pages []*target.Info
+	for _, info := range infos {
+		if info.Type == "page" {
+			pages = append(pages, info)
+		}
+	}
+	if got := len(pages); want != got {
+		var summaries []string
+		for _, info := range pages {
+			summaries = append(summaries, fmt.Sprintf("%v", info))
+		}
+		tb.Fatalf("want %d targets, got %d:\n%s",
+			want, got, strings.Join(summaries, "\n"))
+	}
+}
+
 func TestTargets(t *testing.T) {
 	t.Parallel()
 
@@ -94,17 +126,7 @@ func TestTargets(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	wantTargets := func(ctx context.Context, want int) {
-		t.Helper()
-		infos, err := Targets(ctx)
-		if err != nil {
-			t.Fatal(err)
-		}
-		if got := len(infos); want != got {
-			t.Fatalf("want %d targets, got %d", want, got)
-		}
-	}
-	wantTargets(ctx1, 1)
+	checkTargets(t, ctx1, 1)
 
 	// Start a second tab on the same browser.
 	ctx2, cancel2 := NewContext(ctx1)
@@ -112,14 +134,14 @@ func TestTargets(t *testing.T) {
 	if err := Run(ctx2); err != nil {
 		t.Fatal(err)
 	}
-	wantTargets(ctx2, 2)
+	checkTargets(t, ctx2, 2)
 
 	// The first context should also see both targets.
-	wantTargets(ctx1, 2)
+	checkTargets(t, ctx1, 2)
 
 	// Cancelling the second context should close the second tab alone.
 	cancel2()
-	wantTargets(ctx1, 1)
+	checkTargets(t, ctx1, 1)
 
 	// We used to have a bug where Run would reset the first context as if
 	// it weren't the first, breaking its cancellation.
