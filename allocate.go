@@ -153,6 +153,12 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	if err != nil {
 		return nil, err
 	}
+	go func() {
+		// If the browser loses connection, kill the entire process and
+		// handler at once.
+		<-browser.LostConnection
+		Cancel(ctx)
+	}()
 	browser.process = cmd.Process
 	browser.userDataDir = dataDir
 	return browser, nil
@@ -327,7 +333,17 @@ func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (
 		cancel()    // close the websocket connection
 		a.wg.Done()
 	}()
-	return NewBrowser(wctx, a.wsURL, opts...)
+	browser, err := NewBrowser(wctx, a.wsURL, opts...)
+	if err != nil {
+		return nil, err
+	}
+	go func() {
+		// If the browser loses connection, kill the entire process and
+		// handler at once.
+		<-browser.LostConnection
+		Cancel(ctx)
+	}()
+	return browser, nil
 }
 
 // Wait satisfies the Allocator interface.

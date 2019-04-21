@@ -2,10 +2,14 @@ package chromedp
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"os/exec"
 	"testing"
+	"time"
 )
 
 func TestExecAllocator(t *testing.T) {
@@ -63,6 +67,48 @@ func TestExecAllocatorCancelParent(t *testing.T) {
 	}
 }
 
+func TestExecAllocatorKillBrowser(t *testing.T) {
+	t.Parallel()
+
+	// Simulate a scenario where we navigate to a page that's slow to
+	// respond, and the browser is closed before we can finish the
+	// navigation.
+	serve := make(chan bool, 1)
+	close := make(chan bool, 1)
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		close <- true
+		<-serve
+		fmt.Fprintf(w, "response")
+	}))
+	defer s.Close()
+
+	ctx, cancel := NewContext(context.Background())
+	defer cancel()
+	if err := Run(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	go func() {
+		<-close
+		b := FromContext(ctx).Browser
+		if err := b.process.Signal(os.Kill); err != nil {
+			t.Error(err)
+		}
+		serve <- true
+	}()
+
+	// Run should error with something other than "deadline exceeded" in
+	// much less than 5s.
+	ctx2, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	switch err := Run(ctx2, Navigate(s.URL)); err {
+	case nil:
+		t.Fatal("did not expect a nil error")
+	case context.DeadlineExceeded:
+		t.Fatalf("did not expect a standard context error: %v", err)
+	}
+}
+
 func TestSkipNewContext(t *testing.T) {
 	ctx, cancel := NewExecAllocator(context.Background(), allocOpts...)
 	defer cancel()
@@ -114,6 +160,8 @@ func TestRemoteAllocator(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	allocCtx, allocCancel := NewRemoteAllocator(context.Background(), wsURL)
+	defer allocCancel()
 
 	// We should be able to do the following steps repeatedly; do it twice
 	// to check for idempotency.
@@ -121,9 +169,6 @@ func TestRemoteAllocator(t *testing.T) {
 	// 2) run some actions
 	// 3) close the target and connection
 	for i := 0; i < 3; i++ {
-		allocCtx, allocCancel := NewRemoteAllocator(context.Background(), wsURL)
-		defer allocCancel()
-
 		taskCtx, taskCancel := NewContext(allocCtx)
 		defer taskCancel()
 
@@ -144,6 +189,26 @@ func TestRemoteAllocator(t *testing.T) {
 		if err := Cancel(taskCtx); err != nil {
 			t.Fatal(err)
 		}
-		allocCancel()
+	}
+
+	// Finally, if we kill the browser and the websocket connection drops,
+	// Run should error way before the 5s timeout.
+	ctx, cancel := NewContext(allocCtx)
+	defer cancel()
+	ctx, cancel = context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	// Connect to the browser, then kill it.
+	if err := Run(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if err := cmd.Process.Signal(os.Kill); err != nil {
+		t.Error(err)
+	}
+	switch err := Run(ctx, Navigate(testdataDir+"/form.html")); err {
+	case nil:
+		t.Fatal("did not expect a nil error")
+	case context.DeadlineExceeded:
+		t.Fatalf("did not expect a standard context error: %v", err)
 	}
 }

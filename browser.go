@@ -21,6 +21,11 @@ import (
 // the browser process runner, WebSocket clients, associated targets, and
 // network, page, and DOM events.
 type Browser struct {
+	// LostConnection is closed when the websocket connection to Chrome is
+	// dropped. This can be useful to make sure that Browser's context is
+	// cancelled (and the handler stopped) once the connection has failed.
+	LostConnection chan struct{}
+
 	conn Transport
 
 	// next is the next message id.
@@ -70,6 +75,8 @@ type cmdJob struct {
 // NewBrowser creates a new browser.
 func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Browser, error) {
 	b := &Browser{
+		LostConnection: make(chan struct{}),
+
 		newTabQueue: make(chan *Target),
 		delTabQueue: make(chan target.SessionID, 1),
 
@@ -212,12 +219,6 @@ func (m *messageString) UnmarshalEasyJSON(l *jlexer.Lexer) {
 func (b *Browser) run(ctx context.Context) {
 	defer b.conn.Close()
 
-	// ctx might not be a chromedp context, if called from RemoteAllocator.
-	var cancel func()
-	if c := FromContext(ctx); c != nil {
-		cancel = c.cancel
-	}
-
 	// tabEventQueue is the queue of incoming target events, to be routed by
 	// their session ID.
 	tabEventQueue := make(chan tabEvent, 1)
@@ -237,11 +238,9 @@ func (b *Browser) run(ctx context.Context) {
 			*readMsg = cdproto.Message{}
 			if err := b.conn.Read(ctx, readMsg); err != nil {
 				// If the websocket failed, most likely Chrome
-				// was closed or crashed. Cancel the entire
-				// Browser context to stop all activity.
-				if cancel != nil {
-					cancel()
-				}
+				// was closed or crashed. Signal that so the
+				// entire browser handler can be stopped.
+				close(b.LostConnection)
 				return
 			}
 			if readMsg.Method == cdproto.EventRuntimeExceptionThrown {
@@ -393,6 +392,8 @@ func (b *Browser) run(ctx context.Context) {
 				continue
 			}
 
+		case <-b.LostConnection:
+			return
 		case <-ctx.Done():
 			return
 		}
