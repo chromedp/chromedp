@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"net"
 	"os"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -88,13 +90,34 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 
 	// dial
 	var err error
-	b.conn, err = DialContext(ctx, ForceIP(urlstr), WithConnDebugf(b.dbgf))
+	b.conn, err = DialContext(ctx, forceIP(urlstr), WithConnDebugf(b.dbgf))
 	if err != nil {
 		return nil, err
 	}
 
 	go b.run(ctx)
 	return b, nil
+}
+
+// forceIP forces the host component in urlstr to be an IP address.
+//
+// Since Chrome 66+, Chrome DevTools Protocol clients connecting to a browser
+// must send the "Host:" header as either an IP address, or "localhost".
+func forceIP(urlstr string) string {
+	if i := strings.Index(urlstr, "://"); i != -1 {
+		scheme := urlstr[:i+3]
+		host, port, path := urlstr[len(scheme)+3:], "", ""
+		if i := strings.Index(host, "/"); i != -1 {
+			host, path = host[:i], host[i:]
+		}
+		if i := strings.Index(host, ":"); i != -1 {
+			host, port = host[:i], host[i:]
+		}
+		if addr, err := net.ResolveIPAddr("ip", host); err == nil {
+			urlstr = scheme + addr.IP.String() + port + path
+		}
+	}
+	return urlstr
 }
 
 func (b *Browser) newExecutorForTarget(ctx context.Context, targetID target.ID, sessionID target.SessionID) *Target {
@@ -208,7 +231,7 @@ func (b *Browser) run(ctx context.Context) {
 		readMsg := new(cdproto.Message)
 		for {
 			*readMsg = cdproto.Message{}
-			if err := b.conn.Read(readMsg); err != nil {
+			if err := b.conn.Read(ctx, readMsg); err != nil {
 				// If the websocket failed, most likely Chrome
 				// was closed or crashed. Cancel the entire
 				// Browser context to stop all activity.
@@ -359,7 +382,7 @@ func (b *Browser) run(ctx context.Context) {
 				respByID[q.msg.ID] = q.resp
 			}
 
-			if err := b.conn.Write(q.msg); err != nil {
+			if err := b.conn.Write(ctx, q.msg); err != nil {
 				b.errf("%s", err)
 				continue
 			}

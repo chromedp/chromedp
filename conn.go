@@ -1,11 +1,11 @@
+// +build !nhooyr !gobwas
+
 package chromedp
 
 import (
 	"bytes"
 	"context"
 	"io"
-	"net"
-	"strings"
 
 	"github.com/chromedp/cdproto"
 	"github.com/gorilla/websocket"
@@ -14,24 +14,9 @@ import (
 	"github.com/mailru/easyjson/jwriter"
 )
 
-var (
-	// DefaultReadBufferSize is the default maximum read buffer size.
-	DefaultReadBufferSize = 25 * 1024 * 1024
-
-	// DefaultWriteBufferSize is the default maximum write buffer size.
-	DefaultWriteBufferSize = 10 * 1024 * 1024
-)
-
-// Transport is the common interface to send/receive messages to a target.
-type Transport interface {
-	Read(*cdproto.Message) error
-	Write(*cdproto.Message) error
-	io.Closer
-}
-
 // Conn wraps a gorilla/websocket.Conn connection.
 type Conn struct {
-	*websocket.Conn
+	conn *websocket.Conn
 
 	// buf helps us reuse space when reading from the websocket.
 	buf bytes.Buffer
@@ -46,8 +31,8 @@ type Conn struct {
 // DialContext dials the specified websocket URL using gorilla/websocket.
 func DialContext(ctx context.Context, urlstr string, opts ...DialOption) (*Conn, error) {
 	d := &websocket.Dialer{
-		ReadBufferSize:  DefaultReadBufferSize,
-		WriteBufferSize: DefaultWriteBufferSize,
+		ReadBufferSize:  25 * 1024 * 1024,
+		WriteBufferSize: 10 * 1024 * 1024,
 	}
 
 	// connect
@@ -58,13 +43,18 @@ func DialContext(ctx context.Context, urlstr string, opts ...DialOption) (*Conn,
 
 	// apply opts
 	c := &Conn{
-		Conn: conn,
+		conn: conn,
 	}
 	for _, o := range opts {
 		o(c)
 	}
 
 	return c, nil
+}
+
+// Close satisfies the io.Closer interface.
+func (c *Conn) Close() error {
+	return c.conn.Close()
 }
 
 func (c *Conn) bufReadAll(r io.Reader) ([]byte, error) {
@@ -80,9 +70,9 @@ func unmarshal(lex *jlexer.Lexer, data []byte, v easyjson.Unmarshaler) error {
 }
 
 // Read reads the next message.
-func (c *Conn) Read(msg *cdproto.Message) error {
+func (c *Conn) Read(_ context.Context, msg *cdproto.Message) error {
 	// get websocket reader
-	typ, r, err := c.NextReader()
+	typ, r, err := c.conn.NextReader()
 	if err != nil {
 		return err
 	}
@@ -115,8 +105,8 @@ func (c *Conn) Read(msg *cdproto.Message) error {
 }
 
 // Write writes a message.
-func (c *Conn) Write(msg *cdproto.Message) error {
-	w, err := c.NextWriter(websocket.TextMessage)
+func (c *Conn) Write(_ context.Context, msg *cdproto.Message) error {
+	w, err := c.conn.NextWriter(websocket.TextMessage)
 	if err != nil {
 		return err
 	}
@@ -145,27 +135,6 @@ func (c *Conn) Write(msg *cdproto.Message) error {
 		}
 	}
 	return w.Close()
-}
-
-// ForceIP forces the host component in urlstr to be an IP address.
-//
-// Since Chrome 66+, Chrome DevTools Protocol clients connecting to a browser
-// must send the "Host:" header as either an IP address, or "localhost".
-func ForceIP(urlstr string) string {
-	if i := strings.Index(urlstr, "://"); i != -1 {
-		scheme := urlstr[:i+3]
-		host, port, path := urlstr[len(scheme)+3:], "", ""
-		if i := strings.Index(host, "/"); i != -1 {
-			host, path = host[:i], host[i:]
-		}
-		if i := strings.Index(host, ":"); i != -1 {
-			host, port = host[:i], host[i:]
-		}
-		if addr, err := net.ResolveIPAddr("ip", host); err == nil {
-			urlstr = scheme + addr.IP.String() + port + path
-		}
-	}
-	return urlstr
 }
 
 // DialOption is a dial option.
