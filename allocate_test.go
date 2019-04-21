@@ -2,7 +2,6 @@ package chromedp
 
 import (
 	"context"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -70,31 +69,26 @@ func TestExecAllocatorCancelParent(t *testing.T) {
 func TestExecAllocatorKillBrowser(t *testing.T) {
 	t.Parallel()
 
-	// Simulate a scenario where we navigate to a page that's slow to
-	// respond, and the browser is closed before we can finish the
-	// navigation.
-	serve := make(chan bool, 1)
-	close := make(chan bool, 1)
-	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		close <- true
-		<-serve
-		fmt.Fprintf(w, "response")
-	}))
-	defer s.Close()
-
+	// Simulate a scenario where we navigate to a page that never responds,
+	// and the browser is closed while it's loading.
 	ctx, cancel := NewContext(context.Background())
 	defer cancel()
 	if err := Run(ctx); err != nil {
 		t.Fatal(err)
 	}
 
+	kill := make(chan bool, 1)
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		kill <- true
+		<-ctx.Done() // block until the end of the test
+	}))
+	defer s.Close()
 	go func() {
-		<-close
+		<-kill
 		b := FromContext(ctx).Browser
 		if err := b.process.Signal(os.Kill); err != nil {
 			t.Error(err)
 		}
-		serve <- true
 	}()
 
 	// Run should error with something other than "deadline exceeded" in
