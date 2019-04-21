@@ -212,7 +212,11 @@ func (m *messageString) UnmarshalEasyJSON(l *jlexer.Lexer) {
 func (b *Browser) run(ctx context.Context) {
 	defer b.conn.Close()
 
-	cancel := FromContext(ctx).cancel
+	// ctx might not be a chromedp context, if called from RemoteAllocator.
+	var cancel func()
+	if c := FromContext(ctx); c != nil {
+		cancel = c.cancel
+	}
 
 	// tabEventQueue is the queue of incoming target events, to be routed by
 	// their session ID.
@@ -235,7 +239,9 @@ func (b *Browser) run(ctx context.Context) {
 				// If the websocket failed, most likely Chrome
 				// was closed or crashed. Cancel the entire
 				// Browser context to stop all activity.
-				cancel()
+				if cancel != nil {
+					cancel()
+				}
 				return
 			}
 			if readMsg.Method == cdproto.EventRuntimeExceptionThrown {

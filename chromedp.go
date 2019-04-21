@@ -47,10 +47,9 @@ type Context struct {
 	// cancel function doesn't do any waiting.
 	cancel func()
 
-	// first records whether this context was the one that allocated
-	// Browser. This is important, because its cancellation will stop the
-	// entire browser handler, meaning that no further actions can be
-	// executed.
+	// first records whether this context created a brand new Chrome
+	// process. This is important, because its cancellation should stop the
+	// entire browser and its handler, and not just a portion of its pages.
 	first bool
 
 	// wg allows waiting for a target to be closed on cancellation.
@@ -84,6 +83,11 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 		// create a new tab on the same browser.
 
 		c.first = c.Browser == nil
+
+		// TODO: make this more generic somehow.
+		if _, ok := c.Allocator.(*RemoteAllocator); ok {
+			c.first = false
+		}
 	}
 
 	for _, o := range opts {

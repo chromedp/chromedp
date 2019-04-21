@@ -79,14 +79,14 @@ type ExecAllocator struct {
 }
 
 // Allocate satisfies the Allocator interface.
-func (p *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*Browser, error) {
+func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*Browser, error) {
 	c := FromContext(ctx)
 	if c == nil {
 		return nil, ErrInvalidContext
 	}
 
 	var args []string
-	for name, value := range p.initFlags {
+	for name, value := range a.initFlags {
 		switch value := value.(type) {
 		case string:
 			args = append(args, fmt.Sprintf("--%s=%s", name, value))
@@ -100,7 +100,7 @@ func (p *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	}
 
 	removeDir := false
-	dataDir, ok := p.initFlags["user-data-dir"].(string)
+	dataDir, ok := a.initFlags["user-data-dir"].(string)
 	if !ok {
 		tempDir, err := ioutil.TempDir("", "chromedp-runner")
 		if err != nil {
@@ -116,9 +116,9 @@ func (p *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	// --no-first-run doesn't enforce that.
 	args = append(args, "about:blank")
 
-	cmd := exec.CommandContext(ctx, p.execPath, args...)
+	cmd := exec.CommandContext(ctx, a.execPath, args...)
 
-	p.wg.Add(1) // for the entire allocator
+	a.wg.Add(1) // for the entire allocator
 	c.wg.Add(1) // for this browser's root context
 	go func() {
 		<-ctx.Done()
@@ -133,7 +133,7 @@ func (p *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 				c.cancelErr = err
 			}
 		}
-		p.wg.Done()
+		a.wg.Done()
 		c.wg.Done()
 	}()
 	stderr, err := cmd.StderrPipe()
@@ -180,21 +180,21 @@ func portFromStderr(rc io.ReadCloser) (string, error) {
 }
 
 // Wait satisfies the Allocator interface.
-func (p *ExecAllocator) Wait() {
-	p.wg.Wait()
+func (a *ExecAllocator) Wait() {
+	a.wg.Wait()
 }
 
 // ExecPath returns an ExecAllocatorOption which uses the given path to execute
 // browser processes. The given path can be an absolute path to a binary, or
 // just the name of the program to find via exec.LookPath.
 func ExecPath(path string) ExecAllocatorOption {
-	return func(p *ExecAllocator) {
+	return func(a *ExecAllocator) {
 		// Convert to an absolute path if possible, to avoid
 		// repeated LookPath calls in each Allocate.
 		if fullPath, _ := exec.LookPath(path); fullPath != "" {
-			p.execPath = fullPath
+			a.execPath = fullPath
 		} else {
-			p.execPath = path
+			a.execPath = path
 		}
 	}
 }
@@ -238,8 +238,8 @@ func findExecPath() string {
 // is a string, it will be passed as --name=value. If it's a boolean, it will be
 // passed as --name if value is true.
 func Flag(name string, value interface{}) ExecAllocatorOption {
-	return func(p *ExecAllocator) {
-		p.initFlags[name] = value
+	return func(a *ExecAllocator) {
+		a.initFlags[name] = value
 	}
 }
 
@@ -269,30 +269,30 @@ func UserAgent(userAgent string) ExecAllocatorOption {
 }
 
 // NoSandbox is the Chrome comamnd line option to disable the sandbox.
-func NoSandbox(p *ExecAllocator) {
-	Flag("no-sandbox", true)(p)
+func NoSandbox(a *ExecAllocator) {
+	Flag("no-sandbox", true)(a)
 }
 
 // NoFirstRun is the Chrome comamnd line option to disable the first run
 // dialog.
-func NoFirstRun(p *ExecAllocator) {
-	Flag("no-first-run", true)(p)
+func NoFirstRun(a *ExecAllocator) {
+	Flag("no-first-run", true)(a)
 }
 
 // NoDefaultBrowserCheck is the Chrome comamnd line option to disable the
 // default browser check.
-func NoDefaultBrowserCheck(p *ExecAllocator) {
-	Flag("no-default-browser-check", true)(p)
+func NoDefaultBrowserCheck(a *ExecAllocator) {
+	Flag("no-default-browser-check", true)(a)
 }
 
 // Headless is the command line option to run in headless mode.
-func Headless(p *ExecAllocator) {
-	Flag("headless", true)(p)
+func Headless(a *ExecAllocator) {
+	Flag("headless", true)(a)
 }
 
 // DisableGPU is the command line option to disable the GPU process.
-func DisableGPU(p *ExecAllocator) {
-	Flag("disable-gpu", true)(p)
+func DisableGPU(a *ExecAllocator) {
+	Flag("disable-gpu", true)(a)
 }
 
 // NewRemoteAllocator creates a new context set up with a RemoteAllocator,
@@ -310,12 +310,27 @@ func NewRemoteAllocator(parent context.Context, url string) (context.Context, co
 // process via a websocket URL.
 type RemoteAllocator struct {
 	wsURL string
+
+	wg sync.WaitGroup
 }
 
 // Allocate satisfies the Allocator interface.
-func (p *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*Browser, error) {
-	return NewBrowser(ctx, p.wsURL, opts...)
+func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*Browser, error) {
+	// Use a different context for the websocket, so we can have a chance at
+	// closing the relevant pages before closing the websocket connection.
+	wctx, cancel := context.WithCancel(context.Background())
+
+	a.wg.Add(1)
+	go func() {
+		<-ctx.Done()
+		Cancel(ctx) // block until all pages are closed
+		cancel()    // close the websocket connection
+		a.wg.Done()
+	}()
+	return NewBrowser(wctx, a.wsURL, opts...)
 }
 
 // Wait satisfies the Allocator interface.
-func (p *RemoteAllocator) Wait() {}
+func (a *RemoteAllocator) Wait() {
+	a.wg.Wait()
+}

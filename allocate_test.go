@@ -128,8 +128,7 @@ func TestRemoteAllocator(t *testing.T) {
 		defer taskCancel()
 
 		// check that previous runs closed their tabs
-		// TODO: fix this
-		// checkTargets(t, taskCtx, 1)
+		checkTargets(t, taskCtx, 1)
 
 		want := "insert"
 		var got string
