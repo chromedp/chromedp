@@ -23,7 +23,7 @@ type Target struct {
 	SessionID target.SessionID
 	TargetID  target.ID
 
-	waitQueue  chan func(cur *cdp.Frame) bool
+	waitQueue  chan func() bool
 	eventQueue chan *cdproto.Message
 
 	// below are the old TargetHandler fields.
@@ -55,7 +55,7 @@ func (t *Target) run(ctx context.Context) {
 		}
 		for i := 0; i < n; i++ {
 			fn := <-t.waitQueue
-			if !fn(t.cur) {
+			if !fn() {
 				// try again later.
 				t.waitQueue <- fn
 			}
