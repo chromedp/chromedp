@@ -205,7 +205,11 @@ func (t *Target) pageEvent(ev interface{}) {
 	switch e := ev.(type) {
 	case *page.EventFrameNavigated:
 		t.frames[e.Frame.ID] = e.Frame
-		t.cur = e.Frame
+		if e.Frame.ParentID == "" {
+			// This frame is only the new top-level frame if it has
+			// no parent.
+			t.cur = e.Frame
+		}
 		return
 
 	case *page.EventFrameAttached:
