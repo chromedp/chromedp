@@ -3,6 +3,7 @@ package chromedp
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -57,6 +58,16 @@ type Browser struct {
 	// userDataDir can be initialized by the allocators which set up user
 	// data dirs directly.
 	userDataDir string
+}
+
+// TODO: move Transport to the same file as its default implementation once we
+// settle on one websocket library.
+
+// Transport is the common interface to send/receive messages to a target.
+type Transport interface {
+	Read(context.Context, *cdproto.Message) error
+	Write(context.Context, *cdproto.Message) error
+	io.Closer
 }
 
 type cmdJob struct {
