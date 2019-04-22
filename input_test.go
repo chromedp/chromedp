@@ -82,8 +82,8 @@ func TestMouseClickNode(t *testing.T) {
 	}
 
 	for i, test := range tests {
+		test := test
 		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			test := test
 			t.Parallel()
 
 			ctx, cancel := testAllocate(t, "input.html")
@@ -125,8 +125,8 @@ func TestMouseClickOffscreenNode(t *testing.T) {
 	}
 
 	for i, test := range tests {
+		test := test
 		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			test := test
 			t.Parallel()
 
 			ctx, cancel := testAllocate(t, "input.html")
@@ -184,8 +184,8 @@ func TestKeyAction(t *testing.T) {
 	}
 
 	for i, test := range tests {
+		test := test
 		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			test := test
 			t.Parallel()
 
 			ctx, cancel := testAllocate(t, "input.html")
@@ -234,8 +234,8 @@ func TestKeyActionNode(t *testing.T) {
 	}
 
 	for i, test := range tests {
+		test := test
 		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			test := test
 			t.Parallel()
 
 			ctx, cancel := testAllocate(t, "input.html")
