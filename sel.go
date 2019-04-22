@@ -220,10 +220,10 @@ func (s *Selector) waitReady(check func(context.Context, *Target, *cdp.Node) err
 		cur.RUnlock()
 
 		if check != nil {
-			for i, n := range nodes {
-				go func(i int, n *cdp.Node) {
+			for _, n := range nodes {
+				go func(n *cdp.Node) {
 					errc <- check(ctx, t, n)
-				}(i, n)
+				}(n)
 			}
 
 			var first error
