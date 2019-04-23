@@ -3,6 +3,7 @@ package chromedp
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net"
@@ -108,9 +109,10 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 
 	// dial
 	var err error
-	b.conn, err = DialContext(ctx, forceIP(urlstr), WithConnDebugf(b.dbgf))
+	urlstr = forceIP(urlstr)
+	b.conn, err = DialContext(ctx, urlstr, WithConnDebugf(b.dbgf))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not dial %q: %v", urlstr, err)
 	}
 
 	go b.run(ctx)

@@ -151,7 +151,7 @@ func TestRemoteAllocator(t *testing.T) {
 	if err := cmd.Start(); err != nil {
 		t.Fatal(err)
 	}
-	wsURL, err := portFromStderr(stderr)
+	wsURL, err := addrFromStderr(stderr)
 	if err != nil {
 		t.Fatal(err)
 	}
