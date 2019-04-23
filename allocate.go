@@ -171,20 +171,27 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 // protocol. This should be hooked up to a new Chrome process's Stderr pipe
 // right after it is started.
 func addrFromStderr(rc io.ReadCloser) (string, error) {
+	defer rc.Close()
 	url := ""
 	scanner := bufio.NewScanner(rc)
 	prefix := "DevTools listening on"
+
+	var lines []string
 	for scanner.Scan() {
 		line := scanner.Text()
 		if s := strings.TrimPrefix(line, prefix); s != line {
 			url = strings.TrimSpace(s)
 			break
 		}
+		lines = append(lines, line)
 	}
 	if err := scanner.Err(); err != nil {
 		return "", err
 	}
-	rc.Close()
+	if url == "" {
+		return "", fmt.Errorf("chrome stopped too early; stderr:\n%s",
+			strings.Join(lines, "\n"))
+	}
 	return url, nil
 }
 

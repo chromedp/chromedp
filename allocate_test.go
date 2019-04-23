@@ -2,11 +2,13 @@ package chromedp
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"os/exec"
+	"strings"
 	"testing"
 	"time"
 )
@@ -206,5 +208,24 @@ func TestRemoteAllocator(t *testing.T) {
 		// t.Fatal("did not expect a nil error")
 	case context.DeadlineExceeded:
 		t.Fatalf("did not expect a standard context error: %v", err)
+	}
+}
+
+func TestExecAllocatorMissingWebsocketAddr(t *testing.T) {
+	t.Parallel()
+
+	allocCtx, cancel := NewExecAllocator(context.Background(),
+		// This flag makes Chrome print its version and exit.
+		Flag("product-version", true),
+	)
+	defer cancel()
+
+	ctx, cancel := NewContext(allocCtx)
+	defer cancel()
+
+	want := "stopped too early"
+	got := fmt.Sprintf("%v", Run(ctx))
+	if !strings.Contains(got, want) {
+		t.Fatalf("want error to contain %q, got %q", want, got)
 	}
 }
