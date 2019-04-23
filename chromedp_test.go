@@ -230,5 +230,23 @@ func TestPrematureCancelTab(t *testing.T) {
 	// tab.
 	ctx2, cancel := NewContext(ctx1)
 	cancel()
-	Run(ctx2)
+	if err := Run(ctx2); err != context.Canceled {
+		t.Fatalf("wanted canceled context error, got %v", err)
+	}
+}
+
+func TestConcurrentCancel(t *testing.T) {
+	t.Parallel()
+
+	// To ensure we don't actually fire any Chrome processes.
+	allocCtx, cancel := NewExecAllocator(context.Background(),
+		ExecPath("do-not-run-chrome"))
+	defer cancel()
+
+	// 50 is enough for 'go test -race' to easily spot issues.
+	for i := 0; i < 50; i++ {
+		ctx, cancel := NewContext(allocCtx)
+		go cancel()
+		go Run(ctx)
+	}
 }

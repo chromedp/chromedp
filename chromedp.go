@@ -53,8 +53,11 @@ type Context struct {
 	// entire browser and its handler, and not just a portion of its pages.
 	first bool
 
-	// wg allows waiting for a target to be closed on cancellation.
-	wg sync.WaitGroup
+	// closedTarget allows waiting for a target's page to be closed on
+	// cancellation.
+	closedTarget sync.WaitGroup
+
+	allocated sync.Mutex
 
 	// cancelErr is the first error encountered when cancelling this
 	// context, for example if a browser's temporary user data directory
@@ -99,20 +102,19 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 	}
 
 	ctx = context.WithValue(ctx, contextKey{}, c)
-	c.wg.Add(1)
+	c.closedTarget.Add(1)
 	go func() {
 		<-ctx.Done()
+		defer c.closedTarget.Done()
 		if c.first {
 			// This is the original browser tab, so the entire
 			// browser will already be cleaned up elsewhere.
-			c.wg.Done()
 			return
 		}
 
 		if c.Target == nil {
 			// This is a new tab, but we didn't create it and attach
 			// to it yet. Nothing to do.
-			c.wg.Done()
 			return
 		}
 
@@ -135,11 +137,13 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 				c.cancelErr = err
 			}
 		}
-		c.wg.Done()
 	}()
 	cancelWait := func() {
 		cancel()
-		c.wg.Wait()
+		c.closedTarget.Wait()
+		// If we allocated, wait for the browser to stop.
+		c.allocated.Lock()
+		c.allocated.Unlock()
 	}
 	return ctx, cancelWait
 }
@@ -164,7 +168,10 @@ func Cancel(ctx context.Context) error {
 		return ErrInvalidContext
 	}
 	c.cancel()
-	c.wg.Wait()
+	c.closedTarget.Wait()
+	// If we allocated, wait for the browser to stop.
+	c.allocated.Lock()
+	c.allocated.Unlock()
 	return c.cancelErr
 }
 
