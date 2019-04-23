@@ -118,8 +118,6 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 
 	cmd := exec.CommandContext(ctx, a.execPath, args...)
 
-	c.allocated.Lock() // for this browser's root context
-
 	// We must start the cmd before calling cmd.Wait, as otherwise the two
 	// can run into a data race.
 	stderr, err := cmd.StderrPipe()
@@ -131,7 +129,8 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		return nil, err
 	}
 
-	a.wg.Add(1) // for the entire allocator
+	c.allocated.Lock() // for this browser's root context
+	a.wg.Add(1)        // for the entire allocator
 	go func() {
 		<-ctx.Done()
 		// First wait for the process to be finished.
