@@ -124,13 +124,13 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 		defer cancel()
 		if id := c.Target.SessionID; id != "" {
 			action := target.DetachFromTarget().WithSessionID(id)
-			if err := action.Do(ctx, c.Browser); c.cancelErr == nil {
+			if err := action.Do(cdp.WithExecutor(ctx, c.Browser)); c.cancelErr == nil {
 				c.cancelErr = err
 			}
 		}
 		if id := c.Target.TargetID; id != "" {
 			action := target.CloseTarget(id)
-			if ok, err := action.Do(ctx, c.Browser); c.cancelErr == nil {
+			if ok, err := action.Do(cdp.WithExecutor(ctx, c.Browser)); c.cancelErr == nil {
 				if !ok && err == nil {
 					err = fmt.Errorf("could not close target %q", id)
 				}
@@ -198,7 +198,7 @@ func Run(ctx context.Context, actions ...Action) error {
 			return err
 		}
 	}
-	return Tasks(actions).Do(ctx, c.Target)
+	return Tasks(actions).Do(cdp.WithExecutor(ctx, c.Target))
 }
 
 func (c *Context) newSession(ctx context.Context) error {
@@ -206,7 +206,7 @@ func (c *Context) newSession(ctx context.Context) error {
 	if c.first {
 		// If we just allocated this browser, and it has a single page
 		// that's blank and not attached, use it.
-		infos, err := target.GetTargets().Do(ctx, c.Browser)
+		infos, err := target.GetTargets().Do(cdp.WithExecutor(ctx, c.Browser))
 		if err != nil {
 			return err
 		}
@@ -225,13 +225,13 @@ func (c *Context) newSession(ctx context.Context) error {
 
 	if targetID == "" {
 		var err error
-		targetID, err = target.CreateTarget("about:blank").Do(ctx, c.Browser)
+		targetID, err = target.CreateTarget("about:blank").Do(cdp.WithExecutor(ctx, c.Browser))
 		if err != nil {
 			return err
 		}
 	}
 
-	sessionID, err := target.AttachToTarget(targetID).Do(ctx, c.Browser)
+	sessionID, err := target.AttachToTarget(targetID).Do(cdp.WithExecutor(ctx, c.Browser))
 	if err != nil {
 		return err
 	}
@@ -248,7 +248,7 @@ func (c *Context) newSession(ctx context.Context) error {
 		dom.Enable(),
 		css.Enable(),
 	} {
-		if err := enable.Do(ctx, c.Target); err != nil {
+		if err := enable.Do(cdp.WithExecutor(ctx, c.Target)); err != nil {
 			return fmt.Errorf("unable to execute %T: %v", enable, err)
 		}
 	}
@@ -300,22 +300,22 @@ func Targets(ctx context.Context) ([]*target.Info, error) {
 		}
 		c.Browser = browser
 	}
-	return target.GetTargets().Do(ctx, c.Browser)
+	return target.GetTargets().Do(cdp.WithExecutor(ctx, c.Browser))
 }
 
 // Action is the common interface for an action that will be executed against a
 // context and frame handler.
 type Action interface {
 	// Do executes the action using the provided context and frame handler.
-	Do(context.Context, cdp.Executor) error
+	Do(context.Context) error
 }
 
 // ActionFunc is a adapter to allow the use of ordinary func's as an Action.
-type ActionFunc func(context.Context, cdp.Executor) error
+type ActionFunc func(context.Context) error
 
 // Do executes the func f using the provided context and frame handler.
-func (f ActionFunc) Do(ctx context.Context, h cdp.Executor) error {
-	return f(ctx, h)
+func (f ActionFunc) Do(ctx context.Context) error {
+	return f(ctx)
 }
 
 // Tasks is a sequential list of Actions that can be used as a single Action.
@@ -323,12 +323,12 @@ type Tasks []Action
 
 // Do executes the list of Actions sequentially, using the provided context and
 // frame handler.
-func (t Tasks) Do(ctx context.Context, h cdp.Executor) error {
+func (t Tasks) Do(ctx context.Context) error {
 	// TODO: put individual task timeouts from context here
 	for _, a := range t {
 		// ctx, cancel = context.WithTimeout(ctx, timeout)
 		// defer cancel()
-		if err := a.Do(ctx, h); err != nil {
+		if err := a.Do(ctx); err != nil {
 			return err
 		}
 	}
@@ -342,7 +342,7 @@ func (t Tasks) Do(ctx context.Context, h cdp.Executor) error {
 // be marked for deprecation in the future, after the remaining Actions have
 // been able to be written/tested.
 func Sleep(d time.Duration) Action {
-	return ActionFunc(func(ctx context.Context, h cdp.Executor) error {
+	return ActionFunc(func(ctx context.Context) error {
 		// Don't use time.After, to avoid a temporary goroutine leak if
 		// ctx is cancelled before the timer fires.
 		t := time.NewTimer(d)

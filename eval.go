@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 
-	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/runtime"
 )
 
@@ -27,7 +26,7 @@ func Evaluate(expression string, res interface{}, opts ...EvaluateOption) Action
 		panic("res cannot be nil")
 	}
 
-	return ActionFunc(func(ctx context.Context, h cdp.Executor) error {
+	return ActionFunc(func(ctx context.Context) error {
 		// set up parameters
 		p := runtime.Evaluate(expression)
 		switch res.(type) {
@@ -42,7 +41,7 @@ func Evaluate(expression string, res interface{}, opts ...EvaluateOption) Action
 		}
 
 		// evaluate
-		v, exp, err := p.Do(ctx, h)
+		v, exp, err := p.Do(ctx)
 		if err != nil {
 			return err
 		}

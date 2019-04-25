@@ -1,5 +1,5 @@
-github.com/chromedp/cdproto v0.0.0-20190425015027-26171d8e3723 h1:ilhA03kR0HKyGLCqYqqkszA0LqXNhzNOnqNrEryJINA=
-github.com/chromedp/cdproto v0.0.0-20190425015027-26171d8e3723/go.mod h1:xquOK9dIGFlLaIGI4c6IyfLI/Gz0LiYYuJtzhsUODgI=
+github.com/chromedp/cdproto v0.0.0-20190425095556-764c0969aeab h1:UrGbj3VqvzCSR73c2YmcgTzc+QCeTVHs0fQF31QwIMY=
+github.com/chromedp/cdproto v0.0.0-20190425095556-764c0969aeab/go.mod h1:xquOK9dIGFlLaIGI4c6IyfLI/Gz0LiYYuJtzhsUODgI=
 github.com/disintegration/imaging v1.6.0 h1:nVPXRUUQ36Z7MNf0O77UzgnOb1mkMMor7lmJMJXc/mA=
 github.com/disintegration/imaging v1.6.0/go.mod h1:xuIt+sRxDFrHS0drzXUlCJthkJ8k7lkkUojDSR247MQ=
 github.com/gorilla/websocket v1.4.0 h1:WDFjx/TMzVgy9VdMMQi2K2Emtwi2QcUQsztZ/zLaH/Q=

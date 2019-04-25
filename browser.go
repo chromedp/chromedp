@@ -2,7 +2,6 @@ package chromedp
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -16,6 +15,7 @@ import (
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
+	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 )
 
@@ -168,11 +168,11 @@ func (b *Browser) newExecutorForTarget(ctx context.Context, targetID target.ID, 
 	return t
 }
 
-func (b *Browser) Execute(ctx context.Context, method string, params json.Marshaler, res json.Unmarshaler) error {
+func (b *Browser) Execute(ctx context.Context, method string, params easyjson.Marshaler, res easyjson.Unmarshaler) error {
 	paramsMsg := emptyObj
 	if params != nil {
 		var err error
-		if paramsMsg, err = json.Marshal(params); err != nil {
+		if paramsMsg, err = easyjson.Marshal(params); err != nil {
 			return err
 		}
 	}
@@ -195,7 +195,7 @@ func (b *Browser) Execute(ctx context.Context, method string, params json.Marsha
 		case msg.Error != nil:
 			return msg.Error
 		case res != nil:
-			return json.Unmarshal(msg.Result, res)
+			return easyjson.Unmarshal(msg.Result, res)
 		}
 	case <-ctx.Done():
 		return ctx.Err()

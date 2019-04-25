@@ -80,11 +80,11 @@ func (t *Target) run(ctx context.Context) {
 	}
 }
 
-func (t *Target) Execute(ctx context.Context, method string, params json.Marshaler, res json.Unmarshaler) error {
+func (t *Target) Execute(ctx context.Context, method string, params easyjson.Marshaler, res easyjson.Unmarshaler) error {
 	paramsMsg := emptyObj
 	if params != nil {
 		var err error
-		if paramsMsg, err = json.Marshal(params); err != nil {
+		if paramsMsg, err = easyjson.Marshal(params); err != nil {
 			return err
 		}
 	}
@@ -182,7 +182,7 @@ func (t *Target) documentUpdated(ctx context.Context) {
 
 	f.Nodes = make(map[cdp.NodeID]*cdp.Node)
 	var err error
-	f.Root, err = dom.GetDocument().WithPierce(true).Do(ctx, t)
+	f.Root, err = dom.GetDocument().WithPierce(true).Do(cdp.WithExecutor(ctx, t))
 	if err == context.Canceled {
 		return // TODO: perhaps not necessary, but useful to keep the tests less noisy
 	}
