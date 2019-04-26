@@ -2,7 +2,6 @@ package chromedp
 
 import (
 	"context"
-	"encoding/json"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -123,7 +122,7 @@ func (t *Target) Execute(ctx context.Context, method string, params easyjson.Mar
 		case msg.Error != nil:
 			return msg.Error
 		case res != nil:
-			return json.Unmarshal(msg.Result, res)
+			return easyjson.Unmarshal(msg.Result, res)
 		}
 	case <-ctx.Done():
 		return ctx.Err()
