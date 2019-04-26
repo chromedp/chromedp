@@ -8,7 +8,6 @@ import (
 	"path"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/chromedp/cdproto/target"
 )
@@ -44,16 +43,6 @@ func testAllocate(tb testing.TB, path string) (context.Context, context.CancelFu
 }
 
 func TestMain(m *testing.M) {
-	if task := os.Getenv("CHROMEDP_TEST_TASK"); task != "" {
-		// The test binary is re-used to run standalone tasks, such as
-		// allocating a browser within a Docker container.
-		if err := runTask(task); err != nil {
-			fmt.Fprintln(os.Stderr, err)
-			os.Exit(1)
-		}
-		os.Exit(0)
-	}
-
 	wd, err := os.Getwd()
 	if err != nil {
 		panic(fmt.Sprintf("could not get working directory: %v", err))
@@ -98,23 +87,6 @@ func TestMain(m *testing.M) {
 
 	cancel()
 	os.Exit(code)
-}
-
-func runTask(name string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
-	switch name {
-	case "ExecAllocator_Allocate":
-		ctx, cancel := NewContext(ctx)
-		defer cancel()
-		if err := Run(ctx); err != nil {
-			return err
-		}
-	default:
-		return fmt.Errorf("unknown test binary task: %q", name)
-	}
-	return nil
 }
 
 func BenchmarkTabNavigate(b *testing.B) {
