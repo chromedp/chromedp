@@ -23,7 +23,7 @@ var (
 	allocOpts []ExecAllocatorOption
 )
 
-func testAllocate(tb testing.TB, path string) (_ context.Context, cancel func()) {
+func testAllocate(tb testing.TB, path string) (context.Context, context.CancelFunc) {
 	// Same browser, new tab; not needing to start new chrome browsers for
 	// each test gives a huge speed-up.
 	ctx, _ := NewContext(browserCtx)
@@ -35,12 +35,12 @@ func testAllocate(tb testing.TB, path string) (_ context.Context, cancel func())
 		}
 	}
 
-	cancelErr := func() {
+	cancel := func() {
 		if err := Cancel(ctx); err != nil {
 			tb.Error(err)
 		}
 	}
-	return ctx, cancelErr
+	return ctx, cancel
 }
 
 func TestMain(m *testing.M) {
