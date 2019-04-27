@@ -37,6 +37,8 @@ type Context struct {
 	// have its own unique Target pointing to a separate browser tab (page).
 	Target *Target
 
+	targetListeners []func(v interface{}) error
+
 	// browserOpts holds the browser options passed to NewContext via
 	// WithBrowserOption, so that they can later be used when allocating a
 	// browser in Run.
@@ -197,6 +199,7 @@ func Run(ctx context.Context, actions ...Action) error {
 		if err := c.newSession(ctx); err != nil {
 			return err
 		}
+		c.Target.listeners = append(c.Target.listeners, c.targetListeners...)
 	}
 	return Tasks(actions).Do(cdp.WithExecutor(ctx, c.Target))
 }
@@ -354,4 +357,17 @@ func Sleep(d time.Duration) Action {
 		}
 		return nil
 	})
+}
+
+// ListenTarget adds a function which will be called whenever a target event is
+// received on the chromedp context.
+func ListenTarget(ctx context.Context, fn func(v interface{}) error) {
+	c := FromContext(ctx)
+	if c == nil {
+		panic(ErrInvalidContext)
+	}
+	if c.Target != nil {
+		panic("ListenTarget must be used before a target is created")
+	}
+	c.targetListeners = append(c.targetListeners, fn)
 }

@@ -9,6 +9,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/chromedp/cdproto/dom"
+	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/target"
 )
 
@@ -264,5 +266,40 @@ func TestConcurrentCancel(t *testing.T) {
 		ctx, cancel := NewContext(allocCtx)
 		go cancel()
 		go Run(ctx)
+	}
+}
+
+func TestListenTarget(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+
+	// Check that many ListenTarget callbacks work.
+	var navigatedCount, updatedCount int
+	ListenTarget(ctx, func(v interface{}) error {
+		if _, ok := v.(*page.EventFrameNavigated); ok {
+			navigatedCount++
+		}
+		return nil
+	})
+	ListenTarget(ctx, func(v interface{}) error {
+		if _, ok := v.(*dom.EventDocumentUpdated); ok {
+			updatedCount++
+		}
+		return nil
+	})
+
+	if err := Run(ctx,
+		Navigate(testdataDir+"/form.html"),
+		WaitVisible(`#form`, ByID), // for form.html
+	); err != nil {
+		t.Fatal(err)
+	}
+	if want := 1; navigatedCount != want {
+		t.Fatalf("want %d Page.frameNavigated events; got %d", want, navigatedCount)
+	}
+	if want := 1; updatedCount < want {
+		t.Fatalf("want at least %d DOM.documentUpdated events; got %d", want, updatedCount)
 	}
 }
