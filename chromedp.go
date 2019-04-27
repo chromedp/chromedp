@@ -247,7 +247,6 @@ func (c *Context) newSession(ctx context.Context) error {
 	for _, enable := range []Action{
 		log.Enable(),
 		runtime.Enable(),
-		// network.Enable(),
 		inspector.Enable(),
 		page.Enable(),
 		dom.Enable(),
@@ -329,15 +328,11 @@ type Tasks []Action
 // Do executes the list of Actions sequentially, using the provided context and
 // frame handler.
 func (t Tasks) Do(ctx context.Context) error {
-	// TODO: put individual task timeouts from context here
 	for _, a := range t {
-		// ctx, cancel = context.WithTimeout(ctx, timeout)
-		// defer cancel()
 		if err := a.Do(ctx); err != nil {
 			return err
 		}
 	}
-
 	return nil
 }
 

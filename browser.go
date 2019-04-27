@@ -415,7 +415,7 @@ func (b *Browser) run(ctx context.Context) {
 			}
 
 		case <-b.LostConnection:
-			return
+			return // to avoid "write: broken pipe" errors
 		case <-ctx.Done():
 			return
 		}
