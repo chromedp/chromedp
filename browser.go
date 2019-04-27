@@ -28,6 +28,8 @@ type Browser struct {
 	// cancelled (and the handler stopped) once the connection has failed.
 	LostConnection chan struct{}
 
+	listeners []func(v interface{}) error
+
 	conn Transport
 
 	// next is the next message id.
@@ -285,13 +287,20 @@ func (b *Browser) run(ctx context.Context) {
 			switch {
 			case msg.Method != "":
 				if sessionID == "" {
-					switch msg.Method {
-					case cdproto.EventTargetDetachedFromTarget:
-						var ev target.EventDetachedFromTarget
-						if err := unmarshal(lexer, readMsg.Params, &ev); err != nil {
+					ev, err := cdproto.UnmarshalMessage(msg)
+					if err != nil {
+						b.errf("%s", err)
+						continue
+					}
+					for _, fn := range b.listeners {
+						if err := fn(ev); err != nil {
+							// TODO: allow for custom logic here.
 							b.errf("%s", err)
 							continue
 						}
+					}
+					switch ev := ev.(type) {
+					case *target.EventDetachedFromTarget:
 						b.delTabQueue <- ev.SessionID
 					default:
 						// TODO: are any other browser

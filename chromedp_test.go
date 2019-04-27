@@ -269,6 +269,39 @@ func TestConcurrentCancel(t *testing.T) {
 	}
 }
 
+func TestListenBrowser(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := NewContext(context.Background())
+	defer cancel()
+
+	// Check that many ListenBrowser callbacks work.
+	var attachedCount, totalCount int
+	ListenBrowser(ctx, func(v interface{}) error {
+		if _, ok := v.(*target.EventAttachedToTarget); ok {
+			attachedCount++
+		}
+		return nil
+	})
+	ListenBrowser(ctx, func(v interface{}) error {
+		totalCount++
+		return nil
+	})
+
+	if err := Run(ctx,
+		Navigate(testdataDir+"/form.html"),
+		WaitVisible(`#form`, ByID), // for form.html
+	); err != nil {
+		t.Fatal(err)
+	}
+	if want := 1; attachedCount != want {
+		t.Fatalf("want %d Page.frameNavigated events; got %d", want, attachedCount)
+	}
+	if want := 1; totalCount < want {
+		t.Fatalf("want at least %d DOM.documentUpdated events; got %d", want, totalCount)
+	}
+}
+
 func TestListenTarget(t *testing.T) {
 	t.Parallel()
 
