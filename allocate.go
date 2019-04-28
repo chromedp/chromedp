@@ -135,8 +135,12 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		return nil, err
 	}
 
-	c.allocated.Lock() // for this browser's root context
-	a.wg.Add(1)        // for the entire allocator
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case <-c.allocated: // for this browser's root context
+	}
+	a.wg.Add(1) // for the entire allocator
 	go func() {
 		<-ctx.Done()
 		// First wait for the process to be finished.
@@ -151,7 +155,7 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 			}
 		}
 		a.wg.Done()
-		c.allocated.Unlock()
+		close(c.allocated)
 	}()
 	wsURL, err := addrFromStderr(stderr)
 	if err != nil {
@@ -338,11 +342,17 @@ type RemoteAllocator struct {
 
 // Allocate satisfies the Allocator interface.
 func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*Browser, error) {
+	c := FromContext(ctx)
+	if c == nil {
+		return nil, ErrInvalidContext
+	}
+
 	// Use a different context for the websocket, so we can have a chance at
 	// closing the relevant pages before closing the websocket connection.
 	wctx, cancel := context.WithCancel(context.Background())
 
-	a.wg.Add(1)
+	close(c.allocated)
+	a.wg.Add(1) // for the entire allocator
 	go func() {
 		<-ctx.Done()
 		Cancel(ctx) // block until all pages are closed

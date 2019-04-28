@@ -60,7 +60,10 @@ type Context struct {
 	// cancellation.
 	closedTarget sync.WaitGroup
 
-	allocated sync.Mutex
+	// allocated is closed when an allocated browser completely stops. If no
+	// browser needs to be allocated, the channel is simply not initialised
+	// and remains nil.
+	allocated chan struct{}
 
 	// cancelErr is the first error encountered when cancelling this
 	// context, for example if a browser's temporary user data directory
@@ -95,6 +98,11 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 		if _, ok := c.Allocator.(*RemoteAllocator); ok {
 			c.first = false
 		}
+	}
+	if c.Browser == nil {
+		// set up the semaphore for Allocator.Allocate
+		c.allocated = make(chan struct{}, 1)
+		c.allocated <- struct{}{}
 	}
 
 	for _, o := range opts {
@@ -145,8 +153,9 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 		cancel()
 		c.closedTarget.Wait()
 		// If we allocated, wait for the browser to stop.
-		c.allocated.Lock()
-		c.allocated.Unlock()
+		if c.allocated != nil {
+			<-c.allocated
+		}
 	}
 	return ctx, cancelWait
 }
@@ -173,8 +182,9 @@ func Cancel(ctx context.Context) error {
 	c.cancel()
 	c.closedTarget.Wait()
 	// If we allocated, wait for the browser to stop.
-	c.allocated.Lock()
-	c.allocated.Unlock()
+	if c.allocated != nil {
+		<-c.allocated
+	}
 	return c.cancelErr
 }
 
