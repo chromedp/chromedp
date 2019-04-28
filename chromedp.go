@@ -358,6 +358,10 @@ func Sleep(d time.Duration) Action {
 
 // ListenBrowser adds a function which will be called whenever a browser event
 // is received on the chromedp context.
+//
+// Note that the function is called synchronously when handling events. As such,
+// the function should do as little work as possible and avoid blocking, as
+// otherwise the entire browser handler would get blocked.
 func ListenBrowser(ctx context.Context, fn func(v interface{}) error) {
 	c := FromContext(ctx)
 	if c == nil {
@@ -372,6 +376,10 @@ func ListenBrowser(ctx context.Context, fn func(v interface{}) error) {
 // ListenTarget adds a function which will be called whenever a target event is
 // received on the chromedp context. Note that this only includes browser
 // events; command responses and target events are not included.
+//
+// Note that the function is called synchronously when handling events. As such,
+// the function should do as little work as possible and avoid blocking, as
+// otherwise the entire target handler would get blocked.
 func ListenTarget(ctx context.Context, fn func(v interface{}) error) {
 	c := FromContext(ctx)
 	if c == nil {
