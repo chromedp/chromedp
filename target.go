@@ -72,10 +72,9 @@ func (t *Target) run(ctx context.Context) {
 	go func() {
 		for {
 			select {
+			case <-ctx.Done():
+				return
 			case msg := <-t.eventQueue:
-				if msg == nil {
-					return // the channel was closed
-				}
 				ev, err := cdproto.UnmarshalMessage(msg)
 				if err != nil {
 					if _, ok := err.(cdp.ErrUnknownCommandOrEvent); ok {
@@ -91,14 +90,14 @@ func (t *Target) run(ctx context.Context) {
 					fn(ev)
 				}
 				syncEventQueue <- eventValue{msg.Method, ev}
-			case <-ctx.Done():
-				return
 			}
 		}
 	}()
 
 	for {
 		select {
+		case <-ctx.Done():
+			return
 		case ev := <-syncEventQueue:
 			switch ev.method.Domain() {
 			case "Page":
@@ -109,8 +108,6 @@ func (t *Target) run(ctx context.Context) {
 			}
 		case <-t.tick:
 			tryWaits()
-		case <-ctx.Done():
-			return
 		}
 	}
 }
@@ -151,6 +148,8 @@ func (t *Target) Execute(ctx context.Context, method string, params easyjson.Mar
 	}
 
 	select {
+	case <-ctx.Done():
+		return ctx.Err()
 	case msg := <-ch:
 		switch {
 		case msg == nil:
@@ -160,8 +159,6 @@ func (t *Target) Execute(ctx context.Context, method string, params easyjson.Mar
 		case res != nil:
 			return easyjson.Unmarshal(msg.Result, res)
 		}
-	case <-ctx.Done():
-		return ctx.Err()
 	}
 	return nil
 }

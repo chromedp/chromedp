@@ -61,9 +61,9 @@ func (s *Selector) Do(ctx context.Context) error {
 	}
 	var err error
 	select {
-	case err = <-s.run(ctx, t):
 	case <-ctx.Done():
 		err = ctx.Err()
+	case err = <-s.run(ctx, t):
 	}
 	return err
 }

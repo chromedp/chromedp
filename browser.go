@@ -190,6 +190,8 @@ func (b *Browser) Execute(ctx context.Context, method string, params easyjson.Ma
 		resp: ch,
 	}
 	select {
+	case <-ctx.Done():
+		return ctx.Err()
 	case msg := <-ch:
 		switch {
 		case msg == nil:
@@ -199,8 +201,6 @@ func (b *Browser) Execute(ctx context.Context, method string, params easyjson.Ma
 		case res != nil:
 			return easyjson.Unmarshal(msg.Result, res)
 		}
-	case <-ctx.Done():
-		return ctx.Err()
 	}
 	return nil
 }
@@ -329,6 +329,8 @@ func (b *Browser) run(ctx context.Context) {
 		pages := make(map[target.SessionID]*Target, 32)
 		for {
 			select {
+			case <-ctx.Done():
+				return
 			case t := <-b.newTabQueue:
 				if _, ok := pages[t.SessionID]; ok {
 					b.errf("executor for %q already exists", t.SessionID)
@@ -367,8 +369,6 @@ func (b *Browser) run(ctx context.Context) {
 					}
 				}
 
-			case <-ctx.Done():
-				return
 			}
 		}
 	}()
@@ -379,6 +379,8 @@ func (b *Browser) run(ctx context.Context) {
 	// responses back for each of these commands via respByID.
 	for {
 		select {
+		case <-ctx.Done():
+			return
 		case res := <-resQueue:
 			resp, ok := respByID[res.ID]
 			if !ok {
@@ -412,8 +414,6 @@ func (b *Browser) run(ctx context.Context) {
 
 		case <-b.LostConnection:
 			return // to avoid "write: broken pipe" errors
-		case <-ctx.Done():
-			return
 		}
 	}
 }

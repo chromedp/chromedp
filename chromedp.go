@@ -357,10 +357,10 @@ func Sleep(d time.Duration) Action {
 		// ctx is cancelled before the timer fires.
 		t := time.NewTimer(d)
 		select {
-		case <-t.C:
 		case <-ctx.Done():
 			t.Stop()
 			return ctx.Err()
+		case <-t.C:
 		}
 		return nil
 	})
