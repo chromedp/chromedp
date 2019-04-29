@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/chromedp/cdproto/dom"
-	cdplog "github.com/chromedp/cdproto/log"
 	"github.com/chromedp/cdproto/page"
 	cdpruntime "github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
@@ -357,7 +356,6 @@ func TestLargeEventCount(t *testing.T) {
 	})
 
 	if err := Run(ctx,
-		cdplog.Enable(),
 		Navigate(testdataDir+"/consolespam.html"),
 		WaitVisible("#done", ByID), // wait for the JS to finish
 	); err != nil {

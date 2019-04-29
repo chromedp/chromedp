@@ -13,7 +13,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	cdplog "github.com/chromedp/cdproto/log"
 	cdpruntime "github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
 )
@@ -151,7 +150,6 @@ func ExampleListenTarget_consoleLog() {
 	})
 
 	if err := chromedp.Run(ctx,
-		cdplog.Enable(),
 		chromedp.Navigate(ts.URL),
 		chromedp.WaitVisible("#loaded", chromedp.ByID),
 	); err != nil {
