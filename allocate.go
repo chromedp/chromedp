@@ -123,6 +123,14 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	args = append(args, "about:blank")
 
 	cmd := exec.CommandContext(ctx, a.execPath, args...)
+	defer func() {
+		if removeDir && cmd.Process == nil {
+			// We couldn't start the process, so we didn't get to
+			// the goroutine that handles RemoveAll below. Remove it
+			// to not leave an empty directory.
+			os.RemoveAll(dataDir)
+		}
+	}()
 
 	// We must start the cmd before calling cmd.Wait, as otherwise the two
 	// can run into a data race.
