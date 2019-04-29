@@ -2,7 +2,6 @@ package chromedp
 
 import (
 	"context"
-	"strings"
 	"sync/atomic"
 	"time"
 
@@ -79,11 +78,10 @@ func (t *Target) run(ctx context.Context) {
 				}
 				ev, err := cdproto.UnmarshalMessage(msg)
 				if err != nil {
-					if strings.Contains(err.Error(), "unknown command or event") {
+					if _, ok := err.(cdp.ErrUnknownCommandOrEvent); ok {
 						// This is most likely an event received from an older
 						// Chrome which a newer cdproto doesn't have, as it is
 						// deprecated. Ignore that error.
-						// TODO: use error wrapping once Go 1.13 is released.
 						continue
 					}
 					t.errf("could not unmarshal event: %v", err)
