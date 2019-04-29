@@ -13,6 +13,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	cdplog "github.com/chromedp/cdproto/log"
+	cdpruntime "github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
 )
 
@@ -118,4 +120,45 @@ func ExampleNewContext_manyTabs() {
 	// Output:
 	// Same browser: true
 	// Same tab: false
+}
+
+func ExampleListenTarget_consoleLog() {
+	ctx, cancel := chromedp.NewContext(context.Background())
+	defer cancel()
+
+	ts := httptest.NewServer(writeHTML(`
+<html>
+<body>
+<script>
+	console.log("hello js world")
+	var p = document.createElement("div");
+	p.setAttribute("id", "loaded");
+	document.body.appendChild(p);
+</script>
+</body>
+</html>
+	`))
+	defer ts.Close()
+
+	chromedp.ListenTarget(ctx, func(ev interface{}) {
+		switch ev := ev.(type) {
+		case *cdpruntime.EventConsoleAPICalled:
+			fmt.Printf("console.%s call:\n", ev.Type)
+			for _, arg := range ev.Args {
+				fmt.Printf("%s - %s\n", arg.Type, arg.Value)
+			}
+		}
+	})
+
+	if err := chromedp.Run(ctx,
+		cdplog.Enable(),
+		chromedp.Navigate(ts.URL),
+		chromedp.WaitVisible("#loaded", chromedp.ByID),
+	); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// console.log call:
+	// string - "hello js world"
 }
