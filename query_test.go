@@ -1068,17 +1068,17 @@ const (
 	uploadHTML = `<!doctype html>
 <html>
 <body>
-  <form method="POST" action="/upload" enctype="multipart/form-data">
-    <input name="upload" type="file"/>
-    <input name="submit" type="submit"/>
-  </form>
+	<form method="POST" action="/upload" enctype="multipart/form-data">
+		<input name="upload" type="file"/>
+		<input name="submit" type="submit"/>
+	</form>
 </body>
 </html>`
 
 	resultHTML = `<!doctype html>
 <html>
 <body>
-  <div id="result">%d</div>
+	<div id="result">%d</div>
 </body>
 </html>`
 )

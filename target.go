@@ -21,7 +21,7 @@ type Target struct {
 	SessionID target.SessionID
 	TargetID  target.ID
 
-	listeners []func(v interface{}) error
+	listeners []func(ev interface{}) error
 
 	waitQueue  chan func() bool
 	eventQueue chan *cdproto.Message
@@ -60,14 +60,57 @@ func (t *Target) run(ctx context.Context) {
 		}
 	}
 
+	type eventValue struct {
+		method cdproto.MethodType
+		value  interface{}
+	}
+	// syncEventQueue is used to handle events synchronously within Target.
+	syncEventQueue := make(chan eventValue, 1024)
+
+	// This goroutine receives events from the browser, calls listeners, and
+	// then passes the events onto the main goroutine for the target handler
+	// to update itself.
+	go func() {
+		for {
+			select {
+			case msg := <-t.eventQueue:
+				if msg == nil {
+					return // the channel was closed
+				}
+				ev, err := cdproto.UnmarshalMessage(msg)
+				if err != nil {
+					if strings.Contains(err.Error(), "unknown command or event") {
+						// This is most likely an event received from an older
+						// Chrome which a newer cdproto doesn't have, as it is
+						// deprecated. Ignore that error.
+						// TODO: use error wrapping once Go 1.13 is released.
+						continue
+					}
+					t.errf("could not unmarshal event: %v", err)
+					continue
+				}
+				for _, fn := range t.listeners {
+					if err := fn(ev); err != nil {
+						// TODO: allow for custom logic here.
+						t.errf("listener error: %v", err)
+						continue
+					}
+				}
+				syncEventQueue <- eventValue{msg.Method, ev}
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
+
 	for {
 		select {
-		case msg := <-t.eventQueue:
-			if err := t.processEvent(ctx, msg); err != nil {
-				t.errf("could not process event: %v", err)
-				continue
-			}
-			if msg.Method.Domain() == "DOM" {
+		case ev := <-syncEventQueue:
+			switch ev.method.Domain() {
+			case "Page":
+				t.pageEvent(ev.value)
+			case "DOM":
+				t.domEvent(ctx, ev.value)
 				tryWaits()
 			}
 		case <-t.tick:
@@ -125,40 +168,6 @@ func (t *Target) Execute(ctx context.Context, method string, params easyjson.Mar
 		}
 	case <-ctx.Done():
 		return ctx.Err()
-	}
-	return nil
-}
-
-// processEvent processes an incoming event.
-func (t *Target) processEvent(ctx context.Context, msg *cdproto.Message) error {
-	if msg == nil {
-		return ErrChannelClosed
-	}
-	// unmarshal
-	ev, err := cdproto.UnmarshalMessage(msg)
-	if err != nil {
-		if strings.Contains(err.Error(), "unknown command or event") {
-			// This is most likely an event received from an older
-			// Chrome which a newer cdproto doesn't have, as it is
-			// deprecated. Ignore that error.
-			// TODO: use error wrapping once Go 1.13 is released.
-			return nil
-		}
-		return err
-	}
-
-	for _, fn := range t.listeners {
-		if err := fn(ev); err != nil {
-			// TODO: allow for custom logic here.
-			return err
-		}
-	}
-
-	switch msg.Method.Domain() {
-	case "Page":
-		t.pageEvent(ev)
-	case "DOM":
-		t.domEvent(ctx, ev)
 	}
 	return nil
 }
@@ -231,6 +240,10 @@ func (t *Target) pageEvent(ev interface{}) {
 	case *page.EventLifecycleEvent:
 		return
 	case *page.EventNavigatedWithinDocument:
+		return
+	case *page.EventJavascriptDialogOpening:
+		return
+	case *page.EventJavascriptDialogClosed:
 		return
 
 	default:
