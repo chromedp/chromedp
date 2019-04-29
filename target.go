@@ -20,7 +20,7 @@ type Target struct {
 	SessionID target.SessionID
 	TargetID  target.ID
 
-	listeners []func(ev interface{}) error
+	listeners []func(ev interface{})
 
 	waitQueue  chan func() bool
 	eventQueue chan *cdproto.Message
@@ -88,11 +88,7 @@ func (t *Target) run(ctx context.Context) {
 					continue
 				}
 				for _, fn := range t.listeners {
-					if err := fn(ev); err != nil {
-						// TODO: allow for custom logic here.
-						t.errf("listener error: %v", err)
-						continue
-					}
+					fn(ev)
 				}
 				syncEventQueue <- eventValue{msg.Method, ev}
 			case <-ctx.Done():

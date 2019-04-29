@@ -28,7 +28,7 @@ type Browser struct {
 	// cancelled (and the handler stopped) once the connection has failed.
 	LostConnection chan struct{}
 
-	listeners []func(v interface{}) error
+	listeners []func(ev interface{})
 
 	conn Transport
 
@@ -293,11 +293,7 @@ func (b *Browser) run(ctx context.Context) {
 						continue
 					}
 					for _, fn := range b.listeners {
-						if err := fn(ev); err != nil {
-							// TODO: allow for custom logic here.
-							b.errf("%s", err)
-							continue
-						}
+						fn(ev)
 					}
 					switch ev := ev.(type) {
 					case *target.EventDetachedFromTarget:

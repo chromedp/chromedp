@@ -37,8 +37,8 @@ type Context struct {
 	// have its own unique Target pointing to a separate browser tab (page).
 	Target *Target
 
-	browserListeners []func(v interface{}) error
-	targetListeners  []func(v interface{}) error
+	browserListeners []func(ev interface{})
+	targetListeners  []func(ev interface{})
 
 	// browserOpts holds the browser options passed to NewContext via
 	// WithBrowserOption, so that they can later be used when allocating a
@@ -372,7 +372,7 @@ func Sleep(d time.Duration) Action {
 // Note that the function is called synchronously when handling events. As such,
 // the function should do as little work as possible and avoid blocking, as
 // otherwise the entire browser handler would get blocked.
-func ListenBrowser(ctx context.Context, fn func(v interface{}) error) {
+func ListenBrowser(ctx context.Context, fn func(ev interface{})) {
 	c := FromContext(ctx)
 	if c == nil {
 		panic(ErrInvalidContext)
@@ -390,7 +390,7 @@ func ListenBrowser(ctx context.Context, fn func(v interface{}) error) {
 // Note that the function is called synchronously when handling events. As such,
 // the function should do as little work as possible and avoid blocking, as
 // otherwise the entire target handler would get blocked.
-func ListenTarget(ctx context.Context, fn func(v interface{}) error) {
+func ListenTarget(ctx context.Context, fn func(ev interface{})) {
 	c := FromContext(ctx)
 	if c == nil {
 		panic(ErrInvalidContext)

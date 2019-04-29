@@ -13,12 +13,15 @@ func TestCloseDialog(t *testing.T) {
 		ctx, cancel := testAllocate(t, "")
 		defer cancel()
 
-		ListenTarget(ctx, func(ev interface{}) error {
+		ListenTarget(ctx, func(ev interface{}) {
 			switch ev.(type) {
 			case *page.EventJavascriptDialogOpening:
-				return Run(ctx, page.HandleJavaScriptDialog(true))
+				if err := Run(ctx,
+					page.HandleJavaScriptDialog(true),
+				); err != nil {
+					t.Error(err)
+				}
 			}
-			return nil
 		})
 
 		if err := Run(ctx,

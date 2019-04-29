@@ -278,15 +278,13 @@ func TestListenBrowser(t *testing.T) {
 
 	// Check that many ListenBrowser callbacks work.
 	var attachedCount, totalCount int
-	ListenBrowser(ctx, func(v interface{}) error {
-		if _, ok := v.(*target.EventAttachedToTarget); ok {
+	ListenBrowser(ctx, func(ev interface{}) {
+		if _, ok := ev.(*target.EventAttachedToTarget); ok {
 			attachedCount++
 		}
-		return nil
 	})
-	ListenBrowser(ctx, func(v interface{}) error {
+	ListenBrowser(ctx, func(ev interface{}) {
 		totalCount++
-		return nil
 	})
 
 	if err := Run(ctx,
@@ -311,17 +309,15 @@ func TestListenTarget(t *testing.T) {
 
 	// Check that many ListenTarget callbacks work.
 	var navigatedCount, updatedCount int
-	ListenTarget(ctx, func(v interface{}) error {
-		if _, ok := v.(*page.EventFrameNavigated); ok {
+	ListenTarget(ctx, func(ev interface{}) {
+		if _, ok := ev.(*page.EventFrameNavigated); ok {
 			navigatedCount++
 		}
-		return nil
 	})
-	ListenTarget(ctx, func(v interface{}) error {
-		if _, ok := v.(*dom.EventDocumentUpdated); ok {
+	ListenTarget(ctx, func(ev interface{}) {
+		if _, ok := ev.(*dom.EventDocumentUpdated); ok {
 			updatedCount++
 		}
-		return nil
 	})
 
 	if err := Run(ctx,
