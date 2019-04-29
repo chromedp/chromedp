@@ -343,11 +343,7 @@ func (b *Browser) run(ctx context.Context) {
 					b.errf("unknown session ID %q", event.sessionID)
 					continue
 				}
-				select {
-				case page.eventQueue <- event.msg:
-				default:
-					panic("eventQueue is full")
-				}
+				page.eventQueue <- event.msg
 
 			case sessionID := <-b.delTabQueue:
 				if _, ok := pages[sessionID]; !ok {

@@ -9,9 +9,12 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/chromedp/cdproto/dom"
+	cdplog "github.com/chromedp/cdproto/log"
 	"github.com/chromedp/cdproto/page"
+	cdpruntime "github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
 )
 
@@ -331,5 +334,33 @@ func TestListenTarget(t *testing.T) {
 	}
 	if want := 1; updatedCount < want {
 		t.Fatalf("want at least %d DOM.documentUpdated events; got %d", want, updatedCount)
+	}
+}
+
+func TestLargeEventCount(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+
+	// Simulate an environment where Chrome sends 2000 console log events,
+	// and we are slow at processing them. In older chromedp versions, this
+	// would crash as we would fill eventQueue and panic. 50ms is enough to
+	// make the test fail somewhat reliably on old chromedp versions,
+	// without making the test too slow.
+	first := true
+	ListenTarget(ctx, func(ev interface{}) {
+		if _, ok := ev.(*cdpruntime.EventConsoleAPICalled); ok && first {
+			time.Sleep(50 * time.Millisecond)
+			first = false
+		}
+	})
+
+	if err := Run(ctx,
+		cdplog.Enable(),
+		Navigate(testdataDir+"/consolespam.html"),
+		WaitVisible("#done", ByID), // wait for the JS to finish
+	); err != nil {
+		t.Fatal(err)
 	}
 }
