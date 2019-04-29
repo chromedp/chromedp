@@ -11,7 +11,6 @@ import (
 	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/dom"
-	"github.com/chromedp/cdproto/inspector"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/target"
 )
@@ -26,8 +25,6 @@ type Target struct {
 
 	waitQueue  chan func() bool
 	eventQueue chan *cdproto.Message
-
-	// below are the old TargetHandler fields.
 
 	// frames is the set of encountered frames.
 	frames map[cdp.FrameID]*cdp.Frame
@@ -132,8 +129,6 @@ func (t *Target) Execute(ctx context.Context, method string, params easyjson.Mar
 	return nil
 }
 
-// below are the old TargetHandler methods.
-
 // processEvent processes an incoming event.
 func (t *Target) processEvent(ctx context.Context, msg *cdproto.Message) error {
 	if msg == nil {
@@ -159,19 +154,11 @@ func (t *Target) processEvent(ctx context.Context, msg *cdproto.Message) error {
 		}
 	}
 
-	switch ev.(type) {
-	case *inspector.EventDetached:
-		return nil
-	case *dom.EventDocumentUpdated:
-		t.documentUpdated(ctx)
-		return nil
-	}
-
 	switch msg.Method.Domain() {
 	case "Page":
 		t.pageEvent(ev)
 	case "DOM":
-		t.domEvent(ev)
+		t.domEvent(ctx, ev)
 	}
 	return nil
 }
@@ -261,19 +248,21 @@ func (t *Target) pageEvent(ev interface{}) {
 	}
 
 	f.Lock()
-	defer f.Unlock()
-
 	op(f)
+	f.Unlock()
 }
 
 // domEvent handles incoming DOM events.
-func (t *Target) domEvent(ev interface{}) {
+func (t *Target) domEvent(ctx context.Context, ev interface{}) {
 	f := t.cur
-
 	var id cdp.NodeID
 	var op nodeOp
 
 	switch e := ev.(type) {
+	case *dom.EventDocumentUpdated:
+		t.documentUpdated(ctx)
+		return
+
 	case *dom.EventSetChildNodes:
 		id, op = e.ParentID, setChildNodes(f.Nodes, e.Nodes)
 
@@ -329,9 +318,8 @@ func (t *Target) domEvent(ev interface{}) {
 	}
 
 	f.Lock()
-	defer f.Unlock()
-
 	op(n)
+	f.Unlock()
 }
 
 type TargetOption func(*Target)
