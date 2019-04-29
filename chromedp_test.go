@@ -7,6 +7,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/chromedp/cdproto/dom"
@@ -15,36 +16,16 @@ import (
 )
 
 var (
+	// these are set up in init
 	execPath    string
 	testdataDir string
+	allocOpts   []ExecAllocatorOption
 
+	// browserCtx is initialised with allocateOnce
 	browserCtx context.Context
-
-	// allocOpts is filled in TestMain
-	allocOpts []ExecAllocatorOption
 )
 
-func testAllocate(tb testing.TB, path string) (context.Context, context.CancelFunc) {
-	// Same browser, new tab; not needing to start new chrome browsers for
-	// each test gives a huge speed-up.
-	ctx, _ := NewContext(browserCtx)
-
-	// Only navigate if we want a path, otherwise leave the blank page.
-	if path != "" {
-		if err := Run(ctx, Navigate(testdataDir+"/"+path)); err != nil {
-			tb.Fatal(err)
-		}
-	}
-
-	cancel := func() {
-		if err := Cancel(ctx); err != nil {
-			tb.Error(err)
-		}
-	}
-	return ctx, cancel
-}
-
-func TestMain(m *testing.M) {
+func init() {
 	wd, err := os.Getwd()
 	if err != nil {
 		panic(fmt.Sprintf("could not get working directory: %v", err))
@@ -71,24 +52,44 @@ func TestMain(m *testing.M) {
 	if noSandbox := os.Getenv("CHROMEDP_NO_SANDBOX"); noSandbox != "false" {
 		allocOpts = append(allocOpts, NoSandbox)
 	}
+}
 
-	allocCtx, cancel := NewExecAllocator(context.Background(), allocOpts...)
+var allocateOnce sync.Once
 
-	var browserOpts []ContextOption
-	if debug := os.Getenv("CHROMEDP_DEBUG"); debug != "" && debug != "false" {
-		browserOpts = append(browserOpts, WithDebugf(log.Printf))
+func testAllocate(tb testing.TB, name string) (context.Context, context.CancelFunc) {
+	// Start the browser exactly once, as needed.
+	allocateOnce.Do(func() {
+		allocCtx, _ := NewExecAllocator(context.Background(), allocOpts...)
+
+		var browserOpts []ContextOption
+		if debug := os.Getenv("CHROMEDP_DEBUG"); debug != "" && debug != "false" {
+			browserOpts = append(browserOpts, WithDebugf(log.Printf))
+		}
+
+		// start the browser
+		browserCtx, _ = NewContext(allocCtx, browserOpts...)
+		if err := Run(browserCtx); err != nil {
+			panic(err)
+		}
+	})
+
+	// Same browser, new tab; not needing to start new chrome browsers for
+	// each test gives a huge speed-up.
+	ctx, _ := NewContext(browserCtx)
+
+	// Only navigate if we want an html file name, otherwise leave the blank page.
+	if name != "" {
+		if err := Run(ctx, Navigate(testdataDir+"/"+name)); err != nil {
+			tb.Fatal(err)
+		}
 	}
 
-	// start the browser
-	browserCtx, _ = NewContext(allocCtx, browserOpts...)
-	if err := Run(browserCtx); err != nil {
-		panic(err)
+	cancel := func() {
+		if err := Cancel(ctx); err != nil {
+			tb.Error(err)
+		}
 	}
-
-	code := m.Run()
-
-	cancel()
-	os.Exit(code)
+	return ctx, cancel
 }
 
 func BenchmarkTabNavigate(b *testing.B) {
