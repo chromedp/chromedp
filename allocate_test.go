@@ -73,7 +73,7 @@ func TestExecAllocatorKillBrowser(t *testing.T) {
 
 	// Simulate a scenario where we navigate to a page that never responds,
 	// and the browser is closed while it's loading.
-	ctx, cancel := NewContext(context.Background())
+	ctx, cancel := testAllocateSeparate(t)
 	defer cancel()
 	if err := Run(ctx); err != nil {
 		t.Fatal(err)
@@ -215,9 +215,10 @@ func TestExecAllocatorMissingWebsocketAddr(t *testing.T) {
 	t.Parallel()
 
 	allocCtx, cancel := NewExecAllocator(context.Background(),
-		// This flag makes Chrome print its version and exit.
-		Flag("product-version", true),
-	)
+		// Use a bad listen addres, so both Chrome and headless-shell
+		// exit almost immediately.
+		append([]ExecAllocatorOption{Flag("remote-debugging-address", "_")},
+			allocOpts...)...)
 	defer cancel()
 
 	ctx, cancel := NewContext(allocCtx)

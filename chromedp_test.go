@@ -119,6 +119,17 @@ func testAllocate(tb testing.TB, name string) (context.Context, context.CancelFu
 	return ctx, cancel
 }
 
+func testAllocateSeparate(tb testing.TB) (context.Context, context.CancelFunc) {
+	// Entirely new browser, unlike testAllocate.
+	ctx, _ := NewContext(allocCtx)
+	cancel := func() {
+		if err := Cancel(ctx); err != nil {
+			tb.Error(err)
+		}
+	}
+	return ctx, cancel
+}
+
 func BenchmarkTabNavigate(b *testing.B) {
 	b.ReportAllocs()
 
@@ -175,7 +186,7 @@ func TestTargets(t *testing.T) {
 	t.Parallel()
 
 	// Start one browser with one tab.
-	ctx1, cancel1 := NewContext(context.Background())
+	ctx1, cancel1 := testAllocateSeparate(t)
 	defer cancel1()
 	if err := Run(ctx1); err != nil {
 		t.Fatal(err)
@@ -208,7 +219,7 @@ func TestTargets(t *testing.T) {
 func TestCancelError(t *testing.T) {
 	t.Parallel()
 
-	ctx1, cancel1 := NewContext(context.Background())
+	ctx1, cancel1 := testAllocateSeparate(t)
 	defer cancel1()
 	if err := Run(ctx1); err != nil {
 		t.Fatal(err)
@@ -240,7 +251,7 @@ func TestPrematureCancel(t *testing.T) {
 	t.Parallel()
 
 	// Cancel before the browser is allocated.
-	ctx, cancel := NewContext(context.Background())
+	ctx, cancel := testAllocateSeparate(t)
 	cancel()
 	if err := Run(ctx); err != context.Canceled {
 		t.Fatalf("wanted canceled context error, got %v", err)
@@ -250,7 +261,7 @@ func TestPrematureCancel(t *testing.T) {
 func TestPrematureCancelTab(t *testing.T) {
 	t.Parallel()
 
-	ctx1, cancel := NewContext(context.Background())
+	ctx1, cancel := testAllocateSeparate(t)
 	defer cancel()
 	if err := Run(ctx1); err != nil {
 		t.Fatal(err)
@@ -300,7 +311,7 @@ func TestConcurrentCancel(t *testing.T) {
 func TestListenBrowser(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := NewContext(context.Background())
+	ctx, cancel := testAllocateSeparate(t)
 	defer cancel()
 
 	// Check that many ListenBrowser callbacks work.
