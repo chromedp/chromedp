@@ -3,6 +3,7 @@ package chromedp
 import (
 	"context"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -23,6 +24,9 @@ var (
 	testdataDir string
 	allocOpts   []ExecAllocatorOption
 
+	// allocCtx is initialised in TestMain, to cancel before exiting.
+	allocCtx context.Context
+
 	// browserCtx is initialised with allocateOnce
 	browserCtx context.Context
 )
@@ -33,6 +37,11 @@ func init() {
 		panic(fmt.Sprintf("could not get working directory: %v", err))
 	}
 	testdataDir = "file://" + path.Join(wd, "testdata")
+
+	allocTempDir, err = ioutil.TempDir("", "chromedp-test")
+	if err != nil {
+		panic(fmt.Sprintf("could not create temp directory: %v", err))
+	}
 
 	// build on top of the default options
 	allocOpts = append(allocOpts, DefaultExecAllocatorOptions...)
@@ -56,13 +65,29 @@ func init() {
 	}
 }
 
+func TestMain(m *testing.M) {
+	var cancel context.CancelFunc
+	allocCtx, cancel = NewExecAllocator(context.Background(), allocOpts...)
+
+	code := m.Run()
+	cancel()
+
+	if infos, _ := ioutil.ReadDir(allocTempDir); len(infos) > 0 {
+		os.RemoveAll(allocTempDir)
+		// TODO: panic instead, once we fix the dir leaks
+		// panic(fmt.Sprintf("leaked %d temporary dirs under %s", len(infos), allocTempDir))
+	} else {
+		os.Remove(allocTempDir)
+	}
+
+	os.Exit(code)
+}
+
 var allocateOnce sync.Once
 
 func testAllocate(tb testing.TB, name string) (context.Context, context.CancelFunc) {
 	// Start the browser exactly once, as needed.
 	allocateOnce.Do(func() {
-		allocCtx, _ := NewExecAllocator(context.Background(), allocOpts...)
-
 		var browserOpts []ContextOption
 		if debug := os.Getenv("CHROMEDP_DEBUG"); debug != "" && debug != "false" {
 			browserOpts = append(browserOpts, WithDebugf(log.Printf))

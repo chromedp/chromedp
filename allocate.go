@@ -78,6 +78,11 @@ type ExecAllocator struct {
 	wg sync.WaitGroup
 }
 
+// allocTempDir is used to group all ExecAllocator temporary user data dirs in
+// the same location, useful for the tests. If left empty, the system's default
+// temporary directory is used.
+var allocTempDir string
+
 // Allocate satisfies the Allocator interface.
 func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*Browser, error) {
 	c := FromContext(ctx)
@@ -102,7 +107,7 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	removeDir := false
 	dataDir, ok := a.initFlags["user-data-dir"].(string)
 	if !ok {
-		tempDir, err := ioutil.TempDir("", "chromedp-runner")
+		tempDir, err := ioutil.TempDir(allocTempDir, "chromedp-runner")
 		if err != nil {
 			return nil, err
 		}
