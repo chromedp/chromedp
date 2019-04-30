@@ -136,6 +136,7 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 			os.RemoveAll(dataDir)
 		}
 	}()
+	allocateCmdOptions(cmd)
 
 	// We must start the cmd before calling cmd.Wait, as otherwise the two
 	// can run into a data race.
