@@ -1,4 +1,4 @@
-// +build !windows,!plan9
+// +build linux
 
 package chromedp
 
@@ -12,5 +12,5 @@ func allocateCmdOptions(cmd *exec.Cmd) {
 		cmd.SysProcAttr = new(syscall.SysProcAttr)
 	}
 	// When the parent process dies (Go), kill the child as well.
-	cmd.SysProcAttr.Setpgid = true
+	cmd.SysProcAttr.Pdeathsig = syscall.SIGKILL
 }
