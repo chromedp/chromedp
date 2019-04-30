@@ -1,11 +1,18 @@
+dist: xenial
+
 language: go
 
 go:
   - 1.12.x
+
+services:
+  - docker
 
 addons:
   apt:
     chrome: stable
 
 script:
-  - go test -v ./...
+  - go test
+  - go test -c
+  - docker run --volume=$PWD:/chromedp --entrypoint=/chromedp/chromedp.test --workdir=/chromedp --env=PATH=/headless-shell chromedp/headless-shell:latest
