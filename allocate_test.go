@@ -11,6 +11,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/chromedp/cdproto/target"
 )
 
 func TestExecAllocator(t *testing.T) {
@@ -165,12 +167,23 @@ func TestRemoteAllocator(t *testing.T) {
 	// 1) connect and create a target (tab)
 	// 2) run some actions
 	// 3) close the target and connection
+	var prev target.ID
 	for i := 0; i < 3; i++ {
 		taskCtx, taskCancel := NewContext(allocCtx)
 		defer taskCancel()
 
-		// check that previous runs closed their tabs
-		checkTargets(t, taskCtx, 1)
+		// Check that previous runs closed their tabs. Don't just count
+		// the number of targets, as perhaps the initial blank tab
+		// hasn't come up yet.
+		infos, err := Targets(taskCtx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, info := range infos {
+			if info.TargetID == prev {
+				t.Fatalf("target from previous iteration wasn't closed: %v", prev)
+			}
+		}
 
 		want := "insert"
 		var got string
@@ -183,6 +196,7 @@ func TestRemoteAllocator(t *testing.T) {
 		if got != want {
 			t.Fatalf("want %q, got %q", want, got)
 		}
+		prev = FromContext(taskCtx).Target.TargetID
 		if err := Cancel(taskCtx); err != nil {
 			t.Fatal(err)
 		}

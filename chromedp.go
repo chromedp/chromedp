@@ -219,6 +219,8 @@ func Run(ctx context.Context, actions ...Action) error {
 func (c *Context) newSession(ctx context.Context) error {
 	var targetID target.ID
 	if c.first {
+		tries := 0
+	retry:
 		// If we just allocated this browser, and it has a single page
 		// that's blank and not attached, use it.
 		infos, err := target.GetTargets().Do(cdp.WithExecutor(ctx, c.Browser))
@@ -231,6 +233,16 @@ func (c *Context) newSession(ctx context.Context) error {
 				targetID = info.TargetID
 				pages++
 			}
+		}
+		if pages < 1 {
+			// TODO: replace this polling with retries with a wait
+			// via Target.setDiscoverTargets after allocating a new
+			// browser.
+			if tries++; tries < 5 {
+				time.Sleep(10 * time.Millisecond)
+				goto retry
+			}
+			return fmt.Errorf("waited too long for page targets to show up")
 		}
 		if pages > 1 {
 			// Multiple blank pages; just in case, don't use any.
