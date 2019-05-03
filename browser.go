@@ -30,7 +30,7 @@ type Browser struct {
 
 	dialTimeout time.Duration
 
-	listeners []func(ev interface{})
+	listeners []cancelableListener
 
 	conn Transport
 
@@ -303,9 +303,7 @@ func (b *Browser) run(ctx context.Context) {
 						b.errf("%s", err)
 						continue
 					}
-					for _, fn := range b.listeners {
-						fn(ev)
-					}
+					b.listeners = runListeners(b.listeners, ev)
 					switch ev := ev.(type) {
 					case *target.EventDetachedFromTarget:
 						b.delTabQueue <- ev.SessionID

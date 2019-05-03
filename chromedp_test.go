@@ -444,3 +444,38 @@ func TestDialTimeout(t *testing.T) {
 		}
 	})
 }
+
+func TestListenCancel(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocateSeparate(t)
+	defer cancel()
+
+	// Check that cancelling a listen context stops the listener.
+	var browserCount, targetCount int
+
+	ctx1, cancel1 := context.WithCancel(ctx)
+	ListenBrowser(ctx1, func(ev interface{}) {
+		browserCount++
+		cancel1()
+	})
+
+	ctx2, cancel2 := context.WithCancel(ctx)
+	ListenTarget(ctx2, func(ev interface{}) {
+		targetCount++
+		cancel2()
+	})
+
+	if err := Run(ctx,
+		Navigate(testdataDir+"/form.html"),
+		WaitVisible(`#form`, ByID), // for form.html
+	); err != nil {
+		t.Fatal(err)
+	}
+	if want := 1; browserCount != 1 {
+		t.Fatalf("want %d browser events; got %d", want, browserCount)
+	}
+	if want := 1; targetCount != 1 {
+		t.Fatalf("want %d target events; got %d", want, targetCount)
+	}
+}

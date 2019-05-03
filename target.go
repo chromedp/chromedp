@@ -20,7 +20,7 @@ type Target struct {
 	SessionID target.SessionID
 	TargetID  target.ID
 
-	listeners []func(ev interface{})
+	listeners []cancelableListener
 
 	waitQueue  chan func() bool
 	eventQueue chan *cdproto.Message
@@ -86,9 +86,7 @@ func (t *Target) run(ctx context.Context) {
 					t.errf("could not unmarshal event: %v", err)
 					continue
 				}
-				for _, fn := range t.listeners {
-					fn(ev)
-				}
+				t.listeners = runListeners(t.listeners, ev)
 				syncEventQueue <- eventValue{msg.Method, ev}
 			}
 		}
@@ -110,6 +108,20 @@ func (t *Target) run(ctx context.Context) {
 			tryWaits()
 		}
 	}
+}
+
+func runListeners(list []cancelableListener, ev interface{}) []cancelableListener {
+	for i := 0; i < len(list); i++ {
+		listener := list[i]
+		select {
+		case <-listener.ctx.Done():
+			list = append(list[:i], list[i+1:]...)
+			continue
+		default:
+			listener.fn(ev)
+		}
+	}
+	return list
 }
 
 func (t *Target) Execute(ctx context.Context, method string, params easyjson.Marshaler, res easyjson.Unmarshaler) error {

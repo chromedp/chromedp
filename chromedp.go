@@ -37,8 +37,8 @@ type Context struct {
 	// have its own unique Target pointing to a separate browser tab (page).
 	Target *Target
 
-	browserListeners []func(ev interface{})
-	targetListeners  []func(ev interface{})
+	browserListeners []cancelableListener
+	targetListeners  []cancelableListener
 
 	// browserOpts holds the browser options passed to NewContext via
 	// WithBrowserOption, so that they can later be used when allocating a
@@ -378,12 +378,18 @@ func Sleep(d time.Duration) Action {
 	})
 }
 
+type cancelableListener struct {
+	ctx context.Context
+	fn  func(ev interface{})
+}
+
 // ListenBrowser adds a function which will be called whenever a browser event
-// is received on the chromedp context.
+// is received on the chromedp context. Cancelling ctx stops the listener from
+// receiving any more events.
 //
-// Note that the function is called synchronously when handling events. As such,
-// the function should do as little work as possible and avoid blocking, as
-// otherwise the entire browser handler would get blocked.
+// Note that the function is called synchronously when handling events. It can
+// run Actions under some circumstances, but the function should avoid blocking
+// whenever possible.
 func ListenBrowser(ctx context.Context, fn func(ev interface{})) {
 	c := FromContext(ctx)
 	if c == nil {
@@ -392,16 +398,17 @@ func ListenBrowser(ctx context.Context, fn func(ev interface{})) {
 	if c.Browser != nil {
 		panic("ListenBrowser must be used before a browser is created")
 	}
-	c.browserListeners = append(c.browserListeners, fn)
+	c.browserListeners = append(c.browserListeners, cancelableListener{ctx, fn})
 }
 
 // ListenTarget adds a function which will be called whenever a target event is
 // received on the chromedp context. Note that this only includes browser
-// events; command responses and target events are not included.
+// events; command responses and target events are not included. Cancelling ctx
+// stops the listener from receiving any more events.
 //
-// Note that the function is called synchronously when handling events. As such,
-// the function should do as little work as possible and avoid blocking, as
-// otherwise the entire target handler would get blocked.
+// Note that the function is called synchronously when handling events. It can
+// run Actions under some circumstances, but the function should avoid blocking
+// whenever possible.
 func ListenTarget(ctx context.Context, fn func(ev interface{})) {
 	c := FromContext(ctx)
 	if c == nil {
@@ -410,5 +417,5 @@ func ListenTarget(ctx context.Context, fn func(ev interface{})) {
 	if c.Target != nil {
 		panic("ListenTarget must be used before a target is created")
 	}
-	c.targetListeners = append(c.targetListeners, fn)
+	c.targetListeners = append(c.targetListeners, cancelableListener{ctx, fn})
 }
