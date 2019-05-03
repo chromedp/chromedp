@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net"
 	"os"
 	"path"
 	"strings"
@@ -397,4 +398,49 @@ func TestLargeEventCount(t *testing.T) {
 	); err != nil {
 		t.Fatal(err)
 	}
+}
+
+func TestDialTimeout(t *testing.T) {
+	t.Parallel()
+
+	t.Run("ShortTimeoutError", func(t *testing.T) {
+		t.Parallel()
+		l, err := net.Listen("tcp", ":0")
+		if err != nil {
+			t.Fatal(err)
+		}
+		url := "ws://" + l.(*net.TCPListener).Addr().String()
+		defer l.Close()
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		_, err = NewBrowser(ctx, url, WithDialTimeout(time.Microsecond))
+		got, want := fmt.Sprintf("%v", err), "i/o timeout"
+		if !strings.Contains(got, want) {
+			t.Fatalf("got %q, want %q", got, want)
+		}
+	})
+	t.Run("NoTimeoutSuccess", func(t *testing.T) {
+		t.Parallel()
+		l, err := net.Listen("tcp", ":0")
+		if err != nil {
+			t.Fatal(err)
+		}
+		url := "ws://" + l.(*net.TCPListener).Addr().String()
+		defer l.Close()
+		go func() {
+			conn, err := l.Accept()
+			if err == nil {
+				conn.Close()
+			}
+		}()
+
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		_, err = NewBrowser(ctx, url, WithDialTimeout(0))
+		got, want := fmt.Sprintf("%v", err), "unexpected EOF"
+		if !strings.Contains(got, want) {
+			t.Fatalf("got %q, want %q", got, want)
+		}
+	})
 }
