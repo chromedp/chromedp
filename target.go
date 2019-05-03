@@ -115,7 +115,7 @@ func (t *Target) run(ctx context.Context) {
 }
 
 func runListeners(list []cancelableListener, ev interface{}) []cancelableListener {
-	for i := 0; i < len(list); i++ {
+	for i := 0; i < len(list); {
 		listener := list[i]
 		select {
 		case <-listener.ctx.Done():
@@ -123,6 +123,7 @@ func runListeners(list []cancelableListener, ev interface{}) []cancelableListene
 			continue
 		default:
 			listener.fn(ev)
+			i++
 		}
 	}
 	return list
