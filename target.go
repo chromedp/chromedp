@@ -2,6 +2,7 @@ package chromedp
 
 import (
 	"context"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -20,7 +21,8 @@ type Target struct {
 	SessionID target.SessionID
 	TargetID  target.ID
 
-	listeners []cancelableListener
+	listenersMu sync.Mutex
+	listeners   []cancelableListener
 
 	waitQueue  chan func() bool
 	eventQueue chan *cdproto.Message
@@ -86,7 +88,9 @@ func (t *Target) run(ctx context.Context) {
 					t.errf("could not unmarshal event: %v", err)
 					continue
 				}
+				t.listenersMu.Lock()
 				t.listeners = runListeners(t.listeners, ev)
+				t.listenersMu.Unlock()
 				syncEventQueue <- eventValue{msg.Method, ev}
 			}
 		}

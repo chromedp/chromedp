@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -30,7 +31,8 @@ type Browser struct {
 
 	dialTimeout time.Duration
 
-	listeners []cancelableListener
+	listenersMu sync.Mutex
+	listeners   []cancelableListener
 
 	conn Transport
 
@@ -303,7 +305,9 @@ func (b *Browser) run(ctx context.Context) {
 						b.errf("%s", err)
 						continue
 					}
+					b.listenersMu.Lock()
 					b.listeners = runListeners(b.listeners, ev)
+					b.listenersMu.Unlock()
 					switch ev := ev.(type) {
 					case *target.EventDetachedFromTarget:
 						b.delTabQueue <- ev.SessionID

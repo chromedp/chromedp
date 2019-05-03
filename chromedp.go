@@ -395,10 +395,14 @@ func ListenBrowser(ctx context.Context, fn func(ev interface{})) {
 	if c == nil {
 		panic(ErrInvalidContext)
 	}
+	cl := cancelableListener{ctx, fn}
 	if c.Browser != nil {
-		panic("ListenBrowser must be used before a browser is created")
+		c.Browser.listenersMu.Lock()
+		c.Browser.listeners = append(c.Browser.listeners, cl)
+		c.Browser.listenersMu.Unlock()
+	} else {
+		c.browserListeners = append(c.browserListeners, cl)
 	}
-	c.browserListeners = append(c.browserListeners, cancelableListener{ctx, fn})
 }
 
 // ListenTarget adds a function which will be called whenever a target event is
@@ -414,8 +418,12 @@ func ListenTarget(ctx context.Context, fn func(ev interface{})) {
 	if c == nil {
 		panic(ErrInvalidContext)
 	}
+	cl := cancelableListener{ctx, fn}
 	if c.Target != nil {
-		panic("ListenTarget must be used before a target is created")
+		c.Target.listenersMu.Lock()
+		c.Target.listeners = append(c.Target.listeners, cl)
+		c.Target.listenersMu.Unlock()
+	} else {
+		c.targetListeners = append(c.targetListeners, cl)
 	}
-	c.targetListeners = append(c.targetListeners, cancelableListener{ctx, fn})
 }

@@ -315,28 +315,34 @@ func TestListenBrowser(t *testing.T) {
 	ctx, cancel := testAllocateSeparate(t)
 	defer cancel()
 
-	// Check that many ListenBrowser callbacks work.
+	// Check that many ListenBrowser callbacks work, including adding
+	// callbacks after the browser has been allocated.
 	var attachedCount, totalCount int
+	ListenBrowser(ctx, func(ev interface{}) {
+		totalCount++
+	})
+	if err := Run(ctx); err != nil {
+		t.Fatal(err)
+	}
 	ListenBrowser(ctx, func(ev interface{}) {
 		if _, ok := ev.(*target.EventAttachedToTarget); ok {
 			attachedCount++
 		}
 	})
-	ListenBrowser(ctx, func(ev interface{}) {
-		totalCount++
-	})
 
-	if err := Run(ctx,
+	newTabCtx, cancel := NewContext(ctx)
+	defer cancel()
+	if err := Run(newTabCtx,
 		Navigate(testdataDir+"/form.html"),
 		WaitVisible(`#form`, ByID), // for form.html
 	); err != nil {
 		t.Fatal(err)
 	}
 	if want := 1; attachedCount != want {
-		t.Fatalf("want %d Page.frameNavigated events; got %d", want, attachedCount)
+		t.Fatalf("want %d Target.attachedToTarget events; got %d", want, attachedCount)
 	}
 	if want := 1; totalCount < want {
-		t.Fatalf("want at least %d DOM.documentUpdated events; got %d", want, totalCount)
+		t.Fatalf("want at least %d browser events; got %d", want, totalCount)
 	}
 }
 
@@ -346,13 +352,17 @@ func TestListenTarget(t *testing.T) {
 	ctx, cancel := testAllocate(t, "")
 	defer cancel()
 
-	// Check that many ListenTarget callbacks work.
+	// Check that many listen callbacks work, including adding callbacks
+	// after the target has been attached to.
 	var navigatedCount, updatedCount int
 	ListenTarget(ctx, func(ev interface{}) {
 		if _, ok := ev.(*page.EventFrameNavigated); ok {
 			navigatedCount++
 		}
 	})
+	if err := Run(ctx); err != nil {
+		t.Fatal(err)
+	}
 	ListenTarget(ctx, func(ev interface{}) {
 		if _, ok := ev.(*dom.EventDocumentUpdated); ok {
 			updatedCount++
