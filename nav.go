@@ -3,16 +3,36 @@ package chromedp
 import (
 	"context"
 	"errors"
+	"sync"
 
+	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/page"
 )
 
 // Navigate navigates the current frame.
 func Navigate(urlstr string) Action {
 	return ActionFunc(func(ctx context.Context) error {
-		_, _, _, err := page.Navigate(urlstr).Do(ctx)
-		return err
+		frameID, _, _, err := page.Navigate(urlstr).Do(ctx)
+		if err != nil {
+			return err
+		}
+		waitLoaded(ctx, frameID)
+		return nil
 	})
+}
+
+func waitLoaded(ctx context.Context, frameID cdp.FrameID) {
+	ctx, cancel := context.WithCancel(ctx)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	ListenTarget(ctx, func(ev interface{}) {
+		evs, ok := ev.(*page.EventFrameStoppedLoading)
+		if ok && evs.FrameID == frameID {
+			cancel()
+			wg.Done()
+		}
+	})
+	wg.Wait()
 }
 
 // NavigationEntries is an action to retrieve the page's navigation history
@@ -32,7 +52,14 @@ func NavigationEntries(currentIndex *int64, entries *[]*page.NavigationEntry) Ac
 // NavigateToHistoryEntry is an action to navigate to the specified navigation
 // entry.
 func NavigateToHistoryEntry(entryID int64) Action {
-	return page.NavigateToHistoryEntry(entryID)
+	return ActionFunc(func(ctx context.Context) error {
+		frameID := FromContext(ctx).Target.cur.ID
+		if err := page.NavigateToHistoryEntry(entryID).Do(ctx); err != nil {
+			return err
+		}
+		waitLoaded(ctx, frameID)
+		return nil
+	})
 }
 
 // NavigateBack navigates the current frame backwards in its history.
@@ -47,7 +74,13 @@ func NavigateBack() Action {
 			return errors.New("invalid navigation entry")
 		}
 
-		return page.NavigateToHistoryEntry(entries[cur-1].ID).Do(ctx)
+		frameID := FromContext(ctx).Target.cur.ID
+		entryID := entries[cur-1].ID
+		if err := page.NavigateToHistoryEntry(entryID).Do(ctx); err != nil {
+			return err
+		}
+		waitLoaded(ctx, frameID)
+		return nil
 	})
 }
 
@@ -63,7 +96,13 @@ func NavigateForward() Action {
 			return errors.New("invalid navigation entry")
 		}
 
-		return page.NavigateToHistoryEntry(entries[cur+1].ID).Do(ctx)
+		frameID := FromContext(ctx).Target.cur.ID
+		entryID := entries[cur+1].ID
+		if err := page.NavigateToHistoryEntry(entryID).Do(ctx); err != nil {
+			return err
+		}
+		waitLoaded(ctx, frameID)
+		return nil
 	})
 }
 

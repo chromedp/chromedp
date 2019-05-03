@@ -148,7 +148,7 @@ func BenchmarkTabNavigate(b *testing.B) {
 			ctx, _ := NewContext(bctx)
 			if err := Run(ctx,
 				Navigate(testdataDir+"/form.html"),
-				WaitVisible(`#form`, ByID), // for form.html
+				WaitVisible(`#form`, ByID),
 			); err != nil {
 				b.Fatal(err)
 			}
@@ -332,12 +332,10 @@ func TestListenBrowser(t *testing.T) {
 
 	newTabCtx, cancel := NewContext(ctx)
 	defer cancel()
-	if err := Run(newTabCtx,
-		Navigate(testdataDir+"/form.html"),
-		WaitVisible(`#form`, ByID), // for form.html
-	); err != nil {
+	if err := Run(newTabCtx, Navigate(testdataDir+"/form.html")); err != nil {
 		t.Fatal(err)
 	}
+	cancel()
 	if want := 1; attachedCount != want {
 		t.Fatalf("want %d Target.attachedToTarget events; got %d", want, attachedCount)
 	}
@@ -369,12 +367,10 @@ func TestListenTarget(t *testing.T) {
 		}
 	})
 
-	if err := Run(ctx,
-		Navigate(testdataDir+"/form.html"),
-		WaitVisible(`#form`, ByID), // for form.html
-	); err != nil {
+	if err := Run(ctx, Navigate(testdataDir+"/form.html")); err != nil {
 		t.Fatal(err)
 	}
+	cancel()
 	if want := 1; navigatedCount != want {
 		t.Fatalf("want %d Page.frameNavigated events; got %d", want, navigatedCount)
 	}
@@ -476,10 +472,7 @@ func TestListenCancel(t *testing.T) {
 		cancel2()
 	})
 
-	if err := Run(ctx,
-		Navigate(testdataDir+"/form.html"),
-		WaitVisible(`#form`, ByID), // for form.html
-	); err != nil {
+	if err := Run(ctx, Navigate(testdataDir+"/form.html")); err != nil {
 		t.Fatal(err)
 	}
 	if want := 1; browserCount != 1 {

@@ -21,25 +21,19 @@ func TestNavigate(t *testing.T) {
 	ctx, cancel := testAllocate(t, "image.html")
 	defer cancel()
 
-	var urlstr string
+	var urlstr, title string
 	if err := Run(ctx,
-		WaitVisible(`#icon-brankas`, ByID),
 		Location(&urlstr),
+		Title(&title),
 	); err != nil {
 		t.Fatal(err)
 	}
 	if !strings.HasSuffix(urlstr, "image.html") {
-		t.Errorf("expected to be on image.html, at: %s", urlstr)
+		t.Errorf("want to be on image.html, at %q", urlstr)
 	}
-
-	var title string
-	if err := Run(ctx, Title(&title)); err != nil {
-		t.Fatal(err)
-	}
-
 	exptitle := "this is title"
 	if title != exptitle {
-		t.Errorf("expected title to contain google, instead title is: %s", title)
+		t.Errorf("want title to be %q, got %q", title, exptitle)
 	}
 }
 
@@ -73,7 +67,6 @@ func TestNavigationEntries(t *testing.T) {
 	for i, test := range tests {
 		if err := Run(ctx,
 			Navigate(testdataDir+"/"+test.file),
-			WaitVisible(test.waitID, ByID),
 			NavigationEntries(&index, &entries),
 		); err != nil {
 			t.Fatal(err)
@@ -99,11 +92,8 @@ func TestNavigateToHistoryEntry(t *testing.T) {
 	var entries []*page.NavigationEntry
 	var index int64
 	if err := Run(ctx,
-		WaitVisible(`#icon-brankas`, ByID), // for image.html
 		NavigationEntries(&index, &entries),
-
 		Navigate(testdataDir+"/form.html"),
-		WaitVisible(`#form`, ByID), // for form.html
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -111,13 +101,12 @@ func TestNavigateToHistoryEntry(t *testing.T) {
 	var title string
 	if err := Run(ctx,
 		NavigateToHistoryEntry(entries[index].ID),
-		WaitVisible(`#icon-brankas`, ByID), // for image.html
 		Title(&title),
 	); err != nil {
 		t.Fatal(err)
 	}
 	if title != entries[index].Title {
-		t.Errorf("expected title to be %s, instead title is: %s", entries[index].Title, title)
+		t.Errorf("expected title to be %q, instead title is %q", entries[index].Title, title)
 	}
 }
 
@@ -129,21 +118,18 @@ func TestNavigateBack(t *testing.T) {
 
 	var title, exptitle string
 	if err := Run(ctx,
-		WaitVisible(`#form`, ByID), // for form.html
 		Title(&exptitle),
 
 		Navigate(testdataDir+"/image.html"),
-		WaitVisible(`#icon-brankas`, ByID), // for image.html
 
 		NavigateBack(),
-		WaitVisible(`#form`, ByID), // for form.html
 		Title(&title),
 	); err != nil {
 		t.Fatal(err)
 	}
 
 	if title != exptitle {
-		t.Errorf("expected title to be %s, instead title is: %s", exptitle, title)
+		t.Errorf("expected title to be %q, instead title is %q", exptitle, title)
 	}
 }
 
@@ -155,24 +141,19 @@ func TestNavigateForward(t *testing.T) {
 
 	var title, exptitle string
 	if err := Run(ctx,
-		WaitVisible(`#form`, ByID), // for form.html
-
 		Navigate(testdataDir+"/image.html"),
-		WaitVisible(`#icon-brankas`, ByID), // for image.html
 		Title(&exptitle),
 
 		NavigateBack(),
-		WaitVisible(`#form`, ByID), // for form.html
-
 		NavigateForward(),
-		WaitVisible(`#icon-brankas`, ByID), // for image.html
+
 		Title(&title),
 	); err != nil {
 		t.Fatal(err)
 	}
 
 	if title != exptitle {
-		t.Errorf("expected title to be %s, instead title is: %s", exptitle, title)
+		t.Errorf("expected title to be %q, instead title is %q", exptitle, title)
 	}
 }
 
@@ -222,7 +203,7 @@ func TestReload(t *testing.T) {
 	}
 
 	if title != exptitle {
-		t.Errorf("expected title to be %s, instead title is: %s", exptitle, title)
+		t.Errorf("expected title to be %q, instead title is %q", exptitle, title)
 	}
 }
 
@@ -237,7 +218,6 @@ func TestCaptureScreenshot(t *testing.T) {
 	var buf []byte
 	if err := Run(ctx,
 		emulation.SetDeviceMetricsOverride(int64(width), int64(height), 1.0, false),
-		WaitVisible(`#icon-brankas`, ByID), // for image.html
 		CaptureScreenshot(&buf),
 	); err != nil {
 		t.Fatal(err)
@@ -305,15 +285,12 @@ func TestLocation(t *testing.T) {
 	defer cancel()
 
 	var urlstr string
-	if err := Run(ctx,
-		WaitVisible(`#form`, ByID), // for form.html
-		Location(&urlstr),
-	); err != nil {
+	if err := Run(ctx, Location(&urlstr)); err != nil {
 		t.Fatal(err)
 	}
 
 	if !strings.HasSuffix(urlstr, "form.html") {
-		t.Fatalf("expected to be on form.html, got: %s", urlstr)
+		t.Fatalf("expected to be on form.html, got %q", urlstr)
 	}
 }
 
@@ -324,16 +301,13 @@ func TestTitle(t *testing.T) {
 	defer cancel()
 
 	var title string
-	if err := Run(ctx,
-		WaitVisible(`#icon-brankas`, ByID), // for image.html
-		Title(&title),
-	); err != nil {
+	if err := Run(ctx, Title(&title)); err != nil {
 		t.Fatal(err)
 	}
 
 	exptitle := "this is title"
 	if title != exptitle {
-		t.Fatalf("expected title to be %s, got: %s", exptitle, title)
+		t.Fatalf("expected title to be %q, got %q", exptitle, title)
 	}
 }
 
