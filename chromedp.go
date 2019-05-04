@@ -215,7 +215,6 @@ func Run(ctx context.Context, actions ...Action) error {
 		if err := c.newTarget(ctx); err != nil {
 			return err
 		}
-		c.Target.listeners = append(c.Target.listeners, c.targetListeners...)
 	}
 	return Tasks(actions).Do(cdp.WithExecutor(ctx, c.Target))
 }
@@ -269,7 +268,9 @@ func (c *Context) attachTarget(ctx context.Context, targetID target.ID) error {
 		return err
 	}
 
-	c.Target = c.Browser.newExecutorForTarget(ctx, targetID, sessionID)
+	c.Target = c.Browser.newExecutorForTarget(targetID, sessionID)
+	c.Target.listeners = append(c.Target.listeners, c.targetListeners...)
+	go c.Target.run(ctx)
 
 	for _, action := range []Action{
 		// enable domains

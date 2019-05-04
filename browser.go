@@ -155,7 +155,7 @@ func forceIP(urlstr string) string {
 	return urlstr
 }
 
-func (b *Browser) newExecutorForTarget(ctx context.Context, targetID target.ID, sessionID target.SessionID) *Target {
+func (b *Browser) newExecutorForTarget(targetID target.ID, sessionID target.SessionID) *Target {
 	if targetID == "" {
 		panic("empty target ID")
 	}
@@ -176,7 +176,6 @@ func (b *Browser) newExecutorForTarget(ctx context.Context, targetID target.ID, 
 
 		tick: make(chan time.Time, 1),
 	}
-	go t.run(ctx)
 	// This send should be blocking, to ensure the tab is inserted into the
 	// map before any more target events are routed.
 	b.newTabQueue <- t
