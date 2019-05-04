@@ -1,9 +1,11 @@
 package chromedp
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/chromedp/cdproto/page"
+	"github.com/chromedp/cdproto/target"
 )
 
 func TestCloseDialog(t *testing.T) {
@@ -147,8 +149,37 @@ func TestCloseDialog(t *testing.T) {
 				Navigate(testdataDir+"/dialog.html"),
 				Click(test.sel, ByID, NodeVisible),
 			); err != nil {
-				t.Fatalf("got error on DialogText %v", err)
+				t.Fatal(err)
 			}
 		})
+	}
+}
+
+func TestClickNewTab(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "newtab.html")
+	defer cancel()
+	targetID := FromContext(ctx).Target.TargetID
+
+	ch := make(chan target.ID, 1)
+	ListenTarget(ctx, func(ev interface{}) {
+		if ev, ok := ev.(*target.EventTargetCreated); ok &&
+			ev.TargetInfo.OpenerID == targetID {
+			ch <- ev.TargetInfo.TargetID
+		}
+	})
+	if err := Run(ctx, Click("#new-tab", ByID)); err != nil {
+		t.Fatal(err)
+	}
+	blankCtx, cancel := NewContext(ctx, WithTargetID(<-ch))
+	defer cancel()
+
+	var urlstr string
+	if err := Run(blankCtx, Location(&urlstr)); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.HasSuffix(urlstr, "form.html") {
+		t.Errorf("want to be on form.html, at %q", urlstr)
 	}
 }

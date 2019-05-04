@@ -37,6 +37,10 @@ type Context struct {
 	// have its own unique Target pointing to a separate browser tab (page).
 	Target *Target
 
+	// targetID is set up by WithTargetID. If nil, Run will pick the only
+	// unused page target, or create a new one.
+	targetID target.ID
+
 	browserListeners []cancelableListener
 	targetListeners  []cancelableListener
 
@@ -208,7 +212,7 @@ func Run(ctx context.Context, actions ...Action) error {
 		c.Browser.listeners = append(c.Browser.listeners, c.browserListeners...)
 	}
 	if c.Target == nil {
-		if err := c.newSession(ctx); err != nil {
+		if err := c.newTarget(ctx); err != nil {
 			return err
 		}
 		c.Target.listeners = append(c.Target.listeners, c.targetListeners...)
@@ -216,9 +220,8 @@ func Run(ctx context.Context, actions ...Action) error {
 	return Tasks(actions).Do(cdp.WithExecutor(ctx, c.Target))
 }
 
-func (c *Context) newSession(ctx context.Context) error {
-	var targetID target.ID
-	if c.first {
+func (c *Context) newTarget(ctx context.Context) error {
+	if c.targetID == "" && c.first {
 		tries := 0
 	retry:
 		// If we just allocated this browser, and it has a single page
@@ -230,7 +233,7 @@ func (c *Context) newSession(ctx context.Context) error {
 		pages := 0
 		for _, info := range infos {
 			if info.Type == "page" && info.URL == "about:blank" && !info.Attached {
-				targetID = info.TargetID
+				c.targetID = info.TargetID
 				pages++
 			}
 		}
@@ -246,18 +249,21 @@ func (c *Context) newSession(ctx context.Context) error {
 		}
 		if pages > 1 {
 			// Multiple blank pages; just in case, don't use any.
-			targetID = ""
+			c.targetID = ""
 		}
 	}
 
-	if targetID == "" {
+	if c.targetID == "" {
 		var err error
-		targetID, err = target.CreateTarget("about:blank").Do(cdp.WithExecutor(ctx, c.Browser))
+		c.targetID, err = target.CreateTarget("about:blank").Do(cdp.WithExecutor(ctx, c.Browser))
 		if err != nil {
 			return err
 		}
 	}
+	return c.attachTarget(ctx, c.targetID)
+}
 
+func (c *Context) attachTarget(ctx context.Context, targetID target.ID) error {
 	sessionID, err := target.AttachToTarget(targetID).Do(cdp.WithExecutor(ctx, c.Browser))
 	if err != nil {
 		return err
@@ -265,17 +271,20 @@ func (c *Context) newSession(ctx context.Context) error {
 
 	c.Target = c.Browser.newExecutorForTarget(ctx, targetID, sessionID)
 
-	// enable domains
-	for _, enable := range []Action{
+	for _, action := range []Action{
+		// enable domains
 		log.Enable(),
 		runtime.Enable(),
 		inspector.Enable(),
 		page.Enable(),
 		dom.Enable(),
 		css.Enable(),
+
+		// receive events when targets appear or disappear
+		target.SetDiscoverTargets(true),
 	} {
-		if err := enable.Do(cdp.WithExecutor(ctx, c.Target)); err != nil {
-			return fmt.Errorf("unable to execute %T: %v", enable, err)
+		if err := action.Do(cdp.WithExecutor(ctx, c.Target)); err != nil {
+			return fmt.Errorf("unable to execute %T: %v", action, err)
 		}
 	}
 	return nil
@@ -283,6 +292,12 @@ func (c *Context) newSession(ctx context.Context) error {
 
 // ContextOption is a context option.
 type ContextOption func(*Context)
+
+// WithTargetID sets up a context to be attached to an existing target, instead
+// of creating a new one.
+func WithTargetID(id target.ID) ContextOption {
+	return func(c *Context) { c.targetID = id }
+}
 
 // WithLogf is a shortcut for WithBrowserOption(WithBrowserLogf(f)).
 func WithLogf(f func(string, ...interface{})) ContextOption {
