@@ -44,23 +44,21 @@ func init() {
 		panic(fmt.Sprintf("could not create temp directory: %v", err))
 	}
 
-	// build on top of the default options
+	// Build on top of the default options.
 	allocOpts = append(allocOpts, DefaultExecAllocatorOptions...)
 
-	// disabling the GPU helps portability with some systems like Travis,
-	// and can slightly speed up the tests on other systems
+	// Disabling the GPU helps portability with some systems like Travis,
+	// and can slightly speed up the tests on other systems.
 	allocOpts = append(allocOpts, DisableGPU)
 
-	// find the exec path once at startup
-	// it's worth noting that newer versions of chrome (64+) run much faster
-	// than older ones -- same for headless_shell ...
+	// Find the exec path once at startup.
 	execPath = os.Getenv("CHROMEDP_TEST_RUNNER")
 	if execPath == "" {
 		execPath = findExecPath()
 	}
 	allocOpts = append(allocOpts, ExecPath(execPath))
 
-	// not explicitly needed to be set, as this vastly speeds up unit tests
+	// Not explicitly needed to be set, as this speeds up the tests
 	if noSandbox := os.Getenv("CHROMEDP_NO_SANDBOX"); noSandbox != "false" {
 		allocOpts = append(allocOpts, NoSandbox)
 	}

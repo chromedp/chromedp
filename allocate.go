@@ -50,6 +50,30 @@ var DefaultExecAllocatorOptions = []ExecAllocatorOption{
 	NoFirstRun,
 	NoDefaultBrowserCheck,
 	Headless,
+
+	// After Puppeteer's default behavior.
+	Flag("disable-background-networking", true),
+	Flag("enable-features", "NetworkService,NetworkServiceInProcess"),
+	Flag("disable-background-timer-throttling", true),
+	Flag("disable-backgrounding-occluded-windows", true),
+	Flag("disable-breakpad", true),
+	Flag("disable-client-side-phishing-detection", true),
+	Flag("disable-default-apps", true),
+	Flag("disable-dev-shm-usage", true),
+	Flag("disable-extensions", true),
+	Flag("disable-features", "site-per-process,TranslateUI,BlinkGenPropertyTrees"),
+	Flag("disable-hang-monitor", true),
+	Flag("disable-ipc-flooding-protection", true),
+	Flag("disable-popup-blocking", true),
+	Flag("disable-prompt-on-repost", true),
+	Flag("disable-renderer-backgrounding", true),
+	Flag("disable-sync", true),
+	Flag("force-color-profile", "srgb"),
+	Flag("metrics-recording-only", true),
+	Flag("safebrowsing-disable-auto-update", true),
+	Flag("enable-automation", true),
+	Flag("password-store", "basic"),
+	Flag("use-mock-keychain", true),
 }
 
 // NewExecAllocator creates a new context set up with an ExecAllocator, suitable
@@ -325,9 +349,13 @@ func NoDefaultBrowserCheck(a *ExecAllocator) {
 	Flag("no-default-browser-check", true)(a)
 }
 
-// Headless is the command line option to run in headless mode.
+// Headless is the command line option to run in headless mode. On top of
+// setting the headless flag, it also hides scrollbars and mutes audio.
 func Headless(a *ExecAllocator) {
 	Flag("headless", true)(a)
+	// Like in Puppeteer.
+	Flag("hide-scrollbars", true)(a)
+	Flag("mute-audio", true)(a)
 }
 
 // DisableGPU is the command line option to disable the GPU process.
