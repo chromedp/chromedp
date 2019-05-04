@@ -220,7 +220,7 @@ func TestTargets(t *testing.T) {
 func TestCancelError(t *testing.T) {
 	t.Parallel()
 
-	ctx1, cancel1 := testAllocateSeparate(t)
+	ctx1, cancel1 := testAllocate(t, "")
 	defer cancel1()
 	if err := Run(ctx1); err != nil {
 		t.Fatal(err)
@@ -262,7 +262,7 @@ func TestPrematureCancel(t *testing.T) {
 func TestPrematureCancelTab(t *testing.T) {
 	t.Parallel()
 
-	ctx1, cancel := testAllocateSeparate(t)
+	ctx1, cancel := testAllocate(t, "")
 	defer cancel()
 	if err := Run(ctx1); err != nil {
 		t.Fatal(err)
@@ -312,21 +312,22 @@ func TestConcurrentCancel(t *testing.T) {
 func TestListenBrowser(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := testAllocateSeparate(t)
+	ctx, cancel := testAllocate(t, "")
 	defer cancel()
 
 	// Check that many ListenBrowser callbacks work, including adding
 	// callbacks after the browser has been allocated.
-	var attachedCount, totalCount int
+	var totalCount int
 	ListenBrowser(ctx, func(ev interface{}) {
 		totalCount++
 	})
 	if err := Run(ctx); err != nil {
 		t.Fatal(err)
 	}
+	seenSessions := make(map[target.SessionID]bool)
 	ListenBrowser(ctx, func(ev interface{}) {
-		if _, ok := ev.(*target.EventAttachedToTarget); ok {
-			attachedCount++
+		if ev, ok := ev.(*target.EventAttachedToTarget); ok {
+			seenSessions[ev.SessionID] = true
 		}
 	})
 
@@ -336,8 +337,8 @@ func TestListenBrowser(t *testing.T) {
 		t.Fatal(err)
 	}
 	cancel()
-	if want := 1; attachedCount != want {
-		t.Fatalf("want %d Target.attachedToTarget events; got %d", want, attachedCount)
+	if id := FromContext(newTabCtx).Target.SessionID; !seenSessions[id] {
+		t.Fatalf("did not see Target.attachedToTarget for %q", id)
 	}
 	if want := 1; totalCount < want {
 		t.Fatalf("want at least %d browser events; got %d", want, totalCount)

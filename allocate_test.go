@@ -11,8 +11,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	"github.com/chromedp/cdproto/target"
 )
 
 func TestExecAllocator(t *testing.T) {
@@ -162,50 +160,45 @@ func TestRemoteAllocator(t *testing.T) {
 	allocCtx, allocCancel := NewRemoteAllocator(context.Background(), wsURL)
 	defer allocCancel()
 
-	// We should be able to do the following steps repeatedly; do it twice
-	// to check for idempotency.
-	// 1) connect and create a target (tab)
-	// 2) run some actions
-	// 3) close the target and connection
-	var prev target.ID
-	for i := 0; i < 3; i++ {
-		taskCtx, taskCancel := NewContext(allocCtx)
-		defer taskCancel()
+	taskCtx, taskCancel := NewContext(allocCtx)
+	defer taskCancel()
+	want := "insert"
+	var got string
+	if err := Run(taskCtx,
+		Navigate(testdataDir+"/form.html"),
+		Text("#foo", &got, ByID),
+	); err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Fatalf("want %q, got %q", want, got)
+	}
+	targetID := FromContext(taskCtx).Target.TargetID
+	if err := Cancel(taskCtx); err != nil {
+		t.Fatal(err)
+	}
 
-		// Check that previous runs closed their tabs. Don't just count
-		// the number of targets, as perhaps the initial blank tab
-		// hasn't come up yet.
-		infos, err := Targets(taskCtx)
-		if err != nil {
-			t.Fatal(err)
-		}
-		for _, info := range infos {
-			if info.TargetID == prev {
-				t.Fatalf("target from previous iteration wasn't closed: %v", prev)
-			}
-		}
-
-		want := "insert"
-		var got string
-		if err := Run(taskCtx,
-			Navigate(testdataDir+"/form.html"),
-			Text("#foo", &got, ByID),
-		); err != nil {
-			t.Fatal(err)
-		}
-		if got != want {
-			t.Fatalf("want %q, got %q", want, got)
-		}
-		prev = FromContext(taskCtx).Target.TargetID
-		if err := Cancel(taskCtx); err != nil {
-			t.Fatal(err)
+	// Check that cancel closed the tabs. Don't just count the
+	// number of targets, as perhaps the initial blank tab hasn't
+	// come up yet.
+	targetsCtx, targetsCancel := NewContext(allocCtx)
+	defer targetsCancel()
+	infos, err := Targets(targetsCtx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, info := range infos {
+		if info.TargetID == targetID {
+			t.Fatalf("target from previous iteration wasn't closed: %v", targetID)
 		}
 	}
+	targetsCancel()
 
 	// Finally, if we kill the browser and the websocket connection drops,
 	// Run should error way before the 5s timeout.
-	ctx, cancel := NewContext(allocCtx)
-	defer cancel()
+	// TODO: a "defer cancel()" here adds a 1s timeout, since we try to
+	// close the target twice. Fix that.
+	ctx, _ := NewContext(allocCtx)
 	ctx, cancel = context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
