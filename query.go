@@ -1,17 +1,13 @@
 package chromedp
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
-	"image"
-	"image/png"
+	"math"
 	"strconv"
 	"strings"
 	"sync"
-
-	"github.com/disintegration/imaging"
 
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/css"
@@ -457,38 +453,25 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 			return ErrInvalidBoxModel
 		}
 
-		// scroll to node position
-		var pos []float64
-		err = EvaluateAsDevTools(fmt.Sprintf(scrollJS, int64(box.Margin[0]), int64(box.Margin[1])), &pos).Do(ctx)
-		if err != nil {
-			return err
-		}
-
 		// take page screenshot
-		buf, err := page.CaptureScreenshot().Do(ctx)
+		buf, err := page.CaptureScreenshot().
+			WithFormat(page.CaptureScreenshotFormatPng).
+			WithClip(&page.Viewport{
+				// Round the dimensions, as otherwise we might
+				// lose one pixel in either dimension.
+				X:      math.Round(box.Margin[0]),
+				Y:      math.Round(box.Margin[1]),
+				Width:  math.Round(box.Margin[4] - box.Margin[0]),
+				Height: math.Round(box.Margin[5] - box.Margin[1]),
+				// This seems to be necessary? Seems to do the
+				// right thing regardless of DPI.
+				Scale: 1.0,
+			}).Do(ctx)
 		if err != nil {
 			return err
 		}
 
-		// load image
-		img, err := png.Decode(bytes.NewReader(buf))
-		if err != nil {
-			return err
-		}
-
-		// crop to box model contents
-		cropped := imaging.Crop(img, image.Rect(
-			int(box.Margin[0]-pos[0]), int(box.Margin[1]-pos[1]),
-			int(box.Margin[4]-pos[0]), int(box.Margin[5]-pos[1]),
-		))
-
-		// encode
-		var croppedBuf bytes.Buffer
-		if err := png.Encode(&croppedBuf, cropped); err != nil {
-			return err
-		}
-
-		*picbuf = croppedBuf.Bytes()
+		*picbuf = buf
 		return nil
 	}, append(opts, NodeVisible)...)
 }

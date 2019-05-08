@@ -19,14 +19,6 @@ const (
 		return true;
 	})($x('%s'))`
 
-	// scrollJS is a javascript snippet that scrolls the window to the
-	// specified x, y coordinates and then returns the actual window x/y after
-	// execution.
-	scrollJS = `(function(x, y) {
-		window.scrollTo(x, y);
-		return [window.scrollX, window.scrollY];
-	})(%d, %d)`
-
 	// scrollIntoViewJS is a javascript snippet that scrolls the specified node
 	// into the window's viewport (if needed), returning the actual window x/y
 	// after execution.
