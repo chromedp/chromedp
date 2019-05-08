@@ -426,6 +426,9 @@ func TestDialTimeout(t *testing.T) {
 		}
 	})
 	t.Run("NoTimeoutSuccess", func(t *testing.T) {
+		if os.Getenv("CI") != "" {
+			t.Skip("localhost connections within Docker are unreliable on CI")
+		}
 		t.Parallel()
 		l, err := net.Listen("tcp", ":0")
 		if err != nil {
