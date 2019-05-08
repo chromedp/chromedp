@@ -176,11 +176,9 @@ func TestReload(t *testing.T) {
 	mux.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
 		fmt.Fprintf(res, `<html>
 <head>
-	<title>Title</title>
+	<title>Title %d</title>
 </head>
-<body>
-	<div id="count%d"></div>
-</body></html`, count)
+</html>`, count)
 		count++
 	})
 	s := httptest.NewServer(mux)
@@ -189,21 +187,20 @@ func TestReload(t *testing.T) {
 	ctx, cancel := testAllocate(t, "")
 	defer cancel()
 
-	var title, exptitle string
+	var firstTitle, secondTitle string
 	if err := Run(ctx,
 		Navigate(s.URL),
-		WaitReady(`#count0`, ByID),
-		Title(&exptitle),
-
+		Title(&firstTitle),
 		Reload(),
-		WaitReady(`#count1`, ByID),
-		Title(&title),
+		Title(&secondTitle),
 	); err != nil {
 		t.Fatal(err)
 	}
-
-	if title != exptitle {
-		t.Errorf("expected title to be %q, instead title is %q", exptitle, title)
+	if want := "Title 0"; firstTitle != want {
+		t.Errorf("expected first title to be %q, instead title is %q", want, firstTitle)
+	}
+	if want := "Title 1"; secondTitle != want {
+		t.Errorf("expected second title to be %q, instead title is %q", want, secondTitle)
 	}
 }
 

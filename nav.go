@@ -106,14 +106,21 @@ func NavigateForward() Action {
 	})
 }
 
+// Reload reloads the current page.
+func Reload() Action {
+	return ActionFunc(func(ctx context.Context) error {
+		frameID := FromContext(ctx).Target.cur.ID
+		if err := page.Reload().Do(ctx); err != nil {
+			return err
+		}
+		waitLoaded(ctx, frameID)
+		return nil
+	})
+}
+
 // Stop stops all navigation and pending resource retrieval.
 func Stop() Action {
 	return page.StopLoading()
-}
-
-// Reload reloads the current page.
-func Reload() Action {
-	return page.Reload()
 }
 
 // CaptureScreenshot captures takes a screenshot of the current viewport.
