@@ -184,6 +184,12 @@ func (t *Target) Execute(ctx context.Context, method string, params easyjson.Mar
 // root for the root frame.
 func (t *Target) documentUpdated(ctx context.Context) {
 	f := t.cur
+	if f == nil {
+		// TODO: This seems to happen on CI, when running the tests
+		// under the headless-shell Docker image. Figure out why.
+		t.errf("received DOM.documentUpdated when there's no top-level frame")
+		return
+	}
 	f.Lock()
 	defer f.Unlock()
 
