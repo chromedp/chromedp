@@ -108,7 +108,7 @@ func TestFocusBlur(t *testing.T) {
 		}
 
 		if value != "9999" {
-			t.Errorf("test %d expected value is '9999', got: '%s'", i, value)
+			t.Errorf("test %d expected value is '9999', got: %q", i, value)
 		}
 		if err := Run(ctx,
 			Blur(test.sel, test.by),
@@ -118,7 +118,7 @@ func TestFocusBlur(t *testing.T) {
 		}
 
 		if value != "0" {
-			t.Errorf("test %d expected value is '0', got: '%s'", i, value)
+			t.Errorf("test %d expected value is '0', got: %q", i, value)
 		}
 	}
 }
@@ -177,7 +177,7 @@ func TestText(t *testing.T) {
 		}
 
 		if text != test.exp {
-			t.Errorf("test %d expected `%s`, got: %s", i, test.exp, text)
+			t.Errorf("test %d expected %q, got: %s", i, test.exp, text)
 		}
 	}
 }
@@ -219,7 +219,7 @@ func TestClear(t *testing.T) {
 				t.Fatalf("got error: %v", err)
 			}
 			if val == "" {
-				t.Errorf("expected `%s` to have non empty value", test.sel)
+				t.Errorf("expected %q to have non empty value", test.sel)
 			}
 			if err := Run(ctx,
 				Clear(test.sel, test.by),
@@ -228,7 +228,7 @@ func TestClear(t *testing.T) {
 				t.Fatalf("got error: %v", err)
 			}
 			if val != "" {
-				t.Errorf("expected empty value for `%s`, got: %s", test.sel, val)
+				t.Errorf("expected empty value for %q, got: %s", test.sel, val)
 			}
 		})
 	}
@@ -267,7 +267,7 @@ func TestReset(t *testing.T) {
 			}
 
 			if value != test.exp {
-				t.Errorf("expected value after reset is %s, got: '%s'", test.exp, value)
+				t.Errorf("expected value after reset is %s, got: %q", test.exp, value)
 			}
 		})
 	}
@@ -664,7 +664,7 @@ func TestClick(t *testing.T) {
 			}
 
 			if title != "this is title" {
-				t.Errorf("expected title to be 'chromedp - Google Search', got: '%s'", title)
+				t.Errorf("expected title to be 'chromedp - Google Search', got: %q", title)
 			}
 		})
 	}
@@ -700,7 +700,7 @@ func TestDoubleClick(t *testing.T) {
 			}
 
 			if value != "1" {
-				t.Errorf("expected value to be '1', got: '%s'", value)
+				t.Errorf("expected value to be '1', got: %q", value)
 			}
 		})
 	}
@@ -866,7 +866,7 @@ func TestSubmit(t *testing.T) {
 			}
 
 			if title != "this is title" {
-				t.Errorf("expected title to be 'this is title', got: '%s'", title)
+				t.Errorf("expected title to be 'this is title', got: %q", title)
 			}
 		})
 	}

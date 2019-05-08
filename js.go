@@ -17,7 +17,7 @@ const (
 	blurJS = `(function(a) {
 		a[0].blur();
 		return true;
-	})($x('%s'))`
+	})($x(%q))`
 
 	// scrollIntoViewJS is a javascript snippet that scrolls the specified node
 	// into the window's viewport (if needed), returning the actual window x/y
@@ -25,7 +25,7 @@ const (
 	scrollIntoViewJS = `(function(a) {
 		a[0].scrollIntoViewIfNeeded(true);
 		return [window.scrollX, window.scrollY];
-	})($x('%s'))`
+	})($x(%q))`
 
 	// submitJS is a javascript snippet that will call the containing form's
 	// submit function, returning true or false if the call was successful.
@@ -38,7 +38,7 @@ const (
 			return true;
 		}
 		return false;
-	})($x('%s'))`
+	})($x(%q))`
 
 	// resetJS is a javascript snippet that will call the containing form's
 	// reset function, returning true or false if the call was successful.
@@ -51,23 +51,23 @@ const (
 			return true;
 		}
 		return false;
-	})($x('%s'))`
+	})($x(%q))`
 
 	// attributeJS is a javascript snippet that returns the attribute of a specified
 	// node.
 	attributeJS = `(function(a, n) {
 		return a[0][n];
-	})($x('%s'), '%s')`
+	})($x(%q), %q)`
 
 	// setAttributeJS is a javascript snippet that sets the value of the specified
 	// node, and returns the value.
 	setAttributeJS = `(function(a, n, v) {
 		return a[0][n] = v;
-	})($x('%s'), '%s', '%s')`
+	})($x(%q), %q, %q)`
 
 	// visibleJS is a javascript snippet that returns true or false depending
 	// on if the specified node's offsetParent is not null.
 	visibleJS = `(function(a) {
 		return a[0].offsetParent !== null;
-	})($x('%s'))`
+	})($x(%q))`
 )

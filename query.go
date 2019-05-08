@@ -49,7 +49,7 @@ func NodeIDs(sel interface{}, ids *[]cdp.NodeID, opts ...QueryOption) Action {
 func Focus(sel interface{}, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
-			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
 		return dom.Focus().WithNodeID(nodes[0].NodeID).Do(ctx)
@@ -60,7 +60,7 @@ func Focus(sel interface{}, opts ...QueryOption) Action {
 func Blur(sel interface{}, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
-			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
 		var res bool
@@ -85,7 +85,7 @@ func Dimensions(sel interface{}, model **dom.BoxModel, opts ...QueryOption) Acti
 	}
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
-			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 		var err error
 		*model, err = dom.GetBoxModel().WithNodeID(nodes[0].NodeID).Do(ctx)
@@ -101,7 +101,7 @@ func Text(sel interface{}, text *string, opts ...QueryOption) Action {
 
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
-			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
 		return EvaluateAsDevTools(fmt.Sprintf(textJS, nodes[0].FullXPath()), text).Do(ctx)
@@ -112,12 +112,12 @@ func Text(sel interface{}, text *string, opts ...QueryOption) Action {
 func Clear(sel interface{}, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
-			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
 		for _, n := range nodes {
 			if n.NodeType != cdp.NodeTypeElement || (n.NodeName != "INPUT" && n.NodeName != "TEXTAREA") {
-				return fmt.Errorf("selector `%s` matched node %d with name %s", sel, n.NodeID, strings.ToLower(n.NodeName))
+				return fmt.Errorf("selector %q matched node %d with name %s", sel, n.NodeID, strings.ToLower(n.NodeName))
 			}
 		}
 
@@ -188,7 +188,7 @@ func Attributes(sel interface{}, attributes *map[string]string, opts ...QueryOpt
 
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
-			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
 		nodes[0].RLock()
@@ -217,7 +217,7 @@ func AttributesAll(sel interface{}, attributes *[]map[string]string, opts ...Que
 
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
-			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
 		for _, node := range nodes {
@@ -293,7 +293,7 @@ func AttributeValue(sel interface{}, name string, value *string, ok *bool, opts 
 func SetAttributeValue(sel interface{}, name, value string, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
-			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
 		return dom.SetAttributeValue(nodes[0].NodeID, name, value).Do(ctx)
@@ -305,7 +305,7 @@ func SetAttributeValue(sel interface{}, name, value string, opts ...QueryOption)
 func RemoveAttribute(sel interface{}, name string, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
-			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
 		return dom.RemoveAttribute(nodes[0].NodeID, name).Do(ctx)
@@ -320,7 +320,7 @@ func JavascriptAttribute(sel interface{}, name string, res interface{}, opts ...
 	}
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
-			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
 		return EvaluateAsDevTools(fmt.Sprintf(attributeJS, nodes[0].FullXPath(), name), res).Do(ctx)
@@ -332,7 +332,7 @@ func JavascriptAttribute(sel interface{}, name string, res interface{}, opts ...
 func SetJavascriptAttribute(sel interface{}, name, value string, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
-			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
 		var res string
@@ -368,7 +368,7 @@ func InnerHTML(sel interface{}, html *string, opts ...QueryOption) Action {
 func Click(sel interface{}, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
-			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
 		return MouseClickNode(nodes[0]).Do(ctx)
@@ -380,7 +380,7 @@ func Click(sel interface{}, opts ...QueryOption) Action {
 func DoubleClick(sel interface{}, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
-			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
 		return MouseClickNode(nodes[0], ClickCount(2)).Do(ctx)
@@ -395,7 +395,7 @@ func DoubleClick(sel interface{}, opts ...QueryOption) Action {
 func SendKeys(sel interface{}, v string, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
-			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
 		n := nodes[0]
@@ -424,7 +424,7 @@ func SendKeys(sel interface{}, v string, opts ...QueryOption) Action {
 func SetUploadFiles(sel interface{}, files []string, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
-			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
 		return dom.SetFileInputFiles(files).WithNodeID(nodes[0].NodeID).Do(ctx)
@@ -439,7 +439,7 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
-			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
 		// get box model
@@ -447,13 +447,11 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 		if err != nil {
 			return err
 		}
-
-		// check box
 		if len(box.Margin) != 8 {
 			return ErrInvalidBoxModel
 		}
 
-		// take page screenshot
+		// take screenshot of the box
 		buf, err := page.CaptureScreenshot().
 			WithFormat(page.CaptureScreenshotFormatPng).
 			WithClip(&page.Viewport{
@@ -481,7 +479,7 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 func Submit(sel interface{}, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
-			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
 		var res bool
@@ -503,7 +501,7 @@ func Submit(sel interface{}, opts ...QueryOption) Action {
 func Reset(sel interface{}, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
-			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
 		var res bool
@@ -528,7 +526,7 @@ func ComputedStyle(sel interface{}, style *[]*css.ComputedProperty, opts ...Quer
 
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
-			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
 		computed, err := css.GetComputedStyleForNode(nodes[0].NodeID).Do(ctx)
@@ -551,7 +549,7 @@ func MatchedStyle(sel interface{}, style **css.GetMatchedStylesForNodeReturns, o
 
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
-			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
 		var err error
@@ -573,7 +571,7 @@ func MatchedStyle(sel interface{}, style **css.GetMatchedStylesForNodeReturns, o
 func ScrollIntoView(sel interface{}, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
-			return fmt.Errorf("selector `%s` did not return any nodes", sel)
+			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
 		var pos []int

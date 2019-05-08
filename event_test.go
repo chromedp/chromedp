@@ -122,10 +122,10 @@ func TestCloseDialog(t *testing.T) {
 				switch e := ev.(type) {
 				case *page.EventJavascriptDialogOpening:
 					if e.Type != test.dialogType {
-						t.Errorf("expected dialog type to be '%s', got: '%s'", test.dialogType, e.Type)
+						t.Errorf("expected dialog type to be %q, got: %q", test.dialogType, e.Type)
 					}
 					if e.Message != test.want {
-						t.Errorf("expected dialog message to be '%s', got: '%s'", test.want, e.Message)
+						t.Errorf("expected dialog message to be %q, got: %q", test.want, e.Message)
 					}
 
 					task := page.HandleJavaScriptDialog(test.accept)

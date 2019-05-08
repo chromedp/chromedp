@@ -15,7 +15,7 @@ import (
 const inViewportJS = `(function(a) {
 		var r = a[0].getBoundingClientRect();
 		return r.top >= 0 && r.left >= 0 && r.bottom <= window.innerHeight && r.right <= window.innerWidth;
-	})($x('%s'))`
+	})($x(%q))`
 
 func TestMouseClickXY(t *testing.T) {
 	t.Parallel()
