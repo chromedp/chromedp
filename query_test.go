@@ -764,9 +764,8 @@ func TestScreenshot(t *testing.T) {
 	}
 
 	// a smaller viewport speeds up this test
-	width, height := 650, 450
 	if err := Run(ctx, emulation.SetDeviceMetricsOverride(
-		int64(width), int64(height), 1.0, false,
+		600, 400, 1.0, false,
 	)); err != nil {
 		t.Fatal(err)
 	}
@@ -791,6 +790,35 @@ func TestScreenshot(t *testing.T) {
 			t.Fatalf("expected dimensions to be %d*%d, got %d*%d",
 				test.size, test.size, config.Width, config.Height)
 		}
+	}
+}
+
+func TestScreenshotHighDPI(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "image.html")
+	defer cancel()
+
+	// Use a weird screen dimension with a 1.5 scale factor, so that
+	// cropping the screenshot is forced to use floating point arithmetic
+	// and keep the high DPI in mind.
+	if err := Run(ctx, emulation.SetDeviceMetricsOverride(
+		605, 405, 1.5, false,
+	)); err != nil {
+		t.Fatal(err)
+	}
+
+	var buf []byte
+	if err := Run(ctx, Screenshot("#half-color", &buf, ByID)); err != nil {
+		t.Fatal(err)
+	}
+	config, _, err := image.DecodeConfig(bytes.NewReader(buf))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if config.Width != 200 || config.Height != 200 {
+		t.Fatalf("expected dimensions to be %d*%d, got %d*%d",
+			200, 200, config.Width, config.Height)
 	}
 }
 

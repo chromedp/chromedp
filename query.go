@@ -458,7 +458,7 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 		}
 
 		// scroll to node position
-		var pos []int
+		var pos []float64
 		err = EvaluateAsDevTools(fmt.Sprintf(scrollJS, int64(box.Margin[0]), int64(box.Margin[1])), &pos).Do(ctx)
 		if err != nil {
 			return err
@@ -478,8 +478,8 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 
 		// crop to box model contents
 		cropped := imaging.Crop(img, image.Rect(
-			int(box.Margin[0])-pos[0], int(box.Margin[1])-pos[1],
-			int(box.Margin[4])-pos[0], int(box.Margin[5])-pos[1],
+			int(box.Margin[0]-pos[0]), int(box.Margin[1]-pos[1]),
+			int(box.Margin[4]-pos[0]), int(box.Margin[5]-pos[1]),
 		))
 
 		// encode
@@ -489,7 +489,6 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 		}
 
 		*picbuf = croppedBuf.Bytes()
-
 		return nil
 	}, append(opts, NodeVisible)...)
 }
