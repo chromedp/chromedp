@@ -352,7 +352,9 @@ func (b *Browser) run(ctx context.Context) {
 			case event := <-tabEventQueue:
 				page, ok := pages[event.sessionID]
 				if !ok {
-					b.errf("unknown session ID %q", event.sessionID)
+					// Most likely, this is a page we
+					// recently closed, but is still sending
+					// events. Ignore it.
 					continue
 				}
 				page.eventQueue <- event.msg
