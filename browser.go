@@ -174,22 +174,25 @@ func (b *Browser) newExecutorForTarget(targetID target.ID, sessionID target.Sess
 	return t
 }
 
-func (b *Browser) Execute(ctx context.Context, method string, params easyjson.Marshaler, res easyjson.Unmarshaler) error {
-	paramsMsg := emptyObj
-	if params != nil {
-		var err error
-		if paramsMsg, err = easyjson.Marshal(params); err != nil {
-			return err
-		}
+func rawMarshal(v easyjson.Marshaler) easyjson.RawMessage {
+	if v == nil {
+		return nil
 	}
+	buf, err := easyjson.Marshal(v)
+	if err != nil {
+		panic(err)
+	}
+	return buf
+}
 
+func (b *Browser) Execute(ctx context.Context, method string, params easyjson.Marshaler, res easyjson.Unmarshaler) error {
 	id := atomic.AddInt64(&b.next, 1)
 	ch := make(chan *cdproto.Message, 1)
 	b.cmdQueue <- cmdJob{
 		msg: &cdproto.Message{
 			ID:     id,
 			Method: cdproto.MethodType(method),
-			Params: paramsMsg,
+			Params: rawMarshal(params),
 		},
 		resp: ch,
 	}

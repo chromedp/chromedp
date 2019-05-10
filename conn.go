@@ -48,9 +48,8 @@ func DialContext(ctx context.Context, urlstr string, opts ...DialOption) (*Conn,
 		return nil, err
 	}
 	if br != nil {
-		panic("br should not be nil")
+		panic("br should be nil")
 	}
-	// ws.PutReader(br)
 
 	// apply opts
 	c := &Conn{

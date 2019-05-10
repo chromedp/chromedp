@@ -130,18 +130,11 @@ func runListeners(list []cancelableListener, ev interface{}) []cancelableListene
 }
 
 func (t *Target) Execute(ctx context.Context, method string, params easyjson.Marshaler, res easyjson.Unmarshaler) error {
-	paramsMsg := emptyObj
-	if params != nil {
-		var err error
-		if paramsMsg, err = easyjson.Marshal(params); err != nil {
-			return err
-		}
-	}
 	innerID := atomic.AddInt64(&t.browser.next, 1)
 	msg := &cdproto.Message{
 		ID:     innerID,
 		Method: cdproto.MethodType(method),
-		Params: paramsMsg,
+		Params: rawMarshal(params),
 	}
 	msgJSON, err := easyjson.Marshal(msg)
 	if err != nil {
@@ -149,7 +142,6 @@ func (t *Target) Execute(ctx context.Context, method string, params easyjson.Mar
 	}
 	sendParams := target.SendMessageToTarget(string(msgJSON)).
 		WithSessionID(t.SessionID)
-	sendParamsJSON, _ := easyjson.Marshal(sendParams)
 
 	ch := make(chan *cdproto.Message, 1)
 	outerID := atomic.AddInt64(&t.browser.next, 1)
@@ -157,7 +149,7 @@ func (t *Target) Execute(ctx context.Context, method string, params easyjson.Mar
 		msg: &cdproto.Message{
 			ID:     outerID,
 			Method: target.CommandSendMessageToTarget,
-			Params: sendParamsJSON,
+			Params: rawMarshal(sendParams),
 		},
 		// We want to grab the response from the inner message.
 		resp:   ch,
@@ -211,9 +203,6 @@ func (t *Target) documentUpdated(ctx context.Context) {
 	f.Root.Invalidated = make(chan struct{})
 	walk(f.Nodes, f.Root)
 }
-
-// emptyObj is an empty JSON object message.
-var emptyObj = easyjson.RawMessage([]byte(`{}`))
 
 // pageEvent handles incoming page events.
 func (t *Target) pageEvent(ev interface{}) {
