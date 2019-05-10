@@ -17,6 +17,7 @@ import (
 	"github.com/chromedp/cdproto/target"
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
+	jwriter "github.com/mailru/easyjson/jwriter"
 )
 
 // Browser is the high-level Chrome DevTools Protocol browser manager, handling
@@ -222,20 +223,36 @@ type tabEvent struct {
 //easyjson:json
 type eventReceivedMessageFromTarget struct {
 	SessionID target.SessionID `json:"sessionId"`
-	Message   messageString    `json:"message"`
+	Message   decMessageString `json:"message"`
 }
 
-type messageString struct {
+type decMessageString struct {
 	lexer jlexer.Lexer // to avoid an alloc
-	M     cdproto.Message
+	m     cdproto.Message
 }
 
-func (m *messageString) UnmarshalEasyJSON(l *jlexer.Lexer) {
+func (m *decMessageString) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	if l.IsNull() {
 		l.Skip()
 	} else {
-		l.AddError(unmarshal(&m.lexer, l.UnsafeBytes(), &m.M))
+		l.AddError(unmarshal(&m.lexer, l.UnsafeBytes(), &m.m))
 	}
+}
+
+//easyjson:json
+type sendMessageToTargetParams struct {
+	Message   encMessageString `json:"message"`
+	SessionID target.SessionID `json:"sessionId,omitempty"`
+}
+
+type encMessageString struct {
+	Message cdproto.Message
+}
+
+func (m encMessageString) MarshalEasyJSON(w *jwriter.Writer) {
+	var w2 jwriter.Writer
+	m.Message.MarshalEasyJSON(&w2)
+	w.RawText(w2.BuildBytes(nil))
 }
 
 func (b *Browser) run(ctx context.Context) {
@@ -284,7 +301,7 @@ func (b *Browser) run(ctx context.Context) {
 					continue
 				}
 				sessionID = ev.SessionID
-				msg = &ev.Message.M
+				msg = &ev.Message.m
 			} else {
 				// We're passing along readMsg to another
 				// goroutine, so we must make a copy of it.

@@ -131,17 +131,14 @@ func runListeners(list []cancelableListener, ev interface{}) []cancelableListene
 
 func (t *Target) Execute(ctx context.Context, method string, params easyjson.Marshaler, res easyjson.Unmarshaler) error {
 	innerID := atomic.AddInt64(&t.browser.next, 1)
-	msg := &cdproto.Message{
-		ID:     innerID,
-		Method: cdproto.MethodType(method),
-		Params: rawMarshal(params),
+	sendParams := &sendMessageToTargetParams{
+		Message: encMessageString{Message: cdproto.Message{
+			ID:     innerID,
+			Method: cdproto.MethodType(method),
+			Params: rawMarshal(params),
+		}},
+		SessionID: t.SessionID,
 	}
-	msgJSON, err := easyjson.Marshal(msg)
-	if err != nil {
-		return err
-	}
-	sendParams := target.SendMessageToTarget(string(msgJSON)).
-		WithSessionID(t.SessionID)
 
 	ch := make(chan *cdproto.Message, 1)
 	outerID := atomic.AddInt64(&t.browser.next, 1)
