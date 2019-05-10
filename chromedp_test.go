@@ -446,7 +446,7 @@ func TestDialTimeout(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 		_, err = NewBrowser(ctx, url, WithDialTimeout(0))
-		got, want := fmt.Sprintf("%v", err), "unexpected EOF"
+		got, want := fmt.Sprintf("%v", err), "EOF"
 		if !strings.Contains(got, want) {
 			t.Fatalf("got %q, want %q", got, want)
 		}
