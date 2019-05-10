@@ -426,9 +426,6 @@ func TestDialTimeout(t *testing.T) {
 		}
 	})
 	t.Run("NoTimeoutSuccess", func(t *testing.T) {
-		if os.Getenv("CI") != "" {
-			t.Skip("localhost connections within Docker are unreliable on CI")
-		}
 		t.Parallel()
 		l, err := net.Listen("tcp", ":0")
 		if err != nil {
@@ -446,9 +443,9 @@ func TestDialTimeout(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 		_, err = NewBrowser(ctx, url, WithDialTimeout(0))
-		got, want := fmt.Sprintf("%v", err), "EOF"
-		if !strings.Contains(got, want) {
-			t.Fatalf("got %q, want %q", got, want)
+		got := fmt.Sprintf("%v", err)
+		if !strings.Contains(got, "EOF") && !strings.Contains(got, "connection reset") {
+			t.Fatalf("got %q, want %q or %q", got, "EOF", "connection reset")
 		}
 	})
 }
