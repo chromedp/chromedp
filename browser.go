@@ -342,67 +342,16 @@ func (b *Browser) run(ctx context.Context) {
 		}
 	}()
 
-	// This goroutine handles tabs, as well as routing events to each tab
-	// via the pages map.
-	go func() {
-		ticker := time.NewTicker(2 * time.Millisecond)
-		defer ticker.Stop()
-
-		// This map is only safe for use within this goroutine, so don't
-		// declare it as a Browser field.
-		pages := make(map[target.SessionID]*Target, 32)
-		for {
-			select {
-			case <-ctx.Done():
-				return
-			case t := <-b.newTabQueue:
-				if _, ok := pages[t.SessionID]; ok {
-					b.errf("executor for %q already exists", t.SessionID)
-				}
-				pages[t.SessionID] = t
-
-			case event := <-tabEventQueue:
-				page, ok := pages[event.sessionID]
-				if !ok {
-					// Most likely, this is a page we
-					// recently closed, but is still sending
-					// events. Ignore it.
-					continue
-				}
-				page.eventQueue <- event.msg
-
-			case sessionID := <-b.delTabQueue:
-				if _, ok := pages[sessionID]; !ok {
-					b.errf("executor for %q doesn't exist", sessionID)
-				}
-				delete(pages, sessionID)
-
-			case t := <-ticker.C:
-				// Roughly once every 2ms, give every target a
-				// chance to run periodic work like checking if
-				// a wait function is complete.
-				//
-				// If a target hasn't picked up the previous
-				// tick, skip it.
-				for _, target := range pages {
-					select {
-					case target.tick <- t:
-					default:
-					}
-				}
-
-			}
-		}
-	}()
-
+	pages := make(map[target.SessionID]*Target, 32)
 	respByID := make(map[int64]chan *cdproto.Message)
 
-	// This goroutine handles sending commands to the browser, and sending
-	// responses back for each of these commands via respByID.
+	ticker := time.NewTicker(2 * time.Millisecond)
+	defer ticker.Stop()
 	for {
 		select {
 		case <-ctx.Done():
 			return
+
 		case res := <-resQueue:
 			resp, ok := respByID[res.ID]
 			if !ok {
@@ -432,6 +381,42 @@ func (b *Browser) run(ctx context.Context) {
 			if err := b.conn.Write(ctx, q.msg); err != nil {
 				b.errf("%s", err)
 				continue
+			}
+
+		case t := <-b.newTabQueue:
+			if _, ok := pages[t.SessionID]; ok {
+				b.errf("executor for %q already exists", t.SessionID)
+			}
+			pages[t.SessionID] = t
+
+		case event := <-tabEventQueue:
+			page, ok := pages[event.sessionID]
+			if !ok {
+				// Most likely, this is a page we
+				// recently closed, but is still sending
+				// events. Ignore it.
+				continue
+			}
+			page.eventQueue <- event.msg
+
+		case sessionID := <-b.delTabQueue:
+			if _, ok := pages[sessionID]; !ok {
+				b.errf("executor for %q doesn't exist", sessionID)
+			}
+			delete(pages, sessionID)
+
+		case t := <-ticker.C:
+			// Roughly once every 2ms, give every target a
+			// chance to run periodic work like checking if
+			// a wait function is complete.
+			//
+			// If a target hasn't picked up the previous
+			// tick, skip it.
+			for _, target := range pages {
+				select {
+				case target.tick <- t:
+				default:
+				}
 			}
 
 		case <-b.LostConnection:
