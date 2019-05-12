@@ -63,9 +63,6 @@ type Browser struct {
 	userDataDir string
 }
 
-// TODO: move Transport to the same file as its default implementation once we
-// settle on one websocket library.
-
 type cmdJob struct {
 	// msg is the message being sent.
 	msg *cdproto.Message
@@ -208,7 +205,7 @@ func (b *Browser) Execute(ctx context.Context, method string, params easyjson.Ma
 	return nil
 }
 
-type tabEvent struct {
+type tabMessage struct {
 	sessionID target.SessionID
 	msg       *cdproto.Message
 }
@@ -253,9 +250,9 @@ func (m encMessageString) MarshalEasyJSON(w *jwriter.Writer) {
 func (b *Browser) run(ctx context.Context) {
 	defer b.conn.Close()
 
-	// tabEventQueue is the queue of incoming target events, to be routed by
+	// tabMessageQueue is the queue of incoming target events, to be routed by
 	// their session ID.
-	tabEventQueue := make(chan tabEvent, 1)
+	tabMessageQueue := make(chan tabMessage, 1)
 
 	// resQueue is the incoming command result queue.
 	resQueue := make(chan *cdproto.Message, 1)
@@ -316,14 +313,11 @@ func (b *Browser) run(ctx context.Context) {
 					b.listenersMu.Unlock()
 					// TODO: are other browser events useful?
 					if ev, ok := ev.(*target.EventDetachedFromTarget); ok {
-						tabEventQueue <- tabEvent{
-							sessionID: ev.SessionID,
-							msg:       msg,
-						}
+						tabMessageQueue <- tabMessage{ev.SessionID, msg}
 					}
 					continue
 				}
-				tabEventQueue <- tabEvent{
+				tabMessageQueue <- tabMessage{
 					sessionID: sessionID,
 					msg:       msg,
 				}
@@ -384,20 +378,20 @@ func (b *Browser) run(ctx context.Context) {
 			}
 			pages[t.SessionID] = t
 
-		case event := <-tabEventQueue:
-			page, ok := pages[event.sessionID]
+		case tm := <-tabMessageQueue:
+			page, ok := pages[tm.sessionID]
 			if !ok {
 				// Most likely, this is a page we recently
 				// closed, but is still sending events. Ignore
 				// it.
 				continue
 			}
-			page.eventQueue <- event.msg
-			if event.msg.Method == cdproto.EventTargetDetachedFromTarget {
-				if _, ok := pages[event.sessionID]; !ok {
-					b.errf("executor for %q doesn't exist", event.sessionID)
+			page.eventQueue <- tm.msg
+			if tm.msg.Method == cdproto.EventTargetDetachedFromTarget {
+				if _, ok := pages[tm.sessionID]; !ok {
+					b.errf("executor for %q doesn't exist", tm.sessionID)
 				}
-				delete(pages, event.sessionID)
+				delete(pages, tm.sessionID)
 				break
 			}
 

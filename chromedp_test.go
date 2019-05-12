@@ -10,6 +10,7 @@ import (
 	"path"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -315,9 +316,10 @@ func TestListenBrowser(t *testing.T) {
 
 	// Check that many ListenBrowser callbacks work, including adding
 	// callbacks after the browser has been allocated.
-	var totalCount int
+	var totalCount int32
 	ListenBrowser(ctx, func(ev interface{}) {
-		totalCount++
+		// using sync/atomic, as the browser is shared.
+		atomic.AddInt32(&totalCount, 1)
 	})
 	if err := Run(ctx); err != nil {
 		t.Fatal(err)
@@ -338,8 +340,8 @@ func TestListenBrowser(t *testing.T) {
 	if id := FromContext(newTabCtx).Target.SessionID; !seenSessions[id] {
 		t.Fatalf("did not see Target.attachedToTarget for %q", id)
 	}
-	if want := 1; totalCount < want {
-		t.Fatalf("want at least %d browser events; got %d", want, totalCount)
+	if want, got := int32(1), atomic.LoadInt32(&totalCount); got < want {
+		t.Fatalf("want at least %d browser events; got %d", want, got)
 	}
 }
 
