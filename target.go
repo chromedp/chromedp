@@ -91,7 +91,10 @@ func (t *Target) run(ctx context.Context) {
 				t.listenersMu.Lock()
 				t.listeners = runListeners(t.listeners, ev)
 				t.listenersMu.Unlock()
-				syncEventQueue <- eventValue{msg.Method, ev}
+				switch msg.Method.Domain() {
+				case "Page", "DOM":
+					syncEventQueue <- eventValue{msg.Method, ev}
+				}
 			}
 		}
 	}()

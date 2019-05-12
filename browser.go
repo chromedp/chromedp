@@ -381,9 +381,7 @@ func (b *Browser) run(ctx context.Context) {
 		case tm := <-tabMessageQueue:
 			page, ok := pages[tm.sessionID]
 			if !ok {
-				// Most likely, this is a page we recently
-				// closed, but is still sending events. Ignore
-				// it.
+				// A page we recently closed still sending events.
 				continue
 			}
 			page.eventQueue <- tm.msg
@@ -392,7 +390,6 @@ func (b *Browser) run(ctx context.Context) {
 					b.errf("executor for %q doesn't exist", tm.sessionID)
 				}
 				delete(pages, tm.sessionID)
-				break
 			}
 
 		case t := <-ticker.C:
