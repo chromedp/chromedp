@@ -403,9 +403,9 @@ type cancelableListener struct {
 // is received on the chromedp context. Cancelling ctx stops the listener from
 // receiving any more events.
 //
-// Note that the function is called synchronously when handling events. It can
-// run Actions under some circumstances, but the function should avoid blocking
-// whenever possible.
+// Note that the function is called synchronously when handling events. The
+// function should avoid blocking at all costs. For example, any Actions must be
+// run via a separate goroutine.
 func ListenBrowser(ctx context.Context, fn func(ev interface{})) {
 	c := FromContext(ctx)
 	if c == nil {
@@ -426,9 +426,9 @@ func ListenBrowser(ctx context.Context, fn func(ev interface{})) {
 // events; command responses and target events are not included. Cancelling ctx
 // stops the listener from receiving any more events.
 //
-// Note that the function is called synchronously when handling events. It can
-// run Actions under some circumstances, but the function should avoid blocking
-// whenever possible.
+// Note that the function is called synchronously when handling events. The
+// function should avoid blocking at all costs. For example, any Actions must be
+// run via a separate goroutine.
 func ListenTarget(ctx context.Context, fn func(ev interface{})) {
 	c := FromContext(ctx)
 	if c == nil {

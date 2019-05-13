@@ -131,7 +131,7 @@ func runListeners(list []cancelableListener, ev interface{}) []cancelableListene
 			list = append(list[:i], list[i+1:]...)
 			continue
 		default:
-			go listener.fn(ev)
+			listener.fn(ev)
 			i++
 		}
 	}
