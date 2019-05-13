@@ -162,12 +162,11 @@ func TestClickNewTab(t *testing.T) {
 
 	ctx, cancel := testAllocate(t, "newtab.html")
 	defer cancel()
-	targetID := FromContext(ctx).Target.TargetID
 
 	ch := make(chan target.ID, 1)
 	ListenTarget(ctx, func(ev interface{}) {
 		if ev, ok := ev.(*target.EventTargetCreated); ok &&
-			ev.TargetInfo.OpenerID == targetID {
+			ev.TargetInfo.OpenerID != "" {
 			ch <- ev.TargetInfo.TargetID
 		}
 	})

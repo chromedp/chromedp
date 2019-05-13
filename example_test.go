@@ -13,12 +13,15 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/chromedp/cdproto/page"
 	cdpruntime "github.com/chromedp/cdproto/runtime"
+	"github.com/chromedp/cdproto/target"
 	"github.com/chromedp/chromedp"
 )
 
 func writeHTML(content string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
 		io.WriteString(w, strings.TrimSpace(content))
 	})
 }
@@ -28,14 +31,12 @@ func ExampleTitle() {
 	defer cancel()
 
 	ts := httptest.NewServer(writeHTML(`
-<html>
 <head>
 	<title>fancy website title</title>
 </head>
 <body>
 	<div id="content"></div>
 </body>
-</html>
 	`))
 	defer ts.Close()
 
@@ -125,7 +126,6 @@ func ExampleListenTarget_consoleLog() {
 	defer cancel()
 
 	ts := httptest.NewServer(writeHTML(`
-<html>
 <body>
 <script>
 	console.log("hello js world")
@@ -134,7 +134,6 @@ func ExampleListenTarget_consoleLog() {
 	document.body.appendChild(p);
 </script>
 </body>
-</html>
 	`))
 	defer ts.Close()
 
@@ -158,4 +157,80 @@ func ExampleListenTarget_consoleLog() {
 	// Output:
 	// console.log call:
 	// string - "hello js world"
+}
+
+func ExampleClickNewTab() {
+	ctx, cancel := chromedp.NewContext(context.Background())
+	defer cancel()
+
+	mux := http.NewServeMux()
+	mux.Handle("/first", writeHTML(`
+<input id='newtab' type='button' value='open' onclick='window.open("/second", "_blank");'/>
+	`))
+	mux.Handle("/second", writeHTML(``))
+	ts := httptest.NewServer(mux)
+	defer ts.Close()
+
+	lctx, cancel := context.WithCancel(ctx)
+	ch := make(chan target.ID, 1)
+	chromedp.ListenTarget(lctx, func(ev interface{}) {
+		if ev, ok := ev.(*target.EventTargetCreated); ok &&
+			// if OpenerID == "", this is the first tab.
+			ev.TargetInfo.OpenerID != "" {
+			ch <- ev.TargetInfo.TargetID
+			cancel()
+		}
+	})
+	if err := chromedp.Run(ctx,
+		chromedp.Navigate(ts.URL+"/first"),
+		chromedp.Click("#newtab", chromedp.ByID),
+	); err != nil {
+		panic(err)
+	}
+	newCtx, cancel := chromedp.NewContext(ctx, chromedp.WithTargetID(<-ch))
+	defer cancel()
+
+	var urlstr string
+	if err := chromedp.Run(newCtx, chromedp.Location(&urlstr)); err != nil {
+		panic(err)
+	}
+	fmt.Println("new tab's path:", strings.TrimPrefix(urlstr, ts.URL))
+
+	// Output:
+	// new tab's path: /second
+}
+
+func ExampleAcceptAlert() {
+	ctx, cancel := chromedp.NewContext(context.Background())
+	defer cancel()
+
+	mux := http.NewServeMux()
+	mux.Handle("/second", writeHTML(``))
+	ts := httptest.NewServer(writeHTML(`
+<input id='alert' type='button' value='alert' onclick='alert("alert text");'/>
+	`))
+	defer ts.Close()
+
+	chromedp.ListenTarget(ctx, func(ev interface{}) {
+		if ev, ok := ev.(*page.EventJavascriptDialogOpening); ok {
+			fmt.Println("closing alert:", ev.Message)
+			go func() {
+				if err := chromedp.Run(ctx,
+					page.HandleJavaScriptDialog(true),
+				); err != nil {
+					panic(err)
+				}
+			}()
+		}
+	})
+
+	if err := chromedp.Run(ctx,
+		chromedp.Navigate(ts.URL),
+		chromedp.Click("#alert", chromedp.ByID),
+	); err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// closing alert: alert text
 }
