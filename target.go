@@ -24,8 +24,8 @@ type Target struct {
 	listenersMu sync.Mutex
 	listeners   []cancelableListener
 
-	waitQueue  chan func() bool
-	eventQueue chan *cdproto.Message
+	waitQueue    chan func() bool
+	messageQueue chan *cdproto.Message
 
 	// frames is the set of encountered frames.
 	frames map[cdp.FrameID]*cdp.Frame
@@ -76,7 +76,13 @@ func (t *Target) run(ctx context.Context) {
 			select {
 			case <-ctx.Done():
 				return
-			case msg := <-t.eventQueue:
+			case msg := <-t.messageQueue:
+				if msg.ID != 0 {
+					t.listenersMu.Lock()
+					t.listeners = runListeners(t.listeners, msg)
+					t.listenersMu.Unlock()
+					continue
+				}
 				ev, err := cdproto.UnmarshalMessage(msg)
 				if err != nil {
 					if _, ok := err.(cdp.ErrUnknownCommandOrEvent); ok {
@@ -125,7 +131,7 @@ func runListeners(list []cancelableListener, ev interface{}) []cancelableListene
 			list = append(list[:i], list[i+1:]...)
 			continue
 		default:
-			listener.fn(ev)
+			go listener.fn(ev)
 			i++
 		}
 	}
@@ -133,29 +139,32 @@ func runListeners(list []cancelableListener, ev interface{}) []cancelableListene
 }
 
 func (t *Target) Execute(ctx context.Context, method string, params easyjson.Marshaler, res easyjson.Unmarshaler) error {
-	innerID := atomic.AddInt64(&t.browser.next, 1)
+	id := atomic.AddInt64(&t.browser.next, 1)
+	lctx, cancel := context.WithCancel(ctx)
+	ch := make(chan *cdproto.Message, 1)
+	fn := func(ev interface{}) {
+		if msg, ok := ev.(*cdproto.Message); ok && msg.ID == id {
+			ch <- msg
+			cancel()
+		}
+	}
+	t.listenersMu.Lock()
+	t.listeners = append(t.listeners, cancelableListener{lctx, fn})
+	t.listenersMu.Unlock()
+
 	sendParams := &sendMessageToTargetParams{
 		Message: encMessageString{Message: cdproto.Message{
-			ID:     innerID,
+			ID:     id,
 			Method: cdproto.MethodType(method),
 			Params: rawMarshal(params),
 		}},
 		SessionID: t.SessionID,
 	}
-
-	ch := make(chan *cdproto.Message, 1)
-	outerID := atomic.AddInt64(&t.browser.next, 1)
-	t.browser.cmdQueue <- cmdJob{
-		msg: &cdproto.Message{
-			ID:     outerID,
-			Method: target.CommandSendMessageToTarget,
-			Params: rawMarshal(sendParams),
-		},
-		// We want to grab the response from the inner message.
-		resp:   ch,
-		respID: innerID,
+	t.browser.cmdQueue <- &cdproto.Message{
+		ID:     atomic.AddInt64(&t.browser.next, 1),
+		Method: target.CommandSendMessageToTarget,
+		Params: rawMarshal(sendParams),
 	}
-
 	select {
 	case <-ctx.Done():
 		return ctx.Err()

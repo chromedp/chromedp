@@ -45,7 +45,7 @@ type Browser struct {
 	newTabQueue chan *Target
 
 	// cmdQueue is the outgoing command queue.
-	cmdQueue chan cmdJob
+	cmdQueue chan *cdproto.Message
 
 	// logging funcs
 	logf func(string, ...interface{})
@@ -63,19 +63,6 @@ type Browser struct {
 	userDataDir string
 }
 
-type cmdJob struct {
-	// msg is the message being sent.
-	msg *cdproto.Message
-
-	// resp is the channel to send the response to; must be non-nil.
-	resp chan *cdproto.Message
-
-	// respID is the ID to receive a response in resp for. If zero, msg.ID
-	// is used. If non-zero and different than msg.ID, msg.ID's response is
-	// discarded.
-	respID int64
-}
-
 // NewBrowser creates a new browser. Typically, this function wouldn't be called
 // directly, as the Allocator interface takes care of it.
 func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Browser, error) {
@@ -86,9 +73,8 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 
 		newTabQueue: make(chan *Target),
 
-		// Fit some jobs without blocking, to reduce blocking in
-		// Execute.
-		cmdQueue: make(chan cmdJob, 32),
+		// Fit some jobs without blocking, to reduce blocking in Execute.
+		cmdQueue: make(chan *cdproto.Message, 32),
 
 		logf: log.Printf,
 	}
@@ -152,9 +138,9 @@ func (b *Browser) newExecutorForTarget(targetID target.ID, sessionID target.Sess
 		TargetID:  targetID,
 		SessionID: sessionID,
 
-		eventQueue: make(chan *cdproto.Message, 1024),
-		waitQueue:  make(chan func() bool, 1024),
-		frames:     make(map[cdp.FrameID]*cdp.Frame),
+		messageQueue: make(chan *cdproto.Message, 1024),
+		waitQueue:    make(chan func() bool, 1024),
+		frames:       make(map[cdp.FrameID]*cdp.Frame),
 
 		logf: b.logf,
 		errf: b.errf,
@@ -180,14 +166,22 @@ func rawMarshal(v easyjson.Marshaler) easyjson.RawMessage {
 
 func (b *Browser) Execute(ctx context.Context, method string, params easyjson.Marshaler, res easyjson.Unmarshaler) error {
 	id := atomic.AddInt64(&b.next, 1)
+	lctx, cancel := context.WithCancel(ctx)
 	ch := make(chan *cdproto.Message, 1)
-	b.cmdQueue <- cmdJob{
-		msg: &cdproto.Message{
-			ID:     id,
-			Method: cdproto.MethodType(method),
-			Params: rawMarshal(params),
-		},
-		resp: ch,
+	fn := func(ev interface{}) {
+		if msg, ok := ev.(*cdproto.Message); ok && msg.ID == id {
+			ch <- msg
+			cancel()
+		}
+	}
+	b.listenersMu.Lock()
+	b.listeners = append(b.listeners, cancelableListener{lctx, fn})
+	b.listenersMu.Unlock()
+
+	b.cmdQueue <- &cdproto.Message{
+		ID:     id,
+		Method: cdproto.MethodType(method),
+		Params: rawMarshal(params),
 	}
 	select {
 	case <-ctx.Done():
@@ -254,9 +248,6 @@ func (b *Browser) run(ctx context.Context) {
 	// their session ID.
 	tabMessageQueue := make(chan tabMessage, 1)
 
-	// resQueue is the incoming command result queue.
-	resQueue := make(chan *cdproto.Message, 1)
-
 	// This goroutine continuously reads events from the websocket
 	// connection. The separate goroutine is needed since a websocket read
 	// is blocking, so it cannot be used in a select statement.
@@ -322,9 +313,14 @@ func (b *Browser) run(ctx context.Context) {
 					msg:       msg,
 				}
 			case msg.ID != 0:
-				// We can't process the response here, as it's
-				// another goroutine that maintans respByID.
-				resQueue <- msg
+				if sessionID == "" {
+					b.listenersMu.Lock()
+					b.listeners = runListeners(b.listeners, msg)
+					b.listenersMu.Unlock()
+					continue
+				}
+				tabMessageQueue <- tabMessage{sessionID, msg}
+
 			default:
 				b.errf("ignoring malformed incoming message (missing id or method): %#v", msg)
 			}
@@ -332,7 +328,6 @@ func (b *Browser) run(ctx context.Context) {
 	}()
 
 	pages := make(map[target.SessionID]*Target, 32)
-	respByID := make(map[int64]chan *cdproto.Message)
 
 	ticker := time.NewTicker(2 * time.Millisecond)
 	defer ticker.Stop()
@@ -341,33 +336,8 @@ func (b *Browser) run(ctx context.Context) {
 		case <-ctx.Done():
 			return
 
-		case res := <-resQueue:
-			resp, ok := respByID[res.ID]
-			if !ok {
-				b.errf("id %d not present in response map", res.ID)
-				continue
-			}
-			if resp != nil {
-				// resp could be nil, if we're not interested in
-				// this response; for CommandSendMessageToTarget.
-				resp <- res
-				close(resp)
-			}
-			delete(respByID, res.ID)
-
-		case q := <-b.cmdQueue:
-			if _, ok := respByID[q.msg.ID]; ok {
-				b.errf("id %d already present in response map", q.msg.ID)
-				continue
-			}
-			if q.respID > 0 {
-				respByID[q.msg.ID] = nil // discard this response
-				respByID[q.respID] = q.resp
-			} else {
-				respByID[q.msg.ID] = q.resp
-			}
-
-			if err := b.conn.Write(ctx, q.msg); err != nil {
+		case msg := <-b.cmdQueue:
+			if err := b.conn.Write(ctx, msg); err != nil {
 				b.errf("%s", err)
 				continue
 			}
@@ -384,7 +354,7 @@ func (b *Browser) run(ctx context.Context) {
 				// A page we recently closed still sending events.
 				continue
 			}
-			page.eventQueue <- tm.msg
+			page.messageQueue <- tm.msg
 			if tm.msg.Method == cdproto.EventTargetDetachedFromTarget {
 				if _, ok := pages[tm.sessionID]; !ok {
 					b.errf("executor for %q doesn't exist", tm.sessionID)
