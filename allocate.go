@@ -100,6 +100,12 @@ type ExecAllocator struct {
 	initFlags map[string]interface{}
 
 	wg sync.WaitGroup
+
+	stdout io.ReadCloser
+	stderr io.ReadCloser
+
+	stdoutWriter io.Writer
+	stderrWriter io.Writer
 }
 
 // allocTempDir is used to group all ExecAllocator temporary user data dirs in
@@ -164,11 +170,24 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 
 	// We must start the cmd before calling cmd.Wait, as otherwise the two
 	// can run into a data race.
-	stderr, err := cmd.StderrPipe()
+	var err error
+
+	a.stdout, err = cmd.StdoutPipe()
 	if err != nil {
 		return nil, err
 	}
-	defer stderr.Close()
+	if a.stdoutWriter == nil {
+		defer a.stdout.Close()
+	}
+
+	a.stderr, err = cmd.StderrPipe()
+	if err != nil {
+		return nil, err
+	}
+	if a.stderrWriter == nil {
+		defer a.stderr.Close()
+	}
+
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
@@ -195,9 +214,23 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		a.wg.Done()
 		close(c.allocated)
 	}()
-	wsURL, err := addrFromStderr(stderr)
+	wsURL, err := addrFromStderr(a.stderr)
 	if err != nil {
 		return nil, err
+	}
+
+	if a.stdoutWriter != nil {
+		go func() {
+			io.Copy(a.stdoutWriter, a.stdout) // Blocks until stderr is closed
+			// Ignore error here because if it fails, we just want to silently
+			// continue and avoid disrupting anything
+		}()
+	}
+
+	if a.stderrWriter != nil {
+		go func() {
+			io.Copy(a.stderrWriter, a.stderr) // Blocks until stderr is closed
+		}()
 	}
 
 	browser, err := NewBrowser(ctx, wsURL, opts...)
@@ -219,7 +252,6 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 // protocol. This should be hooked up to a new Chrome process's Stderr pipe
 // right after it is started.
 func addrFromStderr(rc io.ReadCloser) (string, error) {
-	defer rc.Close()
 	url := ""
 	scanner := bufio.NewScanner(rc)
 	prefix := "DevTools listening on"
@@ -361,6 +393,22 @@ func Headless(a *ExecAllocator) {
 // DisableGPU is the command line option to disable the GPU process.
 func DisableGPU(a *ExecAllocator) {
 	Flag("disable-gpu", true)(a)
+}
+
+// StdoutWriter is used to set an io.Writer where stdout from the browser
+// will be sent
+func StdoutWriter(writer io.Writer) ExecAllocatorOption {
+	return func(a *ExecAllocator) {
+		a.stdoutWriter = writer
+	}
+}
+
+// StderrWriter is used to set an io.Writer where stderr from the browser
+// will be sent
+func StderrWriter(writer io.Writer) ExecAllocatorOption {
+	return func(a *ExecAllocator) {
+		a.stderrWriter = writer
+	}
 }
 
 // NewRemoteAllocator creates a new context set up with a RemoteAllocator,
