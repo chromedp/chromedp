@@ -101,9 +101,6 @@ type ExecAllocator struct {
 
 	wg sync.WaitGroup
 
-	stdout io.ReadCloser
-	stderr io.ReadCloser
-
 	stdoutWriter io.Writer
 	stderrWriter io.Writer
 }
@@ -172,20 +169,14 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	// can run into a data race.
 	var err error
 
-	a.stdout, err = cmd.StdoutPipe()
+	stdout, err := cmd.StdoutPipe()
 	if err != nil {
 		return nil, err
-	}
-	if a.stdoutWriter == nil {
-		defer a.stdout.Close()
 	}
 
-	a.stderr, err = cmd.StderrPipe()
+	stderr, err := cmd.StderrPipe()
 	if err != nil {
 		return nil, err
-	}
-	if a.stderrWriter == nil {
-		defer a.stderr.Close()
 	}
 
 	if err := cmd.Start(); err != nil {
@@ -214,23 +205,23 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		a.wg.Done()
 		close(c.allocated)
 	}()
-	wsURL, err := addrFromStderr(a.stderr)
+	wsURL, err := addrFromStderr(stderr)
 	if err != nil {
 		return nil, err
 	}
 
 	if a.stdoutWriter != nil {
-		go func() {
-			io.Copy(a.stdoutWriter, a.stdout) // Blocks until stderr is closed
+		go io.Copy(a.stdoutWriter, stdout) // Blocks until stderr is closed
 			// Ignore error here because if it fails, we just want to silently
 			// continue and avoid disrupting anything
-		}()
+	} else {
+		stdout.Close()
 	}
 
 	if a.stderrWriter != nil {
-		go func() {
-			io.Copy(a.stderrWriter, a.stderr) // Blocks until stderr is closed
-		}()
+		go io.Copy(a.stderrWriter, stderr) // Blocks until stderr is closed
+	} else {
+		stderr.Close()
 	}
 
 	browser, err := NewBrowser(ctx, wsURL, opts...)
@@ -397,17 +388,17 @@ func DisableGPU(a *ExecAllocator) {
 
 // StdoutWriter is used to set an io.Writer where stdout from the browser
 // will be sent
-func StdoutWriter(writer io.Writer) ExecAllocatorOption {
+func StdoutWriter(w io.Writer) ExecAllocatorOption {
 	return func(a *ExecAllocator) {
-		a.stdoutWriter = writer
+		a.stdoutWriter = w
 	}
 }
 
 // StderrWriter is used to set an io.Writer where stderr from the browser
 // will be sent
-func StderrWriter(writer io.Writer) ExecAllocatorOption {
+func StderrWriter(w io.Writer) ExecAllocatorOption {
 	return func(a *ExecAllocator) {
-		a.stderrWriter = writer
+		a.stderrWriter = w
 	}
 }
 
