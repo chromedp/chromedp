@@ -101,8 +101,7 @@ type ExecAllocator struct {
 
 	wg sync.WaitGroup
 
-	stdoutWriter io.Writer
-	stderrWriter io.Writer
+	browserOutputWriter io.Writer
 }
 
 // allocTempDir is used to group all ExecAllocator temporary user data dirs in
@@ -210,17 +209,14 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		return nil, err
 	}
 
-	if a.stdoutWriter != nil {
-		go io.Copy(a.stdoutWriter, stdout) // Blocks until stderr is closed
-			// Ignore error here because if it fails, we just want to silently
-			// continue and avoid disrupting anything
+	// If requested, copy all terminal output from the browser
+	// instance (stdout and stderr) to given io.Writer. Note that
+	// this is different from the output written to the browser console.
+	if a.browserOutputWriter != nil {
+		go io.Copy(a.browserOutputWriter, stdout)
+		go io.Copy(a.browserOutputWriter, stderr)
 	} else {
 		stdout.Close()
-	}
-
-	if a.stderrWriter != nil {
-		go io.Copy(a.stderrWriter, stderr) // Blocks until stderr is closed
-	} else {
 		stderr.Close()
 	}
 
@@ -386,19 +382,11 @@ func DisableGPU(a *ExecAllocator) {
 	Flag("disable-gpu", true)(a)
 }
 
-// StdoutWriter is used to set an io.Writer where stdout from the browser
-// will be sent
-func StdoutWriter(w io.Writer) ExecAllocatorOption {
+// BrowserOutput is used to set an io.Writer where stdout and stderr
+// from the browser will be sent
+func BrowserOutput(w io.Writer) ExecAllocatorOption {
 	return func(a *ExecAllocator) {
-		a.stdoutWriter = w
-	}
-}
-
-// StderrWriter is used to set an io.Writer where stderr from the browser
-// will be sent
-func StderrWriter(w io.Writer) ExecAllocatorOption {
-	return func(a *ExecAllocator) {
-		a.stderrWriter = w
+		a.browserOutputWriter = w
 	}
 }
 
