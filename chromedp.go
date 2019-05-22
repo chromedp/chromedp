@@ -239,9 +239,9 @@ func (c *Context) newTarget(ctx context.Context) error {
 		if pages < 1 {
 			// TODO: replace this polling with retries with a wait
 			// via Target.setDiscoverTargets after allocating a new
-			// browser.
-			if tries++; tries < 5 {
-				time.Sleep(10 * time.Millisecond)
+			// browser. Wait for a maximum of 1s.
+			if tries++; tries < 50 {
+				time.Sleep(20 * time.Millisecond)
 				goto retry
 			}
 			return fmt.Errorf("waited too long for page targets to show up")
