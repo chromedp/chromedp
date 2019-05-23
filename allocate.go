@@ -101,7 +101,7 @@ type ExecAllocator struct {
 
 	wg sync.WaitGroup
 
-	browserOutputWriter io.Writer
+	combinedOutputWriter io.Writer
 }
 
 // allocTempDir is used to group all ExecAllocator temporary user data dirs in
@@ -166,17 +166,8 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 
 	// We must start the cmd before calling cmd.Wait, as otherwise the two
 	// can run into a data race.
-	var err error
-
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return nil, err
-	}
-
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return nil, err
-	}
+	outputReader, err := cmd.StdoutPipe()
+	cmd.Stderr = cmd.Stdout
 
 	if err := cmd.Start(); err != nil {
 		return nil, err
@@ -204,7 +195,7 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		a.wg.Done()
 		close(c.allocated)
 	}()
-	wsURL, err := addrFromStderr(stderr)
+	wsURL, err := addrFromStderr(outputReader)
 	if err != nil {
 		return nil, err
 	}
@@ -212,12 +203,10 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	// If requested, copy all terminal output from the browser
 	// instance (stdout and stderr) to given io.Writer. Note that
 	// this is different from the output written to the browser console.
-	if a.browserOutputWriter != nil {
-		go io.Copy(a.browserOutputWriter, stdout)
-		go io.Copy(a.browserOutputWriter, stderr)
+	if a.combinedOutputWriter != nil {
+		go io.Copy(a.combinedOutputWriter, outputReader)
 	} else {
-		stdout.Close()
-		stderr.Close()
+		outputReader.Close()
 	}
 
 	browser, err := NewBrowser(ctx, wsURL, opts...)
@@ -382,11 +371,11 @@ func DisableGPU(a *ExecAllocator) {
 	Flag("disable-gpu", true)(a)
 }
 
-// BrowserOutput is used to set an io.Writer where stdout and stderr
+// CombinedOutput is used to set an io.Writer where stdout and stderr
 // from the browser will be sent
-func BrowserOutput(w io.Writer) ExecAllocatorOption {
+func CombinedOutput(w io.Writer) ExecAllocatorOption {
 	return func(a *ExecAllocator) {
-		a.browserOutputWriter = w
+		a.combinedOutputWriter = w
 	}
 }
 
