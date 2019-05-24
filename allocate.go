@@ -234,9 +234,9 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 // addrFromStderr finds the free port that Chrome selected for the debugging
 // protocol. This should be hooked up to a new Chrome process's Stderr pipe
 // right after it is started.
-func addrFromStderr(rc io.Reader) (string, error) {
+func addrFromStderr(r io.Reader) (string, error) {
 	url := ""
-	scanner := bufio.NewScanner(rc)
+	scanner := bufio.NewScanner(r)
 	prefix := "DevTools listening on"
 
 	var lines []string
