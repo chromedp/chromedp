@@ -16,9 +16,7 @@ func Navigate(urlstr string) Action {
 		if err != nil {
 			return err
 		}
-		ch <- frameID
-		<-ch
-		return nil
+		return waitLoaded(ctx, ch, frameID)
 	})
 }
 
@@ -46,6 +44,20 @@ func listenLoaded(ctx context.Context) chan cdp.FrameID {
 	return ch
 }
 
+func waitLoaded(ctx context.Context, ch chan cdp.FrameID, frameID cdp.FrameID) error {
+	select {
+	case ch <- frameID:
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+	select {
+	case <-ch:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
+	}
+}
+
 // NavigationEntries is an action to retrieve the page's navigation history
 // entries.
 func NavigationEntries(currentIndex *int64, entries *[]*page.NavigationEntry) Action {
@@ -69,9 +81,7 @@ func NavigateToHistoryEntry(entryID int64) Action {
 		if err := page.NavigateToHistoryEntry(entryID).Do(ctx); err != nil {
 			return err
 		}
-		ch <- frameID
-		<-ch
-		return nil
+		return waitLoaded(ctx, ch, frameID)
 	})
 }
 
@@ -93,9 +103,7 @@ func NavigateBack() Action {
 		if err := page.NavigateToHistoryEntry(entryID).Do(ctx); err != nil {
 			return err
 		}
-		ch <- frameID
-		<-ch
-		return nil
+		return waitLoaded(ctx, ch, frameID)
 	})
 }
 
@@ -117,9 +125,7 @@ func NavigateForward() Action {
 		if err := page.NavigateToHistoryEntry(entryID).Do(ctx); err != nil {
 			return err
 		}
-		ch <- frameID
-		<-ch
-		return nil
+		return waitLoaded(ctx, ch, frameID)
 	})
 }
 
@@ -131,9 +137,7 @@ func Reload() Action {
 		if err := page.Reload().Do(ctx); err != nil {
 			return err
 		}
-		ch <- frameID
-		<-ch
-		return nil
+		return waitLoaded(ctx, ch, frameID)
 	})
 }
 
