@@ -100,6 +100,8 @@ type ExecAllocator struct {
 	initFlags map[string]interface{}
 
 	wg sync.WaitGroup
+
+	combinedOutputWriter io.Writer
 }
 
 // allocTempDir is used to group all ExecAllocator temporary user data dirs in
@@ -162,13 +164,12 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	}()
 	allocateCmdOptions(cmd)
 
+	// Create a single reader for both stdout and stderr
+	outputReader, err := cmd.StdoutPipe()
+	cmd.Stderr = cmd.Stdout
+
 	// We must start the cmd before calling cmd.Wait, as otherwise the two
 	// can run into a data race.
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		return nil, err
-	}
-	defer stderr.Close()
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
@@ -195,9 +196,24 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		a.wg.Done()
 		close(c.allocated)
 	}()
-	wsURL, err := addrFromStderr(stderr)
-	if err != nil {
-		return nil, err
+
+	// If the browser output is requested, use a TeeReader so that we can
+	// grab the websocket address here but also send all output to the
+	// specified writer.
+	var wsURL string
+	if a.combinedOutputWriter != nil {
+		teeReader := io.TeeReader(outputReader, a.combinedOutputWriter)
+		wsURL, err = addrFromStderr(teeReader)
+		if err != nil {
+			return nil, err
+		}
+		go io.Copy(a.combinedOutputWriter, outputReader)
+	} else {
+		wsURL, err = addrFromStderr(outputReader)
+		if err != nil {
+			return nil, err
+		}
+		outputReader.Close()
 	}
 
 	browser, err := NewBrowser(ctx, wsURL, opts...)
@@ -218,8 +234,7 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 // addrFromStderr finds the free port that Chrome selected for the debugging
 // protocol. This should be hooked up to a new Chrome process's Stderr pipe
 // right after it is started.
-func addrFromStderr(rc io.ReadCloser) (string, error) {
-	defer rc.Close()
+func addrFromStderr(rc io.Reader) (string, error) {
 	url := ""
 	scanner := bufio.NewScanner(rc)
 	prefix := "DevTools listening on"
@@ -361,6 +376,14 @@ func Headless(a *ExecAllocator) {
 // DisableGPU is the command line option to disable the GPU process.
 func DisableGPU(a *ExecAllocator) {
 	Flag("disable-gpu", true)(a)
+}
+
+// CombinedOutput is used to set an io.Writer where stdout and stderr
+// from the browser will be sent
+func CombinedOutput(w io.Writer) ExecAllocatorOption {
+	return func(a *ExecAllocator) {
+		a.combinedOutputWriter = w
+	}
 }
 
 // NewRemoteAllocator creates a new context set up with a RemoteAllocator,
