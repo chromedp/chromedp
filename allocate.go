@@ -164,11 +164,12 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	}()
 	allocateCmdOptions(cmd)
 
-	// We must start the cmd before calling cmd.Wait, as otherwise the two
-	// can run into a data race.
+	// Create a single reader for both stdout and stderr
 	outputReader, err := cmd.StdoutPipe()
 	cmd.Stderr = cmd.Stdout
 
+	// We must start the cmd before calling cmd.Wait, as otherwise the two
+	// can run into a data race.
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
@@ -195,17 +196,23 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		a.wg.Done()
 		close(c.allocated)
 	}()
-	wsURL, err := addrFromStderr(outputReader)
-	if err != nil {
-		return nil, err
-	}
 
-	// If requested, copy all terminal output from the browser
-	// instance (stdout and stderr) to given io.Writer. Note that
-	// this is different from the output written to the browser console.
+	// If the browser output is requested, use a TeeReader so that we can
+	// grab the websocket address here but also send all output to the
+	// specified writer.
+	var wsURL string
 	if a.combinedOutputWriter != nil {
+		teeReader := io.TeeReader(outputReader, a.combinedOutputWriter)
+		wsURL, err = addrFromStderr(teeReader)
+		if err != nil {
+			return nil, err
+		}
 		go io.Copy(a.combinedOutputWriter, outputReader)
 	} else {
+		wsURL, err = addrFromStderr(outputReader)
+		if err != nil {
+			return nil, err
+		}
 		outputReader.Close()
 	}
 
@@ -227,7 +234,7 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 // addrFromStderr finds the free port that Chrome selected for the debugging
 // protocol. This should be hooked up to a new Chrome process's Stderr pipe
 // right after it is started.
-func addrFromStderr(rc io.ReadCloser) (string, error) {
+func addrFromStderr(rc io.Reader) (string, error) {
 	url := ""
 	scanner := bufio.NewScanner(rc)
 	prefix := "DevTools listening on"
