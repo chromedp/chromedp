@@ -1,14 +1,13 @@
 package chromedp
 
 import (
-	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
-	"strings"
 	"sync"
 )
 
@@ -164,8 +163,10 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	}()
 	allocateCmdOptions(cmd)
 
-	// Create a single reader for both stdout and stderr
-	outputReader, err := cmd.StdoutPipe()
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		return nil, err
+	}
 	cmd.Stderr = cmd.Stdout
 
 	// We must start the cmd before calling cmd.Wait, as otherwise the two
@@ -197,23 +198,9 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		close(c.allocated)
 	}()
 
-	// If the browser output is requested, use a TeeReader so that we can
-	// grab the websocket address here but also send all output to the
-	// specified writer.
-	var wsURL string
-	if a.combinedOutputWriter != nil {
-		teeReader := io.TeeReader(outputReader, a.combinedOutputWriter)
-		wsURL, err = addrFromStderr(teeReader)
-		if err != nil {
-			return nil, err
-		}
-		go io.Copy(a.combinedOutputWriter, outputReader)
-	} else {
-		wsURL, err = addrFromStderr(outputReader)
-		if err != nil {
-			return nil, err
-		}
-		outputReader.Close()
+	wsURL, err := readOutput(stdout, a.combinedOutputWriter)
+	if err != nil {
+		return nil, err
 	}
 
 	browser, err := NewBrowser(ctx, wsURL, opts...)
@@ -231,31 +218,44 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	return browser, nil
 }
 
-// addrFromStderr finds the free port that Chrome selected for the debugging
-// protocol. This should be hooked up to a new Chrome process's Stderr pipe
-// right after it is started.
-func addrFromStderr(r io.Reader) (string, error) {
-	url := ""
-	scanner := bufio.NewScanner(r)
-	prefix := "DevTools listening on"
-
-	var lines []string
-	for scanner.Scan() {
-		line := scanner.Text()
-		if s := strings.TrimPrefix(line, prefix); s != line {
-			url = strings.TrimSpace(s)
-			break
+// readOutput grabs the websocket address from chrome's output, returning as
+// soon as it is found. All read output is forwarded to forward, if non-nil.
+func readOutput(rc io.ReadCloser, forward io.Writer) (wsURL string, _ error) {
+	prefix := []byte("DevTools listening on ")
+	var accumulated bytes.Buffer
+	var p [256]byte
+readLoop:
+	for {
+		n, err := rc.Read(p[:])
+		if err != nil {
+			return "", fmt.Errorf("chrome failed to start:\n%s",
+				accumulated.Bytes())
+			return "", err
 		}
-		lines = append(lines, line)
+		if forward != nil {
+			if _, err := forward.Write(p[:n]); err != nil {
+				return "", err
+			}
+		}
+
+		lines := bytes.Split(p[:n], []byte("\n"))
+		for _, line := range lines {
+			if bytes.HasPrefix(line, prefix) {
+				wsURL = string(line[len(prefix):])
+				break readLoop
+			}
+		}
+		accumulated.Write(p[:n])
 	}
-	if err := scanner.Err(); err != nil {
-		return "", err
+	if forward == nil {
+		// We don't need the process's output anymore.
+		rc.Close()
+	} else {
+		// Copy the rest of the output in a separate goroutine, as we
+		// need to return with the websocket URL.
+		go io.Copy(forward, rc)
 	}
-	if url == "" {
-		return "", fmt.Errorf("chrome stopped too early; stderr:\n%s",
-			strings.Join(lines, "\n"))
-	}
-	return url, nil
+	return wsURL, nil
 }
 
 // Wait satisfies the Allocator interface.

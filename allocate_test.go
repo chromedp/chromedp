@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"os/exec"
+	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -154,7 +155,7 @@ func TestRemoteAllocator(t *testing.T) {
 	if err := cmd.Start(); err != nil {
 		t.Fatal(err)
 	}
-	wsURL, err := addrFromStderr(stderr)
+	wsURL, err := readOutput(stderr, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -232,10 +233,10 @@ func TestExecAllocatorMissingWebsocketAddr(t *testing.T) {
 	ctx, cancel := NewContext(allocCtx)
 	defer cancel()
 
-	want := "stopped too early"
+	want := regexp.MustCompile(`failed to start:\n.*Invalid devtools`)
 	got := fmt.Sprintf("%v", Run(ctx))
-	if !strings.Contains(got, want) {
-		t.Fatalf("want error to contain %q, got %q", want, got)
+	if !want.MatchString(got) {
+		t.Fatalf("want error to match %q, got %q", want, got)
 	}
 }
 
