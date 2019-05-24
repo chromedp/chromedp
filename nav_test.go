@@ -2,6 +2,7 @@ package chromedp
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"image"
 	_ "image/png"
@@ -321,6 +322,28 @@ func TestLoadIframe(t *testing.T) {
 		// WaitVisible(`#form`, ByID), // for the nested form.html
 		WaitVisible(`#parent`, ByID), // for iframe.html
 	}); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestNavigateContextTimeout(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+
+	// Serve the page, but cancel the context almost immediately after.
+	// Navigate shouldn't block waiting for the load to finish, which may
+	// not come as the target is cancelled.
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		go func() {
+			time.Sleep(time.Millisecond)
+			cancel()
+		}()
+	}))
+	defer s.Close()
+
+	if err := Run(ctx, Navigate(s.URL)); err != nil && err != context.Canceled {
 		t.Fatal(err)
 	}
 }
