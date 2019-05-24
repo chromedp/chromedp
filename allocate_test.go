@@ -155,7 +155,7 @@ func TestRemoteAllocator(t *testing.T) {
 	if err := cmd.Start(); err != nil {
 		t.Fatal(err)
 	}
-	wsURL, err := readOutput(stderr, nil)
+	wsURL, err := readOutput(stderr, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -251,23 +251,15 @@ func TestCombinedOutput(t *testing.T) {
 		}, allocOpts...)...)
 	defer cancel()
 
-	taskCtx, cancel := NewContext(allocCtx)
-	defer cancel()
-
-	if err := Run(taskCtx); err != nil {
-		t.Fatal(err)
-	}
-	if !strings.Contains(buf.String(), "DevTools listening on") {
-		t.Fatalf("failed to find websocket string in browser output test")
-	}
-	if want, got := 0, strings.Count(buf.String(), `"spam"`); want != got {
-		t.Fatalf("want %d spam console logs, got %d", want, got)
-	}
-
+	taskCtx, _ := NewContext(allocCtx)
 	if err := Run(taskCtx,
 		Navigate(testdataDir+"/consolespam.html"),
 	); err != nil {
 		t.Fatal(err)
+	}
+	cancel()
+	if !strings.Contains(buf.String(), "DevTools listening on") {
+		t.Fatalf("failed to find websocket string in browser output test")
 	}
 	if want, got := 2000, strings.Count(buf.String(), `"spam"`); want != got {
 		t.Fatalf("want %d spam console logs, got %d", want, got)

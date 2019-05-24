@@ -181,6 +181,9 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	case <-c.allocated: // for this browser's root context
 	}
 	a.wg.Add(1) // for the entire allocator
+	if a.combinedOutputWriter != nil {
+		a.wg.Add(1) // for the io.Copy in a separate goroutine
+	}
 	go func() {
 		<-ctx.Done()
 		// First wait for the process to be finished.
@@ -198,7 +201,7 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		close(c.allocated)
 	}()
 
-	wsURL, err := readOutput(stdout, a.combinedOutputWriter)
+	wsURL, err := readOutput(stdout, a.combinedOutputWriter, a.wg.Done)
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +223,8 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 
 // readOutput grabs the websocket address from chrome's output, returning as
 // soon as it is found. All read output is forwarded to forward, if non-nil.
-func readOutput(rc io.ReadCloser, forward io.Writer) (wsURL string, _ error) {
+// done is used to signal that the asynchronous io.Copy is done, if any.
+func readOutput(rc io.ReadCloser, forward io.Writer, done func()) (wsURL string, _ error) {
 	prefix := []byte("DevTools listening on ")
 	var accumulated bytes.Buffer
 	var p [256]byte
@@ -253,7 +257,10 @@ readLoop:
 	} else {
 		// Copy the rest of the output in a separate goroutine, as we
 		// need to return with the websocket URL.
-		go io.Copy(forward, rc)
+		go func() {
+			io.Copy(forward, rc)
+			done()
+		}()
 	}
 	return wsURL, nil
 }
