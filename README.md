@@ -15,6 +15,41 @@ Install in the usual Go way:
 Refer to the [GoDoc page][7] for the documentation and examples. The
 [examples][6] repository contains more complex scenarios.
 
+## Frequently Asked Questions
+
+* I can't see any Chrome browser window
+
+By default, it's run in headless mode. See `DefaultExecAllocatorOptions`, and
+[an example](https://godoc.org/github.com/chromedp/chromedp#example-ExecAllocator)
+to override said options.
+
+* I'm seeing "context canceled" errors
+
+If the connection to the browser is dropped, the context will be cancelled,
+which can be an unexpected reason for this error. For example, if the browser is
+closed manually.
+
+* Chrome exits as soon as my Go program finishes
+
+This is set up on Linux to avoid leaking resources. If you want Chrome to be a
+long-running process, start it separately and connect to it via `RemoteAllocator`.
+
+* Execute an action results in "invalid context"
+
+By default, a chromedp context doesn't have an executor set up. You can specify
+one; see #326.
+
+* I can't use an `Action` with `Run` because it returns many values
+
+Wrap it with an `ActionFunc`:
+
+```
+chromedp.Do(ctx, ActionFunc(func(ctx context.Context) error {
+	_, err := domain.SomeAction().Do(ctx)
+	return err
+}))
+```
+
 ## Resources
 
 * [chromedp: A New Way to Drive the Web][8] - GopherCon SG 2017 talk
