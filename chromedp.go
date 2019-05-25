@@ -113,7 +113,7 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 		o(c)
 	}
 	if c.Allocator == nil {
-		c.Allocator = setupExecAllocator(DefaultExecAllocatorOptions...)
+		c.Allocator = setupExecAllocator(DefaultExecAllocatorOptions[:]...)
 	}
 
 	ctx = context.WithValue(ctx, contextKey{}, c)

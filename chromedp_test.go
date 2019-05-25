@@ -46,7 +46,7 @@ func init() {
 	}
 
 	// Build on top of the default options.
-	allocOpts = append(allocOpts, DefaultExecAllocatorOptions...)
+	allocOpts = append(allocOpts, DefaultExecAllocatorOptions[:]...)
 
 	// Disabling the GPU helps portability with some systems like Travis,
 	// and can slightly speed up the tests on other systems.
