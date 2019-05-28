@@ -44,7 +44,7 @@ one; see #326.
 Wrap it with an `ActionFunc`:
 
 ```
-chromedp.Do(ctx, ActionFunc(func(ctx context.Context) error {
+chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
 	_, err := domain.SomeAction().Do(ctx)
 	return err
 }))
