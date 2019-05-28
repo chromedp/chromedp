@@ -1,8 +1,13 @@
+<!---
+This issue tracker is mainly for bugs and feature requests. Before asking a
+question, search online and try to investigate on your own.
+-->
+
 #### What versions are you running?
 
 <pre>
 $ go list -m github.com/chromedp/chromedp
-$ chromium --version
+$ google-chrome --version
 $ go version
 </pre>
 
