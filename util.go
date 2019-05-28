@@ -8,22 +8,12 @@ import (
 // frameOp is a frame manipulation operation.
 type frameOp func(*cdp.Frame)
 
-/*func domContentEventFired(f *cdp.Frame) {
-}
-
-func loadEventFired(f *cdp.Frame) {
-}*/
-
 func frameAttached(id cdp.FrameID) frameOp {
 	return func(f *cdp.Frame) {
 		f.ParentID = id
 		setFrameState(f, cdp.FrameAttached)
 	}
 }
-
-/*func frameNavigated(f *cdp.Frame) {
-	setFrameState(f, cdp.FrameNavigated)
-}*/
 
 func frameDetached(f *cdp.Frame) {
 	f.ParentID = cdp.EmptyFrameID
@@ -45,10 +35,6 @@ func frameScheduledNavigation(f *cdp.Frame) {
 func frameClearedScheduledNavigation(f *cdp.Frame) {
 	clearFrameState(f, cdp.FrameScheduledNavigation)
 }
-
-/*func frameResized(f *cdp.Frame) {
-	// TODO
-}*/
 
 // setFrameState sets the frame state via bitwise or (|).
 func setFrameState(f *cdp.Frame, fs cdp.FrameState) {

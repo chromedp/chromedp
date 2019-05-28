@@ -141,24 +141,6 @@ func CaptureScreenshot(res *[]byte) Action {
 	})
 }
 
-// AddOnLoadScript adds a script to evaluate on page load.
-/*func AddOnLoadScript(source string, id *page.ScriptIdentifier) Action {
-	if id == nil {
-		panic("id cannot be nil")
-	}
-
-	return ActionFunc(func(ctx context.Context) error {
-		var err error
-		*id, err = page.AddScriptToEvaluateOnLoad(source).Do(ctx)
-		return err
-	})
-}
-
-// RemoveOnLoadScript removes a script to evaluate on page load.
-func RemoveOnLoadScript(id page.ScriptIdentifier) Action {
-	return page.RemoveScriptToEvaluateOnLoad(id)
-}*/
-
 // Location retrieves the document location.
 func Location(urlstr *string) Action {
 	if urlstr == nil {

@@ -235,48 +235,6 @@ func TestCaptureScreenshot(t *testing.T) {
 	}
 }
 
-/*func TestAddOnLoadScript(t *testing.T) {
-	t.Parallel()
-
-	ctx, cancel := testAllocate(t, "")
-	defer cancel()
-
-	var scriptID page.ScriptIdentifier
-	if err := Run(ctx,
-		AddOnLoadScript(`window.alert("TEST")`, &scriptID),
-		Navigate(testdataDir+"/form.html"),
-	); err != nil {
-		t.Fatal(err)
-	}
-
-	if scriptID == "" {
-		t.Fatal("got empty script ID")
-	}
-	// TODO: Handle javascript dialog.
-}
-
-func TestRemoveOnLoadScript(t *testing.T) {
-	t.Parallel()
-
-	ctx, cancel := testAllocate(t, "")
-	defer cancel()
-
-	var scriptID page.ScriptIdentifier
-	if err := Run(ctx, AddOnLoadScript(`window.alert("TEST")`, &scriptID)); err != nil {
-		t.Fatal(err)
-	}
-	if scriptID == "" {
-		t.Fatal("got empty script ID")
-	}
-
-	if err := Run(ctx,
-		RemoveOnLoadScript(scriptID),
-		Navigate(testdataDir+"/form.html"),
-	); err != nil {
-		t.Fatal(err)
-	}
-}*/
-
 func TestLocation(t *testing.T) {
 	t.Parallel()
 
