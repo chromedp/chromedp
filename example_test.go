@@ -61,13 +61,10 @@ func ExampleExecAllocator() {
 	}
 	defer os.RemoveAll(dir)
 
-	opts := []chromedp.ExecAllocatorOption{
-		chromedp.NoFirstRun,
-		chromedp.NoDefaultBrowserCheck,
-		chromedp.Headless,
+	opts := append(chromedp.DefaultExecAllocatorOptions[:],
 		chromedp.DisableGPU,
 		chromedp.UserDataDir(dir),
-	}
+	)
 
 	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
 	defer cancel()

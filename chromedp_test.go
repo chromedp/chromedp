@@ -24,7 +24,7 @@ var (
 	// these are set up in init
 	execPath    string
 	testdataDir string
-	allocOpts   []ExecAllocatorOption
+	allocOpts   = DefaultExecAllocatorOptions[:]
 
 	// allocCtx is initialised in TestMain, to cancel before exiting.
 	allocCtx context.Context
@@ -44,9 +44,6 @@ func init() {
 	if err != nil {
 		panic(fmt.Sprintf("could not create temp directory: %v", err))
 	}
-
-	// Build on top of the default options.
-	allocOpts = append(allocOpts, DefaultExecAllocatorOptions[:]...)
 
 	// Disabling the GPU helps portability with some systems like Travis,
 	// and can slightly speed up the tests on other systems.

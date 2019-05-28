@@ -44,7 +44,8 @@ func setupExecAllocator(opts ...ExecAllocatorOption) *ExecAllocator {
 }
 
 // DefaultExecAllocatorOptions are the ExecAllocator options used by NewContext
-// if the given parent context doesn't have an allocator set up.
+// if the given parent context doesn't have an allocator set up. Do not modify
+// this global; instead, use NewExecAllocator. See ExampleExecAllocator.
 var DefaultExecAllocatorOptions = [...]ExecAllocatorOption{
 	NoFirstRun,
 	NoDefaultBrowserCheck,
