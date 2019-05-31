@@ -226,7 +226,7 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 // soon as it is found. All read output is forwarded to forward, if non-nil.
 // done is used to signal that the asynchronous io.Copy is done, if any.
 func readOutput(rc io.ReadCloser, forward io.Writer, done func()) (wsURL string, _ error) {
-	prefix := []byte("DevTools listening on ")
+	prefix := []byte("DevTools listening on")
 	var accumulated bytes.Buffer
 	var p [256]byte
 readLoop:
@@ -246,7 +246,10 @@ readLoop:
 		lines := bytes.Split(p[:n], []byte("\n"))
 		for _, line := range lines {
 			if bytes.HasPrefix(line, prefix) {
-				wsURL = string(line[len(prefix):])
+				line = line[len(prefix):]
+				// use TrimSpace, to also remove \r on Windows
+				line = bytes.TrimSpace(line)
+				wsURL = string(line)
 				break readLoop
 			}
 		}
