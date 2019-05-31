@@ -222,15 +222,13 @@ func AttributesAll(sel interface{}, attributes *[]map[string]string, opts ...Que
 
 		for _, node := range nodes {
 			node.RLock()
-			defer node.RUnlock()
-
 			m := make(map[string]string)
 			attrs := node.Attributes
 			for i := 0; i < len(attrs); i += 2 {
 				m[attrs[i]] = attrs[i+1]
 			}
-
 			*attributes = append(*attributes, m)
+			node.RUnlock()
 		}
 		return nil
 	}, opts...)
