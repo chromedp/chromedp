@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"net/url"
 	"os"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -105,25 +105,25 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 	return b, nil
 }
 
-// forceIP forces the host component in urlstr to be an IP address.
+// forceIP tries to force the host component in urlstr to be an IP address.
 //
 // Since Chrome 66+, Chrome DevTools Protocol clients connecting to a browser
 // must send the "Host:" header as either an IP address, or "localhost".
 func forceIP(urlstr string) string {
-	if i := strings.Index(urlstr, "://"); i != -1 {
-		scheme := urlstr[:i+3]
-		host, port, path := urlstr[len(scheme):], "", ""
-		if i := strings.Index(host, "/"); i != -1 {
-			host, path = host[:i], host[i:]
-		}
-		if i := strings.Index(host, ":"); i != -1 {
-			host, port = host[:i], host[i:]
-		}
-		if addr, err := net.ResolveIPAddr("ip", host); err == nil {
-			urlstr = scheme + addr.IP.String() + port + path
-		}
+	u, err := url.Parse(urlstr)
+	if err != nil {
+		return urlstr
 	}
-	return urlstr
+	host, port, err := net.SplitHostPort(u.Host)
+	if err != nil {
+		return urlstr
+	}
+	addr, err := net.ResolveIPAddr("ip", host)
+	if err != nil {
+		return urlstr
+	}
+	u.Host = net.JoinHostPort(addr.IP.String(), port)
+	return u.String()
 }
 
 func (b *Browser) newExecutorForTarget(targetID target.ID, sessionID target.SessionID) *Target {
