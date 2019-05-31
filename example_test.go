@@ -169,15 +169,9 @@ func ExampleClickNewTab() {
 	ts := httptest.NewServer(mux)
 	defer ts.Close()
 
-	lctx, cancel := context.WithCancel(ctx)
-	ch := make(chan target.ID, 1)
-	chromedp.ListenTarget(lctx, func(ev interface{}) {
-		if ev, ok := ev.(*target.EventTargetCreated); ok &&
-			// if OpenerID == "", this is the first tab.
-			ev.TargetInfo.OpenerID != "" {
-			ch <- ev.TargetInfo.TargetID
-			cancel()
-		}
+	// Grab the first spawned tab that isn't blank.
+	ch := chromedp.WaitNewTarget(ctx, func(info *target.Info) bool {
+		return info.URL != ""
 	})
 	if err := chromedp.Run(ctx,
 		chromedp.Navigate(ts.URL+"/first"),

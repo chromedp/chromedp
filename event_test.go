@@ -157,18 +157,14 @@ func TestCloseDialog(t *testing.T) {
 	}
 }
 
-func TestClickNewTab(t *testing.T) {
+func TestWaitTarget(t *testing.T) {
 	t.Parallel()
 
 	ctx, cancel := testAllocate(t, "newtab.html")
 	defer cancel()
 
-	ch := make(chan target.ID, 1)
-	ListenTarget(ctx, func(ev interface{}) {
-		if ev, ok := ev.(*target.EventTargetCreated); ok &&
-			ev.TargetInfo.OpenerID != "" {
-			ch <- ev.TargetInfo.TargetID
-		}
+	ch := WaitNewTarget(ctx, func(info *target.Info) bool {
+		return info.URL != ""
 	})
 	if err := Run(ctx, Click("#new-tab", ByID)); err != nil {
 		t.Fatal(err)
