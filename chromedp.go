@@ -443,3 +443,34 @@ func ListenTarget(ctx context.Context, fn func(ev interface{})) {
 		c.targetListeners = append(c.targetListeners, cl)
 	}
 }
+
+// WaitNewTarget can be used to wait for the current target to open a new
+// target. Once fn matches a new unattached target, its target ID is sent via
+// the returned channel.
+func WaitNewTarget(ctx context.Context, fn func(*target.Info) bool) <-chan target.ID {
+	ch := make(chan target.ID, 1)
+	lctx, cancel := context.WithCancel(ctx)
+	ListenTarget(lctx, func(ev interface{}) {
+		var info *target.Info
+		switch ev := ev.(type) {
+		case *target.EventTargetCreated:
+			info = ev.TargetInfo
+		case *target.EventTargetInfoChanged:
+			info = ev.TargetInfo
+		default:
+			return
+		}
+		if info.OpenerID == "" {
+			return // not a child target
+		}
+		if info.Attached {
+			return // already attached; not a new target
+		}
+		if fn(info) {
+			ch <- info.TargetID
+			close(ch)
+			cancel()
+		}
+	})
+	return ch
+}
