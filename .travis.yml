@@ -13,6 +13,6 @@ addons:
     chrome: stable
 
 script:
-  - go test
+  - go test -v
   - go test -c
-  - docker run --volume=$PWD:/chromedp --entrypoint=/chromedp/chromedp.test --workdir=/chromedp --env=PATH=/headless-shell chromedp/headless-shell:latest
+  - docker run --volume=$PWD:/chromedp --entrypoint=/chromedp/chromedp.test --workdir=/chromedp --env=PATH=/headless-shell chromedp/headless-shell:latest -test.v
