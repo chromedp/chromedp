@@ -112,7 +112,7 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 func forceIP(urlstr string) string {
 	if i := strings.Index(urlstr, "://"); i != -1 {
 		scheme := urlstr[:i+3]
-		host, port, path := urlstr[len(scheme)+3:], "", ""
+		host, port, path := urlstr[len(scheme):], "", ""
 		if i := strings.Index(host, "/"); i != -1 {
 			host, path = host[:i], host[i:]
 		}
