@@ -278,6 +278,8 @@ function changeText() {
 	fmt.Println("OuterHTML after clicking:")
 	fmt.Println(outerAfter)
 
+	// TODO: reenable once we fix the race with EventResponseReceived. The
+	// code needs to wait for EventLoadingFinished.
 	// Output:
 	// Original response body:
 	// <body>
