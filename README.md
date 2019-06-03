@@ -34,10 +34,10 @@ closed manually.
 This is set up on Linux to avoid leaking resources. If you want Chrome to be a
 long-running process, start it separately and connect to it via `RemoteAllocator`.
 
-> Execute an action results in "invalid context"
+> Execute an action without `Run` results in "invalid context"
 
 By default, a chromedp context doesn't have an executor set up. You can specify
-one; see #326.
+one; see [issue #326](https://github.com/chromedp/chromedp/issues/326).
 
 > I can't use an `Action` with `Run` because it returns many values
 
