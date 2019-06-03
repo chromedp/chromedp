@@ -74,7 +74,10 @@ func (s *Selector) Do(ctx context.Context) error {
 func (s *Selector) run(ctx context.Context, t *Target) chan error {
 	ch := make(chan error, 1)
 	t.waitQueue <- func() bool {
+		t.curMu.RLock()
 		cur := t.cur
+		t.curMu.RUnlock()
+
 		cur.RLock()
 		root := cur.Root
 		cur.RUnlock()
