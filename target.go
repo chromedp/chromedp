@@ -31,7 +31,8 @@ type Target struct {
 	frames map[cdp.FrameID]*cdp.Frame
 
 	// cur is the current top level frame.
-	cur *cdp.Frame
+	cur   *cdp.Frame
+	curMu sync.RWMutex
 
 	// logging funcs
 	logf, errf func(string, ...interface{})
@@ -40,26 +41,18 @@ type Target struct {
 }
 
 func (t *Target) run(ctx context.Context) {
-	// tryWaits runs all wait functions on the current top-level frame, if
-	// neither are empty.
-	//
-	// This function is run after each DOM event, since those are the vast
-	// majority that we wait on, and approximately every 5ms. The periodic
-	// runs are necessary to wait for events such as a node no longer being
-	// visible in Chrome.
-	tryWaits := func() {
-		n := len(t.waitQueue)
-		if n == 0 || t.cur == nil {
-			return
-		}
-		for i := 0; i < n; i++ {
-			fn := <-t.waitQueue
-			if !fn() {
-				// try again later.
-				t.waitQueue <- fn
+	go func() {
+		for range t.tick {
+			n := len(t.waitQueue)
+			for i := 0; i < n; i++ {
+				fn := <-t.waitQueue
+				if !fn() {
+					// try again later.
+					t.waitQueue <- fn
+				}
 			}
 		}
-	}
+	}()
 
 	type eventValue struct {
 		method cdproto.MethodType
@@ -115,10 +108,7 @@ func (t *Target) run(ctx context.Context) {
 				t.pageEvent(ev.value)
 			case "DOM":
 				t.domEvent(ctx, ev.value)
-				tryWaits()
 			}
-		case <-t.tick:
-			tryWaits()
 		}
 	}
 }
@@ -184,7 +174,9 @@ func (t *Target) Execute(ctx context.Context, method string, params easyjson.Mar
 // documentUpdated handles the document updated event, retrieving the document
 // root for the root frame.
 func (t *Target) documentUpdated(ctx context.Context) {
+	t.curMu.RLock()
 	f := t.cur
+	t.curMu.RUnlock()
 	if f == nil {
 		// TODO: This seems to happen on CI, when running the tests
 		// under the headless-shell Docker image. Figure out why.
@@ -224,7 +216,9 @@ func (t *Target) pageEvent(ev interface{}) {
 		if e.Frame.ParentID == "" {
 			// This frame is only the new top-level frame if it has
 			// no parent.
+			t.curMu.Lock()
 			t.cur = e.Frame
+			t.curMu.Unlock()
 		}
 		return
 
