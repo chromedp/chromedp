@@ -235,7 +235,6 @@ readLoop:
 		if err != nil {
 			return "", fmt.Errorf("chrome failed to start:\n%s",
 				accumulated.Bytes())
-			return "", err
 		}
 		if forward != nil {
 			if _, err := forward.Write(p[:n]); err != nil {

@@ -157,7 +157,7 @@ func ExampleListenTarget_consoleLog() {
 	// string - "hello js world"
 }
 
-func ExampleClickNewTab() {
+func ExampleWaitNewTarget() {
 	ctx, cancel := chromedp.NewContext(context.Background())
 	defer cancel()
 
@@ -192,7 +192,7 @@ func ExampleClickNewTab() {
 	// new tab's path: /second
 }
 
-func ExampleAcceptAlert() {
+func ExampleListenTarget_acceptAlert() {
 	ctx, cancel := chromedp.NewContext(context.Background())
 	defer cancel()
 
@@ -227,7 +227,7 @@ func ExampleAcceptAlert() {
 	// closing alert: alert text
 }
 
-func ExampleRetrieveHTML() {
+func Example_retrieveHTML() {
 	ctx, cancel := chromedp.NewContext(context.Background())
 	defer cancel()
 
