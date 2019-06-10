@@ -372,7 +372,7 @@ func processKeys(keys map[rune]kb.Key) ([]byte, []byte, error) {
 		// add key definition
 		v := strings.TrimPrefix(fmt.Sprintf("%#v", key), "kb.")
 		v = nameRE.ReplaceAllString(v, "")
-		mapBuf.WriteString(fmt.Sprintf("%q: &%s,\n", s, v))
+		mapBuf.WriteString(fmt.Sprintf("'%s': &%s,\n", s, v))
 
 		// fix 'Quote' const
 		if s == `\'` {

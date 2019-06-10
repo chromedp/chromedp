@@ -55,6 +55,7 @@ const (
 	PrintScreen          = "\u0608"
 	WakeUp               = "\u060b"
 	Convert              = "\u0705"
+	ModeChange           = "\u070b"
 	NonConvert           = "\u070d"
 	HangulMode           = "\u0711"
 	HanjaMode            = "\u0712"
@@ -269,7 +270,7 @@ var Keys = map[rune]*Key{
 	'\u0409': {"Redo", "Redo", "", "", 0, 0, false, false},
 	'\u040a': {"Undo", "Undo", "", "", 0, 0, false, false},
 	'\u0502': {"Again", "Again", "", "", 0, 0, false, false},
-	'\u0504': {"Abort", "Cancel", "", "", 0, 0, false, false},
+	'\u0504': {"Abort", "Cancel", "", "", 3, 3, false, false},
 	'\u0505': {"ContextMenu", "ContextMenu", "", "", 93, 93, false, false},
 	'\u0507': {"Find", "Find", "", "", 0, 0, false, false},
 	'\u0508': {"Help", "Help", "", "", 47, 47, false, false},
@@ -286,6 +287,7 @@ var Keys = map[rune]*Key{
 	'\u0608': {"PrintScreen", "PrintScreen", "", "", 44, 44, false, false},
 	'\u060b': {"WakeUp", "WakeUp", "", "", 0, 0, false, false},
 	'\u0705': {"Convert", "Convert", "", "", 28, 28, false, false},
+	'\u070b': {"KeyboardLayoutSelect", "ModeChange", "", "", 0, 0, false, false},
 	'\u070d': {"NonConvert", "NonConvert", "", "", 29, 29, false, false},
 	'\u0711': {"Lang1", "HangulMode", "", "", 21, 21, false, false},
 	'\u0712': {"Lang2", "HanjaMode", "", "", 25, 25, false, false},
