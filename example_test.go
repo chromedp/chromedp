@@ -13,7 +13,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/cdproto/page"
 	cdpruntime "github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
@@ -243,26 +242,8 @@ function changeText() {
 	`))
 	defer ts.Close()
 
-	respBody := make(chan string)
-	chromedp.ListenTarget(ctx, func(ev interface{}) {
-		ev2, ok := ev.(*network.EventResponseReceived)
-		if !ok {
-			return
-		}
-		go func() {
-			if err := chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
-				body, err := network.GetResponseBody(ev2.RequestID).Do(ctx)
-				respBody <- string(body)
-				return err
-			})); err != nil {
-				panic(err)
-			}
-		}()
-	})
-
 	var outerBefore, outerAfter string
 	if err := chromedp.Run(ctx,
-		network.Enable(),
 		chromedp.Navigate(ts.URL),
 		chromedp.OuterHTML("#content", &outerBefore),
 		chromedp.Click("#content", chromedp.ByID),
@@ -270,27 +251,12 @@ function changeText() {
 	); err != nil {
 		panic(err)
 	}
-	fmt.Println("Original response body:")
-	fmt.Println(<-respBody)
-	fmt.Println()
 	fmt.Println("OuterHTML before clicking:")
 	fmt.Println(outerBefore)
 	fmt.Println("OuterHTML after clicking:")
 	fmt.Println(outerAfter)
 
-	// TODO: reenable once we fix the race with EventResponseReceived. The
-	// code needs to wait for EventLoadingFinished.
 	// Output:
-	// Original response body:
-	// <body>
-	// <p id="content" onclick="changeText()">Original content.</p>
-	// <script>
-	// function changeText() {
-	// 	document.getElementById("content").textContent = "New content!"
-	// }
-	// </script>
-	// </body>
-	//
 	// OuterHTML before clicking:
 	// <p id="content" onclick="changeText()">Original content.</p>
 	// OuterHTML after clicking:
