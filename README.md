@@ -50,14 +50,21 @@ chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
 }))
 ```
 
+> I want to use chromedp on a headless environment
+
+The simplest way is to run the Go program that uses chromedp inside the
+[chromedp/headless-shell][8] image. That image contains `headless-shell`, a
+smaller headless build of Chrome, which `chromedp` is able to find out of the
+box.
+
 ## Resources
 
-* [chromedp: A New Way to Drive the Web][8] - GopherCon SG 2017 talk
+* [chromedp: A New Way to Drive the Web][9] - GopherCon SG 2017 talk
 * [Chrome DevTools Protocol][5] - Chrome DevTools Protocol Domain documentation
 * [chromedp examples][6] - various `chromedp` examples
-* [`github.com/chromedp/cdproto`][9] - GoDoc listing for the CDP domains used by `chromedp`
-* [`github.com/chromedp/cdproto-gen`][10] - tool used to generate `cdproto`
-* [`github.com/chromedp/chromedp-proxy`][11] - a simple CDP proxy for logging CDP clients and browsers
+* [`github.com/chromedp/cdproto`][10] - GoDoc listing for the CDP domains used by `chromedp`
+* [`github.com/chromedp/cdproto-gen`][11] - tool used to generate `cdproto`
+* [`github.com/chromedp/chromedp-proxy`][12] - a simple CDP proxy for logging CDP clients and browsers
 
 [1]: https://godoc.org/github.com/chromedp/chromedp?status.svg
 [2]: https://godoc.org/github.com/chromedp/chromedp
@@ -66,7 +73,8 @@ chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
 [5]: https://chromedevtools.github.io/devtools-protocol/
 [6]: https://github.com/chromedp/examples
 [7]: https://godoc.org/github.com/chromedp/chromedp
-[8]: https://www.youtube.com/watch?v=_7pWCg94sKw
-[9]: https://godoc.org/github.com/chromedp/cdproto
-[10]: https://github.com/chromedp/cdproto-gen
-[11]: https://github.com/chromedp/chromedp-proxy
+[8]: https://hub.docker.com/r/chromedp/headless-shell/
+[9]: https://www.youtube.com/watch?v=_7pWCg94sKw
+[10]: https://godoc.org/github.com/chromedp/cdproto
+[11]: https://github.com/chromedp/cdproto-gen
+[12]: https://github.com/chromedp/chromedp-proxy
