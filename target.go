@@ -4,7 +4,6 @@ import (
 	"context"
 	"sync"
 	"sync/atomic"
-	"time"
 
 	"github.com/mailru/easyjson"
 
@@ -24,7 +23,6 @@ type Target struct {
 	listenersMu sync.Mutex
 	listeners   []cancelableListener
 
-	waitQueue    chan func() bool
 	messageQueue chan *cdproto.Message
 
 	// frames is the set of encountered frames.
@@ -36,24 +34,9 @@ type Target struct {
 
 	// logging funcs
 	logf, errf func(string, ...interface{})
-
-	tick chan time.Time
 }
 
 func (t *Target) run(ctx context.Context) {
-	go func() {
-		for range t.tick {
-			n := len(t.waitQueue)
-			for i := 0; i < n; i++ {
-				fn := <-t.waitQueue
-				if !fn() {
-					// try again later.
-					t.waitQueue <- fn
-				}
-			}
-		}
-	}()
-
 	type eventValue struct {
 		method cdproto.MethodType
 		value  interface{}

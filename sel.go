@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/dom"
@@ -59,11 +60,13 @@ func (s *Selector) Do(ctx context.Context) error {
 	if t == nil {
 		return ErrInvalidTarget
 	}
+	ch := make(chan error, 1)
+	go s.run(ctx, t, ch)
 	var err error
 	select {
 	case <-ctx.Done():
 		err = ctx.Err()
-	case err = <-s.run(ctx, t):
+	case err = <-ch:
 	}
 	return err
 }
@@ -71,9 +74,13 @@ func (s *Selector) Do(ctx context.Context) error {
 // run runs the selector action, starting over if the original returned nodes
 // are invalidated prior to finishing the selector's by, wait, check, and after
 // funcs.
-func (s *Selector) run(ctx context.Context, t *Target) chan error {
-	ch := make(chan error, 1)
-	t.waitQueue <- func() bool {
+func (s *Selector) run(ctx context.Context, t *Target, ch chan error) {
+	for {
+		select {
+		case <-ctx.Done():
+			ch <- ctx.Err()
+		case <-time.After(5 * time.Millisecond):
+		}
 		t.curMu.RLock()
 		cur := t.cur
 		t.curMu.RUnlock()
@@ -84,17 +91,17 @@ func (s *Selector) run(ctx context.Context, t *Target) chan error {
 
 		if root == nil {
 			// not ready?
-			return false
+			continue
 		}
 
 		ids, err := s.by(ctx, root)
 		if err != nil || len(ids) < s.exp {
-			return false
+			continue
 		}
 		nodes, err := s.wait(ctx, cur, ids...)
 		// if nodes==nil, we're not yet ready
 		if nodes == nil || err != nil {
-			return false
+			continue
 		}
 		if s.after != nil {
 			if err := s.after(ctx, nodes...); err != nil {
@@ -102,9 +109,8 @@ func (s *Selector) run(ctx context.Context, t *Target) chan error {
 			}
 		}
 		close(ch)
-		return true
+		break
 	}
-	return ch
 }
 
 // selAsString forces sel into a string.

@@ -139,13 +139,10 @@ func (b *Browser) newExecutorForTarget(targetID target.ID, sessionID target.Sess
 		SessionID: sessionID,
 
 		messageQueue: make(chan *cdproto.Message, 1024),
-		waitQueue:    make(chan func() bool, 1024),
 		frames:       make(map[cdp.FrameID]*cdp.Frame),
 
 		logf: b.logf,
 		errf: b.errf,
-
-		tick: make(chan time.Time, 1),
 	}
 	// This send should be blocking, to ensure the tab is inserted into the
 	// map before any more target events are routed.
@@ -328,9 +325,6 @@ func (b *Browser) run(ctx context.Context) {
 	}()
 
 	pages := make(map[target.SessionID]*Target, 32)
-
-	ticker := time.NewTicker(2 * time.Millisecond)
-	defer ticker.Stop()
 	for {
 		select {
 		case <-ctx.Done():
@@ -360,20 +354,6 @@ func (b *Browser) run(ctx context.Context) {
 					b.errf("executor for %q doesn't exist", tm.sessionID)
 				}
 				delete(pages, tm.sessionID)
-			}
-
-		case t := <-ticker.C:
-			// Roughly once every 2ms, give every target a
-			// chance to run periodic work like checking if
-			// a wait function is complete.
-			//
-			// If a target hasn't picked up the previous
-			// tick, skip it.
-			for _, target := range pages {
-				select {
-				case target.tick <- t:
-				default:
-				}
 			}
 
 		case <-b.LostConnection:
