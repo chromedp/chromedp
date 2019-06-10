@@ -220,45 +220,35 @@ func Run(ctx context.Context, actions ...Action) error {
 }
 
 func (c *Context) newTarget(ctx context.Context) error {
-	if c.targetID == "" && c.first {
-		tries := 0
-	retry:
-		// If we just allocated this browser, and it has a single page
-		// that's blank and not attached, use it.
-		infos, err := target.GetTargets().Do(cdp.WithExecutor(ctx, c.Browser))
-		if err != nil {
-			return err
-		}
-		pages := 0
-		for _, info := range infos {
-			if info.Type == "page" && info.URL == "about:blank" && !info.Attached {
-				c.targetID = info.TargetID
-				pages++
-			}
-		}
-		if pages < 1 {
-			// TODO: replace this polling with retries with a wait
-			// via Target.setDiscoverTargets after allocating a new
-			// browser. Wait for a maximum of 1s.
-			if tries++; tries < 50 {
-				time.Sleep(20 * time.Millisecond)
-				goto retry
-			}
-			return fmt.Errorf("waited too long for page targets to show up")
-		}
-		if pages > 1 {
-			// Multiple blank pages; just in case, don't use any.
-			c.targetID = ""
-		}
+	if c.targetID != "" {
+		return c.attachTarget(ctx, c.targetID)
 	}
-
-	if c.targetID == "" {
+	if !c.first {
 		var err error
 		c.targetID, err = target.CreateTarget("about:blank").Do(cdp.WithExecutor(ctx, c.Browser))
 		if err != nil {
 			return err
 		}
+		return c.attachTarget(ctx, c.targetID)
 	}
+
+	ch := make(chan target.ID, 1)
+	lctx, cancel := context.WithCancel(ctx)
+	ListenBrowser(lctx, func(ev interface{}) {
+		if ev, ok := ev.(*target.EventTargetCreated); ok &&
+			ev.TargetInfo.Type == "page" &&
+			ev.TargetInfo.URL == "about:blank" {
+			ch <- ev.TargetInfo.TargetID
+			cancel()
+		}
+	})
+
+	// wait for the first blank tab to appear
+	action := target.SetDiscoverTargets(true)
+	if err := action.Do(cdp.WithExecutor(ctx, c.Browser)); err != nil {
+		return err
+	}
+	c.targetID = <-ch
 	return c.attachTarget(ctx, c.targetID)
 }
 
