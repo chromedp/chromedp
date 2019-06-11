@@ -90,7 +90,7 @@ func (s *Selector) run(ctx context.Context, t *Target, ch chan error) {
 		cur.RUnlock()
 
 		if root == nil {
-			// not ready?
+			// not root node yet?
 			continue
 		}
 

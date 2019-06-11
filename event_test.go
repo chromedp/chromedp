@@ -157,7 +157,7 @@ func TestCloseDialog(t *testing.T) {
 	}
 }
 
-func TestWaitTarget(t *testing.T) {
+func TestWaitNewTarget(t *testing.T) {
 	t.Parallel()
 
 	ctx, cancel := testAllocate(t, "newtab.html")
@@ -173,7 +173,10 @@ func TestWaitTarget(t *testing.T) {
 	defer cancel()
 
 	var urlstr string
-	if err := Run(blankCtx, Location(&urlstr)); err != nil {
+	if err := Run(blankCtx,
+		Location(&urlstr),
+		WaitVisible(`#form`, ByID),
+	); err != nil {
 		t.Fatal(err)
 	}
 	if !strings.HasSuffix(urlstr, "form.html") {

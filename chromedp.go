@@ -221,7 +221,19 @@ func Run(ctx context.Context, actions ...Action) error {
 
 func (c *Context) newTarget(ctx context.Context) error {
 	if c.targetID != "" {
-		return c.attachTarget(ctx, c.targetID)
+		if err := c.attachTarget(ctx, c.targetID); err != nil {
+			return err
+		}
+		// This new page might have already loaded its top-level frame
+		// already, in which case we wouldn't see the frameNavigated and
+		// documentUpdated events. Load them here.
+		tree, err := page.GetFrameTree().Do(cdp.WithExecutor(ctx, c.Target))
+		if err != nil {
+			return err
+		}
+		c.Target.cur = tree.Frame
+		c.Target.documentUpdated(ctx)
+		return nil
 	}
 	if !c.first {
 		var err error
