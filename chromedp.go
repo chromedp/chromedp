@@ -244,13 +244,21 @@ func (c *Context) newTarget(ctx context.Context) error {
 		return c.attachTarget(ctx, c.targetID)
 	}
 
+	// This is like WaitNewTarget, but for the entire browser.
 	ch := make(chan target.ID, 1)
 	lctx, cancel := context.WithCancel(ctx)
 	ListenBrowser(lctx, func(ev interface{}) {
-		if ev, ok := ev.(*target.EventTargetCreated); ok &&
-			ev.TargetInfo.Type == "page" &&
-			ev.TargetInfo.URL == "about:blank" {
-			ch <- ev.TargetInfo.TargetID
+		var info *target.Info
+		switch ev := ev.(type) {
+		case *target.EventTargetCreated:
+			info = ev.TargetInfo
+		case *target.EventTargetInfoChanged:
+			info = ev.TargetInfo
+		default:
+			return
+		}
+		if info.Type == "page" && info.URL == "about:blank" {
+			ch <- info.TargetID
 			cancel()
 		}
 	})
