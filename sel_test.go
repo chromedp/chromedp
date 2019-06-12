@@ -173,3 +173,27 @@ func TestAtLeast(t *testing.T) {
 		t.Errorf("expected to have at least 3 nodes: got %d", len(nodes))
 	}
 }
+
+func TestByJSPath(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "image2.html")
+	defer cancel()
+
+	// check nodes == 1
+	var nodes []*cdp.Node
+	if err := Run(ctx,
+		Nodes(`document.querySelector('#imagething').shadowRoot.querySelector('.container')`, &nodes, ByJSPath),
+	); err != nil {
+		t.Fatal(err)
+	}
+	if len(nodes) != 1 {
+		t.Errorf("expected nodes to have len 1, got: %d", len(nodes))
+	}
+
+	// check class
+	class := nodes[0].AttributeValue("class")
+	if class != "container" {
+		t.Errorf("expected class to be 'container', got: %q", class)
+	}
+}

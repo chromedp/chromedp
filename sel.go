@@ -8,18 +8,8 @@ import (
 
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/dom"
+	"github.com/chromedp/cdproto/runtime"
 )
-
-/*
-
-TODO: selector 'by' type, as below:
-classname
-linktext
-name
-partiallinktext
-tagname
-
-*/
 
 // Selector holds information pertaining to an element query select action.
 type Selector struct {
@@ -28,6 +18,7 @@ type Selector struct {
 	by    func(context.Context, *cdp.Node) ([]cdp.NodeID, error)
 	wait  func(context.Context, *cdp.Frame, ...cdp.NodeID) ([]*cdp.Node, error)
 	after func(context.Context, ...*cdp.Node) error
+	raw   bool
 }
 
 // Query is an action to query for document nodes matching the specified
@@ -169,8 +160,8 @@ func ByID(s *Selector) {
 	ByQuery(s)
 }
 
-// BySearch is a query option via DOM.performSearch (works with both CSS and
-// XPath queries).
+// BySearch is a query option to select a value using the DOM.performSearch
+// API. Works with both CSS and XPath queries.
 func BySearch(s *Selector) {
 	ByFunc(func(ctx context.Context, n *cdp.Node) ([]cdp.NodeID, error) {
 		id, count, err := dom.PerformSearch(s.selAsString()).Do(ctx)
@@ -188,6 +179,45 @@ func BySearch(s *Selector) {
 		}
 
 		return nodes, nil
+	})(s)
+}
+
+// ByJSPath is a query option to select elements using a "JS Path" value.
+//
+// Allows for the direct querying of DOM elements that otherwise cannot be
+// retrieved using the other By* funcs, such as ShadowDOM elements.
+//
+// Note: Do not use with an untrusted selector value, as any defined selector
+// will be passed to runtime.Evaluate.
+func ByJSPath(s *Selector) {
+	s.raw = true
+	ByFunc(func(ctx context.Context, n *cdp.Node) ([]cdp.NodeID, error) {
+		// set up eval command
+		p := runtime.Evaluate(s.selAsString()).
+			WithAwaitPromise(true).
+			WithObjectGroup("console").
+			WithIncludeCommandLineAPI(true)
+
+		// execute
+		v, exp, err := p.Do(ctx)
+		if err != nil {
+			return nil, err
+		}
+		if exp != nil {
+			return nil, exp
+		}
+
+		// use the ObjectID from the evaluation to get the nodeID
+		nodeID, err := dom.RequestNode(v.ObjectID).Do(ctx)
+		if err != nil {
+			return nil, err
+		}
+
+		if nodeID == cdp.EmptyNodeID {
+			return []cdp.NodeID{}, nil
+		}
+
+		return []cdp.NodeID{nodeID}, nil
 	})(s)
 }
 
@@ -276,7 +306,7 @@ func NodeVisible(s *Selector) {
 
 		// check offsetParent
 		var res bool
-		err = EvaluateAsDevTools(fmt.Sprintf(visibleJS, n.FullXPath()), &res).Do(ctx)
+		err = EvaluateAsDevTools(snippet(visibleJS, cashX(true), s, n), &res).Do(ctx)
 		if err != nil {
 			return err
 		}
@@ -302,7 +332,7 @@ func NodeNotVisible(s *Selector) {
 
 		// check offsetParent
 		var res bool
-		err = EvaluateAsDevTools(fmt.Sprintf(visibleJS, n.FullXPath()), &res).Do(ctx)
+		err = EvaluateAsDevTools(snippet(visibleJS, cashX(true), s, n), &res).Do(ctx)
 		if err != nil {
 			return err
 		}

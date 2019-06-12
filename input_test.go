@@ -73,12 +73,13 @@ func TestMouseClickNode(t *testing.T) {
 		opt      MouseOption
 		by       QueryOption
 	}{
-		{"button2", "foo", ButtonType(input.ButtonNone), ByID},
-		{"button2", "bar", ButtonType(input.ButtonLeft), ByID},
-		{"button2", "bar-middle", ButtonType(input.ButtonMiddle), ByID},
-		{"input3", "foo", ButtonModifiers(input.ModifierNone), ByID},
-		{"input3", "bar-right", ButtonType(input.ButtonRight), ByID},
-		{"input3", "bar-right", Button("right"), ByID},
+		{`button2`, "foo", ButtonType(input.ButtonNone), ByID},
+		{`button2`, "bar", ButtonType(input.ButtonLeft), ByID},
+		{`button2`, "bar-middle", ButtonType(input.ButtonMiddle), ByID},
+		{`input3`, "foo", ButtonModifiers(input.ModifierNone), ByID},
+		{`input3`, "bar-right", ButtonType(input.ButtonRight), ByID},
+		{`input3`, "bar-right", Button("right"), ByID},
+		{`document.querySelector('#input3')`, "bar-right", ButtonType(input.ButtonRight), ByJSPath},
 	}
 
 	for i, test := range tests {
@@ -119,9 +120,10 @@ func TestMouseClickOffscreenNode(t *testing.T) {
 		exp int
 		by  QueryOption
 	}{
-		{"#button3", 0, ByID},
-		{"#button3", 2, ByID},
-		{"#button3", 10, ByID},
+		{`#button3`, 0, ByID},
+		{`#button3`, 2, ByID},
+		{`#button3`, 10, ByID},
+		{`document.querySelector('#button3')`, 10, ByJSPath},
 	}
 
 	for i, test := range tests {
@@ -175,12 +177,13 @@ func TestKeyAction(t *testing.T) {
 		sel, exp string
 		by       QueryOption
 	}{
-		{"#input4", "foo", ByID},
-		{"#input4", "foo and bar", ByID},
-		{"#input4", "1234567890", ByID},
-		{"#input4", "~!@#$%^&*()_+=[];'", ByID},
-		{"#input4", "你", ByID},
-		{"#input4", "\n\nfoo\n\nbar\n\n", ByID},
+		{`#input4`, "foo", ByID},
+		{`#input4`, "foo and bar", ByID},
+		{`#input4`, "1234567890", ByID},
+		{`#input4`, "~!@#$%^&*()_+=[];'", ByID},
+		{`#input4`, "你", ByID},
+		{`#input4`, "\n\nfoo\n\nbar\n\n", ByID},
+		{`document.querySelector('#input4')`, "\n\ntest\n\n", ByJSPath},
 	}
 
 	for i, test := range tests {
@@ -225,12 +228,13 @@ func TestKeyActionNode(t *testing.T) {
 		sel, exp string
 		by       QueryOption
 	}{
-		{"#input4", "foo", ByID},
-		{"#input4", "foo and bar", ByID},
-		{"#input4", "1234567890", ByID},
-		{"#input4", "~!@#$%^&*()_+=[];'", ByID},
-		{"#input4", "你", ByID},
-		{"#input4", "\n\nfoo\n\nbar\n\n", ByID},
+		{`#input4`, "foo", ByID},
+		{`#input4`, "foo and bar", ByID},
+		{`#input4`, "1234567890", ByID},
+		{`#input4`, "~!@#$%^&*()_+=[];'", ByID},
+		{`#input4`, "你", ByID},
+		{`#input4`, "\n\nfoo\n\nbar\n\n", ByID},
+		{`document.querySelector('#input4')`, "\n\ntest\n\n", ByJSPath},
 	}
 
 	for i, test := range tests {

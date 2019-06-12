@@ -30,12 +30,13 @@ func TestNodes(t *testing.T) {
 	tests := []struct {
 		sel string
 		by  QueryOption
-		len int
+		n   int
 	}{
-		{"/html/body/table/tbody[1]/tr[2]/td", BySearch, 3},
-		{"body > table > tbody:nth-child(2) > tr:nth-child(2) > td:not(:last-child)", ByQueryAll, 2},
-		{"body > table > tbody:nth-child(2) > tr:nth-child(2) > td", ByQuery, 1},
-		{"#footer", ByID, 1},
+		{`/html/body/table/tbody[1]/tr[2]/td`, BySearch, 3},
+		{`body > table > tbody:nth-child(2) > tr:nth-child(2) > td:not(:last-child)`, ByQueryAll, 2},
+		{`body > table > tbody:nth-child(2) > tr:nth-child(2) > td`, ByQuery, 1},
+		{`#footer`, ByID, 1},
+		{`document.querySelector("body > table > tbody:nth-child(2) > tr:nth-child(2) > td:nth-child(1)")`, ByJSPath, 1},
 	}
 
 	for i, test := range tests {
@@ -44,8 +45,8 @@ func TestNodes(t *testing.T) {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
 
-		if len(nodes) != test.len {
-			t.Errorf("test %d expected to have %d nodes: got %d", i, test.len, len(nodes))
+		if len(nodes) != test.n {
+			t.Errorf("test %d expected to have %d nodes: got %d", i, test.n, len(nodes))
 		}
 	}
 }
@@ -59,12 +60,13 @@ func TestNodeIDs(t *testing.T) {
 	tests := []struct {
 		sel string
 		by  QueryOption
-		len int
+		n   int
 	}{
-		{"/html/body/table/tbody[1]/tr[2]/td", BySearch, 3},
-		{"body > table > tbody:nth-child(2) > tr:nth-child(2) > td:not(:last-child)", ByQueryAll, 2},
-		{"body > table > tbody:nth-child(2) > tr:nth-child(2) > td", ByQuery, 1},
-		{"#footer", ByID, 1},
+		{`/html/body/table/tbody[1]/tr[2]/td`, BySearch, 3},
+		{`body > table > tbody:nth-child(2) > tr:nth-child(2) > td:not(:last-child)`, ByQueryAll, 2},
+		{`body > table > tbody:nth-child(2) > tr:nth-child(2) > td`, ByQuery, 1},
+		{`#footer`, ByID, 1},
+		{`document.querySelector("body > table > tbody:nth-child(2) > tr:nth-child(2) > td:nth-child(1)")`, ByJSPath, 1},
 	}
 
 	for i, test := range tests {
@@ -73,8 +75,8 @@ func TestNodeIDs(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if len(ids) != test.len {
-			t.Errorf("test %d expected to have %d node id's: got %d", i, test.len, len(ids))
+		if len(ids) != test.n {
+			t.Errorf("test %d expected to have %d node id's: got %d", i, test.n, len(ids))
 		}
 	}
 }
@@ -92,7 +94,8 @@ func TestFocusBlur(t *testing.T) {
 		{`//*[@id="input1"]`, BySearch},
 		{`body > input[type="number"]:nth-child(1)`, ByQueryAll},
 		{`body > input[type="number"]:nth-child(1)`, ByQuery},
-		{"#input1", ByID},
+		{`#input1`, ByID},
+		{`document.querySelector("#input1")`, ByJSPath},
 	}
 
 	if err := Run(ctx, Click("#input1", ByID)); err != nil {
@@ -136,15 +139,16 @@ func TestDimensions(t *testing.T) {
 		width  int64
 		height int64
 	}{
-		{"/html/body/img", BySearch, 239, 239},
-		{"img", ByQueryAll, 239, 239},
-		{"img", ByQuery, 239, 239},
-		{"#icon-github", ByID, 120, 120},
+		{`/html/body/img`, BySearch, 239, 239},
+		{`img`, ByQueryAll, 239, 239},
+		{`img`, ByQuery, 239, 239},
+		{`#icon-github`, ByID, 120, 120},
+		{`document.querySelector("#icon-github")`, ByJSPath, 120, 120},
 	}
 
 	for i, test := range tests {
 		var model *dom.BoxModel
-		if err := Run(ctx, Dimensions(test.sel, &model)); err != nil {
+		if err := Run(ctx, Dimensions(test.sel, &model, test.by)); err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
 
@@ -169,6 +173,7 @@ func TestText(t *testing.T) {
 		{"body > form > span", ByQueryAll, "insert"},
 		{"body > form > span:nth-child(2)", ByQuery, "keyword"},
 		{"/html/body/form/span[2]", BySearch, "keyword"},
+		{`document.querySelector("#form > span:nth-child(2)")`, ByJSPath, "keyword"},
 	}
 
 	for i, test := range tests {
@@ -195,6 +200,7 @@ func TestClear(t *testing.T) {
 		{`#form > input[type="text"]:nth-child(4)`, ByQuery},
 		{`#form > input[type="text"]`, ByQueryAll},
 		{`#keyword`, ByID},
+		{`document.querySelector("#keyword")`, ByJSPath},
 
 		// textarea fields
 		{`//*[@id="bar"]`, BySearch},
@@ -248,6 +254,7 @@ func TestReset(t *testing.T) {
 		{`#form > input[type="text"]:nth-child(6)`, ByQuery, "foobar", "foo"},
 		{`#form > input[type="text"]`, ByQueryAll, "foobar", "chromedp"},
 		{"#bar", ByID, "foobar", "bar"},
+		{`document.querySelector("#bar")`, ByJSPath, "foobar", "bar"},
 	}
 
 	for i, test := range tests {
@@ -288,6 +295,7 @@ func TestValue(t *testing.T) {
 		{`#form > input[type="text"]:nth-child(4)`, ByQuery},
 		{`#form > input[type="text"]`, ByQueryAll},
 		{`#keyword`, ByID},
+		{`document.querySelector("#keyword")`, ByJSPath},
 	}
 
 	for i, test := range tests {
@@ -313,6 +321,7 @@ func TestSetValue(t *testing.T) {
 		{`#form > input[type="text"]:nth-child(4)`, ByQuery},
 		{`#form > input[type="text"]`, ByQueryAll},
 		{`#bar`, ByID},
+		{`document.querySelector("#bar")`, ByJSPath},
 	}
 
 	for i, test := range tests {
@@ -358,7 +367,7 @@ func TestAttributes(t *testing.T) {
 			},
 		},
 		{
-			"body > img:first-child", ByQuery,
+			`body > img:first-child`, ByQuery,
 			map[string]string{
 				"alt": "Brankas - Easy Money Management",
 				"id":  "icon-brankas",
@@ -366,7 +375,7 @@ func TestAttributes(t *testing.T) {
 			},
 		},
 		{
-			"body > img:nth-child(2)", ByQueryAll,
+			`body > img:nth-child(2)`, ByQueryAll,
 			map[string]string{
 				"alt": `How people build software`,
 				"id":  "icon-github",
@@ -374,7 +383,15 @@ func TestAttributes(t *testing.T) {
 			},
 		},
 		{
-			"#icon-github", ByID,
+			`#icon-github`, ByID,
+			map[string]string{
+				"alt": "How people build software",
+				"id":  "icon-github",
+				"src": "images/github.png",
+			},
+		},
+		{
+			`document.querySelector("#icon-github")`, ByJSPath,
 			map[string]string{
 				"alt": "How people build software",
 				"id":  "icon-github",
@@ -455,7 +472,7 @@ func TestSetAttributes(t *testing.T) {
 			},
 		},
 		{
-			"body > img:first-child", ByQuery,
+			`body > img:first-child`, ByQuery,
 			map[string]string{"data-url": "brankas"},
 			map[string]string{
 				"alt":      "Brankas - Easy Money Management",
@@ -465,7 +482,7 @@ func TestSetAttributes(t *testing.T) {
 			},
 		},
 		{
-			"body > img:nth-child(2)", ByQueryAll,
+			`body > img:nth-child(2)`, ByQueryAll,
 			map[string]string{"width": "100", "height": "200"},
 			map[string]string{
 				"alt":    `How people build software`,
@@ -476,7 +493,18 @@ func TestSetAttributes(t *testing.T) {
 			},
 		},
 		{
-			"#icon-github", ByID,
+			`#icon-github`, ByID,
+			map[string]string{"width": "100", "height": "200"},
+			map[string]string{
+				"alt":    "How people build software",
+				"id":     "icon-github",
+				"src":    "images/github.png",
+				"width":  "100",
+				"height": "200",
+			},
+		},
+		{
+			`document.querySelector("#icon-github")`, ByJSPath,
 			map[string]string{"width": "100", "height": "200"},
 			map[string]string{
 				"alt":    "How people build software",
@@ -528,9 +556,10 @@ func TestAttributeValue(t *testing.T) {
 		exp  string
 	}{
 		{`//*[@id="icon-brankas"]`, BySearch, "alt", "Brankas - Easy Money Management"},
-		{"body > img:first-child", ByQuery, "alt", "Brankas - Easy Money Management"},
-		{"body > img:nth-child(2)", ByQueryAll, "alt", "How people build software"},
-		{"#icon-github", ByID, "alt", "How people build software"},
+		{`body > img:first-child`, ByQuery, "alt", "Brankas - Easy Money Management"},
+		{`body > img:nth-child(2)`, ByQueryAll, "alt", "How people build software"},
+		{`#icon-github`, ByID, "alt", "How people build software"},
+		{`document.querySelector('#icon-github')`, ByJSPath, "alt", "How people build software"},
 	}
 
 	for i, test := range tests {
@@ -560,7 +589,8 @@ func TestSetAttributeValue(t *testing.T) {
 		{`//*[@id="keyword"]`, BySearch, "foo", "bar"},
 		{`#form > input[type="text"]:nth-child(6)`, ByQuery, "foo", "bar"},
 		{`#form > input[type="text"]`, ByQueryAll, "foo", "bar"},
-		{"#bar", ByID, "foo", "bar"},
+		{`#bar`, ByID, "foo", "bar"},
+		{`document.querySelector('#bar')`, ByJSPath, "foo", "bar"},
 	}
 
 	for i, test := range tests {
@@ -601,10 +631,11 @@ func TestRemoveAttribute(t *testing.T) {
 		by   QueryOption
 		attr string
 	}{
-		{"/html/body/img", BySearch, "alt"},
-		{"img", ByQueryAll, "alt"},
-		{"img", ByQuery, "alt"},
-		{"#icon-github", ByID, "alt"},
+		{`/html/body/img`, BySearch, "alt"},
+		{`img`, ByQueryAll, "alt"},
+		{`img`, ByQuery, "alt"},
+		{`#icon-github`, ByID, "alt"},
+		{`document.querySelector('#icon-github')`, ByJSPath, "alt"},
 	}
 
 	for i, test := range tests {
@@ -615,7 +646,7 @@ func TestRemoveAttribute(t *testing.T) {
 			ctx, cancel := testAllocate(t, "image.html")
 			defer cancel()
 
-			if err := Run(ctx, RemoveAttribute(test.sel, test.attr)); err != nil {
+			if err := Run(ctx, RemoveAttribute(test.sel, test.attr, test.by)); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
@@ -644,7 +675,8 @@ func TestClick(t *testing.T) {
 		{`//*[@id="form"]/input[4]`, BySearch},
 		{`#form > input[type="submit"]:nth-child(11)`, ByQuery},
 		{`#form > input[type="submit"]:nth-child(11)`, ByQueryAll},
-		{"#btn2", ByID},
+		{`#btn2`, ByID},
+		{`document.querySelector('#btn2')`, ByJSPath},
 	}
 
 	for i, test := range tests {
@@ -682,6 +714,7 @@ func TestDoubleClick(t *testing.T) {
 		{`body > input[type="button"]:nth-child(2)`, ByQueryAll},
 		{`body > input[type="button"]:nth-child(2)`, ByQuery},
 		{`#button1`, ByID},
+		{`document.querySelector('#button1')`, ByJSPath},
 	}
 
 	for i, test := range tests {
@@ -719,9 +752,10 @@ func TestSendKeys(t *testing.T) {
 		{`//*[@id="input1"]`, BySearch, "INSERT ", "INSERT some value"}, // 0
 		{`#box4 > input:nth-child(1)`, ByQuery, "insert ", "insert some value"},
 		{`#box4 > textarea`, ByQueryAll, "prefix " + kb.End + "\b\b SUFFIX\n", "prefix textar SUFFIX\n"},
-		{"#textarea1", ByID, "insert ", "insert textarea"},
-		{"#textarea1", ByID, kb.End + "\b\b\n\naoeu\n\nfoo\n\nbar\n\n", "textar\n\naoeu\n\nfoo\n\nbar\n\n"},
-		{"#select1", ByID, kb.ArrowDown + kb.ArrowDown, "three"}, // 5
+		{`#textarea1`, ByID, "insert ", "insert textarea"},
+		{`#textarea1`, ByID, kb.End + "\b\b\n\naoeu\n\nfoo\n\nbar\n\n", "textar\n\naoeu\n\nfoo\n\nbar\n\n"},
+		{`#select1`, ByID, kb.ArrowDown + kb.ArrowDown, "three"}, // 5
+		{`document.querySelector('#textarea1')`, ByJSPath, "insert ", "insert textarea"},
 	}
 
 	for i, test := range tests {
@@ -754,7 +788,7 @@ func TestSendKeys(t *testing.T) {
 func TestScreenshot(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := testAllocate(t, "image.html")
+	ctx, cancel := testAllocate(t, "image2.html")
 	defer cancel()
 
 	tests := []struct {
@@ -762,9 +796,10 @@ func TestScreenshot(t *testing.T) {
 		by   QueryOption
 		size int
 	}{
-		{"/html/body/img", BySearch, 239},
-		{"img", ByQueryAll, 239},
-		{"#icon-github", ByID, 120},
+		{`/html/body/img`, BySearch, 239},
+		{`img`, ByQueryAll, 239},
+		{`#icon-github`, ByID, 120},
+		{`document.querySelector('#imagething').shadowRoot.querySelector('.container')`, ByJSPath, 190},
 	}
 
 	// a smaller viewport speeds up this test
@@ -776,7 +811,7 @@ func TestScreenshot(t *testing.T) {
 
 	for i, test := range tests {
 		var buf []byte
-		if err := Run(ctx, Screenshot(test.sel, &buf)); err != nil {
+		if err := Run(ctx, Screenshot(test.sel, &buf, test.by)); err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
 
@@ -789,7 +824,7 @@ func TestScreenshot(t *testing.T) {
 		}
 		size := img.Bounds().Size()
 		if size.X != test.size || size.Y != test.size {
-			t.Fatalf("expected dimensions to be %d*%d, got %d*%d",
+			t.Errorf("expected dimensions to be %d*%d, got %d*%d",
 				test.size, test.size, size.X, size.Y)
 		}
 	}
@@ -850,7 +885,8 @@ func TestSubmit(t *testing.T) {
 		{`//*[@id="keyword"]`, BySearch},
 		{`#form > input[type="text"]:nth-child(4)`, ByQuery},
 		{`#form > input[type="text"]`, ByQueryAll},
-		{"#form", ByID},
+		{`#form`, ByID},
+		{`document.querySelector('#form')`, ByJSPath},
 	}
 
 	for i, test := range tests {
@@ -887,7 +923,8 @@ func TestComputedStyle(t *testing.T) {
 		{`//*[@id="input1"]`, BySearch},
 		{`body > input[type="number"]:nth-child(1)`, ByQueryAll},
 		{`body > input[type="number"]:nth-child(1)`, ByQuery},
-		{"#input1", ByID},
+		{`#input1`, ByID},
+		{`document.querySelector('#input1')`, ByJSPath},
 	}
 
 	for i, test := range tests {
@@ -938,7 +975,8 @@ func TestMatchedStyle(t *testing.T) {
 		{`//*[@id="input1"]`, BySearch},
 		{`body > input[type="number"]:nth-child(1)`, ByQueryAll},
 		{`body > input[type="number"]:nth-child(1)`, ByQuery},
-		{"#input1", ByID},
+		{`#input1`, ByID},
+		{`document.querySelector('#input1')`, ByJSPath},
 	}
 
 	for i, test := range tests {
@@ -1044,13 +1082,14 @@ func TestInnerHTML(t *testing.T) {
 		sel string
 		by  QueryOption
 	}{
-		{"/html/body/table/thead", BySearch},
-		{"thead", ByQueryAll},
-		{"thead", ByQuery},
+		{`/html/body/table/thead`, BySearch},
+		{`thead`, ByQueryAll},
+		{`thead`, ByQuery},
+		{`document.querySelector("#footer > td:nth-child(2)")`, ByJSPath},
 	}
 	for i, test := range tests {
 		var html string
-		if err := Run(ctx, InnerHTML(test.sel, &html)); err != nil {
+		if err := Run(ctx, InnerHTML(test.sel, &html, test.by)); err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
 
@@ -1070,13 +1109,14 @@ func TestOuterHTML(t *testing.T) {
 		sel string
 		by  QueryOption
 	}{
-		{"/html/body/table/thead/tr", BySearch},
-		{"thead tr", ByQueryAll},
-		{"thead tr", ByQuery},
+		{`/html/body/table/thead/tr`, BySearch},
+		{`thead tr`, ByQueryAll},
+		{`thead tr`, ByQuery},
+		{`document.querySelector("#footer > td:nth-child(2)")`, ByJSPath},
 	}
 	for i, test := range tests {
 		var html string
-		if err := Run(ctx, OuterHTML(test.sel, &html)); err != nil {
+		if err := Run(ctx, OuterHTML(test.sel, &html, test.by)); err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
 
@@ -1096,10 +1136,11 @@ func TestScrollIntoView(t *testing.T) {
 		sel string
 		by  QueryOption
 	}{
-		{"/html/body/img", BySearch},
-		{"img", ByQueryAll},
-		{"img", ByQuery},
-		{"#icon-github", ByID},
+		{`/html/body/img`, BySearch},
+		{`img`, ByQueryAll},
+		{`img`, ByQuery},
+		{`#icon-github`, ByID},
+		{`document.querySelector('#icon-github')`, ByJSPath},
 	}
 	for i, test := range tests {
 		if err := Run(ctx, ScrollIntoView(test.sel, test.by)); err != nil {

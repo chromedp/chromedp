@@ -2,7 +2,6 @@ package chromedp
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/dom"
@@ -57,7 +56,7 @@ func MouseClickXY(x, y int64, opts ...MouseOption) Action {
 func MouseClickNode(n *cdp.Node, opts ...MouseOption) Action {
 	return ActionFunc(func(ctx context.Context) error {
 		var pos []int
-		err := EvaluateAsDevTools(fmt.Sprintf(scrollIntoViewJS, n.FullXPath()), &pos).Do(ctx)
+		err := EvaluateAsDevTools(snippet(scrollIntoViewJS, cashX(true), nil, n), &pos).Do(ctx)
 		if err != nil {
 			return err
 		}
