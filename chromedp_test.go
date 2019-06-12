@@ -1,6 +1,7 @@
 package chromedp
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io/ioutil"
@@ -511,5 +512,41 @@ func TestListenCancel(t *testing.T) {
 	}
 	if want := 1; targetCount != 1 {
 		t.Fatalf("want %d target events; got %d", want, targetCount)
+	}
+}
+
+func TestLogOptions(t *testing.T) {
+	t.Parallel()
+
+	var bufMu sync.Mutex
+	var buf bytes.Buffer
+	fn := func(format string, a ...interface{}) {
+		bufMu.Lock()
+		fmt.Fprintf(&buf, format, a...)
+		fmt.Fprintln(&buf)
+		bufMu.Unlock()
+	}
+
+	ctx, cancel := NewContext(context.Background(),
+		WithErrorf(fn),
+		WithLogf(fn),
+		WithDebugf(fn),
+	)
+	defer cancel()
+	if err := Run(ctx, Navigate(testdataDir+"/form.html")); err != nil {
+		t.Fatal(err)
+	}
+	cancel()
+
+	bufMu.Lock()
+	got := buf.String()
+	bufMu.Unlock()
+	for _, want := range []string{
+		"Page.navigate",
+		"Page.frameNavigated",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("expected output to contain %q", want)
+		}
 	}
 }
