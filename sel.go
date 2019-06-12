@@ -30,8 +30,8 @@ type Selector struct {
 	after func(context.Context, ...*cdp.Node) error
 }
 
-// Query is an action to query for document nodes match the specified sel and
-// the supplied query options.
+// Query is an action to query for document nodes matching the specified
+// selector sel using the supplied query options.
 func Query(sel interface{}, opts ...QueryOption) Action {
 	s := &Selector{
 		sel: sel,

@@ -1,8 +1,8 @@
 # About chromedp [![GoDoc][1]][2] [![Build Status][3]][4]
 
 Package chromedp is a faster, simpler way to drive browsers supporting the
-[Chrome DevTools Protocol][5] in Go using the without external dependencies
-(like Selenium or PhantomJS).
+[Chrome DevTools Protocol][5] in Go without external dependencies (like
+Selenium or PhantomJS).
 
 ## Installing
 
@@ -12,38 +12,40 @@ Install in the usual Go way:
 
 ## Examples
 
-Refer to the [GoDoc page][7] for the documentation and examples. The
-[examples][6] repository contains more complex scenarios.
+Refer to the [GoDoc page][7] for the documentation and examples. Additionally,
+the [examples][6] repository contains more complex examples.
 
 ## Frequently Asked Questions
 
 > I can't see any Chrome browser window
 
-By default, it's run in headless mode. See `DefaultExecAllocatorOptions`, and
+By default, Chrome is run in headless mode. See `DefaultExecAllocatorOptions`, and
 [an example](https://godoc.org/github.com/chromedp/chromedp#example-ExecAllocator)
-to override said options.
+to override the default options.
 
 > I'm seeing "context canceled" errors
 
-If the connection to the browser is dropped, the context will be cancelled,
-which can be an unexpected reason for this error. For example, if the browser is
-closed manually.
+When the connection to the browser is lost, `chromedp` cancels the context, and
+it may result in this error. This occurs, for example, if the browser is closed
+manually, or if the browser process has been killed or otherwise terminated.
 
 > Chrome exits as soon as my Go program finishes
 
-This is set up on Linux to avoid leaking resources. If you want Chrome to be a
-long-running process, start it separately and connect to it via `RemoteAllocator`.
+On Linux, `chromedp` is configured to avoid leaking resources by force-killing
+any started Chrome child processes. If you need to launch a long-running Chrome
+instance, manually start Chrome and connect using `RemoteAllocator`.
 
-> Execute an action without `Run` results in "invalid context"
+> Executing an action without `Run` results in "invalid context"
 
-By default, a chromedp context doesn't have an executor set up. You can specify
-one; see [issue #326](https://github.com/chromedp/chromedp/issues/326).
+By default, a `chromedp` context does not have an executor, however one can be
+specified manually if necessary; see [issue #326](https://github.com/chromedp/chromedp/issues/326)
+for an example.
 
 > I can't use an `Action` with `Run` because it returns many values
 
 Wrap it with an `ActionFunc`:
 
-```
+```go
 chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
 	_, err := domain.SomeAction().Do(ctx)
 	return err
