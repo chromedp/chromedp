@@ -64,7 +64,7 @@ func Blur(sel interface{}, opts ...QueryOption) Action {
 		}
 
 		var res bool
-		err := EvaluateAsDevTools(fmt.Sprintf(blurJS, nodes[0].FullXPath()), &res).Do(ctx)
+		err := EvaluateAsDevTools(snippet(blurJS, cashX(true), sel, nodes[0]), &res).Do(ctx)
 		if err != nil {
 			return err
 		}
@@ -104,7 +104,7 @@ func Text(sel interface{}, text *string, opts ...QueryOption) Action {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
-		return EvaluateAsDevTools(fmt.Sprintf(textJS, nodes[0].FullXPath()), text).Do(ctx)
+		return EvaluateAsDevTools(snippet(textJS, cashXNode(false), sel, nodes[0]), text).Do(ctx)
 	}, opts...)
 }
 
@@ -321,7 +321,7 @@ func JavascriptAttribute(sel interface{}, name string, res interface{}, opts ...
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
-		return EvaluateAsDevTools(fmt.Sprintf(attributeJS, nodes[0].FullXPath(), name), res).Do(ctx)
+		return EvaluateAsDevTools(snippet(attributeJS, cashX(true), sel, nodes[0], name), res).Do(ctx)
 	}, opts...)
 }
 
@@ -334,7 +334,7 @@ func SetJavascriptAttribute(sel interface{}, name, value string, opts ...QueryOp
 		}
 
 		var res string
-		err := EvaluateAsDevTools(fmt.Sprintf(setAttributeJS, nodes[0].FullXPath(), name, value), &res).Do(ctx)
+		err := EvaluateAsDevTools(snippet(setAttributeJS, cashX(true), sel, nodes[0], name, value), &res).Do(ctx)
 		if err != nil {
 			return err
 		}
@@ -481,7 +481,7 @@ func Submit(sel interface{}, opts ...QueryOption) Action {
 		}
 
 		var res bool
-		err := EvaluateAsDevTools(fmt.Sprintf(submitJS, nodes[0].FullXPath()), &res).Do(ctx)
+		err := EvaluateAsDevTools(snippet(submitJS, cashX(true), sel, nodes[0]), &res).Do(ctx)
 		if err != nil {
 			return err
 		}
@@ -503,7 +503,7 @@ func Reset(sel interface{}, opts ...QueryOption) Action {
 		}
 
 		var res bool
-		err := EvaluateAsDevTools(fmt.Sprintf(resetJS, nodes[0].FullXPath()), &res).Do(ctx)
+		err := EvaluateAsDevTools(snippet(resetJS, cashX(true), sel, nodes[0]), &res).Do(ctx)
 		if err != nil {
 			return err
 		}
@@ -573,7 +573,7 @@ func ScrollIntoView(sel interface{}, opts ...QueryOption) Action {
 		}
 
 		var pos []int
-		err := EvaluateAsDevTools(fmt.Sprintf(scrollIntoViewJS, nodes[0].FullXPath()), &pos).Do(ctx)
+		err := EvaluateAsDevTools(snippet(scrollIntoViewJS, cashX(true), sel, nodes[0]), &pos).Do(ctx)
 		if err != nil {
 			return err
 		}

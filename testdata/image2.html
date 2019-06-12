@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head>
+  <title>this is title</title>
+  <style>
+    #half-color {
+      display: inline-block;
+      width: 200px;
+      height: 200px;
+      background: linear-gradient(to right, blue 50%, red 50%);
+    }
+  </style>
+</head>
+<body style="background-color: #41a1e1">
+  <template id="myimage">
+    <style>
+      .container {
+        display: inline-block;
+        width: 188px;
+        height: 188px;
+        background: linear-gradient(to right, gray 50%, white 50%);
+        border: 1px solid black;
+      }
+    </style>
+    <div class="container">
+      hi!
+    </div>
+  </template>
+  <img id="icon-brankas" src="images/brankas.png" alt="Brankas - Easy Money Management">
+  <img id="icon-github" src="images/github.png" alt="How people build software">
+  <div id="half-color"></div>
+  <div id="imagething"/>
+  <script>
+   var shadow = document.querySelector('#imagething').createShadowRoot();
+   var template = document.querySelector('#myimage');
+   var clone = document.importNode(template.content, true);
+   shadow.appendChild(clone);
+  </script>
+</body>
+</html>

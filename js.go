@@ -1,5 +1,11 @@
 package chromedp
 
+import (
+	"fmt"
+
+	"github.com/chromedp/cdproto/cdp"
+)
+
 const (
 	// textJS is a javascript snippet that returns the concatenated textContent
 	// of all visible (ie, offsetParent !== null) children.
@@ -11,63 +17,94 @@ const (
 			}
 		}
 		return s;
-	})($x('%s/node()'))`
+	})(%s)`
 
 	// blurJS is a javscript snippet that blurs the specified element.
 	blurJS = `(function(a) {
-		a[0].blur();
+		a.blur();
 		return true;
-	})($x(%q))`
+	})(%s)`
 
 	// scrollIntoViewJS is a javascript snippet that scrolls the specified node
 	// into the window's viewport (if needed), returning the actual window x/y
 	// after execution.
 	scrollIntoViewJS = `(function(a) {
-		a[0].scrollIntoViewIfNeeded(true);
+		a.scrollIntoViewIfNeeded(true);
 		return [window.scrollX, window.scrollY];
-	})($x(%q))`
+	})(%s)`
 
 	// submitJS is a javascript snippet that will call the containing form's
 	// submit function, returning true or false if the call was successful.
 	submitJS = `(function(a) {
-		if (a[0].nodeName === 'FORM') {
-			a[0].submit();
+		if (a.nodeName === 'FORM') {
+			a.submit();
 			return true;
-		} else if (a[0].form !== null) {
-			a[0].form.submit();
+		} else if (a.form !== null) {
+			a.form.submit();
 			return true;
 		}
 		return false;
-	})($x(%q))`
+	})(%s)`
 
 	// resetJS is a javascript snippet that will call the containing form's
 	// reset function, returning true or false if the call was successful.
 	resetJS = `(function(a) {
-		if (a[0].nodeName === 'FORM') {
-			a[0].reset();
+		if (a.nodeName === 'FORM') {
+			a.reset();
 			return true;
-		} else if (a[0].form !== null) {
-			a[0].form.reset();
+		} else if (a.form !== null) {
+			a.form.reset();
 			return true;
 		}
 		return false;
-	})($x(%q))`
+	})(%s)`
 
 	// attributeJS is a javascript snippet that returns the attribute of a specified
 	// node.
 	attributeJS = `(function(a, n) {
-		return a[0][n];
-	})($x(%q), %q)`
+		return a[n];
+	})(%s, %q)`
 
 	// setAttributeJS is a javascript snippet that sets the value of the specified
 	// node, and returns the value.
 	setAttributeJS = `(function(a, n, v) {
-		return a[0][n] = v;
-	})($x(%q), %q, %q)`
+		return a[n] = v;
+	})(%s, %q, %q)`
 
 	// visibleJS is a javascript snippet that returns true or false depending
 	// on if the specified node's offsetParent is not null.
 	visibleJS = `(function(a) {
-		return a[0].offsetParent !== null;
-	})($x(%q))`
+		return a.offsetParent !== null;
+	})(%s)`
 )
+
+// snippet builds a Javascript expression snippet.
+func snippet(js string, f func(n *cdp.Node) string, sel interface{}, n *cdp.Node, v ...interface{}) string {
+	switch s := sel.(type) {
+	case *Selector:
+		if s != nil && s.raw {
+			return fmt.Sprintf(js, append([]interface{}{s.selAsString()}, v...)...)
+		}
+	}
+	return fmt.Sprintf(js, append([]interface{}{f(n)}, v...)...)
+}
+
+// cashX returns the $x() expression using the node's full xpath value.
+func cashX(flatten bool) func(*cdp.Node) string {
+	return func(n *cdp.Node) string {
+		if flatten {
+			return fmt.Sprintf(`$x(%q)[0]`, n.FullXPath())
+		}
+		return fmt.Sprintf(`$x(%q)`, n.FullXPath())
+	}
+}
+
+// cashXNode returns the $x(/node()) expression using the node's full xpath value.
+func cashXNode(flatten bool) func(*cdp.Node) string {
+	return func(n *cdp.Node) string {
+		if flatten {
+			return fmt.Sprintf(`$x('%s/node()')[0]`, n.FullXPath())
+		}
+		return fmt.Sprintf(`$x('%s/node()')`, n.FullXPath())
+	}
+}
