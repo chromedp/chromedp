@@ -215,11 +215,7 @@ type decMessageString struct {
 }
 
 func (m *decMessageString) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	if l.IsNull() {
-		l.Skip()
-	} else {
-		l.AddError(unmarshal(&m.lexer, l.UnsafeBytes(), &m.m))
-	}
+	l.AddError(unmarshal(&m.lexer, l.UnsafeBytes(), &m.m))
 }
 
 //easyjson:json
