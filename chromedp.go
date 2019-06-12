@@ -339,19 +339,10 @@ func WithBrowserOption(opts ...BrowserOption) ContextOption {
 
 // Targets lists all the targets in the browser attached to the given context.
 func Targets(ctx context.Context) ([]*target.Info, error) {
-	// Don't rely on Run, as that needs to be able to call Targets, and we
-	// don't want cyclic func calls.
+	if err := Run(ctx); err != nil {
+		return nil, err
+	}
 	c := FromContext(ctx)
-	if c == nil || c.Allocator == nil {
-		return nil, ErrInvalidContext
-	}
-	if c.Browser == nil {
-		browser, err := c.Allocator.Allocate(ctx, c.browserOpts...)
-		if err != nil {
-			return nil, err
-		}
-		c.Browser = browser
-	}
 	return target.GetTargets().Do(cdp.WithExecutor(ctx, c.Browser))
 }
 
