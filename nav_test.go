@@ -13,7 +13,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chromedp/cdproto/emulation"
 	"github.com/chromedp/cdproto/page"
 )
 
@@ -212,11 +211,12 @@ func TestCaptureScreenshot(t *testing.T) {
 	ctx, cancel := testAllocate(t, "image.html")
 	defer cancel()
 
+	const width, height = 650, 450
+
 	// set the viewport size, to know what screenshot size to expect
-	width, height := 650, 450
 	var buf []byte
 	if err := Run(ctx,
-		emulation.SetDeviceMetricsOverride(int64(width), int64(height), 1.0, false),
+		EmulateViewport(width, height),
 		CaptureScreenshot(&buf),
 	); err != nil {
 		t.Fatal(err)
