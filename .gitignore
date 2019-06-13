@@ -4,6 +4,8 @@ old*.txt
 cdp-*.log
 cdp-*.txt
 
+/*.png
+
 coverage.out
 massif.out
 

@@ -16,7 +16,6 @@ import (
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/css"
 	"github.com/chromedp/cdproto/dom"
-	"github.com/chromedp/cdproto/emulation"
 
 	"github.com/chromedp/chromedp/kb"
 )
@@ -803,9 +802,7 @@ func TestScreenshot(t *testing.T) {
 	}
 
 	// a smaller viewport speeds up this test
-	if err := Run(ctx, emulation.SetDeviceMetricsOverride(
-		600, 400, 1.0, false,
-	)); err != nil {
+	if err := Run(ctx, EmulateViewport(600, 400)); err != nil {
 		t.Fatal(err)
 	}
 
@@ -839,9 +836,7 @@ func TestScreenshotHighDPI(t *testing.T) {
 	// Use a weird screen dimension with a 1.5 scale factor, so that
 	// cropping the screenshot is forced to use floating point arithmetic
 	// and keep the high DPI in mind.
-	if err := Run(ctx, emulation.SetDeviceMetricsOverride(
-		605, 405, 1.5, false,
-	)); err != nil {
+	if err := Run(ctx, EmulateViewport(605, 405, EmulateScale(1.5))); err != nil {
 		t.Fatal(err)
 	}
 

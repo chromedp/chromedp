@@ -14,9 +14,10 @@ import (
 	"strings"
 
 	"github.com/chromedp/cdproto/page"
-	cdpruntime "github.com/chromedp/cdproto/runtime"
+	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
 	"github.com/chromedp/chromedp"
+	"github.com/chromedp/chromedp/device"
 )
 
 func writeHTML(content string) http.Handler {
@@ -136,7 +137,7 @@ func ExampleListenTarget_consoleLog() {
 
 	chromedp.ListenTarget(ctx, func(ev interface{}) {
 		switch ev := ev.(type) {
-		case *cdpruntime.EventConsoleAPICalled:
+		case *runtime.EventConsoleAPICalled:
 			fmt.Printf("console.%s call:\n", ev.Type)
 			for _, arg := range ev.Args {
 				fmt.Printf("%s - %s\n", arg.Type, arg.Value)
@@ -261,4 +262,27 @@ function changeText() {
 	// <p id="content" onclick="changeText()">Original content.</p>
 	// OuterHTML after clicking:
 	// <p id="content" onclick="changeText()">New content!</p>
+}
+
+func ExampleEmulate() {
+	ctx, cancel := chromedp.NewContext(context.Background())
+	defer cancel()
+
+	var buf []byte
+	if err := chromedp.Run(ctx,
+		chromedp.Emulate(device.IPhone7),
+		chromedp.Navigate(`https://google.com/`),
+		chromedp.WaitVisible(`#main`, chromedp.ByID),
+		chromedp.SendKeys(`input[name=q]`, "what's my user agent?\n"),
+		chromedp.WaitVisible(`#rso`, chromedp.ByID),
+		chromedp.CaptureScreenshot(&buf),
+	); err != nil {
+		panic(err)
+	}
+
+	if err := ioutil.WriteFile("google-iphone7.png", buf, 0644); err != nil {
+		panic(err)
+	}
+
+	// Output:
 }
