@@ -74,7 +74,7 @@ func EvaluateAsDevTools(expression string, res interface{}, opts ...EvaluateOpti
 }
 
 // EvaluateOption is the type for script evaluation options.
-type EvaluateOption func(*runtime.EvaluateParams) *runtime.EvaluateParams
+type EvaluateOption = func(*runtime.EvaluateParams) *runtime.EvaluateParams
 
 // EvalObjectGroup is a evaluate option to set the object group.
 func EvalObjectGroup(objectGroup string) EvaluateOption {

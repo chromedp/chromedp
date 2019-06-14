@@ -91,7 +91,7 @@ func NewExecAllocator(parent context.Context, opts ...ExecAllocatorOption) (cont
 }
 
 // ExecAllocatorOption is a exec allocator option.
-type ExecAllocatorOption func(*ExecAllocator)
+type ExecAllocatorOption = func(*ExecAllocator)
 
 // ExecAllocator is an Allocator which starts new browser processes on the host
 // machine.

@@ -359,7 +359,7 @@ func (b *Browser) run(ctx context.Context) {
 }
 
 // BrowserOption is a browser option.
-type BrowserOption func(*Browser)
+type BrowserOption = func(*Browser)
 
 // WithBrowserLogf is a browser option to specify a func to receive general logging.
 func WithBrowserLogf(f func(string, ...interface{})) BrowserOption {

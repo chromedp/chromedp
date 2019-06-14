@@ -302,7 +302,7 @@ func (c *Context) attachTarget(ctx context.Context, targetID target.ID) error {
 }
 
 // ContextOption is a context option.
-type ContextOption func(*Context)
+type ContextOption = func(*Context)
 
 // WithTargetID sets up a context to be attached to an existing target, instead
 // of creating a new one.

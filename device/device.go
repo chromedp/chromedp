@@ -39,38 +39,55 @@ type device struct {
 
 // String satisfies fmt.Stringer.
 func (d Device) String() string {
-	return devices[d].Name
+	if d < 1 || int(d) > len(devices) {
+		return "Invalid device"
+	}
+	return devices[d-1].Name
 }
 
-// ViewportParams satisfies chromedp.Device.
-func (d Device) ViewportParams() (int64, int64, string, []func(*emulation.SetDeviceMetricsOverrideParams, *emulation.SetTouchEmulationEnabledParams)) {
+// UserAgent satisfies chromedp.Device.
+func (d Device) UserAgent() string {
+	if d < 1 || int(d) > len(devices) {
+		panic("invalid device")
+	}
+	return devices[d-1].UserAgent
+}
+
+// Viewport satisfies chromedp.Device.
+func (d Device) Viewport() (int64, int64, []emulateViewportOption) {
+	if d < 1 || int(d) > len(devices) {
+		panic("invalid device")
+	}
+	dev := devices[d-1]
 	orientation := emulatePortrait
-	if devices[d].Landscape {
+	if dev.Landscape {
 		orientation = emulateLandscape
 	}
-	opts := []func(*emulation.SetDeviceMetricsOverrideParams, *emulation.SetTouchEmulationEnabledParams){
-		emulateScale(devices[d].Scale),
+	opts := []emulateViewportOption{
+		emulateScale(dev.Scale),
 		orientation,
 	}
-	if devices[d].Mobile {
+	if dev.Mobile {
 		opts = append(opts, emulateMobile)
 	}
-	if devices[d].Touch {
+	if dev.Touch {
 		opts = append(opts, emulateTouch)
 	}
-	return devices[d].Width, devices[d].Height, devices[d].UserAgent, opts
+	return dev.Width, dev.Height, opts
 }
 
 /*
-
 	THE FOLLOWING ARE A COPY OF THE chromedp.EmulateViewport* options.
 
 	Provided here in order to prevent circular imports.
 */
 
+// emulateViewportOption is the type for emulate viewport options.
+type emulateViewportOption = func(*emulation.SetDeviceMetricsOverrideParams, *emulation.SetTouchEmulationEnabledParams)
+
 // emulateScale is an emulate viewport option to set the device viewport scaling
 // factor.
-func emulateScale(scale float64) func(*emulation.SetDeviceMetricsOverrideParams, *emulation.SetTouchEmulationEnabledParams) {
+func emulateScale(scale float64) emulateViewportOption {
 	return func(p1 *emulation.SetDeviceMetricsOverrideParams, p2 *emulation.SetTouchEmulationEnabledParams) {
 		p1.DeviceScaleFactor = scale
 	}
@@ -78,7 +95,7 @@ func emulateScale(scale float64) func(*emulation.SetDeviceMetricsOverrideParams,
 
 // emulateOrientation is an emulate viewport option to set the device viewport
 // orientation.
-func emulateOrientation(orientation emulation.OrientationType, angle int64) func(*emulation.SetDeviceMetricsOverrideParams, *emulation.SetTouchEmulationEnabledParams) {
+func emulateOrientation(orientation emulation.OrientationType, angle int64) emulateViewportOption {
 	return func(p1 *emulation.SetDeviceMetricsOverrideParams, p2 *emulation.SetTouchEmulationEnabledParams) {
 		p1.ScreenOrientation = &emulation.ScreenOrientation{
 			Type:  orientation,

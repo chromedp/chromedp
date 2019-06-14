@@ -326,4 +326,4 @@ func (t *Target) domEvent(ctx context.Context, ev interface{}) {
 	f.Unlock()
 }
 
-type TargetOption func(*Target)
+type TargetOption = func(*Target)

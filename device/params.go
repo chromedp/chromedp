@@ -6,8 +6,10 @@ package device
 
 // Devices.
 const (
+	_ Device = iota // make the zero value invalid
+
 	// BlackberryPlayBook is the "Blackberry PlayBook" device.
-	BlackberryPlayBook Device = iota
+	BlackberryPlayBook
 
 	// BlackberryPlayBooklandscape is the "Blackberry PlayBook landscape" device.
 	BlackberryPlayBooklandscape

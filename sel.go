@@ -121,7 +121,7 @@ func QueryAfter(sel interface{}, f func(context.Context, ...*cdp.Node) error, op
 }
 
 // QueryOption is a element query selector option.
-type QueryOption func(*Selector)
+type QueryOption = func(*Selector)
 
 // ByFunc is a query option to set the func used to select elements.
 func ByFunc(f func(context.Context, *cdp.Node) ([]cdp.NodeID, error)) QueryOption {
