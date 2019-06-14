@@ -81,9 +81,9 @@ func TestExecAllocatorKillBrowser(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	kill := make(chan bool, 1)
+	kill := make(chan struct{}, 1)
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		kill <- true
+		kill <- struct{}{}
 		<-ctx.Done() // block until the end of the test
 	}))
 	defer s.Close()

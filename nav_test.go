@@ -324,7 +324,7 @@ func TestClickNavigate(t *testing.T) {
 	mux.Handle("/", writeHTML(`
 <img src="/img.jpg"></img>
 	`))
-	ch := make(chan bool)
+	ch := make(chan struct{})
 	mux.Handle("/img.jpg", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		<-ch
 	}))
@@ -348,7 +348,7 @@ func TestClickNavigate(t *testing.T) {
 			return err
 		}),
 		ActionFunc(func(ctx context.Context) error {
-			ch <- true
+			ch <- struct{}{}
 			return nil
 		}),
 		Navigate(testdataDir + "/image.html"),

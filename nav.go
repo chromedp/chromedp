@@ -30,7 +30,7 @@ func waitLoaded(ctx context.Context) error {
 	//
 	// For now, the second race seems much more common in real scenarios, so
 	// keep the first approach. Is there a better way to deal with this?
-	ch := make(chan bool)
+	ch := make(chan struct{})
 	lctx, cancel := context.WithCancel(ctx)
 	ListenTarget(lctx, func(ev interface{}) {
 		if _, ok := ev.(*page.EventLoadEventFired); ok {
