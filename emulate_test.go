@@ -31,21 +31,3 @@ func TestEmulate(t *testing.T) {
 		t.Errorf("expected size 400x400, got: %dx%d", size.X, size.Y)
 	}
 }
-
-func TestEmulateInvalidDevice(t *testing.T) {
-	t.Parallel()
-
-	var dev device.Device
-
-	want := "Invalid device"
-	if got := dev.String(); got != want {
-		t.Fatalf("want %q, got %q", want, got)
-	}
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Fatalf("expected a panic in Emulate(Device(0))")
-		}
-	}()
-	_ = Emulate(dev)
-}
