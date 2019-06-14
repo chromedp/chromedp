@@ -146,7 +146,7 @@ func (c *Conn) Write(_ context.Context, msg *cdproto.Message) error {
 }
 
 // DialOption is a dial option.
-type DialOption func(*Conn)
+type DialOption = func(*Conn)
 
 // WithConnDebugf is a dial option to set a protocol logger.
 func WithConnDebugf(f func(string, ...interface{})) DialOption {

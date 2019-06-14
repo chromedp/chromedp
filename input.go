@@ -84,7 +84,7 @@ func MouseClickNode(n *cdp.Node, opts ...MouseOption) Action {
 }
 
 // MouseOption is a mouse action option.
-type MouseOption func(*input.DispatchMouseEventParams) *input.DispatchMouseEventParams
+type MouseOption = func(*input.DispatchMouseEventParams) *input.DispatchMouseEventParams
 
 // Button is a mouse action option to set the button to click from a string.
 func Button(btn string) MouseOption {
@@ -174,7 +174,7 @@ func KeyActionNode(n *cdp.Node, keys string, opts ...KeyOption) Action {
 }
 
 // KeyOption is a key action option.
-type KeyOption func(*input.DispatchKeyEventParams) *input.DispatchKeyEventParams
+type KeyOption = func(*input.DispatchKeyEventParams) *input.DispatchKeyEventParams
 
 // KeyModifiers is a key action option to add additional modifiers on the key
 // press.

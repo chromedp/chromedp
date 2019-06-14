@@ -1,34 +1,21 @@
 package chromedp
 
-import (
-	"context"
-
-	"github.com/chromedp/cdproto/emulation"
-)
+import "github.com/chromedp/cdproto/emulation"
 
 // EmulateViewport is an action to change the browser viewport.
 //
 // Wraps calls to emulation.SetDeviceMetricsOverride and emulation.SetTouchEmulationEnabled.
 func EmulateViewport(width, height int64, opts ...EmulateViewportOption) Action {
-	return ActionFunc(func(ctx context.Context) error {
-		p1 := emulation.SetDeviceMetricsOverride(width, height, 1.0, false)
-		p2 := emulation.SetTouchEmulationEnabled(false)
-
-		// apply opts
-		for _, o := range opts {
-			o(p1, p2)
-		}
-
-		// execute
-		if err := p1.Do(ctx); err != nil {
-			return err
-		}
-		return p2.Do(ctx)
-	})
+	p1 := emulation.SetDeviceMetricsOverride(width, height, 1.0, false)
+	p2 := emulation.SetTouchEmulationEnabled(false)
+	for _, o := range opts {
+		o(p1, p2)
+	}
+	return Tasks{p1, p2}
 }
 
 // EmulateViewportOption is the type for emulate viewport options.
-type EmulateViewportOption func(*emulation.SetDeviceMetricsOverrideParams, *emulation.SetTouchEmulationEnabledParams)
+type EmulateViewportOption = func(*emulation.SetDeviceMetricsOverrideParams, *emulation.SetTouchEmulationEnabledParams)
 
 // EmulateScale is an emulate viewport option to set the device viewport scaling
 // factor.
@@ -82,9 +69,13 @@ func ResetViewport() Action {
 // See: github.com/chromedp/chromedp/device for a set of off-the-shelf devices
 // and modes.
 type Device interface {
-	// ViewportParams returns paramaters for use with the EmulateViewport
-	// action.
-	ViewportParams() (int64, int64, string, []func(*emulation.SetDeviceMetricsOverrideParams, *emulation.SetTouchEmulationEnabledParams))
+	// UserAgent returns the string to pass to
+	// emulation.SetUserAgentOverride to emulate this device.
+	UserAgent() string
+
+	// Viewport returns the parameters to pass to EmulateViewport to emulate
+	// this device.
+	Viewport() (width, height int64, opts []EmulateViewportOption)
 }
 
 // Emulate is an action to emulate a specific device.
@@ -92,16 +83,10 @@ type Device interface {
 // See: github.com/chromedp/chromedp/device for a set of off-the-shelf devices
 // and modes.
 func Emulate(device Device) Action {
-	width, height, userAgent, deviceOpts := device.ViewportParams()
-	opts := make([]EmulateViewportOption, len(deviceOpts))
-	for i := 0; i < len(deviceOpts); i++ {
-		opts[i] = deviceOpts[i]
+	userAgent := device.UserAgent()
+	width, height, opts := device.Viewport()
+	return Tasks{
+		emulation.SetUserAgentOverride(userAgent),
+		EmulateViewport(width, height, opts...),
 	}
-	return ActionFunc(func(ctx context.Context) error {
-		// set user agent
-		if err := emulation.SetUserAgentOverride(userAgent).Do(ctx); err != nil {
-			return err
-		}
-		return EmulateViewport(width, height, opts...).Do(ctx)
-	})
 }
