@@ -4,10 +4,8 @@ package device
 
 //go:generate go run gen.go
 
-import "github.com/chromedp/cdproto/emulation"
-
-// Device holds device information for use with chromedp.Emulate.
-type Device struct {
+// Info holds device information for use with chromedp.Emulate.
+type Info struct {
 	// Name is the device name.
 	Name string
 
@@ -35,57 +33,24 @@ type Device struct {
 }
 
 // String satisfies fmt.Stringer.
-func (d Device) String() string {
-	return d.Name
+func (i Info) String() string {
+	return i.Name
 }
 
-// UserAgentString satisfies chromedp.Device.
-func (d Device) UserAgentString() string {
-	return d.UserAgent
+// Device satisfies chromedp.Device.
+func (i Info) Device() Info {
+	return i
 }
 
-// EmulateViewportOption satisfies chromedp.Device.
-func (d Device) EmulateViewportOption() []func(*emulation.SetDeviceMetricsOverrideParams, *emulation.SetTouchEmulationEnabledParams) {
-	return []func(*emulation.SetDeviceMetricsOverrideParams, *emulation.SetTouchEmulationEnabledParams){
-		func(p1 *emulation.SetDeviceMetricsOverrideParams, p2 *emulation.SetTouchEmulationEnabledParams) {
-			var angle int64
-			orientation := emulation.OrientationTypePortraitPrimary
-			if d.Landscape {
-				orientation, angle = emulation.OrientationTypeLandscapePrimary, 90
-			}
-
-			// force parameters
-			*p1 = emulation.SetDeviceMetricsOverrideParams{
-				Width:             d.Width,
-				Height:            d.Height,
-				DeviceScaleFactor: d.Scale,
-				ScreenOrientation: &emulation.ScreenOrientation{
-					Type:  orientation,
-					Angle: angle,
-				},
-				Mobile: d.Mobile,
-			}
-			*p2 = emulation.SetTouchEmulationEnabledParams{
-				Enabled: d.Touch,
-			}
-		},
-	}
-}
-
-// deviceType provides the enumerated device type.
-type deviceType int
+// infoType provides the enumerated device type.
+type infoType int
 
 // String satisfies fmt.Stringer.
-func (d deviceType) String() string {
-	return devices[d].String()
+func (i infoType) String() string {
+	return devices[i].String()
 }
 
-// UserAgent satisfies chromedp.Device.
-func (d deviceType) UserAgentString() string {
-	return devices[d].UserAgentString()
-}
-
-// EmulateViewportOption satisfies chromedp.Device.
-func (d deviceType) EmulateViewportOption() []func(*emulation.SetDeviceMetricsOverrideParams, *emulation.SetTouchEmulationEnabledParams) {
-	return devices[d].EmulateViewportOption()
+// Device satisfies chromedp.Device.
+func (i infoType) Device() Info {
+	return devices[i]
 }

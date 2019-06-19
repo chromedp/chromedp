@@ -81,13 +81,8 @@ func ResetViewport() Action {
 // See: github.com/chromedp/chromedp/device for a set of off-the-shelf devices
 // and modes.
 type Device interface {
-	// UserAgentString returns the string to pass to
-	// emulation.SetUserAgentOverride to emulate the device.
-	UserAgentString() string
-
-	// EmulateViewportOption returns the emulate viewport options used to
-	// emulate the device.
-	EmulateViewportOption() []EmulateViewportOption
+	// Device returns the device info.
+	Device() device.Info
 }
 
 // Emulate is an action to emulate a specific device.
@@ -95,9 +90,22 @@ type Device interface {
 // See: github.com/chromedp/chromedp/device for a set of off-the-shelf devices
 // and modes.
 func Emulate(device Device) Action {
+	d := device.Device()
+
+	var angle int64
+	orientation := emulation.OrientationTypePortraitPrimary
+	if d.Landscape {
+		orientation, angle = emulation.OrientationTypeLandscapePrimary, 90
+	}
+
 	return Tasks{
-		emulation.SetUserAgentOverride(device.UserAgentString()),
-		EmulateViewport(0, 0, device.EmulateViewportOption()...),
+		emulation.SetUserAgentOverride(d.UserAgent),
+		emulation.SetDeviceMetricsOverride(d.Width, d.Height, d.Scale, d.Mobile).
+			WithScreenOrientation(&emulation.ScreenOrientation{
+				Type:  orientation,
+				Angle: angle,
+			}),
+		emulation.SetTouchEmulationEnabled(d.Touch),
 	}
 }
 

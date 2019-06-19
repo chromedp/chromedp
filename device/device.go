@@ -7,7 +7,7 @@ package device
 // Devices.
 const (
 	// Reset is the reset device.
-	Reset deviceType = iota
+	Reset infoType = iota
 
 	// BlackberryPlayBook is the "Blackberry PlayBook" device.
 	BlackberryPlayBook
@@ -218,7 +218,7 @@ const (
 )
 
 // devices is the list of devices.
-var devices = [...]Device{
+var devices = [...]Info{
 	{"", "", 0, 0, 0.000000, false, false, false},
 	{"Blackberry PlayBook", "Mozilla/5.0 (PlayBook; U; RIM Tablet OS 2.1.0; en-US) AppleWebKit/536.2+ (KHTML like Gecko) Version/7.2.1.0 Safari/536.2+", 600, 1024, 1.000000, false, true, true},
 	{"Blackberry PlayBook landscape", "Mozilla/5.0 (PlayBook; U; RIM Tablet OS 2.1.0; en-US) AppleWebKit/536.2+ (KHTML like Gecko) Version/7.2.1.0 Safari/536.2+", 1024, 600, 1.000000, true, true, true},
