@@ -283,6 +283,4 @@ func ExampleEmulate() {
 	if err := ioutil.WriteFile("google-iphone7.png", buf, 0644); err != nil {
 		panic(err)
 	}
-
-	// Output:
 }
