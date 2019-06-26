@@ -40,6 +40,19 @@ type Conn struct {
 	dbgf func(string, ...interface{})
 }
 
+// Chrome doesn't support fragmentation of incoming websocket messages. To
+// compensate this, they support single-fragment messages of up to 100MiB.
+//
+// If our write buffer size is too small, large messages will get fragmented,
+// and Chrome will silently crash. And if it's too large, chromedp will require
+// more memory for all users.
+//
+// For now, make this a middle ground. 1MiB is large enough for practically any
+// outgoing message, but small enough to not take too much meomry.
+//
+// See https://github.com/ChromeDevTools/devtools-protocol/issues/175.
+const wsWriteBufferSize = 1 << 20
+
 // DialContext dials the specified websocket URL using gobwas/ws.
 func DialContext(ctx context.Context, urlstr string, opts ...DialOption) (*Conn, error) {
 	// connect
@@ -53,8 +66,9 @@ func DialContext(ctx context.Context, urlstr string, opts ...DialOption) (*Conn,
 
 	// apply opts
 	c := &Conn{
-		conn:   conn,
-		writer: *wsutil.NewWriterBufferSize(conn, ws.StateClientSide, ws.OpText, 4096),
+		conn: conn,
+		writer: *wsutil.NewWriterBufferSize(conn,
+			ws.StateClientSide, ws.OpText, wsWriteBufferSize),
 	}
 	for _, o := range opts {
 		o(c)
