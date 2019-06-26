@@ -366,11 +366,40 @@ func TestText(t *testing.T) {
 		{"body > form > span:nth-child(2)", ByQuery, "keyword"},
 		{"/html/body/form/span[2]", BySearch, "keyword"},
 		{`document.querySelector("#form > span:nth-child(2)")`, ByJSPath, "keyword"},
+		{"#inner-hidden", ByID, "this is"},
+		{"#hidden", ByID, ""},
 	}
 
 	for i, test := range tests {
 		var text string
 		if err := Run(ctx, Text(test.sel, &text, test.by)); err != nil {
+			t.Fatalf("test %d got error: %v", i, err)
+		}
+
+		if text != test.exp {
+			t.Errorf("test %d expected %q, got: %s", i, test.exp, text)
+		}
+	}
+}
+
+func TestTextContent(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "form.html")
+	defer cancel()
+
+	tests := []struct {
+		sel string
+		by  QueryOption
+		exp string
+	}{
+		{"#inner-hidden", ByID, "this is hidden"},
+		{"#hidden", ByID, "hidden"},
+	}
+
+	for i, test := range tests {
+		var text string
+		if err := Run(ctx, TextContent(test.sel, &text, test.by)); err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
 
@@ -1392,13 +1421,13 @@ func TestSVGFullXPath(t *testing.T) {
 			}
 
 			var text1, text2 string
-			if err := Run(ctx, Text(test.sel, &text1, test.by)); err != nil {
+			if err := Run(ctx, TextContent(test.sel, &text1, test.by)); err != nil {
 				t.Fatal(err)
 			}
 			if strings.TrimSpace(text1) != "Brankas" {
 				t.Errorf("expected %q, got: %q", "Brankas", text1)
 			}
-			if err := Run(ctx, Text(xpath, &text2)); err != nil {
+			if err := Run(ctx, TextContent(xpath, &text2)); err != nil {
 				t.Fatal(err)
 			}
 			if strings.TrimSpace(text2) != "Brankas" {
