@@ -411,7 +411,7 @@ func NodeVisible(s *Selector) {
 			return err
 		}
 
-		// check offsetParent
+		// check visibility
 		var res bool
 		err = EvaluateAsDevTools(snippet(visibleJS, cashX(true), s, n), &res).Do(ctx)
 		if err != nil {
@@ -438,7 +438,7 @@ func NodeNotVisible(s *Selector) {
 			return err
 		}
 
-		// check offsetParent
+		// check visibility
 		var res bool
 		err = EvaluateAsDevTools(snippet(visibleJS, cashX(true), s, n), &res).Do(ctx)
 		if err != nil {
@@ -650,7 +650,23 @@ func Text(sel interface{}, text *string, opts ...QueryOption) QueryAction {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
-		return EvaluateAsDevTools(snippet(textJS, cashXNode(false), sel, nodes[0]), text).Do(ctx)
+		return EvaluateAsDevTools(snippet(textJS, cashX(false), sel, nodes[0]), text).Do(ctx)
+	}, opts...)
+}
+
+// TextContent is an element query action that retrieves the text content of the first element
+// node matching the selector.
+func TextContent(sel interface{}, text *string, opts ...QueryOption) QueryAction {
+	if text == nil {
+		panic("text cannot be nil")
+	}
+
+	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
+		if len(nodes) < 1 {
+			return fmt.Errorf("selector %q did not return any nodes", sel)
+		}
+
+		return EvaluateAsDevTools(snippet(textContentJS, cashX(false), sel, nodes[0]), text).Do(ctx)
 	}, opts...)
 }
 
