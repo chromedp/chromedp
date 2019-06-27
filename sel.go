@@ -76,6 +76,11 @@ func (s *Selector) run(ctx context.Context, t *Target, ch chan error) {
 		cur := t.cur
 		t.curMu.RUnlock()
 
+		if cur == nil {
+			// the frame hasn't loaded yet.
+			continue
+		}
+
 		cur.RLock()
 		root := cur.Root
 		cur.RUnlock()

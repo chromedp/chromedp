@@ -274,13 +274,13 @@ func TestLoadIframe(t *testing.T) {
 	ctx, cancel := testAllocate(t, "iframe.html")
 	defer cancel()
 
-	if err := Run(ctx, Tasks{
+	if err := Run(ctx,
 		// TODO: remove the sleep once we have better support for
 		// iframes.
-		Sleep(10 * time.Millisecond),
+		Sleep(10*time.Millisecond),
 		// WaitVisible(`#form`, ByID), // for the nested form.html
 		WaitVisible(`#parent`, ByID), // for iframe.html
-	}); err != nil {
+	); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -342,7 +342,7 @@ func TestClickNavigate(t *testing.T) {
 	// navigate used to get confused, either blocking forever or not waiting
 	// for the right load event (the second).
 	var title string
-	if err := Run(ctx, Tasks{
+	if err := Run(ctx,
 		ActionFunc(func(ctx context.Context) error {
 			_, _, _, err := page.Navigate(s.URL).Do(ctx)
 			return err
@@ -351,13 +351,30 @@ func TestClickNavigate(t *testing.T) {
 			ch <- struct{}{}
 			return nil
 		}),
-		Navigate(testdataDir + "/image.html"),
+		Navigate(testdataDir+"/image.html"),
 		Title(&title),
-	}); err != nil {
+	); err != nil {
 		t.Fatal(err)
 	}
 	exptitle := "this is title"
 	if title != exptitle {
 		t.Errorf("want title to be %q, got %q", exptitle, title)
+	}
+}
+
+func TestNavigateWithoutWaitingForLoad(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+
+	if err := Run(ctx,
+		ActionFunc(func(ctx context.Context) error {
+			_, _, _, err := page.Navigate(testdataDir + "/form.html").Do(ctx)
+			return err
+		}),
+		WaitVisible(`#form`, ByID), // for form.html
+	); err != nil {
+		t.Fatal(err)
 	}
 }
