@@ -204,6 +204,11 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 
 	wsURL, err := readOutput(stdout, a.combinedOutputWriter, a.wg.Done)
 	if err != nil {
+		if a.combinedOutputWriter != nil {
+			// There's no io.Copy goroutine to call the done func.
+			// TODO: a cleaner way to deal with this edge case?
+			a.wg.Done()
+		}
 		return nil, err
 	}
 

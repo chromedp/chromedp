@@ -224,8 +224,7 @@ func TestExecAllocatorMissingWebsocketAddr(t *testing.T) {
 	t.Parallel()
 
 	allocCtx, cancel := NewExecAllocator(context.Background(),
-		// Use a bad listen addres, so both Chrome and headless-shell
-		// exit almost immediately.
+		// Use a bad listen address, so Chrome exits straight away.
 		append([]ExecAllocatorOption{Flag("remote-debugging-address", "_")},
 			allocOpts...)...)
 	defer cancel()
@@ -263,5 +262,29 @@ func TestCombinedOutput(t *testing.T) {
 	}
 	if want, got := 2000, strings.Count(buf.String(), `"spam"`); want != got {
 		t.Fatalf("want %d spam console logs, got %d", want, got)
+	}
+}
+
+func TestCombinedOutputError(t *testing.T) {
+	t.Parallel()
+
+	// CombinedOutput used to hang the allocator if Chrome errored straight
+	// away, as there was no output to copy and the CombinedOutput would
+	// never signal it's done.
+	buf := new(bytes.Buffer)
+	allocCtx, cancel := NewExecAllocator(context.Background(),
+		// Use a bad listen address, so Chrome exits straight away.
+		append([]ExecAllocatorOption{
+			Flag("remote-debugging-address", "_"),
+			CombinedOutput(buf),
+		}, allocOpts...)...)
+	defer cancel()
+
+	ctx, cancel := NewContext(allocCtx)
+	defer cancel()
+	got := fmt.Sprint(Run(ctx))
+	want := "failed to start"
+	if !strings.Contains(got, want) {
+		t.Fatalf("got %q, want %q", got, want)
 	}
 }
