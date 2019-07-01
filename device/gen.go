@@ -70,7 +70,7 @@ func run() error {
 	fmt.Fprintln(buf, ")\n")
 
 	fmt.Fprintln(buf, "// devices is the list of devices.")
-	fmt.Fprintln(buf, "var devices = [...]Device{")
+	fmt.Fprintln(buf, "var devices = [...]Info{")
 	for _, d := range descriptors {
 		fmt.Fprintf(buf, "{%q, %q, %d, %d, %f, %t, %t, %t},\n",
 			d.Name, d.UserAgent,
