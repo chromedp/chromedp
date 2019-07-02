@@ -7,6 +7,10 @@ import (
 	"github.com/chromedp/cdproto/runtime"
 )
 
+// EvaluateAction are actions that evaluate Javascript expressions using
+// runtime.Evaluate.
+type EvaluateAction Action
+
 // Evaluate is an action to evaluate the Javascript expression, unmarshaling
 // the result of the script evaluation to res.
 //
@@ -21,7 +25,7 @@ import (
 // made to convert the result.
 //
 // Note: any exception encountered will be returned as an error.
-func Evaluate(expression string, res interface{}, opts ...EvaluateOption) Action {
+func Evaluate(expression string, res interface{}, opts ...EvaluateOption) EvaluateAction {
 	if res == nil {
 		panic("res cannot be nil")
 	}
@@ -68,12 +72,14 @@ func Evaluate(expression string, res interface{}, opts ...EvaluateOption) Action
 // Chrome DevTools would, evaluating the expression in the "console" context,
 // and making the Command Line API available to the script.
 //
+// See Evaluate for more information on how script expressions are evaluated.
+//
 // Note: this should not be used with untrusted Javascript.
-func EvaluateAsDevTools(expression string, res interface{}, opts ...EvaluateOption) Action {
+func EvaluateAsDevTools(expression string, res interface{}, opts ...EvaluateOption) EvaluateAction {
 	return Evaluate(expression, res, append(opts, EvalObjectGroup("console"), EvalWithCommandLineAPI)...)
 }
 
-// EvaluateOption is the type for script evaluation options.
+// EvaluateOption is the type for Javascript evaluation options.
 type EvaluateOption = func(*runtime.EvaluateParams) *runtime.EvaluateParams
 
 // EvalObjectGroup is a evaluate option to set the object group.
@@ -86,19 +92,21 @@ func EvalObjectGroup(objectGroup string) EvaluateOption {
 // EvalWithCommandLineAPI is an evaluate option to make the DevTools Command
 // Line API available to the evaluated script.
 //
+// See Evaluate for more information on how evaluate actions work.
+//
 // Note: this should not be used with untrusted Javascript.
 func EvalWithCommandLineAPI(p *runtime.EvaluateParams) *runtime.EvaluateParams {
 	return p.WithIncludeCommandLineAPI(true)
 }
 
-// EvalIgnoreExceptions is a evaluate option that will cause script evaluation
-// to ignore exceptions.
+// EvalIgnoreExceptions is a evaluate option that will cause Javascript
+// evaluation to ignore exceptions.
 func EvalIgnoreExceptions(p *runtime.EvaluateParams) *runtime.EvaluateParams {
 	return p.WithSilent(true)
 }
 
-// EvalAsValue is a evaluate option that will cause the evaluated script to
-// encode the result of the expression as a JSON-encoded value.
+// EvalAsValue is a evaluate option that will cause the evaluated Javascript
+// expression to encode the result of the expression as a JSON-encoded value.
 func EvalAsValue(p *runtime.EvaluateParams) *runtime.EvaluateParams {
 	return p.WithReturnByValue(true)
 }

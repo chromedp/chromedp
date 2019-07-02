@@ -5,6 +5,10 @@ import (
 	"github.com/chromedp/chromedp/device"
 )
 
+// EmulateAction are actions that change the emulation settings for the
+// browser.
+type EmulateAction Action
+
 // EmulateViewport is an action to change the browser viewport.
 //
 // Wraps calls to emulation.SetDeviceMetricsOverride and emulation.SetTouchEmulationEnabled.
@@ -14,7 +18,7 @@ import (
 // is not the desired behavior, use the emulate viewport options
 // EmulateOrientation (or EmulateLandscape/EmulatePortrait), EmulateMobile, and
 // EmulateTouch, respectively.
-func EmulateViewport(width, height int64, opts ...EmulateViewportOption) Action {
+func EmulateViewport(width, height int64, opts ...EmulateViewportOption) EmulateAction {
 	p1 := emulation.SetDeviceMetricsOverride(width, height, 1.0, false)
 	p2 := emulation.SetTouchEmulationEnabled(false)
 	for _, o := range opts {
@@ -72,7 +76,7 @@ func EmulateTouch(p1 *emulation.SetDeviceMetricsOverrideParams, p2 *emulation.Se
 // values the browser was started with.
 //
 // Note: does not modify / change the browser's emulated User-Agent, if any.
-func ResetViewport() Action {
+func ResetViewport() EmulateAction {
 	return EmulateViewport(0, 0, EmulatePortrait)
 }
 
@@ -89,7 +93,7 @@ type Device interface {
 //
 // See: github.com/chromedp/chromedp/device for a set of off-the-shelf devices
 // and modes.
-func Emulate(device Device) Action {
+func Emulate(device Device) EmulateAction {
 	d := device.Device()
 
 	var angle int64
@@ -114,6 +118,6 @@ func Emulate(device Device) Action {
 // Resets the browser's viewport, screen orientation, user-agent, and
 // mobile/touch emulation settings to the original values the browser was
 // started with.
-func EmulateReset() Action {
+func EmulateReset() EmulateAction {
 	return Emulate(device.Reset)
 }
