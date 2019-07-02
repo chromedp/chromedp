@@ -240,7 +240,6 @@ func TestExecAllocatorMissingWebsocketAddr(t *testing.T) {
 }
 
 func TestCombinedOutput(t *testing.T) {
-	t.Skip("FIXME: currently failing on travis and docker")
 	t.Parallel()
 
 	buf := new(bytes.Buffer)
@@ -261,7 +260,9 @@ func TestCombinedOutput(t *testing.T) {
 	if !strings.Contains(buf.String(), "DevTools listening on") {
 		t.Fatalf("failed to find websocket string in browser output test")
 	}
-	if want, got := 2000, strings.Count(buf.String(), `"spam"`); want != got {
+	// Recent chrome versions have started replacing many "spam" messages
+	// with "spam 1", "spam 2", and so on. Search for the prefix only.
+	if want, got := 2000, strings.Count(buf.String(), `"spam`); want != got {
 		t.Fatalf("want %d spam console logs, got %d", want, got)
 	}
 }
