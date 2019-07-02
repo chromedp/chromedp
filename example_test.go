@@ -284,3 +284,27 @@ func ExampleEmulate() {
 		panic(err)
 	}
 }
+
+func ExamplePrintToPDF() {
+	ctx, cancel := chromedp.NewContext(context.Background())
+	defer cancel()
+
+	var buf []byte
+	if err := chromedp.Run(ctx,
+		chromedp.Navigate(`https://godoc.org/github.com/chromedp/chromedp`),
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			var err error
+			buf, _, err = page.PrintToPDF().
+				WithDisplayHeaderFooter(false).
+				WithLandscape(true).
+				Do(ctx)
+			return err
+		}),
+	); err != nil {
+		panic(err)
+	}
+
+	if err := ioutil.WriteFile("page.pdf", buf, 0644); err != nil {
+		panic(err)
+	}
+}
