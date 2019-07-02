@@ -13,6 +13,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/chromedp/cdproto/cdp"
+	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
@@ -307,4 +309,39 @@ func ExamplePrintToPDF() {
 	if err := ioutil.WriteFile("page.pdf", buf, 0644); err != nil {
 		panic(err)
 	}
+}
+
+func ExampleByJSPath_OuterHTML() {
+	ctx, cancel := chromedp.NewContext(context.Background())
+	defer cancel()
+
+	ts := httptest.NewServer(writeHTML(`
+<body>
+	<div id="content">cool content</div>
+</body>
+	`))
+	defer ts.Close()
+
+	var ids []cdp.NodeID
+	var html string
+	if err := chromedp.Run(ctx,
+		chromedp.Navigate(ts.URL),
+		chromedp.NodeIDs(`document`, &ids, chromedp.ByJSPath),
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			var err error
+			html, err = dom.GetOuterHTML().WithNodeID(ids[0]).Do(ctx)
+			return err
+		}),
+	); err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Outer HTML:")
+	fmt.Println(html)
+
+	// Output:
+	// Outer HTML:
+	//<html><head></head><body>
+	//	<div id="content">cool content</div>
+	//</body></html>
 }
