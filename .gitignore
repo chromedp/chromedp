@@ -5,6 +5,7 @@ cdp-*.log
 cdp-*.txt
 
 /*.png
+/*.pdf
 
 coverage.out
 massif.out
