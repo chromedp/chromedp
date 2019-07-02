@@ -247,7 +247,7 @@ func insertNode(n []*cdp.Node, prevID cdp.NodeID, c *cdp.Node) []*cdp.Node {
 	}
 
 	if !found {
-		return append(n, c)
+		return append([]*cdp.Node{c}, n...)
 	}
 
 	i++

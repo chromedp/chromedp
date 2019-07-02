@@ -345,3 +345,60 @@ func ExampleByJSPath_OuterHTML() {
 	//	<div id="content">cool content</div>
 	//</body></html>
 }
+
+func Example_DocumentDump() {
+	ctx, cancel := chromedp.NewContext(context.Background())
+	defer cancel()
+
+	ts := httptest.NewServer(writeHTML(`<!doctype html>
+<html>
+<body>
+  <div id="content">the content</div>
+</body>
+</html>`))
+	defer ts.Close()
+
+	const expr = `(function(d, id, v) {
+		var b = d.querySelector('body');
+		var el = d.createElement('div');
+		el.id = id;
+		el.innerText = v;
+		b.insertBefore(el, b.childNodes[0]);
+	})(document, %q, %q);`
+
+	var nodes []*cdp.Node
+	if err := chromedp.Run(ctx,
+		chromedp.Navigate(ts.URL),
+		chromedp.Nodes(`document`, &nodes, chromedp.ByJSPath),
+		chromedp.WaitVisible(`#content`),
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			s := fmt.Sprintf(expr, "thing", "a new thing!")
+			_, exp, err := runtime.Evaluate(s).Do(ctx)
+			if err != nil {
+				return err
+			}
+			if exp != nil {
+				return exp
+			}
+			return nil
+		}),
+		chromedp.WaitVisible(`#thing`),
+	); err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Document tree:")
+	fmt.Print(nodes[0].Dump("  ", "  ", false))
+
+	// Output:
+	// Document tree:
+	//   #document <Document>
+	//     html <DocumentType>
+	//     html
+	//       head
+	//       body
+	//         div#thing
+	//           #text "a new thing!"
+	//         div#content
+	//           #text "the content"
+}

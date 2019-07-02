@@ -3,7 +3,7 @@ module github.com/chromedp/chromedp
 go 1.11
 
 require (
-	github.com/chromedp/cdproto v0.0.0-20190701071144-1240e427ea55
+	github.com/chromedp/cdproto v0.0.0-20190704235924-3fd473b6d5d1
 	github.com/gobwas/httphead v0.0.0-20180130184737-2c6c146eadee // indirect
 	github.com/gobwas/pool v0.2.0 // indirect
 	github.com/gobwas/ws v1.0.2
