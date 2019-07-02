@@ -165,7 +165,11 @@ func Clear(sel interface{}, opts ...QueryOption) Action {
 	}, opts...)
 }
 
-// Value retrieves the value of the first node matching the selector.
+// Value retrieves the Javascript value field of the first node matching the
+// selector.
+//
+// Useful for retrieving an element's Javascript value, namely form, input,
+// textarea, select, or any other element with a '.value' field.
 func Value(sel interface{}, value *string, opts ...QueryOption) Action {
 	if value == nil {
 		panic("value cannot be nil")
@@ -174,7 +178,10 @@ func Value(sel interface{}, value *string, opts ...QueryOption) Action {
 	return JavascriptAttribute(sel, "value", value, opts...)
 }
 
-// SetValue sets the value of an element.
+// SetValue sets the Javascript value of the first node matching the selector.
+//
+// Useful for setting an element's Javascript value, namely form, input,
+// textarea, select, or other element with a '.value' field.
 func SetValue(sel interface{}, value string, opts ...QueryOption) Action {
 	return SetJavascriptAttribute(sel, "value", value, opts...)
 }
@@ -472,8 +479,8 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) Action {
 	}, append(opts, NodeVisible)...)
 }
 
-// Submit is an action that submits the form of the first node matching the
-// selector belongs to.
+// Submit is an action that submits the parent form of the first node matching
+// the selector.
 func Submit(sel interface{}, opts ...QueryOption) Action {
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {

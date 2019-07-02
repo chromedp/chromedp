@@ -128,7 +128,7 @@ func Stop() Action {
 
 // CaptureScreenshot captures takes a screenshot of the current viewport.
 //
-// Note: this an alias for page.CaptureScreenshot.
+// Note: this is an alias for page.CaptureScreenshot.
 func CaptureScreenshot(res *[]byte) Action {
 	if res == nil {
 		panic("res cannot be nil")
