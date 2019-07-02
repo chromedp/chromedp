@@ -7,8 +7,11 @@ import (
 	"github.com/chromedp/cdproto/page"
 )
 
-// Navigate navigates the current frame.
-func Navigate(urlstr string) Action {
+// NavigateAction are actions that manipulate the navigation of the browser.
+type NavigateAction Action
+
+// Navigate is an action that navigates the current frame.
+func Navigate(urlstr string) NavigateAction {
 	return ActionFunc(func(ctx context.Context) error {
 		_, _, _, err := page.Navigate(urlstr).Do(ctx)
 		if err != nil {
@@ -46,9 +49,9 @@ func waitLoaded(ctx context.Context) error {
 	}
 }
 
-// NavigationEntries is an action to retrieve the page's navigation history
+// NavigationEntries is an action that retrieves the page's navigation history
 // entries.
-func NavigationEntries(currentIndex *int64, entries *[]*page.NavigationEntry) Action {
+func NavigationEntries(currentIndex *int64, entries *[]*page.NavigationEntry) NavigateAction {
 	if currentIndex == nil || entries == nil {
 		panic("currentIndex and entries cannot be nil")
 	}
@@ -62,7 +65,7 @@ func NavigationEntries(currentIndex *int64, entries *[]*page.NavigationEntry) Ac
 
 // NavigateToHistoryEntry is an action to navigate to the specified navigation
 // entry.
-func NavigateToHistoryEntry(entryID int64) Action {
+func NavigateToHistoryEntry(entryID int64) NavigateAction {
 	return ActionFunc(func(ctx context.Context) error {
 		if err := page.NavigateToHistoryEntry(entryID).Do(ctx); err != nil {
 			return err
@@ -71,8 +74,9 @@ func NavigateToHistoryEntry(entryID int64) Action {
 	})
 }
 
-// NavigateBack navigates the current frame backwards in its history.
-func NavigateBack() Action {
+// NavigateBack is an action that navigates the current frame backwards in its
+// history.
+func NavigateBack() NavigateAction {
 	return ActionFunc(func(ctx context.Context) error {
 		cur, entries, err := page.GetNavigationHistory().Do(ctx)
 		if err != nil {
@@ -91,8 +95,9 @@ func NavigateBack() Action {
 	})
 }
 
-// NavigateForward navigates the current frame forwards in its history.
-func NavigateForward() Action {
+// NavigateForward is an action that navigates the current frame forwards in
+// its history.
+func NavigateForward() NavigateAction {
 	return ActionFunc(func(ctx context.Context) error {
 		cur, entries, err := page.GetNavigationHistory().Do(ctx)
 		if err != nil {
@@ -111,8 +116,8 @@ func NavigateForward() Action {
 	})
 }
 
-// Reload reloads the current page.
-func Reload() Action {
+// Reload is an action that reloads the current page.
+func Reload() NavigateAction {
 	return ActionFunc(func(ctx context.Context) error {
 		if err := page.Reload().Do(ctx); err != nil {
 			return err
@@ -121,14 +126,18 @@ func Reload() Action {
 	})
 }
 
-// Stop stops all navigation and pending resource retrieval.
-func Stop() Action {
+// Stop is an action that stops all navigation and pending resource retrieval.
+func Stop() NavigateAction {
 	return page.StopLoading()
 }
 
-// CaptureScreenshot captures takes a screenshot of the current viewport.
+// CaptureScreenshot is an action that captures/takes a screenshot of the
+// current browser viewport.
 //
-// Note: this is an alias for page.CaptureScreenshot.
+// See the Screenshot action to take a screenshot of a specific element.
+//
+// See the 'screenshot' example in the https://github.com/chromedp/examples
+// project for an example of taking a screenshot of the entire page.
 func CaptureScreenshot(res *[]byte) Action {
 	if res == nil {
 		panic("res cannot be nil")
@@ -141,20 +150,18 @@ func CaptureScreenshot(res *[]byte) Action {
 	})
 }
 
-// Location retrieves the document location.
+// Location is an action that retrieves the document location.
 func Location(urlstr *string) Action {
 	if urlstr == nil {
 		panic("urlstr cannot be nil")
 	}
-
 	return EvaluateAsDevTools(`document.location.toString()`, urlstr)
 }
 
-// Title retrieves the document title.
+// Title is an action that retrieves the document title.
 func Title(title *string) Action {
 	if title == nil {
 		panic("title cannot be nil")
 	}
-
 	return EvaluateAsDevTools(`document.title`, title)
 }

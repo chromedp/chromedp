@@ -170,7 +170,7 @@ func TestMouseClickOffscreenNode(t *testing.T) {
 	}
 }
 
-func TestKeyAction(t *testing.T) {
+func TestKeyEvent(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -204,7 +204,7 @@ func TestKeyAction(t *testing.T) {
 			}
 			if err := Run(ctx,
 				Focus(test.sel, test.by),
-				KeyAction(test.exp),
+				KeyEvent(test.exp),
 			); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -221,7 +221,7 @@ func TestKeyAction(t *testing.T) {
 	}
 }
 
-func TestKeyActionNode(t *testing.T) {
+func TestKeyEventNode(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -255,7 +255,7 @@ func TestKeyActionNode(t *testing.T) {
 			}
 			var value string
 			if err := Run(ctx,
-				KeyActionNode(nodes[0], test.exp),
+				KeyEventNode(nodes[0], test.exp),
 				Value(test.sel, &value, test.by),
 			); err != nil {
 				t.Fatalf("got error: %v", err)
