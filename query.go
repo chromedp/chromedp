@@ -150,30 +150,17 @@ func Query(sel interface{}, opts ...QueryOption) QueryAction {
 	return s
 }
 
-// Do satisfies the QueryAction interface.
+// Do executes the selector, only finishing if the selector's by, wait, and
+// after funcs succeed, or if the context is cancelled.
 func (s *Selector) Do(ctx context.Context) error {
 	t := cdp.ExecutorFromContext(ctx).(*Target)
 	if t == nil {
 		return ErrInvalidTarget
 	}
-	ch := make(chan error, 1)
-	go s.run(ctx, t, ch)
-	var err error
-	select {
-	case <-ctx.Done():
-		err = ctx.Err()
-	case err = <-ch:
-	}
-	return err
-}
-
-// run executes the selector, restarting if returned nodes are invalidated
-// prior to finishing the selector's by, wait, and after funcs.
-func (s *Selector) run(ctx context.Context, t *Target, ch chan error) {
 	for {
 		select {
 		case <-ctx.Done():
-			ch <- ctx.Err()
+			return ctx.Err()
 		case <-time.After(5 * time.Millisecond):
 		}
 		t.curMu.RLock()
@@ -205,11 +192,10 @@ func (s *Selector) run(ctx context.Context, t *Target, ch chan error) {
 		}
 		if s.after != nil {
 			if err := s.after(ctx, nodes...); err != nil {
-				ch <- err
+				return err
 			}
 		}
-		close(ch)
-		break
+		return nil
 	}
 }
 
