@@ -98,6 +98,7 @@ type ExecAllocatorOption = func(*ExecAllocator)
 type ExecAllocator struct {
 	execPath  string
 	initFlags map[string]interface{}
+	initEnv   []string
 
 	wg sync.WaitGroup
 
@@ -169,6 +170,10 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		return nil, err
 	}
 	cmd.Stderr = cmd.Stdout
+
+	if len(a.initEnv) > 0 {
+		cmd.Env = append(os.Environ(), a.initEnv...)
+	}
 
 	// We must start the cmd before calling cmd.Wait, as otherwise the two
 	// can run into a data race.
@@ -334,6 +339,15 @@ func findExecPath() string {
 func Flag(name string, value interface{}) ExecAllocatorOption {
 	return func(a *ExecAllocator) {
 		a.initFlags[name] = value
+	}
+}
+
+// Env is a list of generic environment variables in the form NAME=value
+// to pass into the new Chrome process. These will be appended to the
+// environment of the golang process as retrieved by os.Environ.
+func Env(vars ...string) ExecAllocatorOption {
+	return func(a *ExecAllocator) {
+		a.initEnv = append(a.initEnv, vars...)
 	}
 }
 
