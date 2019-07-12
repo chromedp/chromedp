@@ -10,6 +10,7 @@ import (
 	"os"
 	"reflect"
 	"runtime"
+	"strings"
 	"testing"
 	"time"
 
@@ -1335,6 +1336,60 @@ func TestScrollIntoView(t *testing.T) {
 		}
 
 		// TODO test scroll event
+	}
+}
+
+func TestSVGFullXPath(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		sel string
+		by  QueryOption
+	}{
+		{`#brankas`, ByQuery},
+		{`text`, ByQueryAll},
+		{`brankas`, ByID},
+		{`//*[local-name()='text']`, BySearch},
+		{`document.querySelector('#brankas')`, ByJSPath},
+	}
+
+	for i, test := range tests {
+		test := test
+		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
+			t.Parallel()
+
+			ctx, cancel := testAllocate(t, "svg.html")
+			defer cancel()
+
+			var nodes []*cdp.Node
+			if err := Run(ctx, Nodes(test.sel, &nodes, test.by)); err != nil {
+				t.Fatal(err)
+			}
+
+			if len(nodes) < 1 {
+				t.Fatalf("expected at least 1 node, got: %d", len(nodes))
+			}
+
+			const exp = `/html[1]/body[1]/*[local-name()='svg'][1]/*[local-name()='text'][1]`
+			xpath := nodes[0].FullXPath()
+			if exp != xpath {
+				t.Errorf("expected %q, got: %q", exp, xpath)
+			}
+
+			var text1, text2 string
+			if err := Run(ctx, Text(test.sel, &text1, test.by)); err != nil {
+				t.Fatal(err)
+			}
+			if strings.TrimSpace(text1) != "Brankas" {
+				t.Errorf("expected %q, got: %q", "Brankas", text1)
+			}
+			if err := Run(ctx, Text(xpath, &text2)); err != nil {
+				t.Fatal(err)
+			}
+			if strings.TrimSpace(text2) != "Brankas" {
+				t.Errorf("expected %q, got: %q", "Brankas", text2)
+			}
+		})
 	}
 }
 

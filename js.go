@@ -103,8 +103,8 @@ func cashX(flatten bool) func(*cdp.Node) string {
 func cashXNode(flatten bool) func(*cdp.Node) string {
 	return func(n *cdp.Node) string {
 		if flatten {
-			return fmt.Sprintf(`$x('%s/node()')[0]`, n.FullXPath())
+			return fmt.Sprintf(`$x(%q)[0]`, n.FullXPath()+"/node()")
 		}
-		return fmt.Sprintf(`$x('%s/node()')`, n.FullXPath())
+		return fmt.Sprintf(`$x(%q)`, n.FullXPath()+"/node()")
 	}
 }
