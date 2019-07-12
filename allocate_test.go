@@ -290,3 +290,28 @@ func TestCombinedOutputError(t *testing.T) {
 		t.Fatalf("got %q, want %q", got, want)
 	}
 }
+
+func TestEnv(t *testing.T) {
+	t.Parallel()
+
+	tz := "Australia/Melbourne"
+	allocCtx, cancel := NewExecAllocator(context.Background(),
+		append([]ExecAllocatorOption{
+			Env("TZ=" + tz),
+		}, allocOpts...)...)
+	defer cancel()
+
+	ctx, cancel := NewContext(allocCtx)
+	defer cancel()
+
+	var ret string
+	if err := Run(ctx,
+		Evaluate(`Intl.DateTimeFormat().resolvedOptions().timeZone`, &ret),
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	if ret != tz {
+		t.Fatalf("got %s, want %s", ret, tz)
+	}
+}
