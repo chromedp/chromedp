@@ -402,7 +402,8 @@ func CombinedOutput(w io.Writer) ExecAllocatorOption {
 }
 
 // NewRemoteAllocator creates a new context set up with a RemoteAllocator,
-// suitable for use with NewContext.
+// suitable for use with NewContext. The url should point to the browser's
+// websocket address, such as "ws://127.0.0.1:$PORT/devtools/browser/...".
 func NewRemoteAllocator(parent context.Context, url string) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(parent)
 	c := &Context{Allocator: &RemoteAllocator{
