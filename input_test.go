@@ -80,6 +80,7 @@ func TestMouseClickNode(t *testing.T) {
 		{`input3`, "bar-right", ButtonType(input.ButtonRight), ByID},
 		{`input3`, "bar-right", Button("right"), ByID},
 		{`document.querySelector('#input3')`, "bar-right", ButtonType(input.ButtonRight), ByJSPath},
+		{`link`, "clicked", ButtonType(input.ButtonLeft), ByID},
 	}
 
 	for i, test := range tests {

@@ -63,20 +63,21 @@ func MouseClickNode(n *cdp.Node, opts ...MouseOption) MouseAction {
 			return err
 		}
 
-		box, err := dom.GetBoxModel().WithNodeID(n.NodeID).Do(ctx)
+		boxes, err := dom.GetContentQuads().WithNodeID(n.NodeID).Do(ctx)
 		if err != nil {
 			return err
 		}
+		content := boxes[0]
 
-		c := len(box.Content)
+		c := len(content)
 		if c%2 != 0 || c < 1 {
 			return ErrInvalidDimensions
 		}
 
 		var x, y float64
 		for i := 0; i < c; i += 2 {
-			x += box.Content[i]
-			y += box.Content[i+1]
+			x += content[i]
+			y += content[i+1]
 		}
 		x /= float64(c / 2)
 		y /= float64(c / 2)
