@@ -27,7 +27,7 @@ func TestMouseClickXY(t *testing.T) {
 		t.Fatal(err)
 	}
 	tests := []struct {
-		x, y int64
+		x, y float64
 	}{
 		{100, 100},
 		{0, 0},
@@ -44,23 +44,23 @@ func TestMouseClickXY(t *testing.T) {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
 
-		x, err := strconv.ParseInt(xstr, 10, 64)
+		x, err := strconv.ParseFloat(xstr, 64)
 		if err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
 		if x != test.x {
-			t.Fatalf("test %d expected x to be: %d, got: %d", i, test.x, x)
+			t.Fatalf("test %d expected x to be: %f, got: %f", i, test.x, x)
 		}
 		if err := Run(ctx, Value("#input2", &ystr, ByID)); err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
 
-		y, err := strconv.ParseInt(ystr, 10, 64)
+		y, err := strconv.ParseFloat(ystr, 64)
 		if err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
 		if y != test.y {
-			t.Fatalf("test %d expected y to be: %d, got: %d", i, test.y, y)
+			t.Fatalf("test %d expected y to be: %f, got: %f", i, test.y, y)
 		}
 	}
 }
