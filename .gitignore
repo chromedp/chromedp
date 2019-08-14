@@ -3,13 +3,10 @@ out*.txt
 old*.txt
 cdp-*.log
 cdp-*.txt
+*.out
+
+/chromedp.test
+/chromedp.test.exe
 
 /*.png
 /*.pdf
-
-coverage.out
-massif.out
-
-# headless_shell
-/headless_shell/
-/hs/
