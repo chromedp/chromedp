@@ -502,6 +502,21 @@ func TestValue(t *testing.T) {
 	}
 }
 
+func TestValueUndefined(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "form.html")
+	defer cancel()
+
+	var value string
+	err := Run(ctx, Value("foo", &value, ByID))
+	want := `could not retrieve attribute "value": encountered an undefined value`
+	got := fmt.Sprint(err)
+	if !strings.Contains(got, want) {
+		t.Fatalf("want error %q, got %q", want, got)
+	}
+}
+
 func TestSetValue(t *testing.T) {
 	t.Parallel()
 

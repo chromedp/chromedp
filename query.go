@@ -877,7 +877,12 @@ func JavascriptAttribute(sel interface{}, name string, res interface{}, opts ...
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
-		return EvaluateAsDevTools(snippet(attributeJS, cashX(true), sel, nodes[0], name), res).Do(ctx)
+		if err := EvaluateAsDevTools(
+			snippet(attributeJS, cashX(true), sel, nodes[0], name), res,
+		).Do(ctx); err != nil {
+			return fmt.Errorf("could not retrieve attribute %q: %v", name, err)
+		}
+		return nil
 	}, opts...)
 }
 
