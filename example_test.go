@@ -311,7 +311,7 @@ func ExamplePrintToPDF() {
 	}
 }
 
-func ExampleByJSPath_OuterHTML() {
+func ExampleByJSPath() {
 	ctx, cancel := chromedp.NewContext(context.Background())
 	defer cancel()
 
@@ -346,7 +346,7 @@ func ExampleByJSPath_OuterHTML() {
 	//</body></html>
 }
 
-func Example_DocumentDump() {
+func Example_documentDump() {
 	ctx, cancel := chromedp.NewContext(context.Background())
 	defer cancel()
 
