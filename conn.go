@@ -15,6 +15,9 @@ import (
 )
 
 // Transport is the common interface to send/receive messages to a target.
+//
+// This interface is currently used internally by Browser, but it is exposed as
+// it will be useful as part of the public API in the future.
 type Transport interface {
 	Read(context.Context, *cdproto.Message) error
 	Write(context.Context, *cdproto.Message) error

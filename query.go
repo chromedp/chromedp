@@ -948,6 +948,9 @@ func DoubleClick(sel interface{}, opts ...QueryOption) QueryAction {
 // events as needed for the runes in v, sending them to the first element node
 // matching the selector.
 //
+// For a complete example on how to use SendKeys, see
+// https://github.com/chromedp/examples/tree/master/keys.
+//
 // Note: when the element query matches a input[type="file"] node, then
 // dom.SetFileInputFiles is used to set the upload path of the input node to v.
 func SendKeys(sel interface{}, v string, opts ...QueryOption) QueryAction {
