@@ -341,9 +341,9 @@ func ExampleByJSPath() {
 
 	// Output:
 	// Outer HTML:
-	//<html><head></head><body>
-	//	<div id="content">cool content</div>
-	//</body></html>
+	// <html><head></head><body>
+	// 	<div id="content">cool content</div>
+	// </body></html>
 }
 
 func Example_documentDump() {

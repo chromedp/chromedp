@@ -45,7 +45,7 @@ type Selector struct {
 //
 // For example:
 //
-// 	chromedp.Run(ctx, chromedp.SendKeys(`thing`, chromedp.ByID))
+//     chromedp.Run(ctx, chromedp.SendKeys(`thing`, chromedp.ByID))
 //
 // The above will perform a "SendKeys" action on the first element matching a
 // browser CSS query for "#thing".
@@ -54,15 +54,15 @@ type Selector struct {
 // the primary way of automating Tasks in the browser. They are typically
 // written in the following form:
 //
-// 	Action(selector[, parameter1, ...parameterN][,result][, queryOptions...])
+//     Action(selector[, parameter1, ...parameterN][,result][, queryOptions...])
 //
 // Where:
 //
-// 	Action         - the action to perform
-// 	selector       - element query selection (typically a string), that any matching node(s) will have the action applied
-// 	parameter[1-N] - parameter(s) needed for the individual action (if any)
-// 	result         - pointer to a result (if any)
-// 	queryOptions   - changes how queries are executed, or how nodes are waited for (see below)
+//     Action         - the action to perform
+//     selector       - element query selection (typically a string), that any matching node(s) will have the action applied
+//     parameter[1-N] - parameter(s) needed for the individual action (if any)
+//     result         - pointer to a result (if any)
+//     queryOptions   - changes how queries are executed, or how nodes are waited for (see below)
 //
 // Query Options
 //
