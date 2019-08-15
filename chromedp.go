@@ -4,6 +4,9 @@
 //
 // chromedp requires no third-party dependencies, implementing the async Chrome
 // DevTools Protocol entirely in Go.
+//
+// This package includes a number of simple examples. Additionally,
+// https://github.com/chromedp/examples contains more complex examples.
 package chromedp
 
 import (
