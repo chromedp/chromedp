@@ -1426,3 +1426,18 @@ const (
 </body>
 </html>`
 )
+
+func TestWaitReadyReuseAction(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "js.html")
+	defer cancel()
+
+	// Reusing a single WaitReady action used to panic.
+	action := WaitReady("#input2", ByID)
+	for i := 0; i < 3; i++ {
+		if err := Run(ctx, action); err != nil {
+			t.Fatalf("got error: %v", err)
+		}
+	}
+}

@@ -209,7 +209,6 @@ func (s *Selector) selAsString() string {
 
 // waitReady waits for the specified nodes to be ready.
 func (s *Selector) waitReady(check func(context.Context, *cdp.Node) error) func(context.Context, *cdp.Frame, ...cdp.NodeID) ([]*cdp.Node, error) {
-	errc := make(chan error, 1)
 	return func(ctx context.Context, cur *cdp.Frame, ids ...cdp.NodeID) ([]*cdp.Node, error) {
 		nodes := make([]*cdp.Node, len(ids))
 		cur.RLock()
@@ -224,6 +223,7 @@ func (s *Selector) waitReady(check func(context.Context, *cdp.Node) error) func(
 		cur.RUnlock()
 
 		if check != nil {
+			errc := make(chan error, 1)
 			for _, n := range nodes {
 				go func(n *cdp.Node) {
 					errc <- check(ctx, n)
@@ -236,12 +236,11 @@ func (s *Selector) waitReady(check func(context.Context, *cdp.Node) error) func(
 					first = err
 				}
 			}
+			close(errc)
 			if first != nil {
 				return nil, first
 			}
 		}
-
-		close(errc)
 		return nodes, nil
 	}
 }
