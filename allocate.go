@@ -4,12 +4,14 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"sync"
+	"time"
 )
 
 // An Allocator is responsible for creating and managing a number of browsers.
@@ -48,6 +50,7 @@ func setupExecAllocator(opts ...ExecAllocatorOption) *ExecAllocator {
 // if the given parent context doesn't have an allocator set up. Do not modify
 // this global; instead, use NewExecAllocator. See ExampleExecAllocator.
 var DefaultExecAllocatorOptions = [...]ExecAllocatorOption{
+	WSURLReadTimeout(time.Second * 10),
 	NoFirstRun,
 	NoDefaultBrowserCheck,
 	Headless,
@@ -103,6 +106,7 @@ type ExecAllocator struct {
 
 	wg sync.WaitGroup
 
+	wsURLReadTimeout     time.Duration
 	combinedOutputWriter io.Writer
 }
 
@@ -210,7 +214,23 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		close(c.allocated)
 	}()
 
-	wsURL, err := readOutput(stdout, a.combinedOutputWriter, a.wg.Done)
+	var wsURL string
+	if a.wsURLReadTimeout > 0 {
+		wsURLChan := make(chan struct{})
+		go func() {
+			wsURL, err = readOutput(stdout, a.combinedOutputWriter, a.wg.Done)
+			wsURLChan <- struct{}{}
+		}()
+		select {
+		case <-wsURLChan:
+		case <-time.After(a.wsURLReadTimeout):
+			err = errors.New("websocket url timeout reached")
+			// preventing goroutine leak.
+			go func() { <-wsURLChan }()
+		}
+	} else {
+		wsURL, err = readOutput(stdout, a.combinedOutputWriter, a.wg.Done)
+	}
 	if err != nil {
 		if a.combinedOutputWriter != nil {
 			// There's no io.Copy goroutine to call the done func.
@@ -413,6 +433,14 @@ func DisableGPU(a *ExecAllocator) {
 func CombinedOutput(w io.Writer) ExecAllocatorOption {
 	return func(a *ExecAllocator) {
 		a.combinedOutputWriter = w
+	}
+}
+
+// WSURLReadTimeout is used to set a timeout for reading websocket url on
+// chrome process starting.
+func WSURLReadTimeout(timeout time.Duration) ExecAllocatorOption {
+	return func(allocator *ExecAllocator) {
+		allocator.wsURLReadTimeout = timeout
 	}
 }
 
