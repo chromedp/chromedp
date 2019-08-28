@@ -2,6 +2,7 @@ package chromedp
 
 import (
 	"context"
+	"fmt"
 	"sync"
 	"sync/atomic"
 
@@ -112,6 +113,10 @@ func runListeners(list []cancelableListener, ev interface{}) []cancelableListene
 }
 
 func (t *Target) Execute(ctx context.Context, method string, params easyjson.Marshaler, res easyjson.Unmarshaler) error {
+	if method == target.CommandCloseTarget {
+		return fmt.Errorf("to close the target, cancel its context or use chromedp.Cancel")
+	}
+
 	id := atomic.AddInt64(&t.browser.next, 1)
 	lctx, cancel := context.WithCancel(ctx)
 	ch := make(chan *cdproto.Message, 1)

@@ -17,6 +17,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/chromedp/cdproto/browser"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/cdproto/page"
@@ -562,5 +563,49 @@ func TestLargeOutboundMessages(t *testing.T) {
 	res := new([]byte)
 	if err := Run(ctx, Evaluate(expr, res)); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestDirectCloseTarget(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+
+	c := FromContext(ctx)
+	want := "to close the target, cancel its context"
+
+	// Check that nothing is closed by running the action twice.
+	for i := 0; i < 2; i++ {
+		err := Run(ctx, ActionFunc(func(ctx context.Context) error {
+			_, err := target.CloseTarget(c.Target.TargetID).Do(ctx)
+			if err != nil {
+				return err
+			}
+			return nil
+		}))
+		got := fmt.Sprint(err)
+		if !strings.Contains(got, want) {
+			t.Fatalf("want %q, got %q", want, got)
+		}
+	}
+}
+
+func TestDirectCloseBrowser(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+
+	c := FromContext(ctx)
+	want := "to close the browser, cancel its context"
+
+	// Check that nothing is closed by running the action twice.
+	for i := 0; i < 2; i++ {
+		err := browser.Close().Do(cdp.WithExecutor(ctx, c.Browser))
+		got := fmt.Sprint(err)
+		if !strings.Contains(got, want) {
+			t.Fatalf("want %q, got %q", want, got)
+		}
 	}
 }
