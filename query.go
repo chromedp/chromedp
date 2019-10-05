@@ -157,11 +157,12 @@ func (s *Selector) Do(ctx context.Context) error {
 	if t == nil {
 		return ErrInvalidTarget
 	}
+	ticker := time.NewTicker(5 * time.Millisecond)
 	for {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		case <-time.After(5 * time.Millisecond):
+		case <- ticker.C:
 		}
 		t.curMu.RLock()
 		cur := t.cur
