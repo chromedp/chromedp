@@ -276,7 +276,7 @@ func (c *Context) newTarget(ctx context.Context) error {
 }
 
 func (c *Context) attachTarget(ctx context.Context, targetID target.ID) error {
-	sessionID, err := target.AttachToTarget(targetID).Do(cdp.WithExecutor(ctx, c.Browser))
+	sessionID, err := target.AttachToTarget(targetID).WithFlatten(true).Do(cdp.WithExecutor(ctx, c.Browser))
 	if err != nil {
 		return err
 	}
@@ -294,8 +294,9 @@ func (c *Context) attachTarget(ctx context.Context, targetID target.ID) error {
 		dom.Enable(),
 		css.Enable(),
 
-		// receive events when targets appear or disappear
+		// enable target discovery
 		target.SetDiscoverTargets(true),
+		target.SetAutoAttach(true, false).WithFlatten(true),
 	} {
 		if err := action.Do(cdp.WithExecutor(ctx, c.Target)); err != nil {
 			return fmt.Errorf("unable to execute %T: %v", action, err)
