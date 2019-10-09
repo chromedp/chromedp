@@ -192,7 +192,7 @@ func (b *Browser) run(ctx context.Context) {
 			}
 			if msg.Method == cdproto.EventRuntimeExceptionThrown {
 				ev := new(runtime.EventExceptionThrown)
-				if err := unmarshal(lexer, msg.Params, ev); err != nil {
+				if err := rawUnmarshal(lexer, msg.Params, ev); err != nil {
 					b.errf("%s", err)
 					continue
 				}
