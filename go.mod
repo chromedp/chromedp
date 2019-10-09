@@ -10,3 +10,5 @@ require (
 	github.com/mailru/easyjson v0.7.0
 	golang.org/x/sys v0.0.0-20191005200804-aed5e4c7ecf9 // indirect
 )
+
+replace github.com/chromedp/cdproto => ./../cdproto

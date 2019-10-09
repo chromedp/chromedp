@@ -130,18 +130,11 @@ func (t *Target) Execute(ctx context.Context, method string, params easyjson.Mar
 	t.listeners = append(t.listeners, cancelableListener{lctx, fn})
 	t.listenersMu.Unlock()
 
-	sendParams := &sendMessageToTargetParams{
-		Message: encMessageString{Message: cdproto.Message{
-			ID:     id,
-			Method: cdproto.MethodType(method),
-			Params: rawMarshal(params),
-		}},
-		SessionID: t.SessionID,
-	}
 	t.browser.cmdQueue <- &cdproto.Message{
-		ID:     atomic.AddInt64(&t.browser.next, 1),
-		Method: target.CommandSendMessageToTarget,
-		Params: rawMarshal(sendParams),
+		ID:        id,
+		SessionID: t.SessionID,
+		Method:    cdproto.MethodType(method),
+		Params:    rawMarshal(params),
 	}
 	select {
 	case <-ctx.Done():

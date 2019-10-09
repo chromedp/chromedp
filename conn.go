@@ -28,9 +28,6 @@ type Transport interface {
 type Conn struct {
 	conn net.Conn
 
-	// buf helps us reuse space when reading from the websocket.
-	buf bytes.Buffer
-
 	// reuse the websocket reader and writer to avoid an alloc per
 	// Read/Write.
 	reader wsutil.Reader
@@ -85,12 +82,6 @@ func (c *Conn) Close() error {
 	return c.conn.Close()
 }
 
-func (c *Conn) bufReadAll(r io.Reader) ([]byte, error) {
-	c.buf.Reset()
-	_, err := c.buf.ReadFrom(r)
-	return c.buf.Bytes(), err
-}
-
 func unmarshal(lex *jlexer.Lexer, data []byte, v easyjson.Unmarshaler) error {
 	*lex = jlexer.Lexer{Data: data}
 	v.UnmarshalEasyJSON(lex)
@@ -109,28 +100,17 @@ func (c *Conn) Read(_ context.Context, msg *cdproto.Message) error {
 		return ErrInvalidWebsocketMessage
 	}
 
-	// Unmarshal via a bytes.Buffer. Don't use UnmarshalFromReader, as that
-	// uses ioutil.ReadAll, which uses a brand new bytes.Buffer each time.
-	// That doesn't reuse any space.
-	buf, err := c.bufReadAll(&c.reader)
-	if err != nil {
+	buf := bytes.Buffer{}
+	if _, err := buf.ReadFrom(&c.reader); err != nil {
 		return err
 	}
+	bs := buf.Bytes()
 	if c.dbgf != nil {
-		c.dbgf("<- %s", buf)
+		c.dbgf("<- %s", bs)
 	}
 
 	// Reuse the easyjson lexer.
-	if err := unmarshal(&c.decoder, buf, msg); err != nil {
-		return err
-	}
-
-	// bufReadAll uses the buffer space directly, and msg.Result is an
-	// easyjson.RawMessage, so we must make a copy of those bytes to prevent
-	// data races. This still allocates much less than using a new buffer
-	// each time.
-	msg.Result = append([]byte{}, msg.Result...)
-	return nil
+	return unmarshal(&c.decoder, bs, msg)
 }
 
 // Write writes a message.

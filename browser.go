@@ -18,7 +18,6 @@ import (
 	"github.com/chromedp/cdproto/target"
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
-	jwriter "github.com/mailru/easyjson/jwriter"
 )
 
 // Browser is the high-level Chrome DevTools Protocol browser manager, handling
@@ -202,41 +201,8 @@ func (b *Browser) Execute(ctx context.Context, method string, params easyjson.Ma
 }
 
 type tabMessage struct {
-	sessionID target.SessionID
+	sessionID target.SessionID // TODO: remove and simplify
 	msg       *cdproto.Message
-}
-
-//go:generate easyjson browser.go
-
-//easyjson:json
-type eventReceivedMessageFromTarget struct {
-	SessionID target.SessionID `json:"sessionId"`
-	Message   decMessageString `json:"message"`
-}
-
-type decMessageString struct {
-	lexer jlexer.Lexer // to avoid an alloc
-	m     cdproto.Message
-}
-
-func (m *decMessageString) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	l.AddError(unmarshal(&m.lexer, l.UnsafeBytes(), &m.m))
-}
-
-//easyjson:json
-type sendMessageToTargetParams struct {
-	Message   encMessageString `json:"message"`
-	SessionID target.SessionID `json:"sessionId,omitempty"`
-}
-
-type encMessageString struct {
-	Message cdproto.Message
-}
-
-func (m encMessageString) MarshalEasyJSON(w *jwriter.Writer) {
-	var w2 jwriter.Writer
-	m.Message.MarshalEasyJSON(&w2)
-	w.RawText(w2.BuildBytes(nil))
 }
 
 func (b *Browser) run(ctx context.Context) {
@@ -250,22 +216,19 @@ func (b *Browser) run(ctx context.Context) {
 	// connection. The separate goroutine is needed since a websocket read
 	// is blocking, so it cannot be used in a select statement.
 	go func() {
-		// Reuse the space for the read message, since in some cases
-		// like EventTargetReceivedMessageFromTarget we throw it away.
 		lexer := new(jlexer.Lexer)
-		readMsg := new(cdproto.Message)
 		for {
-			*readMsg = cdproto.Message{}
-			if err := b.conn.Read(ctx, readMsg); err != nil {
+			msg := new(cdproto.Message)
+			if err := b.conn.Read(ctx, msg); err != nil {
 				// If the websocket failed, most likely Chrome
 				// was closed or crashed. Signal that so the
 				// entire browser handler can be stopped.
 				close(b.LostConnection)
 				return
 			}
-			if readMsg.Method == cdproto.EventRuntimeExceptionThrown {
+			if msg.Method == cdproto.EventRuntimeExceptionThrown {
 				ev := new(runtime.EventExceptionThrown)
-				if err := unmarshal(lexer, readMsg.Params, ev); err != nil {
+				if err := unmarshal(lexer, msg.Params, ev); err != nil {
 					b.errf("%s", err)
 					continue
 				}
@@ -273,25 +236,9 @@ func (b *Browser) run(ctx context.Context) {
 				continue
 			}
 
-			var msg *cdproto.Message
-			var sessionID target.SessionID
-			if readMsg.Method == cdproto.EventTargetReceivedMessageFromTarget {
-				ev := new(eventReceivedMessageFromTarget)
-				if err := unmarshal(lexer, readMsg.Params, ev); err != nil {
-					b.errf("%s", err)
-					continue
-				}
-				sessionID = ev.SessionID
-				msg = &ev.Message.m
-			} else {
-				// We're passing along readMsg to another
-				// goroutine, so we must make a copy of it.
-				msg = new(cdproto.Message)
-				*msg = *readMsg
-			}
 			switch {
 			case msg.Method != "":
-				if sessionID == "" {
+				if msg.SessionID == "" {
 					ev, err := cdproto.UnmarshalMessage(msg)
 					if err != nil {
 						b.errf("%s", err)
@@ -307,17 +254,17 @@ func (b *Browser) run(ctx context.Context) {
 					continue
 				}
 				tabMessageQueue <- tabMessage{
-					sessionID: sessionID,
+					sessionID: msg.SessionID,
 					msg:       msg,
 				}
 			case msg.ID != 0:
-				if sessionID == "" {
+				if msg.SessionID == "" {
 					b.listenersMu.Lock()
 					b.listeners = runListeners(b.listeners, msg)
 					b.listenersMu.Unlock()
 					continue
 				}
-				tabMessageQueue <- tabMessage{sessionID, msg}
+				tabMessageQueue <- tabMessage{msg.SessionID, msg}
 
 			default:
 				b.errf("ignoring malformed incoming message (missing id or method): %#v", msg)
