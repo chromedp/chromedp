@@ -125,10 +125,11 @@ func (c *Conn) Read(_ context.Context, msg *cdproto.Message) error {
 		return err
 	}
 
-	// bufReadAll uses the buffer space directly, and msg.Result is an
+	// bufReadAll uses the buffer space directly, and msg.{Params,Result} is an
 	// easyjson.RawMessage, so we must make a copy of those bytes to prevent
-	// data races. This still allocates much less than using a new buffer
-	// each time.
+	// data races. This still allocates much less than using a new buffer each
+	// time.
+	msg.Params = append([]byte{}, msg.Params...)
 	msg.Result = append([]byte{}, msg.Result...)
 	return nil
 }
