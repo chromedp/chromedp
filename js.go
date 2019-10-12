@@ -7,14 +7,24 @@ import (
 )
 
 const (
-	// textJS is a javascript snippet that returns the concatenated textContent
-	// of all visible (ie, offsetParent !== null) children.
+	// textJS is a javascript snippet that returns the concatenated innerText of all
+	// visible (ie, offsetWidth || offsetHeight || getClientRects().length ) children.
 	textJS = `(function(a) {
 		var s = '';
 		for (var i = 0; i < a.length; i++) {
-			if (a[i].offsetParent !== null) {
-				s += a[i].textContent;
+			if (a[i].offsetWidth || a[i].offsetHeight || a[i].getClientRects().length) {
+				s += a[i].innerText;
 			}
+		}
+		return s;
+	})(%s)`
+
+	// textContentJS is a javascript snippet that returns the concatenated textContent
+	// of all children.
+	textContentJS = `(function(a) {
+		var s = '';
+		for (var i = 0; i < a.length; i++) {
+			s += a[i].textContent;
 		}
 		return s;
 	})(%s)`
@@ -71,10 +81,11 @@ const (
 		return a[n] = v;
 	})(%s, %q, %q)`
 
-	// visibleJS is a javascript snippet that returns true or false depending
-	// on if the specified node's offsetParent is not null.
+	// visibleJS is a javascript snippet that returns true or false depending on if
+	// the specified node's offsetWidth, offsetHeight or getClientRects().length is
+	// not null.
 	visibleJS = `(function(a) {
-		return a.offsetParent !== null;
+		return Boolean( a.offsetWidth || a.offsetHeight || a.getClientRects().length );
 	})(%s)`
 )
 

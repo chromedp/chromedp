@@ -1,9 +1,68 @@
 package chromedp
 
 import (
+	"net"
+	"net/url"
+
+	easyjson "github.com/mailru/easyjson"
+	jlexer "github.com/mailru/easyjson/jlexer"
+
 	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/cdp"
 )
+
+// forceIP tries to force the host component in urlstr to be an IP address.
+//
+// Since Chrome 66+, Chrome DevTools Protocol clients connecting to a browser
+// must send the "Host:" header as either an IP address, or "localhost".
+func forceIP(urlstr string) string {
+	u, err := url.Parse(urlstr)
+	if err != nil {
+		return urlstr
+	}
+	host, port, err := net.SplitHostPort(u.Host)
+	if err != nil {
+		return urlstr
+	}
+	addr, err := net.ResolveIPAddr("ip", host)
+	if err != nil {
+		return urlstr
+	}
+	u.Host = net.JoinHostPort(addr.IP.String(), port)
+	return u.String()
+}
+
+func rawMarshal(v easyjson.Marshaler) easyjson.RawMessage {
+	if v == nil {
+		return nil
+	}
+	buf, err := easyjson.Marshal(v)
+	if err != nil {
+		panic(err)
+	}
+	return buf
+}
+
+func rawUnmarshal(lex *jlexer.Lexer, data []byte, v easyjson.Unmarshaler) error {
+	*lex = jlexer.Lexer{Data: data}
+	v.UnmarshalEasyJSON(lex)
+	return lex.Error()
+}
+
+func runListeners(list []cancelableListener, ev interface{}) []cancelableListener {
+	for i := 0; i < len(list); {
+		listener := list[i]
+		select {
+		case <-listener.ctx.Done():
+			list = append(list[:i], list[i+1:]...)
+			continue
+		default:
+			listener.fn(ev)
+			i++
+		}
+	}
+	return list
+}
 
 // frameOp is a frame manipulation operation.
 type frameOp func(*cdp.Frame)

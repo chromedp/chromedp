@@ -134,7 +134,6 @@ func TestNodeOp(t *testing.T) {
     <div id="div1">div1 content</div>
   </body>
 <html>`)
-
 	}))
 	defer s.Close()
 
@@ -209,6 +208,6 @@ func TestNodeOp(t *testing.T) {
 
 		prev = tree
 
-		//t.Logf("test %d:\n%s\n--\n", i, tree)
+		// t.Logf("test %d:\n%s\n--\n", i, tree)
 	}
 }

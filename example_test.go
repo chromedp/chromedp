@@ -311,7 +311,7 @@ func ExamplePrintToPDF() {
 	}
 }
 
-func ExampleByJSPath_OuterHTML() {
+func ExampleByJSPath() {
 	ctx, cancel := chromedp.NewContext(context.Background())
 	defer cancel()
 
@@ -341,12 +341,12 @@ func ExampleByJSPath_OuterHTML() {
 
 	// Output:
 	// Outer HTML:
-	//<html><head></head><body>
-	//	<div id="content">cool content</div>
-	//</body></html>
+	// <html><head></head><body>
+	// 	<div id="content">cool content</div>
+	// </body></html>
 }
 
-func Example_DocumentDump() {
+func Example_documentDump() {
 	ctx, cancel := chromedp.NewContext(context.Background())
 	defer cancel()
 

@@ -2,6 +2,7 @@ package chromedp
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"sync/atomic"
 
@@ -96,22 +97,11 @@ func (t *Target) run(ctx context.Context) {
 	}
 }
 
-func runListeners(list []cancelableListener, ev interface{}) []cancelableListener {
-	for i := 0; i < len(list); {
-		listener := list[i]
-		select {
-		case <-listener.ctx.Done():
-			list = append(list[:i], list[i+1:]...)
-			continue
-		default:
-			listener.fn(ev)
-			i++
-		}
-	}
-	return list
-}
-
 func (t *Target) Execute(ctx context.Context, method string, params easyjson.Marshaler, res easyjson.Unmarshaler) error {
+	if method == target.CommandCloseTarget {
+		return errors.New("to close the target, cancel its context or use chromedp.Cancel")
+	}
+
 	id := atomic.AddInt64(&t.browser.next, 1)
 	lctx, cancel := context.WithCancel(ctx)
 	ch := make(chan *cdproto.Message, 1)
@@ -125,19 +115,13 @@ func (t *Target) Execute(ctx context.Context, method string, params easyjson.Mar
 	t.listeners = append(t.listeners, cancelableListener{lctx, fn})
 	t.listenersMu.Unlock()
 
-	sendParams := &sendMessageToTargetParams{
-		Message: encMessageString{Message: cdproto.Message{
-			ID:     id,
-			Method: cdproto.MethodType(method),
-			Params: rawMarshal(params),
-		}},
+	t.browser.cmdQueue <- &cdproto.Message{
+		ID:        id,
+		Method:    cdproto.MethodType(method),
+		Params:    rawMarshal(params),
 		SessionID: t.SessionID,
 	}
-	t.browser.cmdQueue <- &cdproto.Message{
-		ID:     atomic.AddInt64(&t.browser.next, 1),
-		Method: target.CommandSendMessageToTarget,
-		Params: rawMarshal(sendParams),
-	}
+
 	select {
 	case <-ctx.Done():
 		return ctx.Err()

@@ -45,7 +45,7 @@ type Selector struct {
 //
 // For example:
 //
-// 	chromedp.Run(ctx, chromedp.SendKeys(`thing`, chromedp.ByID))
+//     chromedp.Run(ctx, chromedp.SendKeys(`thing`, chromedp.ByID))
 //
 // The above will perform a "SendKeys" action on the first element matching a
 // browser CSS query for "#thing".
@@ -54,15 +54,15 @@ type Selector struct {
 // the primary way of automating Tasks in the browser. They are typically
 // written in the following form:
 //
-// 	Action(selector[, parameter1, ...parameterN][,result][, queryOptions...])
+//     Action(selector[, parameter1, ...parameterN][,result][, queryOptions...])
 //
 // Where:
 //
-// 	Action         - the action to perform
-// 	selector       - element query selection (typically a string), that any matching node(s) will have the action applied
-// 	parameter[1-N] - parameter(s) needed for the individual action (if any)
-// 	result         - pointer to a result (if any)
-// 	queryOptions   - changes how queries are executed, or how nodes are waited for (see below)
+//     Action         - the action to perform
+//     selector       - element query selection (typically a string), that any matching node(s) will have the action applied
+//     parameter[1-N] - parameter(s) needed for the individual action (if any)
+//     result         - pointer to a result (if any)
+//     queryOptions   - changes how queries are executed, or how nodes are waited for (see below)
 //
 // Query Options
 //
@@ -209,7 +209,6 @@ func (s *Selector) selAsString() string {
 
 // waitReady waits for the specified nodes to be ready.
 func (s *Selector) waitReady(check func(context.Context, *cdp.Node) error) func(context.Context, *cdp.Frame, ...cdp.NodeID) ([]*cdp.Node, error) {
-	errc := make(chan error, 1)
 	return func(ctx context.Context, cur *cdp.Frame, ids ...cdp.NodeID) ([]*cdp.Node, error) {
 		nodes := make([]*cdp.Node, len(ids))
 		cur.RLock()
@@ -224,6 +223,7 @@ func (s *Selector) waitReady(check func(context.Context, *cdp.Node) error) func(
 		cur.RUnlock()
 
 		if check != nil {
+			errc := make(chan error, 1)
 			for _, n := range nodes {
 				go func(n *cdp.Node) {
 					errc <- check(ctx, n)
@@ -236,12 +236,11 @@ func (s *Selector) waitReady(check func(context.Context, *cdp.Node) error) func(
 					first = err
 				}
 			}
+			close(errc)
 			if first != nil {
 				return nil, first
 			}
 		}
-
-		close(errc)
 		return nodes, nil
 	}
 }
@@ -412,7 +411,7 @@ func NodeVisible(s *Selector) {
 			return err
 		}
 
-		// check offsetParent
+		// check visibility
 		var res bool
 		err = EvaluateAsDevTools(snippet(visibleJS, cashX(true), s, n), &res).Do(ctx)
 		if err != nil {
@@ -439,7 +438,7 @@ func NodeNotVisible(s *Selector) {
 			return err
 		}
 
-		// check offsetParent
+		// check visibility
 		var res bool
 		err = EvaluateAsDevTools(snippet(visibleJS, cashX(true), s, n), &res).Do(ctx)
 		if err != nil {
@@ -651,7 +650,23 @@ func Text(sel interface{}, text *string, opts ...QueryOption) QueryAction {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
-		return EvaluateAsDevTools(snippet(textJS, cashXNode(false), sel, nodes[0]), text).Do(ctx)
+		return EvaluateAsDevTools(snippet(textJS, cashX(false), sel, nodes[0]), text).Do(ctx)
+	}, opts...)
+}
+
+// TextContent is an element query action that retrieves the text content of the first element
+// node matching the selector.
+func TextContent(sel interface{}, text *string, opts ...QueryOption) QueryAction {
+	if text == nil {
+		panic("text cannot be nil")
+	}
+
+	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
+		if len(nodes) < 1 {
+			return fmt.Errorf("selector %q did not return any nodes", sel)
+		}
+
+		return EvaluateAsDevTools(snippet(textContentJS, cashX(false), sel, nodes[0]), text).Do(ctx)
 	}, opts...)
 }
 
@@ -877,7 +892,12 @@ func JavascriptAttribute(sel interface{}, name string, res interface{}, opts ...
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
-		return EvaluateAsDevTools(snippet(attributeJS, cashX(true), sel, nodes[0], name), res).Do(ctx)
+		if err := EvaluateAsDevTools(
+			snippet(attributeJS, cashX(true), sel, nodes[0], name), res,
+		).Do(ctx); err != nil {
+			return fmt.Errorf("could not retrieve attribute %q: %v", name, err)
+		}
+		return nil
 	}, opts...)
 }
 
@@ -947,6 +967,9 @@ func DoubleClick(sel interface{}, opts ...QueryOption) QueryAction {
 // SendKeys is an element query action that synthesizes the key up, char, and down
 // events as needed for the runes in v, sending them to the first element node
 // matching the selector.
+//
+// For a complete example on how to use SendKeys, see
+// https://github.com/chromedp/examples/tree/master/keys.
 //
 // Note: when the element query matches a input[type="file"] node, then
 // dom.SetFileInputFiles is used to set the upload path of the input node to v.

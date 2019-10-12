@@ -6,7 +6,6 @@ import (
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/cdproto/input"
-
 	"github.com/chromedp/chromedp/kb"
 )
 
@@ -15,8 +14,8 @@ type MouseAction Action
 
 // MouseEvent is a mouse event action to dispatch the specified mouse event
 // type at coordinates x, y.
-func MouseEvent(typ input.MouseType, x, y int64, opts ...MouseOption) MouseAction {
-	p := input.DispatchMouseEvent(typ, float64(x), float64(y))
+func MouseEvent(typ input.MouseType, x, y float64, opts ...MouseOption) MouseAction {
+	p := input.DispatchMouseEvent(typ, x, y)
 	// apply opts
 	for _, o := range opts {
 		p = o(p)
@@ -26,12 +25,12 @@ func MouseEvent(typ input.MouseType, x, y int64, opts ...MouseOption) MouseActio
 
 // MouseClickXY is an action that sends a left mouse button click (ie,
 // mousePressed and mouseReleased event) to the X, Y location.
-func MouseClickXY(x, y int64, opts ...MouseOption) MouseAction {
+func MouseClickXY(x, y float64, opts ...MouseOption) MouseAction {
 	return ActionFunc(func(ctx context.Context) error {
 		p := &input.DispatchMouseEventParams{
 			Type:       input.MousePressed,
-			X:          float64(x),
-			Y:          float64(y),
+			X:          x,
+			Y:          y,
 			Button:     input.ButtonLeft,
 			ClickCount: 1,
 		}
@@ -57,29 +56,30 @@ func MouseClickXY(x, y int64, opts ...MouseOption) MouseAction {
 // viewport.
 func MouseClickNode(n *cdp.Node, opts ...MouseOption) MouseAction {
 	return ActionFunc(func(ctx context.Context) error {
-		var pos []int
+		var pos []float64
 		err := EvaluateAsDevTools(snippet(scrollIntoViewJS, cashX(true), nil, n), &pos).Do(ctx)
 		if err != nil {
 			return err
 		}
 
-		box, err := dom.GetBoxModel().WithNodeID(n.NodeID).Do(ctx)
+		boxes, err := dom.GetContentQuads().WithNodeID(n.NodeID).Do(ctx)
 		if err != nil {
 			return err
 		}
+		content := boxes[0]
 
-		c := len(box.Content)
+		c := len(content)
 		if c%2 != 0 || c < 1 {
 			return ErrInvalidDimensions
 		}
 
-		var x, y int64
+		var x, y float64
 		for i := 0; i < c; i += 2 {
-			x += int64(box.Content[i])
-			y += int64(box.Content[i+1])
+			x += content[i]
+			y += content[i+1]
 		}
-		x /= int64(c / 2)
-		y /= int64(c / 2)
+		x /= float64(c / 2)
+		y /= float64(c / 2)
 
 		return MouseClickXY(x, y, opts...).Do(ctx)
 	})

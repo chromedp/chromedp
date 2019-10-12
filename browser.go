@@ -4,20 +4,19 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net"
-	"net/url"
 	"os"
 	"sync"
 	"sync/atomic"
 	"time"
 
+	easyjson "github.com/mailru/easyjson"
+	jlexer "github.com/mailru/easyjson/jlexer"
+
 	"github.com/chromedp/cdproto"
+	"github.com/chromedp/cdproto/browser"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
-	easyjson "github.com/mailru/easyjson"
-	jlexer "github.com/mailru/easyjson/jlexer"
-	jwriter "github.com/mailru/easyjson/jwriter"
 )
 
 // Browser is the high-level Chrome DevTools Protocol browser manager, handling
@@ -105,27 +104,6 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 	return b, nil
 }
 
-// forceIP tries to force the host component in urlstr to be an IP address.
-//
-// Since Chrome 66+, Chrome DevTools Protocol clients connecting to a browser
-// must send the "Host:" header as either an IP address, or "localhost".
-func forceIP(urlstr string) string {
-	u, err := url.Parse(urlstr)
-	if err != nil {
-		return urlstr
-	}
-	host, port, err := net.SplitHostPort(u.Host)
-	if err != nil {
-		return urlstr
-	}
-	addr, err := net.ResolveIPAddr("ip", host)
-	if err != nil {
-		return urlstr
-	}
-	u.Host = net.JoinHostPort(addr.IP.String(), port)
-	return u.String()
-}
-
 func (b *Browser) newExecutorForTarget(targetID target.ID, sessionID target.SessionID) *Target {
 	if targetID == "" {
 		panic("empty target ID")
@@ -150,18 +128,11 @@ func (b *Browser) newExecutorForTarget(targetID target.ID, sessionID target.Sess
 	return t
 }
 
-func rawMarshal(v easyjson.Marshaler) easyjson.RawMessage {
-	if v == nil {
-		return nil
-	}
-	buf, err := easyjson.Marshal(v)
-	if err != nil {
-		panic(err)
-	}
-	return buf
-}
-
 func (b *Browser) Execute(ctx context.Context, method string, params easyjson.Marshaler, res easyjson.Unmarshaler) error {
+	if method == browser.CommandClose {
+		return fmt.Errorf("to close the browser, cancel its context or use chromedp.Cancel")
+	}
+
 	id := atomic.AddInt64(&b.next, 1)
 	lctx, cancel := context.WithCancel(ctx)
 	ch := make(chan *cdproto.Message, 1)
@@ -196,50 +167,12 @@ func (b *Browser) Execute(ctx context.Context, method string, params easyjson.Ma
 	return nil
 }
 
-type tabMessage struct {
-	sessionID target.SessionID
-	msg       *cdproto.Message
-}
-
-//go:generate easyjson browser.go
-
-//easyjson:json
-type eventReceivedMessageFromTarget struct {
-	SessionID target.SessionID `json:"sessionId"`
-	Message   decMessageString `json:"message"`
-}
-
-type decMessageString struct {
-	lexer jlexer.Lexer // to avoid an alloc
-	m     cdproto.Message
-}
-
-func (m *decMessageString) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	l.AddError(unmarshal(&m.lexer, l.UnsafeBytes(), &m.m))
-}
-
-//easyjson:json
-type sendMessageToTargetParams struct {
-	Message   encMessageString `json:"message"`
-	SessionID target.SessionID `json:"sessionId,omitempty"`
-}
-
-type encMessageString struct {
-	Message cdproto.Message
-}
-
-func (m encMessageString) MarshalEasyJSON(w *jwriter.Writer) {
-	var w2 jwriter.Writer
-	m.Message.MarshalEasyJSON(&w2)
-	w.RawText(w2.BuildBytes(nil))
-}
-
 func (b *Browser) run(ctx context.Context) {
 	defer b.conn.Close()
 
-	// tabMessageQueue is the queue of incoming target events, to be routed by
+	// incomingQueue is the queue of incoming target events, to be routed by
 	// their session ID.
-	tabMessageQueue := make(chan tabMessage, 1)
+	incomingQueue := make(chan *cdproto.Message, 1)
 
 	// This goroutine continuously reads events from the websocket
 	// connection. The separate goroutine is needed since a websocket read
@@ -248,19 +181,18 @@ func (b *Browser) run(ctx context.Context) {
 		// Reuse the space for the read message, since in some cases
 		// like EventTargetReceivedMessageFromTarget we throw it away.
 		lexer := new(jlexer.Lexer)
-		readMsg := new(cdproto.Message)
 		for {
-			*readMsg = cdproto.Message{}
-			if err := b.conn.Read(ctx, readMsg); err != nil {
-				// If the websocket failed, most likely Chrome
-				// was closed or crashed. Signal that so the
-				// entire browser handler can be stopped.
+			msg := new(cdproto.Message)
+			if err := b.conn.Read(ctx, msg); err != nil {
+				// If the websocket failed, most likely Chrome was closed or
+				// crashed. Signal that so the entire browser handler can be
+				// stopped.
 				close(b.LostConnection)
 				return
 			}
-			if readMsg.Method == cdproto.EventRuntimeExceptionThrown {
+			if msg.Method == cdproto.EventRuntimeExceptionThrown {
 				ev := new(runtime.EventExceptionThrown)
-				if err := unmarshal(lexer, readMsg.Params, ev); err != nil {
+				if err := rawUnmarshal(lexer, msg.Params, ev); err != nil {
 					b.errf("%s", err)
 					continue
 				}
@@ -268,51 +200,24 @@ func (b *Browser) run(ctx context.Context) {
 				continue
 			}
 
-			var msg *cdproto.Message
-			var sessionID target.SessionID
-			if readMsg.Method == cdproto.EventTargetReceivedMessageFromTarget {
-				ev := new(eventReceivedMessageFromTarget)
-				if err := unmarshal(lexer, readMsg.Params, ev); err != nil {
+			switch {
+			case msg.SessionID != "" && (msg.Method != "" || msg.ID != 0):
+				incomingQueue <- msg
+
+			case msg.Method != "":
+				ev, err := cdproto.UnmarshalMessage(msg)
+				if err != nil {
 					b.errf("%s", err)
 					continue
 				}
-				sessionID = ev.SessionID
-				msg = &ev.Message.m
-			} else {
-				// We're passing along readMsg to another
-				// goroutine, so we must make a copy of it.
-				msg = new(cdproto.Message)
-				*msg = *readMsg
-			}
-			switch {
-			case msg.Method != "":
-				if sessionID == "" {
-					ev, err := cdproto.UnmarshalMessage(msg)
-					if err != nil {
-						b.errf("%s", err)
-						continue
-					}
-					b.listenersMu.Lock()
-					b.listeners = runListeners(b.listeners, ev)
-					b.listenersMu.Unlock()
-					// TODO: are other browser events useful?
-					if ev, ok := ev.(*target.EventDetachedFromTarget); ok {
-						tabMessageQueue <- tabMessage{ev.SessionID, msg}
-					}
-					continue
-				}
-				tabMessageQueue <- tabMessage{
-					sessionID: sessionID,
-					msg:       msg,
-				}
+				b.listenersMu.Lock()
+				b.listeners = runListeners(b.listeners, ev)
+				b.listenersMu.Unlock()
+
 			case msg.ID != 0:
-				if sessionID == "" {
-					b.listenersMu.Lock()
-					b.listeners = runListeners(b.listeners, msg)
-					b.listenersMu.Unlock()
-					continue
-				}
-				tabMessageQueue <- tabMessage{sessionID, msg}
+				b.listenersMu.Lock()
+				b.listeners = runListeners(b.listeners, msg)
+				b.listenersMu.Unlock()
 
 			default:
 				b.errf("ignoring malformed incoming message (missing id or method): %#v", msg)
@@ -338,18 +243,18 @@ func (b *Browser) run(ctx context.Context) {
 			}
 			pages[t.SessionID] = t
 
-		case tm := <-tabMessageQueue:
-			page, ok := pages[tm.sessionID]
+		case m := <-incomingQueue:
+			page, ok := pages[m.SessionID]
 			if !ok {
 				// A page we recently closed still sending events.
 				continue
 			}
-			page.messageQueue <- tm.msg
-			if tm.msg.Method == cdproto.EventTargetDetachedFromTarget {
-				if _, ok := pages[tm.sessionID]; !ok {
-					b.errf("executor for %q doesn't exist", tm.sessionID)
+			page.messageQueue <- m
+			if m.Method == cdproto.EventTargetDetachedFromTarget {
+				if _, ok := pages[m.SessionID]; !ok {
+					b.errf("executor for %q doesn't exist", m.SessionID)
 				}
-				delete(pages, tm.sessionID)
+				delete(pages, m.SessionID)
 			}
 
 		case <-b.LostConnection:

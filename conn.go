@@ -6,15 +6,18 @@ import (
 	"io"
 	"net"
 
-	"github.com/chromedp/cdproto"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
-	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jlexer"
 	"github.com/mailru/easyjson/jwriter"
+
+	"github.com/chromedp/cdproto"
 )
 
 // Transport is the common interface to send/receive messages to a target.
+//
+// This interface is currently used internally by Browser, but it is exposed as
+// it will be useful as part of the public API in the future.
 type Transport interface {
 	Read(context.Context, *cdproto.Message) error
 	Write(context.Context, *cdproto.Message) error
@@ -24,9 +27,6 @@ type Transport interface {
 // Conn implements Transport with a gobwas/ws websocket connection.
 type Conn struct {
 	conn net.Conn
-
-	// buf helps us reuse space when reading from the websocket.
-	buf bytes.Buffer
 
 	// reuse the websocket reader and writer to avoid an alloc per
 	// Read/Write.
@@ -82,18 +82,6 @@ func (c *Conn) Close() error {
 	return c.conn.Close()
 }
 
-func (c *Conn) bufReadAll(r io.Reader) ([]byte, error) {
-	c.buf.Reset()
-	_, err := c.buf.ReadFrom(r)
-	return c.buf.Bytes(), err
-}
-
-func unmarshal(lex *jlexer.Lexer, data []byte, v easyjson.Unmarshaler) error {
-	*lex = jlexer.Lexer{Data: data}
-	v.UnmarshalEasyJSON(lex)
-	return lex.Error()
-}
-
 // Read reads the next message.
 func (c *Conn) Read(_ context.Context, msg *cdproto.Message) error {
 	// get websocket reader
@@ -106,28 +94,15 @@ func (c *Conn) Read(_ context.Context, msg *cdproto.Message) error {
 		return ErrInvalidWebsocketMessage
 	}
 
-	// Unmarshal via a bytes.Buffer. Don't use UnmarshalFromReader, as that
-	// uses ioutil.ReadAll, which uses a brand new bytes.Buffer each time.
-	// That doesn't reuse any space.
-	buf, err := c.bufReadAll(&c.reader)
-	if err != nil {
+	var b bytes.Buffer
+	if _, err := b.ReadFrom(&c.reader); err != nil {
 		return err
 	}
+	buf := b.Bytes()
 	if c.dbgf != nil {
 		c.dbgf("<- %s", buf)
 	}
-
-	// Reuse the easyjson lexer.
-	if err := unmarshal(&c.decoder, buf, msg); err != nil {
-		return err
-	}
-
-	// bufReadAll uses the buffer space directly, and msg.Result is an
-	// easyjson.RawMessage, so we must make a copy of those bytes to prevent
-	// data races. This still allocates much less than using a new buffer
-	// each time.
-	msg.Result = append([]byte{}, msg.Result...)
-	return nil
+	return rawUnmarshal(&c.decoder, buf, msg)
 }
 
 // Write writes a message.
