@@ -271,7 +271,11 @@ func (c *Context) newTarget(ctx context.Context) error {
 	if err := action.Do(cdp.WithExecutor(ctx, c.Browser)); err != nil {
 		return err
 	}
-	c.targetID = <-ch
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case c.targetID = <-ch:
+	}
 	return c.attachTarget(ctx, c.targetID)
 }
 

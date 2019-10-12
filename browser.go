@@ -146,10 +146,14 @@ func (b *Browser) Execute(ctx context.Context, method string, params easyjson.Ma
 	b.listeners = append(b.listeners, cancelableListener{lctx, fn})
 	b.listenersMu.Unlock()
 
-	b.cmdQueue <- &cdproto.Message{
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case b.cmdQueue <- &cdproto.Message{
 		ID:     id,
 		Method: cdproto.MethodType(method),
 		Params: rawMarshal(params),
+	}:
 	}
 	select {
 	case <-ctx.Done():
