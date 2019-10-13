@@ -281,7 +281,11 @@ func (c *Context) attachTarget(ctx context.Context, targetID target.ID) error {
 		return err
 	}
 
-	c.Target = c.Browser.newExecutorForTarget(targetID, sessionID)
+	c.Target, err = c.Browser.newExecutorForTarget(ctx, targetID, sessionID)
+	if err != nil {
+		return err
+	}
+
 	c.Target.listeners = append(c.Target.listeners, c.targetListeners...)
 	go c.Target.run(ctx)
 

@@ -4,9 +4,6 @@ import (
 	"net"
 	"net/url"
 
-	easyjson "github.com/mailru/easyjson"
-	jlexer "github.com/mailru/easyjson/jlexer"
-
 	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/cdp"
 )
@@ -30,23 +27,6 @@ func forceIP(urlstr string) string {
 	}
 	u.Host = net.JoinHostPort(addr.IP.String(), port)
 	return u.String()
-}
-
-func rawMarshal(v easyjson.Marshaler) easyjson.RawMessage {
-	if v == nil {
-		return nil
-	}
-	buf, err := easyjson.Marshal(v)
-	if err != nil {
-		panic(err)
-	}
-	return buf
-}
-
-func rawUnmarshal(lex *jlexer.Lexer, data []byte, v easyjson.Unmarshaler) error {
-	*lex = jlexer.Lexer{Data: data}
-	v.UnmarshalEasyJSON(lex)
-	return lex.Error()
 }
 
 func runListeners(list []cancelableListener, ev interface{}) []cancelableListener {
