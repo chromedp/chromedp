@@ -319,6 +319,7 @@ func findExecPath() string {
 		"chrome",
 		"chrome.exe", // in case PATHEXT is misconfigured
 		`C:\Program Files (x86)\Google\Chrome\Application\chrome.exe`,
+		`C:\Program Files\Google\Chrome\Application\chrome.exe`,
 
 		// Mac
 		`/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`,
