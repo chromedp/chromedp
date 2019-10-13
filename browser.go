@@ -2,6 +2,7 @@ package chromedp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -104,12 +105,12 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 	return b, nil
 }
 
-func (b *Browser) newExecutorForTarget(targetID target.ID, sessionID target.SessionID) *Target {
+func (b *Browser) newExecutorForTarget(ctx context.Context, targetID target.ID, sessionID target.SessionID) (*Target, error) {
 	if targetID == "" {
-		panic("empty target ID")
+		return nil, errors.New("empty target ID")
 	}
 	if sessionID == "" {
-		panic("empty session ID")
+		return nil, errors.New("empty session ID")
 	}
 	t := &Target{
 		browser:   b,
@@ -122,10 +123,15 @@ func (b *Browser) newExecutorForTarget(targetID target.ID, sessionID target.Sess
 		logf: b.logf,
 		errf: b.errf,
 	}
+
 	// This send should be blocking, to ensure the tab is inserted into the
 	// map before any more target events are routed.
-	b.newTabQueue <- t
-	return t
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case b.newTabQueue <- t:
+	}
+	return t, nil
 }
 
 func (b *Browser) Execute(ctx context.Context, method string, params easyjson.Marshaler, res easyjson.Unmarshaler) error {
@@ -138,7 +144,10 @@ func (b *Browser) Execute(ctx context.Context, method string, params easyjson.Ma
 	ch := make(chan *cdproto.Message, 1)
 	fn := func(ev interface{}) {
 		if msg, ok := ev.(*cdproto.Message); ok && msg.ID == id {
-			ch <- msg
+			select {
+			case <-ctx.Done():
+			case ch <- msg:
+			}
 			cancel()
 		}
 	}
@@ -146,11 +155,27 @@ func (b *Browser) Execute(ctx context.Context, method string, params easyjson.Ma
 	b.listeners = append(b.listeners, cancelableListener{lctx, fn})
 	b.listenersMu.Unlock()
 
-	b.cmdQueue <- &cdproto.Message{
+	// send command
+	var buf []byte
+	if params != nil {
+		var err error
+		buf, err = easyjson.Marshal(params)
+		if err != nil {
+			return err
+		}
+	}
+	cmd := &cdproto.Message{
 		ID:     id,
 		Method: cdproto.MethodType(method),
-		Params: rawMarshal(params),
+		Params: buf,
 	}
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case b.cmdQueue <- cmd:
+	}
+
+	// wait for result
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
@@ -192,7 +217,9 @@ func (b *Browser) run(ctx context.Context) {
 			}
 			if msg.Method == cdproto.EventRuntimeExceptionThrown {
 				ev := new(runtime.EventExceptionThrown)
-				if err := rawUnmarshal(lexer, msg.Params, ev); err != nil {
+				*lexer = jlexer.Lexer{Data: msg.Params}
+				ev.UnmarshalJSON(msg.Params)
+				if err := lexer.Error(); err != nil {
 					b.errf("%s", err)
 					continue
 				}
@@ -202,7 +229,11 @@ func (b *Browser) run(ctx context.Context) {
 
 			switch {
 			case msg.SessionID != "" && (msg.Method != "" || msg.ID != 0):
-				incomingQueue <- msg
+				select {
+				case <-ctx.Done():
+					return
+				case incomingQueue <- msg:
+				}
 
 			case msg.Method != "":
 				ev, err := cdproto.UnmarshalMessage(msg)

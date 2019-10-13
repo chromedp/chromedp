@@ -102,7 +102,11 @@ func (c *Conn) Read(_ context.Context, msg *cdproto.Message) error {
 	if c.dbgf != nil {
 		c.dbgf("<- %s", buf)
 	}
-	return rawUnmarshal(&c.decoder, buf, msg)
+
+	// unmarshal, reusing lexer
+	c.decoder = jlexer.Lexer{Data: buf}
+	msg.UnmarshalEasyJSON(&c.decoder)
+	return c.decoder.Error()
 }
 
 // Write writes a message.

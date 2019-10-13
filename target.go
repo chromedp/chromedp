@@ -53,6 +53,7 @@ func (t *Target) run(ctx context.Context) {
 			select {
 			case <-ctx.Done():
 				return
+
 			case msg := <-t.messageQueue:
 				if msg.ID != 0 {
 					t.listenersMu.Lock()
@@ -74,9 +75,14 @@ func (t *Target) run(ctx context.Context) {
 				t.listenersMu.Lock()
 				t.listeners = runListeners(t.listeners, ev)
 				t.listenersMu.Unlock()
+
 				switch msg.Method.Domain() {
 				case "Page", "DOM":
-					syncEventQueue <- eventValue{msg.Method, ev}
+					select {
+					case <-ctx.Done():
+						return
+					case syncEventQueue <- eventValue{msg.Method, ev}:
+					}
 				}
 			}
 		}
@@ -107,7 +113,10 @@ func (t *Target) Execute(ctx context.Context, method string, params easyjson.Mar
 	ch := make(chan *cdproto.Message, 1)
 	fn := func(ev interface{}) {
 		if msg, ok := ev.(*cdproto.Message); ok && msg.ID == id {
-			ch <- msg
+			select {
+			case <-ctx.Done():
+			case ch <- msg:
+			}
 			cancel()
 		}
 	}
@@ -115,13 +124,28 @@ func (t *Target) Execute(ctx context.Context, method string, params easyjson.Mar
 	t.listeners = append(t.listeners, cancelableListener{lctx, fn})
 	t.listenersMu.Unlock()
 
-	t.browser.cmdQueue <- &cdproto.Message{
+	// send command
+	var buf []byte
+	if params != nil {
+		var err error
+		buf, err = easyjson.Marshal(params)
+		if err != nil {
+			return err
+		}
+	}
+	cmd := &cdproto.Message{
 		ID:        id,
-		Method:    cdproto.MethodType(method),
-		Params:    rawMarshal(params),
 		SessionID: t.SessionID,
+		Method:    cdproto.MethodType(method),
+		Params:    buf,
+	}
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case t.browser.cmdQueue <- cmd:
 	}
 
+	// wait for result
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
