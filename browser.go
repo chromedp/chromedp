@@ -280,7 +280,13 @@ func (b *Browser) run(ctx context.Context) {
 				// A page we recently closed still sending events.
 				continue
 			}
-			page.messageQueue <- m
+
+			select {
+			case <-ctx.Done():
+				return
+			case page.messageQueue <- m:
+			}
+
 			if m.Method == cdproto.EventTargetDetachedFromTarget {
 				if _, ok := pages[m.SessionID]; !ok {
 					b.errf("executor for %q doesn't exist", m.SessionID)
