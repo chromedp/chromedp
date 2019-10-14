@@ -261,7 +261,10 @@ func (c *Context) newTarget(ctx context.Context) error {
 			return
 		}
 		if info.Type == "page" && info.URL == "about:blank" {
-			ch <- info.TargetID
+			select {
+			case <-lctx.Done():
+			case ch <- info.TargetID:
+			}
 			cancel()
 		}
 	})
@@ -271,7 +274,11 @@ func (c *Context) newTarget(ctx context.Context) error {
 	if err := action.Do(cdp.WithExecutor(ctx, c.Browser)); err != nil {
 		return err
 	}
-	c.targetID = <-ch
+	select {
+	case <-ctx.Done():
+		return ctx.Err()
+	case c.targetID = <-ch:
+	}
 	return c.attachTarget(ctx, c.targetID)
 }
 
@@ -476,7 +483,10 @@ func WaitNewTarget(ctx context.Context, fn func(*target.Info) bool) <-chan targe
 			return // already attached; not a new target
 		}
 		if fn(info) {
-			ch <- info.TargetID
+			select {
+			case <-lctx.Done():
+			case ch <- info.TargetID:
+			}
 			close(ch)
 			cancel()
 		}
