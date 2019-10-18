@@ -1,0 +1,36 @@
+on: [push, pull_request]
+name: Test
+
+jobs:
+
+  test:
+    strategy:
+      matrix:
+        go-version: [1.12.x, 1.13.x]
+        # TODO: Add macos-latest and windows-latest. The former doesn't come
+        # with Chrome by default, and the latter needs lots of work in the tests.
+        platform: [ubuntu-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v1
+      with:
+        go-version: ${{ matrix.go-version }}
+    - name: Checkout code
+      uses: actions/checkout@v1
+    - name: Test
+      run: go test -v ./...
+
+  test-headless-shell:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install Go
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.13.x
+    - name: Checkout code
+      uses: actions/checkout@v1
+    - name: Build
+      run: go test -c -vet=off
+    - name: Test
+      run: docker run --rm --volume=$PWD:/chromedp --entrypoint=/chromedp/chromedp.test --workdir=/chromedp --env=PATH=/headless-shell chromedp/headless-shell:latest -test.v

@@ -322,7 +322,7 @@ func findExecPath() string {
 		`C:\Program Files\Google\Chrome\Application\chrome.exe`,
 
 		// Mac
-		`/Applications/Google Chrome.app/Contents/MacOS/Google Chrome`,
+		"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
 	} {
 		found, err := exec.LookPath(path)
 		if err == nil {
