@@ -148,7 +148,9 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		// default, unless the user set Flag("no-sandbox", false).
 		args = append(args, "--no-sandbox")
 	}
-	args = append(args, "--remote-debugging-port=0")
+	if _, ok := a.initFlags["remote-debugging-port"]; !ok {
+		args = append(args, "--remote-debugging-port=0")
+	}
 
 	// Force the first page to be blank, instead of the welcome page;
 	// --no-first-run doesn't enforce that.
@@ -375,6 +377,11 @@ func WindowSize(width, height int) ExecAllocatorOption {
 // header.
 func UserAgent(userAgent string) ExecAllocatorOption {
 	return Flag("user-agent", userAgent)
+}
+
+// RemoteDebuggingPort is the command line option to set remote-debugging-port.
+func RemoteDebuggingPort(port string) ExecAllocatorOption {
+	return Flag("remote-debugging-port", port)
 }
 
 // NoSandbox is the Chrome comamnd line option to disable the sandbox.
