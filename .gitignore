@@ -10,3 +10,5 @@ cdp-*.txt
 
 /*.png
 /*.pdf
+
+.idea/
