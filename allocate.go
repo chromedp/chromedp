@@ -379,11 +379,6 @@ func UserAgent(userAgent string) ExecAllocatorOption {
 	return Flag("user-agent", userAgent)
 }
 
-// RemoteDebuggingPort is the command line option to set remote-debugging-port.
-func RemoteDebuggingPort(port string) ExecAllocatorOption {
-	return Flag("remote-debugging-port", port)
-}
-
 // NoSandbox is the Chrome comamnd line option to disable the sandbox.
 func NoSandbox(a *ExecAllocator) {
 	Flag("no-sandbox", true)(a)
