@@ -197,29 +197,33 @@ func Cancel(ctx context.Context) error {
 
 // Run runs an action against context. The provided context must be a valid
 // chromedp context, typically created via NewContext.
-func Run(ctx context.Context, actions ...Action) error {
+func Run(ctx context.Context, actions ...Action) (error, int) {
 	c := FromContext(ctx)
+
+	pid := 0
 	// If c is nil, it's not a chromedp context.
 	// If c.Allocator is nil, NewContext wasn't used properly.
 	// If c.cancel is nil, Run is being called directly with an allocator
 	// context.
 	if c == nil || c.Allocator == nil || c.cancel == nil {
-		return ErrInvalidContext
+		return ErrInvalidContext, pid
 	}
 	if c.Browser == nil {
 		browser, err := c.Allocator.Allocate(ctx, c.browserOpts...)
 		if err != nil {
-			return err
+			return err, pid
 		}
 		c.Browser = browser
 		c.Browser.listeners = append(c.Browser.listeners, c.browserListeners...)
+		pid = browser.process.Pid
 	}
+
 	if c.Target == nil {
 		if err := c.newTarget(ctx); err != nil {
-			return err
+			return err, pid
 		}
 	}
-	return Tasks(actions).Do(cdp.WithExecutor(ctx, c.Target))
+	return Tasks(actions).Do(cdp.WithExecutor(ctx, c.Target)), pid
 }
 
 func (c *Context) newTarget(ctx context.Context) error {
@@ -354,7 +358,7 @@ func WithBrowserOption(opts ...BrowserOption) ContextOption {
 
 // Targets lists all the targets in the browser attached to the given context.
 func Targets(ctx context.Context) ([]*target.Info, error) {
-	if err := Run(ctx); err != nil {
+	if err, _ := Run(ctx); err != nil {
 		return nil, err
 	}
 	c := FromContext(ctx)
