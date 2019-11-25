@@ -216,6 +216,14 @@ func TestTargets(t *testing.T) {
 	if err := Run(ctx1); err != nil {
 		t.Fatal(err)
 	}
+
+	// We should see one attached target, since we closed the second a while
+	// ago. If we see two, that means there's a memory leak, as we're
+	// holding onto the detached target.
+	pages := FromContext(ctx1).Browser.pages
+	if len(pages) != 1 {
+		t.Fatalf("expected one attached target, got %d", len(pages))
+	}
 }
 
 func TestCancelError(t *testing.T) {

@@ -31,6 +31,11 @@ type Browser struct {
 
 	dialTimeout time.Duration
 
+	// pages keeps track of the attached targets, indexed by each's session
+	// ID. The only reaon this is a field is so that the tests can check the
+	// map once a browser is closed.
+	pages map[target.SessionID]*Target
+
 	listenersMu sync.Mutex
 	listeners   []cancelableListener
 
@@ -199,6 +204,8 @@ func (b *Browser) run(ctx context.Context) {
 	// their session ID.
 	incomingQueue := make(chan *cdproto.Message, 1)
 
+	delTabQueue := make(chan target.SessionID, 1)
+
 	// This goroutine continuously reads events from the websocket
 	// connection. The separate goroutine is needed since a websocket read
 	// is blocking, so it cannot be used in a select statement.
@@ -245,6 +252,10 @@ func (b *Browser) run(ctx context.Context) {
 				b.listeners = runListeners(b.listeners, ev)
 				b.listenersMu.Unlock()
 
+				if ev, ok := ev.(*target.EventDetachedFromTarget); ok {
+					delTabQueue <- ev.SessionID
+				}
+
 			case msg.ID != 0:
 				b.listenersMu.Lock()
 				b.listeners = runListeners(b.listeners, msg)
@@ -256,7 +267,7 @@ func (b *Browser) run(ctx context.Context) {
 		}
 	}()
 
-	pages := make(map[target.SessionID]*Target, 32)
+	b.pages = make(map[target.SessionID]*Target, 32)
 	for {
 		select {
 		case <-ctx.Done():
@@ -269,13 +280,19 @@ func (b *Browser) run(ctx context.Context) {
 			}
 
 		case t := <-b.newTabQueue:
-			if _, ok := pages[t.SessionID]; ok {
+			if _, ok := b.pages[t.SessionID]; ok {
 				b.errf("executor for %q already exists", t.SessionID)
 			}
-			pages[t.SessionID] = t
+			b.pages[t.SessionID] = t
+
+		case sessionID := <-delTabQueue:
+			if _, ok := b.pages[sessionID]; !ok {
+				b.errf("executor for %q doesn't exist", sessionID)
+			}
+			delete(b.pages, sessionID)
 
 		case m := <-incomingQueue:
-			page, ok := pages[m.SessionID]
+			page, ok := b.pages[m.SessionID]
 			if !ok {
 				// A page we recently closed still sending events.
 				continue
@@ -285,13 +302,6 @@ func (b *Browser) run(ctx context.Context) {
 			case <-ctx.Done():
 				return
 			case page.messageQueue <- m:
-			}
-
-			if m.Method == cdproto.EventTargetDetachedFromTarget {
-				if _, ok := pages[m.SessionID]; !ok {
-					b.errf("executor for %q doesn't exist", m.SessionID)
-				}
-				delete(pages, m.SessionID)
 			}
 
 		case <-b.LostConnection:
