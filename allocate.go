@@ -1,6 +1,7 @@
 package chromedp
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"fmt"
@@ -240,31 +241,28 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 func readOutput(rc io.ReadCloser, forward io.Writer, done func()) (wsURL string, _ error) {
 	prefix := []byte("DevTools listening on")
 	var accumulated bytes.Buffer
-	var p [256]byte
+	bufr := bufio.NewReader(rc)
 readLoop:
 	for {
-		n, err := rc.Read(p[:])
+		line, err := bufr.ReadBytes('\n')
 		if err != nil {
 			return "", fmt.Errorf("chrome failed to start:\n%s",
 				accumulated.Bytes())
 		}
 		if forward != nil {
-			if _, err := forward.Write(p[:n]); err != nil {
+			if _, err := forward.Write(line); err != nil {
 				return "", err
 			}
 		}
 
-		lines := bytes.Split(p[:n], []byte("\n"))
-		for _, line := range lines {
-			if bytes.HasPrefix(line, prefix) {
-				line = line[len(prefix):]
-				// use TrimSpace, to also remove \r on Windows
-				line = bytes.TrimSpace(line)
-				wsURL = string(line)
-				break readLoop
-			}
+		if bytes.HasPrefix(line, prefix) {
+			line = line[len(prefix):]
+			// use TrimSpace, to also remove \r on Windows
+			line = bytes.TrimSpace(line)
+			wsURL = string(line)
+			break readLoop
 		}
-		accumulated.Write(p[:n])
+		accumulated.Write(line)
 	}
 	if forward == nil {
 		// We don't need the process's output anymore.
@@ -273,7 +271,7 @@ readLoop:
 		// Copy the rest of the output in a separate goroutine, as we
 		// need to return with the websocket URL.
 		go func() {
-			io.Copy(forward, rc)
+			io.Copy(forward, bufr)
 			done()
 		}()
 	}
