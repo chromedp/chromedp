@@ -609,3 +609,39 @@ func TestDirectCloseBrowser(t *testing.T) {
 		}
 	}
 }
+
+func TestDownloadIntoDir(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+
+	dir, err := ioutil.TempDir("", "chromedp-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/data.bin":
+			w.Header().Set("Content-Type", "application/octet-stream")
+			fmt.Fprintf(w, "some binary data")
+		default:
+			w.Header().Set("Content-Type", "text/html")
+			fmt.Fprintf(w, `go <a id="download" href="/data.bin">download</a> stuff/`)
+		}
+	}))
+	defer s.Close()
+
+	if err := Run(ctx,
+		Navigate(s.URL),
+		page.SetDownloadBehavior(page.SetDownloadBehaviorBehaviorAllow).WithDownloadPath(dir),
+		Click("#download", ByQuery),
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	// TODO: wait for the download to finish, and check that the file is in
+	// the directory.
+}
