@@ -67,9 +67,15 @@ func init() {
 	}
 }
 
+var browserOpts []ContextOption
+
 func TestMain(m *testing.M) {
 	var cancel context.CancelFunc
 	allocCtx, cancel = NewExecAllocator(context.Background(), allocOpts...)
+
+	if debug := os.Getenv("CHROMEDP_DEBUG"); debug != "" && debug != "false" {
+		browserOpts = append(browserOpts, WithDebugf(log.Printf))
+	}
 
 	code := m.Run()
 	cancel()
@@ -89,18 +95,7 @@ var allocateOnce sync.Once
 
 func testAllocate(tb testing.TB, name string) (context.Context, context.CancelFunc) {
 	// Start the browser exactly once, as needed.
-	allocateOnce.Do(func() {
-		var browserOpts []ContextOption
-		if debug := os.Getenv("CHROMEDP_DEBUG"); debug != "" && debug != "false" {
-			browserOpts = append(browserOpts, WithDebugf(log.Printf))
-		}
-
-		// start the browser
-		browserCtx, _ = NewContext(allocCtx, browserOpts...)
-		if err := Run(browserCtx); err != nil {
-			panic(err)
-		}
-	})
+	allocateOnce.Do(func() { browserCtx, _ = testAllocateSeparate(tb) })
 
 	// Same browser, new tab; not needing to start new chrome browsers for
 	// each test gives a huge speed-up.
@@ -123,7 +118,10 @@ func testAllocate(tb testing.TB, name string) (context.Context, context.CancelFu
 
 func testAllocateSeparate(tb testing.TB) (context.Context, context.CancelFunc) {
 	// Entirely new browser, unlike testAllocate.
-	ctx, _ := NewContext(allocCtx)
+	ctx, _ := NewContext(allocCtx, browserOpts...)
+	if err := Run(ctx); err != nil {
+		tb.Fatal(err)
+	}
 	cancel := func() {
 		if err := Cancel(ctx); err != nil {
 			tb.Error(err)
@@ -190,9 +188,6 @@ func TestTargets(t *testing.T) {
 	// Start one browser with one tab.
 	ctx1, cancel1 := testAllocateSeparate(t)
 	defer cancel1()
-	if err := Run(ctx1); err != nil {
-		t.Fatal(err)
-	}
 
 	checkTargets(t, ctx1, 1)
 
@@ -261,8 +256,10 @@ func TestPrematureCancel(t *testing.T) {
 	t.Parallel()
 
 	// Cancel before the browser is allocated.
-	ctx, cancel := testAllocateSeparate(t)
-	cancel()
+	ctx, _ := NewContext(allocCtx, browserOpts...)
+	if err := Cancel(ctx); err != nil {
+		t.Fatal(err)
+	}
 	if err := Run(ctx); err != context.Canceled {
 		t.Fatalf("wanted canceled context error, got %v", err)
 	}

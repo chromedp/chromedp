@@ -77,9 +77,6 @@ func TestExecAllocatorKillBrowser(t *testing.T) {
 	// and the browser is closed while it's loading.
 	ctx, cancel := testAllocateSeparate(t)
 	defer cancel()
-	if err := Run(ctx); err != nil {
-		t.Fatal(err)
-	}
 
 	kill := make(chan struct{}, 1)
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
