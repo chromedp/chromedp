@@ -129,34 +129,39 @@ func ExampleListenTarget_consoleLog() {
 <body>
 <script>
 	console.log("hello js world")
-	var p = document.createElement("div");
-	p.setAttribute("id", "jsFinished");
-	document.body.appendChild(p);
+	console.warn("scary warning", 123)
+	null.throwsException
 </script>
 </body>
 	`))
 	defer ts.Close()
 
+	gotException := make(chan bool, 1)
 	chromedp.ListenTarget(ctx, func(ev interface{}) {
 		switch ev := ev.(type) {
 		case *runtime.EventConsoleAPICalled:
-			fmt.Printf("console.%s call:\n", ev.Type)
+			fmt.Printf("* console.%s call:\n", ev.Type)
 			for _, arg := range ev.Args {
 				fmt.Printf("%s - %s\n", arg.Type, arg.Value)
 			}
+		case *runtime.EventExceptionThrown:
+			fmt.Printf("* %s\n", ev.ExceptionDetails)
+			gotException <- true
 		}
 	})
 
-	if err := chromedp.Run(ctx,
-		chromedp.Navigate(ts.URL),
-		chromedp.WaitVisible("#jsFinished", chromedp.ByID),
-	); err != nil {
+	if err := chromedp.Run(ctx, chromedp.Navigate(ts.URL)); err != nil {
 		panic(err)
 	}
+	<-gotException
 
 	// Output:
-	// console.log call:
+	// * console.log call:
 	// string - "hello js world"
+	// * console.warning call:
+	// string - "scary warning"
+	// number - 123
+	// * encountered exception 'Uncaught' (4:6)
 }
 
 func ExampleWaitNewTarget() {

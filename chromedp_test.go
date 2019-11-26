@@ -122,6 +122,12 @@ func testAllocateSeparate(tb testing.TB) (context.Context, context.CancelFunc) {
 	if err := Run(ctx); err != nil {
 		tb.Fatal(err)
 	}
+	ListenBrowser(ctx, func(ev interface{}) {
+		switch ev := ev.(type) {
+		case *cdpruntime.EventExceptionThrown:
+			tb.Errorf("%+v\n", ev.ExceptionDetails)
+		}
+	})
 	cancel := func() {
 		if err := Cancel(ctx); err != nil {
 			tb.Error(err)

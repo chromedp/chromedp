@@ -11,12 +11,10 @@ import (
 	"time"
 
 	easyjson "github.com/mailru/easyjson"
-	jlexer "github.com/mailru/easyjson/jlexer"
 
 	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/browser"
 	"github.com/chromedp/cdproto/cdp"
-	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
 )
 
@@ -210,9 +208,6 @@ func (b *Browser) run(ctx context.Context) {
 	// connection. The separate goroutine is needed since a websocket read
 	// is blocking, so it cannot be used in a select statement.
 	go func() {
-		// Reuse the space for the read message, since in some cases
-		// like EventTargetReceivedMessageFromTarget we throw it away.
-		lexer := new(jlexer.Lexer)
 		for {
 			msg := new(cdproto.Message)
 			if err := b.conn.Read(ctx, msg); err != nil {
@@ -221,17 +216,6 @@ func (b *Browser) run(ctx context.Context) {
 				// stopped.
 				close(b.LostConnection)
 				return
-			}
-			if msg.Method == cdproto.EventRuntimeExceptionThrown {
-				ev := new(runtime.EventExceptionThrown)
-				*lexer = jlexer.Lexer{Data: msg.Params}
-				ev.UnmarshalJSON(msg.Params)
-				if err := lexer.Error(); err != nil {
-					b.errf("%s", err)
-					continue
-				}
-				b.errf("%+v\n", ev.ExceptionDetails)
-				continue
 			}
 
 			switch {
