@@ -89,6 +89,9 @@ type Context struct {
 // Cancelling the returned context will close a tab or an entire browser,
 // depending on the logic described above. To cancel a context while checking
 // for errors, see Cancel.
+//
+// Note that NewContext doesn't allocate nor start a browser; that happens the
+// first time Run is used on the context.
 func NewContext(parent context.Context, opts ...ContextOption) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(parent)
 
@@ -197,6 +200,10 @@ func Cancel(ctx context.Context) error {
 
 // Run runs an action against context. The provided context must be a valid
 // chromedp context, typically created via NewContext.
+//
+// Note that the first time Run is called on a context, a browser will be
+// allocated via Allocator. Thus, it's generally a bad idea to use a context
+// timeout on the first Run call, as it will stop the entire browser.
 func Run(ctx context.Context, actions ...Action) error {
 	c := FromContext(ctx)
 	// If c is nil, it's not a chromedp context.
