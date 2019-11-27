@@ -82,8 +82,7 @@ func TestMain(m *testing.M) {
 
 	if infos, _ := ioutil.ReadDir(allocTempDir); len(infos) > 0 {
 		os.RemoveAll(allocTempDir)
-		// TODO: panic instead, once we fix the dir leaks
-		// panic(fmt.Sprintf("leaked %d temporary dirs under %s", len(infos), allocTempDir))
+		panic(fmt.Sprintf("leaked %d temporary dirs under %s", len(infos), allocTempDir))
 	} else {
 		os.Remove(allocTempDir)
 	}
