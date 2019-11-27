@@ -106,6 +106,8 @@ func TestExecAllocatorKillBrowser(t *testing.T) {
 }
 
 func TestSkipNewContext(t *testing.T) {
+	t.Parallel()
+
 	ctx, cancel := NewExecAllocator(context.Background(), allocOpts...)
 	defer cancel()
 
