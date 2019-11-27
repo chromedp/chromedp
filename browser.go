@@ -22,6 +22,11 @@ import (
 // the browser process runner, WebSocket clients, associated targets, and
 // network, page, and DOM events.
 type Browser struct {
+	// next is the next message id.
+	// NOTE: needs to be 64-bit aligned for 32-bit targets too, so be careful when moving this field.
+	// This will be eventually done by the compiler once https://github.com/golang/go/issues/599 is fixed.
+	next int64
+
 	// LostConnection is closed when the websocket connection to Chrome is
 	// dropped. This can be useful to make sure that Browser's context is
 	// cancelled (and the handler stopped) once the connection has failed.
@@ -38,9 +43,6 @@ type Browser struct {
 	listeners   []cancelableListener
 
 	conn Transport
-
-	// next is the next message id.
-	next int64
 
 	// newTabQueue is the queue used to create new target handlers, once a new
 	// tab is created and attached to. The newly created Target is sent back
