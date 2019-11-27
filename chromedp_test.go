@@ -96,6 +96,11 @@ func testAllocate(tb testing.TB, name string) (context.Context, context.CancelFu
 	// Start the browser exactly once, as needed.
 	allocateOnce.Do(func() { browserCtx, _ = testAllocateSeparate(tb) })
 
+	if browserCtx == nil {
+		// allocateOnce.Do failed; continuing would result in panics.
+		tb.FailNow()
+	}
+
 	// Same browser, new tab; not needing to start new chrome browsers for
 	// each test gives a huge speed-up.
 	ctx, _ := NewContext(browserCtx)
