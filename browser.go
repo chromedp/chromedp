@@ -13,7 +13,6 @@ import (
 	easyjson "github.com/mailru/easyjson"
 
 	"github.com/chromedp/cdproto"
-	"github.com/chromedp/cdproto/browser"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/target"
 )
@@ -140,10 +139,6 @@ func (b *Browser) newExecutorForTarget(ctx context.Context, targetID target.ID, 
 }
 
 func (b *Browser) Execute(ctx context.Context, method string, params easyjson.Marshaler, res easyjson.Unmarshaler) error {
-	if method == browser.CommandClose {
-		return fmt.Errorf("to close the browser, cancel its context or use chromedp.Cancel")
-	}
-
 	id := atomic.AddInt64(&b.next, 1)
 	lctx, cancel := context.WithCancel(ctx)
 	ch := make(chan *cdproto.Message, 1)
