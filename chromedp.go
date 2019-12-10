@@ -192,9 +192,11 @@ func Cancel(ctx context.Context) error {
 		return ErrInvalidContext
 	}
 
-	err := c.Browser.Execute(ctx, browser.CommandClose, nil, nil)
-	if err != nil {
-		return err
+	if len(FromContext(ctx).Browser.pages) == 1 {
+		err := c.Browser.Execute(ctx, browser.CommandClose, nil, nil)
+		if err != nil {
+			return err
+		}
 	}
 
 	c.cancel()
