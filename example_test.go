@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/dom"
@@ -90,6 +91,52 @@ func ExampleExecAllocator() {
 
 	// Output:
 	// DevToolsActivePort has 2 lines
+}
+
+func ExampleNewContext_reuseBrowser() {
+	ts := httptest.NewServer(writeHTML(`
+<body>
+<script>
+	// Show the current cookies.
+	var p = document.createElement("p")
+	p.innerText = document.cookie
+	p.setAttribute("id", "cookies")
+	document.body.appendChild(p)
+
+	// Override the cookies.
+	document.cookie = "foo=bar"
+</script>
+</body>
+	`))
+	defer ts.Close()
+
+	// create a new browser
+	ctx, cancel := chromedp.NewContext(context.Background())
+	defer cancel()
+
+	// start the browser without a timeout
+	if err := chromedp.Run(ctx); err != nil {
+		panic(err)
+	}
+
+	for i := 0; i < 2; i++ {
+		// look at the page twice, with a timeout set up; we skip
+		// cancels for the sake of brevity
+		ctx, _ := context.WithTimeout(ctx, time.Second)
+		ctx, _ = chromedp.NewContext(ctx)
+		var cookies string
+		if err := chromedp.Run(ctx,
+			chromedp.Navigate(ts.URL),
+			chromedp.Text("#cookies", &cookies),
+		); err != nil {
+			panic(err)
+		}
+		fmt.Printf("Cookies at i=%d: %q\n", i, cookies)
+	}
+
+	// Output:
+	// Cookies at i=0: ""
+	// Cookies at i=1: "foo=bar"
 }
 
 func ExampleNewContext_manyTabs() {

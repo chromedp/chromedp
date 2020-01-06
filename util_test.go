@@ -29,7 +29,7 @@ const dumpJS = `(function dump(n, prefix, indent, nodeIDs) {
 	var s = '';
 	if (typeof n.localName !== 'undefined') {
 		s = n.localName;
-	} 
+	}
 	if (s === '' && typeof n.nodeName !== 'undefined') {
 		s = n.nodeName;
 	}
