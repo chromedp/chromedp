@@ -609,11 +609,11 @@ func TestDirectCloseTarget(t *testing.T) {
 func TestDirectCloseBrowser(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := testAllocate(t, "")
+	ctx, cancel := testAllocateSeparate(t)
 	defer cancel()
 
 	c := FromContext(ctx)
-	want := "to close the browser, cancel its context"
+	want := "use chromedp.Cancel"
 
 	// Check that nothing is closed by running the action twice.
 	for i := 0; i < 2; i++ {
@@ -659,4 +659,60 @@ func TestDownloadIntoDir(t *testing.T) {
 
 	// TODO: wait for the download to finish, and check that the file is in
 	// the directory.
+}
+
+func TestGracefulBrowserShutdown(t *testing.T) {
+	t.Parallel()
+
+	dir, err := ioutil.TempDir("", "chromedp-test")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+
+	// TODO(mvdan): this doesn't work with DefaultExecAllocatorOptions+UserDataDir
+	opts := []ExecAllocatorOption{
+		NoFirstRun,
+		NoDefaultBrowserCheck,
+		Headless,
+		UserDataDir(dir),
+	}
+	actx, cancel := NewExecAllocator(context.Background(), opts...)
+	defer cancel()
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.RequestURI == "/set" {
+			http.SetCookie(w, &http.Cookie{
+				Name:    "cookie1",
+				Value:   "value1",
+				Expires: time.Now().AddDate(0, 0, 1), // one day later
+			})
+		}
+	}))
+	defer ts.Close()
+
+	{
+		ctx, _ := NewContext(actx)
+		if err := Run(ctx, Navigate(ts.URL+"/set")); err != nil {
+			t.Fatal(err)
+		}
+
+		// Close the browser gracefully.
+		if err := Cancel(ctx); err != nil {
+			t.Fatal(err)
+		}
+	}
+	{
+		ctx, _ := NewContext(actx)
+		var got string
+		if err := Run(ctx,
+			Navigate(ts.URL),
+			EvaluateAsDevTools("document.cookie", &got),
+		); err != nil {
+			t.Fatal(err)
+		}
+		if want := "cookie1=value1"; got != want {
+			t.Fatalf("want cookies %q; got %q", want, got)
+		}
+	}
 }

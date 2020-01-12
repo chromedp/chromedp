@@ -74,8 +74,9 @@ func TestExecAllocatorKillBrowser(t *testing.T) {
 	t.Parallel()
 
 	// Simulate a scenario where we navigate to a page that never responds,
-	// and the browser is closed while it's loading.
-	ctx, cancel := testAllocateSeparate(t)
+	// and the browser is killed while it's loading.
+	ctx, _ := testAllocateSeparate(t)
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
 	kill := make(chan struct{}, 1)
@@ -93,10 +94,8 @@ func TestExecAllocatorKillBrowser(t *testing.T) {
 	}()
 
 	// Run should error with something other than "deadline exceeded" in
-	// much less than 5s.
-	ctx2, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-	switch err := Run(ctx2, Navigate(s.URL)); err {
+	// much less than 3s.
+	switch err := Run(ctx, Navigate(s.URL)); err {
 	case nil:
 		// TODO: figure out why this happens sometimes on Travis
 		// t.Fatal("did not expect a nil error")

@@ -140,10 +140,14 @@ func (b *Browser) newExecutorForTarget(ctx context.Context, targetID target.ID, 
 }
 
 func (b *Browser) Execute(ctx context.Context, method string, params easyjson.Marshaler, res easyjson.Unmarshaler) error {
+	// Certain methods aren't available to the user directly.
 	if method == browser.CommandClose {
-		return fmt.Errorf("to close the browser, cancel its context or use chromedp.Cancel")
+		return fmt.Errorf("to close the browser gracefully, use chromedp.Cancel")
 	}
+	return b.execute(ctx, method, params, res)
+}
 
+func (b *Browser) execute(ctx context.Context, method string, params easyjson.Marshaler, res easyjson.Unmarshaler) error {
 	id := atomic.AddInt64(&b.next, 1)
 	lctx, cancel := context.WithCancel(ctx)
 	ch := make(chan *cdproto.Message, 1)

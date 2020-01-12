@@ -15,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/chromedp/cdproto/browser"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/css"
 	"github.com/chromedp/cdproto/dom"
@@ -181,16 +182,25 @@ func FromContext(ctx context.Context) *Context {
 // Cancel cancels a chromedp context, waits for its resources to be cleaned up,
 // and returns any error encountered during that process.
 //
-// Usually a "defer cancel()" will be enough for most use cases. This API is
-// useful if you want to catch underlying cancel errors, such as when a
-// temporary directory cannot be deleted.
+// If the context allocated a browser, the browser will be closed gracefully by
+// Cancel.
+//
+// Usually a "defer cancel()" will be enough for most use cases. However, Cancel
+// is the better option if one wants to gracefully close a browser, or catch
+// underlying errors happening during cancellation.
 func Cancel(ctx context.Context) error {
 	c := FromContext(ctx)
 	if c == nil {
 		return ErrInvalidContext
 	}
-	c.cancel()
-	c.closedTarget.Wait()
+	if c.first && c.Browser != nil {
+		if err := c.Browser.execute(ctx, browser.CommandClose, nil, nil); err != nil {
+			return err
+		}
+	} else {
+		c.cancel()
+		c.closedTarget.Wait()
+	}
 	// If we allocated, wait for the browser to stop.
 	if c.allocated != nil {
 		<-c.allocated

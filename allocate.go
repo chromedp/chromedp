@@ -243,9 +243,10 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	}
 	go func() {
 		// If the browser loses connection, kill the entire process and
-		// handler at once.
+		// handler at once. Don't use Cancel, as that will attempt to
+		// gracefully close the browser, which will hang.
 		<-browser.LostConnection
-		Cancel(ctx)
+		c.cancel()
 	}()
 	browser.process = cmd.Process
 	browser.userDataDir = dataDir
