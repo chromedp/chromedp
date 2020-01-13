@@ -11,12 +11,10 @@ import (
 	"time"
 
 	easyjson "github.com/mailru/easyjson"
-	jlexer "github.com/mailru/easyjson/jlexer"
 
 	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/browser"
 	"github.com/chromedp/cdproto/cdp"
-	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
 )
 
@@ -24,6 +22,11 @@ import (
 // the browser process runner, WebSocket clients, associated targets, and
 // network, page, and DOM events.
 type Browser struct {
+	// next is the next message id.
+	// NOTE: needs to be 64-bit aligned for 32-bit targets too, so be careful when moving this field.
+	// This will be eventually done by the compiler once https://github.com/golang/go/issues/599 is fixed.
+	next int64
+
 	// LostConnection is closed when the websocket connection to Chrome is
 	// dropped. This can be useful to make sure that Browser's context is
 	// cancelled (and the handler stopped) once the connection has failed.
@@ -31,13 +34,15 @@ type Browser struct {
 
 	dialTimeout time.Duration
 
+	// pages keeps track of the attached targets, indexed by each's session
+	// ID. The only reaon this is a field is so that the tests can check the
+	// map once a browser is closed.
+	pages map[target.SessionID]*Target
+
 	listenersMu sync.Mutex
 	listeners   []cancelableListener
 
 	conn Transport
-
-	// next is the next message id.
-	next int64
 
 	// newTabQueue is the queue used to create new target handlers, once a new
 	// tab is created and attached to. The newly created Target is sent back
@@ -135,10 +140,14 @@ func (b *Browser) newExecutorForTarget(ctx context.Context, targetID target.ID, 
 }
 
 func (b *Browser) Execute(ctx context.Context, method string, params easyjson.Marshaler, res easyjson.Unmarshaler) error {
+	// Certain methods aren't available to the user directly.
 	if method == browser.CommandClose {
-		return fmt.Errorf("to close the browser, cancel its context or use chromedp.Cancel")
+		return fmt.Errorf("to close the browser gracefully, use chromedp.Cancel")
 	}
+	return b.execute(ctx, method, params, res)
+}
 
+func (b *Browser) execute(ctx context.Context, method string, params easyjson.Marshaler, res easyjson.Unmarshaler) error {
 	id := atomic.AddInt64(&b.next, 1)
 	lctx, cancel := context.WithCancel(ctx)
 	ch := make(chan *cdproto.Message, 1)
@@ -199,13 +208,12 @@ func (b *Browser) run(ctx context.Context) {
 	// their session ID.
 	incomingQueue := make(chan *cdproto.Message, 1)
 
+	delTabQueue := make(chan target.SessionID, 1)
+
 	// This goroutine continuously reads events from the websocket
 	// connection. The separate goroutine is needed since a websocket read
 	// is blocking, so it cannot be used in a select statement.
 	go func() {
-		// Reuse the space for the read message, since in some cases
-		// like EventTargetReceivedMessageFromTarget we throw it away.
-		lexer := new(jlexer.Lexer)
 		for {
 			msg := new(cdproto.Message)
 			if err := b.conn.Read(ctx, msg); err != nil {
@@ -214,17 +222,6 @@ func (b *Browser) run(ctx context.Context) {
 				// stopped.
 				close(b.LostConnection)
 				return
-			}
-			if msg.Method == cdproto.EventRuntimeExceptionThrown {
-				ev := new(runtime.EventExceptionThrown)
-				*lexer = jlexer.Lexer{Data: msg.Params}
-				ev.UnmarshalJSON(msg.Params)
-				if err := lexer.Error(); err != nil {
-					b.errf("%s", err)
-					continue
-				}
-				b.errf("%+v\n", ev.ExceptionDetails)
-				continue
 			}
 
 			switch {
@@ -245,6 +242,10 @@ func (b *Browser) run(ctx context.Context) {
 				b.listeners = runListeners(b.listeners, ev)
 				b.listenersMu.Unlock()
 
+				if ev, ok := ev.(*target.EventDetachedFromTarget); ok {
+					delTabQueue <- ev.SessionID
+				}
+
 			case msg.ID != 0:
 				b.listenersMu.Lock()
 				b.listeners = runListeners(b.listeners, msg)
@@ -256,7 +257,7 @@ func (b *Browser) run(ctx context.Context) {
 		}
 	}()
 
-	pages := make(map[target.SessionID]*Target, 32)
+	b.pages = make(map[target.SessionID]*Target, 32)
 	for {
 		select {
 		case <-ctx.Done():
@@ -269,13 +270,19 @@ func (b *Browser) run(ctx context.Context) {
 			}
 
 		case t := <-b.newTabQueue:
-			if _, ok := pages[t.SessionID]; ok {
+			if _, ok := b.pages[t.SessionID]; ok {
 				b.errf("executor for %q already exists", t.SessionID)
 			}
-			pages[t.SessionID] = t
+			b.pages[t.SessionID] = t
+
+		case sessionID := <-delTabQueue:
+			if _, ok := b.pages[sessionID]; !ok {
+				b.errf("executor for %q doesn't exist", sessionID)
+			}
+			delete(b.pages, sessionID)
 
 		case m := <-incomingQueue:
-			page, ok := pages[m.SessionID]
+			page, ok := b.pages[m.SessionID]
 			if !ok {
 				// A page we recently closed still sending events.
 				continue
@@ -285,13 +292,6 @@ func (b *Browser) run(ctx context.Context) {
 			case <-ctx.Done():
 				return
 			case page.messageQueue <- m:
-			}
-
-			if m.Method == cdproto.EventTargetDetachedFromTarget {
-				if _, ok := pages[m.SessionID]; !ok {
-					b.errf("executor for %q doesn't exist", m.SessionID)
-				}
-				delete(pages, m.SessionID)
 			}
 
 		case <-b.LostConnection:
@@ -331,4 +331,20 @@ func WithConsolef(f func(string, ...interface{})) BrowserOption {
 // to not use a timeout.
 func WithDialTimeout(d time.Duration) BrowserOption {
 	return func(b *Browser) { b.dialTimeout = d }
+}
+
+// GetBrowserPid returns the process ID of the browser attached to the provided context
+func GetBrowserPid(ctx context.Context) (int, error) {
+	c := FromContext(ctx)
+	// If c is nil, it's not a chromedp context.
+	// If c.Allocator is nil, NewContext wasn't used properly.
+	// If c.cancel is nil, GetBrowserPid is being called directly with an allocator
+	// context.
+	if c == nil || c.Allocator == nil || c.cancel == nil {
+		return -1, ErrInvalidContext
+	}
+	if c.Browser == nil {
+		return -1, ErrInvalidTarget
+	}
+	return c.Browser.process.Pid, nil
 }
