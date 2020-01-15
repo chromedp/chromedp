@@ -165,7 +165,7 @@ func loadKeycodeConverterData() (map[string][]string, error) {
 	for _, m := range matches {
 		vkey := m[7]
 		if _, ok := domMap[vkey]; ok {
-			panic(fmt.Sprintf("vkey %s already defined", vkey))
+			return nil, fmt.Errorf("vkey %s already defined", vkey)
 		}
 		domMap[vkey] = m[1:]
 	}
@@ -247,7 +247,7 @@ func loadPrintable(keys map[rune]kb.Key, keycodeConverterMap, domKeyMap map[stri
 
 		kc, ok := keycodeConverterMap[domCode]
 		if !ok {
-			panic(fmt.Sprintf("could not find key %s in keycode map", domCode))
+			return fmt.Errorf("could not find key %s in keycode map", domCode)
 		}
 
 		code := getCode(kc[5])
@@ -313,11 +313,11 @@ func loadNonPrintable(keys map[rune]kb.Key, keycodeConverterMap, domKeyMap map[s
 		// get code, key definitions
 		dc, ok := keycodeConverterMap[code]
 		if !ok {
-			panic(fmt.Sprintf("no dom code definition for %s", code))
+			return fmt.Errorf("no dom code definition for %s", code)
 		}
 		dk, ok := domKeyMap[key]
 		if !ok {
-			panic(fmt.Sprintf("no dom key definition for %s", key))
+			return mt.Errorf("no dom key definition for %s", key)
 		}
 
 		// some scan codes do not have names defined, so use key name
@@ -413,12 +413,12 @@ func loadScanCodes(keycodeConverterMap, domKeyMap map[string][]string, layoutBuf
 
 		kc, ok := keycodeConverterMap[domCode]
 		if !ok {
-			panic(fmt.Sprintf("dom code %s not defined in keycode map", domCode))
+			return nil, fmt.Errorf("dom code %s not defined in keycode map", domCode)
 		}
 
 		sc, ok := vkeyCodeMap[vkey]
 		if !ok {
-			panic(fmt.Sprintf("vkey %s is not defined in keyboardCodeMap", vkey))
+			return nil, fmt.Errorf("vkey %s is not defined in keyboardCodeMap", vkey)
 		}
 
 		scanCodeMap[getCode(kc[5])] = sc
@@ -497,7 +497,7 @@ func loadKeyboardCodes(vkeyCodeMap map[string][]int64, lookup map[string]string,
 		case !strings.HasPrefix(m[2], "0x") && m[2] != "0":
 			z, ok := lookup[v]
 			if !ok {
-				panic(fmt.Sprintf("could not find %s in lookup", v))
+				return fmt.Errorf("could not find %s in lookup", v)
 			}
 			v = z
 		}
@@ -505,7 +505,7 @@ func loadKeyboardCodes(vkeyCodeMap map[string][]int64, lookup map[string]string,
 		// load the value
 		i, err := strconv.ParseInt(v, 0, 32)
 		if err != nil {
-			panic(fmt.Sprintf("could not parse %s // %s // %s", m[1], m[2], v))
+			return fmt.Errorf("could not parse %s // %s // %s", m[1], m[2], v)
 		}
 
 		vkey, ok := vkeyCodeMap[m[1]]

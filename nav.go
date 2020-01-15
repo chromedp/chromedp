@@ -52,11 +52,12 @@ func waitLoaded(ctx context.Context) error {
 // NavigationEntries is an action that retrieves the page's navigation history
 // entries.
 func NavigationEntries(currentIndex *int64, entries *[]*page.NavigationEntry) NavigateAction {
-	if currentIndex == nil || entries == nil {
-		panic("currentIndex and entries cannot be nil")
-	}
 
 	return ActionFunc(func(ctx context.Context) error {
+		if currentIndex == nil || entries == nil {
+			return errors.New("currentIndex and entries cannot be nil")
+		}
+
 		var err error
 		*currentIndex, *entries, err = page.GetNavigationHistory().Do(ctx)
 		return err
@@ -139,11 +140,12 @@ func Stop() NavigateAction {
 // See the 'screenshot' example in the https://github.com/chromedp/examples
 // project for an example of taking a screenshot of the entire page.
 func CaptureScreenshot(res *[]byte) Action {
-	if res == nil {
-		panic("res cannot be nil")
-	}
 
 	return ActionFunc(func(ctx context.Context) error {
+		if res == nil {
+			return errors.New("res cannot be nil")
+		}
+
 		var err error
 		*res, err = page.CaptureScreenshot().Do(ctx)
 		return err
@@ -152,16 +154,10 @@ func CaptureScreenshot(res *[]byte) Action {
 
 // Location is an action that retrieves the document location.
 func Location(urlstr *string) Action {
-	if urlstr == nil {
-		panic("urlstr cannot be nil")
-	}
 	return EvaluateAsDevTools(`document.location.toString()`, urlstr)
 }
 
 // Title is an action that retrieves the document title.
 func Title(title *string) Action {
-	if title == nil {
-		panic("title cannot be nil")
-	}
 	return EvaluateAsDevTools(`document.title`, title)
 }

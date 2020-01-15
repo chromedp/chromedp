@@ -371,12 +371,12 @@ func ByJSPath(s *Selector) {
 //
 // Note: must be used with []cdp.NodeID.
 func ByNodeID(s *Selector) {
-	ids, ok := s.sel.([]cdp.NodeID)
-	if !ok {
-		panic("ByNodeID can only work on []cdp.NodeID")
-	}
 
 	ByFunc(func(ctx context.Context, n *cdp.Node) ([]cdp.NodeID, error) {
+		ids, ok := s.sel.([]cdp.NodeID)
+		if !ok {
+			return nil, errors.New("ByNodeID can only work on []cdp.NodeID")
+		}
 		for _, id := range ids {
 			err := dom.RequestChildNodes(id).WithPierce(true).Do(ctx)
 			if err != nil {
@@ -563,11 +563,12 @@ func WaitNotPresent(sel interface{}, opts ...QueryOption) QueryAction {
 // Nodes is an element query action that retrieves the document element nodes
 // matching the selector.
 func Nodes(sel interface{}, nodes *[]*cdp.Node, opts ...QueryOption) QueryAction {
-	if nodes == nil {
-		panic("nodes cannot be nil")
-	}
 
 	return QueryAfter(sel, func(ctx context.Context, n ...*cdp.Node) error {
+		if nodes == nil {
+			return errors.New("nodes cannot be nil")
+		}
+
 		*nodes = n
 		return nil
 	}, opts...)
@@ -576,11 +577,11 @@ func Nodes(sel interface{}, nodes *[]*cdp.Node, opts ...QueryOption) QueryAction
 // NodeIDs is an element query action that retrieves the element node IDs matching the
 // selector.
 func NodeIDs(sel interface{}, ids *[]cdp.NodeID, opts ...QueryOption) QueryAction {
-	if ids == nil {
-		panic("nodes cannot be nil")
-	}
 
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
+		if ids == nil {
+			return errors.New("nodes cannot be nil")
+		}
 		nodeIDs := make([]cdp.NodeID, len(nodes))
 		for i, n := range nodes {
 			nodeIDs[i] = n.NodeID
@@ -629,10 +630,12 @@ func Blur(sel interface{}, opts ...QueryOption) QueryAction {
 // Dimensions is an element query action that retrieves the box model dimensions for the
 // first element node matching the selector.
 func Dimensions(sel interface{}, model **dom.BoxModel, opts ...QueryOption) QueryAction {
-	if model == nil {
-		panic("model cannot be nil")
-	}
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
+
+		if model == nil {
+			return errors.New("model cannot be nil")
+		}
+
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -645,11 +648,12 @@ func Dimensions(sel interface{}, model **dom.BoxModel, opts ...QueryOption) Quer
 // Text is an element query action that retrieves the visible text of the first element
 // node matching the selector.
 func Text(sel interface{}, text *string, opts ...QueryOption) QueryAction {
-	if text == nil {
-		panic("text cannot be nil")
-	}
 
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
+		if text == nil {
+			return errors.New("text cannot be nil")
+		}
+
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -661,11 +665,11 @@ func Text(sel interface{}, text *string, opts ...QueryOption) QueryAction {
 // TextContent is an element query action that retrieves the text content of the first element
 // node matching the selector.
 func TextContent(sel interface{}, text *string, opts ...QueryOption) QueryAction {
-	if text == nil {
-		panic("text cannot be nil")
-	}
 
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
+		if text == nil {
+			return errors.New("text cannot be nil")
+		}
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -738,10 +742,6 @@ func Clear(sel interface{}, opts ...QueryOption) QueryAction {
 // Useful for retrieving an element's Javascript value, namely form, input,
 // textarea, select, or any other element with a '.value' field.
 func Value(sel interface{}, value *string, opts ...QueryOption) QueryAction {
-	if value == nil {
-		panic("value cannot be nil")
-	}
-
 	return JavascriptAttribute(sel, "value", value, opts...)
 }
 
@@ -757,11 +757,12 @@ func SetValue(sel interface{}, value string, opts ...QueryOption) QueryAction {
 // Attributes is an element query action that retrieves the element attributes for the
 // first element node matching the selector.
 func Attributes(sel interface{}, attributes *map[string]string, opts ...QueryOption) QueryAction {
-	if attributes == nil {
-		panic("attributes cannot be nil")
-	}
 
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
+		if attributes == nil {
+			return errors.New("attributes cannot be nil")
+		}
+
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -786,11 +787,12 @@ func Attributes(sel interface{}, attributes *map[string]string, opts ...QueryOpt
 //
 // Note: this should be used with the ByQueryAll query option.
 func AttributesAll(sel interface{}, attributes *[]map[string]string, opts ...QueryOption) QueryAction {
-	if attributes == nil {
-		panic("attributes cannot be nil")
-	}
 
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
+		if attributes == nil {
+			return errors.New("attributes cannot be nil")
+		}
+
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -830,11 +832,12 @@ func SetAttributes(sel interface{}, attributes map[string]string, opts ...QueryO
 // AttributeValue is an element query action that retrieves the element attribute value
 // for the first element node matching the selector.
 func AttributeValue(sel interface{}, name string, value *string, ok *bool, opts ...QueryOption) QueryAction {
-	if value == nil {
-		panic("value cannot be nil")
-	}
 
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
+		if value == nil {
+			return errors.New("value cannot be nil")
+		}
+
 		if len(nodes) < 1 {
 			return errors.New("expected at least one element")
 		}
@@ -888,10 +891,11 @@ func RemoveAttribute(sel interface{}, name string, opts ...QueryOption) QueryAct
 // JavascriptAttribute is an element query action that retrieves the Javascript
 // attribute for the first element node matching the selector.
 func JavascriptAttribute(sel interface{}, name string, res interface{}, opts ...QueryOption) QueryAction {
-	if res == nil {
-		panic("res cannot be nil")
-	}
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
+		if res == nil {
+			return errors.New("res cannot be nil")
+		}
+
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -929,18 +933,12 @@ func SetJavascriptAttribute(sel interface{}, name, value string, opts ...QueryOp
 // OuterHTML is an element query action that retrieves the outer html of the first
 // element node matching the selector.
 func OuterHTML(sel interface{}, html *string, opts ...QueryOption) QueryAction {
-	if html == nil {
-		panic("html cannot be nil")
-	}
 	return JavascriptAttribute(sel, "outerHTML", html, opts...)
 }
 
 // InnerHTML is an element query action that retrieves the inner html of the first
 // element node matching the selector.
 func InnerHTML(sel interface{}, html *string, opts ...QueryOption) QueryAction {
-	if html == nil {
-		panic("html cannot be nil")
-	}
 	return JavascriptAttribute(sel, "innerHTML", html, opts...)
 }
 
@@ -1024,11 +1022,12 @@ func SetUploadFiles(sel interface{}, files []string, opts ...QueryOption) QueryA
 // See the 'screenshot' example in the https://github.com/chromedp/examples
 // project for an example of taking a screenshot of the entire page.
 func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) QueryAction {
-	if picbuf == nil {
-		panic("picbuf cannot be nil")
-	}
 
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
+		if picbuf == nil {
+			return errors.New("picbuf cannot be nil")
+		}
+
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -1112,11 +1111,11 @@ func Reset(sel interface{}, opts ...QueryOption) QueryAction {
 // ComputedStyle is an element query action that retrieves the computed style of the
 // first element node matching the selector.
 func ComputedStyle(sel interface{}, style *[]*css.ComputedProperty, opts ...QueryOption) QueryAction {
-	if style == nil {
-		panic("style cannot be nil")
-	}
 
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
+		if style == nil {
+			return errors.New("style cannot be nil")
+		}
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -1135,11 +1134,11 @@ func ComputedStyle(sel interface{}, style *[]*css.ComputedProperty, opts ...Quer
 // MatchedStyle is an element query action that retrieves the matched style information
 // for the first element node matching the selector.
 func MatchedStyle(sel interface{}, style **css.GetMatchedStylesForNodeReturns, opts ...QueryOption) QueryAction {
-	if style == nil {
-		panic("style cannot be nil")
-	}
 
 	return QueryAfter(sel, func(ctx context.Context, nodes ...*cdp.Node) error {
+		if style == nil {
+			return errors.New("style cannot be nil")
+		}
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}

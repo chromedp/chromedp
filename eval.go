@@ -3,6 +3,7 @@ package chromedp
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"github.com/chromedp/cdproto/runtime"
@@ -27,11 +28,12 @@ type EvaluateAction Action
 //
 // Note: any exception encountered will be returned as an error.
 func Evaluate(expression string, res interface{}, opts ...EvaluateOption) EvaluateAction {
-	if res == nil {
-		panic("res cannot be nil")
-	}
 
 	return ActionFunc(func(ctx context.Context) error {
+		if res == nil {
+			return errors.New("res cannot be nil")
+		}
+
 		// set up parameters
 		p := runtime.Evaluate(expression)
 		switch res.(type) {
