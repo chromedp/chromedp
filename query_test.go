@@ -1168,7 +1168,7 @@ func TestComputedStyle(t *testing.T) {
 			ctx, cancel := testAllocate(t, "js.html")
 			defer cancel()
 
-			var styles []*css.ComputedProperty
+			var styles []*css.ComputedStyleProperty
 			if err := Run(ctx, ComputedStyle(test.sel, &styles, test.by)); err != nil {
 				t.Fatalf("got error: %v", err)
 			}

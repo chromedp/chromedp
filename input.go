@@ -31,7 +31,7 @@ func MouseClickXY(x, y float64, opts ...MouseOption) MouseAction {
 			Type:       input.MousePressed,
 			X:          x,
 			Y:          y,
-			Button:     input.ButtonLeft,
+			Button:     input.Left,
 			ClickCount: 1,
 		}
 
@@ -90,11 +90,11 @@ type MouseOption = func(*input.DispatchMouseEventParams) *input.DispatchMouseEve
 
 // Button is a mouse action option to set the button to click from a string.
 func Button(btn string) MouseOption {
-	return ButtonType(input.ButtonType(btn))
+	return ButtonType(input.MouseButton(btn))
 }
 
 // ButtonType is a mouse action option to set the button to click.
-func ButtonType(button input.ButtonType) MouseOption {
+func ButtonType(button input.MouseButton) MouseOption {
 	return func(p *input.DispatchMouseEventParams) *input.DispatchMouseEventParams {
 		return p.WithButton(button)
 	}
@@ -103,25 +103,25 @@ func ButtonType(button input.ButtonType) MouseOption {
 // ButtonLeft is a mouse action option to set the button clicked as the left
 // mouse button.
 func ButtonLeft(p *input.DispatchMouseEventParams) *input.DispatchMouseEventParams {
-	return p.WithButton(input.ButtonLeft)
+	return p.WithButton(input.Left)
 }
 
 // ButtonMiddle is a mouse action option to set the button clicked as the middle
 // mouse button.
 func ButtonMiddle(p *input.DispatchMouseEventParams) *input.DispatchMouseEventParams {
-	return p.WithButton(input.ButtonMiddle)
+	return p.WithButton(input.Middle)
 }
 
 // ButtonRight is a mouse action option to set the button clicked as the right
 // mouse button.
 func ButtonRight(p *input.DispatchMouseEventParams) *input.DispatchMouseEventParams {
-	return p.WithButton(input.ButtonRight)
+	return p.WithButton(input.Right)
 }
 
 // ButtonNone is a mouse action option to set the button clicked as none (used
 // for mouse movements).
 func ButtonNone(p *input.DispatchMouseEventParams) *input.DispatchMouseEventParams {
-	return p.WithButton(input.ButtonNone)
+	return p.WithButton(input.None)
 }
 
 // ButtonModifiers is a mouse action option to add additional input modifiers
