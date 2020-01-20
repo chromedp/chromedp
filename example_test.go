@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/dom"
@@ -92,6 +93,52 @@ func ExampleExecAllocator() {
 	// DevToolsActivePort has 2 lines
 }
 
+func ExampleNewContext_reuseBrowser() {
+	ts := httptest.NewServer(writeHTML(`
+<body>
+<script>
+	// Show the current cookies.
+	var p = document.createElement("p")
+	p.innerText = document.cookie
+	p.setAttribute("id", "cookies")
+	document.body.appendChild(p)
+
+	// Override the cookies.
+	document.cookie = "foo=bar"
+</script>
+</body>
+	`))
+	defer ts.Close()
+
+	// create a new browser
+	ctx, cancel := chromedp.NewContext(context.Background())
+	defer cancel()
+
+	// start the browser without a timeout
+	if err := chromedp.Run(ctx); err != nil {
+		panic(err)
+	}
+
+	for i := 0; i < 2; i++ {
+		// look at the page twice, with a timeout set up; we skip
+		// cancels for the sake of brevity
+		ctx, _ := context.WithTimeout(ctx, time.Second)
+		ctx, _ = chromedp.NewContext(ctx)
+		var cookies string
+		if err := chromedp.Run(ctx,
+			chromedp.Navigate(ts.URL),
+			chromedp.Text("#cookies", &cookies),
+		); err != nil {
+			panic(err)
+		}
+		fmt.Printf("Cookies at i=%d: %q\n", i, cookies)
+	}
+
+	// Output:
+	// Cookies at i=0: ""
+	// Cookies at i=1: "foo=bar"
+}
+
 func ExampleNewContext_manyTabs() {
 	// new browser, first tab
 	ctx1, cancel := chromedp.NewContext(context.Background())
@@ -129,34 +176,39 @@ func ExampleListenTarget_consoleLog() {
 <body>
 <script>
 	console.log("hello js world")
-	var p = document.createElement("div");
-	p.setAttribute("id", "jsFinished");
-	document.body.appendChild(p);
+	console.warn("scary warning", 123)
+	null.throwsException
 </script>
 </body>
 	`))
 	defer ts.Close()
 
+	gotException := make(chan bool, 1)
 	chromedp.ListenTarget(ctx, func(ev interface{}) {
 		switch ev := ev.(type) {
 		case *runtime.EventConsoleAPICalled:
-			fmt.Printf("console.%s call:\n", ev.Type)
+			fmt.Printf("* console.%s call:\n", ev.Type)
 			for _, arg := range ev.Args {
 				fmt.Printf("%s - %s\n", arg.Type, arg.Value)
 			}
+		case *runtime.EventExceptionThrown:
+			fmt.Printf("* %s\n", ev.ExceptionDetails)
+			gotException <- true
 		}
 	})
 
-	if err := chromedp.Run(ctx,
-		chromedp.Navigate(ts.URL),
-		chromedp.WaitVisible("#jsFinished", chromedp.ByID),
-	); err != nil {
+	if err := chromedp.Run(ctx, chromedp.Navigate(ts.URL)); err != nil {
 		panic(err)
 	}
+	<-gotException
 
 	// Output:
-	// console.log call:
+	// * console.log call:
 	// string - "hello js world"
+	// * console.warning call:
+	// string - "scary warning"
+	// number - 123
+	// * encountered exception 'Uncaught' (4:6)
 }
 
 func ExampleWaitNewTarget() {

@@ -67,17 +67,22 @@ func init() {
 	}
 }
 
+var browserOpts []ContextOption
+
 func TestMain(m *testing.M) {
 	var cancel context.CancelFunc
 	allocCtx, cancel = NewExecAllocator(context.Background(), allocOpts...)
+
+	if debug := os.Getenv("CHROMEDP_DEBUG"); debug != "" && debug != "false" {
+		browserOpts = append(browserOpts, WithDebugf(log.Printf))
+	}
 
 	code := m.Run()
 	cancel()
 
 	if infos, _ := ioutil.ReadDir(allocTempDir); len(infos) > 0 {
 		os.RemoveAll(allocTempDir)
-		// TODO: panic instead, once we fix the dir leaks
-		// panic(fmt.Sprintf("leaked %d temporary dirs under %s", len(infos), allocTempDir))
+		panic(fmt.Sprintf("leaked %d temporary dirs under %s", len(infos), allocTempDir))
 	} else {
 		os.Remove(allocTempDir)
 	}
@@ -89,18 +94,12 @@ var allocateOnce sync.Once
 
 func testAllocate(tb testing.TB, name string) (context.Context, context.CancelFunc) {
 	// Start the browser exactly once, as needed.
-	allocateOnce.Do(func() {
-		var browserOpts []ContextOption
-		if debug := os.Getenv("CHROMEDP_DEBUG"); debug != "" && debug != "false" {
-			browserOpts = append(browserOpts, WithDebugf(log.Printf))
-		}
+	allocateOnce.Do(func() { browserCtx, _ = testAllocateSeparate(tb) })
 
-		// start the browser
-		browserCtx, _ = NewContext(allocCtx, browserOpts...)
-		if err := Run(browserCtx); err != nil {
-			panic(err)
-		}
-	})
+	if browserCtx == nil {
+		// allocateOnce.Do failed; continuing would result in panics.
+		tb.FailNow()
+	}
 
 	// Same browser, new tab; not needing to start new chrome browsers for
 	// each test gives a huge speed-up.
@@ -123,7 +122,16 @@ func testAllocate(tb testing.TB, name string) (context.Context, context.CancelFu
 
 func testAllocateSeparate(tb testing.TB) (context.Context, context.CancelFunc) {
 	// Entirely new browser, unlike testAllocate.
-	ctx, _ := NewContext(allocCtx)
+	ctx, _ := NewContext(allocCtx, browserOpts...)
+	if err := Run(ctx); err != nil {
+		tb.Fatal(err)
+	}
+	ListenBrowser(ctx, func(ev interface{}) {
+		switch ev := ev.(type) {
+		case *cdpruntime.EventExceptionThrown:
+			tb.Errorf("%+v\n", ev.ExceptionDetails)
+		}
+	})
 	cancel := func() {
 		if err := Cancel(ctx); err != nil {
 			tb.Error(err)
@@ -190,9 +198,6 @@ func TestTargets(t *testing.T) {
 	// Start one browser with one tab.
 	ctx1, cancel1 := testAllocateSeparate(t)
 	defer cancel1()
-	if err := Run(ctx1); err != nil {
-		t.Fatal(err)
-	}
 
 	checkTargets(t, ctx1, 1)
 
@@ -215,6 +220,14 @@ func TestTargets(t *testing.T) {
 	// it weren't the first, breaking its cancellation.
 	if err := Run(ctx1); err != nil {
 		t.Fatal(err)
+	}
+
+	// We should see one attached target, since we closed the second a while
+	// ago. If we see two, that means there's a memory leak, as we're
+	// holding onto the detached target.
+	pages := FromContext(ctx1).Browser.pages
+	if len(pages) != 1 {
+		t.Fatalf("expected one attached target, got %d", len(pages))
 	}
 }
 
@@ -253,8 +266,10 @@ func TestPrematureCancel(t *testing.T) {
 	t.Parallel()
 
 	// Cancel before the browser is allocated.
-	ctx, cancel := testAllocateSeparate(t)
-	cancel()
+	ctx, _ := NewContext(allocCtx, browserOpts...)
+	if err := Cancel(ctx); err != nil {
+		t.Fatal(err)
+	}
 	if err := Run(ctx); err != context.Canceled {
 		t.Fatalf("wanted canceled context error, got %v", err)
 	}
@@ -594,11 +609,11 @@ func TestDirectCloseTarget(t *testing.T) {
 func TestDirectCloseBrowser(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := testAllocate(t, "")
+	ctx, cancel := testAllocateSeparate(t)
 	defer cancel()
 
 	c := FromContext(ctx)
-	want := "to close the browser, cancel its context"
+	want := "use chromedp.Cancel"
 
 	// Check that nothing is closed by running the action twice.
 	for i := 0; i < 2; i++ {
@@ -606,6 +621,98 @@ func TestDirectCloseBrowser(t *testing.T) {
 		got := fmt.Sprint(err)
 		if !strings.Contains(got, want) {
 			t.Fatalf("want %q, got %q", want, got)
+		}
+	}
+}
+
+func TestDownloadIntoDir(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+
+	dir, err := ioutil.TempDir("", "chromedp-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/data.bin":
+			w.Header().Set("Content-Type", "application/octet-stream")
+			fmt.Fprintf(w, "some binary data")
+		default:
+			w.Header().Set("Content-Type", "text/html")
+			fmt.Fprintf(w, `go <a id="download" href="/data.bin">download</a> stuff/`)
+		}
+	}))
+	defer s.Close()
+
+	if err := Run(ctx,
+		Navigate(s.URL),
+		page.SetDownloadBehavior(page.SetDownloadBehaviorBehaviorAllow).WithDownloadPath(dir),
+		Click("#download", ByQuery),
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	// TODO: wait for the download to finish, and check that the file is in
+	// the directory.
+}
+
+func TestGracefulBrowserShutdown(t *testing.T) {
+	t.Parallel()
+
+	dir, err := ioutil.TempDir("", "chromedp-test")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+
+	// TODO(mvdan): this doesn't work with DefaultExecAllocatorOptions+UserDataDir
+	opts := []ExecAllocatorOption{
+		NoFirstRun,
+		NoDefaultBrowserCheck,
+		Headless,
+		UserDataDir(dir),
+	}
+	actx, cancel := NewExecAllocator(context.Background(), opts...)
+	defer cancel()
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.RequestURI == "/set" {
+			http.SetCookie(w, &http.Cookie{
+				Name:    "cookie1",
+				Value:   "value1",
+				Expires: time.Now().AddDate(0, 0, 1), // one day later
+			})
+		}
+	}))
+	defer ts.Close()
+
+	{
+		ctx, _ := NewContext(actx)
+		if err := Run(ctx, Navigate(ts.URL+"/set")); err != nil {
+			t.Fatal(err)
+		}
+
+		// Close the browser gracefully.
+		if err := Cancel(ctx); err != nil {
+			t.Fatal(err)
+		}
+	}
+	{
+		ctx, _ := NewContext(actx)
+		var got string
+		if err := Run(ctx,
+			Navigate(ts.URL),
+			EvaluateAsDevTools("document.cookie", &got),
+		); err != nil {
+			t.Fatal(err)
+		}
+		if want := "cookie1=value1"; got != want {
+			t.Fatalf("want cookies %q; got %q", want, got)
 		}
 	}
 }
