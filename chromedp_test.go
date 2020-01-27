@@ -723,13 +723,14 @@ func TestAttachingToWorkers(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
-		io.WriteString(w, `<html>
-      <body>
-        <script>
-          new Worker('/worker.js');
-        </script>
-      </body>
-    </html>`)
+		io.WriteString(w, `
+			<html>
+				<body>
+					<script>
+						new Worker('/worker.js');
+					</script>
+				</body>
+			</html>`)
 	}))
 	mux.Handle("/worker.js", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/javascript")
@@ -738,31 +739,17 @@ func TestAttachingToWorkers(t *testing.T) {
 	ts := httptest.NewServer(mux)
 	defer ts.Close()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := NewContext(context.Background())
 	defer cancel()
 
-	ctx, cancel = NewContext(context.Background())
-	defer cancel()
-
-	ch := make(chan error, 1)
+	ch := make(chan target.ID, 1)
 
 	ListenTarget(ctx, func(ev interface{}) {
 		if ev, ok := ev.(*target.EventAttachedToTarget); ok {
 			if ev.TargetInfo.Type != "worker" {
 				return
 			}
-			go func() {
-				ctx, cancel := NewContext(ctx, WithTargetID(ev.TargetInfo.TargetID))
-				defer cancel()
-				ch <- Run(ctx, ActionFunc(func(ctx context.Context) error {
-					if r, _, err := runtime.Evaluate("self;").Do(ctx); err != nil {
-						return err
-					} else if !strings.Contains(r.ClassName, "WorkerGlobalScope") {
-						return fmt.Errorf("Expected `self` to be a WorkerGlobalScope, got %q", r.ClassName)
-					}
-					return nil
-				}))
-			}()
+			ch <- ev.TargetInfo.TargetID
 		}
 	})
 
@@ -770,12 +757,18 @@ func TestAttachingToWorkers(t *testing.T) {
 		t.Fatalf("Failed to navigate to the test page: %q", err)
 	}
 
-	select {
-	case <-ctx.Done():
-		t.Fatalf("Timed out waiting to attach to worker: %q", ctx.Err())
-	case err := <-ch:
-		if err != nil {
-			t.Fatalf("Failed to use CDP in a worker target: %q", err)
+	targetID := <-ch
+	ctx, cancel = NewContext(ctx, WithTargetID(targetID))
+	defer cancel()
+
+	if err := Run(ctx, ActionFunc(func(ctx context.Context) error {
+		if r, _, err := runtime.Evaluate("self").Do(ctx); err != nil {
+			return err
+		} else if r.ClassName != "DedicatedWorkerGlobalScope" {
+			return fmt.Errorf("Expected \"self\" to be a WorkerGlobalScope, got %q", r.ClassName)
 		}
+		return nil
+	})); err != nil {
+		t.Fatalf("Failed to check evaluating JavaScript in a worker target: %q", err)
 	}
 }

@@ -248,6 +248,9 @@ func (c *Context) newTarget(ctx context.Context) error {
 		// This new page might have already loaded its top-level frame
 		// already, in which case we wouldn't see the frameNavigated and
 		// documentUpdated events. Load them here.
+		// Since at the time of writing this (2020-1-27), Page.* CDP methods are
+		// not implemented in worker targets, we need to skip this step when we
+		// attach to workers.
 		if !c.Target.isWorker {
 			tree, err := page.GetFrameTree().Do(cdp.WithExecutor(ctx, c.Target))
 			if err != nil {
@@ -317,12 +320,12 @@ func (c *Context) attachTarget(ctx context.Context, targetID target.ID) error {
 	go c.Target.run(ctx)
 
 	// Check if this is a worker target. We cannot use Target.getTargetInfo or
-	// Target.getTargets in a worker, so we check if `self` refers to a
+	// Target.getTargets in a worker, so we check if "self" refers to a
 	// WorkerGlobalScope or ServiceWorkerGlobalScope.
 	if err := runtime.Enable().Do(cdp.WithExecutor(ctx, c.Target)); err != nil {
 		return err
 	}
-	res, _, err := runtime.Evaluate("self;").Do(cdp.WithExecutor(ctx, c.Target))
+	res, _, err := runtime.Evaluate("self").Do(cdp.WithExecutor(ctx, c.Target))
 	if err != nil {
 		return err
 	}
@@ -331,7 +334,6 @@ func (c *Context) attachTarget(ctx context.Context, targetID target.ID) error {
 	// Enable available domains and discover targets.
 	actions := []Action{
 		log.Enable(),
-		runtime.Enable(),
 	}
 	if !c.Target.isWorker {
 		actions = append(actions, []Action{
