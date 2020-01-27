@@ -316,10 +316,12 @@ func (c *Context) attachTarget(ctx context.Context, targetID target.ID) error {
 	c.Target.listeners = append(c.Target.listeners, c.targetListeners...)
 	go c.Target.run(ctx)
 
+	// Check if this is a worker target. We cannot use Target.getTargetInfo or
+	// Target.getTargets in a worker, so we check if `self` refers to a
+	// WorkerGlobalScope or ServiceWorkerGlobalScope.
 	if err := runtime.Enable().Do(cdp.WithExecutor(ctx, c.Target)); err != nil {
 		return err
 	}
-
 	res, _, err := runtime.Evaluate("self;").Do(cdp.WithExecutor(ctx, c.Target))
 	if err != nil {
 		return err
