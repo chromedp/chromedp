@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net"
@@ -21,6 +22,7 @@ import (
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/cdproto/page"
+	"github.com/chromedp/cdproto/runtime"
 	cdpruntime "github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
 )
@@ -713,6 +715,67 @@ func TestGracefulBrowserShutdown(t *testing.T) {
 		}
 		if want := "cookie1=value1"; got != want {
 			t.Fatalf("want cookies %q; got %q", want, got)
+		}
+	}
+}
+
+func TestAttachingToWorkers(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		io.WriteString(w, `<html>
+      <body>
+        <script>
+          new Worker('/worker.js');
+        </script>
+      </body>
+    </html>`)
+	}))
+	mux.Handle("/worker.js", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript")
+		io.WriteString(w, "console.log('I am worker code.');")
+	}))
+	ts := httptest.NewServer(mux)
+	defer ts.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	ctx, cancel = NewContext(context.Background())
+	defer cancel()
+
+	ch := make(chan error, 1)
+
+	ListenTarget(ctx, func(ev interface{}) {
+		if ev, ok := ev.(*target.EventAttachedToTarget); ok {
+			if ev.TargetInfo.Type != "worker" {
+				return
+			}
+			go func() {
+				ctx, cancel := NewContext(ctx, WithTargetID(ev.TargetInfo.TargetID))
+				defer cancel()
+				ch <- Run(ctx, ActionFunc(func(ctx context.Context) error {
+					if r, _, err := runtime.Evaluate("self;").Do(ctx); err != nil {
+						return err
+					} else if !strings.Contains(r.ClassName, "WorkerGlobalScope") {
+						return fmt.Errorf("Expected `self` to be a WorkerGlobalScope, got %q", r.ClassName)
+					}
+					return nil
+				}))
+			}()
+		}
+	})
+
+	if err := Run(ctx, Navigate(ts.URL)); err != nil {
+		t.Fatalf("Failed to navigate to the test page: %q", err)
+	}
+
+	select {
+	case <-ctx.Done():
+		t.Fatalf("Timed out waiting to attach to worker: %q", ctx.Err())
+	case err := <-ch:
+		if err != nil {
+			t.Fatalf("Failed to use CDP in a worker target: %q", err)
 		}
 	}
 }
