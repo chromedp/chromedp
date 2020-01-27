@@ -332,3 +332,19 @@ func WithConsolef(f func(string, ...interface{})) BrowserOption {
 func WithDialTimeout(d time.Duration) BrowserOption {
 	return func(b *Browser) { b.dialTimeout = d }
 }
+
+// GetBrowserPid returns the process ID of the browser attached to the provided context
+func GetBrowserPid(ctx context.Context) (int, error) {
+	c := FromContext(ctx)
+	// If c is nil, it's not a chromedp context.
+	// If c.Allocator is nil, NewContext wasn't used properly.
+	// If c.cancel is nil, GetBrowserPid is being called directly with an allocator
+	// context.
+	if c == nil || c.Allocator == nil || c.cancel == nil {
+		return -1, ErrInvalidContext
+	}
+	if c.Browser == nil {
+		return -1, ErrInvalidTarget
+	}
+	return c.Browser.process.Pid, nil
+}
