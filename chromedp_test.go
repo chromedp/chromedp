@@ -720,55 +720,64 @@ func TestGracefulBrowserShutdown(t *testing.T) {
 }
 
 func TestAttachingToWorkers(t *testing.T) {
-	mux := http.NewServeMux()
-	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/html")
-		io.WriteString(w, `
+	for _, tc := range []struct {
+		desc, pageJS, wantSelf string
+	}{
+		{"DedicatedWorker", "new Worker('/worker.js')", "DedicatedWorkerGlobalScope"},
+		{"ServiceWorker", "navigator.serviceWorker.register('/worker.js')", "ServiceWorkerGlobalScope"},
+	} {
+		t.Run(tc.desc, func(t *testing.T) {
+			mux := http.NewServeMux()
+			mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "text/html")
+				io.WriteString(w, fmt.Sprintf(`
 			<html>
 				<body>
 					<script>
-						new Worker('/worker.js');
+						%s
 					</script>
 				</body>
-			</html>`)
-	}))
-	mux.Handle("/worker.js", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/javascript")
-		io.WriteString(w, "console.log('I am worker code.');")
-	}))
-	ts := httptest.NewServer(mux)
-	defer ts.Close()
+			</html>`, tc.pageJS))
+			}))
+			mux.Handle("/worker.js", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Set("Content-Type", "text/javascript")
+				io.WriteString(w, "console.log('I am worker code.');")
+			}))
+			ts := httptest.NewServer(mux)
+			defer ts.Close()
 
-	ctx, cancel := NewContext(context.Background())
-	defer cancel()
+			ctx, cancel := NewContext(context.Background())
+			defer cancel()
 
-	ch := make(chan target.ID, 1)
+			ch := make(chan target.ID, 1)
 
-	ListenTarget(ctx, func(ev interface{}) {
-		if ev, ok := ev.(*target.EventAttachedToTarget); ok {
-			if ev.TargetInfo.Type != "worker" {
-				return
+			ListenTarget(ctx, func(ev interface{}) {
+				if ev, ok := ev.(*target.EventAttachedToTarget); ok {
+					if !strings.Contains(ev.TargetInfo.Type, "worker") {
+						return
+					}
+					ch <- ev.TargetInfo.TargetID
+				}
+			})
+
+			if err := Run(ctx, Navigate(ts.URL)); err != nil {
+				t.Fatalf("Failed to navigate to the test page: %q", err)
 			}
-			ch <- ev.TargetInfo.TargetID
-		}
-	})
 
-	if err := Run(ctx, Navigate(ts.URL)); err != nil {
-		t.Fatalf("Failed to navigate to the test page: %q", err)
-	}
+			targetID := <-ch
+			ctx, cancel = NewContext(ctx, WithTargetID(targetID))
+			defer cancel()
 
-	targetID := <-ch
-	ctx, cancel = NewContext(ctx, WithTargetID(targetID))
-	defer cancel()
-
-	if err := Run(ctx, ActionFunc(func(ctx context.Context) error {
-		if r, _, err := runtime.Evaluate("self").Do(ctx); err != nil {
-			return err
-		} else if r.ClassName != "DedicatedWorkerGlobalScope" {
-			return fmt.Errorf("Expected \"self\" to be a WorkerGlobalScope, got %q", r.ClassName)
-		}
-		return nil
-	})); err != nil {
-		t.Fatalf("Failed to check evaluating JavaScript in a worker target: %q", err)
+			if err := Run(ctx, ActionFunc(func(ctx context.Context) error {
+				if r, _, err := runtime.Evaluate("self").Do(ctx); err != nil {
+					return err
+				} else if r.ClassName != tc.wantSelf {
+					return fmt.Errorf("Global scope type mismatch: got %q want: %q", r.ClassName, tc.wantSelf)
+				}
+				return nil
+			})); err != nil {
+				t.Fatalf("Failed to check evaluating JavaScript in a worker target: %q", err)
+			}
+		})
 	}
 }
