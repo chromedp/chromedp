@@ -335,6 +335,7 @@ func (c *Context) attachTarget(ctx context.Context, targetID target.ID) error {
 	actions := []Action{
 		log.Enable(),
 	}
+	// These actions are not available on a worker target.
 	if !c.Target.isWorker {
 		actions = append(actions, []Action{
 			inspector.Enable(),
