@@ -83,8 +83,8 @@ type Selector struct {
 //
 // By Options
 //
-// The BySearch (default) option enables querying for elements with a CSS or
-// XPath selector, wrapping DOM.performSearch.
+// The BySearch (default) option enables querying for elements by plain text,
+// CSS selector or XPath query, wrapping DOM.performSearch.
 //
 // The ByID option enables querying for a single element with the matching CSS
 // ID, wrapping DOM.querySelector. ByID is similar to calling
@@ -304,7 +304,7 @@ func ByID(s *Selector) {
 }
 
 // BySearch is an element query option to select elements by the DOM.performSearch
-// command. Works with both CSS and XPath queries.
+// command. It matches nodes by plain text, CSS selector or XPath query.
 func BySearch(s *Selector) {
 	ByFunc(func(ctx context.Context, n *cdp.Node) ([]cdp.NodeID, error) {
 		id, count, err := dom.PerformSearch(s.selAsString()).Do(ctx)
