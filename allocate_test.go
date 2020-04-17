@@ -160,7 +160,10 @@ func TestRemoteAllocator(t *testing.T) {
 	allocCtx, allocCancel := NewRemoteAllocator(context.Background(), wsURL)
 	defer allocCancel()
 
-	taskCtx, taskCancel := NewContext(allocCtx)
+	taskCtx, taskCancel := NewContext(allocCtx,
+		// This used to crash when used with RemoteAllocator.
+		WithLogf(func(format string, args ...interface{}) {}),
+	)
 	defer taskCancel()
 	want := "insert"
 	var got string
@@ -312,4 +315,23 @@ func TestEnv(t *testing.T) {
 	if ret != tz {
 		t.Fatalf("got %s, want %s", ret, tz)
 	}
+}
+
+func TestWithBrowserOptionAlreadyAllocated(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocateSeparate(t)
+	defer cancel()
+
+	defer func() {
+		want := "when allocating a new browser"
+		if got := fmt.Sprint(recover()); !strings.Contains(got, want) {
+			t.Errorf("expected a panic containing %q, got %q", want, got)
+		}
+	}()
+	// This needs to panic, as we try to set up a browser logf function
+	// after the browser has already been set up earlier.
+	_, _ = NewContext(ctx,
+		WithLogf(func(format string, args ...interface{}) {}),
+	)
 }

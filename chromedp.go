@@ -384,7 +384,7 @@ func WithDebugf(f func(string, ...interface{})) ContextOption {
 // when NewContext is allocating a new browser.
 func WithBrowserOption(opts ...BrowserOption) ContextOption {
 	return func(c *Context) {
-		if !c.first {
+		if c.Browser != nil {
 			panic("WithBrowserOption can only be used when allocating a new browser")
 		}
 		c.browserOpts = append(c.browserOpts, opts...)
