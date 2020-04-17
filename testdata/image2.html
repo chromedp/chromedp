@@ -31,7 +31,7 @@
   <div id="half-color"></div>
   <div id="imagething"/>
   <script>
-   var shadow = document.querySelector('#imagething').createShadowRoot();
+   var shadow = document.querySelector('#imagething').attachShadow({mode: 'open'});
    var template = document.querySelector('#myimage');
    var clone = document.importNode(template.content, true);
    shadow.appendChild(clone);
