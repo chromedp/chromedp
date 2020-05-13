@@ -398,6 +398,56 @@ func ExampleByJSPath() {
 	// </body></html>
 }
 
+func ExampleFromNode() {
+	ctx, cancel := chromedp.NewContext(context.Background())
+	defer cancel()
+
+	ts := httptest.NewServer(writeHTML(`
+<body>
+	<p class="content">outer content</p>
+	<div id="section"><p class="content">inner content</p></div>
+</body>
+	`))
+	defer ts.Close()
+
+	var nodes []*cdp.Node
+	println("a")
+	if err := chromedp.Run(ctx,
+		chromedp.Navigate(ts.URL),
+		chromedp.Nodes("#section", &nodes, chromedp.ByQuery),
+	); err != nil {
+		panic(err)
+	}
+	println("b")
+	sectionNode := nodes[0]
+
+	var queryRoot, queryFromNode, queryNestedSelector string
+	if err := chromedp.Run(ctx,
+		// Queries run from the document root by default, so Text will
+		// pick the first node it finds.
+		chromedp.Text(".content", &queryRoot, chromedp.ByQuery),
+
+		// We can specify a different node to run the query from; in
+		// this case, we can tailor the search within #section.
+		chromedp.Text(".content", &queryFromNode, chromedp.ByQuery, chromedp.FromNode(sectionNode)),
+
+		// A CSS selector like "#section > .content" achieves the same
+		// here, but FromNode allows us to use a node obtained by an
+		// entirely separate step, allowing for custom logic.
+		chromedp.Text("#section > .content", &queryNestedSelector, chromedp.ByQuery),
+	); err != nil {
+		panic(err)
+	}
+	fmt.Println("Simple query from the document root:", queryRoot)
+	fmt.Println("Simple query from the section node:", queryFromNode)
+	fmt.Println("Nested query from the document root:", queryNestedSelector)
+
+	// Output:
+	// Simple query from the document root: outer content
+	// Simple query from the section node: inner content
+	// Nested query from the document root: inner content
+}
+
 func Example_documentDump() {
 	ctx, cancel := chromedp.NewContext(context.Background())
 	defer cancel()

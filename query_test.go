@@ -1471,3 +1471,50 @@ func TestWaitReadyReuseAction(t *testing.T) {
 		}
 	}
 }
+
+func TestFromNode(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "nested.html")
+	defer cancel()
+
+	tests := []struct{
+		name string
+		fromQuery  string
+		nodesQuery string
+		nodesCount int
+	} {
+		{"DefaultRoot", "", ".content", 4},
+		{"Body", "body", ".content", 4},
+		{"Empty", "#empty", ".content", 0},
+		{"Parent1", "#parent1", ".content", 1},
+		{"Parent2", "#parent2", ".content", 2},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var from *cdp.Node
+			if test.fromQuery != "" {
+				var nodes []*cdp.Node
+				if err := Run(ctx,
+					Nodes(test.fromQuery, &nodes, ByQuery, AtLeast(0)),
+				); err != nil {
+					t.Fatal(err)
+				}
+				if len(nodes) != 1 {
+					t.Fatalf("expected to have 1 node, got %d", len(nodes))
+				}
+				from = nodes[0]
+			}
+			var nodes []*cdp.Node
+			if err := Run(ctx,
+				Nodes(test.nodesQuery, &nodes, ByQueryAll, AtLeast(0), FromNode(from)),
+			); err != nil {
+				t.Fatal(err)
+			}
+			if len(nodes) != test.nodesCount {
+				t.Fatalf("expected to have %d node, got %d", test.nodesCount, len(nodes))
+			}
+		})
+	}
+}
