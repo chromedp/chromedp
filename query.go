@@ -28,12 +28,13 @@ type QueryAction Action
 // See Query for information on building an element selector and relevant
 // options.
 type Selector struct {
-	sel   interface{}
-	exp   int
-	by    func(context.Context, *cdp.Node) ([]cdp.NodeID, error)
-	wait  func(context.Context, *cdp.Frame, ...cdp.NodeID) ([]*cdp.Node, error)
-	after func(context.Context, ...*cdp.Node) error
-	raw   bool
+	sel      interface{}
+	fromNode *cdp.Node
+	exp      int
+	by       func(context.Context, *cdp.Node) ([]cdp.NodeID, error)
+	wait     func(context.Context, *cdp.Frame, ...cdp.NodeID) ([]*cdp.Node, error)
+	after    func(context.Context, ...*cdp.Node) error
+	raw      bool
 }
 
 // Query is a query action that queries the browser for specific element
@@ -172,16 +173,19 @@ func (s *Selector) Do(ctx context.Context) error {
 			continue
 		}
 
-		cur.RLock()
-		root := cur.Root
-		cur.RUnlock()
+		fromNode := s.fromNode
+		if fromNode == nil {
+			cur.RLock()
+			fromNode = cur.Root
+			cur.RUnlock()
+		}
 
-		if root == nil {
+		if fromNode == nil {
 			// not root node yet?
 			continue
 		}
 
-		ids, err := s.by(ctx, root)
+		ids, err := s.by(ctx, fromNode)
 		if err != nil || len(ids) < s.exp {
 			continue
 		}
@@ -258,6 +262,13 @@ func QueryAfter(sel interface{}, f func(context.Context, ...*cdp.Node) error, op
 
 // QueryOption is an element query action option.
 type QueryOption = func(*Selector)
+
+// FromNode is an element query action option where a query will be run. That
+// is, the query will only look at the node's element sub-tree. By default, or
+// when passed nil, the document's root element will be used.
+func FromNode(node *cdp.Node) QueryOption {
+	return func(s *Selector) { s.fromNode = node }
+}
 
 // ByFunc is an element query action option to set the func used to select elements.
 func ByFunc(f func(context.Context, *cdp.Node) ([]cdp.NodeID, error)) QueryOption {
