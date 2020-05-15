@@ -411,14 +411,12 @@ func ExampleFromNode() {
 	defer ts.Close()
 
 	var nodes []*cdp.Node
-	println("a")
 	if err := chromedp.Run(ctx,
 		chromedp.Navigate(ts.URL),
 		chromedp.Nodes("#section", &nodes, chromedp.ByQuery),
 	); err != nil {
 		panic(err)
 	}
-	println("b")
 	sectionNode := nodes[0]
 
 	var queryRoot, queryFromNode, queryNestedSelector string

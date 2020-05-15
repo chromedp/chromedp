@@ -1478,12 +1478,12 @@ func TestFromNode(t *testing.T) {
 	ctx, cancel := testAllocate(t, "nested.html")
 	defer cancel()
 
-	tests := []struct{
-		name string
+	tests := []struct {
+		name       string
 		fromQuery  string
 		nodesQuery string
 		nodesCount int
-	} {
+	}{
 		{"DefaultRoot", "", ".content", 4},
 		{"Body", "body", ".content", 4},
 		{"Empty", "#empty", ".content", 0},
