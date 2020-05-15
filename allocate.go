@@ -337,9 +337,12 @@ func findExecPath() string {
 		// Windows
 		"chrome",
 		"chrome.exe", // In case PATHEXT is misconfigured
-		filepath.Join(os.Getenv("ProgramFiles"), `\Google\Chrome\Application\chrome.exe`),      // In case the `Program Files` folder is not under C: drive
-		filepath.Join(os.Getenv("ProgramFiles(x86)"), `\Google\Chrome\Application\chrome.exe`), // In case the `Program Files (x86)` folder is not under C: drive
-		filepath.Join(os.Getenv("LocalAppData"), `\Google\Chrome\Application\chrome.exe`),      // In case the `Local` folder is not under `%UserProfile%\AppData`
+		filepath.Join(os.Getenv("ProgramFiles"), `\Google\Chrome\Application\chrome.exe`),              // In case the `Program Files` folder is not under C: drive
+		`C:\Program Files\Google\Chrome\Application\chrome.exe`,                                        // In case %ProgramFiles% is not set
+		filepath.Join(os.Getenv("ProgramFiles(x86)"), `\Google\Chrome\Application\chrome.exe`),         // In case the `Program Files (x86)` folder is not under C: drive
+		`C:\Program Files(x86)\Google\Chrome\Application\chrome.exe`,                                   // In case %ProgramFiles(x86)% is not set
+		filepath.Join(os.Getenv("LocalAppData"), `\Google\Chrome\Application\chrome.exe`),              // In case the `Local` folder is not under `%UserProfile%\AppData`
+		filepath.Join(os.Getenv("UserProfile"), `\AppData\Local\Google\Chrome\Application\chrome.exe`), // In case %LocalAppData% is not set
 
 		// Mac
 		"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
