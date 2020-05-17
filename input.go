@@ -159,6 +159,9 @@ func KeyEvent(keys string, opts ...KeyOption) KeyAction {
 	return ActionFunc(func(ctx context.Context) error {
 		for _, r := range keys {
 			for _, k := range kb.Encode(r) {
+				for _, o := range opts {
+					o(k)
+				}
 				if err := k.Do(ctx); err != nil {
 					return err
 				}
