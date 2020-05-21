@@ -184,7 +184,12 @@ func FromContext(ctx context.Context) *Context {
 // and returns any error encountered during that process.
 //
 // If the context allocated a browser, the browser will be closed gracefully by
-// Cancel.
+// Cancel. A timeout can be attached to this context to determine how long to
+// wait for the browser to close itself:
+//
+//     tctx, tcancel := context.WithTimeout(ctx, 10 * time.Second)
+//     defer tcancel()
+//     chromedp.Cancel(tctx)
 //
 // Usually a "defer cancel()" will be enough for most use cases. However, Cancel
 // is the better option if one wants to gracefully close a browser, or catch
@@ -194,7 +199,9 @@ func Cancel(ctx context.Context) error {
 	if c == nil {
 		return ErrInvalidContext
 	}
-	if c.first && c.Browser != nil {
+	graceful := c.first && c.Browser != nil
+	if graceful {
+		close(c.Browser.closingGracefully)
 		if err := c.Browser.execute(ctx, browser.CommandClose, nil, nil); err != nil {
 			return err
 		}
@@ -202,9 +209,20 @@ func Cancel(ctx context.Context) error {
 		c.cancel()
 		c.closedTarget.Wait()
 	}
-	// If we allocated, wait for the browser to stop.
+	// If we allocated, wait for the browser to stop, up to any possible
+	// deadline set in this ctx.
 	if c.allocated != nil {
-		<-c.allocated
+		select {
+		case <-c.allocated:
+		case <-ctx.Done():
+		}
+	}
+	// If this was a graceful close, cancel the entire context, in case any
+	// goroutines or resources are left, or if we hit the timeout above and
+	// the browser hasn't finished yet. Note that, in the non-graceful path,
+	// we already called c.cancel above.
+	if graceful {
+		c.cancel()
 	}
 	return c.cancelErr
 }
