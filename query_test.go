@@ -87,6 +87,39 @@ func TestWaitNotVisible(t *testing.T) {
 	}
 }
 
+
+func TestFilterVisible(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "js.html")
+	defer cancel()
+
+	var nodeIDs []cdp.NodeID
+	if err := Run(ctx, NodeIDs("#input2", &nodeIDs, ByID, FilterVisible)); err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	if len(nodeIDs) != 1 {
+		t.Errorf("expected to have exactly 1 node id: got %d", len(nodeIDs))
+	}
+
+	var value string
+	if err := Run(ctx,
+		Click("#button2", ByID),
+		WaitNotVisible("#input2", ByID),
+		Value(nodeIDs, &value, ByNodeID),
+	); err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+
+	if err := Run(ctx, NodeIDs("#input2", &nodeIDs, ByID, FilterVisible, AtLeast(0))); err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	if len(nodeIDs) != 0 {
+		t.Errorf("expected to have exactly 0 node id: got %d", len(nodeIDs))
+	}
+}
+
+
 func TestWaitEnabled(t *testing.T) {
 	t.Parallel()
 

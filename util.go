@@ -4,7 +4,6 @@ import (
 	"net"
 	"net/url"
 
-	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/cdp"
 )
 
@@ -318,9 +317,3 @@ func removeNode(n []*cdp.Node, id cdp.NodeID) []*cdp.Node {
 	return append(n[:i], n[i+1:]...)
 }
 
-// isCouldNotComputeBoxModelError unwraps err as a MessageError and determines
-// if it is a compute box model error.
-func isCouldNotComputeBoxModelError(err error) bool {
-	e, ok := err.(*cdproto.Error)
-	return ok && e.Code == -32000 && e.Message == "Could not compute box model."
-}
