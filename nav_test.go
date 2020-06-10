@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/page"
 )
 
@@ -268,18 +269,18 @@ func TestTitle(t *testing.T) {
 	}
 }
 
-func TestLoadIframe(t *testing.T) {
+func TestQueryIframe(t *testing.T) {
 	t.Parallel()
 
 	ctx, cancel := testAllocate(t, "iframe.html")
 	defer cancel()
 
+	var iframes []*cdp.Node
+	if err := Run(ctx, Nodes(`iframe`, &iframes, ByQuery)); err != nil {
+		t.Fatal(err)
+	}
 	if err := Run(ctx,
-		// TODO: remove the sleep once we have better support for
-		// iframes.
-		Sleep(10*time.Millisecond),
-		// WaitVisible(`#form`, ByID), // for the nested form.html
-		WaitVisible(`#parent`, ByID), // for iframe.html
+		WaitVisible(`#form`, ByID, FromNode(iframes[0])),
 	); err != nil {
 		t.Fatal(err)
 	}

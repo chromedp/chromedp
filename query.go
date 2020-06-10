@@ -164,32 +164,48 @@ func (s *Selector) Do(ctx context.Context) error {
 			return ctx.Err()
 		case <-time.After(5 * time.Millisecond):
 		}
+
 		t.curMu.RLock()
-		cur := t.cur
+		frame := t.cur
 		t.curMu.RUnlock()
 
-		if cur == nil {
+		if frame == nil {
 			// the frame hasn't loaded yet.
 			continue
 		}
 
 		fromNode := s.fromNode
 		if fromNode == nil {
-			cur.RLock()
-			fromNode = cur.Root
-			cur.RUnlock()
+			frame.RLock()
+			fromNode = frame.Root
+			frame.RUnlock()
+
+			if fromNode == nil {
+				// not root node yet?
+				continue
+			}
+		} else {
+			// TODO: we probably want to use the nested frame
+			// instead, butnote that util.go stores the nested
+			// frame's nodes in the root frame's Nodes map.
+			// frame = t.frames[fromNode.FrameID]
+			// if frame == nil {
+			// 	return fmt.Errorf("FromNode provided does not belong to any active frame")
+			// }
 		}
 
-		if fromNode == nil {
-			// not root node yet?
-			continue
+		// If this is an iframe node, we want to run the query
+		// on its "content document" node instead. Otherwise,
+		// queries will return no results.
+		if doc := fromNode.ContentDocument; doc != nil {
+			fromNode = doc
 		}
 
 		ids, err := s.by(ctx, fromNode)
 		if err != nil || len(ids) < s.exp {
 			continue
 		}
-		nodes, err := s.wait(ctx, cur, ids...)
+		nodes, err := s.wait(ctx, frame, ids...)
 		// if nodes==nil, we're not yet ready
 		if nodes == nil || err != nil {
 			continue
