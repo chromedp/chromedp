@@ -327,9 +327,9 @@ func TestClickNavigate(t *testing.T) {
 <img src="/img.jpg"></img>
 	`))
 	ch := make(chan struct{})
-	mux.Handle("/img.jpg", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/img.jpg", func(w http.ResponseWriter, r *http.Request) {
 		<-ch
-	}))
+	})
 	s := httptest.NewServer(mux)
 	defer s.Close()
 

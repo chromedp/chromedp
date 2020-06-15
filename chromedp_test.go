@@ -728,7 +728,7 @@ func TestAttachingToWorkers(t *testing.T) {
 	} {
 		t.Run(tc.desc, func(t *testing.T) {
 			mux := http.NewServeMux()
-			mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "text/html")
 				fmt.Fprintf(w, `
 					<html>
@@ -738,11 +738,11 @@ func TestAttachingToWorkers(t *testing.T) {
 							</script>
 						</body>
 					</html>`, tc.pageJS)
-			}))
-			mux.Handle("/worker.js", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			})
+			mux.HandleFunc("/worker.js", func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "text/javascript")
 				io.WriteString(w, "console.log('I am worker code.');")
-			}))
+			})
 			ts := httptest.NewServer(mux)
 			defer ts.Close()
 
