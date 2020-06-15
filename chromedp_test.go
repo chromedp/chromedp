@@ -730,14 +730,14 @@ func TestAttachingToWorkers(t *testing.T) {
 			mux := http.NewServeMux()
 			mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "text/html")
-				io.WriteString(w, fmt.Sprintf(`
+				fmt.Fprintf(w, `
 					<html>
 						<body>
 							<script>
 								%s
 							</script>
 						</body>
-					</html>`, tc.pageJS))
+					</html>`, tc.pageJS)
 			}))
 			mux.Handle("/worker.js", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Type", "text/javascript")
