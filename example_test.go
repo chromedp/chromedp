@@ -57,6 +57,64 @@ func ExampleTitle() {
 	// fancy website title
 }
 
+func ExampleRunResponse() {
+	ctx, cancel := chromedp.NewContext(context.Background())
+	defer cancel()
+
+	// This server simply shows the URL path as the page title, and contains
+	// a link that points to /foo.
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+                w.Header().Set("Content-Type", "text/html")
+		fmt.Fprintf(w, `
+			<head><title>%s</title></head>
+			<body><a id="foo" href="/foo">foo</a></body>
+		`, r.URL.Path)
+	}))
+	defer ts.Close()
+
+	// The Navigate action already waits until a page loads, so Title runs
+	// once the page is ready.
+	var firstTitle string
+	if err := chromedp.Run(ctx,
+		chromedp.Navigate(ts.URL),
+		chromedp.Title(&firstTitle),
+	); err != nil {
+		panic(err)
+	}
+	fmt.Println("first title:", firstTitle)
+
+	// However, actions like Click don't always trigger a page navigation,
+	// so they don't wait for a page load directly. Wrapping them with
+	// RunResponse does that waiting, and also obtains the HTTP response.
+	resp, err := chromedp.RunResponse(ctx, chromedp.Click("#foo", chromedp.ByID))
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("second status code:", resp.Status)
+
+	// Grabbing the title again should work, as the page has finished
+	// loading once more.
+	var secondTitle string
+	if err := chromedp.Run(ctx, chromedp.Title(&secondTitle)); err != nil {
+		panic(err)
+	}
+	fmt.Println("second title:", secondTitle)
+
+	// Finally, it's always possible to wrap Navigate with RunResponse, if
+	// one wants the response information for that case too.
+	resp, err = chromedp.RunResponse(ctx, chromedp.Navigate(ts.URL + "/bar"))
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("third status code:", resp.Status)
+
+	// Output:
+	// first title: /
+	// second status code: 200
+	// second title: /foo
+	// third status code: 200
+}
+
 func ExampleExecAllocator() {
 	dir, err := ioutil.TempDir("", "chromedp-example")
 	if err != nil {

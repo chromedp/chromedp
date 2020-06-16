@@ -56,6 +56,10 @@ func init() {
 	// and can slightly speed up the tests on other systems.
 	allocOpts = append(allocOpts, DisableGPU)
 
+	if noHeadless := os.Getenv("CHROMEDP_NO_HEADLESS"); noHeadless != "" && noHeadless != "false" {
+		allocOpts = append(allocOpts, Flag("headless", false))
+	}
+
 	// Find the exec path once at startup.
 	execPath = os.Getenv("CHROMEDP_TEST_RUNNER")
 	if execPath == "" {
@@ -780,4 +784,221 @@ func TestAttachingToWorkers(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRunResponse_statusCode(t *testing.T) {
+	t.Parallel()
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/index", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprintf(w, `
+			<html>
+				<body>
+					<a id="index" href="/index">index</a>
+					<a id="resp_200" href="/200">200</a>
+					<a id="resp_404" href="/404">404</a>
+					<a id="resp_500" href="/500">500</a>
+				</body>
+			</html>`)
+	})
+	mux.HandleFunc("/200", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprintf(w, "OK")
+	})
+	mux.HandleFunc("/500", func(w http.ResponseWriter, r *http.Request) {
+		http.Error(w, "500", 500)
+	})
+	ts := httptest.NewServer(mux)
+	defer ts.Close()
+
+	for _, test := range []struct {
+		name       string
+		action     Action
+		wantStatus int64
+	}{
+		{"200", Click("#resp_200", ByQuery), 200},
+		{"404", Click("#resp_404", ByQuery), 404},
+		{"500", Click("#resp_500", ByQuery), 500},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			// Make this parallel once we can use ts.Cleanup for
+			// httptest.Server
+			// t.Parallel()
+
+			ctx, cancel := testAllocate(t, "")
+			defer cancel()
+
+			if err := Run(ctx, Navigate(ts.URL+"/index")); err != nil {
+				t.Fatalf("Failed to navigate to the test page: %q", err)
+			}
+
+			resp, err := RunResponse(ctx, test.action)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if resp.Status != test.wantStatus {
+				t.Fatalf("wanted status code %d, got %d", resp.Status, test.wantStatus)
+			}
+		})
+	}
+}
+
+func TestNavigationError(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/index", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprintf(w, "<html><body>OK</body></html>")
+	})
+	mux.HandleFunc("/plain.txt", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/plain")
+		fmt.Fprintf(w, "OK")
+	})
+	ts := httptest.NewServer(mux)
+	defer ts.Close()
+
+	tests := []struct{
+		name string
+		url  string
+		want string
+	}{
+		// Use the local http server as https, which should be a TLS
+		// error and fail to load. If we don't capture the "loading
+		// failed" error, we will block until the timeout is hit and
+		// give a generic "deadline exceeded" error.
+		{
+			"BadTLS",
+			strings.ReplaceAll(ts.URL, "http://", "https://")+"/index",
+			"ERR_SSL_PROTOCOL_ERROR",
+		},
+
+		// In this case, the "loading failed" event is received, but the
+		// load itself is cancelled immediately, so we never receive a
+		// load event of any sort.
+		{
+			"BadProtocol",
+			strings.ReplaceAll(ts.URL, "http://", "bad://")+"/index",
+			"ERR_ABORTED",
+		},
+
+		// This case is similar to BadProtocol, but not quite the same.
+		{
+			"UnimplementedProtocol",
+			strings.ReplaceAll(ts.URL, "http://", "ftp://")+"/index",
+			"ERR_UNKNOWN_URL_SCHEME",
+		},
+
+		// Check that loading a non-HTML document still works normally.
+		{
+			"NonHTML",
+			ts.URL+"/plain.txt",
+			"<nil>",
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			ctx, cancel := testAllocate(t, "")
+			defer cancel()
+
+			ctx, cancel = context.WithTimeout(ctx, 5 * time.Second)
+			defer cancel()
+
+			// First, check Navigate, which does implicit waiting.
+			if got := fmt.Sprint(Run(ctx, Navigate(test.url))); !strings.Contains(got, test.want) {
+				t.Fatalf("wanted error to contain %q, got %q", test.want, got)
+			}
+
+			// Second, check explicit waiting via RunResponse. The response
+			// should be nil too, as we don't get to an HTTP response.
+			resp, err := RunResponse(ctx, ActionFunc(func(ctx context.Context) error {
+				_, _, _, err := page.Navigate(test.url).Do(ctx)
+				return err
+			}))
+			if got := fmt.Sprint(err); !strings.Contains(got, test.want) {
+				t.Fatalf("wanted error to contain %q, got %q", test.want, got)
+			}
+			if test.want == "<nil>" && resp == nil {
+				t.Fatalf("expected response to be non-nil")
+			} else if test.want != "<nil>" && resp != nil {
+				t.Fatalf("expected response to be nil")
+			}
+		})
+	}
+
+}
+
+func TestNavigationRedirect(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/two", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/one", http.StatusMovedPermanently)
+	})
+	mux.HandleFunc("/one", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/zero", http.StatusMovedPermanently)
+	})
+	mux.HandleFunc("/zero", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "OK")
+	})
+	mux.HandleFunc("/infinite", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/infinite", http.StatusMovedPermanently)
+	})
+	ts := httptest.NewServer(mux)
+	defer ts.Close()
+
+	tests := []struct{
+		name string
+		url  string
+
+		wantSuffixURL string
+		wantErr       string
+	}{
+		{
+			"One",
+			ts.URL + "/one",
+			"/zero",
+			"<nil>",
+		},
+		{
+			"Two",
+			ts.URL + "/two",
+			"/zero",
+			"<nil>",
+		},
+		{
+			"Infinite",
+			ts.URL + "/infinite",
+			"",
+			"ERR_TOO_MANY_REDIRECTS",
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			ctx, cancel := testAllocate(t, "")
+			defer cancel()
+
+			ctx, cancel = context.WithTimeout(ctx, 5 * time.Second)
+			defer cancel()
+
+			resp, err := RunResponse(ctx, ActionFunc(func(ctx context.Context) error {
+				_, _, _, err := page.Navigate(test.url).Do(ctx)
+				return err
+			}))
+			if got := fmt.Sprint(err); !strings.Contains(got, test.wantErr) {
+				t.Fatalf("wanted error to contain %q, got %q", test.wantErr, got)
+			}
+			if test.wantErr == "<nil>" && resp == nil {
+				t.Fatalf("expected response to be non-nil")
+			} else if test.wantErr != "<nil>" && resp != nil {
+				t.Fatalf("expected response to be nil")
+			}
+
+			url := ""
+			if resp != nil {
+				url = resp.URL
+			}
+			if !strings.HasSuffix(url, test.wantSuffixURL) {
+				t.Fatalf("wanted response URL to end with %q, got %q", test.wantSuffixURL, url)
+			}
+		})
+	}
+
 }

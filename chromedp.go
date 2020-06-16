@@ -22,6 +22,7 @@ import (
 	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/cdproto/inspector"
 	"github.com/chromedp/cdproto/log"
+	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
@@ -352,6 +353,7 @@ func (c *Context) attachTarget(ctx context.Context, targetID target.ID) error {
 	// Enable available domains and discover targets.
 	actions := []Action{
 		log.Enable(),
+		network.Enable(),
 	}
 	// These actions are not available on a worker target.
 	if !c.Target.isWorker {
@@ -407,6 +409,90 @@ func WithBrowserOption(opts ...BrowserOption) ContextOption {
 		}
 		c.browserOpts = append(c.browserOpts, opts...)
 	}
+}
+
+// RunResponse is an alternative to Run which can be used with a list of actions
+// that trigger a page navigation, such as clicking on a link or button.
+//
+// RunResponse will run the actions and block until a page loads, returning the
+// HTTP response information for its HTML document. This can be useful to wait
+// for the page to be ready, or to catch 404 status codes, for example.
+//
+// Note that if the actions trigger multiple navigations, only the first is
+// used. And if the actions trigger no navigations at all, RunResponse will
+// block until the context is cancelled.
+func RunResponse(ctx context.Context, actions ...Action) (*network.Response, error) {
+	var resp *network.Response
+	if err := Run(ctx, responseAction(&resp, actions...)); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func responseAction(resp **network.Response, actions ...Action) Action {
+	return ActionFunc(func(ctx context.Context) error {
+		var reqID network.RequestID
+		var loadErr error
+		respReceived := false
+
+		// First, start listening for events.
+		ch := make(chan struct{})
+		lctx, cancel := context.WithCancel(ctx)
+		ListenTarget(lctx, func(ev interface{}) {
+			switch ev := ev.(type) {
+			case *network.EventRequestWillBeSent:
+				if ev.Type == network.ResourceTypeDocument {
+					reqID = ev.RequestID
+				}
+			case *network.EventLoadingFailed:
+				if ev.RequestID == reqID {
+					loadErr = fmt.Errorf("page load error %s", ev.ErrorText)
+					// If Canceled is true, we won't receive a
+					// loadEventFired at all.
+					if ev.Canceled {
+						cancel()
+						close(ch)
+					}
+				}
+			case *network.EventResponseReceived:
+				if ev.RequestID == reqID {
+					respReceived = true
+					if resp != nil {
+						*resp = ev.Response
+					}
+				}
+			case *page.EventLoadEventFired:
+				// Only stop if a load event triggers after we
+				// receive a document response. Otherwise, this
+				// might be a load event from a previous
+				// navigation.
+				if respReceived || loadErr != nil {
+					cancel()
+					close(ch)
+				}
+			}
+		})
+
+		// Second, run the actions.
+		if err := Run(ctx, actions...); err != nil {
+			return err
+		}
+
+		// Third, block until we have finished loading. If we wanted a
+		// response, check that it isn't nil.
+		select {
+		case <-ch:
+			if loadErr != nil {
+				return loadErr
+			}
+			if resp != nil && *resp == nil {
+				return fmt.Errorf("page loaded without a response")
+			}
+			return nil
+		case <-ctx.Done():
+			return ctx.Err()
+		}
+	})
 }
 
 // Targets lists all the targets in the browser attached to the given context.
