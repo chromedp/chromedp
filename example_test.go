@@ -326,7 +326,6 @@ func ExampleEmulate() {
 	if err := chromedp.Run(ctx,
 		chromedp.Emulate(device.IPhone7),
 		chromedp.Navigate(`https://google.com/`),
-		chromedp.WaitVisible(`#main`, chromedp.ByID),
 		chromedp.SendKeys(`input[name=q]`, "what's my user agent?\n"),
 		chromedp.WaitVisible(`#rso`, chromedp.ByID),
 		chromedp.CaptureScreenshot(&buf),

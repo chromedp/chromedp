@@ -144,7 +144,6 @@ func TestNodeOp(t *testing.T) {
 	var nodes []*cdp.Node
 	if err := Run(ctx,
 		Navigate(s.URL),
-		WaitVisible(`#div1`),
 		Nodes(`//*`, &nodes),
 		Nodes(`document`, &nodes, ByJSPath),
 	); err != nil {

@@ -370,6 +370,8 @@ func TestNavigateWithoutWaitingForLoad(t *testing.T) {
 	ctx, cancel := testAllocate(t, "")
 	defer cancel()
 
+	// If we run a query without waiting for the page to load, chromedp used
+	// to panic.
 	if err := Run(ctx,
 		ActionFunc(func(ctx context.Context) error {
 			_, _, _, err := page.Navigate(testdataDir + "/form.html").Do(ctx)
