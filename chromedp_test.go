@@ -844,7 +844,7 @@ func TestRunResponse_statusCode(t *testing.T) {
 	}
 }
 
-func TestNavigationError(t *testing.T) {
+func TestRunResponse_error(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/index", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
@@ -927,7 +927,7 @@ func TestNavigationError(t *testing.T) {
 
 }
 
-func TestNavigationRedirect(t *testing.T) {
+func TestRunResponse_redirect(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/two", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/one", http.StatusMovedPermanently)
@@ -1001,4 +1001,28 @@ func TestNavigationRedirect(t *testing.T) {
 		})
 	}
 
+}
+
+func TestRunResponse_iframe(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/iframe", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprintf(w, `<html><body><iframe src="badurl://localhost/"></iframe></body></html>`)
+	})
+	ts := httptest.NewServer(mux)
+	defer ts.Close()
+
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+
+	ctx, cancel = context.WithTimeout(ctx, 5 * time.Second)
+	defer cancel()
+
+	resp, err := RunResponse(ctx, Navigate(ts.URL+"/iframe"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := "/iframe"; !strings.HasSuffix(resp.URL, want) {
+		t.Fatalf("expected response URL to have suffix %q, got %q", want, resp.URL)
+	}
 }

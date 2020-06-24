@@ -441,7 +441,11 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 		ListenTarget(lctx, func(ev interface{}) {
 			switch ev := ev.(type) {
 			case *network.EventRequestWillBeSent:
-				if ev.Type == network.ResourceTypeDocument {
+				// Stop at the first request, to prevent failed
+				// iframes from interfering.
+				// TODO: what about iframes from the previous
+				// page?
+				if ev.Type == network.ResourceTypeDocument && reqID == "" {
 					reqID = ev.RequestID
 				}
 			case *network.EventLoadingFailed:
