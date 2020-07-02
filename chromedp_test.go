@@ -924,7 +924,6 @@ func TestRunResponse_error(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestRunResponse_redirect(t *testing.T) {
@@ -1000,7 +999,6 @@ func TestRunResponse_redirect(t *testing.T) {
 			}
 		})
 	}
-
 }
 
 func TestRunResponse_iframe(t *testing.T) {

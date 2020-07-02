@@ -164,6 +164,17 @@ func TestRemoteAllocator(t *testing.T) {
 		// This used to crash when used with RemoteAllocator.
 		WithLogf(func(format string, args ...interface{}) {}),
 	)
+
+	{
+		infos, err := Targets(taskCtx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if len(infos) > 1 {
+			t.Fatalf("expected Targets on a new RemoteAllocator context to return at most one, got: %d", len(infos))
+		}
+	}
+
 	defer taskCancel()
 	want := "insert"
 	var got string

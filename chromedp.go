@@ -228,6 +228,26 @@ func Cancel(ctx context.Context) error {
 	return c.cancelErr
 }
 
+func initContextBrowser(ctx context.Context) (*Context, error) {
+	c := FromContext(ctx)
+	// If c is nil, it's not a chromedp context.
+	// If c.Allocator is nil, NewContext wasn't used properly.
+	// If c.cancel is nil, Run is being called directly with an allocator
+	// context.
+	if c == nil || c.Allocator == nil || c.cancel == nil {
+		return nil, ErrInvalidContext
+	}
+	if c.Browser == nil {
+		browser, err := c.Allocator.Allocate(ctx, c.browserOpts...)
+		if err != nil {
+			return nil, err
+		}
+		c.Browser = browser
+		c.Browser.listeners = append(c.Browser.listeners, c.browserListeners...)
+	}
+	return c, nil
+}
+
 // Run runs an action against context. The provided context must be a valid
 // chromedp context, typically created via NewContext.
 //
@@ -235,21 +255,9 @@ func Cancel(ctx context.Context) error {
 // allocated via Allocator. Thus, it's generally a bad idea to use a context
 // timeout on the first Run call, as it will stop the entire browser.
 func Run(ctx context.Context, actions ...Action) error {
-	c := FromContext(ctx)
-	// If c is nil, it's not a chromedp context.
-	// If c.Allocator is nil, NewContext wasn't used properly.
-	// If c.cancel is nil, Run is being called directly with an allocator
-	// context.
-	if c == nil || c.Allocator == nil || c.cancel == nil {
-		return ErrInvalidContext
-	}
-	if c.Browser == nil {
-		browser, err := c.Allocator.Allocate(ctx, c.browserOpts...)
-		if err != nil {
-			return err
-		}
-		c.Browser = browser
-		c.Browser.listeners = append(c.Browser.listeners, c.browserListeners...)
+	c, err := initContextBrowser(ctx)
+	if err != nil {
+		return err
 	}
 	if c.Target == nil {
 		if err := c.newTarget(ctx); err != nil {
@@ -491,10 +499,13 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 
 // Targets lists all the targets in the browser attached to the given context.
 func Targets(ctx context.Context) ([]*target.Info, error) {
-	if err := Run(ctx); err != nil {
+	c, err := initContextBrowser(ctx)
+	if err != nil {
 		return nil, err
 	}
-	c := FromContext(ctx)
+	// TODO: If this is a new browser, the initial target (tab) might not be
+	// ready yet. Should we block until at least one target is available?
+	// Right now, the caller has to add retries with a timeout.
 	return target.GetTargets().Do(cdp.WithExecutor(ctx, c.Browser))
 }
 
