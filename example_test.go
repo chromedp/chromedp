@@ -64,7 +64,7 @@ func ExampleRunResponse() {
 	// This server simply shows the URL path as the page title, and contains
 	// a link that points to /foo.
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-                w.Header().Set("Content-Type", "text/html")
+		w.Header().Set("Content-Type", "text/html")
 		fmt.Fprintf(w, `
 			<head><title>%s</title></head>
 			<body><a id="foo" href="/foo">foo</a></body>
@@ -102,7 +102,7 @@ func ExampleRunResponse() {
 
 	// Finally, it's always possible to wrap Navigate with RunResponse, if
 	// one wants the response information for that case too.
-	resp, err = chromedp.RunResponse(ctx, chromedp.Navigate(ts.URL + "/bar"))
+	resp, err = chromedp.RunResponse(ctx, chromedp.Navigate(ts.URL+"/bar"))
 	if err != nil {
 		panic(err)
 	}

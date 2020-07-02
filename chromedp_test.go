@@ -857,7 +857,7 @@ func TestRunResponse_error(t *testing.T) {
 	ts := httptest.NewServer(mux)
 	defer ts.Close()
 
-	tests := []struct{
+	tests := []struct {
 		name string
 		url  string
 		want string
@@ -868,7 +868,7 @@ func TestRunResponse_error(t *testing.T) {
 		// give a generic "deadline exceeded" error.
 		{
 			"BadTLS",
-			strings.ReplaceAll(ts.URL, "http://", "https://")+"/index",
+			strings.ReplaceAll(ts.URL, "http://", "https://") + "/index",
 			"ERR_SSL_PROTOCOL_ERROR",
 		},
 
@@ -877,21 +877,21 @@ func TestRunResponse_error(t *testing.T) {
 		// load event of any sort.
 		{
 			"BadProtocol",
-			strings.ReplaceAll(ts.URL, "http://", "bad://")+"/index",
+			strings.ReplaceAll(ts.URL, "http://", "bad://") + "/index",
 			"ERR_ABORTED",
 		},
 
 		// This case is similar to BadProtocol, but not quite the same.
 		{
 			"UnimplementedProtocol",
-			strings.ReplaceAll(ts.URL, "http://", "ftp://")+"/index",
+			strings.ReplaceAll(ts.URL, "http://", "ftp://") + "/index",
 			"ERR_UNKNOWN_URL_SCHEME",
 		},
 
 		// Check that loading a non-HTML document still works normally.
 		{
 			"NonHTML",
-			ts.URL+"/plain.txt",
+			ts.URL + "/plain.txt",
 			"<nil>",
 		},
 	}
@@ -900,7 +900,7 @@ func TestRunResponse_error(t *testing.T) {
 			ctx, cancel := testAllocate(t, "")
 			defer cancel()
 
-			ctx, cancel = context.WithTimeout(ctx, 5 * time.Second)
+			ctx, cancel = context.WithTimeout(ctx, 5*time.Second)
 			defer cancel()
 
 			// First, check Navigate, which does implicit waiting.
@@ -944,7 +944,7 @@ func TestRunResponse_redirect(t *testing.T) {
 	ts := httptest.NewServer(mux)
 	defer ts.Close()
 
-	tests := []struct{
+	tests := []struct {
 		name string
 		url  string
 
@@ -975,7 +975,7 @@ func TestRunResponse_redirect(t *testing.T) {
 			ctx, cancel := testAllocate(t, "")
 			defer cancel()
 
-			ctx, cancel = context.WithTimeout(ctx, 5 * time.Second)
+			ctx, cancel = context.WithTimeout(ctx, 5*time.Second)
 			defer cancel()
 
 			resp, err := RunResponse(ctx, ActionFunc(func(ctx context.Context) error {
@@ -1015,7 +1015,7 @@ func TestRunResponse_iframe(t *testing.T) {
 	ctx, cancel := testAllocate(t, "")
 	defer cancel()
 
-	ctx, cancel = context.WithTimeout(ctx, 5 * time.Second)
+	ctx, cancel = context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	resp, err := RunResponse(ctx, Navigate(ts.URL+"/iframe"))
@@ -1024,5 +1024,53 @@ func TestRunResponse_iframe(t *testing.T) {
 	}
 	if want := "/iframe"; !strings.HasSuffix(resp.URL, want) {
 		t.Fatalf("expected response URL to have suffix %q, got %q", want, resp.URL)
+	}
+}
+
+func TestRunResponse_noResponse(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/200", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprintf(w, `<html><body>
+		<a id="same" href="/200">same</a>
+		<a id="fragment" href="/200#fragment">fragment</a>
+		</body></html>`)
+	})
+	ts := httptest.NewServer(mux)
+	defer ts.Close()
+
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+
+	ctx, cancel = context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	steps := []struct {
+		name     string
+		action   Action
+		wantResp bool
+	}{
+		{"FirstNavigation", Navigate(ts.URL + "/200"), true},
+		{"RepeatedNavigation", Navigate(ts.URL + "/200"), true},
+		{"FragmentNavigation", Navigate(ts.URL + "/200#foo"), false},
+
+		{"FirstClick", Click("#same", ByQuery), true},
+		{"RepeatedClick", Click("#same", ByQuery), true},
+		{"FragmentClick", Click("#fragment", ByQuery), false},
+
+		{"Blank", Navigate("about:blank"), false},
+	}
+	for _, step := range steps {
+		t.Run(step.name, func(t *testing.T) {
+			resp, err := RunResponse(ctx, step.action)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if resp == nil && step.wantResp {
+				t.Fatalf("wanted a response, got nil")
+			} else if resp != nil && !step.wantResp {
+				t.Fatalf("did not want a response, got: %#v", resp)
+			}
+		})
 	}
 }

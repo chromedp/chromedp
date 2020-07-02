@@ -433,7 +433,6 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 	return ActionFunc(func(ctx context.Context) error {
 		var reqID network.RequestID
 		var loadErr error
-		respReceived := false
 
 		// First, start listening for events.
 		ch := make(chan struct{})
@@ -459,21 +458,15 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 					}
 				}
 			case *network.EventResponseReceived:
-				if ev.RequestID == reqID {
-					respReceived = true
-					if resp != nil {
-						*resp = ev.Response
-					}
+				if ev.RequestID == reqID && resp != nil {
+					*resp = ev.Response
 				}
 			case *page.EventLoadEventFired:
-				// Only stop if a load event triggers after we
-				// receive a document response. Otherwise, this
-				// might be a load event from a previous
-				// navigation.
-				if respReceived || loadErr != nil {
-					cancel()
-					close(ch)
-				}
+				cancel()
+				close(ch)
+			case *page.EventNavigatedWithinDocument:
+				cancel()
+				close(ch)
 			}
 		})
 
@@ -488,9 +481,6 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 		case <-ch:
 			if loadErr != nil {
 				return loadErr
-			}
-			if resp != nil && *resp == nil {
-				return fmt.Errorf("page loaded without a response")
 			}
 			return nil
 		case <-ctx.Done():
