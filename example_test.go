@@ -250,7 +250,10 @@ func ExampleListenTarget_consoleLog() {
 				fmt.Printf("%s - %s\n", arg.Type, arg.Value)
 			}
 		case *runtime.EventExceptionThrown:
-			fmt.Printf("* %s\n", ev.ExceptionDetails)
+			// Since ts.URL uses a random port, replace it.
+			s := ev.ExceptionDetails.Error()
+			s = strings.ReplaceAll(s, ts.URL, "<server>")
+			fmt.Printf("* %s\n", s)
 			gotException <- true
 		}
 	})
@@ -266,7 +269,9 @@ func ExampleListenTarget_consoleLog() {
 	// * console.warning call:
 	// string - "scary warning"
 	// number - 123
-	// * encountered exception 'Uncaught' (4:6)
+	// * exception "Uncaught" (4:6): TypeError: Cannot read property 'throwsException' of null
+	//     at <server>/:5:7
+
 }
 
 func ExampleWaitNewTarget() {
