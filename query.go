@@ -166,7 +166,7 @@ func (s *Selector) Do(ctx context.Context) error {
 		}
 
 		t.curMu.RLock()
-		frame := t.cur
+		frame := t.frames[t.cur]
 		t.curMu.RUnlock()
 
 		if frame == nil {

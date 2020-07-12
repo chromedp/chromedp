@@ -30,7 +30,7 @@ type Target struct {
 	frames map[cdp.FrameID]*cdp.Frame
 
 	// cur is the current top level frame.
-	cur   *cdp.Frame
+	cur   cdp.FrameID
 	curMu sync.RWMutex
 
 	// logging funcs
@@ -169,7 +169,7 @@ func (t *Target) Execute(ctx context.Context, method string, params easyjson.Mar
 // root for the root frame.
 func (t *Target) documentUpdated(ctx context.Context) {
 	t.curMu.RLock()
-	f := t.cur
+	f := t.frames[t.cur]
 	t.curMu.RUnlock()
 	if f == nil {
 		// TODO: This seems to happen on CI, when running the tests
@@ -211,7 +211,7 @@ func (t *Target) pageEvent(ev interface{}) {
 			// This frame is only the new top-level frame if it has
 			// no parent.
 			t.curMu.Lock()
-			t.cur = e.Frame
+			t.cur = e.Frame.ID
 			t.curMu.Unlock()
 		}
 		return
@@ -271,7 +271,7 @@ func (t *Target) pageEvent(ev interface{}) {
 
 // domEvent handles incoming DOM events.
 func (t *Target) domEvent(ctx context.Context, ev interface{}) {
-	f := t.cur
+	f := t.frames[t.cur]
 	var id cdp.NodeID
 	var op nodeOp
 
