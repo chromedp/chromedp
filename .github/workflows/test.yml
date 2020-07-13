@@ -6,7 +6,9 @@ jobs:
   test:
     strategy:
       matrix:
-        go-version: [1.13.x, 1.14.x]
+        go-version: [1.14.x]
+        # We want testing.T.Cleanup for parallel subtests.
+        # go-version: [1.13.x, 1.14.x]
         # TODO: Add macos-latest and windows-latest. The former doesn't come
         # with Chrome by default, and the latter needs lots of work in the tests.
         platform: [ubuntu-latest]
