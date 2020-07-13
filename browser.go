@@ -132,6 +132,7 @@ func (b *Browser) newExecutorForTarget(ctx context.Context, targetID target.ID, 
 
 		messageQueue: make(chan *cdproto.Message, 1024),
 		frames:       make(map[cdp.FrameID]*cdp.Frame),
+		cur:          cdp.FrameID(targetID),
 
 		logf: b.logf,
 		errf: b.errf,
