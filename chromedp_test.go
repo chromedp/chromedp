@@ -16,11 +16,13 @@ import (
 	"sync"
 	"sync/atomic"
 	"testing"
+	"text/template"
 	"time"
 
 	"github.com/chromedp/cdproto/browser"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/dom"
+	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
 	cdpruntime "github.com/chromedp/cdproto/runtime"
@@ -724,6 +726,8 @@ func TestGracefulBrowserShutdown(t *testing.T) {
 }
 
 func TestAttachingToWorkers(t *testing.T) {
+	t.Parallel()
+
 	for _, tc := range []struct {
 		desc, pageJS, wantSelf string
 	}{
@@ -786,21 +790,47 @@ func TestAttachingToWorkers(t *testing.T) {
 	}
 }
 
-func TestRunResponse_statusCode(t *testing.T) {
+func TestRunResponse(t *testing.T) {
 	t.Parallel()
 
+	// This test includes many edge cases for RunResponse; navigations that
+	// fail to start, responses that return errors, responses that redirect,
+	// and so on.
+	// We also test each of those with different actions, such as a straight
+	// navigation, as well as a click.
+	// What's important here is that we have an iframe that keeps reloading
+	// every 100ms in the main page. If RunResponse doesn't properly filter
+	// events for the top level frame, the tests should fail pretty often.
+
+	indexTmpl := template.Must(template.New("").Parse(`
+		<html>
+			<body>
+				<a id="url_index" href="/index">index</a>
+				<a id="url_200" href="/200">200</a>
+				<a id="url_404" href="/404">404</a>
+				<a id="url_500" href="/500">500</a>
+				<a id="url_badtls" href="https://{{.Host}}/index">badtls</a>
+				<a id="url_badprotocol" href="bad://{{.Host}}/index">badprotocol</a>
+				<a id="url_unimplementedprotocol" href="ftp://{{.Host}}/index">unimplementedprotocol</a>
+				<a id="url_plain" href="/plain">plain</a>
+				<a id="url_two" href="/two">two</a>
+				<a id="url_one" href="/one">one</a>
+				<a id="url_infinite" href="/infinite">infinite</a>
+				<a id="url_badiframe" href="/badiframe">badiframe</a>
+
+				<script>
+					setInterval(function(){
+						document.getElementById("reloadingframe").src += "";
+					}, 100);
+				</script>
+				<iframe id="reloadingframe" src="/reloadingframe"></iframe>
+			</body>
+		</html>`))
 	mux := http.NewServeMux()
 	mux.HandleFunc("/index", func(w http.ResponseWriter, r *http.Request) {
+		// fmt.Printf("%#v\n", r)
 		w.Header().Set("Content-Type", "text/html")
-		fmt.Fprintf(w, `
-			<html>
-				<body>
-					<a id="index" href="/index">index</a>
-					<a id="resp_200" href="/200">200</a>
-					<a id="resp_404" href="/404">404</a>
-					<a id="resp_500" href="/500">500</a>
-				</body>
-			</html>`)
+		indexTmpl.Execute(w, r)
 	})
 	mux.HandleFunc("/200", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
@@ -809,125 +839,10 @@ func TestRunResponse_statusCode(t *testing.T) {
 	mux.HandleFunc("/500", func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "500", 500)
 	})
-	ts := httptest.NewServer(mux)
-	defer ts.Close()
-
-	for _, test := range []struct {
-		name       string
-		action     Action
-		wantStatus int64
-	}{
-		{"200", Click("#resp_200", ByQuery), 200},
-		{"404", Click("#resp_404", ByQuery), 404},
-		{"500", Click("#resp_500", ByQuery), 500},
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			// Make this parallel once we can use ts.Cleanup for
-			// httptest.Server
-			// t.Parallel()
-
-			ctx, cancel := testAllocate(t, "")
-			defer cancel()
-
-			if err := Run(ctx, Navigate(ts.URL+"/index")); err != nil {
-				t.Fatalf("Failed to navigate to the test page: %q", err)
-			}
-
-			resp, err := RunResponse(ctx, test.action)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if resp.Status != test.wantStatus {
-				t.Fatalf("wanted status code %d, got %d", resp.Status, test.wantStatus)
-			}
-		})
-	}
-}
-
-func TestRunResponse_error(t *testing.T) {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/index", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/html")
-		fmt.Fprintf(w, "<html><body>OK</body></html>")
-	})
-	mux.HandleFunc("/plain.txt", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/plain", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
 		fmt.Fprintf(w, "OK")
 	})
-	ts := httptest.NewServer(mux)
-	defer ts.Close()
-
-	tests := []struct {
-		name string
-		url  string
-		want string
-	}{
-		// Use the local http server as https, which should be a TLS
-		// error and fail to load. If we don't capture the "loading
-		// failed" error, we will block until the timeout is hit and
-		// give a generic "deadline exceeded" error.
-		{
-			"BadTLS",
-			strings.ReplaceAll(ts.URL, "http://", "https://") + "/index",
-			"ERR_SSL_PROTOCOL_ERROR",
-		},
-
-		// In this case, the "loading failed" event is received, but the
-		// load itself is cancelled immediately, so we never receive a
-		// load event of any sort.
-		{
-			"BadProtocol",
-			strings.ReplaceAll(ts.URL, "http://", "bad://") + "/index",
-			"ERR_ABORTED",
-		},
-
-		// This case is similar to BadProtocol, but not quite the same.
-		{
-			"UnimplementedProtocol",
-			strings.ReplaceAll(ts.URL, "http://", "ftp://") + "/index",
-			"ERR_UNKNOWN_URL_SCHEME",
-		},
-
-		// Check that loading a non-HTML document still works normally.
-		{
-			"NonHTML",
-			ts.URL + "/plain.txt",
-			"<nil>",
-		},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			ctx, cancel := testAllocate(t, "")
-			defer cancel()
-
-			ctx, cancel = context.WithTimeout(ctx, 5*time.Second)
-			defer cancel()
-
-			// First, check Navigate, which does implicit waiting.
-			if got := fmt.Sprint(Run(ctx, Navigate(test.url))); !strings.Contains(got, test.want) {
-				t.Fatalf("wanted error to contain %q, got %q", test.want, got)
-			}
-
-			// Second, check explicit waiting via RunResponse. The response
-			// should be nil too, as we don't get to an HTTP response.
-			resp, err := RunResponse(ctx, ActionFunc(func(ctx context.Context) error {
-				_, _, _, err := page.Navigate(test.url).Do(ctx)
-				return err
-			}))
-			if got := fmt.Sprint(err); !strings.Contains(got, test.want) {
-				t.Fatalf("wanted error to contain %q, got %q", test.want, got)
-			}
-			if test.want == "<nil>" && resp == nil {
-				t.Fatalf("expected response to be non-nil")
-			} else if test.want != "<nil>" && resp != nil {
-				t.Fatalf("expected response to be nil")
-			}
-		})
-	}
-}
-
-func TestRunResponse_redirect(t *testing.T) {
-	mux := http.NewServeMux()
 	mux.HandleFunc("/two", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/one", http.StatusMovedPermanently)
 	})
@@ -940,92 +855,160 @@ func TestRunResponse_redirect(t *testing.T) {
 	mux.HandleFunc("/infinite", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/infinite", http.StatusMovedPermanently)
 	})
+	mux.HandleFunc("/badiframe", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		fmt.Fprintf(w, `<html><body><iframe src="badurl://localhost/"></iframe></body></html>`)
+	})
 	ts := httptest.NewServer(mux)
-	defer ts.Close()
+	t.Cleanup(ts.Close)
 
 	tests := []struct {
 		name string
 		url  string
 
-		wantSuffixURL string
 		wantErr       string
+		wantSuffixURL string
+		wantStatus    int64
 	}{
 		{
-			"One",
-			ts.URL + "/one",
-			"/zero",
-			"<nil>",
+			name:       "200",
+			url:        "200",
+			wantStatus: 200,
 		},
 		{
-			"Two",
-			ts.URL + "/two",
-			"/zero",
-			"<nil>",
+			name:       "404",
+			url:        "404",
+			wantStatus: 404,
 		},
 		{
-			"Infinite",
-			ts.URL + "/infinite",
-			"",
-			"ERR_TOO_MANY_REDIRECTS",
+			name:       "500",
+			url:        "500",
+			wantStatus: 500,
+		},
+
+		// Use the local http server as https, which should be a TLS
+		// error and fail to load. If we don't capture the "loading
+		// failed" error, we will block until the timeout is hit and
+		// give a generic "deadline exceeded" error.
+		{
+			name:    "BadTLS",
+			url:     strings.ReplaceAll(ts.URL, "http://", "https://") + "/index",
+			wantErr: "ERR_SSL_PROTOCOL_ERROR",
+		},
+
+		// In this case, the "loading failed" event is received, but the
+		// load itself is cancelled immediately, so we never receive a
+		// load event of any sort.
+		{
+			name:    "BadProtocol",
+			url:     strings.ReplaceAll(ts.URL, "http://", "bad://") + "/index",
+			wantErr: "ERR_ABORTED",
+		},
+
+		// This case is similar to BadProtocol, but not quite the same.
+		{
+			name:    "UnimplementedProtocol",
+			url:     strings.ReplaceAll(ts.URL, "http://", "ftp://") + "/index",
+			wantErr: "ERR_UNKNOWN_URL_SCHEME",
+		},
+
+		// Check that loading a non-HTML document still works normally.
+		{
+			name:          "NonHTML",
+			url:           "plain",
+			wantSuffixURL: "/plain",
+		},
+
+		{
+			name:          "BadIframe",
+			url:           "badiframe",
+			wantSuffixURL: "/badiframe",
+		},
+
+		{
+			name:          "OneRedirect",
+			url:           "one",
+			wantSuffixURL: "/zero",
+		},
+		{
+			name:          "TwoRedirects",
+			url:           "two",
+			wantSuffixURL: "/zero",
+		},
+		{
+			name:    "InfiniteRedirects",
+			url:     "infinite",
+			wantErr: "ERR_TOO_MANY_REDIRECTS",
 		},
 	}
+
 	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
+		test := test
+		allocate := func(t *testing.T) context.Context {
 			ctx, cancel := testAllocate(t, "")
-			defer cancel()
-
+			t.Cleanup(cancel)
 			ctx, cancel = context.WithTimeout(ctx, 5*time.Second)
-			defer cancel()
+			t.Cleanup(cancel)
 
-			resp, err := RunResponse(ctx, ActionFunc(func(ctx context.Context) error {
-				_, _, _, err := page.Navigate(test.url).Do(ctx)
-				return err
-			}))
+			if err := Run(ctx, Navigate(ts.URL+"/index")); err != nil {
+				t.Fatalf("Failed to navigate to the test page: %q", err)
+			}
+			return ctx
+		}
+		checkResults := func(t *testing.T, resp *network.Response, err error) {
+			if test.wantErr == "" && err != nil {
+				t.Fatalf("wanted nil error, got %v", err)
+			}
 			if got := fmt.Sprint(err); !strings.Contains(got, test.wantErr) {
 				t.Fatalf("wanted error to contain %q, got %q", test.wantErr, got)
 			}
-			if test.wantErr == "<nil>" && resp == nil {
+			if test.wantErr == "" && resp == nil {
 				t.Fatalf("expected response to be non-nil")
-			} else if test.wantErr != "<nil>" && resp != nil {
+			} else if test.wantErr != "" && resp != nil {
 				t.Fatalf("expected response to be nil")
 			}
 
 			url := ""
+			status := int64(0)
 			if resp != nil {
 				url = resp.URL
+				status = resp.Status
 			}
 			if !strings.HasSuffix(url, test.wantSuffixURL) {
 				t.Fatalf("wanted response URL to end with %q, got %q", test.wantSuffixURL, url)
 			}
+			if want := test.wantStatus; want != 0 && status != want {
+				t.Fatalf("wanted status code %d, got %d", want, status)
+			}
+		}
+		t.Run("Navigate"+test.name, func(t *testing.T) {
+			t.Parallel()
+			ctx := allocate(t)
+
+			url := test.url
+			if !strings.Contains(url, "/") {
+				url = ts.URL + "/" + url
+			}
+			resp, err := RunResponse(ctx, Navigate(url))
+			checkResults(t, resp, err)
+		})
+		t.Run("Click"+test.name, func(t *testing.T) {
+			t.Parallel()
+			ctx := allocate(t)
+
+			query := "#url_" + strings.ToLower(test.name)
+			if !strings.Contains(test.url, "/") {
+				query = "#url_" + test.url
+			}
+			resp, err := RunResponse(ctx, Click(query, ByQuery))
+			checkResults(t, resp, err)
 		})
 	}
 }
 
-func TestRunResponse_iframe(t *testing.T) {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/iframe", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "text/html")
-		fmt.Fprintf(w, `<html><body><iframe src="badurl://localhost/"></iframe></body></html>`)
-	})
-	ts := httptest.NewServer(mux)
-	defer ts.Close()
-
-	ctx, cancel := testAllocate(t, "")
-	defer cancel()
-
-	ctx, cancel = context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-
-	resp, err := RunResponse(ctx, Navigate(ts.URL+"/iframe"))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if want := "/iframe"; !strings.HasSuffix(resp.URL, want) {
-		t.Fatalf("expected response URL to have suffix %q, got %q", want, resp.URL)
-	}
-}
-
 func TestRunResponse_noResponse(t *testing.T) {
+	t.Parallel()
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("/200", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
@@ -1058,17 +1041,17 @@ func TestRunResponse_noResponse(t *testing.T) {
 
 		{"Blank", Navigate("about:blank"), false},
 	}
+	// Don't use sub-tests, as these are all sequential steps that can't
+	// happen independently of each other.
 	for _, step := range steps {
-		t.Run(step.name, func(t *testing.T) {
-			resp, err := RunResponse(ctx, step.action)
-			if err != nil {
-				t.Fatal(err)
-			}
-			if resp == nil && step.wantResp {
-				t.Fatalf("wanted a response, got nil")
-			} else if resp != nil && !step.wantResp {
-				t.Fatalf("did not want a response, got: %#v", resp)
-			}
-		})
+		resp, err := RunResponse(ctx, step.action)
+		if err != nil {
+			t.Fatalf("%s: %v", step.name, err)
+		}
+		if resp == nil && step.wantResp {
+			t.Fatalf("%s: wanted a response, got nil", step.name)
+		} else if resp != nil && !step.wantResp {
+			t.Fatalf("%s: did not want a response, got: %#v", step.name, resp)
+		}
 	}
 }

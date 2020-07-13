@@ -3,6 +3,7 @@ package chromedp
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/chromedp/cdproto/page"
 )
@@ -17,8 +18,15 @@ type NavigateAction Action
 // Navigate is an action that navigates the current frame.
 func Navigate(urlstr string) NavigateAction {
 	return responseAction(nil, ActionFunc(func(ctx context.Context) error {
-		_, _, _, err := page.Navigate(urlstr).Do(ctx)
-		return err
+		_, _, errorText, err := page.Navigate(urlstr).Do(ctx)
+		// fmt.Printf("%q %v\n", errorText, err)
+		if err != nil {
+			return err
+		}
+		if errorText != "" {
+			return fmt.Errorf("page load error %s", errorText)
+		}
+		return nil
 	}))
 }
 

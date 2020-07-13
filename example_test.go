@@ -271,7 +271,6 @@ func ExampleListenTarget_consoleLog() {
 	// number - 123
 	// * exception "Uncaught" (4:6): TypeError: Cannot read property 'throwsException' of null
 	//     at <server>/:5:7
-
 }
 
 func ExampleWaitNewTarget() {
@@ -396,7 +395,7 @@ func ExampleEmulate() {
 		panic(err)
 	}
 
-	if err := ioutil.WriteFile("google-iphone7.png", buf, 0644); err != nil {
+	if err := ioutil.WriteFile("google-iphone7.png", buf, 0o644); err != nil {
 		panic(err)
 	}
 }
@@ -420,7 +419,7 @@ func ExamplePrintToPDF() {
 		panic(err)
 	}
 
-	if err := ioutil.WriteFile("page.pdf", buf, 0644); err != nil {
+	if err := ioutil.WriteFile("page.pdf", buf, 0o644); err != nil {
 		panic(err)
 	}
 }

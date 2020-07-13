@@ -373,6 +373,7 @@ func (c *Context) attachTarget(ctx context.Context, targetID target.ID) error {
 			css.Enable(),
 			target.SetDiscoverTargets(true),
 			target.SetAutoAttach(true, false).WithFlatten(true),
+			page.SetLifecycleEventsEnabled(true),
 		}...)
 	}
 
@@ -440,20 +441,30 @@ func RunResponse(ctx context.Context, actions ...Action) (*network.Response, err
 
 func responseAction(resp **network.Response, actions ...Action) Action {
 	return ActionFunc(func(ctx context.Context) error {
-		var reqID network.RequestID
-		var loadErr error
+		// loaderID lets us filter the requests from the currently
+		// loading navigation.
+		var loaderID cdp.LoaderID
 
-		// First, start listening for events.
-		ch := make(chan struct{})
-		lctx, cancel := context.WithCancel(ctx)
-		ListenTarget(lctx, func(ev interface{}) {
+		// reqID is the request we're currently looking at. This can
+		// go through multiple values, e.g. if the page redirects.
+		var reqID network.RequestID
+
+		// frameID corresponds to the target's root frame.
+		var frameID cdp.FrameID
+
+		var loadErr error
+		hasInit := false
+
+		// First, set up the function to handle events.
+		// We are listening for lifeycle events, so we will use those to
+		// make sure we grab the response for a request initiated by the
+		// loaderID that we want.
+
+		lctx, lcancel := context.WithCancel(ctx)
+		handleEvent := func(ev interface{}) {
 			switch ev := ev.(type) {
 			case *network.EventRequestWillBeSent:
-				// Stop at the first request, to prevent failed
-				// iframes from interfering.
-				// TODO: what about iframes from the previous
-				// page?
-				if ev.Type == network.ResourceTypeDocument && reqID == "" {
+				if ev.LoaderID == loaderID && ev.Type == network.ResourceTypeDocument {
 					reqID = ev.RequestID
 				}
 			case *network.EventLoadingFailed:
@@ -462,36 +473,84 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 					// If Canceled is true, we won't receive a
 					// loadEventFired at all.
 					if ev.Canceled {
-						cancel()
-						close(ch)
+						lcancel()
 					}
 				}
 			case *network.EventResponseReceived:
 				if ev.RequestID == reqID && resp != nil {
 					*resp = ev.Response
 				}
+			case *page.EventLifecycleEvent:
+				if ev.FrameID == frameID && ev.Name == "init" {
+					hasInit = true
+				}
 			case *page.EventLoadEventFired:
-				cancel()
-				close(ch)
+				// Ignore load events before the "init"
+				// lifecycle event, as those are old.
+				if hasInit {
+					lcancel()
+				}
+			}
+		}
+		// earlyEvents is a buffered list of events which happened
+		// before we knew what loaderID to look for.
+		var earlyEvents []interface{}
+
+		ListenTarget(lctx, func(ev interface{}) {
+			if loaderID != "" {
+				handleEvent(ev)
+				return
+			}
+			earlyEvents = append(earlyEvents, ev)
+			switch ev := ev.(type) {
+			case *page.EventFrameNavigated:
+				// Make sure we keep frameID up to date.
+				if ev.Frame.ParentID == "" {
+					frameID = ev.Frame.ID
+				}
+			case *network.EventRequestWillBeSent:
+				// Under some circumstances like ERR_TOO_MANY_REDIRECTS, we never
+				// see the "init" lifecycle event we want. Those "lone" requests
+				// also tend to have a loaderID that matches their requestID, for
+				// some reason. If such a request is seen, use it.
+				// TODO: research this some more when we have the time.
+				if ev.FrameID == frameID && string(ev.LoaderID) == string(ev.RequestID) {
+					loaderID = ev.LoaderID
+				}
+			case *page.EventLifecycleEvent:
+				if ev.FrameID == frameID && ev.Name == "init" {
+					loaderID = ev.LoaderID
+				}
 			case *page.EventNavigatedWithinDocument:
-				cancel()
-				close(ch)
+				// A fragment navigation doesn't need extra steps.
+				lcancel()
+			}
+			if loaderID != "" {
+				for _, ev := range earlyEvents {
+					handleEvent(ev)
+				}
+				earlyEvents = nil
 			}
 		})
+
+		// Obtain frameID from the target.
+		c := FromContext(ctx)
+		c.Target.curMu.Lock()
+		frameID = c.Target.cur
+		c.Target.curMu.Unlock()
 
 		// Second, run the actions.
 		if err := Run(ctx, actions...); err != nil {
 			return err
 		}
 
-		// Third, block until we have finished loading. If we wanted a
-		// response, check that it isn't nil.
+		// Third, block until we have finished loading.
 		select {
-		case <-ch:
+		case <-lctx.Done():
 			if loadErr != nil {
 				return loadErr
 			}
-			return nil
+			return ctx.Err()
 		case <-ctx.Done():
 			return ctx.Err()
 		}
