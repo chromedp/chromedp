@@ -550,7 +550,7 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 			if loadErr != nil {
 				return loadErr
 			}
-			return ctx.Err()
+			return nil
 		case <-ctx.Done():
 			return ctx.Err()
 		}
