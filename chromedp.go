@@ -454,6 +454,7 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 
 		var loadErr error
 		hasInit := false
+		finished := false
 
 		// First, set up the function to handle events.
 		// We are listening for lifeycle events, so we will use those to
@@ -461,6 +462,7 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 		// loaderID that we want.
 
 		lctx, lcancel := context.WithCancel(ctx)
+		defer lcancel()
 		handleEvent := func(ev interface{}) {
 			switch ev := ev.(type) {
 			case *network.EventRequestWillBeSent:
@@ -473,6 +475,7 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 					// If Canceled is true, we won't receive a
 					// loadEventFired at all.
 					if ev.Canceled {
+						finished = true
 						lcancel()
 					}
 				}
@@ -488,6 +491,7 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 				// Ignore load events before the "init"
 				// lifecycle event, as those are old.
 				if hasInit {
+					finished = true
 					lcancel()
 				}
 			}
@@ -523,6 +527,7 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 				}
 			case *page.EventNavigatedWithinDocument:
 				// A fragment navigation doesn't need extra steps.
+				finished = true
 				lcancel()
 			}
 			if loaderID != "" {
@@ -549,6 +554,16 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 		case <-lctx.Done():
 			if loadErr != nil {
 				return loadErr
+			}
+
+			// If the ctx parameter was cancelled by the caller (or
+			// by a timeout etc) the select will race between
+			// lctx.Done and ctx.Done, since lctx is a sub-context
+			// of ctx. So we can't return nil here, as otherwise
+			// that race would mean that we would drop 50% of the
+			// parent context cancellation errors.
+			if !finished {
+				return ctx.Err()
 			}
 			return nil
 		case <-ctx.Done():
