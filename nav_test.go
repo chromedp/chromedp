@@ -3,6 +3,7 @@ package chromedp
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"image"
 	_ "image/png"
@@ -316,7 +317,7 @@ func writeHTML(content string) http.Handler {
 	})
 }
 
-func TestClickNavigate(t *testing.T) {
+func TestNavigateWhileLoading(t *testing.T) {
 	t.Parallel()
 
 	ctx, cancel := testAllocate(t, "")
@@ -380,5 +381,40 @@ func TestNavigateWithoutWaitingForLoad(t *testing.T) {
 		WaitVisible(`#form`, ByID), // for form.html
 	); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestNavigateCancelled(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+
+	loadStarted := make(chan struct{})
+	mux := http.NewServeMux()
+	mux.Handle("/", writeHTML(`<img src="/img.jpg"></img>`))
+	mux.HandleFunc("/img.jpg", func(w http.ResponseWriter, r *http.Request) {
+		// Block until the entire test is done.
+		<-ctx.Done()
+	})
+	s := httptest.NewServer(mux)
+	defer s.Close()
+	defer cancel() // if we call s.Close first, the ctx.Done above hangs
+
+	// Navigate to a page that will navigate, but never finish loading. Once
+	// it has the HTML and starts loading an image, cancel the Run context.
+	// This should result in us seeing a context error.
+	action := ActionFunc(func(ctx context.Context) error {
+		_, _, _, err := page.Navigate(s.URL).Do(ctx)
+		loadStarted <- struct{}{}
+		return err
+	})
+	ctx2, cancel2 := context.WithCancel(ctx)
+	go func() {
+		<-loadStarted
+		cancel2()
+	}()
+	if _, err := RunResponse(ctx2, action); !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected error to be %q, got: %v", context.Canceled, err)
 	}
 }
