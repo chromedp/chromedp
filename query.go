@@ -34,6 +34,7 @@ type Selector struct {
 	by       func(context.Context, *cdp.Node) ([]cdp.NodeID, error)
 	wait     func(context.Context, *cdp.Frame, ...cdp.NodeID) ([]*cdp.Node, error)
 	after    func(context.Context, ...*cdp.Node) error
+	filter   func(context.Context, *cdp.Node) (bool, error)
 	raw      bool
 }
 
@@ -210,6 +211,24 @@ func (s *Selector) Do(ctx context.Context) error {
 		if nodes == nil || err != nil {
 			continue
 		}
+
+		if s.filter != nil {
+			for i, node := range nodes {
+				is, err := s.filter(ctx, node)
+				if err != nil {
+					continue
+				}
+
+				if !is {
+					nodes = append(nodes[0:i], nodes[i+1:]...)
+				}
+
+				if len(nodes) < s.exp {
+					continue
+				}
+			}
+		}
+
 		if s.after != nil {
 			if err := s.after(ctx, nodes...); err != nil {
 				return err
@@ -290,6 +309,12 @@ func FromNode(node *cdp.Node) QueryOption {
 func ByFunc(f func(context.Context, *cdp.Node) ([]cdp.NodeID, error)) QueryOption {
 	return func(s *Selector) {
 		s.by = f
+	}
+}
+
+func FilterFunc(f func(context.Context, *cdp.Node) (bool, error)) QueryOption {
+	return func(s *Selector) {
+		s.filter = f
 	}
 }
 
@@ -432,23 +457,11 @@ func NodeReady(s *Selector) {
 // nodes have been sent by the browser and are visible.
 func NodeVisible(s *Selector) {
 	WaitFunc(s.waitReady(func(ctx context.Context, n *cdp.Node) error {
-		// check box model
-		_, err := dom.GetBoxModel().WithNodeID(n.NodeID).Do(ctx)
-		if err != nil {
-			if isCouldNotComputeBoxModelError(err) {
-				return ErrNotVisible
-			}
-
-			return err
-		}
-
-		// check visibility
-		var res bool
-		err = EvaluateAsDevTools(snippet(visibleJS, cashX(true), s, n), &res).Do(ctx)
+		visible, err := isNodeVisible(ctx, n, s)
 		if err != nil {
 			return err
 		}
-		if !res {
+		if !visible {
 			return ErrNotVisible
 		}
 		return nil
@@ -459,27 +472,22 @@ func NodeVisible(s *Selector) {
 // nodes have been sent by the browser and are not visible.
 func NodeNotVisible(s *Selector) {
 	WaitFunc(s.waitReady(func(ctx context.Context, n *cdp.Node) error {
-		// check box model
-		_, err := dom.GetBoxModel().WithNodeID(n.NodeID).Do(ctx)
-		if err != nil {
-			if isCouldNotComputeBoxModelError(err) {
-				return nil
-			}
-
-			return err
-		}
-
-		// check visibility
-		var res bool
-		err = EvaluateAsDevTools(snippet(visibleJS, cashX(true), s, n), &res).Do(ctx)
+		visible, err := isNodeVisible(ctx, n, s)
 		if err != nil {
 			return err
 		}
-		if res {
+		if visible {
 			return ErrVisible
 		}
 		return nil
 	}))(s)
+}
+
+func FilterVisible(s *Selector) {
+	FilterFunc(func(ctx context.Context, n *cdp.Node) (b bool, err error) {
+		b, e := isNodeVisible(ctx, n, s)
+		return b,e
+	})(s)
 }
 
 // NodeEnabled is an element query option to wait until all queried element
