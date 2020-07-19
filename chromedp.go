@@ -168,6 +168,7 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 		// If we allocated, wait for the browser to stop.
 		if c.allocated != nil {
 			<-c.allocated
+			c.allocated = nil
 		}
 	}
 	return ctx, cancelWait
@@ -215,6 +216,7 @@ func Cancel(ctx context.Context) error {
 	if c.allocated != nil {
 		select {
 		case <-c.allocated:
+			c.allocated = nil
 		case <-ctx.Done():
 		}
 	}

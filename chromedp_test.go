@@ -1055,3 +1055,15 @@ func TestRunResponse_noResponse(t *testing.T) {
 		}
 	}
 }
+
+func TestCancelBlock(t *testing.T) {
+	ctx, cancel := NewContext(context.Background())
+	cancel()
+
+	if err := Cancel(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	cancel()
+	cancel()
+}
