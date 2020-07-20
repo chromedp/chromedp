@@ -19,7 +19,6 @@ type NavigateAction Action
 func Navigate(urlstr string) NavigateAction {
 	return responseAction(nil, ActionFunc(func(ctx context.Context) error {
 		_, _, errorText, err := page.Navigate(urlstr).Do(ctx)
-		// fmt.Printf("%q %v\n", errorText, err)
 		if err != nil {
 			return err
 		}

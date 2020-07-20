@@ -828,7 +828,6 @@ func TestRunResponse(t *testing.T) {
 		</html>`))
 	mux := http.NewServeMux()
 	mux.HandleFunc("/index", func(w http.ResponseWriter, r *http.Request) {
-		// fmt.Printf("%#v\n", r)
 		w.Header().Set("Content-Type", "text/html")
 		indexTmpl.Execute(w, r)
 	})
