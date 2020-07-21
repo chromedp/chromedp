@@ -502,6 +502,12 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 		// before we knew what loaderID to look for.
 		var earlyEvents []interface{}
 
+		// Obtain frameID from the target.
+		c := FromContext(ctx)
+		c.Target.frameMu.Lock()
+		frameID = c.Target.cur
+		c.Target.frameMu.Unlock()
+
 		ListenTarget(lctx, func(ev interface{}) {
 			if loaderID != "" {
 				handleEvent(ev)
@@ -539,12 +545,6 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 				earlyEvents = nil
 			}
 		})
-
-		// Obtain frameID from the target.
-		c := FromContext(ctx)
-		c.Target.curMu.Lock()
-		frameID = c.Target.cur
-		c.Target.curMu.Unlock()
 
 		// Second, run the actions.
 		if err := Run(ctx, actions...); err != nil {

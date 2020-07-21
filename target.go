@@ -26,12 +26,12 @@ type Target struct {
 
 	messageQueue chan *cdproto.Message
 
+	// frameMu protects both frames and cur.
+	frameMu sync.RWMutex
 	// frames is the set of encountered frames.
 	frames map[cdp.FrameID]*cdp.Frame
-
 	// cur is the current top level frame.
-	cur   cdp.FrameID
-	curMu sync.RWMutex
+	cur cdp.FrameID
 
 	// logging funcs
 	logf, errf func(string, ...interface{})
@@ -168,9 +168,9 @@ func (t *Target) Execute(ctx context.Context, method string, params easyjson.Mar
 // documentUpdated handles the document updated event, retrieving the document
 // root for the root frame.
 func (t *Target) documentUpdated(ctx context.Context) {
-	t.curMu.RLock()
+	t.frameMu.RLock()
 	f := t.frames[t.cur]
-	t.curMu.RUnlock()
+	t.frameMu.RUnlock()
 	if f == nil {
 		// TODO: This seems to happen on CI, when running the tests
 		// under the headless-shell Docker image. Figure out why.
@@ -206,14 +206,14 @@ func (t *Target) pageEvent(ev interface{}) {
 
 	switch e := ev.(type) {
 	case *page.EventFrameNavigated:
+		t.frameMu.Lock()
 		t.frames[e.Frame.ID] = e.Frame
 		if e.Frame.ParentID == "" {
 			// This frame is only the new top-level frame if it has
 			// no parent.
-			t.curMu.Lock()
 			t.cur = e.Frame.ID
-			t.curMu.Unlock()
 		}
+		t.frameMu.Unlock()
 		return
 
 	case *page.EventFrameAttached:
@@ -257,6 +257,7 @@ func (t *Target) pageEvent(ev interface{}) {
 		return
 	}
 
+	t.frameMu.Lock()
 	f := t.frames[id]
 	if f == nil {
 		// This can happen if a frame is attached or starts loading
@@ -265,6 +266,7 @@ func (t *Target) pageEvent(ev interface{}) {
 		f = &cdp.Frame{ID: id}
 		t.frames[id] = f
 	}
+	t.frameMu.Unlock()
 
 	f.Lock()
 	op(f)

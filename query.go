@@ -165,9 +165,9 @@ func (s *Selector) Do(ctx context.Context) error {
 		case <-time.After(5 * time.Millisecond):
 		}
 
-		t.curMu.RLock()
+		t.frameMu.RLock()
 		frame := t.frames[t.cur]
-		t.curMu.RUnlock()
+		t.frameMu.RUnlock()
 
 		if frame == nil {
 			// the frame hasn't loaded yet.
