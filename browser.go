@@ -15,6 +15,7 @@ import (
 	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/browser"
 	"github.com/chromedp/cdproto/cdp"
+	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
 )
 
@@ -132,6 +133,7 @@ func (b *Browser) newExecutorForTarget(ctx context.Context, targetID target.ID, 
 
 		messageQueue: make(chan *cdproto.Message, 1024),
 		frames:       make(map[cdp.FrameID]*cdp.Frame),
+		execContexts: make(map[cdp.FrameID]runtime.ExecutionContextID),
 		cur:          cdp.FrameID(targetID),
 
 		logf: b.logf,

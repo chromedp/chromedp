@@ -104,9 +104,9 @@ func snippet(js string, f func(n *cdp.Node) string, sel interface{}, n *cdp.Node
 func cashX(flatten bool) func(*cdp.Node) string {
 	return func(n *cdp.Node) string {
 		if flatten {
-			return fmt.Sprintf(`$x(%q)[0]`, n.FullXPath())
+			return fmt.Sprintf(`$x(%q)[0]`, n.PartialXPath())
 		}
-		return fmt.Sprintf(`$x(%q)`, n.FullXPath())
+		return fmt.Sprintf(`$x(%q)`, n.PartialXPath())
 	}
 }
 
@@ -114,8 +114,8 @@ func cashX(flatten bool) func(*cdp.Node) string {
 func cashXNode(flatten bool) func(*cdp.Node) string {
 	return func(n *cdp.Node) string {
 		if flatten {
-			return fmt.Sprintf(`$x(%q)[0]`, n.FullXPath()+"/node()")
+			return fmt.Sprintf(`$x(%q)[0]`, n.PartialXPath()+"/node()")
 		}
-		return fmt.Sprintf(`$x(%q)`, n.FullXPath()+"/node()")
+		return fmt.Sprintf(`$x(%q)`, n.PartialXPath()+"/node()")
 	}
 }
