@@ -2,6 +2,7 @@ package chromedp
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"sync"
 	"sync/atomic"
@@ -12,6 +13,7 @@ import (
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/cdproto/page"
+	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
 )
 
@@ -29,7 +31,8 @@ type Target struct {
 	// frameMu protects both frames and cur.
 	frameMu sync.RWMutex
 	// frames is the set of encountered frames.
-	frames map[cdp.FrameID]*cdp.Frame
+	frames       map[cdp.FrameID]*cdp.Frame
+	execContexts map[cdp.FrameID]runtime.ExecutionContextID
 	// cur is the current top level frame.
 	cur cdp.FrameID
 
@@ -46,7 +49,10 @@ func (t *Target) run(ctx context.Context) {
 		value  interface{}
 	}
 	// syncEventQueue is used to handle events synchronously within Target.
-	syncEventQueue := make(chan eventValue, 1024)
+	// TODO: If this queue gets full, the goroutine below could get stuck on
+	// a send, and response callbacks would never run, resulting in a
+	// deadlock. Can we fix this without potentially using lots of memory?
+	syncEventQueue := make(chan eventValue, 4096)
 
 	// This goroutine receives events from the browser, calls listeners, and
 	// then passes the events onto the main goroutine for the target handler
@@ -80,7 +86,7 @@ func (t *Target) run(ctx context.Context) {
 				t.listenersMu.Unlock()
 
 				switch msg.Method.Domain() {
-				case "Page", "DOM":
+				case "Runtime", "Page", "DOM":
 					select {
 					case <-ctx.Done():
 						return
@@ -97,6 +103,8 @@ func (t *Target) run(ctx context.Context) {
 			return
 		case ev := <-syncEventQueue:
 			switch ev.method.Domain() {
+			case "Runtime":
+				t.runtimeEvent(ev.value)
 			case "Page":
 				t.pageEvent(ev.value)
 			case "DOM":
@@ -163,6 +171,42 @@ func (t *Target) Execute(ctx context.Context, method string, params easyjson.Mar
 		}
 	}
 	return nil
+}
+
+// runtimeEvent handles incoming runtime events.
+func (t *Target) runtimeEvent(ev interface{}) {
+	switch ev := ev.(type) {
+	case *runtime.EventExecutionContextCreated:
+		var aux struct {
+			FrameID cdp.FrameID
+		}
+		if len(ev.Context.AuxData) == 0 {
+			break
+		}
+		if err := json.Unmarshal(ev.Context.AuxData, &aux); err != nil {
+			t.errf("could not decode executionContextCreated auxData %q: %v", ev.Context.AuxData, err)
+			break
+		}
+		if aux.FrameID != "" {
+			t.frameMu.Lock()
+			t.execContexts[aux.FrameID] = ev.Context.ID
+			t.frameMu.Unlock()
+		}
+	case *runtime.EventExecutionContextDestroyed:
+		t.frameMu.Lock()
+		for frameID, ctxID := range t.execContexts {
+			if ctxID == ev.ExecutionContextID {
+				delete(t.execContexts, frameID)
+			}
+		}
+		t.frameMu.Unlock()
+	case *runtime.EventExecutionContextsCleared:
+		t.frameMu.Lock()
+		for frameID := range t.execContexts {
+			delete(t.execContexts, frameID)
+		}
+		t.frameMu.Unlock()
+	}
 }
 
 // documentUpdated handles the document updated event, retrieving the document

@@ -280,11 +280,15 @@ func TestQueryIframe(t *testing.T) {
 	if err := Run(ctx, Nodes(`iframe`, &iframes, ByQuery)); err != nil {
 		t.Fatal(err)
 	}
+	var gotFoo string
 	if err := Run(ctx,
-		// TODO: WaitVisible hangs here.
-		WaitReady(`#form`, ByID, FromNode(iframes[0])),
+		WaitVisible(`#form`, ByQuery, FromNode(iframes[0])),
+		Text("#foo", &gotFoo, ByQuery, FromNode(iframes[0])),
 	); err != nil {
 		t.Fatal(err)
+	}
+	if want := "insert"; gotFoo != want {
+		t.Fatalf("wanted %q, got %q", want, gotFoo)
 	}
 }
 
