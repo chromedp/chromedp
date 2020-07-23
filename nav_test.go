@@ -284,6 +284,8 @@ func TestQueryIframe(t *testing.T) {
 	if err := Run(ctx,
 		WaitVisible(`#form`, ByQuery, FromNode(iframes[0])),
 		Text("#foo", &gotFoo, ByQuery, FromNode(iframes[0])),
+
+		Click("#btn2", ByQuery, FromNode(iframes[0])),
 	); err != nil {
 		t.Fatal(err)
 	}

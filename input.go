@@ -56,8 +56,17 @@ func MouseClickXY(x, y float64, opts ...MouseOption) MouseAction {
 // viewport.
 func MouseClickNode(n *cdp.Node, opts ...MouseOption) MouseAction {
 	return ActionFunc(func(ctx context.Context) error {
+		t := cdp.ExecutorFromContext(ctx).(*Target)
+		if t == nil {
+			return ErrInvalidTarget
+		}
+		frameID := t.enclosingFrame(n)
+		t.frameMu.RLock()
+		execCtx := t.execContexts[frameID]
+		t.frameMu.RUnlock()
+
 		var pos []float64
-		err := EvaluateAsDevTools(snippet(scrollIntoViewJS, cashX(true), nil, n), &pos).Do(ctx)
+		err := evalInCtx(ctx, execCtx, snippet(scrollIntoViewJS, cashX(true), nil, n), &pos)
 		if err != nil {
 			return err
 		}

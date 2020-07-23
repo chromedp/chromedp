@@ -43,6 +43,16 @@ type Target struct {
 	isWorker bool
 }
 
+func (t *Target) enclosingFrame(node *cdp.Node) cdp.FrameID {
+	t.frameMu.RLock()
+	top := t.frames[t.cur]
+	t.frameMu.RUnlock()
+	for node.FrameID == "" {
+		node = top.Nodes[node.ParentID]
+	}
+	return node.FrameID
+}
+
 func (t *Target) run(ctx context.Context) {
 	type eventValue struct {
 		method cdproto.MethodType
