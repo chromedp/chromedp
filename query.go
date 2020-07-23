@@ -188,7 +188,8 @@ func (s *Selector) Do(ctx context.Context) error {
 				continue
 			}
 		} else {
-			execCtx = t.execContexts[fromNode.FrameID]
+			frameID := t.enclosingFrame(fromNode)
+			execCtx = t.execContexts[frameID]
 			t.frameMu.RUnlock()
 
 			// TODO: we probably want to use the nested frame
@@ -288,6 +289,9 @@ type QueryOption = func(*Selector)
 // FromNode is an element query action option where a query will be run. That
 // is, the query will only look at the node's element sub-tree. By default, or
 // when passed nil, the document's root element will be used.
+//
+// Note that, at present, BySearch and ByJSPath do not support FromNode; this
+// option is mainly useful for ByQuery selectors.
 func FromNode(node *cdp.Node) QueryOption {
 	return func(s *Selector) { s.fromNode = node }
 }
