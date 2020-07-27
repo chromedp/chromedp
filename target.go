@@ -47,7 +47,15 @@ func (t *Target) enclosingFrame(node *cdp.Node) cdp.FrameID {
 	t.frameMu.RLock()
 	top := t.frames[t.cur]
 	t.frameMu.RUnlock()
-	for node.FrameID == "" {
+	for {
+		if node == nil {
+			// Avoid crashing. This can happen if we're using an old
+			// node that has been replaced, for example.
+			return ""
+		}
+		if node.FrameID != "" {
+			break
+		}
 		node = top.Nodes[node.ParentID]
 	}
 	return node.FrameID
