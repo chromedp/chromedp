@@ -225,6 +225,14 @@ func Cancel(ctx context.Context) error {
 	if graceful {
 		c.cancel()
 	}
+
+	// If we allocated and we hit ctx.Done earlier, we can't rely on
+	// cancelErr being ready until the allocated channel is closed, as that
+	// is racy. If we didn't hit ctx.Done earlier, then c.allocated was
+	// already cancelled then, so this will be a no-op.
+	if c.allocated != nil {
+		<-c.allocated
+	}
 	return c.cancelErr
 }
 
