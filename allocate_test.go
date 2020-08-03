@@ -373,3 +373,4 @@ func TestModifyCmdFunc(t *testing.T) {
 		t.Fatalf("got %s, want %s", ret, tz)
 	}
 }
+
