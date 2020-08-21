@@ -37,6 +37,18 @@ type Selector struct {
 	raw      bool
 }
 
+// MutateSelector allows to mutate the Selectors sel string.
+func MutateSelector(s *Selector, m func(strSel string) string) *Selector {
+	strSel, isString := s.sel.(string)
+	if !isString {
+		panic("mutation of non-string mutator is not supported")
+	}
+
+	s.sel = m(strSel)
+
+	return s
+}
+
 // Query is a query action that queries the browser for specific element
 // node(s) matching the criteria.
 //

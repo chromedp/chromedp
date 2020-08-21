@@ -1518,3 +1518,20 @@ func TestFromNode(t *testing.T) {
 		})
 	}
 }
+
+func TestMutateSelector(t *testing.T) {
+	s := &Selector{
+		sel: "test",
+	}
+
+	m := func(s string) string {
+		return s + "-123"
+	}
+
+	got := MutateSelector(s, m).sel
+	want := "test-123"
+
+	if want != got {
+		t.Fatalf("want: %v, got: %v", want, got)
+	}
+}
