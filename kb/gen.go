@@ -5,6 +5,7 @@ package main
 import (
 	"bytes"
 	"encoding/base64"
+	"errors"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -32,8 +33,8 @@ const (
 	// also contains DomKey -> VKEY (not used)
 	domUsLayoutDataH = chromiumSrc + "ui/events/keycodes/dom_us_layout_data.h?format=TEXT"
 
-	// keycodeConverterDataInc contains DomKey -> Key Name
-	keycodeConverterDataInc = chromiumSrc + "ui/events/keycodes/dom/keycode_converter_data.inc?format=TEXT"
+	// domCodeDataInc contains DomKey -> Key Name
+	domCodeDataInc = chromiumSrc + "ui/events/keycodes/dom/dom_code_data.inc?format=TEXT"
 
 	// domKeyDataInc contains DomKey -> Key Name + unicode (non-printable)
 	domKeyDataInc = chromiumSrc + "ui/events/keycodes/dom/dom_key_data.inc?format=TEXT"
@@ -89,9 +90,11 @@ func run() error {
 	}
 
 	// output
-	if err := ioutil.WriteFile(*flagOut,
+	if err := ioutil.WriteFile(
+		*flagOut,
 		[]byte(fmt.Sprintf(hdr, *flagPkg, string(constBuf), string(mapBuf))),
-		0644); err != nil {
+		0644,
+	); err != nil {
 		return err
 	}
 
@@ -111,15 +114,21 @@ func run() error {
 // loadKeys loads the dom key definitions from the chromium source tree.
 func loadKeys(keys map[rune]kb.Key) error {
 	// load key converter data
-	keycodeConverterMap, err := loadKeycodeConverterData()
+	domCodeMap, err := loadDomCodeData()
 	if err != nil {
 		return err
+	}
+	if len(domCodeMap) == 0 {
+		return errors.New("no dom codes defined")
 	}
 
 	// load dom code map
 	domKeyMap, err := loadDomKeyData()
 	if err != nil {
 		return err
+	}
+	if len(domKeyMap) == 0 {
+		return errors.New("no dom keys defined")
 	}
 
 	// load US layout data
@@ -129,19 +138,19 @@ func loadKeys(keys map[rune]kb.Key) error {
 	}
 
 	// load scan code map
-	scanCodeMap, err := loadScanCodes(keycodeConverterMap, domKeyMap, layoutBuf)
+	scanCodeMap, err := loadScanCodes(domCodeMap, domKeyMap, layoutBuf)
 	if err != nil {
 		return err
 	}
 
 	// process printable
-	err = loadPrintable(keys, keycodeConverterMap, domKeyMap, layoutBuf, scanCodeMap)
+	err = loadPrintable(keys, domCodeMap, domKeyMap, layoutBuf, scanCodeMap)
 	if err != nil {
 		return err
 	}
 
 	// process non-printable
-	err = loadNonPrintable(keys, keycodeConverterMap, domKeyMap, layoutBuf, scanCodeMap)
+	err = loadNonPrintable(keys, domCodeMap, domKeyMap, layoutBuf, scanCodeMap)
 	if err != nil {
 		return err
 	}
@@ -150,16 +159,15 @@ func loadKeys(keys map[rune]kb.Key) error {
 }
 
 var fixRE = regexp.MustCompile(`,\n\s{10,}`)
-var usbKeyRE = regexp.MustCompile(`(?m)^\s*USB_KEYMAP\((.*?), (.*?), (.*?), (.*?), (.*?), (.*?), (.*?)\)`)
+var usbKeyRE = regexp.MustCompile(`(?m)^\s*DOM_CODE\((.*?), (.*?), (.*?), (.*?), (.*?), (.*?), (.*?)\)`)
 
-// loadKeycodeConverterData loads the key codes from the keycode_converter_data.inc.
-func loadKeycodeConverterData() (map[string][]string, error) {
-	buf, err := grab(keycodeConverterDataInc)
+// loadDomCodeData loads the key codes from the dom_code_data.inc.
+func loadDomCodeData() (map[string][]string, error) {
+	buf, err := grab(domCodeDataInc)
 	if err != nil {
 		return nil, err
 	}
 	buf = fixRE.ReplaceAllLiteral(buf, []byte(", "))
-
 	domMap := make(map[string][]string)
 	matches := usbKeyRE.FindAllStringSubmatch(string(buf), -1)
 	for _, m := range matches {
@@ -169,7 +177,6 @@ func loadKeycodeConverterData() (map[string][]string, error) {
 		}
 		domMap[vkey] = m[1:]
 	}
-
 	return domMap, nil
 }
 
@@ -207,7 +214,6 @@ func getCode(s string) string {
 	if !strings.HasPrefix(s, `"`) || !strings.HasSuffix(s, `"`) {
 		panic(fmt.Sprintf("expected string, got: %s", s))
 	}
-
 	return s[1 : len(s)-1]
 }
 
@@ -233,23 +239,23 @@ func addKey(keys map[rune]kb.Key, r rune, key kb.Key, scanCodeMap map[string][]i
 var printableKeyRE = regexp.MustCompile(`\{DomCode::(.+?), \{(.+?), (.+?)\}\}`)
 
 // loadPrintable loads the printable key definitions.
-func loadPrintable(keys map[rune]kb.Key, keycodeConverterMap, domKeyMap map[string][]string, layoutBuf []byte, scanCodeMap map[string][]int64) error {
+func loadPrintable(keys map[rune]kb.Key, domCodeMap, domKeyMap map[string][]string, layoutBuf []byte, scanCodeMap map[string][]int64) error {
 	buf := extract(layoutBuf, "kPrintableCodeMap")
 
 	matches := printableKeyRE.FindAllStringSubmatch(string(buf), -1)
 	for _, m := range matches {
 		domCode := m[1]
-
 		// ignore domCodes that are duplicates of other unicode characters
 		if domCode == "INTL_BACKSLASH" || domCode == "INTL_HASH" || strings.HasPrefix(domCode, "NUMPAD") {
 			continue
 		}
-
-		kc, ok := keycodeConverterMap[domCode]
+		kc, ok := domCodeMap[domCode]
 		if !ok {
-			panic(fmt.Sprintf("could not find key %s in keycode map", domCode))
+			panic(fmt.Sprintf("could not find key %s in dom code map", domCode))
 		}
-
+		if kc[5] == "NULL" {
+			continue
+		}
 		code := getCode(kc[5])
 		r1, r2 := decodeRune(m[2]), decodeRune(m[3])
 		addKey(keys, r1, kb.Key{
@@ -304,14 +310,14 @@ func loadDomKeyData() (map[string][]string, error) {
 var nonPrintableKeyRE = regexp.MustCompile(`\n\s{4}\{DomCode::(.+?), DomKey::(.+?)\}`)
 
 // loadNonPrintable loads the not printable key definitions.
-func loadNonPrintable(keys map[rune]kb.Key, keycodeConverterMap, domKeyMap map[string][]string, layoutBuf []byte, scanCodeMap map[string][]int64) error {
+func loadNonPrintable(keys map[rune]kb.Key, domCodeMap, domKeyMap map[string][]string, layoutBuf []byte, scanCodeMap map[string][]int64) error {
 	buf := extract(layoutBuf, "kNonPrintableCodeMap")
 	matches := nonPrintableKeyRE.FindAllStringSubmatch(string(buf), -1)
 	for _, m := range matches {
 		code, key := m[1], m[2]
 
 		// get code, key definitions
-		dc, ok := keycodeConverterMap[code]
+		dc, ok := domCodeMap[code]
 		if !ok {
 			panic(fmt.Sprintf("no dom code definition for %s", code))
 		}
@@ -397,7 +403,7 @@ var domCodeVkeyFixRE = regexp.MustCompile(`,\n\s{5,}`)
 var domCodeVkeyRE = regexp.MustCompile(`(?m)^\s*\{DomCode::(.+?), (.+?)\}`)
 
 // loadScanCodes loads the scan codes for the dom key definitions.
-func loadScanCodes(keycodeConverterMap, domKeyMap map[string][]string, layoutBuf []byte) (map[string][]int64, error) {
+func loadScanCodes(domCodeMap, domKeyMap map[string][]string, layoutBuf []byte) (map[string][]int64, error) {
 	vkeyCodeMap, err := loadPosixWinKeyboardCodes()
 	if err != nil {
 		return nil, err
@@ -410,17 +416,17 @@ func loadScanCodes(keycodeConverterMap, domKeyMap map[string][]string, layoutBuf
 	matches := domCodeVkeyRE.FindAllStringSubmatch(string(buf), -1)
 	for _, m := range matches {
 		domCode, vkey := m[1], m[2]
-
-		kc, ok := keycodeConverterMap[domCode]
+		kc, ok := domCodeMap[domCode]
 		if !ok {
-			panic(fmt.Sprintf("dom code %s not defined in keycode map", domCode))
+			panic(fmt.Sprintf("dom code %s not defined in dom code map", domCode))
 		}
-
 		sc, ok := vkeyCodeMap[vkey]
 		if !ok {
-			panic(fmt.Sprintf("vkey %s is not defined in keyboardCodeMap", vkey))
+			panic(fmt.Sprintf("vkey %s is not defined in vkey code map", vkey))
 		}
-
+		if kc[5] == "NULL" {
+			continue
+		}
 		scanCodeMap[getCode(kc[5])] = sc
 	}
 
@@ -455,7 +461,6 @@ func loadPosixWinKeyboardCodes() (map[string][]int64, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	matches := defineRE.FindAllStringSubmatch(string(buf), -1)
 	for _, m := range matches {
 		lookup[m[1]] = m[2]
@@ -463,15 +468,12 @@ func loadPosixWinKeyboardCodes() (map[string][]int64, error) {
 
 	// load posix and win keyboard codes
 	keyboardCodeMap := make(map[string][]int64)
-	err = loadKeyboardCodes(keyboardCodeMap, lookup, keyboardCodesPosixH, 0)
-	if err != nil {
+	if err = loadKeyboardCodes(keyboardCodeMap, lookup, keyboardCodesPosixH, 0); err != nil {
 		return nil, err
 	}
-	err = loadKeyboardCodes(keyboardCodeMap, lookup, keyboardCodesWinH, 1)
-	if err != nil {
+	if err = loadKeyboardCodes(keyboardCodeMap, lookup, keyboardCodesWinH, 1); err != nil {
 		return nil, err
 	}
-
 	return keyboardCodeMap, nil
 }
 
@@ -493,7 +495,6 @@ func loadKeyboardCodes(vkeyCodeMap map[string][]int64, lookup map[string]string,
 		switch {
 		case strings.HasPrefix(m[2], "'"):
 			v = fmt.Sprintf("0x%04x", m[2][1])
-
 		case !strings.HasPrefix(m[2], "0x") && m[2] != "0":
 			z, ok := lookup[v]
 			if !ok {
@@ -507,7 +508,6 @@ func loadKeyboardCodes(vkeyCodeMap map[string][]int64, lookup map[string]string,
 		if err != nil {
 			panic(fmt.Sprintf("could not parse %s // %s // %s", m[1], m[2], v))
 		}
-
 		vkey, ok := vkeyCodeMap[m[1]]
 		if !ok {
 			vkey = make([]int64, 2)
@@ -532,20 +532,17 @@ func extract(buf []byte, name string) []byte {
 func grab(path string) ([]byte, error) {
 	res, err := http.Get(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to get %s: %w", path, err)
 	}
 	defer res.Body.Close()
-
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to read %s: %w", path, err)
 	}
-
 	buf, err := base64.StdEncoding.DecodeString(string(body))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to base64 decode %s: %w\n>>>\n%s\n<<<", path, err, string(body))
 	}
-
 	return buf, nil
 }
 

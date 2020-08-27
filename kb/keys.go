@@ -130,6 +130,7 @@ const (
 	Info                 = "\u0d25"
 	MediaFastForward     = "\u0d2c"
 	MediaLast            = "\u0d2d"
+	MediaPause           = "\u0d2e"
 	MediaPlay            = "\u0d2f"
 	MediaRecord          = "\u0d30"
 	MediaRewind          = "\u0d31"
@@ -362,6 +363,7 @@ var Keys = map[rune]*Key{
 	'\u0d25': {"Info", "Info", "", "", 0, 0, false, false},
 	'\u0d2c': {"MediaFastForward", "MediaFastForward", "", "", 0, 0, false, false},
 	'\u0d2d': {"MediaLast", "MediaLast", "", "", 0, 0, false, false},
+	'\u0d2e': {"MediaPause", "MediaPause", "", "", 0, 0, false, false},
 	'\u0d2f': {"MediaPlay", "MediaPlay", "", "", 0, 0, false, false},
 	'\u0d30': {"MediaRecord", "MediaRecord", "", "", 0, 0, false, false},
 	'\u0d31': {"MediaRewind", "MediaRewind", "", "", 0, 0, false, false},
