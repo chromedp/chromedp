@@ -16,7 +16,7 @@ import (
 	"strings"
 )
 
-const deviceDescriptorsURL = "https://raw.githubusercontent.com/GoogleChrome/puppeteer/master/lib/DeviceDescriptors.js"
+const deviceDescriptorsURL = "https://raw.githubusercontent.com/puppeteer/puppeteer/main/src/common/DeviceDescriptors.ts"
 
 var flagOut = flag.String("out", "device.go", "out")
 
@@ -88,8 +88,11 @@ func run() error {
 }
 
 var (
-	startRE = regexp.MustCompile(`(?m)^module\.exports\s*=\s*\[`)
-	endRE   = regexp.MustCompile(`(?m)^\];$`)
+	startRE        = regexp.MustCompile(`(?m)^const\s+devices:\s*Device\[\]\s*=\s*\[`)
+	endRE          = regexp.MustCompile(`(?m)^\];`)
+	fixLandscapeRE = regexp.MustCompile(`isLandscape:\s*(true|false),`)
+	fixKeysRE      = regexp.MustCompile(`(?m)^(\s+)([a-zA-Z]+):`)
+	fixClosesRE    = regexp.MustCompile(`([\]\}]),\n(\s*[\]\}])`)
 )
 
 // get retrieves and decodes the device descriptors.
@@ -127,6 +130,11 @@ func get(v interface{}) error {
 	}
 	buf = buf[:end[1]-1]
 	buf = bytes.Replace(buf, []byte("'"), []byte(`"`), -1)
+	buf = fixLandscapeRE.ReplaceAll(buf, []byte(`"isLandscape": $1`))
+	buf = fixKeysRE.ReplaceAll(buf, []byte(`$1"$2":`))
+	buf = fixClosesRE.ReplaceAll(buf, []byte("$1\n$2"))
+	buf = fixClosesRE.ReplaceAll(buf, []byte("$1\n$2"))
+
 	return json.Unmarshal(buf, v)
 }
 
