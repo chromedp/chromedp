@@ -1215,7 +1215,7 @@ func ScrollIntoView(sel interface{}, opts ...QueryOption) QueryAction {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
-		var pos []int
+		var pos []float64
 		err := evalInCtx(ctx, execCtx, snippet(scrollIntoViewJS, cashX(true), sel, nodes[0]), &pos)
 		if err != nil {
 			return err
