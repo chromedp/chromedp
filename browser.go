@@ -225,13 +225,12 @@ func (b *Browser) run(ctx context.Context) {
 	// connection. The separate goroutine is needed since a websocket read
 	// is blocking, so it cannot be used in a select statement.
 	go func() {
+		// Signal to run and exit the browser cleanup goroutine.
+		defer close(b.LostConnection)
+
 		for {
 			msg := new(cdproto.Message)
 			if err := b.conn.Read(ctx, msg); err != nil {
-				// If the websocket failed, most likely Chrome was closed or
-				// crashed. Signal that so the entire browser handler can be
-				// stopped.
-				close(b.LostConnection)
 				return
 			}
 
