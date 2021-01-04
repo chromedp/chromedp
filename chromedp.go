@@ -148,16 +148,13 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 		defer cancel()
 		if id := c.Target.SessionID; id != "" {
 			action := target.DetachFromTarget().WithSessionID(id)
-			if err := action.Do(cdp.WithExecutor(ctx, c.Browser)); c.cancelErr == nil {
+			if err := action.Do(cdp.WithExecutor(ctx, c.Browser)); c.cancelErr == nil && err != nil {
 				c.cancelErr = err
 			}
 		}
 		if id := c.Target.TargetID; id != "" {
 			action := target.CloseTarget(id)
-			if ok, err := action.Do(cdp.WithExecutor(ctx, c.Browser)); c.cancelErr == nil {
-				if !ok && err == nil {
-					err = fmt.Errorf("could not close target %q", id)
-				}
+			if err := action.Do(cdp.WithExecutor(ctx, c.Browser)); c.cancelErr == nil && err != nil {
 				c.cancelErr = err
 			}
 		}
