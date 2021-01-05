@@ -155,7 +155,7 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 		if id := c.Target.TargetID; id != "" {
 			action := target.CloseTarget(id)
 			if err := action.Do(cdp.WithExecutor(ctx, c.Browser)); c.cancelErr == nil {
-				if err == nil {
+				if err != nil {
 					err = fmt.Errorf("could not close target %q", id)
 				}
 				c.cancelErr = err
