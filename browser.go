@@ -310,6 +310,11 @@ func (b *Browser) run(ctx context.Context) {
 	}
 }
 
+// Pid returning browser PID
+func (b *Browser) Pid() int {
+	return b.process.Pid
+}
+
 // BrowserOption is a browser option.
 type BrowserOption = func(*Browser)
 
