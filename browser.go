@@ -310,8 +310,8 @@ func (b *Browser) run(ctx context.Context) {
 	}
 }
 
-// Pid returns the browser process ID
-func (b *Browser) Pid() int {
+// PID returns the browser process ID
+func (b *Browser) PID() int {
 	return b.process.Pid
 }
 
