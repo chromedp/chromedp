@@ -209,9 +209,11 @@ func Cancel(ctx context.Context) error {
 	}
 	// If we allocated, wait for the browser to stop, up to any possible
 	// deadline set in this ctx.
+	ready := false
 	if c.allocated != nil {
 		select {
 		case <-c.allocated:
+			ready = true
 		case <-ctx.Done():
 		}
 	}
@@ -227,7 +229,7 @@ func Cancel(ctx context.Context) error {
 	// cancelErr being ready until the allocated channel is closed, as that
 	// is racy. If we didn't hit ctx.Done earlier, then c.allocated was
 	// already cancelled then, so this will be a no-op.
-	if c.allocated != nil {
+	if !ready && c.allocated != nil {
 		<-c.allocated
 	}
 	return c.cancelErr
