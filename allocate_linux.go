@@ -9,12 +9,10 @@ import (
 )
 
 func allocateCmdOptions(cmd *exec.Cmd) {
-	_, isLambda := os.LookupEnv("LAMBDA_TASK_ROOT")
-	if isLambda {
+	if _, ok := os.LookupEnv("LAMBDA_TASK_ROOT"); ok {
 		// do nothing on AWS Lambda
 		return
 	}
-
 	if cmd.SysProcAttr == nil {
 		cmd.SysProcAttr = new(syscall.SysProcAttr)
 	}
