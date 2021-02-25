@@ -129,6 +129,24 @@ const (
 	// IPhoneXRlandscape is the "iPhone XR landscape" device.
 	IPhoneXRlandscape
 
+	// IPhone11 is the "iPhone 11" device.
+	IPhone11
+
+	// IPhone11landscape is the "iPhone 11 landscape" device.
+	IPhone11landscape
+
+	// IPhone11Pro is the "iPhone 11 Pro" device.
+	IPhone11Pro
+
+	// IPhone11Prolandscape is the "iPhone 11 Pro landscape" device.
+	IPhone11Prolandscape
+
+	// IPhone11ProMax is the "iPhone 11 Pro Max" device.
+	IPhone11ProMax
+
+	// IPhone11ProMaxlandscape is the "iPhone 11 Pro Max landscape" device.
+	IPhone11ProMaxlandscape
+
 	// JioPhone2 is the "JioPhone 2" device.
 	JioPhone2
 
@@ -266,6 +284,12 @@ var devices = [...]Info{
 	{"iPhone X landscape", "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1", 812, 375, 3.000000, true, true, true},
 	{"iPhone XR", "Mozilla/5.0 (iPhone; CPU iPhone OS 12_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Mobile/15E148 Safari/604.1", 414, 896, 3.000000, false, true, true},
 	{"iPhone XR landscape", "Mozilla/5.0 (iPhone; CPU iPhone OS 12_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Mobile/15E148 Safari/604.1", 896, 414, 3.000000, true, true, true},
+	{"iPhone 11", "Mozilla/5.0 (iPhone; CPU iPhone OS 13_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1 Mobile/15E148 Safari/604.1", 414, 828, 2.000000, false, true, true},
+	{"iPhone 11 landscape", "Mozilla/5.0 (iPhone; CPU iPhone OS 13_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1 Mobile/15E148 Safari/604.1", 828, 414, 2.000000, true, true, true},
+	{"iPhone 11 Pro", "Mozilla/5.0 (iPhone; CPU iPhone OS 13_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1 Mobile/15E148 Safari/604.1", 375, 812, 3.000000, false, true, true},
+	{"iPhone 11 Pro landscape", "Mozilla/5.0 (iPhone; CPU iPhone OS 13_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1 Mobile/15E148 Safari/604.1", 812, 375, 3.000000, true, true, true},
+	{"iPhone 11 Pro Max", "Mozilla/5.0 (iPhone; CPU iPhone OS 13_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1 Mobile/15E148 Safari/604.1", 414, 896, 3.000000, false, true, true},
+	{"iPhone 11 Pro Max landscape", "Mozilla/5.0 (iPhone; CPU iPhone OS 13_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1 Mobile/15E148 Safari/604.1", 896, 414, 3.000000, true, true, true},
 	{"JioPhone 2", "Mozilla/5.0 (Mobile; LYF/F300B/LYF-F300B-001-01-15-130718-i;Android; rv:48.0) Gecko/48.0 Firefox/48.0 KAIOS/2.5", 240, 320, 1.000000, false, true, true},
 	{"JioPhone 2 landscape", "Mozilla/5.0 (Mobile; LYF/F300B/LYF-F300B-001-01-15-130718-i;Android; rv:48.0) Gecko/48.0 Firefox/48.0 KAIOS/2.5", 320, 240, 1.000000, true, true, true},
 	{"Kindle Fire HDX", "Mozilla/5.0 (Linux; U; en-us; KFAPWI Build/JDQ39) AppleWebKit/535.19 (KHTML, like Gecko) Silk/3.13 Safari/535.19 Silk-Accelerated=true", 800, 1280, 2.000000, false, true, true},

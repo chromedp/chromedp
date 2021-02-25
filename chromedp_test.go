@@ -258,16 +258,21 @@ func TestCancelError(t *testing.T) {
 		t.Fatalf("expected a nil error, got %v", err)
 	}
 
-	// Make "cancel" close the wrong target; error.
-	ctx3, cancel3 := NewContext(ctx1)
-	defer cancel3()
-	if err := Run(ctx3); err != nil {
-		t.Fatal(err)
-	}
-	FromContext(ctx3).Target.TargetID = "wrong"
-	if err := Cancel(ctx3); err == nil {
-		t.Fatalf("expected a non-nil error, got %v", err)
-	}
+	/*
+		// NOTE: the following test no longer is applicable, as a slight change
+		// to chromium's 89 API deprecated the boolean return value
+
+		// Make "cancel" close the wrong target; error.
+		ctx3, cancel3 := NewContext(ctx1)
+		defer cancel3()
+		if err := Run(ctx3); err != nil {
+			t.Fatal(err)
+		}
+		FromContext(ctx3).Target.TargetID = "wrong"
+		if err := Cancel(ctx3); err == nil {
+			t.Fatalf("expected a non-nil error, got %v", err)
+		}
+	*/
 }
 
 func TestPrematureCancel(t *testing.T) {
@@ -601,11 +606,7 @@ func TestDirectCloseTarget(t *testing.T) {
 	// Check that nothing is closed by running the action twice.
 	for i := 0; i < 2; i++ {
 		err := Run(ctx, ActionFunc(func(ctx context.Context) error {
-			_, err := target.CloseTarget(c.Target.TargetID).Do(ctx)
-			if err != nil {
-				return err
-			}
-			return nil
+			return target.CloseTarget(c.Target.TargetID).Do(ctx)
 		}))
 		got := fmt.Sprint(err)
 		if !strings.Contains(got, want) {

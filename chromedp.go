@@ -148,16 +148,13 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 		defer cancel()
 		if id := c.Target.SessionID; id != "" {
 			action := target.DetachFromTarget().WithSessionID(id)
-			if err := action.Do(cdp.WithExecutor(ctx, c.Browser)); c.cancelErr == nil {
+			if err := action.Do(cdp.WithExecutor(ctx, c.Browser)); c.cancelErr == nil && err != nil {
 				c.cancelErr = err
 			}
 		}
 		if id := c.Target.TargetID; id != "" {
 			action := target.CloseTarget(id)
-			if ok, err := action.Do(cdp.WithExecutor(ctx, c.Browser)); c.cancelErr == nil {
-				if !ok && err == nil {
-					err = fmt.Errorf("could not close target %q", id)
-				}
+			if err := action.Do(cdp.WithExecutor(ctx, c.Browser)); c.cancelErr == nil && err != nil {
 				c.cancelErr = err
 			}
 		}
@@ -212,9 +209,11 @@ func Cancel(ctx context.Context) error {
 	}
 	// If we allocated, wait for the browser to stop, up to any possible
 	// deadline set in this ctx.
+	ready := false
 	if c.allocated != nil {
 		select {
 		case <-c.allocated:
+			ready = true
 		case <-ctx.Done():
 		}
 	}
@@ -230,7 +229,7 @@ func Cancel(ctx context.Context) error {
 	// cancelErr being ready until the allocated channel is closed, as that
 	// is racy. If we didn't hit ctx.Done earlier, then c.allocated was
 	// already cancelled then, so this will be a no-op.
-	if c.allocated != nil {
+	if !ready && c.allocated != nil {
 		<-c.allocated
 	}
 	return c.cancelErr
