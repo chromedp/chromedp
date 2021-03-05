@@ -905,13 +905,6 @@ func TestRunResponse(t *testing.T) {
 			wantErr: "ERR_ABORTED",
 		},
 
-		// This case is similar to BadProtocol, but not quite the same.
-		{
-			name:    "UnimplementedProtocol",
-			url:     strings.ReplaceAll(ts.URL, "http://", "ftp://") + "/index",
-			wantErr: "ERR_UNKNOWN_URL_SCHEME",
-		},
-
 		// Check that loading a non-HTML document still works normally.
 		{
 			name:          "NonHTML",
