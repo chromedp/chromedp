@@ -32,4 +32,4 @@ jobs:
     - name: Build
       run: go test -c -vet=off
     - name: Test
-      run: docker run --rm --volume=$PWD:/chromedp --entrypoint=/chromedp/chromedp.test --workdir=/chromedp --env=PATH=/headless-shell chromedp/headless-shell:latest -test.v
+      run: docker run --rm --volume=$PWD:/chromedp --entrypoint=/chromedp/chromedp.test --workdir=/chromedp --env=PATH=/headless-shell --env=HEADLESS_SHELL=1 chromedp/headless-shell:latest -test.v

@@ -2,6 +2,7 @@ package chromedp
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"testing"
 
@@ -173,6 +174,10 @@ func TestMouseClickOffscreenNode(t *testing.T) {
 }
 
 func TestKeyEvent(t *testing.T) {
+	if os.Getenv("HEADLESS_SHELL") != "" {
+		t.Skip(`Skip in headless-shell due to "Check failed: IsSupportedClipboardBuffer(buffer)"`)
+	}
+
 	t.Parallel()
 
 	tests := []struct {
@@ -207,6 +212,8 @@ func TestKeyEvent(t *testing.T) {
 			if err := Run(ctx,
 				Focus(test.sel, test.by),
 				KeyEvent(kb.Home),
+				// "KeyEvent(kb.End, KeyModifiers(input.ModifierShift))" crash headless-shell with this error:
+				// [...:FATAL:headless_clipboard.cc(296)] Check failed: IsSupportedClipboardBuffer(buffer)
 				KeyEvent(kb.End, KeyModifiers(input.ModifierShift)),
 				KeyEvent(test.exp),
 			); err != nil {
@@ -226,6 +233,10 @@ func TestKeyEvent(t *testing.T) {
 }
 
 func TestKeyEventNode(t *testing.T) {
+	if os.Getenv("HEADLESS_SHELL") != "" {
+		t.Skip(`Skip in headless-shell due to "Check failed: IsSupportedClipboardBuffer(buffer)"`)
+	}
+
 	t.Parallel()
 
 	tests := []struct {
@@ -260,6 +271,8 @@ func TestKeyEventNode(t *testing.T) {
 			var value string
 			if err := Run(ctx,
 				KeyEventNode(nodes[0], kb.Home),
+				// "KeyEventNode(nodes[0], kb.End, KeyModifiers(input.ModifierShift))" crash headless-shell with this error:
+				// [...:FATAL:headless_clipboard.cc(296)] Check failed: IsSupportedClipboardBuffer(buffer)
 				KeyEventNode(nodes[0], kb.End, KeyModifiers(input.ModifierShift)),
 				KeyEventNode(nodes[0], test.exp),
 				Value(test.sel, &value, test.by),
