@@ -398,6 +398,8 @@ func ExampleEmulate() {
 	if err := ioutil.WriteFile("google-iphone7.png", buf, 0o644); err != nil {
 		panic(err)
 	}
+
+	// Output:
 }
 
 func ExamplePrintToPDF() {
@@ -422,6 +424,8 @@ func ExamplePrintToPDF() {
 	if err := ioutil.WriteFile("page.pdf", buf, 0o644); err != nil {
 		panic(err)
 	}
+
+	// Output:
 }
 
 func ExampleByJSPath() {
