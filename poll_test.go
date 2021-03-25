@@ -89,26 +89,42 @@ func TestPoll(t *testing.T) {
 			delay:  50 * time.Millisecond,
 		},
 		{
-			name:   "PollingMutation",
-			js:     "globalThis.__FOO === 1",
-			isFunc: false,
+			name: "PollingMutation",
+			js: `() => {
+				if (globalThis.__Mutation === 1){
+					return true;
+				} else {
+					globalThis.__Mutation = 1;
+					setTimeout(() => {
+						document.body.appendChild(document.createElement('div'))
+					}, 100);
+				}
+			}`,
+			isFunc: true,
 			opts:   []PollOption{WithPollingMutation(), WithPollingTimeout(200 * time.Millisecond)},
-			hash:   "#mutation",
 			delay:  50 * time.Millisecond,
 		},
 		{
 			name:   "TimeoutWithoutMutation",
-			js:     "globalThis.__FOO === 1",
+			js:     "globalThis.__Mutation === 1",
 			isFunc: false,
 			opts:   []PollOption{WithPollingMutation(), WithPollingTimeout(100 * time.Millisecond)},
 			err:    ErrPollingTimeout.Error(),
 		},
 		{
-			name:   "TimeoutBeforeMutation",
-			js:     "globalThis.__FOO === 1",
-			isFunc: false,
+			name: "TimeoutBeforeMutation",
+			js: `() => {
+				if (globalThis.__Mutation === 1){
+					return true;
+				} else {
+					globalThis.__Mutation = 1;
+					setTimeout(() => {
+						document.body.appendChild(document.createElement('div'))
+					}, 100);
+				}
+			}`,
+			isFunc: true,
 			opts:   []PollOption{WithPollingMutation(), WithPollingTimeout(50 * time.Millisecond)},
-			hash:   "#mutation",
 			err:    ErrPollingTimeout.Error(),
 		},
 		{

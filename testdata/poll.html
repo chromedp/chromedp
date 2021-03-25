@@ -13,12 +13,6 @@
             }
         }
         setTimeout(() => globalThis.__FOO = 1, timeout);
-
-        if (hash === "mutation") {
-            setTimeout(() => {
-                document.body.appendChild(document.createElement('div'))
-            }, 100);
-        }
     </script>
 </head>
 <body>
