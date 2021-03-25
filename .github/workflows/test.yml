@@ -4,9 +4,9 @@ jobs:
   test:
     strategy:
       matrix:
-        go-version: [1.15.x]
+        go-version: [1.16.x]
         # We want testing.T.Cleanup for parallel subtests.
-        # go-version: [1.13.x, 1.15.x]
+        # go-version: [1.13.x, 1.16.x]
         # TODO: Add macos-latest and windows-latest. The former doesn't come
         # with Chrome by default, and the latter needs lots of work in the tests.
         platform: [ubuntu-latest]
@@ -26,10 +26,8 @@ jobs:
     - name: Install Go
       uses: actions/setup-go@v2
       with:
-        go-version: 1.15.x
+        go-version: 1.16.x
     - name: Checkout code
       uses: actions/checkout@v2
-    - name: Build
-      run: go test -c -vet=off
     - name: Test
-      run: docker run --rm --volume=$PWD:/chromedp --entrypoint=/chromedp/chromedp.test --workdir=/chromedp --env=PATH=/headless-shell --env=HEADLESS_SHELL=1 chromedp/headless-shell:latest -test.v
+      run: ./contrib/docker-test.sh
