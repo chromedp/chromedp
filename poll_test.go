@@ -151,15 +151,19 @@ func TestPoll(t *testing.T) {
 				Navigate(testdataDir+"/poll.html"+test.hash),
 				action,
 			)
-			if test.err != "" {
+			if test.err == "" {
+				if err != nil {
+					t.Fatalf("got error: %v", err)
+				} else if !res {
+					t.Fatalf("got no error, but res is not true")
+				}
+
+			} else {
 				if err == nil {
 					t.Fatalf("expected err to be %q, got: %v", test.err, err)
 				} else if test.err != err.Error() {
 					t.Fatalf("want error to be %v, got: %v", test.err, err)
 				}
-			}
-			if test.err == "" && !res {
-				t.Fatalf("got no error, but res is not true")
 			}
 			if test.delay != 0 {
 				delay := time.Since(startTime)
