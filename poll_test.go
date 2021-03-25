@@ -2,11 +2,9 @@ package chromedp
 
 import (
 	"context"
-	"reflect"
 	"testing"
 	"time"
 
-	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/runtime"
 )
@@ -18,106 +16,106 @@ func TestPoll(t *testing.T) {
 	defer cancel()
 
 	tests := []struct {
-		name         string
-		js           string
-		isFunction   bool
-		options      []PollOption
-		hash         string
-		wantErr      error
-		wantMinDelay time.Duration
+		name   string
+		js     string
+		isFunc bool
+		opts   []PollOption
+		hash   string
+		err    string
+		delay  time.Duration
 	}{
 		{
-			name:       "ExpressionPredicate",
-			js:         "globalThis.__FOO === 1",
-			isFunction: false,
+			name:   "ExpressionPredicate",
+			js:     "globalThis.__FOO === 1",
+			isFunc: false,
 		},
 		{
-			name:       "LambdaCallPredicate",
-			js:         "(() => globalThis.__FOO === 1)()",
-			isFunction: false,
+			name:   "LambdaCallPredicate",
+			js:     "(() => globalThis.__FOO === 1)()",
+			isFunc: false,
 		},
 		{
-			name:       "MultilinePredicate",
-			js:         "\n(() => globalThis.__FOO === 1)()\n",
-			isFunction: false,
+			name:   "MultilinePredicate",
+			js:     "\n(() => globalThis.__FOO === 1)()\n",
+			isFunc: false,
 		},
 		{
-			name:       "FunctionPredicate",
-			js:         "function foo(){return globalThis.__FOO === 1;}",
-			isFunction: true,
+			name:   "FunctionPredicate",
+			js:     "function foo() { return globalThis.__FOO === 1; }",
+			isFunc: true,
 		},
 		{
-			name:       "LambdaAsFunction",
-			js:         "() => globalThis.__FOO === 1",
-			isFunction: true,
+			name:   "LambdaAsFunction",
+			js:     "() => globalThis.__FOO === 1",
+			isFunc: true,
 		},
 		{
-			name:       "Timeout",
-			js:         "false",
-			isFunction: false,
-			options:    []PollOption{WithPollingTimeout(10 * time.Millisecond)},
-			wantErr:    ErrPollingTimeout,
+			name:   "Timeout",
+			js:     "false",
+			isFunc: false,
+			opts:   []PollOption{WithPollingTimeout(10 * time.Millisecond)},
+			err:    ErrPollingTimeout.Error(),
 		},
 		{
 			name: "ResolvedRightBeforeExecutionContextDisposal",
-			js: `()=>{
+			js: `() => {
 				if (window.location.hash === '#reload'){
 					window.location.replace(window.location.href.substring(0, 0 - '#reload'.length));
 				}
 				return true;
 			}`,
-			isFunction: true,
-			hash:       "#reload",
+			isFunc: true,
+			hash:   "#reload",
 		},
 		{
 			name: "NotSurviveNavigation",
-			js: `()=>{
+			js: `() => {
 				if (window.location.hash === '#navigate'){
 					window.location.replace(window.location.href.substring(0, 0 - '#navigate'.length));
 				} else {
-					return globalThis.__FOO === 1;;
+					return globalThis.__FOO === 1;
 				}
 			}`,
-			isFunction: true,
-			hash:       "#navigate",
-			wantErr:    &cdproto.Error{Code: -32000, Message: "Execution context was destroyed."},
+			isFunc: true,
+			hash:   "#navigate",
+			err:    "Execution context was destroyed. (-32000)",
 		},
 		{
-			name:         "PollingInterval",
-			js:           "globalThis.__FOO === 1",
-			isFunction:   false,
-			options:      []PollOption{WithPollingInterval(100 * time.Millisecond)},
-			hash:         "#100",
-			wantMinDelay: 50 * time.Millisecond,
+			name:   "PollingInterval",
+			js:     "globalThis.__FOO === 1",
+			isFunc: false,
+			opts:   []PollOption{WithPollingInterval(100 * time.Millisecond)},
+			hash:   "#100",
+			delay:  50 * time.Millisecond,
 		},
 		{
-			name:         "PollingMutation",
-			js:           "globalThis.__FOO === 1",
-			isFunction:   false,
-			options:      []PollOption{WithPollingMutation(), WithPollingTimeout(200 * time.Millisecond)},
-			hash:         "#mutation",
-			wantMinDelay: 50 * time.Millisecond,
+			name:   "PollingMutation",
+			js:     "globalThis.__FOO === 1",
+			isFunc: false,
+			opts:   []PollOption{WithPollingMutation(), WithPollingTimeout(200 * time.Millisecond)},
+			hash:   "#mutation",
+			delay:  50 * time.Millisecond,
 		},
 		{
-			name:       "TimeoutWithoutMutation ",
-			js:         "globalThis.__FOO === 1",
-			isFunction: false,
-			options:    []PollOption{WithPollingMutation(), WithPollingTimeout(100 * time.Millisecond)},
-			wantErr:    ErrPollingTimeout,
+			name:   "TimeoutWithoutMutation",
+			js:     "globalThis.__FOO === 1",
+			isFunc: false,
+			opts:   []PollOption{WithPollingMutation(), WithPollingTimeout(100 * time.Millisecond)},
+			err:    ErrPollingTimeout.Error(),
 		},
 		{
-			name:       "TimeoutBeforeMutation ",
-			js:         "globalThis.__FOO === 1",
-			isFunction: false,
-			options:    []PollOption{WithPollingMutation(), WithPollingTimeout(50 * time.Millisecond)},
-			hash:       "#mutation",
-			wantErr:    ErrPollingTimeout,
+			name:   "TimeoutBeforeMutation",
+			js:     "globalThis.__FOO === 1",
+			isFunc: false,
+			opts:   []PollOption{WithPollingMutation(), WithPollingTimeout(50 * time.Millisecond)},
+			hash:   "#mutation",
+			err:    ErrPollingTimeout.Error(),
 		},
 		{
-			name:       "ExtraArgs",
-			js:         "(a1, a2) => a1 === 1 && a2 === 'str'",
-			isFunction: true,
-			options:    []PollOption{WithPollingArgs(1, "str")},
+			name:   "ExtraArgs",
+			js:     "(a1, a2) => a1 === 1 && a2 === 'str'",
+			isFunc: true,
+			opts:   []PollOption{WithPollingArgs(1, "str")},
 		},
 	}
 
@@ -127,27 +125,30 @@ func TestPoll(t *testing.T) {
 			defer tabCancel()
 			var action PollAction
 			var res bool
-			if test.isFunction {
-				action = PollFunction(test.js, &res, test.options...)
+			if test.isFunc {
+				action = PollFunction(test.js, &res, test.opts...)
 			} else {
-				action = Poll(test.js, &res, test.options...)
+				action = Poll(test.js, &res, test.opts...)
 			}
-
 			startTime := time.Now()
 			err := Run(tabCtx,
 				Navigate(testdataDir+"/poll.html"+test.hash),
 				action,
 			)
-			if !reflect.DeepEqual(test.wantErr, err) {
-				t.Fatalf("want error to be %q, got %q", test.wantErr, err)
+			if test.err != "" {
+				if err == nil {
+					t.Fatalf("expected err to be %q, got: %v", test.err, err)
+				} else if test.err != err.Error() {
+					t.Fatalf("want error to be %v, got: %v", test.err, err)
+				}
 			}
-			if test.wantErr == nil && !res {
-				t.Fatal("it should resolve with truthy result")
+			if test.err == "" && !res {
+				t.Fatalf("got no error, but res is not true")
 			}
-			if test.wantMinDelay != 0 {
+			if test.delay != 0 {
 				delay := time.Since(startTime)
-				if delay < test.wantMinDelay {
-					t.Fatalf("want min delay to be %v, got %v", test.wantMinDelay, delay)
+				if delay < test.delay {
+					t.Fatalf("expected delay to be greater than %v, got: %v", test.delay, delay)
 				}
 			}
 		})
