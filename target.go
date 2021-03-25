@@ -63,6 +63,31 @@ func (t *Target) enclosingFrame(node *cdp.Node) cdp.FrameID {
 	return node.FrameID
 }
 
+// ensureFrame ensures the top frame of this target is loaded and returns the top frame,
+// the root node and the ExecutionContextID of this top frame; otherwise, it will return
+// false as its last return value.
+func (t *Target) ensureFrame() (*cdp.Frame, *cdp.Node, runtime.ExecutionContextID, bool) {
+	t.frameMu.RLock()
+	frame := t.frames[t.cur]
+	execCtx := t.execContexts[t.cur]
+	t.frameMu.RUnlock()
+
+	// the frame hasn't loaded yet.
+	if frame == nil || execCtx == 0 {
+		return nil, nil, 0, false
+	}
+
+	frame.RLock()
+	root := frame.Root
+	frame.RUnlock()
+
+	if root == nil {
+		// not root node yet?
+		return nil, nil, 0, false
+	}
+	return frame, root, execCtx, true
+}
+
 func (t *Target) run(ctx context.Context) {
 	type eventValue struct {
 		method cdproto.MethodType

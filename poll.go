@@ -35,15 +35,29 @@ func (p *pollTask) Do(ctx context.Context) error {
 	if t == nil {
 		return ErrInvalidTarget
 	}
-	var frameID cdp.FrameID
-	if p.frame == nil {
-		frameID = t.cur
-	} else {
-		frameID = t.enclosingFrame(p.frame)
+	var (
+		root    *cdp.Node
+		execCtx runtime.ExecutionContextID
+		ok      bool
+	)
+	for !ok {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(5 * time.Millisecond):
+		}
+		_, root, execCtx, ok = t.ensureFrame()
 	}
-	t.frameMu.RLock()
-	execCtx := t.execContexts[frameID]
-	t.frameMu.RUnlock()
+
+	fromNode := p.frame
+	if fromNode == nil {
+		fromNode = root
+	} else {
+		t.frameMu.RLock()
+		frameID := t.enclosingFrame(fromNode)
+		execCtx = t.execContexts[frameID]
+		t.frameMu.RUnlock()
+	}
 
 	ea := &errAppender{args: make([]*runtime.CallArgument, 0, len(p.args)+3)}
 	ea.append(p.predicate)
