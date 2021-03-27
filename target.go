@@ -342,6 +342,10 @@ func (t *Target) pageEvent(ev interface{}) {
 		return
 	case *page.EventDocumentOpened:
 		return
+	case *page.EventScreencastVisibilityChanged:
+		return
+	case *page.EventScreencastFrame:
+		return
 
 	default:
 		t.errf("unhandled page event %T", ev)
