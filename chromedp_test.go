@@ -586,8 +586,8 @@ func TestLargeOutboundMessages(t *testing.T) {
 	ctx, cancel := testAllocate(t, "")
 	defer cancel()
 
-	// ~50KiB of JS should fit just fine in our current buffer of 1MiB.
-	expr := fmt.Sprintf("//%s\n", strings.Repeat("x", 50<<10))
+	// ~5MiB of JS to test the grow feature of github.com/gobwas/ws.
+	expr := fmt.Sprintf("//%s\n", strings.Repeat("x", 5<<20))
 	res := new([]byte)
 	if err := Run(ctx, Evaluate(expr, res)); err != nil {
 		t.Fatal(err)
