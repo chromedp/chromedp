@@ -318,33 +318,24 @@ func (t *Target) pageEvent(ev interface{}) {
 		id, op = e.FrameID, frameStoppedLoading
 
 		// ignored events
-	case *page.EventFrameRequestedNavigation:
-		return
-	case *page.EventDomContentEventFired:
-		return
-	case *page.EventLoadEventFired:
-		return
-	case *page.EventFrameResized:
-		return
-	case *page.EventLifecycleEvent:
-		return
-	case *page.EventNavigatedWithinDocument:
-		return
-	case *page.EventJavascriptDialogOpening:
-		return
-	case *page.EventJavascriptDialogClosed:
-		return
-	case *page.EventWindowOpen:
-		return
-	case *page.EventDownloadWillBegin:
-		return
-	case *page.EventDownloadProgress:
-		return
-	case *page.EventDocumentOpened:
-		return
-	case *page.EventScreencastVisibilityChanged:
-		return
-	case *page.EventScreencastFrame:
+	case *page.EventCompilationCacheProduced,
+		*page.EventDocumentOpened,
+		*page.EventDomContentEventFired,
+		*page.EventDownloadProgress,
+		*page.EventDownloadWillBegin,
+		*page.EventFileChooserOpened,
+		*page.EventFrameRequestedNavigation,
+		*page.EventFrameResized,
+		*page.EventInterstitialHidden,
+		*page.EventInterstitialShown,
+		*page.EventJavascriptDialogClosed,
+		*page.EventJavascriptDialogOpening,
+		*page.EventLifecycleEvent,
+		*page.EventLoadEventFired,
+		*page.EventNavigatedWithinDocument,
+		*page.EventScreencastFrame,
+		*page.EventScreencastVisibilityChanged,
+		*page.EventWindowOpen:
 		return
 
 	default:
