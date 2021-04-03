@@ -630,9 +630,9 @@ func Sleep(d time.Duration) Action {
 		// Don't use time.After, to avoid a temporary goroutine leak if
 		// ctx is cancelled before the timer fires.
 		t := time.NewTimer(d)
+		defer t.Stop()
 		select {
 		case <-ctx.Done():
-			t.Stop()
 			return ctx.Err()
 		case <-t.C:
 		}
