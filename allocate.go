@@ -65,7 +65,7 @@ var DefaultExecAllocatorOptions = [...]ExecAllocatorOption{
 	Flag("disable-default-apps", true),
 	Flag("disable-dev-shm-usage", true),
 	Flag("disable-extensions", true),
-	Flag("disable-features", "site-per-process,TranslateUI,BlinkGenPropertyTrees"),
+	Flag("disable-features", "site-per-process,Translate,BlinkGenPropertyTrees"),
 	Flag("disable-hang-monitor", true),
 	Flag("disable-ipc-flooding-protection", true),
 	Flag("disable-popup-blocking", true),
