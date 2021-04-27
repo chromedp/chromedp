@@ -47,10 +47,10 @@ const (
 	// submit function, returning true or false if the call was successful.
 	submitJS = `(function(a) {
 		if (a.nodeName === 'FORM') {
-			a.submit();
+			HTMLFormElement.prototype.submit.call(a);
 			return true;
 		} else if (a.form !== null) {
-			a.form.submit();
+			HTMLFormElement.prototype.submit.call(a.form);
 			return true;
 		}
 		return false;
@@ -60,10 +60,10 @@ const (
 	// reset function, returning true or false if the call was successful.
 	resetJS = `(function(a) {
 		if (a.nodeName === 'FORM') {
-			a.reset();
+			HTMLFormElement.prototype.reset.call(a);
 			return true;
 		} else if (a.form !== null) {
-			a.form.reset();
+			HTMLFormElement.prototype.reset.call(a.form);
 			return true;
 		}
 		return false;
