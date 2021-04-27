@@ -1,7 +1,10 @@
-# About chromedp [![Go Reference][goref-chromedp-status]][goref-chromedp]
+# About chromedp
 
-Package chromedp is a faster, simpler way to drive browsers supporting the
+Package `chromedp` is a faster, simpler way to drive browsers supporting the
 [Chrome DevTools Protocol][devtools-protocol] in Go without external dependencies.
+
+[![Unit Tests][chromedp-ci-status]][chromedp-ci]
+[![Go Reference][goref-chromedp-status]][goref-chromedp]
 
 ## Installing
 
@@ -73,6 +76,8 @@ to find out of the box.
 * [`github.com/chromedp/pdlgen`][chromedp-pdlgen] - tool used to generate `cdproto`
 * [`github.com/chromedp/chromedp-proxy`][chromedp-proxy] - a simple CDP proxy for logging CDP clients and browsers
 
+[chromedp-ci]: https://github.com/chromedp/chromedp/actions/workflows/test.yml (Test CI)
+[chromedp-ci-status]: https://github.com/chromedp/chromedp/actions/workflows/test.yml/badge.svg (Test CI)
 [chromedp-examples]: https://github.com/chromedp/examples
 [chromedp-pdlgen]: https://github.com/chromedp/pdlgen
 [chromedp-proxy]: https://github.com/chromedp/chromedp-proxy

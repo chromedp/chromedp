@@ -7,7 +7,7 @@ pushd $SRC &> /dev/null
 set -e
 
 (set -x;
-  go test -c
+  CGO_ENABLED=0 go test -c
 )
 
 (set -x;
