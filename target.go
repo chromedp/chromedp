@@ -321,8 +321,6 @@ func (t *Target) pageEvent(ev interface{}) {
 	case *page.EventCompilationCacheProduced,
 		*page.EventDocumentOpened,
 		*page.EventDomContentEventFired,
-		*page.EventDownloadProgress,
-		*page.EventDownloadWillBegin,
 		*page.EventFileChooserOpened,
 		*page.EventFrameRequestedNavigation,
 		*page.EventFrameResized,
