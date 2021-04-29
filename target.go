@@ -63,6 +63,31 @@ func (t *Target) enclosingFrame(node *cdp.Node) cdp.FrameID {
 	return node.FrameID
 }
 
+// ensureFrame ensures the top frame of this target is loaded and returns the top frame,
+// the root node and the ExecutionContextID of this top frame; otherwise, it will return
+// false as its last return value.
+func (t *Target) ensureFrame() (*cdp.Frame, *cdp.Node, runtime.ExecutionContextID, bool) {
+	t.frameMu.RLock()
+	frame := t.frames[t.cur]
+	execCtx := t.execContexts[t.cur]
+	t.frameMu.RUnlock()
+
+	// the frame hasn't loaded yet.
+	if frame == nil || execCtx == 0 {
+		return nil, nil, 0, false
+	}
+
+	frame.RLock()
+	root := frame.Root
+	frame.RUnlock()
+
+	if root == nil {
+		// not root node yet?
+		return nil, nil, 0, false
+	}
+	return frame, root, execCtx, true
+}
+
 func (t *Target) run(ctx context.Context) {
 	type eventValue struct {
 		method cdproto.MethodType
@@ -293,27 +318,22 @@ func (t *Target) pageEvent(ev interface{}) {
 		id, op = e.FrameID, frameStoppedLoading
 
 		// ignored events
-	case *page.EventFrameRequestedNavigation:
-		return
-	case *page.EventDomContentEventFired:
-		return
-	case *page.EventLoadEventFired:
-		return
-	case *page.EventFrameResized:
-		return
-	case *page.EventLifecycleEvent:
-		return
-	case *page.EventNavigatedWithinDocument:
-		return
-	case *page.EventJavascriptDialogOpening:
-		return
-	case *page.EventJavascriptDialogClosed:
-		return
-	case *page.EventWindowOpen:
-		return
-	case *page.EventDownloadWillBegin:
-		return
-	case *page.EventDownloadProgress:
+	case *page.EventCompilationCacheProduced,
+		*page.EventDocumentOpened,
+		*page.EventDomContentEventFired,
+		*page.EventFileChooserOpened,
+		*page.EventFrameRequestedNavigation,
+		*page.EventFrameResized,
+		*page.EventInterstitialHidden,
+		*page.EventInterstitialShown,
+		*page.EventJavascriptDialogClosed,
+		*page.EventJavascriptDialogOpening,
+		*page.EventLifecycleEvent,
+		*page.EventLoadEventFired,
+		*page.EventNavigatedWithinDocument,
+		*page.EventScreencastFrame,
+		*page.EventScreencastVisibilityChanged,
+		*page.EventWindowOpen:
 		return
 
 	default:

@@ -1,0 +1,20 @@
+<!doctype html>
+<html>
+<head>
+    <title>chromedp poll test page</title>
+    <script>
+        let timeout = 10;
+        let hash = window.location.hash;
+        if (hash !== "") {
+            hash = hash.substr(1);
+            num = parseInt(hash);
+            if (!isNaN(num)) {
+                timeout = num;
+            }
+        }
+        setTimeout(() => globalThis.__FOO = 1, timeout);
+    </script>
+</head>
+<body>
+</body>
+</html>

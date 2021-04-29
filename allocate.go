@@ -65,7 +65,7 @@ var DefaultExecAllocatorOptions = [...]ExecAllocatorOption{
 	Flag("disable-default-apps", true),
 	Flag("disable-dev-shm-usage", true),
 	Flag("disable-extensions", true),
-	Flag("disable-features", "site-per-process,TranslateUI,BlinkGenPropertyTrees"),
+	Flag("disable-features", "site-per-process,Translate,BlinkGenPropertyTrees"),
 	Flag("disable-hang-monitor", true),
 	Flag("disable-ipc-flooding-protection", true),
 	Flag("disable-popup-blocking", true),
@@ -215,7 +215,7 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 
 	// Chrome will sometimes fail to print the websocket, or run for a long
 	// time, without properly exiting. To avoid blocking forever in those
-	// cases, give up after ten seconds.
+	// cases, give up after twenty seconds.
 	const wsURLReadTimeout = 20 * time.Second
 
 	var wsURL string

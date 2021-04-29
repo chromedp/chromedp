@@ -120,7 +120,7 @@ func walk(m map[cdp.NodeID]*cdp.Node, n *cdp.Node) {
 		walk(m, c)
 	}
 
-	for _, c := range []*cdp.Node{n.ContentDocument, n.TemplateContent, n.ImportedDocument} {
+	for _, c := range []*cdp.Node{n.ContentDocument, n.TemplateContent} {
 		if c == nil {
 			continue
 		}

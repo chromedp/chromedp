@@ -1,7 +1,11 @@
 package chromedp
 
 import (
+	"context"
+	"math"
+
 	"github.com/chromedp/cdproto/emulation"
+	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp/device"
 )
 
@@ -120,4 +124,54 @@ func Emulate(device Device) EmulateAction {
 // started with.
 func EmulateReset() EmulateAction {
 	return Emulate(device.Reset)
+}
+
+// FullScreenshot takes a full screenshot with the specified image quality of
+// the entire browser viewport. Calls emulation.SetDeviceMetricsOverride (see
+// note below).
+//
+// Implementation liberally sourced from puppeteer.
+//
+// Note: after calling this action, reset the browser's viewport using
+// ResetViewport, EmulateReset, or page.SetDeviceMetricsOverride.
+func FullScreenshot(res *[]byte, quality int) EmulateAction {
+	if res == nil {
+		panic("res cannot be nil")
+	}
+	return ActionFunc(func(ctx context.Context) error {
+		// get layout metrics
+		_, _, contentSize, _, _, cssContentSize, err := page.GetLayoutMetrics().Do(ctx)
+		if err != nil {
+			return err
+		}
+		// protocol v90 changed the return parameter name (contentSize -> cssContentSize)
+		if cssContentSize != nil {
+			contentSize = cssContentSize
+		}
+		width, height := int64(math.Ceil(contentSize.Width)), int64(math.Ceil(contentSize.Height))
+		// force viewport emulation
+		err = emulation.SetDeviceMetricsOverride(width, height, 1, false).
+			WithScreenOrientation(&emulation.ScreenOrientation{
+				Type:  emulation.OrientationTypePortraitPrimary,
+				Angle: 0,
+			}).
+			Do(ctx)
+		if err != nil {
+			return err
+		}
+		// capture screenshot
+		*res, err = page.CaptureScreenshot().
+			WithQuality(int64(quality)).
+			WithClip(&page.Viewport{
+				X:      contentSize.X,
+				Y:      contentSize.Y,
+				Width:  contentSize.Width,
+				Height: contentSize.Height,
+				Scale:  1,
+			}).Do(ctx)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 }

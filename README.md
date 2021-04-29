@@ -1,27 +1,32 @@
-# About chromedp [![GoDoc][1]][2]
+# About chromedp
 
-Package chromedp is a faster, simpler way to drive browsers supporting the
-[Chrome DevTools Protocol][3] in Go without external dependencies (like
-Selenium or PhantomJS).
+Package `chromedp` is a faster, simpler way to drive browsers supporting the
+[Chrome DevTools Protocol][devtools-protocol] in Go without external dependencies.
+
+[![Unit Tests][chromedp-ci-status]][chromedp-ci]
+[![Go Reference][goref-chromedp-status]][goref-chromedp]
 
 ## Installing
 
 Install in the usual Go way:
 
-	go get -u github.com/chromedp/chromedp
+```sh
+$ go get -u github.com/chromedp/chromedp
+```
 
 ## Examples
 
-Refer to the [GoDoc page][5] for the documentation and examples. Additionally,
-the [examples][4] repository contains more complex examples.
+Refer to the [Go reference][goref-chromedp] for the documentation and examples.
+Additionally, the [examples][chromedp-examples] repository contains more
+examples on complex actions, and other common high-level tasks such as taking
+full page screenshots.
 
 ## Frequently Asked Questions
 
 > I can't see any Chrome browser window
 
 By default, Chrome is run in headless mode. See `DefaultExecAllocatorOptions`, and
-[an example](https://godoc.org/github.com/chromedp/chromedp#example-ExecAllocator)
-to override the default options.
+[an example][goref-chromedp-exec-allocator] to override the default options.
 
 > I'm seeing "context canceled" errors
 
@@ -38,7 +43,7 @@ instance, manually start Chrome and connect using `RemoteAllocator`.
 > Executing an action without `Run` results in "invalid context"
 
 By default, a `chromedp` context does not have an executor, however one can be
-specified manually if necessary; see [issue #326](https://github.com/chromedp/chromedp/issues/326)
+specified manually if necessary; see [issue #326][github-326]
 for an example.
 
 > I can't use an `Action` with `Run` because it returns many values
@@ -46,6 +51,8 @@ for an example.
 Wrap it with an `ActionFunc`:
 
 ```go
+ctx, cancel := chromedp.NewContext()
+defer cancel()
 chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
 	_, err := domain.SomeAction().Do(ctx)
 	return err
@@ -55,26 +62,30 @@ chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
 > I want to use chromedp on a headless environment
 
 The simplest way is to run the Go program that uses chromedp inside the
-[chromedp/headless-shell][6] image. That image contains `headless-shell`, a
-smaller headless build of Chrome, which `chromedp` is able to find out of the
-box.
+[chromedp/headless-shell][docker-headless-shell] image. That image contains
+`headless-shell`, a smaller headless build of Chrome, which `chromedp` is able
+to find out of the box.
 
 ## Resources
 
-* [chromedp: A New Way to Drive the Web][7] - GopherCon SG 2017 talk
-* [Chrome DevTools Protocol][3] - Chrome DevTools Protocol Domain documentation
-* [chromedp examples][4] - various `chromedp` examples
-* [`github.com/chromedp/cdproto`][8] - GoDoc listing for the CDP domains used by `chromedp`
-* [`github.com/chromedp/cdproto-gen`][9] - tool used to generate `cdproto`
-* [`github.com/chromedp/chromedp-proxy`][10] - a simple CDP proxy for logging CDP clients and browsers
+* [`headless-shell`][docker-headless-shell] - A build of `headless-shell` that is used for testing `chromedp`
+* [chromedp: A New Way to Drive the Web][gophercon-2017-presentation] - GopherCon SG 2017 talk
+* [Chrome DevTools Protocol][devtools-protocol] - Chrome DevTools Protocol reference
+* [chromedp examples][chromedp-examples] - More complicated examples for `chromedp`
+* [`github.com/chromedp/cdproto`][goref-cdproto] - Go reference for the generated Chrome DevTools Protocol API
+* [`github.com/chromedp/pdlgen`][chromedp-pdlgen] - tool used to generate `cdproto`
+* [`github.com/chromedp/chromedp-proxy`][chromedp-proxy] - a simple CDP proxy for logging CDP clients and browsers
 
-[1]: https://godoc.org/github.com/chromedp/chromedp?status.svg
-[2]: https://godoc.org/github.com/chromedp/chromedp
-[3]: https://chromedevtools.github.io/devtools-protocol/
-[4]: https://github.com/chromedp/examples
-[5]: https://godoc.org/github.com/chromedp/chromedp
-[6]: https://hub.docker.com/r/chromedp/headless-shell/
-[7]: https://www.youtube.com/watch?v=_7pWCg94sKw
-[8]: https://godoc.org/github.com/chromedp/cdproto
-[9]: https://github.com/chromedp/cdproto-gen
-[10]: https://github.com/chromedp/chromedp-proxy
+[chromedp-ci]: https://github.com/chromedp/chromedp/actions/workflows/test.yml (Test CI)
+[chromedp-ci-status]: https://github.com/chromedp/chromedp/actions/workflows/test.yml/badge.svg (Test CI)
+[chromedp-examples]: https://github.com/chromedp/examples
+[chromedp-pdlgen]: https://github.com/chromedp/pdlgen
+[chromedp-proxy]: https://github.com/chromedp/chromedp-proxy
+[devtools-protocol]: https://chromedevtools.github.io/devtools-protocol/
+[docker-headless-shell]: https://hub.docker.com/r/chromedp/headless-shell/
+[github-326]: https://github.com/chromedp/chromedp/issues/326
+[gophercon-2017-presentation]: https://www.youtube.com/watch?v=_7pWCg94sKw
+[goref-cdproto]: https://pkg.go.dev/github.com/chromedp/cdproto
+[goref-chromedp-exec-allocator]: https://pkg.go.dev/github.com/chromedp/chromedp#example-ExecAllocator
+[goref-chromedp]: https://pkg.go.dev/github.com/chromedp/chromedp
+[goref-chromedp-status]: https://pkg.go.dev/badge/github.com/chromedp/chromedp.svg
