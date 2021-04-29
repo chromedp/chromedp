@@ -934,7 +934,7 @@ func JavascriptAttribute(sel interface{}, name string, res interface{}, opts ...
 		if err := evalInCtx(ctx, execCtx,
 			snippet(attributeJS, cashX(true), sel, nodes[0], name), res,
 		); err != nil {
-			return fmt.Errorf("could not retrieve attribute %q: %v", name, err)
+			return fmt.Errorf("could not retrieve attribute %q: %w", name, err)
 		}
 		return nil
 	}, opts...)
