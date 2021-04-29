@@ -310,9 +310,13 @@ func (b *Browser) run(ctx context.Context) {
 	}
 }
 
-// PID returns the browser process ID
-func (b *Browser) PID() int {
-	return b.process.Pid
+// Process returns the Chrome process object
+// Example:
+//     if process := chromedp.FromContext(ctx).Browser.Process(); process != nil {
+//         fmt.Printf("Chrome PID: %v", process.Pid)
+//     }
+func (b *Browser) Process() *os.Process {
+	return b.process
 }
 
 // BrowserOption is a browser option.
