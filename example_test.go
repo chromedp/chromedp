@@ -575,7 +575,7 @@ func ExampleFullScreenshot() {
 	var buf []byte
 	if err := chromedp.Run(ctx,
 		chromedp.Navigate(`https://google.com`),
-		chromedp.FullScreenshot(90, &buf),
+		chromedp.FullScreenshot(&buf, 90),
 	); err != nil {
 		log.Fatal(err)
 	}
