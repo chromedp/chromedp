@@ -120,6 +120,7 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 }
 
 // Process returns the process object of the browser.
+//
 // It could be nil when the browser is allocated with RemoteAllocator.
 // It can be used to control the memory consumed by the browser process.
 //
