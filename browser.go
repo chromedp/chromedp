@@ -119,6 +119,18 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 	return b, nil
 }
 
+// Process returns the process object of the browser.
+// It could be nil when the browser is allocated with RemoteAllocator.
+// It can be used to control the memory consumed by the browser process.
+//
+// Example:
+//     if process := chromedp.FromContext(ctx).Browser.Process(); process != nil {
+//         fmt.Printf("Browser PID: %v", process.Pid)
+//     }
+func (b *Browser) Process() *os.Process {
+	return b.process
+}
+
 func (b *Browser) newExecutorForTarget(ctx context.Context, targetID target.ID, sessionID target.SessionID) (*Target, error) {
 	if targetID == "" {
 		return nil, errors.New("empty target ID")
@@ -308,15 +320,6 @@ func (b *Browser) run(ctx context.Context) {
 			return // to avoid "write: broken pipe" errors
 		}
 	}
-}
-
-// Process returns the Chrome process object
-// Example:
-//     if process := chromedp.FromContext(ctx).Browser.Process(); process != nil {
-//         fmt.Printf("Chrome PID: %v", process.Pid)
-//     }
-func (b *Browser) Process() *os.Process {
-	return b.process
 }
 
 // BrowserOption is a browser option.
