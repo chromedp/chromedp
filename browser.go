@@ -122,7 +122,8 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 // Process returns the process object of the browser.
 //
 // It could be nil when the browser is allocated with RemoteAllocator.
-// It can be used to control the memory consumed by the browser process.
+// It could be useful for a monitoring system to collect process metrics of the browser process.
+// (see https://pkg.go.dev/github.com/prometheus/client_golang/prometheus#NewProcessCollector for an example)
 //
 // Example:
 //     if process := chromedp.FromContext(ctx).Browser.Process(); process != nil {
