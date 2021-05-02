@@ -425,6 +425,13 @@ func ProxyServer(proxy string) ExecAllocatorOption {
 	return Flag("proxy-server", proxy)
 }
 
+// IgnoreCertErrors is the command line option to ignore certificate-related
+// errors. This options is useful when you need to access an HTTPS website
+// through a proxy.
+func IgnoreCertErrors(a *ExecAllocator) {
+	Flag("ignore-certificate-errors", true)(a)
+}
+
 // WindowSize is the command line option to set the initial window size.
 func WindowSize(width, height int) ExecAllocatorOption {
 	return Flag("window-size", fmt.Sprintf("%d,%d", width, height))
