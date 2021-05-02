@@ -404,6 +404,12 @@ func UserAgent(userAgent string) ExecAllocatorOption {
 	return Flag("user-agent", userAgent)
 }
 
+// IgnoreCert is the command line option to ignore errors with the SSL
+// certificate
+func IgnoreCert(a *ExecAllocator) {
+	Flag("ignore-certificate-errors", true)(a)
+}
+
 // NoSandbox is the Chrome comamnd line option to disable the sandbox.
 func NoSandbox(a *ExecAllocator) {
 	Flag("no-sandbox", true)(a)
