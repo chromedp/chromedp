@@ -404,9 +404,9 @@ func UserAgent(userAgent string) ExecAllocatorOption {
 	return Flag("user-agent", userAgent)
 }
 
-// IgnoreCert is the command line option to ignore errors with the SSL
-// certificate
-func IgnoreCert(a *ExecAllocator) {
+// IgnoreCertErrors is the command line option to ignore errors with the
+// SSL certificate
+func IgnoreCertErrors(a *ExecAllocator) {
 	Flag("ignore-certificate-errors", true)(a)
 }
 
