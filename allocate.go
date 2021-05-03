@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"sync"
 	"time"
 )
@@ -325,33 +326,44 @@ func ExecPath(path string) ExecAllocatorOption {
 }
 
 // findExecPath tries to find the Chrome browser somewhere in the current
-// system. It performs a rather agressive search, which is the same in all
-// systems. That may make it a bit slow, but it will only be run when creating a
-// new ExecAllocator.
+// system. Different searches are performed depending on OS runtime.
+// It could perform a rather aggressive search. That may make it a bit slow,
+// but it will only be run when creating a new ExecAllocator.
 func findExecPath() string {
-	for _, path := range [...]string{
-		// Unix-like
-		"headless_shell",
-		"headless-shell",
-		"chromium",
-		"chromium-browser",
-		"google-chrome",
-		"google-chrome-stable",
-		"google-chrome-beta",
-		"google-chrome-unstable",
-		"/usr/bin/google-chrome",
+	var path []string
+	switch runtime.GOOS {
+	case "darwin":
+		path = []string{
+			// Mac
+			"/Applications/Chromium.app/Contents/MacOS/Chromium",
+			"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+		}
+	case "windows":
+		path = []string{
+			// Windows
+			"chrome",
+			"chrome.exe", // in case PATHEXT is misconfigured
+			`C:\Program Files (x86)\Google\Chrome\Application\chrome.exe`,
+			`C:\Program Files\Google\Chrome\Application\chrome.exe`,
+			filepath.Join(os.Getenv("USERPROFILE"), `AppData\Local\Google\Chrome\Application\chrome.exe`),
+		}
+	default:
+		path = []string{
+			// Unix-like
+			"headless_shell",
+			"headless-shell",
+			"chromium",
+			"chromium-browser",
+			"google-chrome",
+			"google-chrome-stable",
+			"google-chrome-beta",
+			"google-chrome-unstable",
+			"/usr/bin/google-chrome",
+		}
+	}
 
-		// Windows
-		"chrome",
-		"chrome.exe", // in case PATHEXT is misconfigured
-		`C:\Program Files (x86)\Google\Chrome\Application\chrome.exe`,
-		`C:\Program Files\Google\Chrome\Application\chrome.exe`,
-		filepath.Join(os.Getenv("USERPROFILE"), `AppData\Local\Google\Chrome\Application\chrome.exe`),
-
-		// Mac
-		"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-	} {
-		found, err := exec.LookPath(path)
+	for _, p := range path {
+		found, err := exec.LookPath(p)
 		if err == nil {
 			return found
 		}
