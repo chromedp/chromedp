@@ -326,20 +326,20 @@ func ExecPath(path string) ExecAllocatorOption {
 }
 
 // findExecPath tries to find the Chrome browser somewhere in the current
-// system. Different searches are performed depending on OS runtime.
+// system. It finds in different locations on different OS systems.
 // It could perform a rather aggressive search. That may make it a bit slow,
 // but it will only be run when creating a new ExecAllocator.
 func findExecPath() string {
-	var path []string
+	var locations []string
 	switch runtime.GOOS {
 	case "darwin":
-		path = []string{
+		locations = []string{
 			// Mac
 			"/Applications/Chromium.app/Contents/MacOS/Chromium",
 			"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
 		}
 	case "windows":
-		path = []string{
+		locations = []string{
 			// Windows
 			"chrome",
 			"chrome.exe", // in case PATHEXT is misconfigured
@@ -348,7 +348,7 @@ func findExecPath() string {
 			filepath.Join(os.Getenv("USERPROFILE"), `AppData\Local\Google\Chrome\Application\chrome.exe`),
 		}
 	default:
-		path = []string{
+		locations = []string{
 			// Unix-like
 			"headless_shell",
 			"headless-shell",
@@ -362,8 +362,8 @@ func findExecPath() string {
 		}
 	}
 
-	for _, p := range path {
-		found, err := exec.LookPath(p)
+	for _, path := range locations {
+		found, err := exec.LookPath(path)
 		if err == nil {
 			return found
 		}
