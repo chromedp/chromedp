@@ -12,7 +12,7 @@ import (
 // runtime.Evaluate.
 type EvaluateAction Action
 
-// Evaluate is an action to evaluate the Javascript expression, unmarshalling
+// Evaluate is an action to evaluate the Javascript expression, unmarshaling
 // the result of the script evaluation to res.
 //
 // When res is a type other than *[]byte, or **runtime.RemoteObject,
