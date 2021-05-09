@@ -348,3 +348,31 @@ func TestWithBrowserOptionAlreadyAllocated(t *testing.T) {
 		WithLogf(func(format string, args ...interface{}) {}),
 	)
 }
+
+func TestModifyCmdFunc(t *testing.T) {
+	t.Parallel()
+
+	tz := "Atlantic/Reykjavik"
+	allocCtx, cancel := NewExecAllocator(context.Background(),
+		append([]ExecAllocatorOption{
+			ModifyCmdFunc(func(cmd *exec.Cmd) {
+				cmd.Env = append(cmd.Env, "TZ=" + tz)
+			}),
+		}, allocOpts...)...)
+	defer cancel()
+
+	ctx, cancel := NewContext(allocCtx)
+	defer cancel()
+
+	var ret string
+	if err := Run(ctx,
+		Evaluate(`Intl.DateTimeFormat().resolvedOptions().timeZone`, &ret),
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	if ret != tz {
+		t.Fatalf("got %s, want %s", ret, tz)
+	}
+}
+

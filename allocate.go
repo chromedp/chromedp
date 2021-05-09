@@ -108,6 +108,8 @@ type ExecAllocator struct {
 	wg sync.WaitGroup
 
 	combinedOutputWriter io.Writer
+
+	modifyCmdFunc func(cmd *exec.Cmd)
 }
 
 // allocTempDir is used to group all ExecAllocator temporary user data dirs in
@@ -170,7 +172,12 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 			os.RemoveAll(dataDir)
 		}
 	}()
-	allocateCmdOptions(cmd)
+
+	if a.modifyCmdFunc != nil {
+		a.modifyCmdFunc(cmd)
+	} else {
+		allocateCmdOptions(cmd)
+	}
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -178,8 +185,11 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	}
 	cmd.Stderr = cmd.Stdout
 
-	if len(a.initEnv) > 0 {
-		cmd.Env = append(os.Environ(), a.initEnv...)
+	// Preserve environment variables set in the (lowest priority) existing
+	// environment, OverrideCmdFunc(), and Env (highest priority)
+	if len(a.initEnv) > 0 || len(cmd.Env) > 0 {
+		cmd.Env = append(os.Environ(), cmd.Env...)
+		cmd.Env = append(cmd.Env, a.initEnv...)
 	}
 
 	// We must start the cmd before calling cmd.Wait, as otherwise the two
@@ -388,6 +398,16 @@ func Flag(name string, value interface{}) ExecAllocatorOption {
 func Env(vars ...string) ExecAllocatorOption {
 	return func(a *ExecAllocator) {
 		a.initEnv = append(a.initEnv, vars...)
+	}
+}
+
+// ModifyCmdFunc allows for running an arbitrary function on the
+// browser exec.Cmd object. This overrides the default version
+// of the command which sends SIGKILL to any open browsers when
+// the Go program exits.
+func ModifyCmdFunc(f func(cmd *exec.Cmd)) ExecAllocatorOption {
+	return func(a *ExecAllocator) {
+		a.modifyCmdFunc = f
 	}
 }
 
