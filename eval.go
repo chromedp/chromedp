@@ -15,27 +15,26 @@ type EvaluateAction Action
 // Evaluate is an action to evaluate the Javascript expression, unmarshaling
 // the result of the script evaluation to res.
 //
-// When res is a type other than *[]byte, or **chromedp/cdproto/runtime.RemoteObject,
+// When res is a type other than *[]byte, or **runtime.RemoteObject,
 // then the result of the script evaluation will be returned "by value" (ie,
 // JSON-encoded), and subsequently an attempt will be made to json.Unmarshal
-// the script result to res.
+// the script result to res. It returns an error if the script result is
+// "undefined" in this case.
 //
 // Otherwise, when res is a *[]byte, the raw JSON-encoded value of the script
-// result will be placed in res. Similarly, if res is a *runtime.RemoteObject,
+// result will be placed in res. Similarly, if res is a **runtime.RemoteObject,
 // then res will be set to the low-level protocol type, and no attempt will be
-// made to convert the result.
+// made to convert the result. "undefined" is okay in this case.
+//
+// When res is nil, the script result will be ignored (including "undefined").
 //
 // Note: any exception encountered will be returned as an error.
 func Evaluate(expression string, res interface{}, opts ...EvaluateOption) EvaluateAction {
-	if res == nil {
-		panic("res cannot be nil")
-	}
-
 	return ActionFunc(func(ctx context.Context) error {
 		// set up parameters
 		p := runtime.Evaluate(expression)
 		switch res.(type) {
-		case **runtime.RemoteObject:
+		case nil, **runtime.RemoteObject:
 		default:
 			p = p.WithReturnByValue(true)
 		}
@@ -52,6 +51,10 @@ func Evaluate(expression string, res interface{}, opts ...EvaluateOption) Evalua
 		}
 		if exp != nil {
 			return exp
+		}
+
+		if res == nil {
+			return nil
 		}
 
 		switch x := res.(type) {
