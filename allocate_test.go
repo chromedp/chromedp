@@ -356,7 +356,7 @@ func TestModifyCmdFunc(t *testing.T) {
 	allocCtx, cancel := NewExecAllocator(context.Background(),
 		append([]ExecAllocatorOption{
 			ModifyCmdFunc(func(cmd *exec.Cmd) {
-				cmd.Env = append(cmd.Env, "TZ=" + tz)
+				cmd.Env = append(cmd.Env, "TZ="+tz)
 			}),
 		}, allocOpts...)...)
 	defer cancel()
@@ -375,4 +375,3 @@ func TestModifyCmdFunc(t *testing.T) {
 		t.Fatalf("got %s, want %s", ret, tz)
 	}
 }
-
