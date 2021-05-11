@@ -478,7 +478,21 @@ func CombinedOutput(w io.Writer) ExecAllocatorOption {
 // NewRemoteAllocator creates a new context set up with a RemoteAllocator,
 // suitable for use with NewContext. The url should point to the browser's
 // websocket address, such as "ws://127.0.0.1:$PORT/devtools/browser/...".
+// If the url does not contain "/devtools/browser/", it will try to detect
+// the correct one by sending a request to "http://$HOST:$PORT/json/version".
+//
+// The url with the following formats are accepted:
+// * ws://127.0.0.1:9222/
+// * http://127.0.0.1:9222/
+//
+// But "ws://127.0.0.1:9222/devtools/browser/" are not accepted.
+// Because it contains "/devtools/browser/" and will be considered
+// as a valid websocket debugger URL.
 func NewRemoteAllocator(parent context.Context, url string) (context.Context, context.CancelFunc) {
+	url, err := detectURL(url)
+	if err != nil {
+		panic(fmt.Sprintf("failed to detect the websocket debugger url: %v", err))
+	}
 	ctx, cancel := context.WithCancel(parent)
 	c := &Context{Allocator: &RemoteAllocator{
 		wsURL: url,
