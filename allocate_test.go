@@ -122,6 +122,35 @@ func TestSkipNewContext(t *testing.T) {
 func TestRemoteAllocator(t *testing.T) {
 	t.Parallel()
 
+	tests := []struct {
+		name      string
+		modifyURL func(wsURL string) string
+	}{
+		{
+			name:      "original wsURL",
+			modifyURL: func(wsURL string) string { return wsURL },
+		},
+		{
+			name: "detect from ws",
+			modifyURL: func(wsURL string) string {
+				return wsURL[0:strings.Index(wsURL, "devtools")]
+			},
+		},
+		{
+			name: "detect from http",
+			modifyURL: func(wsURL string) string {
+				return "http" + wsURL[2:strings.Index(wsURL, "devtools")]
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testRemoteAllocator(t, tt.modifyURL)
+		})
+	}
+}
+
+func testRemoteAllocator(t *testing.T, modifyURL func(wsURL string) string) {
 	tempDir, err := ioutil.TempDir("", "chromedp-runner")
 	if err != nil {
 		t.Fatal(err)
@@ -156,7 +185,7 @@ func TestRemoteAllocator(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	allocCtx, allocCancel := NewRemoteAllocator(context.Background(), wsURL)
+	allocCtx, allocCancel := NewRemoteAllocator(context.Background(), modifyURL(wsURL))
 	defer allocCancel()
 
 	taskCtx, taskCancel := NewContext(allocCtx,
