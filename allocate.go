@@ -489,13 +489,9 @@ func CombinedOutput(w io.Writer) ExecAllocatorOption {
 // Because it contains "/devtools/browser/" and will be considered
 // as a valid websocket debugger URL.
 func NewRemoteAllocator(parent context.Context, url string) (context.Context, context.CancelFunc) {
-	url, err := detectURL(url)
-	if err != nil {
-		panic(fmt.Sprintf("failed to detect the websocket debugger url: %v", err))
-	}
 	ctx, cancel := context.WithCancel(parent)
 	c := &Context{Allocator: &RemoteAllocator{
-		wsURL: url,
+		wsURL: detectURL(url),
 	}}
 	ctx = context.WithValue(ctx, contextKey{}, c)
 	return ctx, cancel

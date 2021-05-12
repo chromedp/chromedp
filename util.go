@@ -40,16 +40,16 @@ func forceIP(urlstr string) string {
 // The original URL with the following formats are accepted:
 // * ws://127.0.0.1:9222/
 // * http://127.0.0.1:9222/
-func detectURL(urlstr string) (string, error) {
+func detectURL(urlstr string) string {
 	if strings.Contains(urlstr, "/devtools/browser/") {
-		return urlstr, nil
+		return urlstr
 	}
 
 	// replace the scheme and path to construct the URL like:
 	// http://127.0.0.1:9222/json/version
 	u, err := url.Parse(urlstr)
 	if err != nil {
-		return "", err
+		return urlstr
 	}
 	u.Scheme = "http"
 	u.Path = "/json/version"
@@ -57,20 +57,20 @@ func detectURL(urlstr string) (string, error) {
 	// to get "webSocketDebuggerUrl" in the response
 	resp, err := http.Get(u.String())
 	if err != nil {
-		return "", err
+		return urlstr
 	}
 	defer resp.Body.Close()
 
 	var result map[string]interface{}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return "", err
+		return urlstr
 	}
 	// the browser will construct the debugger URL using the "host" header of the /json/version request.
 	// for example, run headless-shell in a container: docker run -d -p 9000:9222 chromedp/headless-shell:latest
 	// then: curl http://127.0.0.1:9000/json/version
 	// and the debugger URL will be something like: ws://127.0.0.1:9000/devtools/browser/...
 	wsURL := result["webSocketDebuggerUrl"].(string)
-	return wsURL, nil
+	return wsURL
 }
 
 func runListeners(list []cancelableListener, ev interface{}) []cancelableListener {
