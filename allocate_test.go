@@ -191,6 +191,7 @@ func testRemoteAllocator(t *testing.T, modifyURL func(wsURL string) string) {
 
 		// TODO: perhaps deduplicate this code with ExecAllocator
 		"--user-data-dir="+tempDir,
+		"--remote-debugging-address=0.0.0.0",
 		"--remote-debugging-port=0",
 		"about:blank",
 	)
