@@ -5,8 +5,10 @@ import (
 	"context"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"os/exec"
 	"strings"
@@ -140,6 +142,26 @@ func TestRemoteAllocator(t *testing.T) {
 			name: "detect from http",
 			modifyURL: func(wsURL string) string {
 				return "http" + wsURL[2:strings.Index(wsURL, "devtools")]
+			},
+		},
+		{
+			name: "hostname",
+			modifyURL: func(wsURL string) string {
+				h, err := os.Hostname()
+				if err != nil {
+					t.Fatal(err)
+				}
+				u, err := url.Parse(wsURL)
+				if err != nil {
+					t.Fatal(err)
+				}
+				_, post, err := net.SplitHostPort(u.Host)
+				if err != nil {
+					t.Fatal(err)
+				}
+				u.Host = net.JoinHostPort(h, post)
+				u.Path = "/"
+				return u.String()
 			},
 		},
 	}

@@ -55,7 +55,7 @@ func detectURL(urlstr string) string {
 	u.Path = "/json/version"
 
 	// to get "webSocketDebuggerUrl" in the response
-	resp, err := http.Get(u.String())
+	resp, err := http.Get(forceIP(u.String()))
 	if err != nil {
 		return urlstr
 	}
