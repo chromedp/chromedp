@@ -2,6 +2,8 @@ package chromedp
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"fmt"
 	"image/png"
 	"io/ioutil"
@@ -557,6 +559,7 @@ func TestSetValue(t *testing.T) {
 		{`#form > input[type="text"]`, ByQueryAll},
 		{`#bar`, ByID},
 		{`document.querySelector("#bar")`, ByJSPath},
+		{`#select`, ByQuery},
 	}
 
 	for i, test := range tests {
@@ -577,6 +580,19 @@ func TestSetValue(t *testing.T) {
 
 			if value != "FOOBAR" {
 				t.Errorf("expected `FOOBAR`, got: %s", value)
+			}
+
+			ctx, cancel = context.WithTimeout(ctx, 2*time.Second)
+			defer cancel()
+			if err := Run(ctx,
+				WaitVisible("#event-input", ByQuery),
+				WaitVisible("#event-change", ByQuery),
+			); err != nil {
+				if errors.Is(err, context.DeadlineExceeded) {
+					t.Fatal("input and/or change events not fired")
+				} else {
+					t.Fatalf("got error: %v", err)
+				}
 			}
 		})
 	}
