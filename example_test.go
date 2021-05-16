@@ -362,9 +362,9 @@ function changeText() {
 	var outerBefore, outerAfter string
 	if err := chromedp.Run(ctx,
 		chromedp.Navigate(ts.URL),
-		chromedp.OuterHTML("#content", &outerBefore),
-		chromedp.Click("#content", chromedp.ByID),
-		chromedp.OuterHTML("#content", &outerAfter),
+		chromedp.OuterHTML("#content", &outerBefore, chromedp.ByQuery),
+		chromedp.Click("#content", chromedp.ByQuery),
+		chromedp.OuterHTML("#content", &outerAfter, chromedp.ByQuery),
 	); err != nil {
 		log.Fatal(err)
 	}
