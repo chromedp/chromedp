@@ -78,7 +78,12 @@ const (
 	// setAttributeJS is a javascript snippet that sets the value of the specified
 	// node, and returns the value.
 	setAttributeJS = `(function(a, n, v) {
-		return a[n] = v;
+		a[n] = v;
+		if (n === 'value') {
+			a.dispatchEvent(new Event('input', { bubbles: true }));
+			a.dispatchEvent(new Event('change', { bubbles: true }));
+		}
+		return a[n];
 	})(%s, %q, %q)`
 
 	// visibleJS is a javascript snippet that returns true or false depending on if
