@@ -652,7 +652,8 @@ type cancelableListener struct {
 //
 // Note that the function is called synchronously when handling events. The
 // function should avoid blocking at all costs. For example, any Actions must be
-// run via a separate goroutine.
+// run via a separate goroutine (otherwise, it could result in a deadlock if the
+// action sends CDP messages).
 func ListenBrowser(ctx context.Context, fn func(ev interface{})) {
 	c := FromContext(ctx)
 	if c == nil {
@@ -674,7 +675,8 @@ func ListenBrowser(ctx context.Context, fn func(ev interface{})) {
 //
 // Note that the function is called synchronously when handling events. The
 // function should avoid blocking at all costs. For example, any Actions must be
-// run via a separate goroutine.
+// run via a separate goroutine (otherwise, it could result in a deadlock if the
+// action sends CDP messages).
 func ListenTarget(ctx context.Context, fn func(ev interface{})) {
 	c := FromContext(ctx)
 	if c == nil {
