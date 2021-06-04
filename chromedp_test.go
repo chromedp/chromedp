@@ -57,8 +57,8 @@ func init() {
 	// and can slightly speed up the tests on other systems.
 	allocOpts = append(allocOpts, DisableGPU)
 
-	if noHeadless := os.Getenv("CHROMEDP_NO_HEADLESS"); noHeadless != "" && noHeadless != "false" {
-		allocOpts = append(allocOpts, Flag("headless", false))
+	if noHeadless := os.Getenv("CHROMEDP_NO_HEADLESS"); noHeadless == "" || noHeadless == "false" {
+		allocOpts = append(allocOpts, Headless)
 	}
 
 	// Find the exec path once at startup.
@@ -310,6 +310,7 @@ func TestPrematureCancelAllocator(t *testing.T) {
 
 	// To ensure we don't actually fire any Chrome processes.
 	allocCtx, cancel := NewExecAllocator(context.Background(),
+		Headless,
 		ExecPath("/do-not-run-chrome"))
 	// Cancel before the browser is allocated.
 	cancel()
@@ -326,6 +327,7 @@ func TestConcurrentCancel(t *testing.T) {
 
 	// To ensure we don't actually fire any Chrome processes.
 	allocCtx, cancel := NewExecAllocator(context.Background(),
+		Headless,
 		ExecPath("/do-not-run-chrome"))
 	defer cancel()
 
@@ -555,7 +557,10 @@ func TestLogOptions(t *testing.T) {
 		bufMu.Unlock()
 	}
 
-	ctx, cancel := NewContext(context.Background(),
+	opts := append(DefaultExecAllocatorOptions[:], Headless)
+	ctx, cancel := NewExecAllocator(context.Background(), opts...)
+	defer cancel()
+	ctx, cancel = NewContext(ctx,
 		WithErrorf(fn),
 		WithLogf(fn),
 		WithDebugf(fn),
@@ -728,6 +733,8 @@ func TestGracefulBrowserShutdown(t *testing.T) {
 func TestAttachingToWorkers(t *testing.T) {
 	t.Parallel()
 
+	opts := append(DefaultExecAllocatorOptions[:], Headless)
+
 	for _, tc := range []struct {
 		desc, pageJS, wantSelf string
 	}{
@@ -754,7 +761,9 @@ func TestAttachingToWorkers(t *testing.T) {
 			ts := httptest.NewServer(mux)
 			defer ts.Close()
 
-			ctx, cancel := NewContext(context.Background())
+			ctx, cancel := NewExecAllocator(context.Background(), opts...)
+			defer cancel()
+			ctx, cancel = NewContext(ctx)
 			defer cancel()
 
 			ch := make(chan target.ID, 1)

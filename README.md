@@ -23,11 +23,6 @@ full page screenshots.
 
 ## Frequently Asked Questions
 
-> I can't see any Chrome browser window
-
-By default, Chrome is run in headless mode. See `DefaultExecAllocatorOptions`, and
-[an example][goref-chromedp-exec-allocator] to override the default options.
-
 > I'm seeing "context canceled" errors
 
 When the connection to the browser is lost, `chromedp` cancels the context, and
@@ -64,7 +59,17 @@ chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
 The simplest way is to run the Go program that uses chromedp inside the
 [chromedp/headless-shell][docker-headless-shell] image. That image contains
 `headless-shell`, a smaller headless build of Chrome, which `chromedp` is able
-to find out of the box.
+to find out of the box. If other browser is used in the headless environment,
+don't forget to set the `--headless` option like this:
+
+```go
+opts := append(chromedp.DefaultExecAllocatorOptions[:], chromedp.Headless)
+allocCtx, allocCancel := chromedp.NewExecAllocator(context.Background(), opts...)
+defer allocCancel()
+ctx, cancel := chromedp.NewContext(allocCtx)
+defer cancel()
+// use the ctx
+```
 
 ## Resources
 
