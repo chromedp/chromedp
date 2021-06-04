@@ -34,7 +34,6 @@ type Selector struct {
 	by       func(context.Context, *cdp.Node) ([]cdp.NodeID, error)
 	wait     func(context.Context, *cdp.Frame, runtime.ExecutionContextID, ...cdp.NodeID) ([]*cdp.Node, error)
 	after    func(context.Context, runtime.ExecutionContextID, ...*cdp.Node) error
-	raw      bool
 }
 
 // Query is a query action that queries the browser for specific element
@@ -358,7 +357,6 @@ func BySearch(s *Selector) {
 // Note: Do not use with an untrusted selector value, as any defined selector
 // will be passed to runtime.Evaluate.
 func ByJSPath(s *Selector) {
-	s.raw = true
 	ByFunc(func(ctx context.Context, n *cdp.Node) ([]cdp.NodeID, error) {
 		// set up eval command
 		p := runtime.Evaluate(s.selAsString()).
@@ -425,15 +423,28 @@ func NodeReady(s *Selector) {
 	WaitFunc(s.waitReady(nil))(s)
 }
 
-func withContextID(id runtime.ExecutionContextID) EvaluateOption {
-	return func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
-		return p.WithContextID(id)
+func callFunctionOnNode(ctx context.Context, node *cdp.Node, function string, res interface{}, args ...interface{}) error {
+	r, err := dom.ResolveNode().WithNodeID(node.NodeID).Do(ctx)
+	if err != nil {
+		return err
 	}
-}
+	err = CallFunctionOn(function, &res,
+		func(p *runtime.CallFunctionOnParams) *runtime.CallFunctionOnParams {
+			return p.WithObjectID(r.ObjectID)
+		},
+		args...,
+	).Do(ctx)
 
-func evalInCtx(ctx context.Context, execCtx runtime.ExecutionContextID, expression string, res interface{}, opts ...EvaluateOption) error {
-	allOpts := append([]EvaluateOption{withContextID(execCtx)}, opts...)
-	return EvaluateAsDevTools(expression, &res, allOpts...).Do(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Try to release the remote object.
+	// It will fail if the page is navigated or closed,
+	// and it's okay to ignore the error in this case.
+	_ = runtime.ReleaseObject(r.ObjectID).Do(ctx)
+
+	return nil
 }
 
 // NodeVisible is an element query option to wait until all queried element
@@ -452,7 +463,7 @@ func NodeVisible(s *Selector) {
 
 		// check visibility
 		var res bool
-		err = evalInCtx(ctx, execCtx, snippet(visibleJS, cashX(true), s, n), &res, withContextID(execCtx))
+		err = callFunctionOnNode(ctx, n, visibleJS, &res)
 		if err != nil {
 			return err
 		}
@@ -479,7 +490,7 @@ func NodeNotVisible(s *Selector) {
 
 		// check visibility
 		var res bool
-		err = evalInCtx(ctx, execCtx, snippet(visibleJS, cashX(true), s, n), &res)
+		err = callFunctionOnNode(ctx, n, visibleJS, &res)
 		if err != nil {
 			return err
 		}
@@ -648,7 +659,7 @@ func Blur(sel interface{}, opts ...QueryOption) QueryAction {
 		}
 
 		var res bool
-		err := evalInCtx(ctx, execCtx, snippet(blurJS, cashX(true), sel, nodes[0]), &res)
+		err := callFunctionOnNode(ctx, nodes[0], blurJS, &res)
 		if err != nil {
 			return err
 		}
@@ -689,7 +700,7 @@ func Text(sel interface{}, text *string, opts ...QueryOption) QueryAction {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
-		return evalInCtx(ctx, execCtx, snippet(textJS, cashX(false), sel, nodes[0]), text)
+		return callFunctionOnNode(ctx, nodes[0], textJS, text)
 	}, opts...)
 }
 
@@ -705,7 +716,7 @@ func TextContent(sel interface{}, text *string, opts ...QueryOption) QueryAction
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
-		return evalInCtx(ctx, execCtx, snippet(textContentJS, cashX(false), sel, nodes[0]), text)
+		return callFunctionOnNode(ctx, nodes[0], textContentJS, text)
 	}, opts...)
 }
 
@@ -931,11 +942,10 @@ func JavascriptAttribute(sel interface{}, name string, res interface{}, opts ...
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
-		if err := evalInCtx(ctx, execCtx,
-			snippet(attributeJS, cashX(true), sel, nodes[0], name), res,
-		); err != nil {
+		if err := callFunctionOnNode(ctx, nodes[0], attributeJS, res, name); err != nil {
 			return fmt.Errorf("could not retrieve attribute %q: %w", name, err)
 		}
+
 		return nil
 	}, opts...)
 }
@@ -949,7 +959,7 @@ func SetJavascriptAttribute(sel interface{}, name, value string, opts ...QueryOp
 		}
 
 		var res string
-		err := evalInCtx(ctx, execCtx, snippet(setAttributeJS, cashX(true), sel, nodes[0], name, value), &res)
+		err := callFunctionOnNode(ctx, nodes[0], setAttributeJS, &res, name, value)
 		if err != nil {
 			return err
 		}
@@ -1109,7 +1119,7 @@ func Submit(sel interface{}, opts ...QueryOption) QueryAction {
 		}
 
 		var res bool
-		err := evalInCtx(ctx, execCtx, snippet(submitJS, cashX(true), sel, nodes[0]), &res)
+		err := callFunctionOnNode(ctx, nodes[0], submitJS, &res)
 		if err != nil {
 			return err
 		}
@@ -1131,7 +1141,7 @@ func Reset(sel interface{}, opts ...QueryOption) QueryAction {
 		}
 
 		var res bool
-		err := evalInCtx(ctx, execCtx, snippet(resetJS, cashX(true), sel, nodes[0]), &res)
+		err := callFunctionOnNode(ctx, nodes[0], resetJS, &res)
 		if err != nil {
 			return err
 		}
