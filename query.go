@@ -1202,16 +1202,6 @@ func ScrollIntoView(sel interface{}, opts ...QueryOption) QueryAction {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
-		var pos []float64
-		err := evalInCtx(ctx, execCtx, snippet(scrollIntoViewJS, cashX(true), sel, nodes[0]), &pos)
-		if err != nil {
-			return err
-		}
-
-		if pos == nil {
-			return fmt.Errorf("could not scroll into node %d", nodes[0].NodeID)
-		}
-
-		return nil
+		return dom.ScrollIntoViewIfNeeded().WithNodeID(nodes[0].NodeID).Do(ctx)
 	}, opts...)
 }

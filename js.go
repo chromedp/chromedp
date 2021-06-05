@@ -35,14 +35,6 @@ const (
 		return true;
 	})(%s)`
 
-	// scrollIntoViewJS is a javascript snippet that scrolls the specified node
-	// into the window's viewport (if needed), returning the actual window x/y
-	// after execution.
-	scrollIntoViewJS = `(function(a) {
-		a.scrollIntoViewIfNeeded(true);
-		return [window.scrollX, window.scrollY];
-	})(%s)`
-
 	// submitJS is a javascript snippet that will call the containing form's
 	// submit function, returning true or false if the call was successful.
 	submitJS = `(function(a) {

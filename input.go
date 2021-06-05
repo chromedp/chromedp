@@ -60,14 +60,8 @@ func MouseClickNode(n *cdp.Node, opts ...MouseOption) MouseAction {
 		if t == nil {
 			return ErrInvalidTarget
 		}
-		frameID := t.enclosingFrame(n)
-		t.frameMu.RLock()
-		execCtx := t.execContexts[frameID]
-		t.frameMu.RUnlock()
 
-		var pos []float64
-		err := evalInCtx(ctx, execCtx, snippet(scrollIntoViewJS, cashX(true), nil, n), &pos)
-		if err != nil {
+		if err := dom.ScrollIntoViewIfNeeded().WithNodeID(n.NodeID).Do(ctx); err != nil {
 			return err
 		}
 
