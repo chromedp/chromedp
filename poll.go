@@ -88,22 +88,7 @@ func (p *pollTask) Do(ctx context.Context) error {
 		return ErrPollingTimeout
 	}
 
-	// it's okay to discard the result.
-	if p.res == nil {
-		return nil
-	}
-
-	switch x := p.res.(type) {
-	case **runtime.RemoteObject:
-		*x = v
-		return nil
-
-	case *[]byte:
-		*x = v.Value
-		return nil
-	default:
-		return json.Unmarshal(v.Value, p.res)
-	}
+	return parseRemoteObject(v, p.res)
 }
 
 // Poll is a poll action that will wait for a general Javascript predicate.
