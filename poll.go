@@ -2,7 +2,6 @@ package chromedp
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -55,40 +54,33 @@ func (p *pollTask) Do(ctx context.Context) error {
 		t.frameMu.RUnlock()
 	}
 
-	ea := &errAppender{args: make([]*runtime.CallArgument, 0, len(p.args)+3)}
-	ea.append(p.predicate)
+	args := make([]interface{}, 0, len(p.args)+3)
+	args = append(args, p.predicate)
 	if p.interval > 0 {
-		ea.append(p.interval.Milliseconds())
+		args = append(args, p.interval.Milliseconds())
 	} else {
-		ea.append(p.polling)
+		args = append(args, p.polling)
 	}
-	ea.append(p.timeout.Milliseconds())
+	args = append(args, p.timeout.Milliseconds())
 	for _, arg := range p.args {
-		ea.append(arg)
-	}
-	if ea.err != nil {
-		return ea.err
+		args = append(args, arg)
 	}
 
-	v, exp, err := runtime.CallFunctionOn(waitForPredicatePageFunction).
-		WithExecutionContextID(execCtx).
-		WithReturnByValue(false).
-		WithAwaitPromise(true).
-		WithUserGesture(true).
-		WithArguments(ea.args).
-		Do(ctx)
-	if err != nil {
-		return err
-	}
-	if exp != nil {
-		return exp
-	}
+	err := CallFunctionOn(waitForPredicatePageFunction, p.res,
+		func(p *runtime.CallFunctionOnParams) *runtime.CallFunctionOnParams {
+			return p.WithExecutionContextID(execCtx).
+				WithAwaitPromise(true).
+				WithUserGesture(true)
+		},
+		args...,
+	).Do(ctx)
 
-	if v.Type == "undefined" {
+	// FIXME: sentinel error?
+	if err != nil && err.Error() == "encountered an undefined value" {
 		return ErrPollingTimeout
 	}
 
-	return parseRemoteObject(v, p.res)
+	return err
 }
 
 // Poll is a poll action that will wait for a general Javascript predicate.
@@ -187,24 +179,4 @@ func WithPollingArgs(args ...interface{}) PollOption {
 	return func(w *pollTask) {
 		w.args = args
 	}
-}
-
-// errAppender is to help accumulating the arguments and simplifying error checks.
-//
-// see https://blog.golang.org/errors-are-values
-type errAppender struct {
-	args []*runtime.CallArgument
-	err  error
-}
-
-// append method calls the json.Marshal method to marshal the value and appends it to the slice.
-// It records the first error for future reference.
-// As soon as an error occurs, the append method becomes a no-op but the error value is saved.
-func (ea *errAppender) append(v interface{}) {
-	if ea.err != nil {
-		return
-	}
-	var b []byte
-	b, ea.err = json.Marshal(v)
-	ea.args = append(ea.args, &runtime.CallArgument{Value: b})
 }
