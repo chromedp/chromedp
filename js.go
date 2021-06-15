@@ -72,6 +72,19 @@ const (
 		return Boolean( this.offsetWidth || this.offsetHeight || this.getClientRects().length );
 	}`
 
+	// getClientRectJS is a javascript snippet that returns the information about the
+	// size of the specified node and its position relative to its owner document.
+	getClientRectJS = `function getClientRect() {
+		const e = this.getBoundingClientRect(),
+		t = this.ownerDocument.documentElement.getBoundingClientRect();
+		return {
+			x: e.left - t.left,
+			y: e.top - t.top,
+			width: e.width,
+			height: e.height,
+		};
+	}`
+
 	// waitForPredicatePageFunction is a javascript snippet that runs the polling in the
 	// browser. It's copied from puppeteer. See
 	// https://github.com/puppeteer/puppeteer/blob/669f04a7a6e96cc8353a8cb152898edbc25e7c15/src/common/DOMWorld.ts#L870-L944
