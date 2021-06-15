@@ -2,7 +2,6 @@ package chromedp
 
 import (
 	"context"
-	"math"
 
 	"github.com/chromedp/cdproto/emulation"
 	"github.com/chromedp/cdproto/page"
@@ -127,16 +126,13 @@ func EmulateReset() EmulateAction {
 }
 
 // FullScreenshot takes a full screenshot with the specified image quality of
-// the entire browser viewport. Calls emulation.SetDeviceMetricsOverride (see
-// note below).
+// the entire browser viewport.
 //
-// Implementation liberally sourced from puppeteer.
+// It's supposed to act the same as the command "Capture full size screenshot"
+// in Chrome. See the behavior notes of Screenshot for more information.
 //
 // The valid range of the compression quality is [0..100]. When this value is
 // 100, the image format is png; otherwise, the image format is jpeg.
-//
-// Note: after calling this action, reset the browser's viewport using
-// ResetViewport, EmulateReset, or page.SetDeviceMetricsOverride.
 func FullScreenshot(res *[]byte, quality int) EmulateAction {
 	if res == nil {
 		panic("res cannot be nil")
@@ -151,17 +147,6 @@ func FullScreenshot(res *[]byte, quality int) EmulateAction {
 		if cssContentSize != nil {
 			contentSize = cssContentSize
 		}
-		width, height := int64(math.Ceil(contentSize.Width)), int64(math.Ceil(contentSize.Height))
-		// force viewport emulation
-		err = emulation.SetDeviceMetricsOverride(width, height, 1, false).
-			WithScreenOrientation(&emulation.ScreenOrientation{
-				Type:  emulation.OrientationTypePortraitPrimary,
-				Angle: 0,
-			}).
-			Do(ctx)
-		if err != nil {
-			return err
-		}
 
 		format := page.CaptureScreenshotFormatPng
 		if quality != 100 {
@@ -170,11 +155,12 @@ func FullScreenshot(res *[]byte, quality int) EmulateAction {
 
 		// capture screenshot
 		*res, err = page.CaptureScreenshot().
+			WithCaptureBeyondViewport(true).
 			WithFormat(format).
 			WithQuality(int64(quality)).
 			WithClip(&page.Viewport{
-				X:      contentSize.X,
-				Y:      contentSize.Y,
+				X:      0,
+				Y:      0,
 				Width:  contentSize.Width,
 				Height: contentSize.Height,
 				Scale:  1,

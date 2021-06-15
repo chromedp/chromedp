@@ -1063,6 +1063,17 @@ func SetUploadFiles(sel interface{}, files []string, opts ...QueryOption) QueryA
 // Screenshot is an element query action that takes a screenshot of the first element
 // node matching the selector.
 //
+// It's supposed to act the same as the command "Capture node screenshot" in Chrome.
+//
+// Behavior notes: the Protocol Monitor shows that the command sends the following
+// CDP commands too:
+//   - Emulation.clearDeviceMetricsOverride
+//   - Network.setUserAgentOverride with {"userAgent": ""}
+//   - Overlay.setShowViewportSizeOnResize with {"show": false}
+//
+// These CDP commands are not sent by chromedp. If it does not work as expected,
+// you can try to send those commands yourself.
+//
 // See CaptureScreenshot for capturing a screenshot of the browser viewport.
 //
 // See the 'screenshot' example in the https://github.com/chromedp/examples
@@ -1090,6 +1101,7 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) QueryActio
 		// take screenshot of the box
 		buf, err := page.CaptureScreenshot().
 			WithFormat(page.CaptureScreenshotFormatPng).
+			WithCaptureBeyondViewport(true).
 			WithClip(&clip).
 			Do(ctx)
 		if err != nil {
