@@ -1,10 +1,7 @@
 package chromedp
 
 import (
-	"context"
-
 	"github.com/chromedp/cdproto/emulation"
-	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp/device"
 )
 
@@ -123,51 +120,4 @@ func Emulate(device Device) EmulateAction {
 // started with.
 func EmulateReset() EmulateAction {
 	return Emulate(device.Reset)
-}
-
-// FullScreenshot takes a full screenshot with the specified image quality of
-// the entire browser viewport.
-//
-// It's supposed to act the same as the command "Capture full size screenshot"
-// in Chrome. See the behavior notes of Screenshot for more information.
-//
-// The valid range of the compression quality is [0..100]. When this value is
-// 100, the image format is png; otherwise, the image format is jpeg.
-func FullScreenshot(res *[]byte, quality int) EmulateAction {
-	if res == nil {
-		panic("res cannot be nil")
-	}
-	return ActionFunc(func(ctx context.Context) error {
-		// get layout metrics
-		_, _, contentSize, _, _, cssContentSize, err := page.GetLayoutMetrics().Do(ctx)
-		if err != nil {
-			return err
-		}
-		// protocol v90 changed the return parameter name (contentSize -> cssContentSize)
-		if cssContentSize != nil {
-			contentSize = cssContentSize
-		}
-
-		format := page.CaptureScreenshotFormatPng
-		if quality != 100 {
-			format = page.CaptureScreenshotFormatJpeg
-		}
-
-		// capture screenshot
-		*res, err = page.CaptureScreenshot().
-			WithCaptureBeyondViewport(true).
-			WithFormat(format).
-			WithQuality(int64(quality)).
-			WithClip(&page.Viewport{
-				X:      0,
-				Y:      0,
-				Width:  contentSize.Width,
-				Height: contentSize.Height,
-				Scale:  1,
-			}).Do(ctx)
-		if err != nil {
-			return err
-		}
-		return nil
-	})
 }

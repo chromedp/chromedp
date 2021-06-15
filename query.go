@@ -12,7 +12,6 @@ import (
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/css"
 	"github.com/chromedp/cdproto/dom"
-	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
 )
 
@@ -1058,59 +1057,6 @@ func SetUploadFiles(sel interface{}, files []string, opts ...QueryOption) QueryA
 
 		return dom.SetFileInputFiles(files).WithNodeID(nodes[0].NodeID).Do(ctx)
 	}, opts...)
-}
-
-// Screenshot is an element query action that takes a screenshot of the first element
-// node matching the selector.
-//
-// It's supposed to act the same as the command "Capture node screenshot" in Chrome.
-//
-// Behavior notes: the Protocol Monitor shows that the command sends the following
-// CDP commands too:
-//   - Emulation.clearDeviceMetricsOverride
-//   - Network.setUserAgentOverride with {"userAgent": ""}
-//   - Overlay.setShowViewportSizeOnResize with {"show": false}
-//
-// These CDP commands are not sent by chromedp. If it does not work as expected,
-// you can try to send those commands yourself.
-//
-// See CaptureScreenshot for capturing a screenshot of the browser viewport.
-//
-// See the 'screenshot' example in the https://github.com/chromedp/examples
-// project for an example of taking a screenshot of the entire page.
-func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) QueryAction {
-	if picbuf == nil {
-		panic("picbuf cannot be nil")
-	}
-
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
-		if len(nodes) < 1 {
-			return fmt.Errorf("selector %q did not return any nodes", sel)
-		}
-
-		// get box model
-		var clip page.Viewport
-		if err := callFunctionOnNode(ctx, nodes[0], getClientRectJS, &clip); err != nil {
-			return err
-		}
-
-		// The next comment is copied from the original code.
-		// This seems to be necessary? Seems to do the right thing regardless of DPI.
-		clip.Scale = 1
-
-		// take screenshot of the box
-		buf, err := page.CaptureScreenshot().
-			WithFormat(page.CaptureScreenshotFormatPng).
-			WithCaptureBeyondViewport(true).
-			WithClip(&clip).
-			Do(ctx)
-		if err != nil {
-			return err
-		}
-
-		*picbuf = buf
-		return nil
-	}, append(opts, NodeVisible)...)
 }
 
 // Submit is an element query action that submits the parent form of the first element
