@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math"
 	"strconv"
 	"strings"
 	"sync"
@@ -1079,28 +1078,20 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) QueryActio
 		}
 
 		// get box model
-		box, err := dom.GetBoxModel().WithNodeID(nodes[0].NodeID).Do(ctx)
-		if err != nil {
+		var clip page.Viewport
+		if err := callFunctionOnNode(ctx, nodes[0], getClientRectJS, &clip); err != nil {
 			return err
 		}
-		if len(box.Margin) != 8 {
-			return ErrInvalidBoxModel
-		}
+
+		// The next comment is copied from the original code.
+		// This seems to be necessary? Seems to do the right thing regardless of DPI.
+		clip.Scale = 1
 
 		// take screenshot of the box
 		buf, err := page.CaptureScreenshot().
 			WithFormat(page.CaptureScreenshotFormatPng).
-			WithClip(&page.Viewport{
-				// Round the dimensions, as otherwise we might
-				// lose one pixel in either dimension.
-				X:      math.Round(box.Margin[0]),
-				Y:      math.Round(box.Margin[1]),
-				Width:  math.Round(box.Margin[4] - box.Margin[0]),
-				Height: math.Round(box.Margin[5] - box.Margin[1]),
-				// This seems to be necessary? Seems to do the
-				// right thing regardless of DPI.
-				Scale: 1.0,
-			}).Do(ctx)
+			WithClip(&clip).
+			Do(ctx)
 		if err != nil {
 			return err
 		}
