@@ -132,6 +132,9 @@ func EmulateReset() EmulateAction {
 //
 // Implementation liberally sourced from puppeteer.
 //
+// The valid range of the compression quality is [0..100]. When this value is
+// 100, the image format is png; otherwise, the image format is jpeg.
+//
 // Note: after calling this action, reset the browser's viewport using
 // ResetViewport, EmulateReset, or page.SetDeviceMetricsOverride.
 func FullScreenshot(res *[]byte, quality int) EmulateAction {
@@ -159,8 +162,15 @@ func FullScreenshot(res *[]byte, quality int) EmulateAction {
 		if err != nil {
 			return err
 		}
+
+		format := page.CaptureScreenshotFormatPng
+		if quality != 100 {
+			format = page.CaptureScreenshotFormatJpeg
+		}
+
 		// capture screenshot
 		*res, err = page.CaptureScreenshot().
+			WithFormat(format).
 			WithQuality(int64(quality)).
 			WithClip(&page.Viewport{
 				X:      contentSize.X,

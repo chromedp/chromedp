@@ -582,10 +582,10 @@ func ExampleFullScreenshot() {
 		log.Fatal(err)
 	}
 
-	if err := ioutil.WriteFile("fullScreenshot.png", buf, 0644); err != nil {
+	if err := ioutil.WriteFile("fullScreenshot.jpeg", buf, 0644); err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("wrote fullScreenshot.png")
+	fmt.Println("wrote fullScreenshot.jpeg")
 	// Output:
-	// wrote fullScreenshot.png
+	// wrote fullScreenshot.jpeg
 }
