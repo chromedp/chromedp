@@ -98,6 +98,9 @@ func Stop() Action {
 // CaptureScreenshot is an action that captures/takes a screenshot of the
 // current browser viewport.
 //
+// It's supposed to act the same as the command "Capture screenshot" in
+// Chrome. See the behavior notes of Screenshot for more information.
+//
 // See the Screenshot action to take a screenshot of a specific element.
 //
 // See the 'screenshot' example in the https://github.com/chromedp/examples
@@ -109,7 +112,9 @@ func CaptureScreenshot(res *[]byte) Action {
 
 	return ActionFunc(func(ctx context.Context) error {
 		var err error
-		*res, err = page.CaptureScreenshot().Do(ctx)
+		*res, err = page.CaptureScreenshot().
+			WithCaptureBeyondViewport(true).
+			Do(ctx)
 		return err
 	})
 }
