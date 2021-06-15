@@ -1,11 +1,9 @@
 package chromedp
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
-	"image"
 	_ "image/png"
 	"io"
 	"net/http"
@@ -204,36 +202,6 @@ func TestReload(t *testing.T) {
 	}
 	if want := "Title 1"; secondTitle != want {
 		t.Errorf("expected second title to be %q, instead title is %q", want, secondTitle)
-	}
-}
-
-func TestCaptureScreenshot(t *testing.T) {
-	t.Parallel()
-
-	ctx, cancel := testAllocate(t, "image.html")
-	defer cancel()
-
-	const width, height = 650, 450
-
-	// set the viewport size, to know what screenshot size to expect
-	var buf []byte
-	if err := Run(ctx,
-		EmulateViewport(width, height),
-		CaptureScreenshot(&buf),
-	); err != nil {
-		t.Fatal(err)
-	}
-
-	config, format, err := image.DecodeConfig(bytes.NewReader(buf))
-	if err != nil {
-		t.Fatal(err)
-	}
-	if want := "png"; format != want {
-		t.Fatalf("expected format to be %q, got %q", want, format)
-	}
-	if config.Width != width || config.Height != height {
-		t.Fatalf("expected dimensions to be %d*%d, got %d*%d",
-			width, height, config.Width, config.Height)
 	}
 }
 
