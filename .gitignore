@@ -8,5 +8,6 @@ cdp-*.txt
 /chromedp.test
 /chromedp.test.exe
 
+/*.jpeg
 /*.png
 /*.pdf
