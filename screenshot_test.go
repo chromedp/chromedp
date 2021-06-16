@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"image"
+	_ "image/jpeg"
 	"image/png"
 	"os"
 	"path"
@@ -111,6 +112,53 @@ func TestCaptureScreenshot(t *testing.T) {
 	if config.Width != width || config.Height != height {
 		t.Fatalf("expected dimensions to be %d*%d, got %d*%d",
 			width, height, config.Width, config.Height)
+	}
+}
+
+func TestFullScreenshot(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name    string
+		quality int
+		want    string
+	}{
+		{
+			name:    "quality 100",
+			quality: 100,
+			want:    "grid-fullpage.png",
+		},
+		{
+			name:    "quality 90",
+			quality: 90,
+			want:    "grid-fullpage-90.jpeg",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ctx, cancel := testAllocate(t, "grid.html")
+			defer cancel()
+
+			var buf []byte
+			if err := Run(ctx,
+				EmulateViewport(500, 500),
+				EvaluateAsDevTools("document.documentElement.scrollTo(20,  30)", nil),
+				FullScreenshot(&buf, test.quality),
+			); err != nil {
+				t.Fatal(err)
+			}
+
+			diff, err := matchPixel(buf, test.want)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff != 0 {
+				t.Fatalf("screenshot does not match. diff: %v", diff)
+			}
+		})
 	}
 }
 
