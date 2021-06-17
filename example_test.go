@@ -178,18 +178,20 @@ func ExampleNewContext_reuseBrowser() {
 	}
 
 	for i := 0; i < 2; i++ {
-		// look at the page twice, with a timeout set up; we skip
-		// cancels for the sake of brevity
-		ctx, _ := context.WithTimeout(ctx, time.Second)
-		ctx, _ = chromedp.NewContext(ctx)
-		var cookies string
-		if err := chromedp.Run(ctx,
-			chromedp.Navigate(ts.URL),
-			chromedp.Text("#cookies", &cookies),
-		); err != nil {
-			log.Fatal(err)
-		}
-		fmt.Printf("Cookies at i=%d: %q\n", i, cookies)
+		func() {
+			ctx, cancel := context.WithTimeout(ctx, time.Second)
+			defer cancel()
+			ctx, cancel = chromedp.NewContext(ctx)
+			defer cancel()
+			var cookies string
+			if err := chromedp.Run(ctx,
+				chromedp.Navigate(ts.URL),
+				chromedp.Text("#cookies", &cookies),
+			); err != nil {
+				log.Fatal(err)
+			}
+			fmt.Printf("Cookies at i=%d: %q\n", i, cookies)
+		}()
 	}
 
 	// Output:
