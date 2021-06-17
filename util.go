@@ -111,14 +111,6 @@ func frameStoppedLoading(f *cdp.Frame) {
 	clearFrameState(f, cdp.FrameLoading)
 }
 
-func frameScheduledNavigation(f *cdp.Frame) {
-	setFrameState(f, cdp.FrameScheduledNavigation)
-}
-
-func frameClearedScheduledNavigation(f *cdp.Frame) {
-	clearFrameState(f, cdp.FrameScheduledNavigation)
-}
-
 // setFrameState sets the frame state via bitwise or (|).
 func setFrameState(f *cdp.Frame, fs cdp.FrameState) {
 	f.State |= fs
