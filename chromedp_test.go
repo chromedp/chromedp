@@ -25,7 +25,6 @@ import (
 	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
-	cdpruntime "github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
 )
 
@@ -136,7 +135,7 @@ func testAllocateSeparate(tb testing.TB) (context.Context, context.CancelFunc) {
 	}
 	ListenBrowser(ctx, func(ev interface{}) {
 		switch ev := ev.(type) {
-		case *cdpruntime.EventExceptionThrown:
+		case *runtime.EventExceptionThrown:
 			tb.Errorf("%+v\n", ev.ExceptionDetails)
 		}
 	})
@@ -423,7 +422,7 @@ func TestLargeEventCount(t *testing.T) {
 	// without making the test too slow.
 	first := true
 	ListenTarget(ctx, func(ev interface{}) {
-		if _, ok := ev.(*cdpruntime.EventConsoleAPICalled); ok && first {
+		if _, ok := ev.(*runtime.EventConsoleAPICalled); ok && first {
 			time.Sleep(50 * time.Millisecond)
 			first = false
 		}
