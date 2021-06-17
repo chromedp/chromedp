@@ -36,7 +36,6 @@ func (p *pollTask) Do(ctx context.Context) error {
 		return ErrInvalidTarget
 	}
 	var (
-		root    *cdp.Node
 		execCtx runtime.ExecutionContextID
 		ok      bool
 	)
@@ -46,15 +45,12 @@ func (p *pollTask) Do(ctx context.Context) error {
 			return ctx.Err()
 		case <-time.After(5 * time.Millisecond):
 		}
-		_, root, execCtx, ok = t.ensureFrame()
+		_, _, execCtx, ok = t.ensureFrame()
 	}
 
-	fromNode := p.frame
-	if fromNode == nil {
-		fromNode = root
-	} else {
+	if p.frame != nil {
 		t.frameMu.RLock()
-		frameID := t.enclosingFrame(fromNode)
+		frameID := t.enclosingFrame(p.frame)
 		execCtx = t.execContexts[frameID]
 		t.frameMu.RUnlock()
 	}
