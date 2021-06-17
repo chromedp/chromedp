@@ -88,30 +88,23 @@ func TestScreenshotHighDPI(t *testing.T) {
 func TestCaptureScreenshot(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := testAllocate(t, "image.html")
+	ctx, cancel := testAllocate(t, "grid.html")
 	defer cancel()
 
-	const width, height = 650, 450
-
-	// set the viewport size, to know what screenshot size to expect
 	var buf []byte
 	if err := Run(ctx,
-		EmulateViewport(width, height),
+		EmulateViewport(500, 500),
 		CaptureScreenshot(&buf),
 	); err != nil {
 		t.Fatal(err)
 	}
 
-	config, format, err := image.DecodeConfig(bytes.NewReader(buf))
+	diff, err := matchPixel(buf, "sanity.png")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := "png"; format != want {
-		t.Fatalf("expected format to be %q, got %q", want, format)
-	}
-	if config.Width != width || config.Height != height {
-		t.Fatalf("expected dimensions to be %d*%d, got %d*%d",
-			width, height, config.Width, config.Height)
+	if diff != 0 {
+		t.Fatalf("screenshot does not match. diff: %v", diff)
 	}
 }
 
