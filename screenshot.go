@@ -3,6 +3,7 @@ package chromedp
 import (
 	"context"
 	"fmt"
+	"math"
 
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/page"
@@ -42,6 +43,13 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) QueryActio
 		if err := callFunctionOnNode(ctx, nodes[0], getClientRectJS, &clip); err != nil {
 			return err
 		}
+
+		// The "Capture node screenshot" command does not handle fractional dimensions properly.
+		// Let's align with puppeteer:
+		// https://github.com/puppeteer/puppeteer/blob/bba3f41286908ced8f03faf98242d4c3359a5efc/src/common/Page.ts#L2002-L2011
+		x, y := math.Round(clip.X), math.Round(clip.Y)
+		clip.Width, clip.Height = math.Round(clip.Width+clip.X-x), math.Round(clip.Height+clip.Y-y)
+		clip.X, clip.Y = x, y
 
 		// The next comment is copied from the original code.
 		// This seems to be necessary? Seems to do the right thing regardless of DPI.
