@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"image"
 	_ "image/jpeg"
-	"image/png"
+	_ "image/png"
 	"os"
 	"path"
 	"testing"
@@ -16,43 +16,66 @@ import (
 func TestScreenshot(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := testAllocate(t, "image2.html")
-	defer cancel()
-
 	tests := []struct {
+		name string
 		sel  string
-		by   QueryOption
-		size int
+		want string
 	}{
-		{`/html/body/img`, BySearch, 239},
-		{`img`, ByQueryAll, 239},
-		{`#icon-github`, ByID, 120},
-		{`document.querySelector('#imagething').shadowRoot.querySelector('.container')`, ByJSPath, 190},
+		{
+			name: "padding border",
+			sel:  "#padding-border",
+			want: "element-padding-border.png",
+		},
+		{
+			name: "larger than viewport",
+			sel:  "#larger-than-viewport",
+			want: "element-larger-than-viewport.png",
+		},
+		{
+			name: "outside viewport",
+			sel:  "#outside-viewport",
+			want: "element-scrolled-into-view.png",
+		},
+		{
+			name: "rotate element",
+			sel:  "#rotated",
+			want: "element-rotate.png",
+		},
+		{
+			name: "fractional dimensions",
+			sel:  "#fractional-dimensions",
+			want: "element-fractional.png",
+		},
+		{
+			name: "fractional offset",
+			sel:  "#fractional-offset",
+			want: "element-fractional-offset.png",
+		},
 	}
 
-	// a smaller viewport speeds up this test
-	if err := Run(ctx, EmulateViewport(600, 400)); err != nil {
-		t.Fatal(err)
-	}
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ctx, cancel := testAllocate(t, "screenshot.html")
+			defer cancel()
 
-	for i, test := range tests {
-		var buf []byte
-		if err := Run(ctx, Screenshot(test.sel, &buf, test.by)); err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
-
-		if len(buf) == 0 {
-			t.Fatalf("test %d failed to capture screenshot", i)
-		}
-		img, err := png.Decode(bytes.NewReader(buf))
-		if err != nil {
-			t.Fatal(err)
-		}
-		size := img.Bounds().Size()
-		if size.X != test.size || size.Y != test.size {
-			t.Errorf("expected dimensions to be %d*%d, got %d*%d",
-				test.size, test.size, size.X, size.Y)
-		}
+			var buf []byte
+			if err := Run(ctx,
+				EmulateViewport(500, 500),
+				EvaluateAsDevTools("document.documentElement.scrollTo(20,  30)", nil),
+				Screenshot(test.sel, &buf, ByQuery),
+			); err != nil {
+				t.Fatal(err)
+			}
+			diff, err := matchPixel(buf, test.want)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff != 0 {
+				t.Fatalf("screenshot does not match. diff: %v", diff)
+			}
+		})
 	}
 }
 
