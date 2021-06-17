@@ -2,9 +2,14 @@ package chromedp
 
 import (
 	"bytes"
+	"fmt"
 	"image"
 	"image/png"
+	"os"
+	"path"
 	"testing"
+
+	"github.com/orisano/pixelmatch"
 )
 
 func TestScreenshot(t *testing.T) {
@@ -69,30 +74,14 @@ func TestScreenshotHighDPI(t *testing.T) {
 	if err := Run(ctx, Screenshot("#half-color", &buf, ByID)); err != nil {
 		t.Fatal(err)
 	}
-	img, err := png.Decode(bytes.NewReader(buf))
+
+	diff, err := matchPixel(buf, "half-color.png")
 	if err != nil {
 		t.Fatal(err)
 	}
-	size := img.Bounds().Size()
-	wantSize := 300 // 200px at 1.5 scaling factor
-	if size.X != wantSize || size.Y != wantSize {
-		t.Fatalf("expected dimensions to be %d*%d, got %d*%d",
-			wantSize, wantSize, size.X, size.Y)
+	if diff != 0 {
+		t.Fatalf("screenshot does not match. diff: %v", diff)
 	}
-	wantColor := func(x, y int, r, g, b, a uint32) {
-		color := img.At(x, y)
-		r_, g_, b_, a_ := color.RGBA()
-		if r_ != r || g_ != g || b_ != b || a_ != a {
-			t.Errorf("got 0x%04x%04x%04x%04x at (%d,%d), want 0x%04x%04x%04x%04x",
-				r_, g_, b_, a_, x, y, r, g, b, a)
-		}
-	}
-	// The left half is blue.
-	wantColor(5, 5, 0x0, 0x0, 0xffff, 0xffff)
-	wantColor(5, 295, 0x0, 0x0, 0xffff, 0xffff)
-	// The right half is red.
-	wantColor(295, 5, 0xffff, 0x0, 0x0, 0xffff)
-	wantColor(295, 295, 0xffff, 0x0, 0x0, 0xffff)
 }
 
 func TestCaptureScreenshot(t *testing.T) {
@@ -123,4 +112,41 @@ func TestCaptureScreenshot(t *testing.T) {
 		t.Fatalf("expected dimensions to be %d*%d, got %d*%d",
 			width, height, config.Width, config.Height)
 	}
+}
+
+func matchPixel(buf []byte, want string) (int, error) {
+	img1, format1, err := image.Decode(bytes.NewReader(buf))
+	if err != nil {
+		return 0, err
+	}
+
+	img2, format2, err := openImage(want)
+	if err != nil {
+		return 0, err
+	}
+
+	if format1 != format2 {
+		return 0, fmt.Errorf("image formats not matched: %s != %s", format1, format2)
+	}
+
+	return pixelmatch.MatchPixel(img1, img2, pixelmatch.Threshold(0.1))
+}
+
+func openImage(screenshot string) (image.Image, string, error) {
+	wd, err := os.Getwd()
+	if err != nil {
+		return nil, "", err
+	}
+	p := path.Join(wd, "testdata", "screenshots", screenshot)
+	f, err := os.Open(p)
+	if err != nil {
+		return nil, "", err
+	}
+	defer f.Close()
+
+	img, format, err := image.Decode(f)
+	if err != nil {
+		return nil, "", fmt.Errorf("decode image: %w", err)
+	}
+	return img, format, nil
 }
