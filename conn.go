@@ -33,10 +33,6 @@ type Conn struct {
 	reader wsutil.Reader
 	writer wsutil.Writer
 
-	// reuse the easyjson structs to avoid allocs per Read/Write.
-	decoder jlexer.Lexer
-	encoder jwriter.Writer
-
 	dbgf func(string, ...interface{})
 }
 
@@ -91,10 +87,9 @@ func (c *Conn) Read(_ context.Context, msg *cdproto.Message) error {
 		c.dbgf("<- %s", buf)
 	}
 
-	// unmarshal, reusing lexer
-	c.decoder = jlexer.Lexer{Data: buf}
-	msg.UnmarshalEasyJSON(&c.decoder)
-	return c.decoder.Error()
+	decoder := jlexer.Lexer{Data: buf}
+	msg.UnmarshalEasyJSON(&decoder)
+	return decoder.Error()
 }
 
 // Write writes a message.
@@ -112,25 +107,24 @@ func (c *Conn) Write(_ context.Context, msg *cdproto.Message) error {
 	// but it do make it grow the buffer if needed.
 	c.writer.DisableFlush()
 
-	// Reuse the easyjson writer.
-	c.encoder = jwriter.Writer{}
+	encoder := jwriter.Writer{}
 
 	// Perform the marshal.
-	msg.MarshalEasyJSON(&c.encoder)
-	if err := c.encoder.Error; err != nil {
+	msg.MarshalEasyJSON(&encoder)
+	if err := encoder.Error; err != nil {
 		return err
 	}
 
 	// Write the bytes to the websocket.
 	// BuildBytes consumes the buffer, so we can't use it as well as DumpTo.
 	if c.dbgf != nil {
-		buf, _ := c.encoder.BuildBytes()
+		buf, _ := encoder.BuildBytes()
 		c.dbgf("-> %s", buf)
 		if _, err := c.writer.Write(buf); err != nil {
 			return err
 		}
 	} else {
-		if _, err := c.encoder.DumpTo(&c.writer); err != nil {
+		if _, err := encoder.DumpTo(&c.writer); err != nil {
 			return err
 		}
 	}
