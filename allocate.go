@@ -155,8 +155,27 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		// default, unless the user set Flag("no-sandbox", false).
 		args = append(args, "--no-sandbox")
 	}
-	if _, ok := a.initFlags["remote-debugging-port"]; !ok {
+
+	usePipe := true
+	if _, ok := a.initFlags["remote-debugging-port"]; ok {
+		usePipe = false
+	} else if _, ok := a.initFlags["remote-debugging-address"]; ok {
+		usePipe = false
+		// should be used together with --remote-debugging-port. see
+		// https://github.com/chromium/chromium/blob/d7da0240cae77824d1eda25745c4022757499131/headless/app/headless_shell_switches.cc#L81-L85
 		args = append(args, "--remote-debugging-port=0")
+	} else if runtime.GOOS == "windows" {
+		// FIXME: remove this branch when pipe connection is supported on windows.
+		usePipe = false
+		args = append(args, "--remote-debugging-port=0")
+	}
+	// remote debugging pipe and port are allowed simultaneously. see
+	// https://github.com/chromium/chromium/commit/f43ba6db9b4d7c6150ee370babee1e70526de5cc
+	// when --remote-debugging-pipe is set, pipe connection will be used anyway.
+	if _, ok := a.initFlags["remote-debugging-pipe"]; ok {
+		usePipe = true
+	} else if usePipe {
+		args = append(args, "--remote-debugging-pipe")
 	}
 
 	// Force the first page to be blank, instead of the welcome page;
@@ -179,11 +198,37 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		allocateCmdOptions(cmd)
 	}
 
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return nil, err
+	var stdout io.ReadCloser
+	if !usePipe || a.combinedOutputWriter != nil {
+		var err error
+		stdout, err = cmd.StdoutPipe()
+		if err != nil {
+			return nil, err
+		}
+		cmd.Stderr = cmd.Stdout
 	}
-	cmd.Stderr = cmd.Stdout
+
+	var connect connectFunc
+
+	if usePipe {
+		// Chromium uses fd 3 for input.
+		// our pipe connection will write to w3.
+		r3, w3, err := os.Pipe()
+		if err != nil {
+			return nil, err
+		}
+		// Chromium uses fd 4 for output.
+		// our pipe connection will read from r4.
+		r4, w4, err := os.Pipe()
+		if err != nil {
+			return nil, err
+		}
+		cmd.ExtraFiles = append(cmd.ExtraFiles, r3, w4)
+
+		connect = func(dialCtx context.Context, dbgf func(string, ...interface{})) (Transport, error) {
+			return newPipeConn(r4, w3, dbgf), nil
+		}
+	}
 
 	// Preserve environment variables set in the (lowest priority) existing
 	// environment, OverrideCmdFunc(), and Env (highest priority)
@@ -224,32 +269,42 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		close(c.allocated)
 	}()
 
-	// Chrome will sometimes fail to print the websocket, or run for a long
-	// time, without properly exiting. To avoid blocking forever in those
-	// cases, give up after twenty seconds.
-	const wsURLReadTimeout = 20 * time.Second
+	if !usePipe {
+		// Chrome will sometimes fail to print the websocket, or run for a long
+		// time, without properly exiting. To avoid blocking forever in those
+		// cases, give up after twenty seconds.
+		const wsURLReadTimeout = 20 * time.Second
 
-	var wsURL string
-	wsURLChan := make(chan struct{}, 1)
-	go func() {
-		wsURL, err = readOutput(stdout, a.combinedOutputWriter, a.wg.Done)
-		wsURLChan <- struct{}{}
-	}()
-	select {
-	case <-wsURLChan:
-	case <-time.After(wsURLReadTimeout):
-		err = errors.New("websocket url timeout reached")
-	}
-	if err != nil {
-		if a.combinedOutputWriter != nil {
-			// There's no io.Copy goroutine to call the done func.
-			// TODO: a cleaner way to deal with this edge case?
-			a.wg.Done()
+		var wsURL string
+		var err error
+		wsURLChan := make(chan struct{}, 1)
+		go func() {
+			wsURL, err = readOutput(stdout, a.combinedOutputWriter, a.wg.Done)
+			wsURLChan <- struct{}{}
+		}()
+		select {
+		case <-wsURLChan:
+		case <-time.After(wsURLReadTimeout):
+			err = errors.New("websocket url timeout reached")
 		}
-		return nil, err
+		if err != nil {
+			if a.combinedOutputWriter != nil {
+				// There's no io.Copy goroutine to call the done func.
+				// TODO: a cleaner way to deal with this edge case?
+				a.wg.Done()
+			}
+			return nil, err
+		}
+
+		connect = connectWS(wsURL)
+	} else if a.combinedOutputWriter != nil {
+		go func() {
+			_, _ = io.Copy(a.combinedOutputWriter, stdout)
+			a.wg.Done()
+		}()
 	}
 
-	browser, err := NewBrowser(ctx, connectWs(wsURL), opts...)
+	browser, err := NewBrowser(ctx, connect, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -441,6 +496,19 @@ func WindowSize(width, height int) ExecAllocatorOption {
 // header.
 func UserAgent(userAgent string) ExecAllocatorOption {
 	return Flag("user-agent", userAgent)
+}
+
+// DebuggingPort is the command line option to set the WebSocket debugging
+// port.
+//
+// By default, it will use pipe connection on non-windows. Adding this
+// option will force it to use WebSocket connection. But if --remote-debugging-pipe
+// is also set, it will use pipe connection anyway. Pipe connection is not
+// supported on windows due to https://github.com/golang/go/issues/21085.
+//
+// Pass 0 to let the system find a free port.
+func DebuggingPort(port int) ExecAllocatorOption {
+	return Flag("remote-debugging-port", fmt.Sprintf("%d", port))
 }
 
 // NoSandbox is the Chrome command line option to disable the sandbox.

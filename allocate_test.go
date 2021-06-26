@@ -313,6 +313,7 @@ func TestCombinedOutput(t *testing.T) {
 		append([]ExecAllocatorOption{
 			CombinedOutput(buf),
 			Flag("enable-logging", true),
+			DebuggingPort(0),
 		}, allocOpts...)...)
 	defer cancel()
 

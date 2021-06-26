@@ -125,6 +125,7 @@ func ExampleExecAllocator() {
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
 		chromedp.DisableGPU,
 		chromedp.UserDataDir(dir),
+		chromedp.DebuggingPort(0),
 	)
 
 	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
