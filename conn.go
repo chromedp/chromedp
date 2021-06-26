@@ -1,10 +1,12 @@
 package chromedp
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"io"
 	"net"
+	"os"
 
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
@@ -139,4 +141,74 @@ func WithConnDebugf(f func(string, ...interface{})) DialOption {
 	return func(c *Conn) {
 		c.dbgf = f
 	}
+}
+
+// pipeConn implements Transport with a pipe connection (--remote-debugging-pipe).
+// see https://github.com/chromium/chromium/commit/d91428bfde320278621f8a9346d2e84c108b81a9
+type pipeConn struct {
+	reader *bufio.Reader
+	in     *os.File // just for closing
+	out    *os.File
+
+	dbgf func(string, ...interface{})
+}
+
+func newPipeConn(in *os.File, out *os.File, dbgf func(string, ...interface{})) *pipeConn {
+	reader := bufio.NewReader(in)
+	return &pipeConn{
+		reader: reader,
+		in:     in,
+		out:    out,
+		dbgf:   dbgf,
+	}
+}
+
+// Close satisfies the io.Closer interface.
+func (p *pipeConn) Close() error {
+	_ = p.in.Close()
+	return p.out.Close()
+}
+
+// Read reads the next message.
+func (p *pipeConn) Read(_ context.Context, msg *cdproto.Message) error {
+	buf, err := p.reader.ReadBytes(0)
+	if err != nil {
+		return err
+	}
+	if len(buf) > 0 {
+		buf = buf[:len(buf)-1]
+	}
+
+	if p.dbgf != nil {
+		p.dbgf("<- %s", buf)
+	}
+
+	decoder := jlexer.Lexer{Data: buf}
+	msg.UnmarshalEasyJSON(&decoder)
+	return decoder.Error()
+}
+
+// Write writes a message.
+func (p *pipeConn) Write(_ context.Context, msg *cdproto.Message) error {
+	encoder := jwriter.Writer{}
+
+	msg.MarshalEasyJSON(&encoder)
+	if err := encoder.Error; err != nil {
+		return err
+	}
+
+	if p.dbgf != nil {
+		buf, _ := encoder.BuildBytes()
+		p.dbgf("-> %s", buf)
+		if _, err := p.out.Write(buf); err != nil {
+			return err
+		}
+	} else {
+		if _, err := encoder.DumpTo(p.out); err != nil {
+			return err
+		}
+	}
+
+	_, err := p.out.Write([]byte{0})
+	return err
 }
