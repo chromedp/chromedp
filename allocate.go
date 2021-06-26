@@ -249,7 +249,7 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		return nil, err
 	}
 
-	browser, err := NewBrowser(ctx, wsURL, opts...)
+	browser, err := NewBrowser(ctx, connectWs(wsURL), opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -537,7 +537,7 @@ func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (
 		cancel()    // close the websocket connection
 		a.wg.Done()
 	}()
-	browser, err := NewBrowser(wctx, a.wsURL, opts...)
+	browser, err := NewBrowser(wctx, connectWS(a.wsURL), opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -557,4 +557,15 @@ func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (
 // Wait satisfies the Allocator interface.
 func (a *RemoteAllocator) Wait() {
 	a.wg.Wait()
+}
+
+func connectWS(urlstr string) connectFunc {
+	return func(dialCtx context.Context, dbgf func(string, ...interface{})) (Transport, error) {
+		urlstr = forceIP(urlstr)
+		conn, err := DialContext(dialCtx, urlstr, WithConnDebugf(dbgf))
+		if err != nil {
+			return nil, fmt.Errorf("could not dial %q: %w", urlstr, err)
+		}
+		return conn, nil
+	}
 }

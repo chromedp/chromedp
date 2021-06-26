@@ -76,9 +76,14 @@ type Browser struct {
 	userDataDir string
 }
 
+// connectFunc is the func that NewBrowser will call to get a Transport
+// implementation. NewBrowser will pass an context (to control the dial
+// timeout) and the dbgf func (if any) to the connectFunc.
+type connectFunc func(ctx context.Context, dbgf func(string, ...interface{})) (Transport, error)
+
 // NewBrowser creates a new browser. Typically, this function wouldn't be called
 // directly, as the Allocator interface takes care of it.
-func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Browser, error) {
+func NewBrowser(ctx context.Context, connect connectFunc, opts ...BrowserOption) (*Browser, error) {
 	b := &Browser{
 		LostConnection:    make(chan struct{}),
 		closingGracefully: make(chan struct{}),
@@ -109,10 +114,9 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 	}
 
 	var err error
-	urlstr = forceIP(urlstr)
-	b.conn, err = DialContext(dialCtx, urlstr, WithConnDebugf(b.dbgf))
+	b.conn, err = connect(dialCtx, b.dbgf)
 	if err != nil {
-		return nil, fmt.Errorf("could not dial %q: %w", urlstr, err)
+		return nil, err
 	}
 
 	go b.run(ctx)
