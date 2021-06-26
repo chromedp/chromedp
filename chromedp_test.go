@@ -72,6 +72,11 @@ func init() {
 	if noSandbox := os.Getenv("CHROMEDP_NO_SANDBOX"); noSandbox != "false" {
 		allocOpts = append(allocOpts, NoSandbox)
 	}
+
+	// To test WebSocket connection.
+	if useWS := os.Getenv("CHROMEDP_WS"); useWS != "" && useWS != "false" {
+		allocOpts = append(allocOpts, DebuggingPort(0))
+	}
 }
 
 var browserOpts []ContextOption
