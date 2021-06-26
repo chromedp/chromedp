@@ -29,7 +29,7 @@ const (
 		return s;
 	})(%s)`
 
-	// blurJS is a javscript snippet that blurs the specified element.
+	// blurJS is a javascript snippet that blurs the specified element.
 	blurJS = `(function(a) {
 		a.blur();
 		return true;

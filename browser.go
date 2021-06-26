@@ -10,7 +10,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	easyjson "github.com/mailru/easyjson"
+	"github.com/mailru/easyjson"
 
 	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/browser"
@@ -43,7 +43,7 @@ type Browser struct {
 	dialTimeout time.Duration
 
 	// pages keeps track of the attached targets, indexed by each's session
-	// ID. The only reaon this is a field is so that the tests can check the
+	// ID. The only reason this is a field is so that the tests can check the
 	// map once a browser is closed.
 	pages map[target.SessionID]*Target
 

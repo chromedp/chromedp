@@ -436,18 +436,18 @@ func UserAgent(userAgent string) ExecAllocatorOption {
 	return Flag("user-agent", userAgent)
 }
 
-// NoSandbox is the Chrome comamnd line option to disable the sandbox.
+// NoSandbox is the Chrome command line option to disable the sandbox.
 func NoSandbox(a *ExecAllocator) {
 	Flag("no-sandbox", true)(a)
 }
 
-// NoFirstRun is the Chrome comamnd line option to disable the first run
+// NoFirstRun is the Chrome command line option to disable the first run
 // dialog.
 func NoFirstRun(a *ExecAllocator) {
 	Flag("no-first-run", true)(a)
 }
 
-// NoDefaultBrowserCheck is the Chrome comamnd line option to disable the
+// NoDefaultBrowserCheck is the Chrome command line option to disable the
 // default browser check.
 func NoDefaultBrowserCheck(a *ExecAllocator) {
 	Flag("no-default-browser-check", true)(a)
