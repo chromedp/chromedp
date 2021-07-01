@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
@@ -140,6 +141,41 @@ func TestExecAllocatorMissingWebsocketAddr(t *testing.T) {
 	got := fmt.Sprintf("%v", Run(ctx))
 	if !strings.Contains(got, want) {
 		t.Fatalf("want error to match %q, got %q", want, got)
+	}
+}
+
+func TestExecAllocatorPipeAndPort(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip(`Skip on windows because pipe connection is not supported on windows yet`)
+	}
+
+	t.Parallel()
+
+	buf := new(bytes.Buffer)
+	opts := append([]ExecAllocatorOption{
+		Flag("remote-debugging-pipe", true),
+		DebuggingPort(0),
+		CombinedOutput(buf),
+	}, allocOpts...)
+	allocCtx, cancel := NewExecAllocator(context.Background(), opts...)
+	defer cancel()
+
+	ctx, _ := NewContext(allocCtx)
+
+	if err := Run(ctx); err != nil {
+		t.Error(err)
+	}
+
+	b := FromContext(ctx).Browser
+
+	if _, ok := b.conn.(*pipeConn); !ok {
+		t.Fatalf("want it to use pipe connection, got %T", b.conn)
+	}
+	// close the browser first to avoid race on buf.String() call
+	cancel()
+
+	if !strings.Contains(buf.String(), "DevTools listening on") {
+		t.Fatalf("failed to find websocket string in browser output test")
 	}
 }
 
