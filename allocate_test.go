@@ -121,6 +121,152 @@ func TestSkipNewContext(t *testing.T) {
 	}
 }
 
+func TestExecAllocatorMissingWebsocketAddr(t *testing.T) {
+	t.Parallel()
+
+	allocCtx, cancel := NewExecAllocator(context.Background(),
+		// Use a bad listen address, so Chrome exits straight away.
+		append([]ExecAllocatorOption{Flag("remote-debugging-address", "_")},
+			allocOpts...)...)
+	defer cancel()
+
+	ctx, cancel := NewContext(allocCtx)
+	defer cancel()
+
+	// set the "s" flag to let "." match "\n"
+	// in Github Actions, the error text could be:
+	// "chrome failed to start:\n/bin/bash: /etc/profile.d/env_vars.sh: Permission denied\nmkdir: cannot create directory ‘/run/user/1001’: Permission denied\n[0321/081807.491906:ERROR:headless_shell.cc(720)] Invalid devtools server address\n"
+	want := `failed to start`
+	got := fmt.Sprintf("%v", Run(ctx))
+	if !strings.Contains(got, want) {
+		t.Fatalf("want error to match %q, got %q", want, got)
+	}
+}
+
+func TestCombinedOutput(t *testing.T) {
+	t.Parallel()
+
+	buf := new(bytes.Buffer)
+	allocCtx, cancel := NewExecAllocator(context.Background(),
+		append([]ExecAllocatorOption{
+			CombinedOutput(buf),
+			Flag("enable-logging", true),
+			DebuggingPort(0),
+		}, allocOpts...)...)
+	defer cancel()
+
+	taskCtx, _ := NewContext(allocCtx)
+	if err := Run(taskCtx,
+		Navigate(testdataDir+"/consolespam.html"),
+	); err != nil {
+		t.Fatal(err)
+	}
+	cancel()
+	if !strings.Contains(buf.String(), "DevTools listening on") {
+		t.Fatalf("failed to find websocket string in browser output test")
+	}
+	// Recent chrome versions have started replacing many "spam" messages
+	// with "spam 1", "spam 2", and so on. Search for the prefix only.
+	if want, got := 2000, strings.Count(buf.String(), `"spam`); want != got {
+		t.Fatalf("want %d spam console logs, got %d", want, got)
+	}
+}
+
+func TestCombinedOutputError(t *testing.T) {
+	t.Parallel()
+
+	// CombinedOutput used to hang the allocator if Chrome errored straight
+	// away, as there was no output to copy and the CombinedOutput would
+	// never signal it's done.
+	buf := new(bytes.Buffer)
+	allocCtx, cancel := NewExecAllocator(context.Background(),
+		// Use a bad listen address, so Chrome exits straight away.
+		append([]ExecAllocatorOption{
+			Flag("remote-debugging-address", "_"),
+			CombinedOutput(buf),
+		}, allocOpts...)...)
+	defer cancel()
+
+	ctx, cancel := NewContext(allocCtx)
+	defer cancel()
+	got := fmt.Sprint(Run(ctx))
+	want := "failed to start"
+	if !strings.Contains(got, want) {
+		t.Fatalf("got %q, want %q", got, want)
+	}
+}
+
+func TestEnv(t *testing.T) {
+	t.Parallel()
+
+	tz := "Australia/Melbourne"
+	allocCtx, cancel := NewExecAllocator(context.Background(),
+		append([]ExecAllocatorOption{
+			Env("TZ=" + tz),
+		}, allocOpts...)...)
+	defer cancel()
+
+	ctx, cancel := NewContext(allocCtx)
+	defer cancel()
+
+	var ret string
+	if err := Run(ctx,
+		Evaluate(`Intl.DateTimeFormat().resolvedOptions().timeZone`, &ret),
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	if ret != tz {
+		t.Fatalf("got %s, want %s", ret, tz)
+	}
+}
+
+func TestWithBrowserOptionAlreadyAllocated(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocateSeparate(t)
+	defer cancel()
+
+	defer func() {
+		want := "when allocating a new browser"
+		if got := fmt.Sprint(recover()); !strings.Contains(got, want) {
+			t.Errorf("expected a panic containing %q, got %q", want, got)
+		}
+	}()
+	// This needs to panic, as we try to set up a browser logf function
+	// after the browser has already been set up earlier.
+	_, _ = NewContext(ctx,
+		WithLogf(func(format string, args ...interface{}) {}),
+	)
+}
+
+func TestModifyCmdFunc(t *testing.T) {
+	t.Parallel()
+
+	tz := "Atlantic/Reykjavik"
+	allocCtx, cancel := NewExecAllocator(context.Background(),
+		append([]ExecAllocatorOption{
+			ModifyCmdFunc(func(cmd *exec.Cmd) {
+				cmd.Env = append(cmd.Env, "TZ="+tz)
+			}),
+		}, allocOpts...)...)
+	defer cancel()
+
+	ctx, cancel := NewContext(allocCtx)
+	defer cancel()
+
+	var ret string
+	if err := Run(ctx,
+		Evaluate(`Intl.DateTimeFormat().resolvedOptions().timeZone`, &ret),
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	if ret != tz {
+		t.Fatalf("got %s, want %s", ret, tz)
+	}
+}
+
 func TestRemoteAllocator(t *testing.T) {
 	t.Parallel()
 
@@ -280,151 +426,5 @@ func testRemoteAllocator(t *testing.T, modifyURL func(wsURL string) string) {
 		// t.Fatal("did not expect a nil error")
 	case context.DeadlineExceeded:
 		t.Fatalf("did not expect a standard context error: %v", err)
-	}
-}
-
-func TestExecAllocatorMissingWebsocketAddr(t *testing.T) {
-	t.Parallel()
-
-	allocCtx, cancel := NewExecAllocator(context.Background(),
-		// Use a bad listen address, so Chrome exits straight away.
-		append([]ExecAllocatorOption{Flag("remote-debugging-address", "_")},
-			allocOpts...)...)
-	defer cancel()
-
-	ctx, cancel := NewContext(allocCtx)
-	defer cancel()
-
-	// set the "s" flag to let "." match "\n"
-	// in Github Actions, the error text could be:
-	// "chrome failed to start:\n/bin/bash: /etc/profile.d/env_vars.sh: Permission denied\nmkdir: cannot create directory ‘/run/user/1001’: Permission denied\n[0321/081807.491906:ERROR:headless_shell.cc(720)] Invalid devtools server address\n"
-	want := `failed to start`
-	got := fmt.Sprintf("%v", Run(ctx))
-	if !strings.Contains(got, want) {
-		t.Fatalf("want error to match %q, got %q", want, got)
-	}
-}
-
-func TestCombinedOutput(t *testing.T) {
-	t.Parallel()
-
-	buf := new(bytes.Buffer)
-	allocCtx, cancel := NewExecAllocator(context.Background(),
-		append([]ExecAllocatorOption{
-			CombinedOutput(buf),
-			Flag("enable-logging", true),
-			DebuggingPort(0),
-		}, allocOpts...)...)
-	defer cancel()
-
-	taskCtx, _ := NewContext(allocCtx)
-	if err := Run(taskCtx,
-		Navigate(testdataDir+"/consolespam.html"),
-	); err != nil {
-		t.Fatal(err)
-	}
-	cancel()
-	if !strings.Contains(buf.String(), "DevTools listening on") {
-		t.Fatalf("failed to find websocket string in browser output test")
-	}
-	// Recent chrome versions have started replacing many "spam" messages
-	// with "spam 1", "spam 2", and so on. Search for the prefix only.
-	if want, got := 2000, strings.Count(buf.String(), `"spam`); want != got {
-		t.Fatalf("want %d spam console logs, got %d", want, got)
-	}
-}
-
-func TestCombinedOutputError(t *testing.T) {
-	t.Parallel()
-
-	// CombinedOutput used to hang the allocator if Chrome errored straight
-	// away, as there was no output to copy and the CombinedOutput would
-	// never signal it's done.
-	buf := new(bytes.Buffer)
-	allocCtx, cancel := NewExecAllocator(context.Background(),
-		// Use a bad listen address, so Chrome exits straight away.
-		append([]ExecAllocatorOption{
-			Flag("remote-debugging-address", "_"),
-			CombinedOutput(buf),
-		}, allocOpts...)...)
-	defer cancel()
-
-	ctx, cancel := NewContext(allocCtx)
-	defer cancel()
-	got := fmt.Sprint(Run(ctx))
-	want := "failed to start"
-	if !strings.Contains(got, want) {
-		t.Fatalf("got %q, want %q", got, want)
-	}
-}
-
-func TestEnv(t *testing.T) {
-	t.Parallel()
-
-	tz := "Australia/Melbourne"
-	allocCtx, cancel := NewExecAllocator(context.Background(),
-		append([]ExecAllocatorOption{
-			Env("TZ=" + tz),
-		}, allocOpts...)...)
-	defer cancel()
-
-	ctx, cancel := NewContext(allocCtx)
-	defer cancel()
-
-	var ret string
-	if err := Run(ctx,
-		Evaluate(`Intl.DateTimeFormat().resolvedOptions().timeZone`, &ret),
-	); err != nil {
-		t.Fatal(err)
-	}
-
-	if ret != tz {
-		t.Fatalf("got %s, want %s", ret, tz)
-	}
-}
-
-func TestWithBrowserOptionAlreadyAllocated(t *testing.T) {
-	t.Parallel()
-
-	ctx, cancel := testAllocateSeparate(t)
-	defer cancel()
-
-	defer func() {
-		want := "when allocating a new browser"
-		if got := fmt.Sprint(recover()); !strings.Contains(got, want) {
-			t.Errorf("expected a panic containing %q, got %q", want, got)
-		}
-	}()
-	// This needs to panic, as we try to set up a browser logf function
-	// after the browser has already been set up earlier.
-	_, _ = NewContext(ctx,
-		WithLogf(func(format string, args ...interface{}) {}),
-	)
-}
-
-func TestModifyCmdFunc(t *testing.T) {
-	t.Parallel()
-
-	tz := "Atlantic/Reykjavik"
-	allocCtx, cancel := NewExecAllocator(context.Background(),
-		append([]ExecAllocatorOption{
-			ModifyCmdFunc(func(cmd *exec.Cmd) {
-				cmd.Env = append(cmd.Env, "TZ="+tz)
-			}),
-		}, allocOpts...)...)
-	defer cancel()
-
-	ctx, cancel := NewContext(allocCtx)
-	defer cancel()
-
-	var ret string
-	if err := Run(ctx,
-		Evaluate(`Intl.DateTimeFormat().resolvedOptions().timeZone`, &ret),
-	); err != nil {
-		t.Fatal(err)
-	}
-
-	if ret != tz {
-		t.Fatalf("got %s, want %s", ret, tz)
 	}
 }
