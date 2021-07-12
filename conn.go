@@ -54,13 +54,9 @@ func DialContext(ctx context.Context, urlstr string, opts ...DialOption) (*Conn,
 	// apply opts
 	c := &Conn{
 		conn: conn,
-		// The default buffer size is 4KiB, which should be enough.
-		// But github.com/gobwas/ws has a bug right row
-		// (see https://github.com/gobwas/ws/pull/134),
-		// so we will pass 65544 to make it reserve 10 or 14 bytes for header.
-		// Once the issue is fixed, we can pass 0 to use the default size (4KiB).
-		writer: *wsutil.NewWriterBufferSize(conn,
-			ws.StateClientSide, ws.OpText, 65544),
+		// pass 0 to use the default initial buffer size (4KiB).
+		// github.com/gobwas/ws will grow the buffer size if needed.
+		writer: *wsutil.NewWriterBufferSize(conn, ws.StateClientSide, ws.OpText, 0),
 	}
 	for _, o := range opts {
 		o(c)
