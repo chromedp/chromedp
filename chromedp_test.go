@@ -72,6 +72,11 @@ func init() {
 	if noSandbox := os.Getenv("CHROMEDP_NO_SANDBOX"); noSandbox != "false" {
 		allocOpts = append(allocOpts, NoSandbox)
 	}
+
+	// To test WebSocket connection.
+	if useWS := os.Getenv("CHROMEDP_WS"); useWS != "" && useWS != "false" {
+		allocOpts = append(allocOpts, DebuggingPort(0))
+	}
 }
 
 var browserOpts []ContextOption
@@ -480,7 +485,7 @@ func TestDialTimeout(t *testing.T) {
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		_, err = NewBrowser(ctx, url, WithDialTimeout(time.Microsecond))
+		_, err = NewBrowser(ctx, connectWS(url), WithDialTimeout(time.Microsecond))
 		got, want := fmt.Sprintf("%v", err), "i/o timeout"
 		if !strings.Contains(got, want) {
 			t.Fatalf("got %q, want %q", got, want)
@@ -503,7 +508,7 @@ func TestDialTimeout(t *testing.T) {
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		_, err = NewBrowser(ctx, url, WithDialTimeout(0))
+		_, err = NewBrowser(ctx, connectWS(url), WithDialTimeout(0))
 		got := fmt.Sprintf("%v", err)
 		if !strings.Contains(got, "EOF") && !strings.Contains(got, "connection reset") {
 			t.Fatalf("got %q, want %q or %q", got, "EOF", "connection reset")
