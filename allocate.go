@@ -369,6 +369,7 @@ func findExecPath() string {
 			"google-chrome-beta",
 			"google-chrome-unstable",
 			"/usr/bin/google-chrome",
+			"/usr/local/bin/chrome",
 		}
 	}
 
