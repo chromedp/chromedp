@@ -23,6 +23,28 @@ func MouseEvent(typ input.MouseType, x, y float64, opts ...MouseOption) MouseAct
 	return p
 }
 
+
+
+
+
+func MouseMoveXY(x, y float64, opts ...MouseOption) MouseAction {
+	return ActionFunc(func(ctx context.Context) error {
+		p := &input.DispatchMouseEventParams{
+			Type:       input.MouseMoved,
+			X:          x,
+			Y:          y,
+		}
+
+		// apply opts
+		for _, o := range opts {
+			p = o(p)
+		}
+
+		return p.Do(ctx)
+	})
+}
+
+
 // MouseClickXY is an action that sends a left mouse button click (ie,
 // mousePressed and mouseReleased event) to the X, Y location.
 func MouseClickXY(x, y float64, opts ...MouseOption) MouseAction {
@@ -48,6 +70,38 @@ func MouseClickXY(x, y float64, opts ...MouseOption) MouseAction {
 		return p.Do(ctx)
 	})
 }
+
+
+
+
+
+func MouseMoveNode(n *cdp.Node, opts ...MouseOption) MouseAction {
+	return ActionFunc(func(ctx context.Context) error {
+		boxes, err := dom.GetContentQuads().WithNodeID(n.NodeID).Do(ctx)
+		if err != nil {
+			return err
+		}
+		content := boxes[0]
+
+		c := len(content)
+		if c%2 != 0 || c < 1 {
+			return ErrInvalidDimensions
+		}
+
+		var x, y float64
+		for i := 0; i < c; i += 2 {
+			x += content[i]
+			y += content[i+1]
+		}
+		x /= float64(c / 2)
+		y /= float64(c / 2)
+
+		return MouseMoveXY(x, y, opts...).Do(ctx)
+	})
+}
+
+
+
 
 // MouseClickNode is an action that dispatches a mouse left button click event
 // at the center of a specified node.
