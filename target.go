@@ -333,7 +333,8 @@ func (t *Target) pageEvent(ev interface{}) {
 		*page.EventNavigatedWithinDocument,
 		*page.EventScreencastFrame,
 		*page.EventScreencastVisibilityChanged,
-		*page.EventWindowOpen:
+		*page.EventWindowOpen,
+		*page.EventBackForwardCacheNotUsed:
 		return
 
 	default:
