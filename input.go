@@ -69,6 +69,11 @@ func MouseClickNode(n *cdp.Node, opts ...MouseOption) MouseAction {
 		if err != nil {
 			return err
 		}
+
+		if len(boxes) == 0 {
+			return ErrInvalidDimensions
+		}
+
 		content := boxes[0]
 
 		c := len(content)
