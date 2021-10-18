@@ -38,13 +38,15 @@ func (p *pollTask) Do(ctx context.Context) error {
 		execCtx runtime.ExecutionContextID
 		ok      bool
 	)
-	for !ok {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-time.After(5 * time.Millisecond):
-		}
+
+	for {
 		_, _, execCtx, ok = t.ensureFrame()
+		if ok {
+			break
+		}
+		if err := sleepContext(ctx, 5*time.Millisecond); err != nil {
+			return err
+		}
 	}
 
 	if p.frame != nil {

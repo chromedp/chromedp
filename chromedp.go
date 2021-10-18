@@ -627,17 +627,38 @@ func (t Tasks) Do(ctx context.Context) error {
 // been able to be written/tested.
 func Sleep(d time.Duration) Action {
 	return ActionFunc(func(ctx context.Context) error {
-		// Don't use time.After, to avoid a temporary goroutine leak if
-		// ctx is cancelled before the timer fires.
-		t := time.NewTimer(d)
-		select {
-		case <-ctx.Done():
-			t.Stop()
-			return ctx.Err()
-		case <-t.C:
-		}
-		return nil
+		return sleepContext(ctx, d)
 	})
+}
+
+// sleepContext sleeps for the specified duration. It returns ctx.Err() immediately
+// if the context is cancelled.
+func sleepContext(ctx context.Context, d time.Duration) error {
+	timer := time.NewTimer(d)
+	select {
+	case <-ctx.Done():
+		if !timer.Stop() {
+			<-timer.C
+		}
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
+}
+
+// retryWithSleep reties the execution of the specified func until the func returns
+// true (means to stop) or a non-nil error.
+func retryWithSleep(ctx context.Context, d time.Duration, f func(ctx context.Context) (bool, error)) error {
+	for {
+		toStop, err := f(ctx)
+		if toStop || err != nil {
+			return err
+		}
+		err = sleepContext(ctx, d)
+		if err != nil {
+			return err
+		}
+	}
 }
 
 type cancelableListener struct {
