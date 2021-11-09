@@ -370,6 +370,7 @@ func findExecPath() string {
 			"google-chrome-unstable",
 			"/usr/bin/google-chrome",
 			"/usr/local/bin/chrome",
+			"/snap/bin/chromium",
 			"chrome",
 		}
 	}
