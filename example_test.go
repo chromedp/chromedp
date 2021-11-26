@@ -394,15 +394,15 @@ func ExampleEmulate() {
 	var buf []byte
 	if err := chromedp.Run(ctx,
 		chromedp.Emulate(device.IPhone7),
-		chromedp.Navigate(`https://google.com/`),
+		chromedp.Navigate(`https://duckduckgo.com/`),
 		chromedp.SendKeys(`input[name=q]`, "what's my user agent?\n"),
-		chromedp.WaitVisible(`#rso`, chromedp.ByID),
+		chromedp.WaitVisible(`#zci-answer`, chromedp.ByID),
 		chromedp.CaptureScreenshot(&buf),
 	); err != nil {
 		log.Fatal(err)
 	}
 
-	if err := ioutil.WriteFile("google-iphone7.png", buf, 0o644); err != nil {
+	if err := ioutil.WriteFile("iphone7-ua.png", buf, 0o644); err != nil {
 		log.Fatal(err)
 	}
 
