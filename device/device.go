@@ -45,6 +45,24 @@ const (
 	// GalaxyS5landscape is the "Galaxy S5 landscape" device.
 	GalaxyS5landscape
 
+	// GalaxyS8 is the "Galaxy S8" device.
+	GalaxyS8
+
+	// GalaxyS8landscape is the "Galaxy S8 landscape" device.
+	GalaxyS8landscape
+
+	// GalaxyS9 is the "Galaxy S9+" device.
+	GalaxyS9
+
+	// GalaxyS9landscape is the "Galaxy S9+ landscape" device.
+	GalaxyS9landscape
+
+	// GalaxyTabS4 is the "Galaxy Tab S4" device.
+	GalaxyTabS4
+
+	// GalaxyTabS4landscape is the "Galaxy Tab S4 landscape" device.
+	GalaxyTabS4landscape
+
 	// IPad is the "iPad" device.
 	IPad
 
@@ -239,6 +257,18 @@ const (
 
 	// Pixel2XLlandscape is the "Pixel 2 XL landscape" device.
 	Pixel2XLlandscape
+
+	// Pixel3 is the "Pixel 3" device.
+	Pixel3
+
+	// Pixel3landscape is the "Pixel 3 landscape" device.
+	Pixel3landscape
+
+	// Pixel4 is the "Pixel 4" device.
+	Pixel4
+
+	// Pixel4landscape is the "Pixel 4 landscape" device.
+	Pixel4landscape
 )
 
 // devices is the list of devices.
@@ -256,6 +286,12 @@ var devices = [...]Info{
 	{"Galaxy S III landscape", "Mozilla/5.0 (Linux; U; Android 4.0; en-us; GT-I9300 Build/IMM76D) AppleWebKit/534.30 (KHTML, like Gecko) Version/4.0 Mobile Safari/534.30", 640, 360, 2.000000, true, true, true},
 	{"Galaxy S5", "Mozilla/5.0 (Linux; Android 5.0; SM-G900P Build/LRX21T) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3765.0 Mobile Safari/537.36", 360, 640, 3.000000, false, true, true},
 	{"Galaxy S5 landscape", "Mozilla/5.0 (Linux; Android 5.0; SM-G900P Build/LRX21T) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3765.0 Mobile Safari/537.36", 640, 360, 3.000000, true, true, true},
+	{"Galaxy S8", "Mozilla/5.0 (Linux; Android 7.0; SM-G950U Build/NRD90M) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.84 Mobile Safari/537.36", 360, 740, 3.000000, false, true, true},
+	{"Galaxy S8 landscape", "Mozilla/5.0 (Linux; Android 7.0; SM-G950U Build/NRD90M) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3202.84 Mobile Safari/537.36", 740, 360, 3.000000, true, true, true},
+	{"Galaxy S9+", "Mozilla/5.0 (Linux; Android 8.0.0; SM-G965U Build/R16NW) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.111 Mobile Safari/537.36", 320, 658, 4.500000, false, true, true},
+	{"Galaxy S9+ landscape", "Mozilla/5.0 (Linux; Android 8.0.0; SM-G965U Build/R16NW) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.111 Mobile Safari/537.36", 658, 320, 4.500000, true, true, true},
+	{"Galaxy Tab S4", "Mozilla/5.0 (Linux; Android 8.1.0; SM-T837A) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.80 Safari/537.36", 712, 1138, 2.250000, false, true, true},
+	{"Galaxy Tab S4 landscape", "Mozilla/5.0 (Linux; Android 8.1.0; SM-T837A) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.80 Safari/537.36", 1138, 712, 2.250000, true, true, true},
 	{"iPad", "Mozilla/5.0 (iPad; CPU OS 11_0 like Mac OS X) AppleWebKit/604.1.34 (KHTML, like Gecko) Version/11.0 Mobile/15A5341f Safari/604.1", 768, 1024, 2.000000, false, true, true},
 	{"iPad landscape", "Mozilla/5.0 (iPad; CPU OS 11_0 like Mac OS X) AppleWebKit/604.1.34 (KHTML, like Gecko) Version/11.0 Mobile/15A5341f Safari/604.1", 1024, 768, 2.000000, true, true, true},
 	{"iPad Mini", "Mozilla/5.0 (iPad; CPU OS 11_0 like Mac OS X) AppleWebKit/604.1.34 (KHTML, like Gecko) Version/11.0 Mobile/15A5341f Safari/604.1", 768, 1024, 2.000000, false, true, true},
@@ -321,4 +357,8 @@ var devices = [...]Info{
 	{"Pixel 2 landscape", "Mozilla/5.0 (Linux; Android 8.0; Pixel 2 Build/OPD3.170816.012) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3765.0 Mobile Safari/537.36", 731, 411, 2.625000, true, true, true},
 	{"Pixel 2 XL", "Mozilla/5.0 (Linux; Android 8.0.0; Pixel 2 XL Build/OPD1.170816.004) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3765.0 Mobile Safari/537.36", 411, 823, 3.500000, false, true, true},
 	{"Pixel 2 XL landscape", "Mozilla/5.0 (Linux; Android 8.0.0; Pixel 2 XL Build/OPD1.170816.004) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3765.0 Mobile Safari/537.36", 823, 411, 3.500000, true, true, true},
+	{"Pixel 3", "Mozilla/5.0 (Linux; Android 9; Pixel 3 Build/PQ1A.181105.017.A1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.158 Mobile Safari/537.36", 393, 786, 2.750000, false, true, true},
+	{"Pixel 3 landscape", "Mozilla/5.0 (Linux; Android 9; Pixel 3 Build/PQ1A.181105.017.A1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.158 Mobile Safari/537.36", 786, 393, 2.750000, true, true, true},
+	{"Pixel 4", "Mozilla/5.0 (Linux; Android 10; Pixel 4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Mobile Safari/537.36", 353, 745, 3.000000, false, true, true},
+	{"Pixel 4 landscape", "Mozilla/5.0 (Linux; Android 10; Pixel 4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Mobile Safari/537.36", 745, 353, 3.000000, true, true, true},
 }
