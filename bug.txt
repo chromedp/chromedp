@@ -1,0 +1,1 @@
+Hello, author. When I used this package, I found a problem that some fields could not be obtained when I obtained cookies. For example, HOY_TR and HBB_HC parameters could not be obtained when I placed an order after logging in to this website
