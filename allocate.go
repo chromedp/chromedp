@@ -347,6 +347,9 @@ func findExecPath() string {
 			// Mac
 			"/Applications/Chromium.app/Contents/MacOS/Chromium",
 			"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+			"/Applications/Google Chrome Beta.app/Contents/MacOS/Google Chrome Beta",
+			"/Applications/Google Chrome Dev.app/Contents/MacOS/Google Chrome Dev",
+			"/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary",
 		}
 	case "windows":
 		locations = []string{
