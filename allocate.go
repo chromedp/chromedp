@@ -424,6 +424,17 @@ func UserDataDir(dir string) ExecAllocatorOption {
 	return Flag("user-data-dir", dir)
 }
 
+// UserDataProfileDir is the command line option to set the profile
+// subdirectory under the UserData directory.
+//
+// Note: if unspecificed Chrome will choose/create the folder "Default".
+// This folder contains the profile specific data like cookies & cache.
+// If multiple profile exists they are typically named "Profile 1",
+// "Profile 2", etc.
+func UserDataProfile(profile string) ExecAllocatorOption {
+	return Flag("profile-directory", profile)
+}
+
 // ProxyServer is the command line option to set the outbound proxy server.
 func ProxyServer(proxy string) ExecAllocatorOption {
 	return Flag("proxy-server", proxy)
