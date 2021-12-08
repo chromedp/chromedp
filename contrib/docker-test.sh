@@ -18,7 +18,7 @@ set -e
     --workdir=/chromedp \
     --env=PATH=/headless-shell \
     --env=HEADLESS_SHELL=1 \
-    chromedp/headless-shell:latest -test.v
+    chromedp/headless-shell:latest -test.v -test.parallel=1 -test.timeout=3m
 )
 
 popd &> /dev/null
