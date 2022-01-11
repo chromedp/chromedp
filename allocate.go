@@ -499,6 +499,8 @@ func CombinedOutput(w io.Writer) ExecAllocatorOption {
 // websocket address, such as "ws://127.0.0.1:$PORT/devtools/browser/...".
 // If the url does not contain "/devtools/browser/", it will try to detect
 // the correct one by sending a request to "http://$HOST:$PORT/json/version".
+// In case a RemoteAllocatorOption with FetchJSONDebuggerURL set as false
+// is passed, the URL won't be detected and will use the original URL
 //
 // The url with the following formats are accepted:
 // * ws://127.0.0.1:9222/
@@ -507,10 +509,17 @@ func CombinedOutput(w io.Writer) ExecAllocatorOption {
 // But "ws://127.0.0.1:9222/devtools/browser/" are not accepted.
 // Because it contains "/devtools/browser/" and will be considered
 // as a valid websocket debugger URL.
-func NewRemoteAllocator(parent context.Context, url string) (context.Context, context.CancelFunc) {
+func NewRemoteAllocator(parent context.Context, url string, opts ...RemoteAllocatorOption) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(parent)
+	var wsURL string
+	if opts != nil && !opts[0].FetchJSONDebuggerURL {
+		wsURL = url
+	} else {
+		wsURL = detectURL(url)
+	}
+
 	c := &Context{Allocator: &RemoteAllocator{
-		wsURL: detectURL(url),
+		wsURL: wsURL,
 	}}
 	ctx = context.WithValue(ctx, contextKey{}, c)
 	return ctx, cancel
@@ -523,6 +532,12 @@ type RemoteAllocator struct {
 
 	wg sync.WaitGroup
 }
+
+type RemoteAllocatorOption struct {
+	FetchJSONDebuggerURL bool
+}
+
+var PersistDebuggerURL = RemoteAllocatorOption{ FetchJSONDebuggerURL: false }
 
 // Allocate satisfies the Allocator interface.
 func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*Browser, error) {
