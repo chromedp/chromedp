@@ -369,8 +369,13 @@ func findExecPath() string {
 			"google-chrome-stable",
 			"google-chrome-beta",
 			"google-chrome-unstable",
+			"ungoogled-chromium",
 			"/usr/bin/google-chrome",
 			"/usr/local/bin/chrome",
+			"org.chromium.Chromium",
+			"com.google.Chrome",
+			"com.google.ChromeDev",
+			"com.github.Eloston.UngoogledChromium",
 			"/snap/bin/chromium",
 			"chrome",
 		}
