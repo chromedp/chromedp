@@ -1135,8 +1135,8 @@ func MatchedStyle(sel interface{}, style **css.GetMatchedStylesForNodeReturns, o
 		var err error
 		ret := &css.GetMatchedStylesForNodeReturns{}
 		ret.InlineStyle, ret.AttributesStyle, ret.MatchedCSSRules,
-			ret.PseudoElements, ret.Inherited, ret.CSSKeyframesRules,
-			err = css.GetMatchedStylesForNode(nodes[0].NodeID).Do(ctx)
+			ret.PseudoElements, ret.Inherited, ret.InheritedPseudoElements,
+			ret.CSSKeyframesRules, err = css.GetMatchedStylesForNode(nodes[0].NodeID).Do(ctx)
 		if err != nil {
 			return err
 		}
