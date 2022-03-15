@@ -37,7 +37,8 @@ type Allocator interface {
 // to create the allocator without the unnecessary context layer.
 func setupExecAllocator(opts ...ExecAllocatorOption) *ExecAllocator {
 	ep := &ExecAllocator{
-		initFlags: make(map[string]interface{}),
+		initFlags:        make(map[string]interface{}),
+		wsURLReadTimeout: 20 * time.Second,
 	}
 	for _, o := range opts {
 		o(ep)
@@ -104,6 +105,11 @@ type ExecAllocator struct {
 	execPath  string
 	initFlags map[string]interface{}
 	initEnv   []string
+
+	// Chrome will sometimes fail to print the websocket, or run for a long
+	// time, without properly exiting. To avoid blocking forever in those
+	// cases, give up after a specified timeout.
+	wsURLReadTimeout time.Duration
 
 	modifyCmdFunc func(cmd *exec.Cmd)
 
@@ -224,11 +230,6 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		close(c.allocated)
 	}()
 
-	// Chrome will sometimes fail to print the websocket, or run for a long
-	// time, without properly exiting. To avoid blocking forever in those
-	// cases, give up after twenty seconds.
-	const wsURLReadTimeout = 20 * time.Second
-
 	var wsURL string
 	wsURLChan := make(chan struct{}, 1)
 	go func() {
@@ -237,7 +238,7 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	}()
 	select {
 	case <-wsURLChan:
-	case <-time.After(wsURLReadTimeout):
+	case <-time.After(a.wsURLReadTimeout):
 		err = errors.New("websocket url timeout reached")
 	}
 	if err != nil {
@@ -491,6 +492,14 @@ func DisableGPU(a *ExecAllocator) {
 func CombinedOutput(w io.Writer) ExecAllocatorOption {
 	return func(a *ExecAllocator) {
 		a.combinedOutputWriter = w
+	}
+}
+
+// WSURLReadTimeout sets the waiting time for reading the WebSocket URL.
+// The default value is 20 seconds.
+func WSURLReadTimeout(t time.Duration) ExecAllocatorOption {
+	return func(a *ExecAllocator) {
+		a.wsURLReadTimeout = t
 	}
 }
 
