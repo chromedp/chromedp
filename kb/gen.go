@@ -1,4 +1,5 @@
 //go:build ignore
+// +build ignore
 
 package main
 
@@ -626,7 +627,7 @@ func Encode(r rune) []*input.DispatchKeyEventParams {
 // DOM keys.
 const (
 	%s)
-	
+
 // Keys is the map of unicode characters to their DOM key data.
 var Keys = map[rune]*Key{
 	%s}
