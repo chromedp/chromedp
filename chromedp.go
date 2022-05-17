@@ -245,11 +245,11 @@ func initContextBrowser(ctx context.Context) (*Context, error) {
 		return nil, ErrInvalidContext
 	}
 	if c.Browser == nil {
-		browser, err := c.Allocator.Allocate(ctx, c.browserOpts...)
+		b, err := c.Allocator.Allocate(ctx, c.browserOpts...)
 		if err != nil {
 			return nil, err
 		}
-		c.Browser = browser
+		c.Browser = b
 		c.Browser.listeners = append(c.Browser.listeners, c.browserListeners...)
 	}
 	return c, nil
@@ -386,7 +386,7 @@ func (c *Context) attachTarget(ctx context.Context, targetID target.ID) error {
 
 	for _, action := range actions {
 		if err := action.Do(cdp.WithExecutor(ctx, c.Target)); err != nil {
-			return fmt.Errorf("unable to execute %T: %v", action, err)
+			return fmt.Errorf("unable to execute %T: %w", action, err)
 		}
 	}
 	return nil
@@ -464,7 +464,7 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 		finished := false
 
 		// First, set up the function to handle events.
-		// We are listening for lifeycle events, so we will use those to
+		// We are listening for lifecycle events, so we will use those to
 		// make sure we grab the response for a request initiated by the
 		// loaderID that we want.
 
@@ -627,17 +627,38 @@ func (t Tasks) Do(ctx context.Context) error {
 // been able to be written/tested.
 func Sleep(d time.Duration) Action {
 	return ActionFunc(func(ctx context.Context) error {
-		// Don't use time.After, to avoid a temporary goroutine leak if
-		// ctx is cancelled before the timer fires.
-		t := time.NewTimer(d)
-		select {
-		case <-ctx.Done():
-			t.Stop()
-			return ctx.Err()
-		case <-t.C:
-		}
-		return nil
+		return sleepContext(ctx, d)
 	})
+}
+
+// sleepContext sleeps for the specified duration. It returns ctx.Err() immediately
+// if the context is cancelled.
+func sleepContext(ctx context.Context, d time.Duration) error {
+	timer := time.NewTimer(d)
+	select {
+	case <-ctx.Done():
+		if !timer.Stop() {
+			<-timer.C
+		}
+		return ctx.Err()
+	case <-timer.C:
+		return nil
+	}
+}
+
+// retryWithSleep reties the execution of the specified func until the func returns
+// true (means to stop) or a non-nil error.
+func retryWithSleep(ctx context.Context, d time.Duration, f func(ctx context.Context) (bool, error)) error {
+	for {
+		toStop, err := f(ctx)
+		if toStop || err != nil {
+			return err
+		}
+		err = sleepContext(ctx, d)
+		if err != nil {
+			return err
+		}
+	}
 }
 
 type cancelableListener struct {
@@ -652,7 +673,8 @@ type cancelableListener struct {
 //
 // Note that the function is called synchronously when handling events. The
 // function should avoid blocking at all costs. For example, any Actions must be
-// run via a separate goroutine.
+// run via a separate goroutine (otherwise, it could result in a deadlock if the
+// action sends CDP messages).
 func ListenBrowser(ctx context.Context, fn func(ev interface{})) {
 	c := FromContext(ctx)
 	if c == nil {
@@ -674,7 +696,8 @@ func ListenBrowser(ctx context.Context, fn func(ev interface{})) {
 //
 // Note that the function is called synchronously when handling events. The
 // function should avoid blocking at all costs. For example, any Actions must be
-// run via a separate goroutine.
+// run via a separate goroutine (otherwise, it could result in a deadlock if the
+// action sends CDP messages).
 func ListenTarget(ctx context.Context, fn func(ev interface{})) {
 	c := FromContext(ctx)
 	if c == nil {

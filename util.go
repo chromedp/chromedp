@@ -1,8 +1,11 @@
 package chromedp
 
 import (
+	"encoding/json"
 	"net"
+	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/cdp"
@@ -27,6 +30,47 @@ func forceIP(urlstr string) string {
 	}
 	u.Host = net.JoinHostPort(addr.IP.String(), port)
 	return u.String()
+}
+
+// detectURL detects the websocket debugger URL if the provided URL is not a
+// valid websocket debugger URL.
+//
+// A valid websocket debugger URL is something like:
+// ws://127.0.0.1:9222/devtools/browser/...
+// The original URL with the following formats are accepted:
+// * ws://127.0.0.1:9222/
+// * http://127.0.0.1:9222/
+func detectURL(urlstr string) string {
+	if strings.Contains(urlstr, "/devtools/browser/") {
+		return urlstr
+	}
+
+	// replace the scheme and path to construct the URL like:
+	// http://127.0.0.1:9222/json/version
+	u, err := url.Parse(urlstr)
+	if err != nil {
+		return urlstr
+	}
+	u.Scheme = "http"
+	u.Path = "/json/version"
+
+	// to get "webSocketDebuggerUrl" in the response
+	resp, err := http.Get(forceIP(u.String()))
+	if err != nil {
+		return urlstr
+	}
+	defer resp.Body.Close()
+
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return urlstr
+	}
+	// the browser will construct the debugger URL using the "host" header of the /json/version request.
+	// for example, run headless-shell in a container: docker run -d -p 9000:9222 chromedp/headless-shell:latest
+	// then: curl http://127.0.0.1:9000/json/version
+	// and the debugger URL will be something like: ws://127.0.0.1:9000/devtools/browser/...
+	wsURL := result["webSocketDebuggerUrl"].(string)
+	return wsURL
 }
 
 func runListeners(list []cancelableListener, ev interface{}) []cancelableListener {
@@ -65,14 +109,6 @@ func frameStartedLoading(f *cdp.Frame) {
 
 func frameStoppedLoading(f *cdp.Frame) {
 	clearFrameState(f, cdp.FrameLoading)
-}
-
-func frameScheduledNavigation(f *cdp.Frame) {
-	setFrameState(f, cdp.FrameScheduledNavigation)
-}
-
-func frameClearedScheduledNavigation(f *cdp.Frame) {
-	clearFrameState(f, cdp.FrameScheduledNavigation)
 }
 
 // setFrameState sets the frame state via bitwise or (|).
@@ -120,7 +156,7 @@ func walk(m map[cdp.NodeID]*cdp.Node, n *cdp.Node) {
 		walk(m, c)
 	}
 
-	for _, c := range []*cdp.Node{n.ContentDocument, n.TemplateContent, n.ImportedDocument} {
+	for _, c := range []*cdp.Node{n.ContentDocument, n.TemplateContent} {
 		if c == nil {
 			continue
 		}

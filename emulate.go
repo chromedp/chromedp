@@ -56,7 +56,7 @@ func EmulateLandscape(p1 *emulation.SetDeviceMetricsOverrideParams, p2 *emulatio
 }
 
 // EmulatePortrait is an emulate viewport option to set the device viewport
-// screen orentation in portrait primary mode and an angle of 0.
+// screen orientation in portrait primary mode and an angle of 0.
 func EmulatePortrait(p1 *emulation.SetDeviceMetricsOverrideParams, p2 *emulation.SetTouchEmulationEnabledParams) {
 	EmulateOrientation(emulation.OrientationTypePortraitPrimary, 0)(p1, p2)
 }

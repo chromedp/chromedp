@@ -49,7 +49,7 @@ func ExampleTitle() {
 		chromedp.Navigate(ts.URL),
 		chromedp.Title(&title),
 	); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	fmt.Println(title)
 
@@ -79,7 +79,7 @@ func ExampleRunResponse() {
 		chromedp.Navigate(ts.URL),
 		chromedp.Title(&firstTitle),
 	); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	fmt.Println("first title:", firstTitle)
 
@@ -88,7 +88,7 @@ func ExampleRunResponse() {
 	// RunResponse does that waiting, and also obtains the HTTP response.
 	resp, err := chromedp.RunResponse(ctx, chromedp.Click("#foo", chromedp.ByID))
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	fmt.Println("second status code:", resp.Status)
 
@@ -96,7 +96,7 @@ func ExampleRunResponse() {
 	// loading once more.
 	var secondTitle string
 	if err := chromedp.Run(ctx, chromedp.Title(&secondTitle)); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	fmt.Println("second title:", secondTitle)
 
@@ -104,7 +104,7 @@ func ExampleRunResponse() {
 	// one wants the response information for that case too.
 	resp, err = chromedp.RunResponse(ctx, chromedp.Navigate(ts.URL+"/bar"))
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	fmt.Println("third status code:", resp.Status)
 
@@ -118,7 +118,7 @@ func ExampleRunResponse() {
 func ExampleExecAllocator() {
 	dir, err := ioutil.TempDir("", "chromedp-example")
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	defer os.RemoveAll(dir)
 
@@ -136,13 +136,13 @@ func ExampleExecAllocator() {
 
 	// ensure that the browser process is started
 	if err := chromedp.Run(taskCtx); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	path := filepath.Join(dir, "DevToolsActivePort")
 	bs, err := ioutil.ReadFile(path)
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	lines := bytes.Split(bs, []byte("\n"))
 	fmt.Printf("DevToolsActivePort has %d lines\n", len(lines))
@@ -174,22 +174,24 @@ func ExampleNewContext_reuseBrowser() {
 
 	// start the browser without a timeout
 	if err := chromedp.Run(ctx); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	for i := 0; i < 2; i++ {
-		// look at the page twice, with a timeout set up; we skip
-		// cancels for the sake of brevity
-		ctx, _ := context.WithTimeout(ctx, time.Second)
-		ctx, _ = chromedp.NewContext(ctx)
-		var cookies string
-		if err := chromedp.Run(ctx,
-			chromedp.Navigate(ts.URL),
-			chromedp.Text("#cookies", &cookies),
-		); err != nil {
-			panic(err)
-		}
-		fmt.Printf("Cookies at i=%d: %q\n", i, cookies)
+		func() {
+			ctx, cancel := context.WithTimeout(ctx, time.Second)
+			defer cancel()
+			ctx, cancel = chromedp.NewContext(ctx)
+			defer cancel()
+			var cookies string
+			if err := chromedp.Run(ctx,
+				chromedp.Navigate(ts.URL),
+				chromedp.Text("#cookies", &cookies),
+			); err != nil {
+				log.Fatal(err)
+			}
+			fmt.Printf("Cookies at i=%d: %q\n", i, cookies)
+		}()
 	}
 
 	// Output:
@@ -204,7 +206,7 @@ func ExampleNewContext_manyTabs() {
 
 	// ensure the first tab is created
 	if err := chromedp.Run(ctx1); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	// same browser, second tab
@@ -212,7 +214,7 @@ func ExampleNewContext_manyTabs() {
 
 	// ensure the second tab is created
 	if err := chromedp.Run(ctx2); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	c1 := chromedp.FromContext(ctx1)
@@ -253,13 +255,18 @@ func ExampleListenTarget_consoleLog() {
 			// Since ts.URL uses a random port, replace it.
 			s := ev.ExceptionDetails.Error()
 			s = strings.ReplaceAll(s, ts.URL, "<server>")
+			// V8 has changed the error messages for property access on null/undefined in version 9.3.310.
+			// see: https://chromium.googlesource.com/v8/v8/+/c0fd89c3c089e888c4f4e8582e56db7066fa779b
+			//      https://github.com/chromium/chromium/commit/1735cbf94c98c70ff7554a1e9e01bb9a4f91beb6
+			// The message is normalized to make it compatible with the versions before this change.
+			s = strings.ReplaceAll(s, "Cannot read property 'throwsException' of null", "Cannot read properties of null (reading 'throwsException')")
 			fmt.Printf("* %s\n", s)
 			gotException <- true
 		}
 	})
 
 	if err := chromedp.Run(ctx, chromedp.Navigate(ts.URL)); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	<-gotException
 
@@ -269,7 +276,7 @@ func ExampleListenTarget_consoleLog() {
 	// * console.warning call:
 	// string - "scary warning"
 	// number - 123
-	// * exception "Uncaught" (4:6): TypeError: Cannot read property 'throwsException' of null
+	// * exception "Uncaught" (4:6): TypeError: Cannot read properties of null (reading 'throwsException')
 	//     at <server>/:5:7
 }
 
@@ -293,14 +300,14 @@ func ExampleWaitNewTarget() {
 		chromedp.Navigate(ts.URL+"/first"),
 		chromedp.Click("#newtab", chromedp.ByID),
 	); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	newCtx, cancel := chromedp.NewContext(ctx, chromedp.WithTargetID(<-ch))
 	defer cancel()
 
 	var urlstr string
 	if err := chromedp.Run(newCtx, chromedp.Location(&urlstr)); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	fmt.Println("new tab's path:", strings.TrimPrefix(urlstr, ts.URL))
 
@@ -326,7 +333,7 @@ func ExampleListenTarget_acceptAlert() {
 				if err := chromedp.Run(ctx,
 					page.HandleJavaScriptDialog(true),
 				); err != nil {
-					panic(err)
+					log.Fatal(err)
 				}
 			}()
 		}
@@ -336,7 +343,7 @@ func ExampleListenTarget_acceptAlert() {
 		chromedp.Navigate(ts.URL),
 		chromedp.Click("#alert", chromedp.ByID),
 	); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	// Output:
@@ -362,11 +369,11 @@ function changeText() {
 	var outerBefore, outerAfter string
 	if err := chromedp.Run(ctx,
 		chromedp.Navigate(ts.URL),
-		chromedp.OuterHTML("#content", &outerBefore),
-		chromedp.Click("#content", chromedp.ByID),
-		chromedp.OuterHTML("#content", &outerAfter),
+		chromedp.OuterHTML("#content", &outerBefore, chromedp.ByQuery),
+		chromedp.Click("#content", chromedp.ByQuery),
+		chromedp.OuterHTML("#content", &outerAfter, chromedp.ByQuery),
 	); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	fmt.Println("OuterHTML before clicking:")
 	fmt.Println(outerBefore)
@@ -387,16 +394,16 @@ func ExampleEmulate() {
 	var buf []byte
 	if err := chromedp.Run(ctx,
 		chromedp.Emulate(device.IPhone7),
-		chromedp.Navigate(`https://google.com/`),
+		chromedp.Navigate(`https://duckduckgo.com/`),
 		chromedp.SendKeys(`input[name=q]`, "what's my user agent?\n"),
-		chromedp.WaitVisible(`#rso`, chromedp.ByID),
+		chromedp.WaitVisible(`#zci-answer`, chromedp.ByID),
 		chromedp.CaptureScreenshot(&buf),
 	); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
-	if err := ioutil.WriteFile("google-iphone7.png", buf, 0o644); err != nil {
-		panic(err)
+	if err := ioutil.WriteFile("iphone7-ua.png", buf, 0o644); err != nil {
+		log.Fatal(err)
 	}
 
 	// Output:
@@ -408,7 +415,7 @@ func ExamplePrintToPDF() {
 
 	var buf []byte
 	if err := chromedp.Run(ctx,
-		chromedp.Navigate(`https://godoc.org/github.com/chromedp/chromedp`),
+		chromedp.Navigate(`https://pkg.go.dev/github.com/chromedp/chromedp`),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			var err error
 			buf, _, err = page.PrintToPDF().
@@ -418,11 +425,11 @@ func ExamplePrintToPDF() {
 			return err
 		}),
 	); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	if err := ioutil.WriteFile("page.pdf", buf, 0o644); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	// Output:
@@ -450,7 +457,7 @@ func ExampleByJSPath() {
 			return err
 		}),
 	); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	fmt.Println("Outer HTML:")
@@ -480,7 +487,7 @@ func ExampleFromNode() {
 		chromedp.Navigate(ts.URL),
 		chromedp.Nodes("#section", &nodes, chromedp.ByQuery),
 	); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	sectionNode := nodes[0]
 
@@ -499,7 +506,7 @@ func ExampleFromNode() {
 		// entirely separate step, allowing for custom logic.
 		chromedp.Text("#section > .content", &queryNestedSelector, chromedp.ByQuery),
 	); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 	fmt.Println("Simple query from the document root:", queryRoot)
 	fmt.Println("Simple query from the section node:", queryFromNode)
@@ -549,7 +556,7 @@ func Example_documentDump() {
 		}),
 		chromedp.WaitVisible(`#thing`),
 	); err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
 	fmt.Println("Document tree:")
@@ -566,4 +573,24 @@ func Example_documentDump() {
 	//           #text "a new thing!"
 	//         div#content
 	//           #text "the content"
+}
+
+func ExampleFullScreenshot() {
+	ctx, cancel := chromedp.NewContext(context.Background())
+	defer cancel()
+
+	var buf []byte
+	if err := chromedp.Run(ctx,
+		chromedp.Navigate(`https://google.com`),
+		chromedp.FullScreenshot(&buf, 90),
+	); err != nil {
+		log.Fatal(err)
+	}
+
+	if err := ioutil.WriteFile("fullScreenshot.jpeg", buf, 0644); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println("wrote fullScreenshot.jpeg")
+	// Output:
+	// wrote fullScreenshot.jpeg
 }

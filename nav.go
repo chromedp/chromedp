@@ -95,25 +95,6 @@ func Stop() Action {
 	return page.StopLoading()
 }
 
-// CaptureScreenshot is an action that captures/takes a screenshot of the
-// current browser viewport.
-//
-// See the Screenshot action to take a screenshot of a specific element.
-//
-// See the 'screenshot' example in the https://github.com/chromedp/examples
-// project for an example of taking a screenshot of the entire page.
-func CaptureScreenshot(res *[]byte) Action {
-	if res == nil {
-		panic("res cannot be nil")
-	}
-
-	return ActionFunc(func(ctx context.Context) error {
-		var err error
-		*res, err = page.CaptureScreenshot().Do(ctx)
-		return err
-	})
-}
-
 // Location is an action that retrieves the document location.
 func Location(urlstr *string) Action {
 	if urlstr == nil {

@@ -89,26 +89,42 @@ func TestPoll(t *testing.T) {
 			delay:  50 * time.Millisecond,
 		},
 		{
-			name:   "PollingMutation",
-			js:     "globalThis.__FOO === 1",
-			isFunc: false,
+			name: "PollingMutation",
+			js: `() => {
+				if (globalThis.__Mutation === 1){
+					return true;
+				} else {
+					globalThis.__Mutation = 1;
+					setTimeout(() => {
+						document.body.appendChild(document.createElement('div'))
+					}, 100);
+				}
+			}`,
+			isFunc: true,
 			opts:   []PollOption{WithPollingMutation(), WithPollingTimeout(200 * time.Millisecond)},
-			hash:   "#mutation",
 			delay:  50 * time.Millisecond,
 		},
 		{
 			name:   "TimeoutWithoutMutation",
-			js:     "globalThis.__FOO === 1",
+			js:     "globalThis.__Mutation === 1",
 			isFunc: false,
 			opts:   []PollOption{WithPollingMutation(), WithPollingTimeout(100 * time.Millisecond)},
 			err:    ErrPollingTimeout.Error(),
 		},
 		{
-			name:   "TimeoutBeforeMutation",
-			js:     "globalThis.__FOO === 1",
-			isFunc: false,
+			name: "TimeoutBeforeMutation",
+			js: `() => {
+				if (globalThis.__Mutation === 1){
+					return true;
+				} else {
+					globalThis.__Mutation = 1;
+					setTimeout(() => {
+						document.body.appendChild(document.createElement('div'))
+					}, 100);
+				}
+			}`,
+			isFunc: true,
 			opts:   []PollOption{WithPollingMutation(), WithPollingTimeout(50 * time.Millisecond)},
-			hash:   "#mutation",
 			err:    ErrPollingTimeout.Error(),
 		},
 		{
@@ -135,15 +151,19 @@ func TestPoll(t *testing.T) {
 				Navigate(testdataDir+"/poll.html"+test.hash),
 				action,
 			)
-			if test.err != "" {
+			if test.err == "" {
+				if err != nil {
+					t.Fatalf("got error: %v", err)
+				} else if !res {
+					t.Fatalf("got no error, but res is not true")
+				}
+
+			} else {
 				if err == nil {
 					t.Fatalf("expected err to be %q, got: %v", test.err, err)
 				} else if test.err != err.Error() {
 					t.Fatalf("want error to be %v, got: %v", test.err, err)
 				}
-			}
-			if test.err == "" && !res {
-				t.Fatalf("got no error, but res is not true")
 			}
 			if test.delay != 0 {
 				delay := time.Since(startTime)

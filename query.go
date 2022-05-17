@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"math"
 	"strconv"
 	"strings"
 	"sync"
@@ -13,7 +12,6 @@ import (
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/css"
 	"github.com/chromedp/cdproto/dom"
-	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
 )
 
@@ -34,7 +32,6 @@ type Selector struct {
 	by       func(context.Context, *cdp.Node) ([]cdp.NodeID, error)
 	wait     func(context.Context, *cdp.Frame, runtime.ExecutionContextID, ...cdp.NodeID) ([]*cdp.Node, error)
 	after    func(context.Context, runtime.ExecutionContextID, ...*cdp.Node) error
-	raw      bool
 }
 
 // Query is a query action that queries the browser for specific element
@@ -158,37 +155,18 @@ func (s *Selector) Do(ctx context.Context) error {
 	if t == nil {
 		return ErrInvalidTarget
 	}
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-time.After(5 * time.Millisecond):
-		}
-
-		t.frameMu.RLock()
-		frame := t.frames[t.cur]
-		execCtx := t.execContexts[t.cur]
-
-		if frame == nil || execCtx == 0 {
-			// the frame hasn't loaded yet.
-			t.frameMu.RUnlock()
-			continue
+	return retryWithSleep(ctx, 5*time.Millisecond, func(ctx context.Context) (bool, error) {
+		frame, root, execCtx, ok := t.ensureFrame()
+		if !ok {
+			return false, nil
 		}
 
 		fromNode := s.fromNode
 		if fromNode == nil {
-			t.frameMu.RUnlock()
-
-			frame.RLock()
-			fromNode = frame.Root
-			frame.RUnlock()
-
-			if fromNode == nil {
-				// not root node yet?
-				continue
-			}
+			fromNode = root
 		} else {
 			frameID := t.enclosingFrame(fromNode)
+			t.frameMu.RLock()
 			execCtx = t.execContexts[frameID]
 			t.frameMu.RUnlock()
 
@@ -210,20 +188,20 @@ func (s *Selector) Do(ctx context.Context) error {
 
 		ids, err := s.by(ctx, fromNode)
 		if err != nil || len(ids) < s.exp {
-			continue
+			return false, nil
 		}
 		nodes, err := s.wait(ctx, frame, execCtx, ids...)
 		// if nodes==nil, we're not yet ready
 		if nodes == nil || err != nil {
-			continue
+			return false, nil
 		}
 		if s.after != nil {
 			if err := s.after(ctx, execCtx, nodes...); err != nil {
-				return err
+				return true, err
 			}
 		}
-		return nil
-	}
+		return true, nil
+	})
 }
 
 // selAsString forces sel into a string.
@@ -371,7 +349,6 @@ func BySearch(s *Selector) {
 // Note: Do not use with an untrusted selector value, as any defined selector
 // will be passed to runtime.Evaluate.
 func ByJSPath(s *Selector) {
-	s.raw = true
 	ByFunc(func(ctx context.Context, n *cdp.Node) ([]cdp.NodeID, error) {
 		// set up eval command
 		p := runtime.Evaluate(s.selAsString()).
@@ -438,15 +415,28 @@ func NodeReady(s *Selector) {
 	WaitFunc(s.waitReady(nil))(s)
 }
 
-func withContextID(id runtime.ExecutionContextID) EvaluateOption {
-	return func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
-		return p.WithContextID(id)
+func callFunctionOnNode(ctx context.Context, node *cdp.Node, function string, res interface{}, args ...interface{}) error {
+	r, err := dom.ResolveNode().WithNodeID(node.NodeID).Do(ctx)
+	if err != nil {
+		return err
 	}
-}
+	err = CallFunctionOn(function, &res,
+		func(p *runtime.CallFunctionOnParams) *runtime.CallFunctionOnParams {
+			return p.WithObjectID(r.ObjectID)
+		},
+		args...,
+	).Do(ctx)
 
-func evalInCtx(ctx context.Context, execCtx runtime.ExecutionContextID, expression string, res interface{}, opts ...EvaluateOption) error {
-	allOpts := append([]EvaluateOption{withContextID(execCtx)}, opts...)
-	return EvaluateAsDevTools(expression, &res, allOpts...).Do(ctx)
+	if err != nil {
+		return err
+	}
+
+	// Try to release the remote object.
+	// It will fail if the page is navigated or closed,
+	// and it's okay to ignore the error in this case.
+	_ = runtime.ReleaseObject(r.ObjectID).Do(ctx)
+
+	return nil
 }
 
 // NodeVisible is an element query option to wait until all queried element
@@ -465,7 +455,7 @@ func NodeVisible(s *Selector) {
 
 		// check visibility
 		var res bool
-		err = evalInCtx(ctx, execCtx, snippet(visibleJS, cashX(true), s, n), &res, withContextID(execCtx))
+		err = callFunctionOnNode(ctx, n, visibleJS, &res)
 		if err != nil {
 			return err
 		}
@@ -492,7 +482,7 @@ func NodeNotVisible(s *Selector) {
 
 		// check visibility
 		var res bool
-		err = evalInCtx(ctx, execCtx, snippet(visibleJS, cashX(true), s, n), &res)
+		err = callFunctionOnNode(ctx, n, visibleJS, &res)
 		if err != nil {
 			return err
 		}
@@ -661,7 +651,7 @@ func Blur(sel interface{}, opts ...QueryOption) QueryAction {
 		}
 
 		var res bool
-		err := evalInCtx(ctx, execCtx, snippet(blurJS, cashX(true), sel, nodes[0]), &res)
+		err := callFunctionOnNode(ctx, nodes[0], blurJS, &res)
 		if err != nil {
 			return err
 		}
@@ -702,7 +692,7 @@ func Text(sel interface{}, text *string, opts ...QueryOption) QueryAction {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
-		return evalInCtx(ctx, execCtx, snippet(textJS, cashX(false), sel, nodes[0]), text)
+		return callFunctionOnNode(ctx, nodes[0], textJS, text)
 	}, opts...)
 }
 
@@ -718,7 +708,7 @@ func TextContent(sel interface{}, text *string, opts ...QueryOption) QueryAction
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
-		return evalInCtx(ctx, execCtx, snippet(textContentJS, cashX(false), sel, nodes[0]), text)
+		return callFunctionOnNode(ctx, nodes[0], textContentJS, text)
 	}, opts...)
 }
 
@@ -944,11 +934,10 @@ func JavascriptAttribute(sel interface{}, name string, res interface{}, opts ...
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
-		if err := evalInCtx(ctx, execCtx,
-			snippet(attributeJS, cashX(true), sel, nodes[0], name), res,
-		); err != nil {
-			return fmt.Errorf("could not retrieve attribute %q: %v", name, err)
+		if err := callFunctionOnNode(ctx, nodes[0], attributeJS, res, name); err != nil {
+			return fmt.Errorf("could not retrieve attribute %q: %w", name, err)
 		}
+
 		return nil
 	}, opts...)
 }
@@ -962,7 +951,7 @@ func SetJavascriptAttribute(sel interface{}, name, value string, opts ...QueryOp
 		}
 
 		var res string
-		err := evalInCtx(ctx, execCtx, snippet(setAttributeJS, cashX(true), sel, nodes[0], name, value), &res)
+		err := callFunctionOnNode(ctx, nodes[0], setAttributeJS, &res, name, value)
 		if err != nil {
 			return err
 		}
@@ -1064,55 +1053,6 @@ func SetUploadFiles(sel interface{}, files []string, opts ...QueryOption) QueryA
 	}, opts...)
 }
 
-// Screenshot is an element query action that takes a screenshot of the first element
-// node matching the selector.
-//
-// See CaptureScreenshot for capturing a screenshot of the browser viewport.
-//
-// See the 'screenshot' example in the https://github.com/chromedp/examples
-// project for an example of taking a screenshot of the entire page.
-func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) QueryAction {
-	if picbuf == nil {
-		panic("picbuf cannot be nil")
-	}
-
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
-		if len(nodes) < 1 {
-			return fmt.Errorf("selector %q did not return any nodes", sel)
-		}
-
-		// get box model
-		box, err := dom.GetBoxModel().WithNodeID(nodes[0].NodeID).Do(ctx)
-		if err != nil {
-			return err
-		}
-		if len(box.Margin) != 8 {
-			return ErrInvalidBoxModel
-		}
-
-		// take screenshot of the box
-		buf, err := page.CaptureScreenshot().
-			WithFormat(page.CaptureScreenshotFormatPng).
-			WithClip(&page.Viewport{
-				// Round the dimensions, as otherwise we might
-				// lose one pixel in either dimension.
-				X:      math.Round(box.Margin[0]),
-				Y:      math.Round(box.Margin[1]),
-				Width:  math.Round(box.Margin[4] - box.Margin[0]),
-				Height: math.Round(box.Margin[5] - box.Margin[1]),
-				// This seems to be necessary? Seems to do the
-				// right thing regardless of DPI.
-				Scale: 1.0,
-			}).Do(ctx)
-		if err != nil {
-			return err
-		}
-
-		*picbuf = buf
-		return nil
-	}, append(opts, NodeVisible)...)
-}
-
 // Submit is an element query action that submits the parent form of the first element
 // node matching the selector.
 func Submit(sel interface{}, opts ...QueryOption) QueryAction {
@@ -1122,7 +1062,7 @@ func Submit(sel interface{}, opts ...QueryOption) QueryAction {
 		}
 
 		var res bool
-		err := evalInCtx(ctx, execCtx, snippet(submitJS, cashX(true), sel, nodes[0]), &res)
+		err := callFunctionOnNode(ctx, nodes[0], submitJS, &res)
 		if err != nil {
 			return err
 		}
@@ -1144,7 +1084,7 @@ func Reset(sel interface{}, opts ...QueryOption) QueryAction {
 		}
 
 		var res bool
-		err := evalInCtx(ctx, execCtx, snippet(resetJS, cashX(true), sel, nodes[0]), &res)
+		err := callFunctionOnNode(ctx, nodes[0], resetJS, &res)
 		if err != nil {
 			return err
 		}
@@ -1195,8 +1135,8 @@ func MatchedStyle(sel interface{}, style **css.GetMatchedStylesForNodeReturns, o
 		var err error
 		ret := &css.GetMatchedStylesForNodeReturns{}
 		ret.InlineStyle, ret.AttributesStyle, ret.MatchedCSSRules,
-			ret.PseudoElements, ret.Inherited, ret.CSSKeyframesRules,
-			err = css.GetMatchedStylesForNode(nodes[0].NodeID).Do(ctx)
+			ret.PseudoElements, ret.Inherited, ret.InheritedPseudoElements,
+			ret.CSSKeyframesRules, err = css.GetMatchedStylesForNode(nodes[0].NodeID).Do(ctx)
 		if err != nil {
 			return err
 		}
@@ -1215,16 +1155,6 @@ func ScrollIntoView(sel interface{}, opts ...QueryOption) QueryAction {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
-		var pos []float64
-		err := evalInCtx(ctx, execCtx, snippet(scrollIntoViewJS, cashX(true), sel, nodes[0]), &pos)
-		if err != nil {
-			return err
-		}
-
-		if pos == nil {
-			return fmt.Errorf("could not scroll into node %d", nodes[0].NodeID)
-		}
-
-		return nil
+		return dom.ScrollIntoViewIfNeeded().WithNodeID(nodes[0].NodeID).Do(ctx)
 	}, opts...)
 }

@@ -15,22 +15,26 @@ type EvaluateAction Action
 // Evaluate is an action to evaluate the Javascript expression, unmarshaling
 // the result of the script evaluation to res.
 //
-// When res is a type other than *[]byte, or **chromedp/cdproto/runtime.RemoteObject,
-// then the result of the script evaluation will be returned "by value" (ie,
-// JSON-encoded), and subsequently an attempt will be made to json.Unmarshal
-// the script result to res.
+// When res is nil, the script result will be ignored.
 //
-// Otherwise, when res is a *[]byte, the raw JSON-encoded value of the script
-// result will be placed in res. Similarly, if res is a *runtime.RemoteObject,
-// then res will be set to the low-level protocol type, and no attempt will be
-// made to convert the result.
+// When res is a *[]byte, the raw JSON-encoded value of the script
+// result will be placed in res.
+//
+// When res is a **runtime.RemoteObject, res will be set to the low-level
+// protocol type, and no attempt will be made to convert the result.
+// Original objects are maintained in memory until the page navigated or closed,
+// unless they are either explicitly released or are released along with the
+// other objects in their object group. runtime.ReleaseObject or
+// runtime.ReleaseObjectGroup can be used to ask the browser to release
+// original objects.
+//
+// For all other cases, the result of the script will be returned "by value" (ie,
+// JSON-encoded), and subsequently an attempt will be made to json.Unmarshal
+// the script result to res. It returns an error if the script result is
+// "undefined" in this case.
 //
 // Note: any exception encountered will be returned as an error.
 func Evaluate(expression string, res interface{}, opts ...EvaluateOption) EvaluateAction {
-	if res == nil {
-		panic("res cannot be nil")
-	}
-
 	return ActionFunc(func(ctx context.Context) error {
 		// set up parameters
 		p := runtime.Evaluate(expression)
@@ -54,26 +58,34 @@ func Evaluate(expression string, res interface{}, opts ...EvaluateOption) Evalua
 			return exp
 		}
 
-		switch x := res.(type) {
-		case **runtime.RemoteObject:
-			*x = v
-			return nil
-
-		case *[]byte:
-			*x = []byte(v.Value)
-			return nil
-		}
-
-		if v.Type == "undefined" {
-			// The unmarshal above would fail with the cryptic
-			// "unexpected end of JSON input" error, so try to give
-			// a better one here.
-			return fmt.Errorf("encountered an undefined value")
-		}
-
-		// unmarshal
-		return json.Unmarshal(v.Value, res)
+		return parseRemoteObject(v, res)
 	})
+}
+
+func parseRemoteObject(v *runtime.RemoteObject, res interface{}) error {
+	if res == nil {
+		return nil
+	}
+
+	switch x := res.(type) {
+	case **runtime.RemoteObject:
+		*x = v
+		return nil
+
+	case *[]byte:
+		*x = v.Value
+		return nil
+	}
+
+	if v.Type == "undefined" {
+		// The unmarshal below would fail with the cryptic
+		// "unexpected end of JSON input" error, so try to give
+		// a better one here.
+		return fmt.Errorf("encountered an undefined value")
+	}
+
+	// unmarshal
+	return json.Unmarshal(v.Value, res)
 }
 
 // EvaluateAsDevTools is an action that evaluates a Javascript expression as

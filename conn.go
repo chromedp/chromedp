@@ -40,19 +40,6 @@ type Conn struct {
 	dbgf func(string, ...interface{})
 }
 
-// Chrome doesn't support fragmentation of incoming websocket messages. To
-// compensate this, they support single-fragment messages of up to 100MiB.
-//
-// If our write buffer size is too small, large messages will get fragmented,
-// and Chrome will silently crash. And if it's too large, chromedp will require
-// more memory for all users.
-//
-// For now, make this a middle ground. 1MiB is large enough for practically any
-// outgoing message, but small enough to not take too much meomry.
-//
-// See https://github.com/ChromeDevTools/devtools-protocol/issues/175.
-const wsWriteBufferSize = 1 << 20
-
 // DialContext dials the specified websocket URL using gobwas/ws.
 func DialContext(ctx context.Context, urlstr string, opts ...DialOption) (*Conn, error) {
 	// connect
@@ -67,8 +54,9 @@ func DialContext(ctx context.Context, urlstr string, opts ...DialOption) (*Conn,
 	// apply opts
 	c := &Conn{
 		conn: conn,
-		writer: *wsutil.NewWriterBufferSize(conn,
-			ws.StateClientSide, ws.OpText, wsWriteBufferSize),
+		// pass 0 to use the default initial buffer size (4KiB).
+		// github.com/gobwas/ws will grow the buffer size if needed.
+		writer: *wsutil.NewWriterBufferSize(conn, ws.StateClientSide, ws.OpText, 0),
 	}
 	for _, o := range opts {
 		o(c)
@@ -112,6 +100,17 @@ func (c *Conn) Read(_ context.Context, msg *cdproto.Message) error {
 // Write writes a message.
 func (c *Conn) Write(_ context.Context, msg *cdproto.Message) error {
 	c.writer.Reset(c.conn, ws.StateClientSide, ws.OpText)
+	// Chrome doesn't support fragmentation of incoming websocket messages. To
+	// compensate this, they support single-fragment messages of up to 100MiB.
+	//
+	// See https://github.com/ChromeDevTools/devtools-protocol/issues/175.
+	//
+	// And according to https://bugs.chromium.org/p/chromium/issues/detail?id=1069431,
+	// it seems like that fragmentation won't be supported very soon.
+	// Luckily, now github.com/gobwas/ws will grow the buffer if needed.
+	// The func name DisableFlush is a little misleading,
+	// but it do make it grow the buffer if needed.
+	c.writer.DisableFlush()
 
 	// Reuse the easyjson writer.
 	c.encoder = jwriter.Writer{}
