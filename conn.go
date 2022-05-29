@@ -1,10 +1,12 @@
 package chromedp
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"io"
 	"net"
+	"os"
 
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
@@ -32,10 +34,6 @@ type Conn struct {
 	// Read/Write.
 	reader wsutil.Reader
 	writer wsutil.Writer
-
-	// reuse the easyjson structs to avoid allocs per Read/Write.
-	decoder jlexer.Lexer
-	encoder jwriter.Writer
 
 	dbgf func(string, ...interface{})
 }
@@ -91,10 +89,9 @@ func (c *Conn) Read(_ context.Context, msg *cdproto.Message) error {
 		c.dbgf("<- %s", buf)
 	}
 
-	// unmarshal, reusing lexer
-	c.decoder = jlexer.Lexer{Data: buf}
-	msg.UnmarshalEasyJSON(&c.decoder)
-	return c.decoder.Error()
+	decoder := jlexer.Lexer{Data: buf}
+	msg.UnmarshalEasyJSON(&decoder)
+	return decoder.Error()
 }
 
 // Write writes a message.
@@ -112,25 +109,24 @@ func (c *Conn) Write(_ context.Context, msg *cdproto.Message) error {
 	// but it do make it grow the buffer if needed.
 	c.writer.DisableFlush()
 
-	// Reuse the easyjson writer.
-	c.encoder = jwriter.Writer{}
+	encoder := jwriter.Writer{}
 
 	// Perform the marshal.
-	msg.MarshalEasyJSON(&c.encoder)
-	if err := c.encoder.Error; err != nil {
+	msg.MarshalEasyJSON(&encoder)
+	if err := encoder.Error; err != nil {
 		return err
 	}
 
 	// Write the bytes to the websocket.
 	// BuildBytes consumes the buffer, so we can't use it as well as DumpTo.
 	if c.dbgf != nil {
-		buf, _ := c.encoder.BuildBytes()
+		buf, _ := encoder.BuildBytes()
 		c.dbgf("-> %s", buf)
 		if _, err := c.writer.Write(buf); err != nil {
 			return err
 		}
 	} else {
-		if _, err := c.encoder.DumpTo(&c.writer); err != nil {
+		if _, err := encoder.DumpTo(&c.writer); err != nil {
 			return err
 		}
 	}
@@ -145,4 +141,74 @@ func WithConnDebugf(f func(string, ...interface{})) DialOption {
 	return func(c *Conn) {
 		c.dbgf = f
 	}
+}
+
+// pipeConn implements Transport with a pipe connection (--remote-debugging-pipe).
+// see https://github.com/chromium/chromium/commit/d91428bfde320278621f8a9346d2e84c108b81a9
+type pipeConn struct {
+	reader *bufio.Reader
+	in     *os.File // just for closing
+	out    *os.File
+
+	dbgf func(string, ...interface{})
+}
+
+func newPipeConn(in *os.File, out *os.File, dbgf func(string, ...interface{})) *pipeConn {
+	reader := bufio.NewReader(in)
+	return &pipeConn{
+		reader: reader,
+		in:     in,
+		out:    out,
+		dbgf:   dbgf,
+	}
+}
+
+// Close satisfies the io.Closer interface.
+func (p *pipeConn) Close() error {
+	_ = p.in.Close()
+	return p.out.Close()
+}
+
+// Read reads the next message.
+func (p *pipeConn) Read(_ context.Context, msg *cdproto.Message) error {
+	buf, err := p.reader.ReadBytes(0)
+	if err != nil {
+		return err
+	}
+	if len(buf) > 0 {
+		buf = buf[:len(buf)-1]
+	}
+
+	if p.dbgf != nil {
+		p.dbgf("<- %s", buf)
+	}
+
+	decoder := jlexer.Lexer{Data: buf}
+	msg.UnmarshalEasyJSON(&decoder)
+	return decoder.Error()
+}
+
+// Write writes a message.
+func (p *pipeConn) Write(_ context.Context, msg *cdproto.Message) error {
+	encoder := jwriter.Writer{}
+
+	msg.MarshalEasyJSON(&encoder)
+	if err := encoder.Error; err != nil {
+		return err
+	}
+
+	if p.dbgf != nil {
+		buf, _ := encoder.BuildBytes()
+		p.dbgf("-> %s", buf)
+		if _, err := p.out.Write(buf); err != nil {
+			return err
+		}
+	} else {
+		if _, err := encoder.DumpTo(p.out); err != nil {
+			return err
+		}
+	}
+
+	_, err := p.out.Write([]byte{0})
+	return err
 }
