@@ -3,6 +3,7 @@ package chromedp
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -425,5 +426,44 @@ func TestModifyCmdFunc(t *testing.T) {
 
 	if ret != tz {
 		t.Fatalf("got %s, want %s", ret, tz)
+	}
+}
+
+// TestStartsWithNonBlankTab is a regression test to make sure chromedp won't
+// hang when the browser is started with a non-blank tab.
+//
+// In the following cases, the browser will start with a non-blank tab:
+// 1. with the "--app" option (should disable headless mode);
+// 2. URL other than "about:blank" is placed in the command line arguments.
+//
+// It's hard to disable headless mode on test servers, so we will go with
+// case 2 here.
+func TestStartsWithNonBlankTab(t *testing.T) {
+	t.Parallel()
+
+	allocCtx, cancel := NewExecAllocator(context.Background(),
+		append(allocOpts[:],
+			ModifyCmdFunc(func(cmd *exec.Cmd) {
+				// it assumes that the last argument is "about:blank" and
+				// replace it with other URL.
+				cmd.Args[len(cmd.Args)-1] = testdataDir + "/form.html"
+			}),
+		)...)
+	defer cancel()
+
+	ctx, cancel := NewContext(allocCtx)
+	defer cancel()
+
+	ctx, cancel = context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
+
+	if err := Run(ctx,
+		Navigate(testdataDir+"/form.html"),
+	); err != nil {
+		if errors.Is(err, context.DeadlineExceeded) {
+			t.Error("chromedp hangs when the browser starts with a non-blank tab.")
+		} else {
+			t.Errorf("got error %s, want nil", err)
+		}
 	}
 }
