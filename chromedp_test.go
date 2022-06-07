@@ -672,6 +672,10 @@ func TestDownloadIntoDir(t *testing.T) {
 func TestGracefulBrowserShutdown(t *testing.T) {
 	t.Parallel()
 
+	if os.Getenv("HEADLESS_SHELL") != "" {
+		t.Skip(`Skip in headless-shell due to https://github.com/chromedp/chromedp/issues/1078`)
+	}
+
 	dir, err := ioutil.TempDir("", "chromedp-test")
 	if err != nil {
 		log.Fatal(err)
