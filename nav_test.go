@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -328,12 +329,38 @@ func TestNavigateWhileLoading(t *testing.T) {
 	var title string
 	if err := Run(ctx,
 		ActionFunc(func(ctx context.Context) error {
+			var wg sync.WaitGroup
+			wg.Add(1)
+			lctx, cancel := context.WithCancel(ctx)
+			ListenTarget(lctx, func(ev interface{}) {
+				if ev, ok := ev.(*page.EventLifecycleEvent); ok {
+					if ev.Name == "init" {
+						cancel()
+						wg.Done()
+					}
+				}
+			})
+
 			_, _, _, err := page.Navigate(s.URL).Do(ctx)
-			return err
-		}),
-		ActionFunc(func(ctx context.Context) error {
+
+			// Make sure the Page.lifecycleEvent with the name "init" is emitted
+			// before starting the second navigate.
+			//
+			// Otherwise, it's possible that this event is emitted after the
+			// second navigate, and the second navigate will handle the wrong
+			// events. See https://github.com/chromedp/chromedp/issues/1080.
+			//
+			// The implementation of responseAction() is buggy in this case.
+			// But it's hard to fix it since there is not way to tell whether
+			// the events are from the first navigate.
+			//
+			// I (ZekeLu) will just deflake this test by making sure the second
+			// navigate won't see this event from the first navigate.
+			//
+			// The issue can be reproduced by commenting out the next line.
+			wg.Wait()
 			ch <- struct{}{}
-			return nil
+			return err
 		}),
 		Navigate(testdataDir+"/image.html"),
 		Title(&title),
