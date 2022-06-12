@@ -28,7 +28,7 @@ type QueryAction Action
 type Selector struct {
 	sel      interface{}
 	fromNode *cdp.Node
-	exp      int
+	exp      *int
 	by       func(context.Context, *cdp.Node) ([]cdp.NodeID, error)
 	wait     func(context.Context, *cdp.Frame, runtime.ExecutionContextID, ...cdp.NodeID) ([]*cdp.Node, error)
 	after    func(context.Context, runtime.ExecutionContextID, ...*cdp.Node) error
@@ -127,9 +127,10 @@ type Selector struct {
 // The NodeNotPresent option causes the query to wait until there are no
 // element nodes matching the selector.
 func Query(sel interface{}, opts ...QueryOption) QueryAction {
+	defaultVal := 1
 	s := &Selector{
 		sel: sel,
-		exp: 1,
+		exp: &defaultVal,
 	}
 
 	// apply options
@@ -187,7 +188,7 @@ func (s *Selector) Do(ctx context.Context) error {
 		}
 
 		ids, err := s.by(ctx, fromNode)
-		if err != nil || len(ids) < s.exp {
+		if err != nil || len(ids) < *s.exp {
 			return false, nil
 		}
 		nodes, err := s.wait(ctx, frame, execCtx, ids...)
@@ -534,7 +535,8 @@ func NodeSelected(s *Selector) {
 //
 // Note: forces the expected number of element nodes to be 0.
 func NodeNotPresent(s *Selector) {
-	s.exp = 0
+	defaultVal := 0
+	s.exp = &defaultVal
 	WaitFunc(func(ctx context.Context, cur *cdp.Frame, execCtx runtime.ExecutionContextID, ids ...cdp.NodeID) ([]*cdp.Node, error) {
 		if len(ids) != 0 {
 			return nil, ErrHasResults
@@ -547,7 +549,7 @@ func NodeNotPresent(s *Selector) {
 // must be returned by the query.
 //
 // By default, a query will have a value of 1.
-func AtLeast(n int) QueryOption {
+func AtLeast(n *int) QueryOption {
 	return func(s *Selector) {
 		s.exp = n
 	}
