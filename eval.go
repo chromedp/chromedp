@@ -58,34 +58,41 @@ func Evaluate(expression string, res interface{}, opts ...EvaluateOption) Evalua
 			return exp
 		}
 
-		return parseRemoteObject(v, res)
+		_, err = parseRemoteObject(v, res)
+		return err
 	})
 }
 
-func parseRemoteObject(v *runtime.RemoteObject, res interface{}) error {
+func parseRemoteObject(v *runtime.RemoteObject, res interface{}) (undefined bool, err error) {
+	// undefined indicates that the result is a javascript "undefined" value.
+	// Poll needs this value to decide whether it's a timeout.
+	undefined = v.Type == "undefined"
+
 	if res == nil {
-		return nil
+		return
 	}
 
 	switch x := res.(type) {
 	case **runtime.RemoteObject:
 		*x = v
-		return nil
+		return
 
 	case *[]byte:
 		*x = v.Value
-		return nil
+		return
 	}
 
-	if v.Type == "undefined" {
+	if undefined {
 		// The unmarshal below would fail with the cryptic
 		// "unexpected end of JSON input" error, so try to give
 		// a better one here.
-		return fmt.Errorf("encountered an undefined value")
+		err = fmt.Errorf("encountered an undefined value")
+		return
 	}
 
 	// unmarshal
-	return json.Unmarshal(v.Value, res)
+	err = json.Unmarshal(v.Value, res)
+	return
 }
 
 // EvaluateAsDevTools is an action that evaluates a Javascript expression as
