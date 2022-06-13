@@ -64,9 +64,7 @@ func (p *pollTask) Do(ctx context.Context) error {
 		args = append(args, p.polling)
 	}
 	args = append(args, p.timeout.Milliseconds())
-	for _, arg := range p.args {
-		args = append(args, arg)
-	}
+	args = append(args, p.args...)
 
 	err := CallFunctionOn(waitForPredicatePageFunction, p.res,
 		func(p *runtime.CallFunctionOnParams) *runtime.CallFunctionOnParams {
