@@ -3,7 +3,10 @@ package chromedp
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"image/color"
+	"image/png"
 	"io"
 	"io/ioutil"
 	"log"
@@ -1045,5 +1048,45 @@ func TestRunResponse_noResponse(t *testing.T) {
 		} else if resp != nil && !step.wantResp {
 			t.Fatalf("%s: did not want a response, got: %#v", step.name, resp)
 		}
+	}
+}
+
+// TestWebGL tests that WebGL is correctly configured in headless-shell.
+//
+// This is a regress test for https://github.com/chromedp/chromedp/issues/1073.
+func TestWebGL(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "webgl.html")
+	defer cancel()
+
+	var buf []byte
+	if err := Run(ctx,
+		Poll("rendered", nil, WithPollingTimeout(2*time.Second)),
+		Screenshot(`#c`, &buf, ByQuery),
+	); err != nil {
+		if errors.Is(err, ErrPollingTimeout) {
+			t.Fatal("The cube it not rendered in 2s.")
+		} else {
+			t.Fatal(err)
+		}
+	}
+
+	img, err := png.Decode(bytes.NewReader(buf))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	bounds := img.Bounds()
+	if bounds.Dx() != 200 || bounds.Dy() != 200 {
+		t.Fatalf("Unexpected screenshot size. got: %d x %d, want 200 x 200.", bounds.Dx(), bounds.Dy())
+	}
+
+	isWhite := func(c color.Color) bool {
+		r, g, b, _ := c.RGBA()
+		return r == 0xffff && g == 0xffff && b == 0xffff
+	}
+	if isWhite(img.At(100, 100)) {
+		t.Fatal("When the cube is rendered correctly, the color at the middle of the canvas should not be white.")
 	}
 }
