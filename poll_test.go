@@ -216,3 +216,24 @@ func TestPollRemoteObject(t *testing.T) {
 		t.Fatalf("want class name of remote object to be %q, got %q", wantClassName, res.ClassName)
 	}
 }
+
+func TestPollTimeout(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "poll.html")
+	defer cancel()
+
+	if err := Run(ctx, Poll("false", nil, WithPollingTimeout(10*time.Millisecond))); err != ErrPollingTimeout {
+		t.Errorf("got error: %v, want error: %v", err, ErrPollingTimeout)
+	}
+
+	var res1 *runtime.RemoteObject
+	if err := Run(ctx, Poll("false", &res1, WithPollingTimeout(10*time.Millisecond))); err != ErrPollingTimeout {
+		t.Errorf("got error: %v, want error: %v", err, ErrPollingTimeout)
+	}
+
+	var res2 []byte
+	if err := Run(ctx, Poll("false", &res2, WithPollingTimeout(10*time.Millisecond))); err != ErrPollingTimeout {
+		t.Errorf("got error: %v, want error: %v", err, ErrPollingTimeout)
+	}
+}

@@ -23,44 +23,49 @@ type CallAction Action
 // Note: any exception encountered will be returned as an error.
 func CallFunctionOn(functionDeclaration string, res interface{}, opt CallOption, args ...interface{}) CallAction {
 	return ActionFunc(func(ctx context.Context) error {
-		// set up parameters
-		p := runtime.CallFunctionOn(functionDeclaration).
-			WithSilent(true)
-
-		switch res.(type) {
-		case nil, **runtime.RemoteObject:
-		default:
-			p = p.WithReturnByValue(true)
-		}
-
-		// apply opt
-		if opt != nil {
-			p = opt(p)
-		}
-
-		// arguments
-		if len(args) > 0 {
-			ea := &errAppender{args: make([]*runtime.CallArgument, 0, len(args))}
-			for _, arg := range args {
-				ea.append(arg)
-			}
-			if ea.err != nil {
-				return ea.err
-			}
-			p = p.WithArguments(ea.args)
-		}
-
-		// call
-		v, exp, err := p.Do(ctx)
-		if err != nil {
-			return err
-		}
-		if exp != nil {
-			return exp
-		}
-
-		return parseRemoteObject(v, res)
+		_, err := callFunctionOn(ctx, functionDeclaration, res, opt, args...)
+		return err
 	})
+}
+
+func callFunctionOn(ctx context.Context, functionDeclaration string, res interface{}, opt CallOption, args ...interface{}) (bool, error) {
+	// set up parameters
+	p := runtime.CallFunctionOn(functionDeclaration).
+		WithSilent(true)
+
+	switch res.(type) {
+	case **runtime.RemoteObject:
+	default:
+		p = p.WithReturnByValue(true)
+	}
+
+	// apply opt
+	if opt != nil {
+		p = opt(p)
+	}
+
+	// arguments
+	if len(args) > 0 {
+		ea := &errAppender{args: make([]*runtime.CallArgument, 0, len(args))}
+		for _, arg := range args {
+			ea.append(arg)
+		}
+		if ea.err != nil {
+			return false, ea.err
+		}
+		p = p.WithArguments(ea.args)
+	}
+
+	// call
+	v, exp, err := p.Do(ctx)
+	if err != nil {
+		return false, err
+	}
+	if exp != nil {
+		return false, exp
+	}
+
+	return parseRemoteObject(v, res)
 }
 
 // CallOption is a function to modify the runtime.CallFunctionOnParams

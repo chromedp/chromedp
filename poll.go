@@ -66,17 +66,16 @@ func (p *pollTask) Do(ctx context.Context) error {
 	args = append(args, p.timeout.Milliseconds())
 	args = append(args, p.args...)
 
-	err := CallFunctionOn(waitForPredicatePageFunction, p.res,
+	undefined, err := callFunctionOn(ctx, waitForPredicatePageFunction, p.res,
 		func(p *runtime.CallFunctionOnParams) *runtime.CallFunctionOnParams {
 			return p.WithExecutionContextID(execCtx).
 				WithAwaitPromise(true).
 				WithUserGesture(true)
 		},
 		args...,
-	).Do(ctx)
+	)
 
-	// FIXME: sentinel error?
-	if err != nil && err.Error() == "encountered an undefined value" {
+	if undefined {
 		return ErrPollingTimeout
 	}
 
