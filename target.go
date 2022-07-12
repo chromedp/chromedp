@@ -360,7 +360,10 @@ func (t *Target) pageEvent(ev interface{}) {
 
 // domEvent handles incoming DOM events.
 func (t *Target) domEvent(ctx context.Context, ev interface{}) {
+	t.frameMu.RLock()
 	f := t.frames[t.cur]
+	t.frameMu.RUnlock()
+
 	var id cdp.NodeID
 	var op nodeOp
 
