@@ -85,7 +85,7 @@ func run(out string) error {
 }
 
 var (
-	startRE        = regexp.MustCompile(`(?m)^const\s+devices:\s*Device\[\]\s*=\s*\[`)
+	startRE        = regexp.MustCompile(`(?m)^const\s+deviceArray:\s*Device\[\]\s*=\s*\[`)
 	endRE          = regexp.MustCompile(`(?m)^\];`)
 	fixLandscapeRE = regexp.MustCompile(`isLandscape:\s*(true|false),`)
 	fixKeysRE      = regexp.MustCompile(`(?m)^(\s+)([a-zA-Z]+):`)
