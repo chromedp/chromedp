@@ -5,6 +5,7 @@ Package `chromedp` is a faster, simpler way to drive browsers supporting the
 
 [![Unit Tests][chromedp-ci-status]][chromedp-ci]
 [![Go Reference][goref-chromedp-status]][goref-chromedp]
+[![Releases][release-status]][releases]
 
 ## Installing
 
@@ -89,3 +90,5 @@ to find out of the box.
 [goref-chromedp-exec-allocator]: https://pkg.go.dev/github.com/chromedp/chromedp#example-ExecAllocator
 [goref-chromedp]: https://pkg.go.dev/github.com/chromedp/chromedp
 [goref-chromedp-status]: https://pkg.go.dev/badge/github.com/chromedp/chromedp.svg
+[release-status]: https://img.shields.io/github/v/release/chromedp/chromedp?display_name=tag&sort=semver (Latest Release)
+[releases]: https://github.com/chromedp/chromedp/releases (Releases)
