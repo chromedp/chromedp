@@ -117,6 +117,12 @@ type ExecAllocator struct {
 // temporary directory is used.
 var allocTempDir string
 
+// DebugURLReadTimeout defines how much time we should wait for the debug URL from Chrome after start.
+// Chrome will sometimes fail to print the websocket, or run for a long
+// time, without properly exiting. To avoid blocking forever in those
+// cases, give up after twenty seconds.
+const DebugURLReadTimeout = 20 * time.Second
+
 // Allocate satisfies the Allocator interface.
 func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*Browser, error) {
 	c := FromContext(ctx)
@@ -224,11 +230,6 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		close(c.allocated)
 	}()
 
-	// Chrome will sometimes fail to print the websocket, or run for a long
-	// time, without properly exiting. To avoid blocking forever in those
-	// cases, give up after twenty seconds.
-	const wsURLReadTimeout = 20 * time.Second
-
 	var wsURL string
 	wsURLChan := make(chan struct{}, 1)
 	go func() {
@@ -237,7 +238,7 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	}()
 	select {
 	case <-wsURLChan:
-	case <-time.After(wsURLReadTimeout):
+	case <-time.After(DebugURLReadTimeout):
 		err = errors.New("websocket url timeout reached")
 	}
 	if err != nil {
