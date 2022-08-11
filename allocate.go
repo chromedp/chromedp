@@ -105,11 +105,11 @@ type ExecAllocator struct {
 	initFlags map[string]interface{}
 	initEnv   []string
 
+	modifyCmdFunc func(cmd *exec.Cmd)
+
 	wg sync.WaitGroup
 
 	combinedOutputWriter io.Writer
-
-	modifyCmdFunc func(cmd *exec.Cmd)
 }
 
 // allocTempDir is used to group all ExecAllocator temporary user data dirs in
