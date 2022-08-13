@@ -52,7 +52,7 @@ for an example.
 Wrap it with an `ActionFunc`:
 
 ```go
-ctx, cancel := chromedp.NewContext()
+ctx, cancel := chromedp.NewContext(context.Background())
 defer cancel()
 chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
 	_, err := domain.SomeAction().Do(ctx)
