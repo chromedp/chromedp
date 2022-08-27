@@ -4,7 +4,7 @@ SRC=$(realpath $(cd -P "$(dirname "${BASH_SOURCE[0]}")" && pwd)/..)
 
 pushd $SRC &> /dev/null
 
-IMAGE=${IMAGE:-chromedp/headless-shell:latest}
+IMAGE=${IMAGE:-docker.io/chromedp/headless-shell:latest}
 
 set -e
 
@@ -12,8 +12,13 @@ set -e
   CGO_ENABLED=0 go test -c
 )
 
+CMD=docker
+if [ ! -z "$(type -p podman)" ]; then
+  CMD=podman
+fi
+
 (set -x;
-  docker run \
+  $CMD run \
     --rm \
     --volume=$PWD:/chromedp \
     --entrypoint=/chromedp/chromedp.test \
