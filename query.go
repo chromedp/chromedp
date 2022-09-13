@@ -7,7 +7,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/css"
@@ -155,7 +154,8 @@ func (s *Selector) Do(ctx context.Context) error {
 	if t == nil {
 		return ErrInvalidTarget
 	}
-	return retryWithSleep(ctx, 5*time.Millisecond, func(ctx context.Context) (bool, error) {
+	pollingInterval := FromContext(ctx).pollingInterval
+	return retryWithSleep(ctx, pollingInterval, func(ctx context.Context) (bool, error) {
 		frame, root, execCtx, ok := t.ensureFrame()
 		if !ok {
 			return false, nil

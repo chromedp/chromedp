@@ -79,6 +79,9 @@ type Context struct {
 	// context, for example if a browser's temporary user data directory
 	// couldn't be deleted.
 	cancelErr error
+
+	// pollingInterval controls default polling interval from WaitXXX. It is set to 5ms by default.
+	pollingInterval time.Duration
 }
 
 // NewContext creates a chromedp context from the parent context. The parent
@@ -98,7 +101,7 @@ type Context struct {
 func NewContext(parent context.Context, opts ...ContextOption) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(parent)
 
-	c := &Context{cancel: cancel, first: true}
+	c := &Context{cancel: cancel, first: true, pollingInterval: 5 * time.Millisecond}
 	if pc := FromContext(parent); pc != nil {
 		c.Allocator = pc.Allocator
 		c.Browser = pc.Browser
@@ -434,6 +437,11 @@ func WithBrowserOption(opts ...BrowserOption) ContextOption {
 		}
 		c.browserOpts = append(c.browserOpts, opts...)
 	}
+}
+
+// WithContextPollingInterval updates chromedp.Context pollingInterval.
+func WithContextPollingInterval(d time.Duration) ContextOption {
+	return func(c *Context) { c.pollingInterval = d }
 }
 
 // RunResponse is an alternative to Run which can be used with a list of actions
