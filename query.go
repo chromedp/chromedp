@@ -26,12 +26,13 @@ type QueryAction Action
 // See Query for information on building an element selector and relevant
 // options.
 type Selector struct {
-	sel      interface{}
-	fromNode *cdp.Node
-	exp      int
-	by       func(context.Context, *cdp.Node) ([]cdp.NodeID, error)
-	wait     func(context.Context, *cdp.Frame, runtime.ExecutionContextID, ...cdp.NodeID) ([]*cdp.Node, error)
-	after    func(context.Context, runtime.ExecutionContextID, ...*cdp.Node) error
+	sel           interface{}
+	fromNode      *cdp.Node
+	retryInterval time.Duration
+	exp           int
+	by            func(context.Context, *cdp.Node) ([]cdp.NodeID, error)
+	wait          func(context.Context, *cdp.Frame, runtime.ExecutionContextID, ...cdp.NodeID) ([]*cdp.Node, error)
+	after         func(context.Context, runtime.ExecutionContextID, ...*cdp.Node) error
 }
 
 // Query is a query action that queries the browser for specific element
@@ -128,8 +129,9 @@ type Selector struct {
 // element nodes matching the selector.
 func Query(sel interface{}, opts ...QueryOption) QueryAction {
 	s := &Selector{
-		sel: sel,
-		exp: 1,
+		sel:           sel,
+		exp:           1,
+		retryInterval: 5 * time.Millisecond,
 	}
 
 	// apply options
@@ -155,7 +157,7 @@ func (s *Selector) Do(ctx context.Context) error {
 	if t == nil {
 		return ErrInvalidTarget
 	}
-	return retryWithSleep(ctx, 5*time.Millisecond, func(ctx context.Context) (bool, error) {
+	return retryWithSleep(ctx, s.retryInterval, func(ctx context.Context) (bool, error) {
 		frame, root, execCtx, ok := t.ensureFrame()
 		if !ok {
 			return false, nil
@@ -550,6 +552,16 @@ func NodeNotPresent(s *Selector) {
 func AtLeast(n int) QueryOption {
 	return func(s *Selector) {
 		s.exp = n
+	}
+}
+
+// RetryInterval is an element query action option to set the retry interval to specify
+// how often it should retry when it failed to select the target element(s).
+//
+// The default value is 5ms.
+func RetryInterval(interval time.Duration) QueryOption {
+	return func(s *Selector) {
+		s.retryInterval = interval
 	}
 }
 

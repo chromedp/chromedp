@@ -17,6 +17,7 @@ import (
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/css"
 	"github.com/chromedp/cdproto/dom"
+	cdpruntime "github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp/kb"
 )
 
@@ -185,6 +186,67 @@ func TestAtLeast(t *testing.T) {
 	}
 	if len(nodes) < 3 {
 		t.Errorf("expected to have at least 3 nodes: got %d", len(nodes))
+	}
+}
+
+func TestRetryInterval(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		opts         []QueryOption
+		wantCountMin int
+		wantCountMax int
+	}{
+		{
+			name: "default",
+			opts: []QueryOption{},
+			// in 100ms
+			wantCountMin: 10,
+			wantCountMax: 20,
+		},
+		{
+			name: "large interval",
+			opts: []QueryOption{RetryInterval(60 * time.Millisecond)},
+			// in 100ms
+			wantCountMin: 2,
+			wantCountMax: 2,
+		},
+	}
+
+	ctx, cancel := testAllocate(t, "js.html")
+	defer cancel()
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			retryCount := 0
+
+			// count is a wait function that makes the query always fail and
+			// counts the number of retries. Note that the wait func is called
+			// only after the number of result nodes >= s.exp .
+			count := WaitFunc(
+				func(ctx context.Context, f *cdp.Frame, eci cdpruntime.ExecutionContextID, ni ...cdp.NodeID) ([]*cdp.Node, error) {
+					retryCount += 1
+					return nil, ErrInvalidTarget
+				},
+			)
+
+			ctx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
+			defer cancel()
+
+			opts := append(tc.opts, count)
+			err := Run(ctx, Query("//input", opts...))
+
+			if err == nil || !errors.Is(err, context.DeadlineExceeded) {
+				t.Fatalf("want error context.DeadlineExceeded, got: %v", err)
+			}
+			if retryCount < tc.wantCountMin {
+				t.Fatalf("want retry count > %d, got: %d", tc.wantCountMin, retryCount)
+			}
+			if retryCount > tc.wantCountMax {
+				t.Fatalf("want retry count < %d, got: %d", tc.wantCountMax, retryCount)
+			}
+		})
 	}
 }
 
