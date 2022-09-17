@@ -80,8 +80,9 @@ type Context struct {
 	// couldn't be deleted.
 	cancelErr error
 
-	// pollingInterval controls default polling interval from WaitXXX. It is set to 5ms by default.
-	pollingInterval time.Duration
+	// selectorPollingInterval controls default polling interval from QueryAction.
+	// It is set to 5ms by default.
+	selectorPollingInterval time.Duration
 }
 
 // NewContext creates a chromedp context from the parent context. The parent
@@ -101,7 +102,11 @@ type Context struct {
 func NewContext(parent context.Context, opts ...ContextOption) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(parent)
 
-	c := &Context{cancel: cancel, first: true, pollingInterval: 5 * time.Millisecond}
+	c := &Context{
+		cancel:                  cancel,
+		first:                   true,
+		selectorPollingInterval: 5 * time.Millisecond,
+	}
 	if pc := FromContext(parent); pc != nil {
 		c.Allocator = pc.Allocator
 		c.Browser = pc.Browser
@@ -188,9 +193,9 @@ func FromContext(ctx context.Context) *Context {
 // Cancel. A timeout can be attached to this context to determine how long to
 // wait for the browser to close itself:
 //
-//     tctx, tcancel := context.WithTimeout(ctx, 10 * time.Second)
-//     defer tcancel()
-//     chromedp.Cancel(tctx)
+//	tctx, tcancel := context.WithTimeout(ctx, 10 * time.Second)
+//	defer tcancel()
+//	chromedp.Cancel(tctx)
 //
 // Usually a "defer cancel()" will be enough for most use cases. However, Cancel
 // is the better option if one wants to gracefully close a browser, or catch
@@ -439,9 +444,9 @@ func WithBrowserOption(opts ...BrowserOption) ContextOption {
 	}
 }
 
-// WithContextPollingInterval updates chromedp.Context pollingInterval.
-func WithContextPollingInterval(d time.Duration) ContextOption {
-	return func(c *Context) { c.pollingInterval = d }
+// WithSelectorPollingInterval updates chromedp.Context selectorPollingInterval.
+func WithSelectorPollingInterval(d time.Duration) ContextOption {
+	return func(c *Context) { c.selectorPollingInterval = d }
 }
 
 // RunResponse is an alternative to Run which can be used with a list of actions

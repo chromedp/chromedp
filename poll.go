@@ -34,8 +34,6 @@ func (p *pollTask) Do(ctx context.Context) error {
 	if t == nil {
 		return ErrInvalidTarget
 	}
-	pollingInterval := FromContext(ctx).pollingInterval
-
 	var (
 		execCtx runtime.ExecutionContextID
 		ok      bool
@@ -46,7 +44,7 @@ func (p *pollTask) Do(ctx context.Context) error {
 		if ok {
 			break
 		}
-		if err := sleepContext(ctx, pollingInterval); err != nil {
+		if err := sleepContext(ctx, 5*time.Millisecond); err != nil {
 			return err
 		}
 	}

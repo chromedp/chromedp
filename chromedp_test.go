@@ -583,6 +583,24 @@ func TestLogOptions(t *testing.T) {
 	}
 }
 
+func TestWithSelectorPollingInterval(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := NewContext(context.Background())
+	defer cancel()
+
+	if want, got := 5*time.Millisecond, FromContext(ctx).selectorPollingInterval; want != got {
+		t.Fatalf("want %q, got %q", want, got)
+	}
+
+	ctx2, cancel := NewContext(context.Background(), WithSelectorPollingInterval(time.Second))
+	defer cancel()
+
+	if want, got := time.Second, FromContext(ctx2).selectorPollingInterval; want != got {
+		t.Fatalf("want %q, got %q", want, got)
+	}
+}
+
 func TestLargeOutboundMessages(t *testing.T) {
 	t.Parallel()
 
@@ -1100,6 +1118,7 @@ func TestWebGL(t *testing.T) {
 //   - url
 //   - pageNumber
 //   - totalPages
+//
 // This is a regress test for https://github.com/chromedp/chromedp/issues/922.
 func TestPDFTemplate(t *testing.T) {
 	t.Parallel()
