@@ -17,6 +17,7 @@ import (
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/css"
 	"github.com/chromedp/cdproto/dom"
+	cdpruntime "github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp/kb"
 )
 
@@ -185,6 +186,47 @@ func TestAtLeast(t *testing.T) {
 	}
 	if len(nodes) < 3 {
 		t.Errorf("expected to have at least 3 nodes: got %d", len(nodes))
+	}
+}
+
+func TestRetryInterval(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "js.html")
+	defer cancel()
+
+	waitCount := 0
+	count := func(context.Context, *cdp.Frame, cdpruntime.ExecutionContextID, ...cdp.NodeID) ([]*cdp.Node, error) {
+		waitCount += 1
+		return nil, ErrHasResults
+	}
+
+	{
+		waitCount = 0
+
+		ctx, cancel := context.WithTimeout(ctx, time.Second)
+		defer cancel()
+
+		if err := Run(ctx, Query("//input", WaitFunc(count))); err != nil && !errors.Is(err, context.DeadlineExceeded) {
+			t.Fatalf("got error: %v", err)
+		}
+		if waitCount <= 1 {
+			t.Fatalf("query should retry more than once")
+		}
+	}
+
+	{
+		waitCount = 0
+
+		ctx, cancel := context.WithTimeout(ctx, time.Second)
+		defer cancel()
+
+		if err := Run(ctx, Query("//input", WaitFunc(count), RetryInterval(10*time.Second))); err != nil && !errors.Is(err, context.DeadlineExceeded) {
+			t.Fatalf("got error: %v", err)
+		}
+		if waitCount != 1 {
+			t.Fatalf("query should retry once")
+		}
 	}
 }
 

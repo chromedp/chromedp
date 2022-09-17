@@ -79,10 +79,6 @@ type Context struct {
 	// context, for example if a browser's temporary user data directory
 	// couldn't be deleted.
 	cancelErr error
-
-	// selectorPollingInterval controls default polling interval from QueryAction.
-	// It is set to 5ms by default.
-	selectorPollingInterval time.Duration
 }
 
 // NewContext creates a chromedp context from the parent context. The parent
@@ -102,11 +98,7 @@ type Context struct {
 func NewContext(parent context.Context, opts ...ContextOption) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(parent)
 
-	c := &Context{
-		cancel:                  cancel,
-		first:                   true,
-		selectorPollingInterval: 5 * time.Millisecond,
-	}
+	c := &Context{cancel: cancel, first: true}
 	if pc := FromContext(parent); pc != nil {
 		c.Allocator = pc.Allocator
 		c.Browser = pc.Browser
@@ -442,11 +434,6 @@ func WithBrowserOption(opts ...BrowserOption) ContextOption {
 		}
 		c.browserOpts = append(c.browserOpts, opts...)
 	}
-}
-
-// WithSelectorPollingInterval updates chromedp.Context selectorPollingInterval.
-func WithSelectorPollingInterval(d time.Duration) ContextOption {
-	return func(c *Context) { c.selectorPollingInterval = d }
 }
 
 // RunResponse is an alternative to Run which can be used with a list of actions
