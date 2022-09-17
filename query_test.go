@@ -192,42 +192,61 @@ func TestAtLeast(t *testing.T) {
 func TestRetryInterval(t *testing.T) {
 	t.Parallel()
 
+	tests := []struct {
+		name         string
+		opts         []QueryOption
+		wantCountMin int
+		wantCountMax int
+	}{
+		{
+			name: "default",
+			opts: []QueryOption{},
+			// in 100ms
+			wantCountMin: 10,
+			wantCountMax: 20,
+		},
+		{
+			name: "large interval",
+			opts: []QueryOption{RetryInterval(60 * time.Millisecond)},
+			// in 100ms
+			wantCountMin: 2,
+			wantCountMax: 2,
+		},
+	}
+
 	ctx, cancel := testAllocate(t, "js.html")
 	defer cancel()
 
-	tests := []struct {
-		sel             string
-		by              QueryOption
-		expectRetryOnce bool
-	}{
-		{"//input", nil, false},
-		{"//input", RetryInterval(10 * time.Second), true},
-	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			retryCount := 0
 
-	for i, test := range tests {
-		retryCount := 0
-		countRetries := func(context.Context, *cdp.Frame, cdpruntime.ExecutionContextID, ...cdp.NodeID) ([]*cdp.Node, error) {
-			retryCount += 1
-			return nil, ErrInvalidTarget
-		}
+			// count is a wait function that makes the query always fail and
+			// counts the number of retries. Note that the wait func is called
+			// only after the number of result nodes >= s.exp .
+			count := WaitFunc(
+				func(ctx context.Context, f *cdp.Frame, eci cdpruntime.ExecutionContextID, ni ...cdp.NodeID) ([]*cdp.Node, error) {
+					retryCount += 1
+					return nil, ErrInvalidTarget
+				},
+			)
 
-		ctx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
-		defer cancel()
+			ctx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
+			defer cancel()
 
-		opts := []QueryOption{WaitFunc(countRetries)}
-		if test.by != nil {
-			opts = append(opts, test.by)
-		}
-		if err := Run(ctx, Query(test.sel, opts...)); err != nil &&
-			!errors.Is(err, context.DeadlineExceeded) {
-			t.Fatalf("test %d got error: %v", i, err)
-		}
-		if retryCount == 0 {
-			t.Fatalf("test %d expected to retry at least once", i)
-		}
-		if want, got := test.expectRetryOnce, retryCount == 1; want != got {
-			t.Fatalf("test %d expected retry once %v: got %v", i, want, got)
-		}
+			opts := append(tc.opts, count)
+			err := Run(ctx, Query("//input", opts...))
+
+			if err == nil || !errors.Is(err, context.DeadlineExceeded) {
+				t.Fatalf("want error context.DeadlineExceeded, got: %v", err)
+			}
+			if retryCount < tc.wantCountMin {
+				t.Fatalf("want retry count > %d, got: %d", tc.wantCountMin, retryCount)
+			}
+			if retryCount > tc.wantCountMax {
+				t.Fatalf("want retry count < %d, got: %d", tc.wantCountMax, retryCount)
+			}
+		})
 	}
 }
 
