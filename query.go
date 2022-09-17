@@ -555,9 +555,10 @@ func AtLeast(n int) QueryOption {
 	}
 }
 
-// RetryInterval updates query's retry interval.
+// RetryInterval is an element query action option to set the retry interval to specify
+// how often it should retry when it failed to select the target element(s).
 //
-// By default, a query retries every 5ms.
+// The default value is 5ms.
 func RetryInterval(interval time.Duration) QueryOption {
 	return func(s *Selector) {
 		s.retryInterval = interval

@@ -195,37 +195,38 @@ func TestRetryInterval(t *testing.T) {
 	ctx, cancel := testAllocate(t, "js.html")
 	defer cancel()
 
-	waitCount := 0
-	count := func(context.Context, *cdp.Frame, cdpruntime.ExecutionContextID, ...cdp.NodeID) ([]*cdp.Node, error) {
-		waitCount += 1
-		return nil, ErrHasResults
+	tests := []struct {
+		sel             string
+		by              QueryOption
+		expectRetryOnce bool
+	}{
+		{"//input", nil, false},
+		{"//input", RetryInterval(10 * time.Second), true},
 	}
 
-	{
-		waitCount = 0
+	for i, test := range tests {
+		retryCount := 0
+		countRetries := func(context.Context, *cdp.Frame, cdpruntime.ExecutionContextID, ...cdp.NodeID) ([]*cdp.Node, error) {
+			retryCount += 1
+			return nil, ErrInvalidTarget
+		}
 
-		ctx, cancel := context.WithTimeout(ctx, time.Second)
+		ctx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
 		defer cancel()
 
-		if err := Run(ctx, Query("//input", WaitFunc(count))); err != nil && !errors.Is(err, context.DeadlineExceeded) {
-			t.Fatalf("got error: %v", err)
+		opts := []QueryOption{WaitFunc(countRetries)}
+		if test.by != nil {
+			opts = append(opts, test.by)
 		}
-		if waitCount <= 1 {
-			t.Fatalf("query should retry more than once")
+		if err := Run(ctx, Query(test.sel, opts...)); err != nil &&
+			!errors.Is(err, context.DeadlineExceeded) {
+			t.Fatalf("test %d got error: %v", i, err)
 		}
-	}
-
-	{
-		waitCount = 0
-
-		ctx, cancel := context.WithTimeout(ctx, time.Second)
-		defer cancel()
-
-		if err := Run(ctx, Query("//input", WaitFunc(count), RetryInterval(10*time.Second))); err != nil && !errors.Is(err, context.DeadlineExceeded) {
-			t.Fatalf("got error: %v", err)
+		if retryCount == 0 {
+			t.Fatalf("test %d expected to retry at least once", i)
 		}
-		if waitCount != 1 {
-			t.Fatalf("query should retry once")
+		if want, got := test.expectRetryOnce, retryCount == 1; want != got {
+			t.Fatalf("test %d expected retry once %v: got %v", i, want, got)
 		}
 	}
 }
