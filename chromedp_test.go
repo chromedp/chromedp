@@ -1118,7 +1118,6 @@ func TestWebGL(t *testing.T) {
 //   - url
 //   - pageNumber
 //   - totalPages
-//
 // This is a regress test for https://github.com/chromedp/chromedp/issues/922.
 func TestPDFTemplate(t *testing.T) {
 	t.Parallel()

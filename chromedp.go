@@ -193,9 +193,9 @@ func FromContext(ctx context.Context) *Context {
 // Cancel. A timeout can be attached to this context to determine how long to
 // wait for the browser to close itself:
 //
-//	tctx, tcancel := context.WithTimeout(ctx, 10 * time.Second)
-//	defer tcancel()
-//	chromedp.Cancel(tctx)
+//     tctx, tcancel := context.WithTimeout(ctx, 10 * time.Second)
+//     defer tcancel()
+//     chromedp.Cancel(tctx)
 //
 // Usually a "defer cancel()" will be enough for most use cases. However, Cancel
 // is the better option if one wants to gracefully close a browser, or catch
