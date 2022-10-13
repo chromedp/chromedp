@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"sync"
 	"time"
 )
@@ -508,6 +509,18 @@ func WSURLReadTimeout(t time.Duration) ExecAllocatorOption {
 	}
 }
 
+// setupRemoteAllocator is similar to NewRemoteAllocator, but it allows NewContext
+// to create the allocator without the unnecessary context layer.
+func setupRemoteAllocator(opts ...RemoteAllocatorOption) *RemoteAllocator {
+	rp := &RemoteAllocator{
+		initFlags: make(map[string]interface{}),
+	}
+	for _, o := range opts {
+		o(rp)
+	}
+	return rp
+}
+
 // NewRemoteAllocator creates a new context set up with a RemoteAllocator,
 // suitable for use with NewContext. The url should point to the browser's
 // websocket address, such as "ws://127.0.0.1:$PORT/devtools/browser/...".
@@ -521,21 +534,39 @@ func WSURLReadTimeout(t time.Duration) ExecAllocatorOption {
 // But "ws://127.0.0.1:9222/devtools/browser/" are not accepted.
 // Because it contains "/devtools/browser/" and will be considered
 // as a valid websocket debugger URL.
-func NewRemoteAllocator(parent context.Context, url string) (context.Context, context.CancelFunc) {
+func NewRemoteAllocator(parent context.Context, url string, opts ...RemoteAllocatorOption) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(parent)
-	c := &Context{Allocator: &RemoteAllocator{
-		wsURL: detectURL(url),
-	}}
+	opts = append(opts, remoteUrl(url))
+	c := &Context{Allocator: setupRemoteAllocator(opts...)}
 	ctx = context.WithValue(ctx, contextKey{}, c)
 	return ctx, cancel
 }
 
+// remoteUrl set websocket address
+func remoteUrl(url string) RemoteAllocatorOption {
+	return func(r *RemoteAllocator) {
+		r.wsURL = url
+	}
+}
+
+// Param is a generic option to pass a flag to remote url. If the value
+// is a string, it will be passed as --name=value. If it's a boolean, it will be
+// passed as --name if value is true.
+func Param(name string, value interface{}) RemoteAllocatorOption {
+	return func(r *RemoteAllocator) {
+		r.initFlags[name] = value
+	}
+}
+
+// RemoteAllocatorOption is a remote allocator option.
+type RemoteAllocatorOption = func(allocator *RemoteAllocator)
+
 // RemoteAllocator is an Allocator which connects to an already running Chrome
 // process via a websocket URL.
 type RemoteAllocator struct {
-	wsURL string
-
-	wg sync.WaitGroup
+	wsURL     string
+	initFlags map[string]interface{}
+	wg        sync.WaitGroup
 }
 
 // Allocate satisfies the Allocator interface.
@@ -545,6 +576,19 @@ func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (
 		return nil, ErrInvalidContext
 	}
 
+	var args []string
+	for name, value := range a.initFlags {
+		switch value := value.(type) {
+		case string:
+			args = append(args, fmt.Sprintf("--%s=%s", name, value))
+		case bool:
+			if value {
+				args = append(args, fmt.Sprintf("--%s", name))
+			}
+		default:
+			return nil, fmt.Errorf("invalid remote pool flag")
+		}
+	}
 	// Use a different context for the websocket, so we can have a chance at
 	// closing the relevant pages before closing the websocket connection.
 	wctx, cancel := context.WithCancel(context.Background())
@@ -557,7 +601,9 @@ func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (
 		cancel()    // close the websocket connection
 		a.wg.Done()
 	}()
-	browser, err := NewBrowser(wctx, a.wsURL, opts...)
+	wsURLArgs := strings.Join(args, "&")
+	wsURL := fmt.Sprintf("%s?%s", a.wsURL, wsURLArgs)
+	browser, err := NewBrowser(wctx, wsURL, opts...)
 	if err != nil {
 		return nil, err
 	}
