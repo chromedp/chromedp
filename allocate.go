@@ -513,7 +513,8 @@ func WSURLReadTimeout(t time.Duration) ExecAllocatorOption {
 // to create the allocator without the unnecessary context layer.
 func setupRemoteAllocator(opts ...RemoteAllocatorOption) *RemoteAllocator {
 	rp := &RemoteAllocator{
-		initFlags: make(map[string]interface{}),
+		initFlags:   make(map[string]interface{}),
+		initQueries: make(map[string]interface{}),
 	}
 	for _, o := range opts {
 		o(rp)
@@ -550,11 +551,17 @@ func remoteUrl(url string) RemoteAllocatorOption {
 }
 
 // Param is a generic option to pass a flag to remote url. If the value
-// is a string, it will be passed as --name=value. If it's a boolean, it will be
-// passed as --name if value is true.
-func Param(name string, value interface{}) RemoteAllocatorOption {
+// is a string and isFlag is true, it will be passed as --name=value. If it's a boolean, it will be
+// passed as --name if value is true. If isFlag is false, it will be passed as name=value.
+// If it's a boolean, it will be passed as name if value is true.
+func Param(name string, value interface{}, isFlag bool) RemoteAllocatorOption {
 	return func(r *RemoteAllocator) {
-		r.initFlags[name] = value
+		if isFlag {
+			r.initFlags[name] = value
+		} else {
+			r.initQueries[name] = value
+
+		}
 	}
 }
 
@@ -564,9 +571,10 @@ type RemoteAllocatorOption = func(allocator *RemoteAllocator)
 // RemoteAllocator is an Allocator which connects to an already running Chrome
 // process via a websocket URL.
 type RemoteAllocator struct {
-	wsURL     string
-	initFlags map[string]interface{}
-	wg        sync.WaitGroup
+	wsURL       string
+	initFlags   map[string]interface{}
+	initQueries map[string]interface{}
+	wg          sync.WaitGroup
 }
 
 // Allocate satisfies the Allocator interface.
@@ -577,6 +585,20 @@ func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (
 	}
 
 	var args []string
+
+	for name, value := range a.initQueries {
+		switch value := value.(type) {
+		case string:
+			args = append(args, fmt.Sprintf("%s=%s", name, value))
+		case bool:
+			if value {
+				args = append(args, name)
+			}
+		default:
+			return nil, fmt.Errorf("invalid remote pool query")
+		}
+	}
+
 	for name, value := range a.initFlags {
 		switch value := value.(type) {
 		case string:
@@ -603,6 +625,7 @@ func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (
 	}()
 	wsURLArgs := strings.Join(args, "&")
 	wsURL := fmt.Sprintf("%s?%s", a.wsURL, wsURLArgs)
+	fmt.Println("---", wsURL)
 	browser, err := NewBrowser(wctx, wsURL, opts...)
 	if err != nil {
 		return nil, err
