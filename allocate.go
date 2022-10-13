@@ -536,7 +536,7 @@ func setupRemoteAllocator(opts ...RemoteAllocatorOption) *RemoteAllocator {
 // as a valid websocket debugger URL.
 func NewRemoteAllocator(parent context.Context, url string, opts ...RemoteAllocatorOption) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(parent)
-	opts = append(opts, remoteUrl(url))
+	opts = append(opts, remoteUrl(detectURL(url)))
 	c := &Context{Allocator: setupRemoteAllocator(opts...)}
 	ctx = context.WithValue(ctx, contextKey{}, c)
 	return ctx, cancel
