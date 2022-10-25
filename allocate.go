@@ -556,7 +556,8 @@ func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (
 		cancel()    // close the websocket connection
 		a.wg.Done()
 	}()
-	browser, err := NewBrowser(wctx, a.wsURL, opts...)
+	wsURL := forceIP(a.wsURL)
+	browser, err := NewBrowser(wctx, wsURL, opts...)
 	if err != nil {
 		return nil, err
 	}
