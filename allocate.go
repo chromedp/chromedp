@@ -523,7 +523,7 @@ func WSURLReadTimeout(t time.Duration) ExecAllocatorOption {
 func NewRemoteAllocator(parent context.Context, url string) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(parent)
 	c := &Context{Allocator: &RemoteAllocator{
-		wsURL: detectURL(url),
+		wsURL: url,
 	}}
 	ctx = context.WithValue(ctx, contextKey{}, c)
 	return ctx, cancel
@@ -556,7 +556,8 @@ func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (
 		cancel()    // close the websocket connection
 		a.wg.Done()
 	}()
-	wsURL := forceIP(a.wsURL)
+	wsURL := detectURL(a.wsURL)
+	wsURL = forceIP(wsURL)
 	browser, err := NewBrowser(wctx, wsURL, opts...)
 	if err != nil {
 		return nil, err
