@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -147,7 +146,7 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	removeDir := false
 	dataDir, ok := a.initFlags["user-data-dir"].(string)
 	if !ok {
-		tempDir, err := ioutil.TempDir(allocTempDir, "chromedp-runner")
+		tempDir, err := os.MkdirTemp(allocTempDir, "chromedp-runner")
 		if err != nil {
 			return nil, err
 		}

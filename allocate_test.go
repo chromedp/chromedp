@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -174,11 +173,7 @@ func TestRemoteAllocator(t *testing.T) {
 }
 
 func testRemoteAllocator(t *testing.T, modifyURL func(wsURL string) string) {
-	tempDir, err := ioutil.TempDir("", "chromedp-runner")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(tempDir)
+	tempDir := t.TempDir()
 
 	procCtx, cancel := context.WithCancel(context.Background())
 	defer cancel()
