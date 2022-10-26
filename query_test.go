@@ -202,14 +202,14 @@ func TestRetryInterval(t *testing.T) {
 			name: "default",
 			opts: []QueryOption{},
 			// in 100ms
-			wantCountMin: 10,
+			wantCountMin: 5,
 			wantCountMax: 20,
 		},
 		{
 			name: "large interval",
 			opts: []QueryOption{RetryInterval(60 * time.Millisecond)},
 			// in 100ms
-			wantCountMin: 2,
+			wantCountMin: 1,
 			wantCountMax: 2,
 		},
 	}
