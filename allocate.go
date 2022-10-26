@@ -518,8 +518,7 @@ func WSURLReadTimeout(t time.Duration) ExecAllocatorOption {
 // * http://127.0.0.1:9222/
 //
 // But "ws://127.0.0.1:9222/devtools/browser/" are not accepted.
-// Because it contains "/devtools/browser/" and will be considered
-// as a valid websocket debugger URL.
+// Because the allocator won't try to modify it and it's obviously invalid.
 func NewRemoteAllocator(parent context.Context, url string) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(parent)
 	c := &Context{Allocator: &RemoteAllocator{
@@ -544,6 +543,11 @@ func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (
 		return nil, ErrInvalidContext
 	}
 
+	wsURL, err := modifyURL(ctx, a.wsURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to modify wsURL: %w", err)
+	}
+
 	// Use a different context for the websocket, so we can have a chance at
 	// closing the relevant pages before closing the websocket connection.
 	wctx, cancel := context.WithCancel(context.Background())
@@ -556,8 +560,7 @@ func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (
 		cancel()    // close the websocket connection
 		a.wg.Done()
 	}()
-	wsURL := detectURL(a.wsURL)
-	wsURL = forceIP(wsURL)
+
 	browser, err := NewBrowser(wctx, wsURL, opts...)
 	if err != nil {
 		return nil, err
