@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -116,7 +115,7 @@ func ExampleRunResponse() {
 }
 
 func ExampleExecAllocator() {
-	dir, err := ioutil.TempDir("", "chromedp-example")
+	dir, err := os.MkdirTemp("", "chromedp-example")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -140,7 +139,7 @@ func ExampleExecAllocator() {
 	}
 
 	path := filepath.Join(dir, "DevToolsActivePort")
-	bs, err := ioutil.ReadFile(path)
+	bs, err := os.ReadFile(path)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -402,7 +401,7 @@ func ExampleEmulate() {
 		log.Fatal(err)
 	}
 
-	if err := ioutil.WriteFile("iphone7-ua.png", buf, 0o644); err != nil {
+	if err := os.WriteFile("iphone7-ua.png", buf, 0o644); err != nil {
 		log.Fatal(err)
 	}
 
@@ -428,7 +427,7 @@ func ExamplePrintToPDF() {
 		log.Fatal(err)
 	}
 
-	if err := ioutil.WriteFile("page.pdf", buf, 0o644); err != nil {
+	if err := os.WriteFile("page.pdf", buf, 0o644); err != nil {
 		log.Fatal(err)
 	}
 
@@ -587,7 +586,7 @@ func ExampleFullScreenshot() {
 		log.Fatal(err)
 	}
 
-	if err := ioutil.WriteFile("fullScreenshot.jpeg", buf, 0644); err != nil {
+	if err := os.WriteFile("fullScreenshot.jpeg", buf, 0644); err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("wrote fullScreenshot.jpeg")

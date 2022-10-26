@@ -8,7 +8,6 @@ import (
 	"image/color"
 	"image/png"
 	"io"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -52,7 +51,7 @@ func init() {
 	}
 	testdataDir = "file://" + path.Join(wd, "testdata")
 
-	allocTempDir, err = ioutil.TempDir("", "chromedp-test")
+	allocTempDir, err = os.MkdirTemp("", "chromedp-test")
 	if err != nil {
 		panic(fmt.Sprintf("could not create temp directory: %v", err))
 	}
@@ -91,7 +90,7 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 	cancel()
 
-	if infos, _ := ioutil.ReadDir(allocTempDir); len(infos) > 0 {
+	if infos, _ := os.ReadDir(allocTempDir); len(infos) > 0 {
 		os.RemoveAll(allocTempDir)
 		panic(fmt.Sprintf("leaked %d temporary dirs under %s", len(infos), allocTempDir))
 	} else {
@@ -643,11 +642,7 @@ func TestDownloadIntoDir(t *testing.T) {
 	ctx, cancel := testAllocate(t, "")
 	defer cancel()
 
-	dir, err := ioutil.TempDir("", "chromedp-test")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
@@ -676,11 +671,7 @@ func TestDownloadIntoDir(t *testing.T) {
 func TestGracefulBrowserShutdown(t *testing.T) {
 	t.Parallel()
 
-	dir, err := ioutil.TempDir("", "chromedp-test")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer os.RemoveAll(dir)
+	dir := t.TempDir()
 
 	// TODO(mvdan): this doesn't work with DefaultExecAllocatorOptions+UserDataDir
 	opts := []ExecAllocatorOption{
@@ -1100,6 +1091,7 @@ func TestWebGL(t *testing.T) {
 //   - url
 //   - pageNumber
 //   - totalPages
+//
 // This is a regress test for https://github.com/chromedp/chromedp/issues/922.
 func TestPDFTemplate(t *testing.T) {
 	t.Parallel()

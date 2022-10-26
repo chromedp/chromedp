@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -1234,7 +1234,7 @@ func TestFileUpload(t *testing.T) {
 		}
 		defer f.Close()
 
-		buf, err := ioutil.ReadAll(f)
+		buf, err := io.ReadAll(f)
 		if err != nil {
 			http.Error(res, err.Error(), http.StatusBadRequest)
 			return
@@ -1246,7 +1246,7 @@ func TestFileUpload(t *testing.T) {
 	defer s.Close()
 
 	// create temporary file on disk
-	tmpfile, err := ioutil.TempFile("", "chromedp-upload-test")
+	tmpfile, err := os.CreateTemp("", "chromedp-upload-test")
 	if err != nil {
 		t.Fatal(err)
 	}
