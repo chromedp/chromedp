@@ -127,6 +127,8 @@ func TestRemoteAllocator(t *testing.T) {
 	tests := []struct {
 		name      string
 		modifyURL func(wsURL string) string
+		opts      []RemoteAllocatorOption
+		wantErr   string
 	}{
 		{
 			name:      "original wsURL",
@@ -164,15 +166,24 @@ func TestRemoteAllocator(t *testing.T) {
 				return u.String()
 			},
 		},
+		{
+			name: "NoModifyURL",
+			modifyURL: func(wsURL string) string {
+				return wsURL[0:strings.Index(wsURL, "devtools")]
+			},
+			opts:    []RemoteAllocatorOption{NoModifyURL},
+			wantErr: "could not dial",
+		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			testRemoteAllocator(t, tt.modifyURL)
+			testRemoteAllocator(t, tt.modifyURL, tt.wantErr, tt.opts)
 		})
 	}
 }
 
-func testRemoteAllocator(t *testing.T, modifyURL func(wsURL string) string) {
+func testRemoteAllocator(t *testing.T, modifyURL func(wsURL string) string, wantErr string, opts []RemoteAllocatorOption) {
 	tempDir := t.TempDir()
 
 	procCtx, cancel := context.WithCancel(context.Background())
@@ -204,7 +215,7 @@ func testRemoteAllocator(t *testing.T, modifyURL func(wsURL string) string) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	allocCtx, allocCancel := NewRemoteAllocator(context.Background(), modifyURL(wsURL))
+	allocCtx, allocCancel := NewRemoteAllocator(context.Background(), modifyURL(wsURL), opts...)
 	defer allocCancel()
 
 	taskCtx, taskCancel := NewContext(allocCtx,
@@ -214,6 +225,12 @@ func testRemoteAllocator(t *testing.T, modifyURL func(wsURL string) string) {
 
 	{
 		infos, err := Targets(taskCtx)
+		if len(wantErr) > 0 {
+			if err == nil || !strings.Contains(err.Error(), wantErr) {
+				t.Fatalf("\ngot error:\n\t%v\nwant error contains:\n\t%s", err, wantErr)
+			}
+			return
+		}
 		if err != nil {
 			t.Fatal(err)
 		}

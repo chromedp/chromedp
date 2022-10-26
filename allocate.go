@@ -95,7 +95,7 @@ func NewExecAllocator(parent context.Context, opts ...ExecAllocatorOption) (cont
 	return ctx, cancelWait
 }
 
-// ExecAllocatorOption is a exec allocator option.
+// ExecAllocatorOption is an exec allocator option.
 type ExecAllocatorOption = func(*ExecAllocator)
 
 // ExecAllocator is an Allocator which starts new browser processes on the host
@@ -510,6 +510,7 @@ func WSURLReadTimeout(t time.Duration) ExecAllocatorOption {
 // NewRemoteAllocator creates a new context set up with a RemoteAllocator,
 // suitable for use with NewContext. The url should point to the browser's
 // websocket address, such as "ws://127.0.0.1:$PORT/devtools/browser/...".
+//
 // If the url does not contain "/devtools/browser/", it will try to detect
 // the correct one by sending a request to "http://$HOST:$PORT/json/version".
 //
@@ -519,19 +520,33 @@ func WSURLReadTimeout(t time.Duration) ExecAllocatorOption {
 //
 // But "ws://127.0.0.1:9222/devtools/browser/" are not accepted.
 // Because the allocator won't try to modify it and it's obviously invalid.
-func NewRemoteAllocator(parent context.Context, url string) (context.Context, context.CancelFunc) {
-	ctx, cancel := context.WithCancel(parent)
-	c := &Context{Allocator: &RemoteAllocator{
+//
+// Use chromedp.NoModifyURL to prevent it from modifying the url.
+func NewRemoteAllocator(parent context.Context, url string, opts ...RemoteAllocatorOption) (context.Context, context.CancelFunc) {
+	a := &RemoteAllocator{
 		wsURL: url,
-	}}
+		modifyURLFunc: func(ctx context.Context, wsURL string) (string, error) {
+			return modifyURL(ctx, wsURL)
+		},
+	}
+	for _, o := range opts {
+		o(a)
+	}
+	c := &Context{Allocator: a}
+
+	ctx, cancel := context.WithCancel(parent)
 	ctx = context.WithValue(ctx, contextKey{}, c)
 	return ctx, cancel
 }
 
+// RemoteAllocatorOption is a remote allocator option.
+type RemoteAllocatorOption = func(*RemoteAllocator)
+
 // RemoteAllocator is an Allocator which connects to an already running Chrome
 // process via a websocket URL.
 type RemoteAllocator struct {
-	wsURL string
+	wsURL         string
+	modifyURLFunc func(ctx context.Context, wsURL string) (string, error)
 
 	wg sync.WaitGroup
 }
@@ -543,9 +558,13 @@ func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (
 		return nil, ErrInvalidContext
 	}
 
-	wsURL, err := modifyURL(ctx, a.wsURL)
-	if err != nil {
-		return nil, fmt.Errorf("failed to modify wsURL: %w", err)
+	wsURL := a.wsURL
+	var err error
+	if a.modifyURLFunc != nil {
+		wsURL, err = a.modifyURLFunc(ctx, wsURL)
+		if err != nil {
+			return nil, fmt.Errorf("failed to modify wsURL: %w", err)
+		}
 	}
 
 	// Use a different context for the websocket, so we can have a chance at
@@ -581,4 +600,10 @@ func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (
 // Wait satisfies the Allocator interface.
 func (a *RemoteAllocator) Wait() {
 	a.wg.Wait()
+}
+
+// NoModifyURL is a RemoteAllocatorOption that prevents the remote allocator
+// from modifying the websocket debugger URL passed to it.
+func NoModifyURL(a *RemoteAllocator) {
+	a.modifyURLFunc = nil
 }
