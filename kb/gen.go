@@ -10,7 +10,7 @@ import (
 	"flag"
 	"fmt"
 	"go/format"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"regexp"
@@ -48,7 +48,7 @@ func run(out string) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(out, src, 0o644)
+	return os.WriteFile(out, src, 0o644)
 }
 
 // loadKeys loads the dom key definitions from the chromium source tree.
@@ -439,7 +439,7 @@ func grab(path string) ([]byte, error) {
 		return nil, fmt.Errorf("unable to get %s: %w", path, err)
 	}
 	defer res.Body.Close()
-	body, err := ioutil.ReadAll(res.Body)
+	body, err := io.ReadAll(res.Body)
 	if err != nil {
 		return nil, fmt.Errorf("unable to read %s: %w", path, err)
 	}

@@ -10,7 +10,7 @@ import (
 	"flag"
 	"fmt"
 	"go/format"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"regexp"
@@ -81,7 +81,7 @@ func run(out string) error {
 	if err != nil {
 		return err
 	}
-	return ioutil.WriteFile(out, src, 0o644)
+	return os.WriteFile(out, src, 0o644)
 }
 
 var (
@@ -108,7 +108,7 @@ func get(v interface{}) error {
 	if res.StatusCode != 200 {
 		return fmt.Errorf("got status code %d", res.StatusCode)
 	}
-	buf, err := ioutil.ReadAll(res.Body)
+	buf, err := io.ReadAll(res.Body)
 	if err != nil {
 		return err
 	}
