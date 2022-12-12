@@ -59,6 +59,7 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) QueryActio
 		buf, err := page.CaptureScreenshot().
 			WithFormat(page.CaptureScreenshotFormatPng).
 			WithCaptureBeyondViewport(true).
+			WithFromSurface(true).
 			WithClip(&clip).
 			Do(ctx)
 		if err != nil {
@@ -88,7 +89,7 @@ func CaptureScreenshot(res *[]byte) Action {
 	return ActionFunc(func(ctx context.Context) error {
 		var err error
 		*res, err = page.CaptureScreenshot().
-			WithCaptureBeyondViewport(true).
+			WithFromSurface(true).
 			Do(ctx)
 		return err
 	})
@@ -107,33 +108,19 @@ func FullScreenshot(res *[]byte, quality int) EmulateAction {
 		panic("res cannot be nil")
 	}
 	return ActionFunc(func(ctx context.Context) error {
-		// get layout metrics
-		_, _, contentSize, _, _, cssContentSize, err := page.GetLayoutMetrics().Do(ctx)
-		if err != nil {
-			return err
-		}
-		// protocol v90 changed the return parameter name (contentSize -> cssContentSize)
-		if cssContentSize != nil {
-			contentSize = cssContentSize
-		}
-
 		format := page.CaptureScreenshotFormatPng
 		if quality != 100 {
 			format = page.CaptureScreenshotFormatJpeg
 		}
 
 		// capture screenshot
+		var err error
 		*res, err = page.CaptureScreenshot().
 			WithCaptureBeyondViewport(true).
+			WithFromSurface(true).
 			WithFormat(format).
 			WithQuality(int64(quality)).
-			WithClip(&page.Viewport{
-				X:      0,
-				Y:      0,
-				Width:  contentSize.Width,
-				Height: contentSize.Height,
-				Scale:  1,
-			}).Do(ctx)
+			Do(ctx)
 		if err != nil {
 			return err
 		}
