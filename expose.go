@@ -73,14 +73,9 @@ func ExposeFunc(ctx context.Context, fnName string, fn BindingFunc) error {
 				}
 
 				go func() {
-					var res []byte
-					err := Run(ctx, Evaluate(expression, &res, func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
+					Run(ctx, Evaluate(expression, nil, func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
 						return p.WithContextID(ev.ExecutionContextID)
 					}))
-
-					if err != nil {
-						fmt.Println(err)
-					}
 				}()
 
 			}
