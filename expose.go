@@ -9,6 +9,12 @@ import (
 	"github.com/chromedp/cdproto/runtime"
 )
 
+const (
+	deliverError     = "deliverError"
+	deliverResult    = "deliverResult"
+	addTargetBinding = "addTargetBinding"
+)
+
 // BindingCalledPayload ...
 type BindingCalledPayload struct {
 	Type string `json:"type"`
@@ -40,7 +46,7 @@ func ExposeFunc(ctx context.Context, fnName string, fn BindingFunc) error {
 		c.Target.bindingFuncs = make(map[string]BindingFunc)
 
 		err := Run(ctx, ActionFunc(func(ctx context.Context) error {
-			_, err := page.AddScriptToEvaluateOnNewDocument(exposedFunJS).Do(ctx)
+			_, err := page.AddScriptToEvaluateOnNewDocument(exposeJS).Do(ctx)
 			return err
 		}))
 		if err != nil {
@@ -57,25 +63,29 @@ func ExposeFunc(ctx context.Context, fnName string, fn BindingFunc) error {
 					return
 				}
 
-				var expression string
+				if payload.Type != "exposedFun" {
+					return
+				}
 
 				c.Target.bindingFuncMu.RLock()
 				defer c.Target.bindingFuncMu.RUnlock()
+
+				result := "bindingCall name not exsit"
+				callFnName := deliverError
+
 				if fn, ok := c.Target.bindingFuncs[payload.Name]; ok {
-					res, err := fn(payload.Args)
+					result, err = fn(payload.Args)
 					if err != nil {
-						expression = deliverError(payload.Name, payload.Seq, err.Error(), err.Error())
+						result = err.Error()
 					} else {
-						expression = deliverResult(payload.Name, payload.Seq, res)
+						callFnName = deliverResult
 					}
-				} else {
-					expression = deliverError(payload.Name, payload.Seq, "bindingCall name not exsit", "")
 				}
 
 				go func() {
-					Run(ctx, Evaluate(expression, nil, func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
-						return p.WithContextID(ev.ExecutionContextID)
-					}))
+					Run(ctx, CallFunctionOn(callFnName, nil, func(p *runtime.CallFunctionOnParams) *runtime.CallFunctionOnParams {
+						return p.WithExecutionContextID(ev.ExecutionContextID)
+					}, payload.Name, payload.Seq, result))
 				}()
 
 			}
@@ -95,7 +105,7 @@ func ExposeFunc(ctx context.Context, fnName string, fn BindingFunc) error {
 		return err
 	}
 
-	expression := addPageBinding("exposedFun", fnName)
+	expression := fmt.Sprintf(`%s("%s","%s");`, addTargetBinding, "exposedFun", fnName)
 	err = Run(ctx, ActionFunc(func(ctx context.Context) error {
 		_, err := page.AddScriptToEvaluateOnNewDocument(expression).Do(ctx)
 		return err
@@ -104,57 +114,4 @@ func ExposeFunc(ctx context.Context, fnName string, fn BindingFunc) error {
 		return err
 	}
 	return nil
-}
-
-const exposedFunJS = `
-function deliverError(name, seq, message, stack) {
-	const error = new Error(message);
-	error.stack = stack;
-	window[name].callbacks.get(seq).reject(error);
-	window[name].callbacks.delete(seq);
-}
-
-function deliverResult(name, seq, result) {
-	window[name].callbacks.get(seq).resolve(result);
-	window[name].callbacks.delete(seq);
-}
-
-function addPageBinding(type, name) {
-	// This is the CDP binding.
-	const callCDP = self[name];
-	console.log("callCDP",callCDP)
-	// We replace the CDP binding with a Puppeteer binding.
-	Object.assign(self, {
-		[name](args) {
-			if(typeof args != "string"){
-				return Promise.reject(new Error('function takes exactly one argument, this argument should be string'))
-			}
-			var _a, _b;
-			// This is the Puppeteer binding.
-			const callPuppeteer = self[name];
-			(_a = callPuppeteer.callbacks) !== null && _a !== void 0 ? _a : (callPuppeteer.callbacks = new Map());
-			const seq = ((_b = callPuppeteer.lastSeq) !== null && _b !== void 0 ? _b : 0) + 1;
-			callPuppeteer.lastSeq = seq;
-			callCDP(JSON.stringify({ type, name, seq, args }));
-			return new Promise((resolve, reject) => {
-				callPuppeteer.callbacks.set(seq, { resolve, reject });
-			});
-		},
-	});
-}
-`
-
-func deliverError(name string, seq int64, message, stack string) string {
-	var cmd string = `deliverError("%s",%d,"%s","%s");`
-	return fmt.Sprintf(cmd, name, seq, message, stack)
-}
-
-func deliverResult(name string, seq int64, result string) string {
-	var cmd string = `deliverResult("%s",%d,"%s");`
-	return fmt.Sprintf(cmd, name, seq, result)
-}
-
-func addPageBinding(typeS, name string) string {
-	var cmd string = `addPageBinding("%s","%s");`
-	return fmt.Sprintf(cmd, typeS, name)
 }
