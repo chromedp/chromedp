@@ -14,6 +14,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -656,16 +657,32 @@ func TestDownloadIntoDir(t *testing.T) {
 	}))
 	defer s.Close()
 
+	done := make(chan string, 1)
+	ListenTarget(ctx, func(v interface{}) {
+		if ev, ok := v.(*browser.EventDownloadProgress); ok {
+			if ev.State == browser.DownloadProgressStateCompleted {
+				done <- ev.GUID
+				close(done)
+			}
+		}
+	})
+
 	if err := Run(ctx,
 		Navigate(s.URL),
-		page.SetDownloadBehavior(page.SetDownloadBehaviorBehaviorAllow).WithDownloadPath(dir),
+		browser.SetDownloadBehavior(browser.SetDownloadBehaviorBehaviorAllowAndName).WithDownloadPath(dir).WithEventsEnabled(true),
 		Click("#download", ByQuery),
 	); err != nil {
 		t.Fatal(err)
 	}
 
-	// TODO: wait for the download to finish, and check that the file is in
-	// the directory.
+	select {
+	case <-ctx.Done():
+		t.Fatalf("unexpected error: %v", ctx.Err())
+	case guid := <-done:
+		if _, err := os.Stat(filepath.Join(dir, guid)); err != nil {
+			t.Fatalf("want error nil, got: %v", err)
+		}
+	}
 }
 
 func TestGracefulBrowserShutdown(t *testing.T) {
