@@ -14,6 +14,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -642,6 +643,11 @@ func TestDownloadIntoDir(t *testing.T) {
 	ctx, cancel := testAllocate(t, "")
 	defer cancel()
 
+	// Wrap the context into a timeouted context, to ensure test with not run endless if download fails
+	// A second should be enough for this mocked download to finish, even on slower machines
+	ctx, cancel = context.WithTimeout(ctx, 1*time.Second)
+	defer cancel()
+
 	dir := t.TempDir()
 
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -656,16 +662,36 @@ func TestDownloadIntoDir(t *testing.T) {
 	}))
 	defer s.Close()
 
+	done := make(chan string, 1)
+	ListenTarget(ctx, func(v interface{}) {
+		if ev, ok := v.(*browser.EventDownloadProgress); ok {
+			if ev.State == browser.DownloadProgressStateCompleted {
+				done <- ev.GUID
+				close(done)
+			}
+		}
+	})
+
 	if err := Run(ctx,
 		Navigate(s.URL),
-		page.SetDownloadBehavior(page.SetDownloadBehaviorBehaviorAllow).WithDownloadPath(dir),
+		browser.SetDownloadBehavior(browser.SetDownloadBehaviorBehaviorAllowAndName).WithDownloadPath(dir).WithEventsEnabled(true),
 		Click("#download", ByQuery),
 	); err != nil {
 		t.Fatal(err)
 	}
 
-	// TODO: wait for the download to finish, and check that the file is in
-	// the directory.
+	select {
+	case <-ctx.Done():
+		t.Fatal("Download timed out")
+	case guid := <-done:
+		if _, err := os.Stat(filepath.Join(dir, guid)); err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				t.Fatal("Downloaded file does not exist")
+			}
+
+			t.Fatal("Unknown error while checking downloaded file")
+		}
+	}
 }
 
 func TestGracefulBrowserShutdown(t *testing.T) {
