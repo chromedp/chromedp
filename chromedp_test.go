@@ -645,13 +645,11 @@ func TestDownloadIntoDir(t *testing.T) {
 
 	dir := t.TempDir()
 
-	downloadContents := "some binary data"
-
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/data.bin":
 			w.Header().Set("Content-Type", "application/octet-stream")
-			fmt.Fprintf(w, downloadContents)
+			fmt.Fprintf(w, "some binary data")
 		default:
 			w.Header().Set("Content-Type", "text/html")
 			fmt.Fprintf(w, `go <a id="download" href="/data.bin">download</a> stuff/`)
@@ -689,15 +687,6 @@ func TestDownloadIntoDir(t *testing.T) {
 			}
 
 			t.Fatal("Unknown error while checking downloaded file")
-		}
-
-		fileContents, err := os.ReadFile(path)
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		if string(fileContents) != downloadContents {
-			t.Fatalf("Expected content of file to be '%s', but got '%s'", downloadContents, string(fileContents))
 		}
 	}
 }
