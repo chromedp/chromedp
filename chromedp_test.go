@@ -643,11 +643,6 @@ func TestDownloadIntoDir(t *testing.T) {
 	ctx, cancel := testAllocate(t, "")
 	defer cancel()
 
-	// Wrap the context into a timeouted context, to ensure test with not run endless if download fails
-	// A second should be enough for this mocked download to finish, even on slower machines
-	ctx, cancel = context.WithTimeout(ctx, 1*time.Second)
-	defer cancel()
-
 	dir := t.TempDir()
 
 	downloadContents := "some binary data"
@@ -684,7 +679,7 @@ func TestDownloadIntoDir(t *testing.T) {
 
 	select {
 	case <-ctx.Done():
-		t.Fatal("Download timed out")
+		t.Fatal("chromedp context is done, before download was finished")
 	case guid := <-done:
 		path := filepath.Join(dir, guid)
 
