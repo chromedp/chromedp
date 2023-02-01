@@ -464,7 +464,7 @@ var goCodes = map[rune]string{
 
 const (
 	// chromiumSrc is the base chromium source repo location
-	chromiumSrc = "https://chromium.googlesource.com/chromium/src/+/master/"
+	chromiumSrc = "https://chromium.googlesource.com/chromium/src/+/main/"
 	// domUsLayoutDataH contains the {printable,non-printable} DomCode -> DomKey
 	// also contains DomKey -> VKEY (not used)
 	domUsLayoutDataH = chromiumSrc + "ui/events/keycodes/dom_us_layout_data.h?format=TEXT"
