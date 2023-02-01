@@ -45,8 +45,8 @@ var cleanRE = regexp.MustCompile(`[^a-zA-Z0-9_]`)
 
 // run runs the program.
 func run(out string) error {
-	var descriptors []deviceDescriptor
-	if err := get(&descriptors); err != nil {
+	descriptors, err := get()
+	if err != nil {
 		return err
 	}
 	// add reset device
@@ -93,33 +93,27 @@ var (
 )
 
 // get retrieves and decodes the device descriptors.
-func get(v interface{}) error {
-	req, err := http.NewRequest("GET", deviceDescriptorsURL, nil)
+func get() ([]deviceDescriptor, error) {
+	res, err := http.Get(deviceDescriptorsURL)
 	if err != nil {
-		return err
-	}
-	// retrieve
-	cl := &http.Client{}
-	res, err := cl.Do(req)
-	if err != nil {
-		return err
+		return nil, err
 	}
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
-		return fmt.Errorf("got status code %d", res.StatusCode)
+		return nil, fmt.Errorf("got status code %d", res.StatusCode)
 	}
 	buf, err := io.ReadAll(res.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	start := startRE.FindIndex(buf)
 	if start == nil {
-		return errors.New("could not find start")
+		return nil, errors.New("could not find start")
 	}
 	buf = buf[start[1]-1:]
 	end := endRE.FindIndex(buf)
 	if end == nil {
-		return errors.New("could not find end")
+		return nil, errors.New("could not find end")
 	}
 	buf = buf[:end[1]-10]
 	buf = bytes.Replace(buf, []byte("'"), []byte(`"`), -1)
@@ -127,7 +121,11 @@ func get(v interface{}) error {
 	buf = fixKeysRE.ReplaceAll(buf, []byte(`$1"$2":`))
 	buf = fixClosesRE.ReplaceAll(buf, []byte("$1\n$2"))
 	buf = fixClosesRE.ReplaceAll(buf, []byte("$1\n$2"))
-	return json.Unmarshal(buf, v)
+	var descriptors []deviceDescriptor
+	if err := json.Unmarshal(buf, &descriptors); err != nil {
+		return nil, err
+	}
+	return descriptors, nil
 }
 
 const hdr = `// Package device contains device emulation definitions for use with chromedp's
