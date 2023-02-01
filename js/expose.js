@@ -1,35 +1,45 @@
 function deliverError(name, seq, message, stack) {
 	const error = new Error(message);
 	error.stack = stack;
-	window[name].callbacks.get(seq).reject(error);
-	window[name].callbacks.delete(seq);
+	window["CDP_BINDING_" + name].callbacks.get(seq).reject(error);
+	window["CDP_BINDING_" + name].callbacks.delete(seq);
 }
 
 function deliverResult(name, seq, result) {
-	window[name].callbacks.get(seq).resolve(result);
-	window[name].callbacks.delete(seq);
+	window["CDP_BINDING_" + name].callbacks.get(seq).resolve(result);
+	window["CDP_BINDING_" + name].callbacks.delete(seq);
 }
 
 function addTargetBinding(type, name) {
 	// This is the CDP binding.
-	const callCDP = window[name];
-
+	window["CDP_BINDING_" + name] = window[name];
+	
 	// We replace the CDP binding with a chromedp binding.
 	Object.assign(window, {
 		[name](args) {
 			if(typeof args != "string"){
 				return Promise.reject(new Error('function takes exactly one argument, this argument should be string'))
 			}
-			var _a, _b;
+
 			// This is the chromedp binding.
-			const callChromedp = window[name];
-			(_a = callChromedp.callbacks) !== null && _a !== void 0 ? _a : (callChromedp.callbacks = new Map());
-			const seq = ((_b = callChromedp.lastSeq) !== null && _b !== void 0 ? _b : 0) + 1;
+			const callChromedp = window["CDP_BINDING_" + name];
+
+			if (callChromedp.callbacks == undefined) {
+				callChromedp.callbacks = new Map()
+			}
+			if (callChromedp.lastSeq == undefined) {
+				callChromedp.lastSeq = 0
+			}
+
+			const seq = callChromedp.lastSeq + 1
 			callChromedp.lastSeq = seq;
-			callCDP(JSON.stringify({ type, name, seq, args }));
+			
+			callChromedp(JSON.stringify({ type, name, seq, args }));
+
 			return new Promise((resolve, reject) => {
 				callChromedp.callbacks.set(seq, { resolve, reject });
 			});
 		},
 	});
 }
+
