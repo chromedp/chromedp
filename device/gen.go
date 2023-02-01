@@ -17,7 +17,7 @@ import (
 	"strings"
 )
 
-const deviceDescriptorsURL = "https://raw.githubusercontent.com/puppeteer/puppeteer/main/src/common/DeviceDescriptors.ts"
+const deviceDescriptorsURL = "https://raw.githubusercontent.com/puppeteer/puppeteer/main/packages/puppeteer-core/src/common/Device.ts"
 
 func main() {
 	out := flag.String("out", "device.go", "out")
@@ -85,8 +85,8 @@ func run(out string) error {
 }
 
 var (
-	startRE        = regexp.MustCompile(`(?m)^const\s+deviceArray:\s*Device\[\]\s*=\s*\[`)
-	endRE          = regexp.MustCompile(`(?m)^\];`)
+	startRE        = regexp.MustCompile(`(?m)^const\s+knownDevices\s*=\s*\[`)
+	endRE          = regexp.MustCompile(`(?m)^\] as const;`)
 	fixLandscapeRE = regexp.MustCompile(`isLandscape:\s*(true|false),`)
 	fixKeysRE      = regexp.MustCompile(`(?m)^(\s+)([a-zA-Z]+):`)
 	fixClosesRE    = regexp.MustCompile(`([\]\}]),\n(\s*[\]\}])`)
@@ -121,7 +121,7 @@ func get(v interface{}) error {
 	if end == nil {
 		return errors.New("could not find end")
 	}
-	buf = buf[:end[1]-1]
+	buf = buf[:end[1]-10]
 	buf = bytes.Replace(buf, []byte("'"), []byte(`"`), -1)
 	buf = fixLandscapeRE.ReplaceAll(buf, []byte(`"isLandscape": $1`))
 	buf = fixKeysRE.ReplaceAll(buf, []byte(`$1"$2":`))
