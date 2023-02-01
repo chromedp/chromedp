@@ -42,4 +42,3 @@ function addTargetBinding(type, name) {
 		},
 	});
 }
-
