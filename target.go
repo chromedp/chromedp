@@ -41,10 +41,6 @@ type Target struct {
 
 	// Indicates if the target is a worker target.
 	isWorker bool
-
-	bindingFuncs          map[string]BindingFunc
-	bindingFuncMu         sync.RWMutex
-	bindingFuncListenOnce sync.Once
 }
 
 func (t *Target) enclosingFrame(node *cdp.Node) cdp.FrameID {

@@ -58,7 +58,7 @@ var (
 	waitForPredicatePageFunction string
 
 	// exposedJS is a javascript snippet that wraps the function (CDP binding)
-	// It's copied from puppeteer. See
+	// It refers to puppeteer. See
 	// https://github.com/puppeteer/puppeteer/blob/main/packages/puppeteer-core/src/common/util.ts#L248-L327
 	// It's modified to make BindingFunc takes exactly one argument, this argument should be string
 	//go:embed js/expose.js
