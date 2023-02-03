@@ -82,8 +82,7 @@ func ResetViewport() EmulateAction {
 
 // Device is the shared interface for known device types.
 //
-// See: github.com/chromedp/chromedp/device for a set of off-the-shelf devices
-// and modes.
+// See [device] for a set of off-the-shelf devices and modes.
 type Device interface {
 	// Device returns the device info.
 	Device() device.Info
@@ -91,8 +90,7 @@ type Device interface {
 
 // Emulate is an action to emulate a specific device.
 //
-// See: github.com/chromedp/chromedp/device for a set of off-the-shelf devices
-// and modes.
+// See [device] for a set of off-the-shelf devices and modes.
 func Emulate(device Device) EmulateAction {
 	d := device.Device()
 
