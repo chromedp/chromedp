@@ -11,7 +11,7 @@ import (
 
 // PollAction are actions that will wait for a general JavaScript predicate.
 //
-// See Poll for details on building poll tasks.
+// See [Poll] for details on building poll tasks.
 type PollAction Action
 
 // pollTask holds information pertaining to an poll task.
@@ -85,8 +85,7 @@ func (p *pollTask) Do(ctx context.Context) error {
 // Poll is a poll action that will wait for a general JavaScript predicate.
 // It builds the predicate from a JavaScript expression.
 //
-// This is a copy of puppeteer's page.waitForFunction.
-// see https://github.com/puppeteer/puppeteer/blob/v8.0.0/docs/api.md#pagewaitforfunctionpagefunction-options-args.
+// This is a copy of puppeteer's [page.waitForFunction].
 // It's named Poll intentionally to avoid messing up with the Wait* query actions.
 // The behavior is not guaranteed to be compatible.
 // For example, our implementation makes the poll task not survive from a navigation,
@@ -107,7 +106,9 @@ func (p *pollTask) Do(ctx context.Context) error {
 //
 // The WithPollingArgs option provides extra arguments to pass to the predicate.
 // Only apply this option when the predicate is built from a function.
-// See PollFunction.
+// See [PollFunction].
+//
+// [page.waitForFunction]: https://github.com/puppeteer/puppeteer/blob/v8.0.0/docs/api.md#pagewaitforfunctionpagefunction-options-args
 func Poll(expression string, res interface{}, opts ...PollOption) PollAction {
 	predicate := fmt.Sprintf(`return (%s);`, expression)
 	return poll(predicate, res, opts...)
@@ -116,7 +117,7 @@ func Poll(expression string, res interface{}, opts ...PollOption) PollAction {
 // PollFunction is a poll action that will wait for a general JavaScript predicate.
 // It builds the predicate from a JavaScript function.
 //
-// See Poll for details on building poll tasks.
+// See [Poll] for details on building poll tasks.
 func PollFunction(pageFunction string, res interface{}, opts ...PollOption) PollAction {
 	predicate := fmt.Sprintf(`return (%s)(...args);`, pageFunction)
 

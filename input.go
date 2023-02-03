@@ -158,10 +158,10 @@ type KeyAction Action
 //
 // Only well-known, "printable" characters will have char events synthesized.
 //
-// See the SendKeys action to synthesize key events for a specific element
+// See the [SendKeys] action to synthesize key events for a specific element
 // node.
 //
-// See the chromedp/kb package for implementation details and list of
+// See the [kb] package for implementation details and list of
 // well-known keys.
 func KeyEvent(keys string, opts ...KeyOption) KeyAction {
 	return ActionFunc(func(ctx context.Context) error {

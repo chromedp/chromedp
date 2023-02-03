@@ -6,7 +6,9 @@
 // DevTools Protocol entirely in Go.
 //
 // This package includes a number of simple examples. Additionally,
-// https://github.com/chromedp/examples contains more complex examples.
+// [chromedp/examples] contains more complex examples.
+//
+// [chromedp/examples]: https://github.com/chromedp/examples
 package chromedp
 
 import (
@@ -91,7 +93,7 @@ type Context struct {
 //
 // Cancelling the returned context will close a tab or an entire browser,
 // depending on the logic described above. To cancel a context while checking
-// for errors, see Cancel.
+// for errors, see [Cancel].
 //
 // Note that NewContext doesn't allocate nor start a browser; that happens the
 // first time Run is used on the context.

@@ -99,7 +99,7 @@ func parseRemoteObject(v *runtime.RemoteObject, res interface{}) (undefined bool
 // Chrome DevTools would, evaluating the expression in the "console" context,
 // and making the Command Line API available to the script.
 //
-// See Evaluate for more information on how script expressions are evaluated.
+// See [Evaluate] for more information on how script expressions are evaluated.
 //
 // Note: this should not be used with untrusted JavaScript.
 func EvaluateAsDevTools(expression string, res interface{}, opts ...EvaluateOption) EvaluateAction {
@@ -119,7 +119,7 @@ func EvalObjectGroup(objectGroup string) EvaluateOption {
 // EvalWithCommandLineAPI is an evaluate option to make the DevTools Command
 // Line API available to the evaluated script.
 //
-// See Evaluate for more information on how evaluate actions work.
+// See [Evaluate] for more information on how evaluate actions work.
 //
 // Note: this should not be used with untrusted JavaScript.
 func EvalWithCommandLineAPI(p *runtime.EvaluateParams) *runtime.EvaluateParams {

@@ -12,7 +12,7 @@ import (
 // for the page to load.
 //
 // Note that these actions don't collect HTTP response information; for that,
-// see RunResponse.
+// see [RunResponse].
 type NavigateAction Action
 
 // Navigate is an action that navigates the current frame.

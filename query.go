@@ -18,12 +18,12 @@ import (
 // QueryAction are element query actions that select node elements from the
 // browser's DOM for retrieval or manipulation.
 //
-// See Query for details on building element query selectors.
+// See [Query] for details on building element query selectors.
 type QueryAction Action
 
 // Selector holds information pertaining to an element selection query.
 //
-// See Query for information on building an element selector and relevant
+// See [Query] for information on building an element selector and relevant
 // options.
 type Selector struct {
 	sel           interface{}
@@ -39,7 +39,7 @@ type Selector struct {
 // node(s) matching the criteria.
 //
 // Query actions that target a browser DOM element node (or nodes) make use of
-// Query, in conjunction with the After option (see below) to retrieve data or
+// Query, in conjunction with the After option to retrieve data or
 // to modify the element(s) selected by the query.
 //
 // For example:
@@ -57,11 +57,11 @@ type Selector struct {
 //
 // Where:
 //
-// - Action         : the action to perform
-// - selector       : element query selection (typically a string), that any matching node(s) will have the action applied
-// - parameter[1-N] : parameter(s) needed for the individual action (if any)
-// - result         : pointer to a result (if any)
-// - queryOptions   : changes how queries are executed, or how nodes are waited for (see below)
+//   - Action the action to perform
+//   - selector element query selection (typically a string), that any matching node(s) will have the action applied
+//   - parameter[1-N] parameter(s) needed for the individual action (if any)
+//   - result pointer to a result (if any)
+//   - queryOptions changes how queries are executed, or how nodes are waited for
 //
 // # Query Options
 //
@@ -1021,11 +1021,12 @@ func DoubleClick(sel interface{}, opts ...QueryOption) QueryAction {
 // events as needed for the runes in v, sending them to the first element node
 // matching the selector.
 //
-// For a complete example on how to use SendKeys, see
-// https://github.com/chromedp/examples/tree/master/keys.
+// See the [keys] for a complete example on how to use SendKeys.
 //
 // Note: when the element query matches a input[type="file"] node, then
 // dom.SetFileInputFiles is used to set the upload path of the input node to v.
+//
+// [keys]: https://github.com/chromedp/examples/tree/master/keys
 func SendKeys(sel interface{}, v string, opts ...QueryOption) QueryAction {
 	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {

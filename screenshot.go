@@ -24,10 +24,11 @@ import (
 // These CDP commands are not sent by chromedp. If it does not work as expected,
 // you can try to send those commands yourself.
 //
-// See CaptureScreenshot for capturing a screenshot of the browser viewport.
+// See [CaptureScreenshot] for capturing a screenshot of the browser viewport.
 //
-// See the 'screenshot' example in the https://github.com/chromedp/examples
-// project for an example of taking a screenshot of the entire page.
+// See [screenshot] for an example of taking a screenshot of the entire page.
+//
+// [screenshot]: https://github.com/chromedp/examples/tree/master/screenshot
 func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) QueryAction {
 	if picbuf == nil {
 		panic("picbuf cannot be nil")
@@ -77,10 +78,11 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) QueryActio
 // It's supposed to act the same as the command "Capture screenshot" in
 // Chrome. See the behavior notes of Screenshot for more information.
 //
-// See the Screenshot action to take a screenshot of a specific element.
+// See the [Screenshot] action to take a screenshot of a specific element.
 //
-// See the 'screenshot' example in the https://github.com/chromedp/examples
-// project for an example of taking a screenshot of the entire page.
+// See [screenshot] for an example of taking a screenshot of the entire page.
+//
+// [screenshot]: https://github.com/chromedp/examples/tree/master/screenshot
 func CaptureScreenshot(res *[]byte) Action {
 	if res == nil {
 		panic("res cannot be nil")
