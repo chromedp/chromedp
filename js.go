@@ -6,7 +6,7 @@ import (
 
 var (
 	// textJS is a javascript snippet that returns the innerText of the specified
-	// visible (ie, offsetWidth || offsetHeight || getClientRects().length ) element.
+	// visible (i.e., offsetWidth || offsetHeight || getClientRects().length ) element.
 	//go:embed js/text.js
 	textJS string
 

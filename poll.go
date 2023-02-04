@@ -9,7 +9,7 @@ import (
 	"github.com/chromedp/cdproto/runtime"
 )
 
-// PollAction are actions that will wait for a general Javascript predicate.
+// PollAction are actions that will wait for a general JavaScript predicate.
 //
 // See Poll for details on building poll tasks.
 type PollAction Action
@@ -82,8 +82,8 @@ func (p *pollTask) Do(ctx context.Context) error {
 	return err
 }
 
-// Poll is a poll action that will wait for a general Javascript predicate.
-// It builds the predicate from a Javascript expression.
+// Poll is a poll action that will wait for a general JavaScript predicate.
+// It builds the predicate from a JavaScript expression.
 //
 // This is a copy of puppeteer's page.waitForFunction.
 // see https://github.com/puppeteer/puppeteer/blob/v8.0.0/docs/api.md#pagewaitforfunctionpagefunction-options-args.
@@ -113,8 +113,8 @@ func Poll(expression string, res interface{}, opts ...PollOption) PollAction {
 	return poll(predicate, res, opts...)
 }
 
-// PollFunction is a poll action that will wait for a general Javascript predicate.
-// It builds the predicate from a Javascript function.
+// PollFunction is a poll action that will wait for a general JavaScript predicate.
+// It builds the predicate from a JavaScript function.
 //
 // See Poll for details on building poll tasks.
 func PollFunction(pageFunction string, res interface{}, opts ...PollOption) PollAction {

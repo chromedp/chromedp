@@ -42,7 +42,7 @@ type Key struct {
 	// 								false false | false true  | false true | false
 	Shift bool
 	// Print indicates whether or not the character is a printable character
-	// (ie, should a "char" event be generated).
+	// (i.e., should a "char" event be generated).
 	// 								true  true  | true  true  | true  true | false
 	Print bool
 }

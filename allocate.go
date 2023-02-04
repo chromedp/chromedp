@@ -403,7 +403,7 @@ func Flag(name string, value interface{}) ExecAllocatorOption {
 
 // Env is a list of generic environment variables in the form NAME=value
 // to pass into the new Chrome process. These will be appended to the
-// environment of the golang process as retrieved by os.Environ.
+// environment of the Go process as retrieved by os.Environ.
 func Env(vars ...string) ExecAllocatorOption {
 	return func(a *ExecAllocator) {
 		a.initEnv = append(a.initEnv, vars...)

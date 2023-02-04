@@ -472,7 +472,7 @@ const (
 	domCodeDataInc = chromiumSrc + "ui/events/keycodes/dom/dom_code_data.inc?format=TEXT"
 	// domKeyDataInc contains DomKey -> Key Name + unicode (non-printable)
 	domKeyDataInc = chromiumSrc + "ui/events/keycodes/dom/dom_key_data.inc?format=TEXT"
-	// keyboardCodesPosixH contains the scan code definitions for posix (ie native) keys.
+	// keyboardCodesPosixH contains the scan code definitions for posix (i.e. native) keys.
 	keyboardCodesPosixH = chromiumSrc + "ui/events/keycodes/keyboard_codes_posix.h?format=TEXT"
 	// keyboardCodesWinH contains the scan code definitions for windows keys.
 	keyboardCodesWinH = chromiumSrc + "ui/events/keycodes/keyboard_codes_win.h?format=TEXT"
@@ -503,7 +503,7 @@ type Key struct {
 	// 								false false | false true  | false true | false
 	Shift bool
 	// Print indicates whether or not the character is a printable character
-	// (ie, should a "char" event be generated).
+	// (i.e., should a "char" event be generated).
 	// 								true  true  | true  true  | true  true | false
 	Print bool
 }
@@ -552,7 +552,7 @@ type Key struct {
 	// 								false false | false true  | false true | false
 	Shift bool
 	// Print indicates whether or not the character is a printable character
-	// (ie, should a "char" event be generated).
+	// (i.e., should a "char" event be generated).
 	// 								true  true  | true  true  | true  true | false
 	Print bool
 }
