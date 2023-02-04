@@ -7,11 +7,11 @@ import (
 	"github.com/chromedp/cdproto/runtime"
 )
 
-// CallAction are actions that calls a Javascript function using
+// CallAction are actions that calls a JavaScript function using
 // runtime.CallFunctionOn.
 type CallAction Action
 
-// CallFunctionOn is an action to call a Javascript function, unmarshaling
+// CallFunctionOn is an action to call a JavaScript function, unmarshaling
 // the result of the function to res.
 //
 // The handling of res is the same as that of Evaluate.

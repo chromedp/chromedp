@@ -23,7 +23,7 @@ func MouseEvent(typ input.MouseType, x, y float64, opts ...MouseOption) MouseAct
 	return p
 }
 
-// MouseClickXY is an action that sends a left mouse button click (ie,
+// MouseClickXY is an action that sends a left mouse button click (i.e.,
 // mousePressed and mouseReleased event) to the X, Y location.
 func MouseClickXY(x, y float64, opts ...MouseOption) MouseAction {
 	return ActionFunc(func(ctx context.Context) error {
