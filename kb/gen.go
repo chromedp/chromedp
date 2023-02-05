@@ -527,33 +527,34 @@ import (
 // value.
 //
 // Example data for the following runes:
-// 									'\r'  '\n'  | ','  '<'    | 'a'   'A'  | '\u0a07'
-// 									_____________________________________________________
+//
+//	Runes      | '\r'  '\n'  | ','  '<'   | 'a'   'A'  | '\u0a07'    |
+//	-----------|-------------|------------|------------|-------------|
+//	Code       | "Enter"     | "Comma"    | "KeyA"     | "MediaStop" |
+//	Key        | "Enter"     | ","   "<"  | "a"   "A"  | "MediaStop" |
+//	Text       | "\r"  "\r"  | ","   "<"  | "a"   "A"  | ""          |
+//	Unmodified | "\r"  "\r"  | ","   ","  | "a"   "a"  | ""          |
+//	Native     | 0x13  0x13  | 0xbc  0xbc | 0x61  0x41 | 0x00ae      |
+//	Windows    | 0x13  0x13  | 0xbc  0xbc | 0x61  0x41 | 0xe024      |
+//	Shift      | false false | false true | false true | false       |
+//	Print      | true  true  | true  true | true  true | false       |
 type Key struct {
 	// Code is the key code:
-	// 								"Enter"     | "Comma"     | "KeyA"     | "MediaStop"
 	Code string
 	// Key is the key value:
-	// 								"Enter"     | ","   "<"   | "a"   "A"  | "MediaStop"
 	Key string
 	// Text is the text for printable keys:
-	// 								"\r"  "\r"  | ","   "<"   | "a"   "A"  | ""
 	Text string
 	// Unmodified is the unmodified text for printable keys:
-	// 								"\r"  "\r"  | ","   ","   | "a"   "a"  | ""
 	Unmodified string
 	// Native is the native scan code.
-	// 								0x13  0x13  | 0xbc  0xbc  | 0x61  0x41 | 0x00ae
 	Native int64
 	// Windows is the windows scan code.
-	// 								0x13  0x13  | 0xbc  0xbc  | 0x61  0x41 | 0xe024
 	Windows int64
 	// Shift indicates whether or not the Shift modifier should be sent.
-	// 								false false | false true  | false true | false
 	Shift bool
 	// Print indicates whether or not the character is a printable character
 	// (i.e., should a "char" event be generated).
-	// 								true  true  | true  true  | true  true | false
 	Print bool
 }
 
