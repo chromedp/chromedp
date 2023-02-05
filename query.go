@@ -44,7 +44,7 @@ type Selector struct {
 //
 // For example:
 //
-//     chromedp.Run(ctx, chromedp.SendKeys(`thing`, chromedp.ByID))
+//	chromedp.Run(ctx, chromedp.SendKeys(`thing`, chromedp.ByID))
 //
 // The above will perform a "SendKeys" action on the first element matching a
 // browser CSS query for "#thing".
@@ -53,17 +53,17 @@ type Selector struct {
 // the primary way of automating Tasks in the browser. They are typically
 // written in the following form:
 //
-//     Action(selector[, parameter1, ...parameterN][,result][, queryOptions...])
+//	Action(selector[, parameter1, ...parameterN][,result][, queryOptions...])
 //
 // Where:
 //
-//     Action         - the action to perform
-//     selector       - element query selection (typically a string), that any matching node(s) will have the action applied
-//     parameter[1-N] - parameter(s) needed for the individual action (if any)
-//     result         - pointer to a result (if any)
-//     queryOptions   - changes how queries are executed, or how nodes are waited for (see below)
+// - Action         : the action to perform
+// - selector       : element query selection (typically a string), that any matching node(s) will have the action applied
+// - parameter[1-N] : parameter(s) needed for the individual action (if any)
+// - result         : pointer to a result (if any)
+// - queryOptions   : changes how queries are executed, or how nodes are waited for (see below)
 //
-// Query Options
+// # Query Options
 //
 // By* options specify the type of element query used By the browser to perform
 // the selection query. When not specified, element queries will use BySearch
@@ -80,7 +80,7 @@ type Selector struct {
 // element query has returned one or more elements, and after the node condition is
 // true.
 //
-// By Options
+// # By Options
 //
 // The BySearch (default) option enables querying for elements by plain text,
 // CSS selector or XPath query, wrapping DOM.performSearch.
@@ -105,7 +105,7 @@ type Selector struct {
 // for querying DOM elements that cannot be retrieved using other By* funcs,
 // such as ShadowDOM elements.
 //
-// Node Options
+// # Node Options
 //
 // The NodeReady (default) option causes the query to wait until all element
 // nodes matching the selector have been retrieved from the browser.

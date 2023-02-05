@@ -125,9 +125,10 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 // (see https://pkg.go.dev/github.com/prometheus/client_golang/prometheus#NewProcessCollector for an example)
 //
 // Example:
-//     if process := chromedp.FromContext(ctx).Browser.Process(); process != nil {
-//         fmt.Printf("Browser PID: %v", process.Pid)
-//     }
+//
+//	if process := chromedp.FromContext(ctx).Browser.Process(); process != nil {
+//		fmt.Printf("Browser PID: %v", process.Pid)
+//	}
 func (b *Browser) Process() *os.Process {
 	return b.process
 }

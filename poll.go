@@ -92,7 +92,7 @@ func (p *pollTask) Do(ctx context.Context) error {
 // For example, our implementation makes the poll task not survive from a navigation,
 // and an error is raised in this case (see unit test TestPoll/NotSurviveNavigation).
 //
-// Polling Options
+// # Polling Options
 //
 // The default polling mode is "raf", to constantly execute pageFunction in requestAnimationFrame callback.
 // This is the tightest polling mode which is suitable to observe styling changes.
