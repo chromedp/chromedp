@@ -14,7 +14,7 @@ import (
 // See [Poll] for details on building poll tasks.
 type PollAction Action
 
-// pollTask holds information pertaining to an poll task.
+// pollTask holds information pertaining to a poll task.
 //
 // See Poll for details on building poll tasks.
 type pollTask struct {
@@ -139,7 +139,7 @@ func poll(predicate string, res interface{}, opts ...PollOption) PollAction {
 	return p
 }
 
-// PollOption is an poll task option.
+// PollOption is a poll task option.
 type PollOption = func(task *pollTask)
 
 // WithPollingInterval makes it to poll the predicate with the specified interval.

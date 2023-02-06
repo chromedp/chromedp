@@ -180,7 +180,7 @@ func KeyEvent(keys string, opts ...KeyOption) KeyAction {
 	})
 }
 
-// KeyEventNode is a key action that dispatches a key event on a element node.
+// KeyEventNode is a key action that dispatches a key event on an element node.
 func KeyEventNode(n *cdp.Node, keys string, opts ...KeyOption) KeyAction {
 	return ActionFunc(func(ctx context.Context) error {
 		err := dom.Focus().WithNodeID(n.NodeID).Do(ctx)

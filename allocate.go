@@ -437,7 +437,7 @@ func ProxyServer(proxy string) ExecAllocatorOption {
 }
 
 // IgnoreCertErrors is the command line option to ignore certificate-related
-// errors. This options is useful when you need to access an HTTPS website
+// errors. This option is useful when you need to access an HTTPS website
 // through a proxy.
 func IgnoreCertErrors(a *ExecAllocator) {
 	Flag("ignore-certificate-errors", true)(a)

@@ -345,14 +345,14 @@ func loadScanCodes(domCodeMap, domKeyMap map[string][]string, layoutBuf []byte) 
 
 var defineRE = regexp.MustCompile(`(?m)^#define\s+(.+?)\s+([0-9A-Fx]+)`)
 
-// loadPosixWinKeyboardCodes loads the native and windows keyboard scan codes
+// loadPosixWinKeyboardCodes loads the native and Windows keyboard scan codes
 // mapped to the DOM key.
 func loadPosixWinKeyboardCodes() (map[string][]int64, error) {
 	lookup := map[string]string{
 		// mac alias
 		"VKEY_LWIN": "0x5B",
 		// no idea where these are defined in chromium code base (assuming in
-		// windows headers)
+		// Windows headers)
 		//
 		// manually added here as pulled from various online docs
 		"VK_CANCEL":       "0x03",
@@ -364,7 +364,7 @@ func loadPosixWinKeyboardCodes() (map[string][]int64, error) {
 		"VK_OEM_BACKTAB":  "0xF5",
 		"VK_OEM_AX":       "0xE1",
 	}
-	// load windows key lookups
+	// load Windows key lookups
 	buf, err := grab(windowsKeyboardCodesH)
 	if err != nil {
 		return nil, err
@@ -474,9 +474,9 @@ const (
 	domKeyDataInc = chromiumSrc + "ui/events/keycodes/dom/dom_key_data.inc?format=TEXT"
 	// keyboardCodesPosixH contains the scan code definitions for posix (i.e. native) keys.
 	keyboardCodesPosixH = chromiumSrc + "ui/events/keycodes/keyboard_codes_posix.h?format=TEXT"
-	// keyboardCodesWinH contains the scan code definitions for windows keys.
+	// keyboardCodesWinH contains the scan code definitions for Windows keys.
 	keyboardCodesWinH = chromiumSrc + "ui/events/keycodes/keyboard_codes_win.h?format=TEXT"
-	// windowsKeyboardCodesH contains the actual #defs for windows.
+	// windowsKeyboardCodesH contains the actual #defs for Windows.
 	windowsKeyboardCodesH = chromiumSrc + "third_party/blink/renderer/platform/windows_keyboard_codes.h?format=TEXT"
 )
 
@@ -496,7 +496,7 @@ type Key struct {
 	// Native is the native scan code.
 	// 								0x13  0x13  | 0xbc  0xbc  | 0x61  0x41 | 0x00ae
 	Native int64
-	// Windows is the windows scan code.
+	// Windows is the Windows scan code.
 	// 								0x13  0x13  | 0xbc  0xbc  | 0x61  0x41 | 0xe024
 	Windows int64
 	// Shift indicates whether or not the Shift modifier should be sent.
@@ -549,7 +549,7 @@ type Key struct {
 	Unmodified string
 	// Native is the native scan code.
 	Native int64
-	// Windows is the windows scan code.
+	// Windows is the Windows scan code.
 	Windows int64
 	// Shift indicates whether or not the Shift modifier should be sent.
 	Shift bool

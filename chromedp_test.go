@@ -116,7 +116,7 @@ func testAllocate(tb testing.TB, name string) (context.Context, context.CancelFu
 	// each test gives a huge speed-up.
 	ctx, _ := NewContext(browserCtx)
 
-	// Only navigate if we want an html file name, otherwise leave the blank page.
+	// Only navigate if we want an HTML file name, otherwise leave the blank page.
 	if name != "" {
 		if err := Run(ctx, Navigate(testdataDir+"/"+name)); err != nil {
 			tb.Fatal(err)
