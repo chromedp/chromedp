@@ -50,7 +50,9 @@ func setupExecAllocator(opts ...ExecAllocatorOption) *ExecAllocator {
 
 // DefaultExecAllocatorOptions are the ExecAllocator options used by NewContext
 // if the given parent context doesn't have an allocator set up. Do not modify
-// this global; instead, use NewExecAllocator. See the example for [ExecAllocator].
+// this global; instead, use NewExecAllocator. See [ExampleExecAllocator].
+//
+// [ExampleExecAllocator]: https://pkg.go.dev/github.com/chromedp/chromedp#example-ExecAllocator
 var DefaultExecAllocatorOptions = [...]ExecAllocatorOption{
 	NoFirstRun,
 	NoDefaultBrowserCheck,
