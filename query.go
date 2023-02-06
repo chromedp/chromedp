@@ -39,65 +39,65 @@ type Selector struct {
 // node(s) matching the criteria.
 //
 // Query actions that target a browser DOM element node (or nodes) make use of
-// Query, in conjunction with the After option to retrieve data or
+// Query, in conjunction with the [After] option to retrieve data or
 // to modify the element(s) selected by the query.
 //
 // For example:
 //
 //	chromedp.Run(ctx, chromedp.SendKeys(`thing`, chromedp.ByID))
 //
-// The above will perform a "SendKeys" action on the first element matching a
+// The above will perform a [SendKeys] action on the first element matching a
 // browser CSS query for "#thing".
 //
-// Element selection queries work in conjunction with specific actions and form
-// the primary way of automating Tasks in the browser. They are typically
+// [Element] selection queries work in conjunction with specific actions and form
+// the primary way of automating [Tasks] in the browser. They are typically
 // written in the following form:
 //
 //	Action(selector[, parameter1, ...parameterN][,result][, queryOptions...])
 //
 // Where:
 //
-//   - Action the action to perform
-//   - selector element query selection (typically a string), that any matching node(s) will have the action applied
-//   - parameter[1-N] parameter(s) needed for the individual action (if any)
-//   - result pointer to a result (if any)
-//   - queryOptions changes how queries are executed, or how nodes are waited for
+//   - Action - the action to perform
+//   - selector - element query selection (typically a string), that any matching node(s) will have the action applied
+//   - parameter[1-N] - parameter(s) needed for the individual action (if any)
+//   - result - pointer to a result (if any)
+//   - queryOptions - changes how queries are executed, or how nodes are waited for
 //
 // # Query Options
 //
 // By* options specify the type of element query used By the browser to perform
-// the selection query. When not specified, element queries will use BySearch
+// the selection query. When not specified, element queries will use [BySearch]
 // (a wrapper for DOM.performSearch).
 //
 // Node* options specify node conditions that cause the query to wait until the
 // specified condition is true. When not specified, queries will use the
-// NodeReady wait condition.
+// [NodeReady] wait condition.
 //
-// The AtLeast option alters the minimum number of nodes that must be returned
+// The [AtLeast] option alters the minimum number of nodes that must be returned
 // by the element query. If not specified, the default value is 1.
 //
-// The After option is used to specify a func that will be executed when
+// The [After] option is used to specify a func that will be executed when
 // element query has returned one or more elements, and after the node condition is
 // true.
 //
 // # By Options
 //
-// The BySearch (default) option enables querying for elements by plain text,
+// The [BySearch] (default) option enables querying for elements by plain text,
 // CSS selector or XPath query, wrapping DOM.performSearch.
 //
-// The ByID option enables querying for a single element with the matching CSS
+// The [ByID] option enables querying for a single element with the matching CSS
 // ID, wrapping DOM.querySelector. ByID is similar to calling
 // document.querySelector('#' + ID) from within the browser.
 //
-// The ByQuery option enables querying for a single element using a CSS
+// The [ByQuery] option enables querying for a single element using a CSS
 // selector, wrapping DOM.querySelector. ByQuery is similar to calling
 // document.querySelector() from within the browser.
 //
-// The ByQueryAll option enables querying for elements using a CSS selector,
+// The [ByQueryAll] option enables querying for elements using a CSS selector,
 // wrapping DOM.querySelectorAll. ByQueryAll is similar to calling
 // document.querySelectorAll() from within the browser.
 //
-// The ByJSPath option enables querying for a single element using its "JS
+// The [ByJSPath] option enables querying for a single element using its "JS
 // Path" value, wrapping Runtime.evaluate. ByJSPath is similar to executing a
 // JavaScript snippet that returns a element from within the browser. ByJSPath
 // should be used only with trusted element queries, as it is passed directly
@@ -107,25 +107,25 @@ type Selector struct {
 //
 // # Node Options
 //
-// The NodeReady (default) option causes the query to wait until all element
+// The [NodeReady] (default) option causes the query to wait until all element
 // nodes matching the selector have been retrieved from the browser.
 //
-// The NodeVisible option causes the query to wait until all element nodes
+// The [NodeVisible] option causes the query to wait until all element nodes
 // matching the selector have been retrieved from the browser, and are visible.
 //
-// The NodeNotVisible option causes the query to wait until all element nodes
+// The [NodeNotVisible] option causes the query to wait until all element nodes
 // matching the selector have been retrieved from the browser, and are not
 // visible.
 //
-// The NodeEnabled option causes the query to wait until all element nodes
+// The [NodeEnabled] option causes the query to wait until all element nodes
 // matching the selector have been retrieved from the browser, and are enabled
 // (i.e., do not have a 'disabled' attribute).
 //
-// The NodeSelected option causes the query to wait until all element nodes
+// The [NodeSelected] option causes the query to wait until all element nodes
 // matching the selector have been retrieved from the browser, and are are
 // selected (i.e., has a 'selected' attribute).
 //
-// The NodeNotPresent option causes the query to wait until there are no
+// The [NodeNotPresent] option causes the query to wait until there are no
 // element nodes matching the selector.
 func Query(sel interface{}, opts ...QueryOption) QueryAction {
 	s := &Selector{
