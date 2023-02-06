@@ -574,7 +574,7 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 			}
 
 			// If the ctx parameter was cancelled by the caller (or
-			// by a timeout etc) the select will race between
+			// by a timeout etc.) the select will race between
 			// lctx.Done and ctx.Done, since lctx is a sub-context
 			// of ctx. So we can't return nil here, as otherwise
 			// that race would mean that we would drop 50% of the
@@ -608,7 +608,7 @@ type Action interface {
 	Do(context.Context) error
 }
 
-// ActionFunc is a adapter to allow the use of ordinary func's as an Action.
+// ActionFunc is an adapter to allow the use of ordinary func's as an Action.
 type ActionFunc func(context.Context) error
 
 // Do executes the func f using the provided context and frame handler.

@@ -99,7 +99,7 @@ type Selector struct {
 //
 // The [ByJSPath] option enables querying for a single element using its "JS
 // Path" value, wrapping Runtime.evaluate. ByJSPath is similar to executing a
-// JavaScript snippet that returns a element from within the browser. ByJSPath
+// JavaScript snippet that returns an element from within the browser. ByJSPath
 // should be used only with trusted element queries, as it is passed directly
 // to Runtime.evaluate, and no attempt is made to sanitize the query. Useful
 // for querying DOM elements that cannot be retrieved using other By* funcs,
@@ -122,7 +122,7 @@ type Selector struct {
 // (i.e., do not have a 'disabled' attribute).
 //
 // The [NodeSelected] option causes the query to wait until all element nodes
-// matching the selector have been retrieved from the browser, and are are
+// matching the selector have been retrieved from the browser, and are
 // selected (i.e., has a 'selected' attribute).
 //
 // The [NodeNotPresent] option causes the query to wait until there are no
@@ -1023,7 +1023,7 @@ func DoubleClick(sel interface{}, opts ...QueryOption) QueryAction {
 //
 // See the [keys] for a complete example on how to use SendKeys.
 //
-// Note: when the element query matches a input[type="file"] node, then
+// Note: when the element query matches an input[type="file"] node, then
 // dom.SetFileInputFiles is used to set the upload path of the input node to v.
 //
 // [keys]: https://github.com/chromedp/examples/tree/master/keys

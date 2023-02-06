@@ -39,7 +39,7 @@ type Key struct {
 	Unmodified string
 	// Native is the native scan code.
 	Native int64
-	// Windows is the windows scan code.
+	// Windows is the Windows scan code.
 	Windows int64
 	// Shift indicates whether or not the Shift modifier should be sent.
 	Shift bool

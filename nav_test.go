@@ -351,7 +351,7 @@ func TestNavigateWhileLoading(t *testing.T) {
 			// events. See https://github.com/chromedp/chromedp/issues/1080.
 			//
 			// The implementation of responseAction() is buggy in this case.
-			// But it's hard to fix it since there is not way to tell whether
+			// But it's hard to fix it since there is not a way to tell whether
 			// the events are from the first navigate.
 			//
 			// I (ZekeLu) will just deflake this test by making sure the second

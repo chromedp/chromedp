@@ -109,7 +109,7 @@ func EvaluateAsDevTools(expression string, res interface{}, opts ...EvaluateOpti
 // EvaluateOption is the type for JavaScript evaluation options.
 type EvaluateOption = func(*runtime.EvaluateParams) *runtime.EvaluateParams
 
-// EvalObjectGroup is a evaluate option to set the object group.
+// EvalObjectGroup is an evaluate option to set the object group.
 func EvalObjectGroup(objectGroup string) EvaluateOption {
 	return func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
 		return p.WithObjectGroup(objectGroup)
@@ -126,13 +126,13 @@ func EvalWithCommandLineAPI(p *runtime.EvaluateParams) *runtime.EvaluateParams {
 	return p.WithIncludeCommandLineAPI(true)
 }
 
-// EvalIgnoreExceptions is a evaluate option that will cause JavaScript
+// EvalIgnoreExceptions is an evaluate option that will cause JavaScript
 // evaluation to ignore exceptions.
 func EvalIgnoreExceptions(p *runtime.EvaluateParams) *runtime.EvaluateParams {
 	return p.WithSilent(true)
 }
 
-// EvalAsValue is a evaluate option that will cause the evaluated JavaScript
+// EvalAsValue is an evaluate option that will cause the evaluated JavaScript
 // expression to encode the result of the expression as a JSON-encoded value.
 func EvalAsValue(p *runtime.EvaluateParams) *runtime.EvaluateParams {
 	return p.WithReturnByValue(true)
