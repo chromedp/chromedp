@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/css"
 	"github.com/chromedp/cdproto/dom"
@@ -173,7 +174,7 @@ func (s *Selector) Do(ctx context.Context) error {
 			t.frameMu.RUnlock()
 
 			// TODO: we probably want to use the nested frame
-			// instead, but note that util.go stores the nested
+			// instead, but note that targetutil.go stores the nested
 			// frame's nodes in the root frame's Nodes map.
 			// frame = t.frames[fromNode.FrameID]
 			// if frame == nil {
@@ -493,6 +494,13 @@ func NodeNotVisible(s *Selector) {
 		}
 		return nil
 	}))(s)
+}
+
+// isCouldNotComputeBoxModelError unwraps err as a MessageError and determines
+// if it is a compute box model error.
+func isCouldNotComputeBoxModelError(err error) bool {
+	e, ok := err.(*cdproto.Error)
+	return ok && e.Code == -32000 && e.Message == "Could not compute box model."
 }
 
 // NodeEnabled is an element query option to wait until all queried element
