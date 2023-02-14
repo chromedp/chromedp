@@ -66,7 +66,7 @@ func (p *pollTask) Do(ctx context.Context) error {
 	args = append(args, p.timeout.Milliseconds())
 	args = append(args, p.args...)
 
-	undefined, err := callFunctionOn(ctx, waitForPredicatePageFunction, p.res,
+	r, err := callFunctionOn(ctx, waitForPredicatePageFunction, p.res,
 		func(p *runtime.CallFunctionOnParams) *runtime.CallFunctionOnParams {
 			return p.WithExecutionContextID(execCtx).
 				WithAwaitPromise(true).
@@ -75,7 +75,7 @@ func (p *pollTask) Do(ctx context.Context) error {
 		args...,
 	)
 
-	if undefined {
+	if r != nil && r.Type == "undefined" {
 		return ErrPollingTimeout
 	}
 
