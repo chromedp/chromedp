@@ -204,3 +204,43 @@ func TestEvaluateNil(t *testing.T) {
 		})
 	}
 }
+
+func TestEvaluateNull(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name       string
+		expression string
+		res        interface{}
+		want       interface{}
+	}{
+		{
+			name:       "object",
+			expression: "({\"a\": 1,\"b\": \"b\", \"c\": true})",
+			res:        map[string]interface{}{},
+			want:       map[string]interface{}{"a": 1, "b": "b", "c": true},
+		},
+		{
+			name:       "null",
+			expression: "null",
+			res:        map[string]interface{}{},
+			want:       nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx, cancel := testAllocate(t, "")
+			defer cancel()
+
+			err := Run(ctx,
+				Evaluate(tt.expression, &tt.res),
+			)
+			if err != nil {
+				t.Fatalf("got error: %v", err)
+			}
+			if reflect.DeepEqual(tt.want, tt.res) {
+				t.Fatalf("want type: %v, got type: %v", tt.want, tt.res)
+			}
+		})
+	}
+}

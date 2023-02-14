@@ -90,6 +90,13 @@ func parseRemoteObject(v *runtime.RemoteObject, res interface{}) (undefined bool
 		return
 	}
 
+	if v.Type == runtime.TypeObject && v.Value == nil {
+		// when exception `return null`, v.Type must be runtime.TypeObject and
+		// v.Value is nil, res and error should be nil
+		res = nil
+		return false, nil
+	}
+
 	// unmarshal
 	err = json.Unmarshal(v.Value, res)
 	return
