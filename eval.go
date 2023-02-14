@@ -3,7 +3,7 @@ package chromedp
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"reflect"
 
 	"github.com/chromedp/cdproto/runtime"
 )
@@ -22,18 +22,15 @@ type EvaluateAction Action
 //
 // When res is a **runtime.RemoteObject, res will be set to the low-level
 // protocol type, and no attempt will be made to convert the result.
-// Original objects are maintained in memory until the page navigated or closed,
-// unless they are either explicitly released or are released along with the
-// other objects in their object group. runtime.ReleaseObject or
-// runtime.ReleaseObjectGroup can be used to ask the browser to release
-// original objects.
+// The original objects could be maintained in memory until the page is
+// navigated or closed. `runtime.ReleaseObject` or `runtime.ReleaseObjectGroup`
+// can be used to ask the browser to release the original objects.
 //
 // For all other cases, the result of the script will be returned "by value" (i.e.,
 // JSON-encoded), and subsequently an attempt will be made to json.Unmarshal
-// the script result to res. It returns an error if the script result is
-// "undefined" in this case.
-//
-// Note: any exception encountered will be returned as an error.
+// the script result to res. When the script result is "undefined" or "null",
+// and the value that res points to is not a pointer, it returns [ErrJSUndefined]
+// of [ErrJSNull] respectively.
 func Evaluate(expression string, res interface{}, opts ...EvaluateOption) EvaluateAction {
 	return ActionFunc(func(ctx context.Context) error {
 		// set up parameters
@@ -58,16 +55,12 @@ func Evaluate(expression string, res interface{}, opts ...EvaluateOption) Evalua
 			return exp
 		}
 
-		_, err = parseRemoteObject(v, res)
+		err = parseRemoteObject(v, res)
 		return err
 	})
 }
 
-func parseRemoteObject(v *runtime.RemoteObject, res interface{}) (undefined bool, err error) {
-	// undefined indicates that the result is a javascript "undefined" value.
-	// Poll needs this value to decide whether it's a timeout.
-	undefined = v.Type == "undefined"
-
+func parseRemoteObject(v *runtime.RemoteObject, res interface{}) (err error) {
 	if res == nil {
 		return
 	}
@@ -82,15 +75,21 @@ func parseRemoteObject(v *runtime.RemoteObject, res interface{}) (undefined bool
 		return
 	}
 
-	if undefined {
-		// The unmarshal below would fail with the cryptic
-		// "unexpected end of JSON input" error, so try to give
-		// a better one here.
-		err = fmt.Errorf("encountered an undefined value")
-		return
+	if v.Type == "undefined" || v.Value == nil {
+		rv := reflect.ValueOf(res)
+		// `res` should be a pointer. When the value that `res` points to is
+		// not a pointer, it can not be nil. In this case,
+		// return [ErrJSUndefined] or [ErrJSNull] respectively.
+		if rv.Kind() == reflect.Pointer && rv.Elem().Kind() != reflect.Pointer {
+			if v.Type == "undefined" {
+				return ErrJSUndefined
+			}
+			return ErrJSNull
+		}
+		// Otherwise, change the value to the json literal null.
+		v.Value = []byte("null")
 	}
 
-	// unmarshal
 	err = json.Unmarshal(v.Value, res)
 	return
 }

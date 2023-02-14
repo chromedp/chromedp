@@ -1075,7 +1075,7 @@ func TestWebGL(t *testing.T) {
 		Screenshot(`#c`, &buf, ByQuery),
 	); err != nil {
 		if errors.Is(err, ErrPollingTimeout) {
-			t.Fatal("The cube it not rendered in 2s.")
+			t.Fatal("The cube is not rendered in 2s.")
 		} else {
 			t.Fatal(err)
 		}
