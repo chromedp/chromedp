@@ -28,7 +28,7 @@ func CallFunctionOn(functionDeclaration string, res interface{}, opt CallOption,
 	})
 }
 
-func callFunctionOn(ctx context.Context, functionDeclaration string, res interface{}, opt CallOption, args ...interface{}) (bool, error) {
+func callFunctionOn(ctx context.Context, functionDeclaration string, res interface{}, opt CallOption, args ...interface{}) (*runtime.RemoteObject, error) {
 	// set up parameters
 	p := runtime.CallFunctionOn(functionDeclaration).
 		WithSilent(true)
@@ -51,7 +51,7 @@ func callFunctionOn(ctx context.Context, functionDeclaration string, res interfa
 			ea.append(arg)
 		}
 		if ea.err != nil {
-			return false, ea.err
+			return nil, ea.err
 		}
 		p = p.WithArguments(ea.args)
 	}
@@ -59,13 +59,13 @@ func callFunctionOn(ctx context.Context, functionDeclaration string, res interfa
 	// call
 	v, exp, err := p.Do(ctx)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
 	if exp != nil {
-		return false, exp
+		return nil, exp
 	}
 
-	return parseRemoteObject(v, res)
+	return v, parseRemoteObject(v, res)
 }
 
 // CallOption is a function to modify the runtime.CallFunctionOnParams
