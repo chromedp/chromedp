@@ -1,6 +1,7 @@
 package chromedp
 
 import (
+	"errors"
 	"reflect"
 	"testing"
 
@@ -202,5 +203,61 @@ func TestEvaluateNil(t *testing.T) {
 				t.Fatalf("got error: %v", err)
 			}
 		})
+	}
+}
+
+func TestEvaluateNull(t *testing.T) {
+	t.Parallel()
+
+	var (
+		i     int
+		f     func()
+		s     struct{}
+		ifc   interface{}
+		ch    chan struct{}
+		mp    map[string]interface{}
+		arr   [3]string
+		slice []string
+	)
+
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+
+	err := Run(ctx, Evaluate("null", i))
+	if err != nil && !errors.Is(err, ErrJSNull) {
+		t.Fatalf("got error: %v", err)
+	}
+	newi := &i
+	err = Run(ctx, Evaluate("null", &newi))
+	if err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	err = Run(ctx, Evaluate("null", &f))
+	if err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	err = Run(ctx, Evaluate("null", &s))
+	if err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	err = Run(ctx, Evaluate("null", &ifc))
+	if err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	err = Run(ctx, Evaluate("null", &ch))
+	if err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	err = Run(ctx, Evaluate("null", &mp))
+	if err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	err = Run(ctx, Evaluate("null", &arr))
+	if err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	err = Run(ctx, Evaluate("null", &slice))
+	if err != nil {
+		t.Fatalf("got error: %v", err)
 	}
 }

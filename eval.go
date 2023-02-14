@@ -76,18 +76,23 @@ func parseRemoteObject(v *runtime.RemoteObject, res interface{}) (err error) {
 	}
 
 	if v.Type == "undefined" || v.Value == nil {
-		rv := reflect.ValueOf(res)
 		// `res` should be a pointer. When the value that `res` points to is
 		// not a pointer, it can not be nil. In this case,
 		// return [ErrJSUndefined] or [ErrJSNull] respectively.
-		if rv.Kind() == reflect.Pointer && rv.Elem().Kind() != reflect.Pointer {
+		rv := reflect.Indirect(reflect.ValueOf(res))
+		switch rv.Kind() {
+		// json.Unmarshal supported in this case types
+		case reflect.Array, reflect.Chan, reflect.Func, reflect.Interface, reflect.Map,
+			reflect.Pointer, reflect.Slice, reflect.Struct:
+			// Otherwise, change the value to the json literal null.
+			v.Value = []byte("null")
+		default:
+			// other type zero value isn't nil, return error
 			if v.Type == "undefined" {
 				return ErrJSUndefined
 			}
 			return ErrJSNull
 		}
-		// Otherwise, change the value to the json literal null.
-		v.Value = []byte("null")
 	}
 
 	err = json.Unmarshal(v.Value, res)
