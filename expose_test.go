@@ -29,9 +29,6 @@ func TestExpose(t *testing.T) {
 	ctx, cancel := testAllocate(t, "")
 	defer cancel()
 
-	// creates a new page.  about:blank
-	Run(ctx)
-
 	// expose md5SumFunc function as md5 to browser current page and every frame
 	if err := Run(ctx, Expose("md5", md5SumFunc)); err != nil {
 		t.Fatal(err)
@@ -68,7 +65,7 @@ func TestExpose(t *testing.T) {
 
 	// 2. Navigate another page
 	if err := Run(ctx,
-		Navigate(testdataDir+"/expose.html"),
+		Navigate(testdataDir+"/child1.html"),
 	); err != nil {
 		t.Fatal(err)
 	}
