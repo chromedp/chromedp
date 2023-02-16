@@ -638,11 +638,44 @@ func ExampleEvaluate() {
 		}
 	}
 
-	// Accept undefined/nil result:
+	// Accept null/nil result by ptr:
 	{
 		var val *int
 		if err := chromedp.Run(ctx,
-			chromedp.Evaluate(`undefined`, &val),
+			chromedp.Evaluate(`null`, &val),
+		); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(val)
+	}
+
+	// Accept null/nil result by map:
+	{
+		var val map[string]interface{}
+		if err := chromedp.Run(ctx,
+			chromedp.Evaluate(`null`, &val),
+		); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(val)
+	}
+
+	// Accept null/nil result by slice:
+	{
+		var val []string
+		if err := chromedp.Run(ctx,
+			chromedp.Evaluate(`null`, &val),
+		); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(val)
+	}
+
+	// Accept null/nil result by interface:
+	{
+		var val interface{}
+		if err := chromedp.Run(ctx,
+			chromedp.Evaluate(`null`, &val),
 		); err != nil {
 			log.Fatal(err)
 		}
@@ -677,6 +710,9 @@ func ExampleEvaluate() {
 	// 3
 	// encountered an undefined value
 	// encountered a null value
+	// <nil>
+	// map[]
+	// []
 	// <nil>
 	// {}
 	// objectId is present

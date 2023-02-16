@@ -75,28 +75,28 @@ func parseRemoteObject(v *runtime.RemoteObject, res interface{}) (err error) {
 		return
 	}
 
-	if v.Type == "undefined" || v.Value == nil {
-		// `res` should be a pointer. When the value that `res` points to is
-		// not a pointer, it can not be nil. In this case,
-		// return [ErrJSUndefined] or [ErrJSNull] respectively.
-		rv := reflect.Indirect(reflect.ValueOf(res))
-		switch rv.Kind() {
-		// json.Unmarshal supported in this case types
-		case reflect.Array, reflect.Chan, reflect.Func, reflect.Interface, reflect.Map,
-			reflect.Pointer, reflect.Slice, reflect.Struct:
-			// Otherwise, change the value to the json literal null.
-			v.Value = []byte("null")
-		default:
-			// other type zero value isn't nil, return error
-			if v.Type == "undefined" {
-				return ErrJSUndefined
-			}
-			return ErrJSNull
+	value := v.Value
+	if value == nil {
+		// if js expression is undefined, it cannot resolve to any go type, so return ErrJSUndefined directly
+		if v.Type == "undefined" {
+			return ErrJSUndefined
 		}
+		rv := reflect.ValueOf(res)
+		if rv.Kind() == reflect.Pointer {
+			switch rv.Elem().Kind() {
+			case reflect.Interface, reflect.Map, reflect.Pointer, reflect.Slice:
+				// only interface, map, ptr, slice type can resolve js null
+				value = []byte("null")
+			default:
+				// other types return ErrJSNull, the caller maybe need to redefined `res` type
+				return ErrJSNull
+			}
+		}
+		// `res` is not a pointer, change the value to the json literal null, errored by json.Unmarshal
+		value = []byte("null")
 	}
 
-	err = json.Unmarshal(v.Value, res)
-	return
+	return json.Unmarshal(value, res)
 }
 
 // EvaluateAsDevTools is an action that evaluates a JavaScript expression as

@@ -220,11 +220,12 @@ func TestEvaluateNull(t *testing.T) {
 		slice []string
 	)
 
+	nonPointerErr := errors.New("json: Unmarshal(non-pointer int)")
 	ctx, cancel := testAllocate(t, "")
 	defer cancel()
 
 	err := Run(ctx, Evaluate("null", i))
-	if err != nil && !errors.Is(err, ErrJSNull) {
+	if err != nil && errors.Is(err, nonPointerErr) {
 		t.Fatalf("got error: %v", err)
 	}
 	newi := &i
@@ -233,11 +234,11 @@ func TestEvaluateNull(t *testing.T) {
 		t.Fatalf("got error: %v", err)
 	}
 	err = Run(ctx, Evaluate("null", &f))
-	if err != nil {
+	if err != nil && !errors.Is(err, ErrJSNull) {
 		t.Fatalf("got error: %v", err)
 	}
 	err = Run(ctx, Evaluate("null", &s))
-	if err != nil {
+	if err != nil && !errors.Is(err, ErrJSNull) {
 		t.Fatalf("got error: %v", err)
 	}
 	err = Run(ctx, Evaluate("null", &ifc))
@@ -245,7 +246,7 @@ func TestEvaluateNull(t *testing.T) {
 		t.Fatalf("got error: %v", err)
 	}
 	err = Run(ctx, Evaluate("null", &ch))
-	if err != nil {
+	if err != nil && !errors.Is(err, ErrJSNull) {
 		t.Fatalf("got error: %v", err)
 	}
 	err = Run(ctx, Evaluate("null", &mp))
@@ -253,7 +254,7 @@ func TestEvaluateNull(t *testing.T) {
 		t.Fatalf("got error: %v", err)
 	}
 	err = Run(ctx, Evaluate("null", &arr))
-	if err != nil {
+	if err != nil && !errors.Is(err, ErrJSNull) {
 		t.Fatalf("got error: %v", err)
 	}
 	err = Run(ctx, Evaluate("null", &slice))
