@@ -24,10 +24,11 @@ import (
 // These CDP commands are not sent by chromedp. If it does not work as expected,
 // you can try to send those commands yourself.
 //
-// See CaptureScreenshot for capturing a screenshot of the browser viewport.
+// See [CaptureScreenshot] for capturing a screenshot of the browser viewport.
 //
-// See the 'screenshot' example in the https://github.com/chromedp/examples
-// project for an example of taking a screenshot of the entire page.
+// See [screenshot] for an example of taking a screenshot of the entire page.
+//
+// [screenshot]: https://github.com/chromedp/examples/tree/master/screenshot
 func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) QueryAction {
 	if picbuf == nil {
 		panic("picbuf cannot be nil")
@@ -59,6 +60,7 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) QueryActio
 		buf, err := page.CaptureScreenshot().
 			WithFormat(page.CaptureScreenshotFormatPng).
 			WithCaptureBeyondViewport(true).
+			WithFromSurface(true).
 			WithClip(&clip).
 			Do(ctx)
 		if err != nil {
@@ -76,10 +78,11 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) QueryActio
 // It's supposed to act the same as the command "Capture screenshot" in
 // Chrome. See the behavior notes of Screenshot for more information.
 //
-// See the Screenshot action to take a screenshot of a specific element.
+// See the [Screenshot] action to take a screenshot of a specific element.
 //
-// See the 'screenshot' example in the https://github.com/chromedp/examples
-// project for an example of taking a screenshot of the entire page.
+// See [screenshot] for an example of taking a screenshot of the entire page.
+//
+// [screenshot]: https://github.com/chromedp/examples/tree/master/screenshot
 func CaptureScreenshot(res *[]byte) Action {
 	if res == nil {
 		panic("res cannot be nil")
@@ -88,7 +91,7 @@ func CaptureScreenshot(res *[]byte) Action {
 	return ActionFunc(func(ctx context.Context) error {
 		var err error
 		*res, err = page.CaptureScreenshot().
-			WithCaptureBeyondViewport(true).
+			WithFromSurface(true).
 			Do(ctx)
 		return err
 	})
@@ -107,33 +110,19 @@ func FullScreenshot(res *[]byte, quality int) EmulateAction {
 		panic("res cannot be nil")
 	}
 	return ActionFunc(func(ctx context.Context) error {
-		// get layout metrics
-		_, _, contentSize, _, _, cssContentSize, err := page.GetLayoutMetrics().Do(ctx)
-		if err != nil {
-			return err
-		}
-		// protocol v90 changed the return parameter name (contentSize -> cssContentSize)
-		if cssContentSize != nil {
-			contentSize = cssContentSize
-		}
-
 		format := page.CaptureScreenshotFormatPng
 		if quality != 100 {
 			format = page.CaptureScreenshotFormatJpeg
 		}
 
 		// capture screenshot
+		var err error
 		*res, err = page.CaptureScreenshot().
 			WithCaptureBeyondViewport(true).
+			WithFromSurface(true).
 			WithFormat(format).
 			WithQuality(int64(quality)).
-			WithClip(&page.Viewport{
-				X:      0,
-				Y:      0,
-				Width:  contentSize.Width,
-				Height: contentSize.Height,
-				Scale:  1,
-			}).Do(ctx)
+			Do(ctx)
 		if err != nil {
 			return err
 		}

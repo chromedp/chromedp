@@ -593,3 +593,91 @@ func ExampleFullScreenshot() {
 	// Output:
 	// wrote fullScreenshot.jpeg
 }
+
+func ExampleEvaluate() {
+	ctx, cancel := chromedp.NewContext(context.Background())
+	defer cancel()
+
+	// Ignore the result:
+	{
+		if err := chromedp.Run(ctx,
+			chromedp.Evaluate(`window.scrollTo(0, 100)`, nil),
+		); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	// Receive a primary value:
+	{
+		var sum int
+		if err := chromedp.Run(ctx,
+			chromedp.Evaluate(`1+2`, &sum),
+		); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(sum)
+	}
+
+	// ErrJSUndefined:
+	{
+		var val int
+		if err := chromedp.Run(ctx,
+			chromedp.Evaluate(`undefined`, &val),
+		); err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	// ErrJSNull:
+	{
+		var val int
+		if err := chromedp.Run(ctx,
+			chromedp.Evaluate(`null`, &val),
+		); err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	// Accept undefined/nil result:
+	{
+		var val *int
+		if err := chromedp.Run(ctx,
+			chromedp.Evaluate(`undefined`, &val),
+		); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(val)
+	}
+
+	// Receive the raw bytes:
+	{
+		var buf []byte
+		if err := chromedp.Run(ctx,
+			chromedp.Evaluate(`alert`, &buf),
+		); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("%s\n", buf)
+	}
+
+	// Receive the RemoteObject:
+	{
+		var res *runtime.RemoteObject
+		if err := chromedp.Run(ctx,
+			chromedp.Evaluate(`alert`, &res),
+		); err != nil {
+			log.Fatal(err)
+		}
+		if res.ObjectID != "" {
+			fmt.Println("objectId is present")
+		}
+	}
+
+	// Output:
+	// 3
+	// encountered an undefined value
+	// encountered a null value
+	// <nil>
+	// {}
+	// objectId is present
+}

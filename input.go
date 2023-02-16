@@ -23,7 +23,7 @@ func MouseEvent(typ input.MouseType, x, y float64, opts ...MouseOption) MouseAct
 	return p
 }
 
-// MouseClickXY is an action that sends a left mouse button click (ie,
+// MouseClickXY is an action that sends a left mouse button click (i.e.,
 // mousePressed and mouseReleased event) to the X, Y location.
 func MouseClickXY(x, y float64, opts ...MouseOption) MouseAction {
 	return ActionFunc(func(ctx context.Context) error {
@@ -158,10 +158,10 @@ type KeyAction Action
 //
 // Only well-known, "printable" characters will have char events synthesized.
 //
-// See the SendKeys action to synthesize key events for a specific element
+// See the [SendKeys] action to synthesize key events for a specific element
 // node.
 //
-// See the chromedp/kb package for implementation details and list of
+// See the [kb] package for implementation details and list of
 // well-known keys.
 func KeyEvent(keys string, opts ...KeyOption) KeyAction {
 	return ActionFunc(func(ctx context.Context) error {
@@ -180,7 +180,7 @@ func KeyEvent(keys string, opts ...KeyOption) KeyAction {
 	})
 }
 
-// KeyEventNode is a key action that dispatches a key event on a element node.
+// KeyEventNode is a key action that dispatches a key event on an element node.
 func KeyEventNode(n *cdp.Node, keys string, opts ...KeyOption) KeyAction {
 	return ActionFunc(func(ctx context.Context) error {
 		err := dom.Focus().WithNodeID(n.NodeID).Do(ctx)

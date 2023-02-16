@@ -309,7 +309,7 @@ func TestExecAllocatorMissingWebsocketAddr(t *testing.T) {
 	defer cancel()
 
 	// set the "s" flag to let "." match "\n"
-	// in Github Actions, the error text could be:
+	// in GitHub Actions, the error text could be:
 	// "chrome failed to start:\n/bin/bash: /etc/profile.d/env_vars.sh: Permission denied\nmkdir: cannot create directory ‘/run/user/1001’: Permission denied\n[0321/081807.491906:ERROR:headless_shell.cc(720)] Invalid devtools server address\n"
 	want := `failed to start`
 	got := fmt.Sprintf("%v", Run(ctx))

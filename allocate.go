@@ -50,7 +50,9 @@ func setupExecAllocator(opts ...ExecAllocatorOption) *ExecAllocator {
 
 // DefaultExecAllocatorOptions are the ExecAllocator options used by NewContext
 // if the given parent context doesn't have an allocator set up. Do not modify
-// this global; instead, use NewExecAllocator. See ExampleExecAllocator.
+// this global; instead, use NewExecAllocator. See [ExampleExecAllocator].
+//
+// [ExampleExecAllocator]: https://pkg.go.dev/github.com/chromedp/chromedp#example-ExecAllocator
 var DefaultExecAllocatorOptions = [...]ExecAllocatorOption{
 	NoFirstRun,
 	NoDefaultBrowserCheck,
@@ -403,7 +405,7 @@ func Flag(name string, value interface{}) ExecAllocatorOption {
 
 // Env is a list of generic environment variables in the form NAME=value
 // to pass into the new Chrome process. These will be appended to the
-// environment of the golang process as retrieved by os.Environ.
+// environment of the Go process as retrieved by os.Environ.
 func Env(vars ...string) ExecAllocatorOption {
 	return func(a *ExecAllocator) {
 		a.initEnv = append(a.initEnv, vars...)
@@ -435,7 +437,7 @@ func ProxyServer(proxy string) ExecAllocatorOption {
 }
 
 // IgnoreCertErrors is the command line option to ignore certificate-related
-// errors. This options is useful when you need to access an HTTPS website
+// errors. This option is useful when you need to access an HTTPS website
 // through a proxy.
 func IgnoreCertErrors(a *ExecAllocator) {
 	Flag("ignore-certificate-errors", true)(a)
@@ -482,11 +484,12 @@ func Headless(a *ExecAllocator) {
 //
 // The --disable-gpu option is a temporary workaround for a few bugs
 // in headless mode. According to the references below, it's no longer required:
-// - https://bugs.chromium.org/p/chromium/issues/detail?id=737678
-// - https://github.com/puppeteer/puppeteer/pull/2908
-// - https://github.com/puppeteer/puppeteer/pull/4523
+//   - https://bugs.chromium.org/p/chromium/issues/detail?id=737678
+//   - https://github.com/puppeteer/puppeteer/pull/2908
+//   - https://github.com/puppeteer/puppeteer/pull/4523
+//
 // But according to this reported issue, it's still required in some cases:
-// - https://github.com/chromedp/chromedp/issues/904
+//   - https://github.com/chromedp/chromedp/issues/904
 func DisableGPU(a *ExecAllocator) {
 	Flag("disable-gpu", true)(a)
 }
@@ -515,8 +518,8 @@ func WSURLReadTimeout(t time.Duration) ExecAllocatorOption {
 // the correct one by sending a request to "http://$HOST:$PORT/json/version".
 //
 // The url with the following formats are accepted:
-// * ws://127.0.0.1:9222/
-// * http://127.0.0.1:9222/
+//   - ws://127.0.0.1:9222/
+//   - http://127.0.0.1:9222/
 //
 // But "ws://127.0.0.1:9222/devtools/browser/" are not accepted.
 // Because the allocator won't try to modify it and it's obviously invalid.

@@ -114,13 +114,13 @@ const insertJS = `(function(n, typ, id, text) {
 })(document.querySelector(%q), %q, %q, %q)`
 
 // test:
-//   insertBefore
-//   removeChild
-//   appendChild
-//   replaceChild
-//   prepend
-//   append
-//   insertAdjacentElement
+// - insertBefore
+// - removeChild
+// - appendChild
+// - replaceChild
+// - prepend
+// - append
+// - insertAdjacentElement
 func TestNodeOp(t *testing.T) {
 	t.Parallel()
 

@@ -48,4 +48,10 @@ const (
 
 	// ErrPollingTimeout is the error that the timeout reached before the pageFunction returns a truthy value.
 	ErrPollingTimeout Error = "waiting for function failed: timeout"
+
+	// ErrJSUndefined is the error that the type of RemoteObject is "undefined".
+	ErrJSUndefined Error = "encountered an undefined value"
+
+	// ErrJSNull is the error that the value of RemoteObject is null.
+	ErrJSNull Error = "encountered a null value"
 )

@@ -6,7 +6,9 @@
 // DevTools Protocol entirely in Go.
 //
 // This package includes a number of simple examples. Additionally,
-// https://github.com/chromedp/examples contains more complex examples.
+// [chromedp/examples] contains more complex examples.
+//
+// [chromedp/examples]: https://github.com/chromedp/examples
 package chromedp
 
 import (
@@ -91,7 +93,7 @@ type Context struct {
 //
 // Cancelling the returned context will close a tab or an entire browser,
 // depending on the logic described above. To cancel a context while checking
-// for errors, see Cancel.
+// for errors, see [Cancel].
 //
 // Note that NewContext doesn't allocate nor start a browser; that happens the
 // first time Run is used on the context.
@@ -185,9 +187,9 @@ func FromContext(ctx context.Context) *Context {
 // Cancel. A timeout can be attached to this context to determine how long to
 // wait for the browser to close itself:
 //
-//     tctx, tcancel := context.WithTimeout(ctx, 10 * time.Second)
-//     defer tcancel()
-//     chromedp.Cancel(tctx)
+//	tctx, tcancel := context.WithTimeout(ctx, 10 * time.Second)
+//	defer tcancel()
+//	chromedp.Cancel(tctx)
 //
 // Usually a "defer cancel()" will be enough for most use cases. However, Cancel
 // is the better option if one wants to gracefully close a browser, or catch
@@ -572,7 +574,7 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 			}
 
 			// If the ctx parameter was cancelled by the caller (or
-			// by a timeout etc) the select will race between
+			// by a timeout etc.) the select will race between
 			// lctx.Done and ctx.Done, since lctx is a sub-context
 			// of ctx. So we can't return nil here, as otherwise
 			// that race would mean that we would drop 50% of the
@@ -606,7 +608,7 @@ type Action interface {
 	Do(context.Context) error
 }
 
-// ActionFunc is a adapter to allow the use of ordinary func's as an Action.
+// ActionFunc is an adapter to allow the use of ordinary func's as an Action.
 type ActionFunc func(context.Context) error
 
 // Do executes the func f using the provided context and frame handler.

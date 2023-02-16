@@ -18,12 +18,12 @@ import (
 // QueryAction are element query actions that select node elements from the
 // browser's DOM for retrieval or manipulation.
 //
-// See Query for details on building element query selectors.
+// See [Query] for details on building element query selectors.
 type QueryAction Action
 
 // Selector holds information pertaining to an element selection query.
 //
-// See Query for information on building an element selector and relevant
+// See [Query] for information on building an element selector and relevant
 // options.
 type Selector struct {
 	sel           interface{}
@@ -39,93 +39,93 @@ type Selector struct {
 // node(s) matching the criteria.
 //
 // Query actions that target a browser DOM element node (or nodes) make use of
-// Query, in conjunction with the After option (see below) to retrieve data or
+// Query, in conjunction with the [After] option to retrieve data or
 // to modify the element(s) selected by the query.
 //
 // For example:
 //
-//     chromedp.Run(ctx, chromedp.SendKeys(`thing`, chromedp.ByID))
+//	chromedp.Run(ctx, chromedp.SendKeys(`thing`, chromedp.ByID))
 //
-// The above will perform a "SendKeys" action on the first element matching a
+// The above will perform a [SendKeys] action on the first element matching a
 // browser CSS query for "#thing".
 //
-// Element selection queries work in conjunction with specific actions and form
-// the primary way of automating Tasks in the browser. They are typically
+// [Element] selection queries work in conjunction with specific actions and form
+// the primary way of automating [Tasks] in the browser. They are typically
 // written in the following form:
 //
-//     Action(selector[, parameter1, ...parameterN][,result][, queryOptions...])
+//	Action(selector[, parameter1, ...parameterN][,result][, queryOptions...])
 //
 // Where:
 //
-//     Action         - the action to perform
-//     selector       - element query selection (typically a string), that any matching node(s) will have the action applied
-//     parameter[1-N] - parameter(s) needed for the individual action (if any)
-//     result         - pointer to a result (if any)
-//     queryOptions   - changes how queries are executed, or how nodes are waited for (see below)
+//   - Action - the action to perform
+//   - selector - element query selection (typically a string), that any matching node(s) will have the action applied
+//   - parameter[1-N] - parameter(s) needed for the individual action (if any)
+//   - result - pointer to a result (if any)
+//   - queryOptions - changes how queries are executed, or how nodes are waited for
 //
-// Query Options
+// # Query Options
 //
 // By* options specify the type of element query used By the browser to perform
-// the selection query. When not specified, element queries will use BySearch
+// the selection query. When not specified, element queries will use [BySearch]
 // (a wrapper for DOM.performSearch).
 //
 // Node* options specify node conditions that cause the query to wait until the
 // specified condition is true. When not specified, queries will use the
-// NodeReady wait condition.
+// [NodeReady] wait condition.
 //
-// The AtLeast option alters the minimum number of nodes that must be returned
+// The [AtLeast] option alters the minimum number of nodes that must be returned
 // by the element query. If not specified, the default value is 1.
 //
-// The After option is used to specify a func that will be executed when
+// The [After] option is used to specify a func that will be executed when
 // element query has returned one or more elements, and after the node condition is
 // true.
 //
-// By Options
+// # By Options
 //
-// The BySearch (default) option enables querying for elements by plain text,
+// The [BySearch] (default) option enables querying for elements by plain text,
 // CSS selector or XPath query, wrapping DOM.performSearch.
 //
-// The ByID option enables querying for a single element with the matching CSS
+// The [ByID] option enables querying for a single element with the matching CSS
 // ID, wrapping DOM.querySelector. ByID is similar to calling
 // document.querySelector('#' + ID) from within the browser.
 //
-// The ByQuery option enables querying for a single element using a CSS
+// The [ByQuery] option enables querying for a single element using a CSS
 // selector, wrapping DOM.querySelector. ByQuery is similar to calling
 // document.querySelector() from within the browser.
 //
-// The ByQueryAll option enables querying for elements using a CSS selector,
+// The [ByQueryAll] option enables querying for elements using a CSS selector,
 // wrapping DOM.querySelectorAll. ByQueryAll is similar to calling
 // document.querySelectorAll() from within the browser.
 //
-// The ByJSPath option enables querying for a single element using its "JS
+// The [ByJSPath] option enables querying for a single element using its "JS
 // Path" value, wrapping Runtime.evaluate. ByJSPath is similar to executing a
-// Javascript snippet that returns a element from within the browser. ByJSPath
+// JavaScript snippet that returns an element from within the browser. ByJSPath
 // should be used only with trusted element queries, as it is passed directly
 // to Runtime.evaluate, and no attempt is made to sanitize the query. Useful
 // for querying DOM elements that cannot be retrieved using other By* funcs,
 // such as ShadowDOM elements.
 //
-// Node Options
+// # Node Options
 //
-// The NodeReady (default) option causes the query to wait until all element
+// The [NodeReady] (default) option causes the query to wait until all element
 // nodes matching the selector have been retrieved from the browser.
 //
-// The NodeVisible option causes the query to wait until all element nodes
+// The [NodeVisible] option causes the query to wait until all element nodes
 // matching the selector have been retrieved from the browser, and are visible.
 //
-// The NodeNotVisible option causes the query to wait until all element nodes
+// The [NodeNotVisible] option causes the query to wait until all element nodes
 // matching the selector have been retrieved from the browser, and are not
 // visible.
 //
-// The NodeEnabled option causes the query to wait until all element nodes
+// The [NodeEnabled] option causes the query to wait until all element nodes
 // matching the selector have been retrieved from the browser, and are enabled
-// (ie, do not have a 'disabled' attribute).
+// (i.e., do not have a 'disabled' attribute).
 //
-// The NodeSelected option causes the query to wait until all element nodes
-// matching the selector have been retrieved from the browser, and are are
-// selected (ie, has a 'selected' attribute).
+// The [NodeSelected] option causes the query to wait until all element nodes
+// matching the selector have been retrieved from the browser, and are
+// selected (i.e., has a 'selected' attribute).
 //
-// The NodeNotPresent option causes the query to wait until there are no
+// The [NodeNotPresent] option causes the query to wait until there are no
 // element nodes matching the selector.
 func Query(sel interface{}, opts ...QueryOption) QueryAction {
 	s := &Selector{
@@ -496,7 +496,7 @@ func NodeNotVisible(s *Selector) {
 }
 
 // NodeEnabled is an element query option to wait until all queried element
-// nodes have been sent by the browser and are enabled (ie, do not have a
+// nodes have been sent by the browser and are enabled (i.e., do not have a
 // 'disabled' attribute).
 func NodeEnabled(s *Selector) {
 	WaitFunc(s.waitReady(func(ctx context.Context, execCtx runtime.ExecutionContextID, n *cdp.Node) error {
@@ -514,7 +514,7 @@ func NodeEnabled(s *Selector) {
 }
 
 // NodeSelected is an element query option to wait until all queried element
-// nodes have been sent by the browser and are selected (ie, has 'selected'
+// nodes have been sent by the browser and are selected (i.e., has 'selected'
 // attribute).
 func NodeSelected(s *Selector) {
 	WaitFunc(s.waitReady(func(ctx context.Context, execCtx runtime.ExecutionContextID, n *cdp.Node) error {
@@ -575,7 +575,7 @@ func After(f func(context.Context, runtime.ExecutionContextID, ...*cdp.Node) err
 }
 
 // WaitReady is an element query action that waits until the element matching
-// the selector is ready (ie, has been "loaded").
+// the selector is ready (i.e., has been "loaded").
 func WaitReady(sel interface{}, opts ...QueryOption) QueryAction {
 	return Query(sel, opts...)
 }
@@ -593,13 +593,13 @@ func WaitNotVisible(sel interface{}, opts ...QueryOption) QueryAction {
 }
 
 // WaitEnabled is an element query action that waits until the element matching
-// the selector is enabled (ie, does not have attribute 'disabled').
+// the selector is enabled (i.e., does not have attribute 'disabled').
 func WaitEnabled(sel interface{}, opts ...QueryOption) QueryAction {
 	return Query(sel, append(opts, NodeEnabled)...)
 }
 
 // WaitSelected is an element query action that waits until the element
-// matching the selector is selected (ie, has attribute 'selected').
+// matching the selector is selected (i.e., has attribute 'selected').
 func WaitSelected(sel interface{}, opts ...QueryOption) QueryAction {
 	return Query(sel, append(opts, NodeSelected)...)
 }
@@ -782,10 +782,10 @@ func Clear(sel interface{}, opts ...QueryOption) QueryAction {
 	}, opts...)
 }
 
-// Value is an element query action that retrieves the Javascript value field of the
+// Value is an element query action that retrieves the JavaScript value field of the
 // first element node matching the selector.
 //
-// Useful for retrieving an element's Javascript value, namely form, input,
+// Useful for retrieving an element's JavaScript value, namely form, input,
 // textarea, select, or any other element with a '.value' field.
 func Value(sel interface{}, value *string, opts ...QueryOption) QueryAction {
 	if value == nil {
@@ -795,10 +795,10 @@ func Value(sel interface{}, value *string, opts ...QueryOption) QueryAction {
 	return JavascriptAttribute(sel, "value", value, opts...)
 }
 
-// SetValue is an element query action that sets the Javascript value of the first
+// SetValue is an element query action that sets the JavaScript value of the first
 // element node matching the selector.
 //
-// Useful for setting an element's Javascript value, namely form, input,
+// Useful for setting an element's JavaScript value, namely form, input,
 // textarea, select, or other element with a '.value' field.
 func SetValue(sel interface{}, value string, opts ...QueryOption) QueryAction {
 	return SetJavascriptAttribute(sel, "value", value, opts...)
@@ -935,7 +935,7 @@ func RemoveAttribute(sel interface{}, name string, opts ...QueryOption) QueryAct
 	}, opts...)
 }
 
-// JavascriptAttribute is an element query action that retrieves the Javascript
+// JavascriptAttribute is an element query action that retrieves the JavaScript
 // attribute for the first element node matching the selector.
 func JavascriptAttribute(sel interface{}, name string, res interface{}, opts ...QueryOption) QueryAction {
 	if res == nil {
@@ -954,7 +954,7 @@ func JavascriptAttribute(sel interface{}, name string, res interface{}, opts ...
 	}, opts...)
 }
 
-// SetJavascriptAttribute is an element query action that sets the Javascript attribute
+// SetJavascriptAttribute is an element query action that sets the JavaScript attribute
 // for the first element node matching the selector.
 func SetJavascriptAttribute(sel interface{}, name, value string, opts ...QueryOption) QueryAction {
 	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
@@ -1021,11 +1021,12 @@ func DoubleClick(sel interface{}, opts ...QueryOption) QueryAction {
 // events as needed for the runes in v, sending them to the first element node
 // matching the selector.
 //
-// For a complete example on how to use SendKeys, see
-// https://github.com/chromedp/examples/tree/master/keys.
+// See the [keys] for a complete example on how to use SendKeys.
 //
-// Note: when the element query matches a input[type="file"] node, then
+// Note: when the element query matches an input[type="file"] node, then
 // dom.SetFileInputFiles is used to set the upload path of the input node to v.
+//
+// [keys]: https://github.com/chromedp/examples/tree/master/keys
 func SendKeys(sel interface{}, v string, opts ...QueryOption) QueryAction {
 	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
@@ -1053,7 +1054,7 @@ func SendKeys(sel interface{}, v string, opts ...QueryOption) QueryAction {
 	}, append(opts, NodeVisible)...)
 }
 
-// SetUploadFiles is an element query action that sets the files to upload (ie, for a
+// SetUploadFiles is an element query action that sets the files to upload (i.e., for a
 // input[type="file"] node) for the first element node matching the selector.
 func SetUploadFiles(sel interface{}, files []string, opts ...QueryOption) QueryAction {
 	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
