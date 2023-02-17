@@ -30,7 +30,7 @@ type EvaluateAction Action
 // JSON-encoded), and subsequently an attempt will be made to json.Unmarshal
 // the script result to res. When the script result is "undefined" or "null",
 // and the value that res points to is not a pointer, or it points to a
-// map/ptr/slice/interface/func/chan/array/struct, it will handle by json.Unmarshal.
+// map/ptr/slice/interface/func/chan, it will handle by json.Unmarshal.
 // for other type it returns [ErrJSUndefined] of [ErrJSNull] respectively.
 func Evaluate(expression string, res interface{}, opts ...EvaluateOption) EvaluateAction {
 	return ActionFunc(func(ctx context.Context) error {
@@ -83,9 +83,8 @@ func parseRemoteObject(v *runtime.RemoteObject, res interface{}) (err error) {
 		if rv.Kind() == reflect.Pointer {
 			rv = rv.Elem()
 			switch rv.Kind() {
-			case reflect.Map, reflect.Pointer, reflect.Slice,
-				reflect.Func, reflect.Chan, reflect.Struct, reflect.Array:
-				// map, ptr, slice, func, chan, struct, array type can be handled correctly by json package
+			case reflect.Map, reflect.Pointer, reflect.Slice, reflect.Func, reflect.Chan:
+				// map, ptr, slice, func, chan type can be handled correctly by json package
 			case reflect.Interface:
 				// if `res` is interface, get its actual type and check again
 				rv = rv.Elem()

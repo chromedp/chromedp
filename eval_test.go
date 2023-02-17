@@ -238,7 +238,7 @@ func TestEvaluateNull(t *testing.T) {
 		t.Fatalf("got error: %v", err)
 	}
 	err = Run(ctx, Evaluate("null", &s))
-	if err != nil {
+	if err != nil && !errors.Is(err, ErrJSNull) {
 		t.Fatalf("got error: %v", err)
 	}
 	err = Run(ctx, Evaluate("null", &ifc))
@@ -254,7 +254,7 @@ func TestEvaluateNull(t *testing.T) {
 		t.Fatalf("got error: %v", err)
 	}
 	err = Run(ctx, Evaluate("null", &arr))
-	if err != nil {
+	if err != nil && !errors.Is(err, ErrJSNull) {
 		t.Fatalf("got error: %v", err)
 	}
 	err = Run(ctx, Evaluate("null", &slice))
