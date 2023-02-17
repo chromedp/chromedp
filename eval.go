@@ -29,8 +29,9 @@ type EvaluateAction Action
 // For all other cases, the result of the script will be returned "by value" (i.e.,
 // JSON-encoded), and subsequently an attempt will be made to json.Unmarshal
 // the script result to res. When the script result is "undefined" or "null",
-// and the value that res points to is not a pointer, it returns [ErrJSUndefined]
-// of [ErrJSNull] respectively.
+// and the value that res points to is not a pointer, or it points to a
+// map/ptr/slice/interface/func/chan/array/struct, it will handle by json.Unmarshal.
+// for other type it returns [ErrJSUndefined] of [ErrJSNull] respectively.
 func Evaluate(expression string, res interface{}, opts ...EvaluateOption) EvaluateAction {
 	return ActionFunc(func(ctx context.Context) error {
 		// set up parameters
@@ -76,23 +77,29 @@ func parseRemoteObject(v *runtime.RemoteObject, res interface{}) (err error) {
 	}
 
 	value := v.Value
-	if value == nil {
-		// if js expression is undefined, it cannot resolve to any go type, so return ErrJSUndefined directly
-		if v.Type == "undefined" {
-			return ErrJSUndefined
-		}
+	if v.Type == "undefined" || value == nil {
 		rv := reflect.ValueOf(res)
+	checkKind:
 		if rv.Kind() == reflect.Pointer {
-			switch rv.Elem().Kind() {
-			case reflect.Interface, reflect.Map, reflect.Pointer, reflect.Slice:
-				// only interface, map, ptr, slice type can resolve js null
-				value = []byte("null")
+			rv = rv.Elem()
+			switch rv.Kind() {
+			case reflect.Map, reflect.Pointer, reflect.Slice,
+				reflect.Func, reflect.Chan, reflect.Struct, reflect.Array:
+				// map, ptr, slice, func, chan, struct, array type can be handled correctly by json package
+			case reflect.Interface:
+				// if `res` is interface, get its actual type and check again
+				rv = rv.Elem()
+				goto checkKind
 			default:
-				// other types return ErrJSNull, the caller maybe need to redefined `res` type
+				// return [ErrJSUndefined] or [ErrJSNull] respectively.
+				// the caller maybe need to redefined `res` type
+				if v.Type == "undefined" {
+					return ErrJSUndefined
+				}
 				return ErrJSNull
 			}
 		}
-		// `res` is not a pointer, change the value to the json literal null, errored by json.Unmarshal
+		// `res` is not a pointer, change the value to the json literal null, returns error by json.Unmarshal
 		value = []byte("null")
 	}
 

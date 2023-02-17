@@ -628,6 +628,17 @@ func ExampleEvaluate() {
 		}
 	}
 
+	// Accept undefined/nil result by ptr:
+	{
+		var val *int
+		if err := chromedp.Run(ctx,
+			chromedp.Evaluate(`undefined`, &val),
+		); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(val)
+	}
+
 	// ErrJSNull:
 	{
 		var val int
@@ -709,6 +720,7 @@ func ExampleEvaluate() {
 	// Output:
 	// 3
 	// encountered an undefined value
+	// <nil>
 	// encountered a null value
 	// <nil>
 	// map[]
