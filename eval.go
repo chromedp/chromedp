@@ -79,16 +79,11 @@ func parseRemoteObject(v *runtime.RemoteObject, res interface{}) (err error) {
 	value := v.Value
 	if v.Type == "undefined" || value == nil {
 		rv := reflect.ValueOf(res)
-	checkKind:
 		if rv.Kind() == reflect.Pointer {
 			rv = rv.Elem()
 			switch rv.Kind() {
-			case reflect.Map, reflect.Pointer, reflect.Slice, reflect.Func, reflect.Chan:
-				// map, ptr, slice, func, chan type can be handled correctly by json package
-			case reflect.Interface:
-				// if `res` is interface, get its actual type and check again
-				rv = rv.Elem()
-				goto checkKind
+			case reflect.Map, reflect.Pointer, reflect.Slice, reflect.Func, reflect.Chan, reflect.Interface:
+				// map, ptr, slice, func, chan, interface type can be handled correctly by json package
 			default:
 				// return [ErrJSUndefined] or [ErrJSNull] respectively.
 				// the caller maybe need to redefined `res` type
