@@ -56,8 +56,7 @@ func Evaluate(expression string, res interface{}, opts ...EvaluateOption) Evalua
 			return exp
 		}
 
-		err = parseRemoteObject(v, res)
-		return err
+		return parseRemoteObject(v, res)
 	})
 }
 
@@ -80,8 +79,7 @@ func parseRemoteObject(v *runtime.RemoteObject, res interface{}) (err error) {
 	if v.Type == "undefined" || value == nil {
 		rv := reflect.ValueOf(res)
 		if rv.Kind() == reflect.Pointer {
-			rv = rv.Elem()
-			switch rv.Kind() {
+			switch rv.Elem().Kind() {
 			case reflect.Map, reflect.Pointer, reflect.Slice, reflect.Func, reflect.Chan, reflect.Interface:
 				// map, ptr, slice, func, chan, interface type can be handled correctly by json package
 			default:
