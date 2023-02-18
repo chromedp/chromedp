@@ -422,7 +422,7 @@ func callFunctionOnNode(ctx context.Context, node *cdp.Node, function string, re
 	if err != nil {
 		return err
 	}
-	err = CallFunctionOn(function, &res,
+	err = CallFunctionOn(function, res,
 		func(p *runtime.CallFunctionOnParams) *runtime.CallFunctionOnParams {
 			return p.WithObjectID(r.ObjectID)
 		},
