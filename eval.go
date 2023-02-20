@@ -76,7 +76,7 @@ func parseRemoteObject(v *runtime.RemoteObject, res interface{}) (err error) {
 	}
 
 	value := v.Value
-	if v.Type == "undefined" || value == nil {
+	if value == nil {
 		rv := reflect.ValueOf(res)
 		if rv.Kind() == reflect.Pointer {
 			switch rv.Elem().Kind() {
