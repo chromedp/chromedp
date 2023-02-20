@@ -118,8 +118,9 @@ func evaluateOnAllFrames(script string) Action {
 		c.Target.frameMu.RLock()
 		actions := make([]Action, 0, len(c.Target.execContexts))
 		for _, executionContextID := range c.Target.execContexts {
+			id := executionContextID
 			actions = append(actions, Evaluate(script, nil, func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
-				return p.WithContextID(executionContextID)
+				return p.WithContextID(id)
 			}))
 		}
 		c.Target.frameMu.RUnlock()
