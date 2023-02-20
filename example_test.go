@@ -638,7 +638,7 @@ func ExampleEvaluate() {
 		}
 	}
 
-	// Accept undefined/nil result:
+	// Accept undefined/null result:
 	{
 		var val *int
 		if err := chromedp.Run(ctx,
@@ -647,6 +647,28 @@ func ExampleEvaluate() {
 			log.Fatal(err)
 		}
 		fmt.Println(val)
+	}
+
+	// Receive an array value:
+	{
+		var val []int
+		if err := chromedp.Run(ctx,
+			chromedp.Evaluate(`[1,2]`, &val),
+		); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println(val)
+	}
+
+	// Map and Slice accept undefined/null:
+	{
+		var val []int
+		if err := chromedp.Run(ctx,
+			chromedp.Evaluate(`null`, &val),
+		); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Println("slice is nil:", val == nil)
 	}
 
 	// Receive the raw bytes:
@@ -678,6 +700,8 @@ func ExampleEvaluate() {
 	// encountered an undefined value
 	// encountered a null value
 	// <nil>
+	// [1 2]
+	// slice is nil: true
 	// {}
 	// objectId is present
 }

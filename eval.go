@@ -29,8 +29,9 @@ type EvaluateAction Action
 // For all other cases, the result of the script will be returned "by value" (i.e.,
 // JSON-encoded), and subsequently an attempt will be made to json.Unmarshal
 // the script result to res. When the script result is "undefined" or "null",
-// and the value that res points to is not a pointer, it returns [ErrJSUndefined]
-// of [ErrJSNull] respectively.
+// and the value that res points to can not be nil (only the value of a chan,
+// func, interface, map, pointer, or slice can be nil), it returns [ErrJSUndefined]
+// or [ErrJSNull] respectively.
 func Evaluate(expression string, res interface{}, opts ...EvaluateOption) EvaluateAction {
 	return ActionFunc(func(ctx context.Context) error {
 		// set up parameters
@@ -55,8 +56,7 @@ func Evaluate(expression string, res interface{}, opts ...EvaluateOption) Evalua
 			return exp
 		}
 
-		err = parseRemoteObject(v, res)
-		return err
+		return parseRemoteObject(v, res)
 	})
 }
 
@@ -75,23 +75,30 @@ func parseRemoteObject(v *runtime.RemoteObject, res interface{}) (err error) {
 		return
 	}
 
-	if v.Type == "undefined" || v.Value == nil {
+	value := v.Value
+	if value == nil {
 		rv := reflect.ValueOf(res)
-		// `res` should be a pointer. When the value that `res` points to is
-		// not a pointer, it can not be nil. In this case,
-		// return [ErrJSUndefined] or [ErrJSNull] respectively.
-		if rv.Kind() == reflect.Pointer && rv.Elem().Kind() != reflect.Pointer {
-			if v.Type == "undefined" {
-				return ErrJSUndefined
+		if rv.Kind() == reflect.Pointer {
+			switch rv.Elem().Kind() {
+			// Common kinds that can be nil.
+			case reflect.Pointer, reflect.Map, reflect.Slice:
+			// It's weird that res is a pointer to the following kinds,
+			// but they can be nil too.
+			case reflect.Chan, reflect.Func, reflect.Interface:
+			default:
+				// When the value that `res` points to can not be set to nil,
+				// return [ErrJSUndefined] or [ErrJSNull] respectively.
+				if v.Type == "undefined" {
+					return ErrJSUndefined
+				}
+				return ErrJSNull
 			}
-			return ErrJSNull
 		}
-		// Otherwise, change the value to the json literal null.
-		v.Value = []byte("null")
+		// Change the value to the json literal null to make json.Unmarshal happy.
+		value = []byte("null")
 	}
 
-	err = json.Unmarshal(v.Value, res)
-	return
+	return json.Unmarshal(value, res)
 }
 
 // EvaluateAsDevTools is an action that evaluates a JavaScript expression as
