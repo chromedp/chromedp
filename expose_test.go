@@ -20,9 +20,60 @@ func base64EncodeFunc(args string) (string, error) {
 	return base64.StdEncoding.EncodeToString([]byte(testString)), nil
 }
 
+func echoFunc(str string) (string, error) {
+	return str, nil
+}
+
 const testString = "chromedp expose test"
 const testStringMd5 = "a93d69002a286b46c8aa114362afb7ac"
 const testStringBase64 = "Y2hyb21lZHAgZXhwb3NlIHRlc3Q="
+const testIFrameHTMLTitle = "page with an iframe"
+const testFormHTMLTitle = "this is form title"
+
+func TestExposeToAllFrames(t *testing.T) {
+	// allocate browser
+	ctx, cancel := testAllocate(t, "iframe.html")
+	defer cancel()
+
+	// expose echoFunc function as  to browser current page and every frame
+	if err := Run(ctx, Expose("echo", echoFunc)); err != nil {
+		t.Fatal(err)
+	}
+
+	c := FromContext(ctx)
+
+	c.Target.frameMu.RLock()
+	executionContextIDs := make([]runtime.ExecutionContextID, 0, len(c.Target.execContexts))
+	for _, executionContextID := range c.Target.execContexts {
+		executionContextIDs = append(executionContextIDs, executionContextID)
+	}
+	c.Target.frameMu.RUnlock()
+
+	var res1 string
+	var res2 string
+	callEchoFunc := fmt.Sprintf(`%s(document.title);`, "echo")
+	for _, executionContextID := range executionContextIDs {
+		id := executionContextID
+		var res string
+		if err := Run(ctx, Evaluate(callEchoFunc, &res, func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
+			return p.WithContextID(id).WithAwaitPromise(true)
+		})); err != nil {
+			t.Fatal(err)
+		}
+		if len(res1) == 0 {
+			res1 = res
+		} else {
+			res2 = res
+		}
+	}
+
+	// we expect res1 or res2 = testIFrameHTMLTitle or testFormHTMLTitle
+	if res1 == testIFrameHTMLTitle && res2 == testFormHTMLTitle || res1 == testFormHTMLTitle && res2 == testIFrameHTMLTitle {
+		// pass
+	} else {
+		t.Fatalf("res1: %s, res2: %s", res1, res2)
+	}
+}
 
 func TestExpose(t *testing.T) {
 	// allocate browser
