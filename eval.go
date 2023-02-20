@@ -29,9 +29,9 @@ type EvaluateAction Action
 // For all other cases, the result of the script will be returned "by value" (i.e.,
 // JSON-encoded), and subsequently an attempt will be made to json.Unmarshal
 // the script result to res. When the script result is "undefined" or "null",
-// and the value that res points to is not a pointer, or it points to a
-// map/ptr/slice/interface/func/chan, it will handle by json.Unmarshal.
-// for other type it returns [ErrJSUndefined] of [ErrJSNull] respectively.
+// and the value that res points to can not be nil (only the value of a chan,
+// func, interface, map, pointer, or slice can be nil), it returns [ErrJSUndefined]
+// or [ErrJSNull] respectively.
 func Evaluate(expression string, res interface{}, opts ...EvaluateOption) EvaluateAction {
 	return ActionFunc(func(ctx context.Context) error {
 		// set up parameters
@@ -80,18 +80,21 @@ func parseRemoteObject(v *runtime.RemoteObject, res interface{}) (err error) {
 		rv := reflect.ValueOf(res)
 		if rv.Kind() == reflect.Pointer {
 			switch rv.Elem().Kind() {
-			case reflect.Map, reflect.Pointer, reflect.Slice, reflect.Func, reflect.Chan, reflect.Interface:
-				// map, ptr, slice, func, chan, interface type can be handled correctly by json package
+			// Common kinds that can be nil.
+			case reflect.Pointer, reflect.Map, reflect.Slice:
+			// It's weird that res is a pointer to the following kinds,
+			// but they can be nil too.
+			case reflect.Chan, reflect.Func, reflect.Interface:
 			default:
+				// When the value that `res` points to can not be set to nil,
 				// return [ErrJSUndefined] or [ErrJSNull] respectively.
-				// the caller maybe need to redefined `res` type
 				if v.Type == "undefined" {
 					return ErrJSUndefined
 				}
 				return ErrJSNull
 			}
 		}
-		// `res` is not a pointer, change the value to the json literal null, returns error by json.Unmarshal
+		// Change the value to the json literal null to make json.Unmarshal happy.
 		value = []byte("null")
 	}
 

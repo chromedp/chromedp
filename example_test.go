@@ -628,17 +628,6 @@ func ExampleEvaluate() {
 		}
 	}
 
-	// Accept undefined/nil result by ptr:
-	{
-		var val *int
-		if err := chromedp.Run(ctx,
-			chromedp.Evaluate(`undefined`, &val),
-		); err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(val)
-	}
-
 	// ErrJSNull:
 	{
 		var val int
@@ -649,48 +638,37 @@ func ExampleEvaluate() {
 		}
 	}
 
-	// Accept null/nil result by ptr:
+	// Accept undefined/null result:
 	{
 		var val *int
 		if err := chromedp.Run(ctx,
-			chromedp.Evaluate(`null`, &val),
+			chromedp.Evaluate(`undefined`, &val),
 		); err != nil {
 			log.Fatal(err)
 		}
 		fmt.Println(val)
 	}
 
-	// Accept null/nil result by map:
+	// Receive an array value:
 	{
-		var val map[string]interface{}
+		var val []int
 		if err := chromedp.Run(ctx,
-			chromedp.Evaluate(`null`, &val),
+			chromedp.Evaluate(`[1,2]`, &val),
 		); err != nil {
 			log.Fatal(err)
 		}
 		fmt.Println(val)
 	}
 
-	// Accept null/nil result by slice:
+	// Map and Slice accept undefined/null:
 	{
-		var val []string
+		var val []int
 		if err := chromedp.Run(ctx,
 			chromedp.Evaluate(`null`, &val),
 		); err != nil {
 			log.Fatal(err)
 		}
-		fmt.Println(val)
-	}
-
-	// Accept null/nil result by interface:
-	{
-		var val interface{}
-		if err := chromedp.Run(ctx,
-			chromedp.Evaluate(`null`, &val),
-		); err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(val)
+		fmt.Println("slice is nil:", val == nil)
 	}
 
 	// Receive the raw bytes:
@@ -720,12 +698,10 @@ func ExampleEvaluate() {
 	// Output:
 	// 3
 	// encountered an undefined value
-	// <nil>
 	// encountered a null value
 	// <nil>
-	// map[]
-	// []
-	// <nil>
+	// [1 2]
+	// slice is nil: true
 	// {}
 	// objectId is present
 }
