@@ -32,10 +32,11 @@ func Expose(fnName string, fn ExposedFunc) ExposeAction {
 	return ActionFunc(func(ctx context.Context) error {
 
 		expression := fmt.Sprintf(`chromedpExposeFunc.wrapBinding("exposedFun","%s");`, fnName)
+
 		err := Run(ctx,
 			runtime.AddBinding(fnName),
-			Evaluate(exposeJS, nil),
-			Evaluate(expression, nil),
+			evaluateOnAllFrames(exposeJS),
+			evaluateOnAllFrames(expression),
 			// Make it effective after navigation.
 			addScriptToEvaluateOnNewDocument(exposeJS),
 			addScriptToEvaluateOnNewDocument(expression),
@@ -107,5 +108,22 @@ func addScriptToEvaluateOnNewDocument(script string) Action {
 	return ActionFunc(func(ctx context.Context) error {
 		_, err := page.AddScriptToEvaluateOnNewDocument(script).Do(ctx)
 		return err
+	})
+}
+
+func evaluateOnAllFrames(script string) Action {
+	return ActionFunc(func(ctx context.Context) error {
+		c := FromContext(ctx)
+
+		c.Target.frameMu.RLock()
+		actions := make([]Action, 0, len(c.Target.execContexts))
+		for _, executionContextID := range c.Target.execContexts {
+			actions = append(actions, Evaluate(script, nil, func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
+				return p.WithContextID(executionContextID)
+			}))
+		}
+		c.Target.frameMu.RUnlock()
+
+		return Tasks(actions).Do(ctx)
 	})
 }
