@@ -22,8 +22,8 @@ type ExposeAction Action
 // Note:
 // 1. This is the lite version of puppeteer's [page.exposeFunction].
 // 2. It adds "chromedpExposeFunc" to the page's window object too.
-// 3. The exposed function survives page navigation until the tab is closed?
-// 4. (iframe?)
+// 3. The exposed function survives page navigation until the tab is closed.
+// 4. It exports the function to all frames on the current page.
 // 5. Avoid exposing multiple funcs with the same name.
 // 6. Maybe you just need runtime.AddBinding.
 //
