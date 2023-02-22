@@ -52,11 +52,6 @@ func init() {
 	}
 	testdataDir = "file://" + path.Join(wd, "testdata")
 
-	allocTempDir, err = os.MkdirTemp("", "chromedp-test")
-	if err != nil {
-		panic(fmt.Sprintf("could not create temp directory: %v", err))
-	}
-
 	// Disabling the GPU helps portability with some systems like Travis,
 	// and can slightly speed up the tests on other systems.
 	allocOpts = append(allocOpts, DisableGPU)
@@ -90,13 +85,6 @@ func TestMain(m *testing.M) {
 
 	code := m.Run()
 	cancel()
-
-	if infos, _ := os.ReadDir(allocTempDir); len(infos) > 0 {
-		os.RemoveAll(allocTempDir)
-		panic(fmt.Sprintf("leaked %d temporary dirs under %s", len(infos), allocTempDir))
-	} else {
-		os.Remove(allocTempDir)
-	}
 
 	os.Exit(code)
 }
