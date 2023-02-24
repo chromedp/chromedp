@@ -280,10 +280,7 @@ func TestNavigateContextTimeout(t *testing.T) {
 	// Navigate shouldn't block waiting for the load to finish, which may
 	// not come as the target is cancelled.
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		go func() {
-			time.Sleep(time.Millisecond)
-			cancel()
-		}()
+		time.AfterFunc(time.Millisecond, cancel)
 	}))
 	defer s.Close()
 
