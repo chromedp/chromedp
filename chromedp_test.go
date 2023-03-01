@@ -333,12 +333,21 @@ func TestConcurrentCancel(t *testing.T) {
 		ExecPath("/do-not-run-chrome"))
 	defer cancel()
 
+	var wg sync.WaitGroup
 	// 50 is enough for 'go test -race' to easily spot issues.
 	for i := 0; i < 50; i++ {
+		wg.Add(2)
 		ctx, cancel := NewContext(allocCtx)
-		go cancel()
-		go Run(ctx)
+		go func() {
+			cancel()
+			wg.Done()
+		}()
+		go func() {
+			_ = Run(ctx)
+			wg.Done()
+		}()
 	}
+	wg.Wait()
 }
 
 func TestListenBrowser(t *testing.T) {
