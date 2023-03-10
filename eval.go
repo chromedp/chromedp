@@ -78,10 +78,10 @@ func parseRemoteObject(v *runtime.RemoteObject, res interface{}) (err error) {
 	value := v.Value
 	if value == nil {
 		rv := reflect.ValueOf(res)
-		if rv.Kind() == reflect.Pointer {
+		if rv.Kind() == reflectPtr {
 			switch rv.Elem().Kind() {
 			// Common kinds that can be nil.
-			case reflect.Pointer, reflect.Map, reflect.Slice:
+			case reflectPtr, reflect.Map, reflect.Slice:
 			// It's weird that res is a pointer to the following kinds,
 			// but they can be nil too.
 			case reflect.Chan, reflect.Func, reflect.Interface:

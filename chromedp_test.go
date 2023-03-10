@@ -30,7 +30,6 @@ import (
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
 	"github.com/ledongthuc/pdf"
-	"golang.org/x/exp/slices"
 )
 
 var (
@@ -903,7 +902,7 @@ func TestBrowserContext(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			disposed := !slices.Contains(ids, want)
+			disposed := !contains(ids, want)
 
 			if disposed != tt.wantDisposed {
 				t.Errorf("browser context disposed = %v, want %v", disposed, tt.wantDisposed)
@@ -925,6 +924,7 @@ func getBrowserContext(tb testing.TB, ctx context.Context) cdp.BrowserContextID 
 	}
 	return id
 }
+
 func TestLargeOutboundMessages(t *testing.T) {
 	t.Parallel()
 
@@ -1520,4 +1520,13 @@ func TestPDFTemplate(t *testing.T) {
 	if !bytes.Equal(buf, want) {
 		t.Errorf("page.PrintToPDF produces unexpected content. got: %q, want: %q", buf, want)
 	}
+}
+
+func contains(v []cdp.BrowserContextID, id cdp.BrowserContextID) bool {
+	for _, i := range v {
+		if i == id {
+			return true
+		}
+	}
+	return false
 }
