@@ -21,14 +21,14 @@ type CallAction Action
 // - WithArguments: pass the arguments with args instead.
 //
 // Note: any exception encountered will be returned as an error.
-func CallFunctionOn(functionDeclaration string, res interface{}, opt CallOption, args ...interface{}) CallAction {
+func CallFunctionOn(functionDeclaration string, res any, opt CallOption, args ...any) CallAction {
 	return ActionFunc(func(ctx context.Context) error {
 		_, err := callFunctionOn(ctx, functionDeclaration, res, opt, args...)
 		return err
 	})
 }
 
-func callFunctionOn(ctx context.Context, functionDeclaration string, res interface{}, opt CallOption, args ...interface{}) (*runtime.RemoteObject, error) {
+func callFunctionOn(ctx context.Context, functionDeclaration string, res any, opt CallOption, args ...any) (*runtime.RemoteObject, error) {
 	// set up parameters
 	p := runtime.CallFunctionOn(functionDeclaration).
 		WithSilent(true)
@@ -83,7 +83,7 @@ type errAppender struct {
 // append method calls the json.Marshal method to marshal the value and appends it to the slice.
 // It records the first error for future reference.
 // As soon as an error occurs, the append method becomes a no-op but the error value is saved.
-func (ea *errAppender) append(v interface{}) {
+func (ea *errAppender) append(v any) {
 	if ea.err != nil {
 		return
 	}

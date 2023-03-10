@@ -23,8 +23,8 @@ type pollTask struct {
 	polling   string        // the polling mode, defaults to "raf" (triggered by requestAnimationFrame)
 	interval  time.Duration // the interval when the poll is triggered by a timer
 	timeout   time.Duration // the poll timeout, defaults to 30 seconds
-	args      []interface{}
-	res       interface{}
+	args      []any
+	res       any
 }
 
 // Do executes the poll task in the browser,
@@ -56,7 +56,7 @@ func (p *pollTask) Do(ctx context.Context) error {
 		t.frameMu.RUnlock()
 	}
 
-	args := make([]interface{}, 0, len(p.args)+3)
+	args := make([]any, 0, len(p.args)+3)
 	args = append(args, p.predicate)
 	if p.interval > 0 {
 		args = append(args, p.interval.Milliseconds())
@@ -109,7 +109,7 @@ func (p *pollTask) Do(ctx context.Context) error {
 // See [PollFunction].
 //
 // [page.waitForFunction]: https://github.com/puppeteer/puppeteer/blob/v8.0.0/docs/api.md#pagewaitforfunctionpagefunction-options-args
-func Poll(expression string, res interface{}, opts ...PollOption) PollAction {
+func Poll(expression string, res any, opts ...PollOption) PollAction {
 	predicate := fmt.Sprintf(`return (%s);`, expression)
 	return poll(predicate, res, opts...)
 }
@@ -118,13 +118,13 @@ func Poll(expression string, res interface{}, opts ...PollOption) PollAction {
 // It builds the predicate from a JavaScript function.
 //
 // See [Poll] for details on building poll tasks.
-func PollFunction(pageFunction string, res interface{}, opts ...PollOption) PollAction {
+func PollFunction(pageFunction string, res any, opts ...PollOption) PollAction {
 	predicate := fmt.Sprintf(`return (%s)(...args);`, pageFunction)
 
 	return poll(predicate, res, opts...)
 }
 
-func poll(predicate string, res interface{}, opts ...PollOption) PollAction {
+func poll(predicate string, res any, opts ...PollOption) PollAction {
 	p := &pollTask{
 		predicate: predicate,
 		polling:   "raf",
@@ -175,7 +175,7 @@ func WithPollingInFrame(frame *cdp.Node) PollOption {
 }
 
 // WithPollingArgs provides extra arguments to pass to the predicate.
-func WithPollingArgs(args ...interface{}) PollOption {
+func WithPollingArgs(args ...any) PollOption {
 	return func(w *pollTask) {
 		w.args = args
 	}

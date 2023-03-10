@@ -37,7 +37,7 @@ type Target struct {
 	cur cdp.FrameID
 
 	// logging funcs
-	logf, errf func(string, ...interface{})
+	logf, errf func(string, ...any)
 
 	// Indicates if the target is a worker target.
 	isWorker bool
@@ -91,7 +91,7 @@ func (t *Target) ensureFrame() (*cdp.Frame, *cdp.Node, runtime.ExecutionContextI
 func (t *Target) run(ctx context.Context) {
 	type eventValue struct {
 		method cdproto.MethodType
-		value  interface{}
+		value  any
 	}
 	// syncEventQueue is used to handle events synchronously within Target.
 	// TODO: If this queue gets full, the goroutine below could get stuck on
@@ -167,7 +167,7 @@ func (t *Target) Execute(ctx context.Context, method string, params easyjson.Mar
 	id := atomic.AddInt64(&t.browser.next, 1)
 	lctx, cancel := context.WithCancel(ctx)
 	ch := make(chan *cdproto.Message, 1)
-	fn := func(ev interface{}) {
+	fn := func(ev any) {
 		if msg, ok := ev.(*cdproto.Message); ok && msg.ID == id {
 			select {
 			case <-ctx.Done():
@@ -219,7 +219,7 @@ func (t *Target) Execute(ctx context.Context, method string, params easyjson.Mar
 }
 
 // runtimeEvent handles incoming runtime events.
-func (t *Target) runtimeEvent(ev interface{}) {
+func (t *Target) runtimeEvent(ev any) {
 	switch ev := ev.(type) {
 	case *runtime.EventExecutionContextCreated:
 		var aux struct {
@@ -289,7 +289,7 @@ func (t *Target) documentUpdated(ctx context.Context) {
 }
 
 // pageEvent handles incoming page events.
-func (t *Target) pageEvent(ev interface{}) {
+func (t *Target) pageEvent(ev any) {
 	var id cdp.FrameID
 	var op frameOp
 
@@ -359,7 +359,7 @@ func (t *Target) pageEvent(ev interface{}) {
 }
 
 // domEvent handles incoming DOM events.
-func (t *Target) domEvent(ctx context.Context, ev interface{}) {
+func (t *Target) domEvent(ctx context.Context, ev any) {
 	f := t.frames[t.cur]
 	var id cdp.NodeID
 	var op nodeOp

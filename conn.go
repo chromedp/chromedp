@@ -37,7 +37,7 @@ type Conn struct {
 	decoder jlexer.Lexer
 	encoder jwriter.Writer
 
-	dbgf func(string, ...interface{})
+	dbgf func(string, ...any)
 }
 
 // DialContext dials the specified websocket URL using gobwas/ws.
@@ -141,7 +141,7 @@ func (c *Conn) Write(_ context.Context, msg *cdproto.Message) error {
 type DialOption = func(*Conn)
 
 // WithConnDebugf is a dial option to set a protocol logger.
-func WithConnDebugf(f func(string, ...interface{})) DialOption {
+func WithConnDebugf(f func(string, ...any)) DialOption {
 	return func(c *Conn) {
 		c.dbgf = f
 	}

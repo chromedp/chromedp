@@ -26,7 +26,7 @@ type QueryAction Action
 // See [Query] for information on building an element selector and relevant
 // options.
 type Selector struct {
-	sel           interface{}
+	sel           any
 	fromNode      *cdp.Node
 	retryInterval time.Duration
 	exp           int
@@ -127,7 +127,7 @@ type Selector struct {
 //
 // The [NodeNotPresent] option causes the query to wait until there are no
 // element nodes matching the selector.
-func Query(sel interface{}, opts ...QueryOption) QueryAction {
+func Query(sel any, opts ...QueryOption) QueryAction {
 	s := &Selector{
 		sel:           sel,
 		exp:           1,
@@ -259,7 +259,7 @@ func (s *Selector) waitReady(check func(context.Context, runtime.ExecutionContex
 // QueryAfter is an element query action that queries the browser for selector
 // sel. Waits until the visibility conditions of the query have been met, after
 // which executes f.
-func QueryAfter(sel interface{}, f func(context.Context, runtime.ExecutionContextID, ...*cdp.Node) error, opts ...QueryOption) QueryAction {
+func QueryAfter(sel any, f func(context.Context, runtime.ExecutionContextID, ...*cdp.Node) error, opts ...QueryOption) QueryAction {
 	return Query(sel, append(opts, After(f))...)
 }
 
@@ -417,7 +417,7 @@ func NodeReady(s *Selector) {
 	WaitFunc(s.waitReady(nil))(s)
 }
 
-func callFunctionOnNode(ctx context.Context, node *cdp.Node, function string, res interface{}, args ...interface{}) error {
+func callFunctionOnNode(ctx context.Context, node *cdp.Node, function string, res any, args ...any) error {
 	r, err := dom.ResolveNode().WithNodeID(node.NodeID).Do(ctx)
 	if err != nil {
 		return err
@@ -576,43 +576,43 @@ func After(f func(context.Context, runtime.ExecutionContextID, ...*cdp.Node) err
 
 // WaitReady is an element query action that waits until the element matching
 // the selector is ready (i.e., has been "loaded").
-func WaitReady(sel interface{}, opts ...QueryOption) QueryAction {
+func WaitReady(sel any, opts ...QueryOption) QueryAction {
 	return Query(sel, opts...)
 }
 
 // WaitVisible is an element query action that waits until the element matching
 // the selector is visible.
-func WaitVisible(sel interface{}, opts ...QueryOption) QueryAction {
+func WaitVisible(sel any, opts ...QueryOption) QueryAction {
 	return Query(sel, append(opts, NodeVisible)...)
 }
 
 // WaitNotVisible is an element query action that waits until the element
 // matching the selector is not visible.
-func WaitNotVisible(sel interface{}, opts ...QueryOption) QueryAction {
+func WaitNotVisible(sel any, opts ...QueryOption) QueryAction {
 	return Query(sel, append(opts, NodeNotVisible)...)
 }
 
 // WaitEnabled is an element query action that waits until the element matching
 // the selector is enabled (i.e., does not have attribute 'disabled').
-func WaitEnabled(sel interface{}, opts ...QueryOption) QueryAction {
+func WaitEnabled(sel any, opts ...QueryOption) QueryAction {
 	return Query(sel, append(opts, NodeEnabled)...)
 }
 
 // WaitSelected is an element query action that waits until the element
 // matching the selector is selected (i.e., has attribute 'selected').
-func WaitSelected(sel interface{}, opts ...QueryOption) QueryAction {
+func WaitSelected(sel any, opts ...QueryOption) QueryAction {
 	return Query(sel, append(opts, NodeSelected)...)
 }
 
 // WaitNotPresent is an element query action that waits until no elements are
 // present matching the selector.
-func WaitNotPresent(sel interface{}, opts ...QueryOption) QueryAction {
+func WaitNotPresent(sel any, opts ...QueryOption) QueryAction {
 	return Query(sel, append(opts, NodeNotPresent)...)
 }
 
 // Nodes is an element query action that retrieves the document element nodes
 // matching the selector.
-func Nodes(sel interface{}, nodes *[]*cdp.Node, opts ...QueryOption) QueryAction {
+func Nodes(sel any, nodes *[]*cdp.Node, opts ...QueryOption) QueryAction {
 	if nodes == nil {
 		panic("nodes cannot be nil")
 	}
@@ -625,7 +625,7 @@ func Nodes(sel interface{}, nodes *[]*cdp.Node, opts ...QueryOption) QueryAction
 
 // NodeIDs is an element query action that retrieves the element node IDs matching the
 // selector.
-func NodeIDs(sel interface{}, ids *[]cdp.NodeID, opts ...QueryOption) QueryAction {
+func NodeIDs(sel any, ids *[]cdp.NodeID, opts ...QueryOption) QueryAction {
 	if ids == nil {
 		panic("nodes cannot be nil")
 	}
@@ -644,7 +644,7 @@ func NodeIDs(sel interface{}, ids *[]cdp.NodeID, opts ...QueryOption) QueryActio
 
 // Focus is an element query action that focuses the first element node matching the
 // selector.
-func Focus(sel interface{}, opts ...QueryOption) QueryAction {
+func Focus(sel any, opts ...QueryOption) QueryAction {
 	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
@@ -656,7 +656,7 @@ func Focus(sel interface{}, opts ...QueryOption) QueryAction {
 
 // Blur is an element query action that unfocuses (blurs) the first element node
 // matching the selector.
-func Blur(sel interface{}, opts ...QueryOption) QueryAction {
+func Blur(sel any, opts ...QueryOption) QueryAction {
 	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
@@ -678,7 +678,7 @@ func Blur(sel interface{}, opts ...QueryOption) QueryAction {
 
 // Dimensions is an element query action that retrieves the box model dimensions for the
 // first element node matching the selector.
-func Dimensions(sel interface{}, model **dom.BoxModel, opts ...QueryOption) QueryAction {
+func Dimensions(sel any, model **dom.BoxModel, opts ...QueryOption) QueryAction {
 	if model == nil {
 		panic("model cannot be nil")
 	}
@@ -694,7 +694,7 @@ func Dimensions(sel interface{}, model **dom.BoxModel, opts ...QueryOption) Quer
 
 // Text is an element query action that retrieves the visible text of the first element
 // node matching the selector.
-func Text(sel interface{}, text *string, opts ...QueryOption) QueryAction {
+func Text(sel any, text *string, opts ...QueryOption) QueryAction {
 	if text == nil {
 		panic("text cannot be nil")
 	}
@@ -710,7 +710,7 @@ func Text(sel interface{}, text *string, opts ...QueryOption) QueryAction {
 
 // TextContent is an element query action that retrieves the text content of the first element
 // node matching the selector.
-func TextContent(sel interface{}, text *string, opts ...QueryOption) QueryAction {
+func TextContent(sel any, text *string, opts ...QueryOption) QueryAction {
 	if text == nil {
 		panic("text cannot be nil")
 	}
@@ -726,7 +726,7 @@ func TextContent(sel interface{}, text *string, opts ...QueryOption) QueryAction
 
 // Clear is an element query action that clears the values of any input/textarea element
 // nodes matching the selector.
-func Clear(sel interface{}, opts ...QueryOption) QueryAction {
+func Clear(sel any, opts ...QueryOption) QueryAction {
 	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
@@ -787,7 +787,7 @@ func Clear(sel interface{}, opts ...QueryOption) QueryAction {
 //
 // Useful for retrieving an element's JavaScript value, namely form, input,
 // textarea, select, or any other element with a '.value' field.
-func Value(sel interface{}, value *string, opts ...QueryOption) QueryAction {
+func Value(sel any, value *string, opts ...QueryOption) QueryAction {
 	if value == nil {
 		panic("value cannot be nil")
 	}
@@ -800,13 +800,13 @@ func Value(sel interface{}, value *string, opts ...QueryOption) QueryAction {
 //
 // Useful for setting an element's JavaScript value, namely form, input,
 // textarea, select, or other element with a '.value' field.
-func SetValue(sel interface{}, value string, opts ...QueryOption) QueryAction {
+func SetValue(sel any, value string, opts ...QueryOption) QueryAction {
 	return SetJavascriptAttribute(sel, "value", value, opts...)
 }
 
 // Attributes is an element query action that retrieves the element attributes for the
 // first element node matching the selector.
-func Attributes(sel interface{}, attributes *map[string]string, opts ...QueryOption) QueryAction {
+func Attributes(sel any, attributes *map[string]string, opts ...QueryOption) QueryAction {
 	if attributes == nil {
 		panic("attributes cannot be nil")
 	}
@@ -835,7 +835,7 @@ func Attributes(sel interface{}, attributes *map[string]string, opts ...QueryOpt
 // all element nodes matching the selector.
 //
 // Note: this should be used with the ByQueryAll query option.
-func AttributesAll(sel interface{}, attributes *[]map[string]string, opts ...QueryOption) QueryAction {
+func AttributesAll(sel any, attributes *[]map[string]string, opts ...QueryOption) QueryAction {
 	if attributes == nil {
 		panic("attributes cannot be nil")
 	}
@@ -861,7 +861,7 @@ func AttributesAll(sel interface{}, attributes *[]map[string]string, opts ...Que
 
 // SetAttributes is an element query action that sets the element attributes for the
 // first element node matching the selector.
-func SetAttributes(sel interface{}, attributes map[string]string, opts ...QueryOption) QueryAction {
+func SetAttributes(sel any, attributes map[string]string, opts ...QueryOption) QueryAction {
 	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return errors.New("expected at least one element")
@@ -879,7 +879,7 @@ func SetAttributes(sel interface{}, attributes map[string]string, opts ...QueryO
 
 // AttributeValue is an element query action that retrieves the element attribute value
 // for the first element node matching the selector.
-func AttributeValue(sel interface{}, name string, value *string, ok *bool, opts ...QueryOption) QueryAction {
+func AttributeValue(sel any, name string, value *string, ok *bool, opts ...QueryOption) QueryAction {
 	if value == nil {
 		panic("value cannot be nil")
 	}
@@ -913,7 +913,7 @@ func AttributeValue(sel interface{}, name string, value *string, ok *bool, opts 
 
 // SetAttributeValue is an element query action that sets the element attribute with
 // name to value for the first element node matching the selector.
-func SetAttributeValue(sel interface{}, name, value string, opts ...QueryOption) QueryAction {
+func SetAttributeValue(sel any, name, value string, opts ...QueryOption) QueryAction {
 	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
@@ -925,7 +925,7 @@ func SetAttributeValue(sel interface{}, name, value string, opts ...QueryOption)
 
 // RemoveAttribute is an element query action that removes the element attribute with
 // name from the first element node matching the selector.
-func RemoveAttribute(sel interface{}, name string, opts ...QueryOption) QueryAction {
+func RemoveAttribute(sel any, name string, opts ...QueryOption) QueryAction {
 	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
@@ -937,7 +937,7 @@ func RemoveAttribute(sel interface{}, name string, opts ...QueryOption) QueryAct
 
 // JavascriptAttribute is an element query action that retrieves the JavaScript
 // attribute for the first element node matching the selector.
-func JavascriptAttribute(sel interface{}, name string, res interface{}, opts ...QueryOption) QueryAction {
+func JavascriptAttribute(sel any, name string, res any, opts ...QueryOption) QueryAction {
 	if res == nil {
 		panic("res cannot be nil")
 	}
@@ -956,7 +956,7 @@ func JavascriptAttribute(sel interface{}, name string, res interface{}, opts ...
 
 // SetJavascriptAttribute is an element query action that sets the JavaScript attribute
 // for the first element node matching the selector.
-func SetJavascriptAttribute(sel interface{}, name, value string, opts ...QueryOption) QueryAction {
+func SetJavascriptAttribute(sel any, name, value string, opts ...QueryOption) QueryAction {
 	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
@@ -977,7 +977,7 @@ func SetJavascriptAttribute(sel interface{}, name, value string, opts ...QueryOp
 
 // OuterHTML is an element query action that retrieves the outer html of the first
 // element node matching the selector.
-func OuterHTML(sel interface{}, html *string, opts ...QueryOption) QueryAction {
+func OuterHTML(sel any, html *string, opts ...QueryOption) QueryAction {
 	if html == nil {
 		panic("html cannot be nil")
 	}
@@ -986,7 +986,7 @@ func OuterHTML(sel interface{}, html *string, opts ...QueryOption) QueryAction {
 
 // InnerHTML is an element query action that retrieves the inner html of the first
 // element node matching the selector.
-func InnerHTML(sel interface{}, html *string, opts ...QueryOption) QueryAction {
+func InnerHTML(sel any, html *string, opts ...QueryOption) QueryAction {
 	if html == nil {
 		panic("html cannot be nil")
 	}
@@ -995,7 +995,7 @@ func InnerHTML(sel interface{}, html *string, opts ...QueryOption) QueryAction {
 
 // Click is an element query action that sends a mouse click event to the first element
 // node matching the selector.
-func Click(sel interface{}, opts ...QueryOption) QueryAction {
+func Click(sel any, opts ...QueryOption) QueryAction {
 	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
@@ -1007,7 +1007,7 @@ func Click(sel interface{}, opts ...QueryOption) QueryAction {
 
 // DoubleClick is an element query action that sends a mouse double click event to the
 // first element node matching the selector.
-func DoubleClick(sel interface{}, opts ...QueryOption) QueryAction {
+func DoubleClick(sel any, opts ...QueryOption) QueryAction {
 	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
@@ -1027,7 +1027,7 @@ func DoubleClick(sel interface{}, opts ...QueryOption) QueryAction {
 // dom.SetFileInputFiles is used to set the upload path of the input node to v.
 //
 // [keys]: https://github.com/chromedp/examples/tree/master/keys
-func SendKeys(sel interface{}, v string, opts ...QueryOption) QueryAction {
+func SendKeys(sel any, v string, opts ...QueryOption) QueryAction {
 	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
@@ -1056,7 +1056,7 @@ func SendKeys(sel interface{}, v string, opts ...QueryOption) QueryAction {
 
 // SetUploadFiles is an element query action that sets the files to upload (i.e., for a
 // input[type="file"] node) for the first element node matching the selector.
-func SetUploadFiles(sel interface{}, files []string, opts ...QueryOption) QueryAction {
+func SetUploadFiles(sel any, files []string, opts ...QueryOption) QueryAction {
 	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
@@ -1068,7 +1068,7 @@ func SetUploadFiles(sel interface{}, files []string, opts ...QueryOption) QueryA
 
 // Submit is an element query action that submits the parent form of the first element
 // node matching the selector.
-func Submit(sel interface{}, opts ...QueryOption) QueryAction {
+func Submit(sel any, opts ...QueryOption) QueryAction {
 	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
@@ -1090,7 +1090,7 @@ func Submit(sel interface{}, opts ...QueryOption) QueryAction {
 
 // Reset is an element query action that resets the parent form of the first element
 // node matching the selector.
-func Reset(sel interface{}, opts ...QueryOption) QueryAction {
+func Reset(sel any, opts ...QueryOption) QueryAction {
 	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
@@ -1112,7 +1112,7 @@ func Reset(sel interface{}, opts ...QueryOption) QueryAction {
 
 // ComputedStyle is an element query action that retrieves the computed style of the
 // first element node matching the selector.
-func ComputedStyle(sel interface{}, style *[]*css.ComputedStyleProperty, opts ...QueryOption) QueryAction {
+func ComputedStyle(sel any, style *[]*css.ComputedStyleProperty, opts ...QueryOption) QueryAction {
 	if style == nil {
 		panic("style cannot be nil")
 	}
@@ -1135,7 +1135,7 @@ func ComputedStyle(sel interface{}, style *[]*css.ComputedStyleProperty, opts ..
 
 // MatchedStyle is an element query action that retrieves the matched style information
 // for the first element node matching the selector.
-func MatchedStyle(sel interface{}, style **css.GetMatchedStylesForNodeReturns, opts ...QueryOption) QueryAction {
+func MatchedStyle(sel any, style **css.GetMatchedStylesForNodeReturns, opts ...QueryOption) QueryAction {
 	if style == nil {
 		panic("style cannot be nil")
 	}
@@ -1161,7 +1161,7 @@ func MatchedStyle(sel interface{}, style **css.GetMatchedStylesForNodeReturns, o
 
 // ScrollIntoView is an element query action that scrolls the window to the
 // first element node matching the selector.
-func ScrollIntoView(sel interface{}, opts ...QueryOption) QueryAction {
+func ScrollIntoView(sel any, opts ...QueryOption) QueryAction {
 	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)

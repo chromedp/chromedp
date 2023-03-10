@@ -61,9 +61,9 @@ type Browser struct {
 	cmdQueue chan *cdproto.Message
 
 	// logging funcs
-	logf func(string, ...interface{})
-	errf func(string, ...interface{})
-	dbgf func(string, ...interface{})
+	logf func(string, ...any)
+	errf func(string, ...any)
+	dbgf func(string, ...any)
 
 	// The optional fields below are helpful for some tests.
 
@@ -98,7 +98,7 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 	}
 	// ensure errf is set
 	if b.errf == nil {
-		b.errf = func(s string, v ...interface{}) { b.logf("ERROR: "+s, v...) }
+		b.errf = func(s string, v ...any) { b.logf("ERROR: "+s, v...) }
 	}
 
 	dialCtx := ctx
@@ -178,7 +178,7 @@ func (b *Browser) execute(ctx context.Context, method string, params easyjson.Ma
 	id := atomic.AddInt64(&b.next, 1)
 	lctx, cancel := context.WithCancel(ctx)
 	ch := make(chan *cdproto.Message, 1)
-	fn := func(ev interface{}) {
+	fn := func(ev any) {
 		if msg, ok := ev.(*cdproto.Message); ok && msg.ID == id {
 			select {
 			case <-ctx.Done():
@@ -330,25 +330,25 @@ func (b *Browser) run(ctx context.Context) {
 type BrowserOption = func(*Browser)
 
 // WithBrowserLogf is a browser option to specify a func to receive general logging.
-func WithBrowserLogf(f func(string, ...interface{})) BrowserOption {
+func WithBrowserLogf(f func(string, ...any)) BrowserOption {
 	return func(b *Browser) { b.logf = f }
 }
 
 // WithBrowserErrorf is a browser option to specify a func to receive error logging.
-func WithBrowserErrorf(f func(string, ...interface{})) BrowserOption {
+func WithBrowserErrorf(f func(string, ...any)) BrowserOption {
 	return func(b *Browser) { b.errf = f }
 }
 
 // WithBrowserDebugf is a browser option to specify a func to log actual
 // websocket messages.
-func WithBrowserDebugf(f func(string, ...interface{})) BrowserOption {
+func WithBrowserDebugf(f func(string, ...any)) BrowserOption {
 	return func(b *Browser) { b.dbgf = f }
 }
 
 // WithConsolef is a browser option to specify a func to receive chrome log events.
 //
 // Note: NOT YET IMPLEMENTED.
-func WithConsolef(f func(string, ...interface{})) BrowserOption {
+func WithConsolef(f func(string, ...any)) BrowserOption {
 	return func(b *Browser) {}
 }
 

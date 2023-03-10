@@ -243,7 +243,7 @@ func ExampleListenTarget_consoleLog() {
 	defer ts.Close()
 
 	gotException := make(chan bool, 1)
-	chromedp.ListenTarget(ctx, func(ev interface{}) {
+	chromedp.ListenTarget(ctx, func(ev any) {
 		switch ev := ev.(type) {
 		case *runtime.EventConsoleAPICalled:
 			fmt.Printf("* console.%s call:\n", ev.Type)
@@ -325,7 +325,7 @@ func ExampleListenTarget_acceptAlert() {
 	`))
 	defer ts.Close()
 
-	chromedp.ListenTarget(ctx, func(ev interface{}) {
+	chromedp.ListenTarget(ctx, func(ev any) {
 		if ev, ok := ev.(*page.EventJavascriptDialogOpening); ok {
 			fmt.Println("closing alert:", ev.Message)
 			go func() {
