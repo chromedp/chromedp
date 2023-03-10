@@ -839,9 +839,6 @@ func TestSetAttributes(t *testing.T) {
 				t.Fatalf("got error: %v", err)
 			}
 
-			// TODO: figure why this test is flaky without this
-			time.Sleep(10 * time.Millisecond)
-
 			var attrs map[string]string
 			if err := Run(ctx, Attributes(test.sel, &attrs, test.by)); err != nil {
 				t.Fatalf("got error: %v", err)
@@ -916,9 +913,6 @@ func TestSetAttributeValue(t *testing.T) {
 				t.Fatalf("got error: %v", err)
 			}
 
-			// TODO: figure why this test is flaky without this
-			time.Sleep(10 * time.Millisecond)
-
 			var value string
 			var ok bool
 			if err := Run(ctx, AttributeValue(test.sel, test.attr, &value, &ok, test.by)); err != nil {
@@ -960,9 +954,6 @@ func TestRemoveAttribute(t *testing.T) {
 			if err := Run(ctx, RemoveAttribute(test.sel, test.attr, test.by)); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
-
-			// TODO: figure why this test is flaky without this
-			time.Sleep(10 * time.Millisecond)
 
 			var value string
 			var ok bool
