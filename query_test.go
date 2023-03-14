@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"reflect"
 	"runtime"
 	"strings"
@@ -1245,25 +1246,16 @@ func TestFileUpload(t *testing.T) {
 	s := httptest.NewServer(mux)
 	defer s.Close()
 
-	// create temporary file on disk
-	tmpfile, err := os.CreateTemp("", "chromedp-upload-test")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.Remove(tmpfile.Name())
-	defer tmpfile.Close()
-	if _, err := tmpfile.WriteString(uploadHTML); err != nil {
-		t.Fatal(err)
-	}
-	if err := tmpfile.Close(); err != nil {
+	uploadFile := filepath.Join(t.TempDir(), "chromedp-upload-test")
+	if err := os.WriteFile(uploadFile, []byte(uploadHTML), 0o666); err != nil {
 		t.Fatal(err)
 	}
 
 	tests := []struct {
 		a Action
 	}{
-		{SendKeys(`input[name="upload"]`, tmpfile.Name(), NodeVisible)},
-		{SetUploadFiles(`input[name="upload"]`, []string{tmpfile.Name()}, NodeVisible)},
+		{SendKeys(`input[name="upload"]`, uploadFile, NodeVisible)},
+		{SetUploadFiles(`input[name="upload"]`, []string{uploadFile}, NodeVisible)},
 	}
 
 	// Don't run these tests in parallel. The only way to do so would be to
