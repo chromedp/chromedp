@@ -87,7 +87,7 @@ var DefaultExecAllocatorOptions = [...]ExecAllocatorOption{
 // for use with NewContext.
 func NewExecAllocator(parent context.Context, opts ...ExecAllocatorOption) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(parent)
-	c := &Context{Allocator: setupExecAllocator(opts...), cancel: cancel}
+	c := &Context{Allocator: setupExecAllocator(opts...)}
 
 	ctx = context.WithValue(ctx, contextKey{}, c)
 	cancelWait := func() {
@@ -535,9 +535,9 @@ func NewRemoteAllocator(parent context.Context, url string, opts ...RemoteAlloca
 	for _, o := range opts {
 		o(a)
 	}
+	c := &Context{Allocator: a}
 
 	ctx, cancel := context.WithCancel(parent)
-	c := &Context{Allocator: a, cancel: cancel}
 	ctx = context.WithValue(ctx, contextKey{}, c)
 	return ctx, cancel
 }
