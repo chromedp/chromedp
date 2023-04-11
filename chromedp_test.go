@@ -261,8 +261,6 @@ func TestCancelError(t *testing.T) {
 		t.Fatalf("expected a nil error, got %v", err)
 	}
 
-	allocCtx, allocCancel := NewExecAllocator(context.Background(), allocOpts...)
-	defer allocCancel()
 	if err := Cancel(allocCtx); err != ErrInvalidContext {
 		t.Fatalf("want error %q, got %q", ErrInvalidContext, err)
 	}
