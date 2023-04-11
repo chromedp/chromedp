@@ -244,7 +244,7 @@ func FromContext(ctx context.Context) *Context {
 // underlying errors happening during cancellation.
 func Cancel(ctx context.Context) error {
 	c := FromContext(ctx)
-	if c == nil {
+	if c == nil || c.cancel == nil {
 		return ErrInvalidContext
 	}
 	graceful := c.first && c.Browser != nil
