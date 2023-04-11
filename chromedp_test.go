@@ -261,6 +261,12 @@ func TestCancelError(t *testing.T) {
 		t.Fatalf("expected a nil error, got %v", err)
 	}
 
+	allocCtx, allocCancel := NewExecAllocator(context.Background(), allocOpts...)
+	defer allocCancel()
+	if err := Cancel(allocCtx); err != ErrInvalidContext {
+		t.Fatalf("want error %q, got %q", ErrInvalidContext, err)
+	}
+
 	/*
 		// NOTE: the following test no longer is applicable, as a slight change
 		// to chromium's 89 API deprecated the boolean return value
