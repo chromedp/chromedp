@@ -244,7 +244,9 @@ func FromContext(ctx context.Context) *Context {
 // underlying errors happening during cancellation.
 func Cancel(ctx context.Context) error {
 	c := FromContext(ctx)
-	if c == nil {
+	// c.cancel is nil when Cancel is wrongly called with a context returned
+	// by chromedp.NewExecAllocator or chromedp.NewRemoteAllocator.
+	if c == nil || c.cancel == nil {
 		return ErrInvalidContext
 	}
 	graceful := c.first && c.Browser != nil
