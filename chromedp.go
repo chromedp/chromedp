@@ -351,7 +351,9 @@ func (c *Context) newTarget(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
+			c.Target.frameMu.Lock()
 			c.Target.frames[tree.Frame.ID] = tree.Frame
+			c.Target.frameMu.Unlock()
 			c.Target.cur = tree.Frame.ID
 			c.Target.documentUpdated(ctx)
 		}
