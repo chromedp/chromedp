@@ -623,9 +623,9 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 
 		// Obtain frameID from the target.
 		c := FromContext(ctx)
-		c.Target.frameMu.Lock()
+		c.Target.frameMu.RLock()
 		frameID = c.Target.cur
-		c.Target.frameMu.Unlock()
+		c.Target.frameMu.RUnlock()
 
 		ListenTarget(lctx, func(ev interface{}) {
 			if loaderID != "" {
