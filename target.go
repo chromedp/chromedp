@@ -28,7 +28,7 @@ type Target struct {
 
 	messageQueue chan *cdproto.Message
 
-	// frameMu protects both frames and cur.
+	// frameMu protects frames, execContexts, and cur.
 	frameMu sync.RWMutex
 	// frames is the set of encountered frames.
 	frames       map[cdp.FrameID]*cdp.Frame
