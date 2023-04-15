@@ -351,8 +351,12 @@ func (c *Context) newTarget(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
+
+			c.Target.frameMu.Lock()
 			c.Target.frames[tree.Frame.ID] = tree.Frame
 			c.Target.cur = tree.Frame.ID
+			c.Target.frameMu.Unlock()
+
 			c.Target.documentUpdated(ctx)
 		}
 		return nil
@@ -619,9 +623,9 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 
 		// Obtain frameID from the target.
 		c := FromContext(ctx)
-		c.Target.frameMu.Lock()
+		c.Target.frameMu.RLock()
 		frameID = c.Target.cur
-		c.Target.frameMu.Unlock()
+		c.Target.frameMu.RUnlock()
 
 		ListenTarget(lctx, func(ev interface{}) {
 			if loaderID != "" {
