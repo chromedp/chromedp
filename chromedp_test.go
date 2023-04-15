@@ -138,8 +138,7 @@ func testAllocateSeparate(tb testing.TB) (context.Context, context.CancelFunc) {
 		tb.Fatal(err)
 	}
 	ListenBrowser(ctx, func(ev interface{}) {
-		switch ev := ev.(type) {
-		case *runtime.EventExceptionThrown:
+		if ev, ok := ev.(*runtime.EventExceptionThrown); ok {
 			tb.Errorf("%+v\n", ev.ExceptionDetails)
 		}
 	})

@@ -456,7 +456,7 @@ func TestStartsWithNonBlankTab(t *testing.T) {
 	t.Parallel()
 
 	allocCtx, cancel := NewExecAllocator(context.Background(),
-		append(allocOpts[:],
+		append(allocOpts,
 			ModifyCmdFunc(func(cmd *exec.Cmd) {
 				// it assumes that the last argument is "about:blank" and
 				// replace it with other URL.

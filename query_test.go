@@ -227,7 +227,7 @@ func TestRetryInterval(t *testing.T) {
 			// only after the number of result nodes >= s.exp .
 			count := WaitFunc(
 				func(ctx context.Context, f *cdp.Frame, eci cdpruntime.ExecutionContextID, ni ...cdp.NodeID) ([]*cdp.Node, error) {
-					retryCount += 1
+					retryCount++
 					return nil, ErrInvalidTarget
 				},
 			)
