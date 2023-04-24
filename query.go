@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/css"
 	"github.com/chromedp/cdproto/dom"
@@ -189,7 +190,20 @@ func (s *Selector) Do(ctx context.Context) error {
 		}
 
 		ids, err := s.by(ctx, fromNode)
-		if err != nil || len(ids) < s.exp {
+		if err != nil {
+			var e *cdproto.Error
+			// When the selector is invalid (for example, "#a:b" or "#3"), it will
+			// always fail with "DOM Error while querying". It does not make sense
+			// to retry in this case.
+			// Maybe "DOM Error while querying" is also used for other errors other
+			// than invalid selector. But the response does not contain anything
+			// else that can be used to distinguish them. So we have to go with it.
+			if errors.As(err, &e) && e.Message == "DOM Error while querying" {
+				return true, err
+			}
+			return false, nil
+		}
+		if len(ids) < s.exp {
 			return false, nil
 		}
 		nodes, err := s.wait(ctx, frame, execCtx, ids...)
