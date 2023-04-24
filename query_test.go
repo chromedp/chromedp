@@ -251,6 +251,36 @@ func TestRetryInterval(t *testing.T) {
 	}
 }
 
+func TestNoRetryForInvalidSelector(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "table.html")
+	defer cancel()
+
+	ctx, cancel = context.WithTimeout(ctx, time.Second)
+	defer cancel()
+
+	tests := []struct {
+		name    string
+		sel     string
+		by      QueryOption
+		wantErr string
+	}{
+		{`pseudo class`, `#a:b`, ByQuery, "DOM Error while querying (-32000)"},
+		{`leading number`, `#3`, ByQuery, "DOM Error while querying (-32000)"},
+		{`empty selector`, ``, ByQuery, "DOM Error while querying (-32000)"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var nodes []*cdp.Node
+			if err := Run(ctx, Nodes(test.sel, &nodes, test.by)); err.Error() != test.wantErr {
+				t.Fatalf("want error %v, got error: %v", test.wantErr, err)
+			}
+		})
+	}
+}
+
 func TestByJSPath(t *testing.T) {
 	t.Parallel()
 
