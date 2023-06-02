@@ -90,6 +90,9 @@ type Context struct {
 	// entire browser and its handler, and not just a portion of its pages.
 	first bool
 
+	// preventTargetClose preventing target close on context close
+	preventTargetClose bool
+
 	// closedTarget allows waiting for a target's page to be closed on
 	// cancellation.
 	closedTarget sync.WaitGroup
@@ -196,8 +199,9 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 				c.cancelErr = err
 			}
 		}
-		if id := c.Target.TargetID; id != "" {
-			action := target.CloseTarget(id)
+		targetID := c.Target.TargetID
+		if !c.preventTargetClose && targetID != "" {
+			action := target.CloseTarget(targetID)
 			if err := action.Do(browserExecutor); c.cancelErr == nil && err != nil {
 				c.cancelErr = err
 			}
@@ -481,6 +485,11 @@ type ContextOption = func(*Context)
 // of creating a new one.
 func WithTargetID(id target.ID) ContextOption {
 	return func(c *Context) { c.targetID = id }
+}
+
+// WithPreventTargetClose preventing target close on context close
+func WithPreventTargetClose() ContextOption {
+	return func(c *Context) { c.preventTargetClose = true }
 }
 
 // CreateBrowserContextOption is a BrowserContext creation options.
