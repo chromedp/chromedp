@@ -1329,6 +1329,16 @@ func TestRunResponse(t *testing.T) {
 			if want := test.wantStatus; want != 0 && status != want {
 				t.Fatalf("wanted status code %d, got %d", want, status)
 			}
+
+			if resp != nil {
+				latency := time.Since(resp.ResponseTime.Time())
+				if latency > time.Hour || latency < -time.Hour {
+					t.Errorf("responseTime does not hold a reasonable value %s. "+
+						"Maybe it's in seconds now and we should remove the workaround. "+
+						"See https://github.com/chromedp/pdlgen/issues/22.",
+						resp.ResponseTime.Time())
+				}
+			}
 		}
 		t.Run("Navigate"+test.name, func(t *testing.T) {
 			t.Parallel()
