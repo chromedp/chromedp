@@ -53,7 +53,7 @@ func DialContext(ctx context.Context, urlstr string, opts ...DialOption) (*Conn,
 
 	// connect
 	dialer := ws.Dialer{
-		Header: ws.HandshakeHeaderHTTP{c.header},
+		Header: ws.HandshakeHeaderHTTP(c.header),
 	}
 
 	conn, br, _, err := dialer.Dial(ctx, urlstr)
