@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -42,7 +43,7 @@ type Browser struct {
 
 	dialTimeout time.Duration
 
-	dialOptions []DialOption
+	dialHeader http.Header
 
 	// pages keeps track of the attached targets, indexed by each's session
 	// ID. The only reason this is a field is so that the tests can check the
@@ -111,7 +112,7 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 	}
 
 	var err error
-	b.conn, err = DialContext(dialCtx, urlstr, append(b.dialOptions, WithConnDebugf(b.dbgf))...)
+	b.conn, err = DialContext(dialCtx, urlstr, b.dialHeader, WithConnDebugf(b.dbgf))
 	if err != nil {
 		return nil, fmt.Errorf("could not dial %q: %w", urlstr, err)
 	}
@@ -361,6 +362,13 @@ func WithDialTimeout(d time.Duration) BrowserOption {
 	return func(b *Browser) { b.dialTimeout = d }
 }
 
-func WithDialOptions(dialOpts ...DialOption) BrowserOption {
-	return func(b *Browser) { b.dialOptions = append(b.dialOptions, dialOpts...) }
+func WithDialHeader(header http.Header) BrowserOption {
+	return func(b *Browser) {
+		if b.dialHeader == nil {
+			b.dialHeader = make(http.Header)
+		}
+		for k, v := range header {
+			b.dialHeader[k] = v
+		}
+	}
 }
