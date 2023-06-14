@@ -42,6 +42,8 @@ type Browser struct {
 
 	dialTimeout time.Duration
 
+	dialOptions []DialOption
+
 	// pages keeps track of the attached targets, indexed by each's session
 	// ID. The only reason this is a field is so that the tests can check the
 	// map once a browser is closed.
@@ -109,7 +111,7 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 	}
 
 	var err error
-	b.conn, err = DialContext(dialCtx, urlstr, WithConnDebugf(b.dbgf))
+	b.conn, err = DialContext(dialCtx, urlstr, append(b.dialOptions, WithConnDebugf(b.dbgf))...)
 	if err != nil {
 		return nil, fmt.Errorf("could not dial %q: %w", urlstr, err)
 	}
@@ -357,4 +359,8 @@ func WithConsolef(f func(string, ...interface{})) BrowserOption {
 // to not use a timeout.
 func WithDialTimeout(d time.Duration) BrowserOption {
 	return func(b *Browser) { b.dialTimeout = d }
+}
+
+func WithDialOptions(dialOpts ...DialOption) BrowserOption {
+	return func(b *Browser) { b.dialOptions = append(b.dialOptions, dialOpts...) }
 }

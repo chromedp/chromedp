@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"net"
+	"net/http"
 
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
@@ -33,6 +34,8 @@ type Conn struct {
 	reader wsutil.Reader
 	writer wsutil.Writer
 
+	header http.Header
+
 	// reuse the easyjson structs to avoid allocs per Read/Write.
 	decoder jlexer.Lexer
 	encoder jwriter.Writer
@@ -42,8 +45,18 @@ type Conn struct {
 
 // DialContext dials the specified websocket URL using gobwas/ws.
 func DialContext(ctx context.Context, urlstr string, opts ...DialOption) (*Conn, error) {
+	// we apply options prematurely just to get the header information which we need before the connection is established
+	c := &Conn{}
+	for _, o := range opts {
+		o(c)
+	}
+
 	// connect
-	conn, br, _, err := ws.Dial(ctx, urlstr)
+	dialer := ws.Dialer{
+		Header: ws.HandshakeHeaderHTTP{c.header},
+	}
+
+	conn, br, _, err := dialer.Dial(ctx, urlstr)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +65,7 @@ func DialContext(ctx context.Context, urlstr string, opts ...DialOption) (*Conn,
 	}
 
 	// apply opts
-	c := &Conn{
+	c = &Conn{
 		conn: conn,
 		// pass 0 to use the default initial buffer size (4KiB).
 		// github.com/gobwas/ws will grow the buffer size if needed.
@@ -144,5 +157,16 @@ type DialOption = func(*Conn)
 func WithConnDebugf(f func(string, ...interface{})) DialOption {
 	return func(c *Conn) {
 		c.dbgf = f
+	}
+}
+
+func WithDialHeader(header http.Header) DialOption {
+	return func(c *Conn) {
+		if c.header == nil {
+			c.header = make(http.Header)
+		}
+		for k, v := range header {
+			c.header[k] = v
+		}
 	}
 }
