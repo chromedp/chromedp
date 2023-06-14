@@ -95,6 +95,8 @@ func modifyURL(ctx context.Context, urlstr string) (string, error) {
 
 	// to get "webSocketDebuggerUrl" in the response
 	req, err := http.NewRequestWithContext(lctx, "GET", u.String(), nil)
+	req.Header = FromContext(ctx).Allocator.getDialHeader()
+
 	if err != nil {
 		return "", err
 	}

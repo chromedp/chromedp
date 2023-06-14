@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -30,6 +31,8 @@ type Allocator interface {
 	// Cancelling the allocator context will already perform this operation,
 	// so normally there's no need to call Wait directly.
 	Wait()
+
+	getDialHeader() http.Header
 }
 
 // setupExecAllocator is similar to NewExecAllocator, but it allows NewContext
@@ -327,6 +330,10 @@ func (a *ExecAllocator) Wait() {
 	a.wg.Wait()
 }
 
+func (a *ExecAllocator) getDialHeader() http.Header {
+	return nil
+}
+
 // ExecPath returns an ExecAllocatorOption which uses the given path to execute
 // browser processes. The given path can be an absolute path to a binary, or
 // just the name of the program to find via exec.LookPath.
@@ -552,6 +559,8 @@ type RemoteAllocator struct {
 	modifyURLFunc func(ctx context.Context, wsURL string) (string, error)
 
 	wg sync.WaitGroup
+
+	dialHeader http.Header
 }
 
 // Allocate satisfies the Allocator interface.
@@ -583,6 +592,7 @@ func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (
 		a.wg.Done()
 	}()
 
+	opts = append(opts, WithDialHeaderBrowser(FromContext(ctx).Allocator.getDialHeader()))
 	browser, err := NewBrowser(wctx, wsURL, opts...)
 	if err != nil {
 		return nil, err
@@ -605,8 +615,23 @@ func (a *RemoteAllocator) Wait() {
 	a.wg.Wait()
 }
 
+func (a *RemoteAllocator) getDialHeader() http.Header {
+	return a.dialHeader
+}
+
 // NoModifyURL is a RemoteAllocatorOption that prevents the remote allocator
 // from modifying the websocket debugger URL passed to it.
 func NoModifyURL(a *RemoteAllocator) {
 	a.modifyURLFunc = nil
+}
+
+func WithDialHeader(h http.Header) RemoteAllocatorOption {
+	return func(a *RemoteAllocator) {
+		if a.dialHeader == nil {
+			a.dialHeader = make(http.Header)
+		}
+		for k, v := range h {
+			a.dialHeader[k] = v
+		}
+	}
 }

@@ -44,6 +44,7 @@ type Conn struct {
 // DialContext dials the specified websocket URL using gobwas/ws.
 func DialContext(ctx context.Context, urlstr string, header http.Header, opts ...DialOption) (*Conn, error) {
 	// connect
+	// h := FromContext(ctx).Allocator.getDialHeader()
 	dialer := ws.Dialer{
 		Header: ws.HandshakeHeaderHTTP(header),
 	}

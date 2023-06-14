@@ -42,8 +42,7 @@ type Browser struct {
 	closingGracefully chan struct{}
 
 	dialTimeout time.Duration
-
-	dialHeader http.Header
+	dialHeader  http.Header
 
 	// pages keeps track of the attached targets, indexed by each's session
 	// ID. The only reason this is a field is so that the tests can check the
@@ -362,7 +361,10 @@ func WithDialTimeout(d time.Duration) BrowserOption {
 	return func(b *Browser) { b.dialTimeout = d }
 }
 
-func WithDialHeader(header http.Header) BrowserOption {
+func WithDialHeaderBrowser(header http.Header) BrowserOption {
+	if header == nil {
+		return func(b *Browser) {}
+	}
 	return func(b *Browser) {
 		if b.dialHeader == nil {
 			b.dialHeader = make(http.Header)
