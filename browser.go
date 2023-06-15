@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -78,7 +79,7 @@ type Browser struct {
 
 // NewBrowser creates a new browser. Typically, this function wouldn't be called
 // directly, as the Allocator interface takes care of it.
-func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Browser, error) {
+func NewBrowser(ctx context.Context, urlstr string, header http.Header, opts ...BrowserOption) (*Browser, error) {
 	b := &Browser{
 		LostConnection:    make(chan struct{}),
 		closingGracefully: make(chan struct{}),
@@ -109,7 +110,7 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 	}
 
 	var err error
-	b.conn, err = DialContext(dialCtx, urlstr, WithConnDebugf(b.dbgf))
+	b.conn, err = DialContext(dialCtx, urlstr, header, WithConnDebugf(b.dbgf))
 	if err != nil {
 		return nil, fmt.Errorf("could not dial %q: %w", urlstr, err)
 	}

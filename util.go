@@ -67,7 +67,7 @@ func resolveHost(ctx context.Context, host string) (string, error) {
 //   - ws://127.0.0.1:9222/
 //   - http://127.0.0.1:9222/
 //   - http://container-name:9222/
-func modifyURL(ctx context.Context, urlstr string) (string, error) {
+func modifyURL(ctx context.Context, urlstr string, header http.Header) (string, error) {
 	lctx, cancel := context.WithTimeout(ctx, 20*time.Second)
 	defer cancel()
 
@@ -98,6 +98,7 @@ func modifyURL(ctx context.Context, urlstr string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	req.Header = header
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", err

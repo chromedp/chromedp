@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -256,7 +257,7 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		return nil, err
 	}
 
-	browser, err := NewBrowser(ctx, wsURL, opts...)
+	browser, err := NewBrowser(ctx, wsURL, nil, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -525,11 +526,12 @@ func WSURLReadTimeout(t time.Duration) ExecAllocatorOption {
 // Because the allocator won't try to modify it and it's obviously invalid.
 //
 // Use chromedp.NoModifyURL to prevent it from modifying the url.
-func NewRemoteAllocator(parent context.Context, url string, opts ...RemoteAllocatorOption) (context.Context, context.CancelFunc) {
+func NewRemoteAllocator(parent context.Context, url string, header http.Header, opts ...RemoteAllocatorOption) (context.Context, context.CancelFunc) {
 	a := &RemoteAllocator{
-		wsURL: url,
-		modifyURLFunc: func(ctx context.Context, wsURL string) (string, error) {
-			return modifyURL(ctx, wsURL)
+		wsURL:    url,
+		wsHeader: header,
+		modifyURLFunc: func(ctx context.Context, wsURL string, wsHeader http.Header) (string, error) {
+			return modifyURL(ctx, wsURL, wsHeader)
 		},
 	}
 	for _, o := range opts {
@@ -549,7 +551,8 @@ type RemoteAllocatorOption = func(*RemoteAllocator)
 // process via a websocket URL.
 type RemoteAllocator struct {
 	wsURL         string
-	modifyURLFunc func(ctx context.Context, wsURL string) (string, error)
+	wsHeader      http.Header
+	modifyURLFunc func(ctx context.Context, wsURL string, wsHeader http.Header) (string, error)
 
 	wg sync.WaitGroup
 }
@@ -561,10 +564,10 @@ func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (
 		return nil, ErrInvalidContext
 	}
 
-	wsURL := a.wsURL
+	wsURL, wsHeader := a.wsURL, a.wsHeader
 	var err error
 	if a.modifyURLFunc != nil {
-		wsURL, err = a.modifyURLFunc(ctx, wsURL)
+		wsURL, err = a.modifyURLFunc(ctx, wsURL, wsHeader)
 		if err != nil {
 			return nil, fmt.Errorf("failed to modify wsURL: %w", err)
 		}
@@ -583,7 +586,7 @@ func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (
 		a.wg.Done()
 	}()
 
-	browser, err := NewBrowser(wctx, wsURL, opts...)
+	browser, err := NewBrowser(wctx, wsURL, wsHeader, opts...)
 	if err != nil {
 		return nil, err
 	}

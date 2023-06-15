@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"net"
+	"net/http"
 
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
@@ -41,9 +42,12 @@ type Conn struct {
 }
 
 // DialContext dials the specified websocket URL using gobwas/ws.
-func DialContext(ctx context.Context, urlstr string, opts ...DialOption) (*Conn, error) {
+func DialContext(ctx context.Context, urlstr string, header http.Header, opts ...DialOption) (*Conn, error) {
 	// connect
-	conn, br, _, err := ws.Dial(ctx, urlstr)
+	dialer := ws.Dialer{
+		Header: ws.HandshakeHeaderHTTP(header),
+	}
+	conn, br, _, err := dialer.Dial(ctx, urlstr)
 	if err != nil {
 		return nil, err
 	}

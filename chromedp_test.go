@@ -493,7 +493,7 @@ func TestDialTimeout(t *testing.T) {
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		_, err = NewBrowser(ctx, url, WithDialTimeout(time.Microsecond))
+		_, err = NewBrowser(ctx, url, nil, WithDialTimeout(time.Microsecond))
 		got, want := fmt.Sprintf("%v", err), "i/o timeout"
 		if !strings.Contains(got, want) {
 			t.Fatalf("got %q, want %q", got, want)
@@ -516,7 +516,7 @@ func TestDialTimeout(t *testing.T) {
 
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		_, err = NewBrowser(ctx, url, WithDialTimeout(0))
+		_, err = NewBrowser(ctx, url, nil, WithDialTimeout(0))
 		got := fmt.Sprintf("%v", err)
 		if !strings.Contains(got, "EOF") && !strings.Contains(got, "connection reset") {
 			t.Fatalf("got %q, want %q or %q", got, "EOF", "connection reset")
@@ -820,7 +820,7 @@ func TestBrowserContext(t *testing.T) {
 				if conn == nil {
 					t.Skip("skip when the remote debugging address is not available")
 				}
-				actx, _ := NewRemoteAllocator(context.Background(), "ws://"+conn.RemoteAddr().String())
+				actx, _ := NewRemoteAllocator(context.Background(), "ws://"+conn.RemoteAddr().String(), nil)
 				ctx, cancel := NewContext(actx, WithExistingBrowserContext(rootBrowserContextID1))
 				if err := Run(ctx); err != nil {
 					t.Fatal(err)
@@ -842,7 +842,7 @@ func TestBrowserContext(t *testing.T) {
 				if conn == nil {
 					t.Skip("skip when the remote debugging address is not available")
 				}
-				actx, _ := NewRemoteAllocator(context.Background(), "ws://"+conn.RemoteAddr().String())
+				actx, _ := NewRemoteAllocator(context.Background(), "ws://"+conn.RemoteAddr().String(), nil)
 				ctx, cancel := NewContext(actx, WithNewBrowserContext())
 				if err := Run(ctx); err != nil {
 					t.Fatal(err)
