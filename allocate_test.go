@@ -157,11 +157,11 @@ func TestRemoteAllocator(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				_, post, err := net.SplitHostPort(u.Host)
+				_, port, err := net.SplitHostPort(u.Host)
 				if err != nil {
 					t.Fatal(err)
 				}
-				u.Host = net.JoinHostPort(h, post)
+				u.Host = net.JoinHostPort(h, port)
 				u.Path = "/"
 				return u.String()
 			},
