@@ -820,7 +820,7 @@ func TestBrowserContext(t *testing.T) {
 				if conn == nil {
 					t.Skip("skip when the remote debugging address is not available")
 				}
-				actx, _ := NewRemoteAllocator(context.Background(), "ws://"+conn.RemoteAddr().String(), nil)
+				actx, _ := NewRemoteAllocator(context.Background(), "ws://"+conn.RemoteAddr().String())
 				ctx, cancel := NewContext(actx, WithExistingBrowserContext(rootBrowserContextID1))
 				if err := Run(ctx); err != nil {
 					t.Fatal(err)
@@ -842,7 +842,7 @@ func TestBrowserContext(t *testing.T) {
 				if conn == nil {
 					t.Skip("skip when the remote debugging address is not available")
 				}
-				actx, _ := NewRemoteAllocator(context.Background(), "ws://"+conn.RemoteAddr().String(), nil)
+				actx, _ := NewRemoteAllocator(context.Background(), "ws://"+conn.RemoteAddr().String())
 				ctx, cancel := NewContext(actx, WithNewBrowserContext())
 				if err := Run(ctx); err != nil {
 					t.Fatal(err)
