@@ -215,7 +215,7 @@ func testRemoteAllocator(t *testing.T, modifyURL func(wsURL string) string, want
 	if err != nil {
 		t.Fatal(err)
 	}
-	allocCtx, allocCancel := NewRemoteAllocator(context.Background(), modifyURL(wsURL), nil, opts...)
+	allocCtx, allocCancel := NewRemoteAllocator(context.Background(), modifyURL(wsURL), opts...)
 	defer allocCancel()
 
 	taskCtx, taskCancel := NewContext(allocCtx,

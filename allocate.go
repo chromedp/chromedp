@@ -257,7 +257,7 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		return nil, err
 	}
 
-	browser, err := NewBrowser(ctx, wsURL, nil, opts...)
+	browser, err := NewBrowser(ctx, wsURL, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -526,7 +526,11 @@ func WSURLReadTimeout(t time.Duration) ExecAllocatorOption {
 // Because the allocator won't try to modify it and it's obviously invalid.
 //
 // Use chromedp.NoModifyURL to prevent it from modifying the url.
-func NewRemoteAllocator(parent context.Context, url string, header http.Header, opts ...RemoteAllocatorOption) (context.Context, context.CancelFunc) {
+func NewRemoteAllocator(parent context.Context, url string, opts ...RemoteAllocatorOption) (context.Context, context.CancelFunc) {
+	return NewRemoteAllocatorWithHeader(parent, url, nil, opts...)
+}
+
+func NewRemoteAllocatorWithHeader(parent context.Context, url string, header http.Header, opts ...RemoteAllocatorOption) (context.Context, context.CancelFunc) {
 	a := &RemoteAllocator{
 		wsURL:    url,
 		wsHeader: header,
@@ -586,7 +590,7 @@ func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (
 		a.wg.Done()
 	}()
 
-	browser, err := NewBrowser(wctx, wsURL, wsHeader, opts...)
+	browser, err := NewBrowserWithHeader(wctx, wsURL, wsHeader, opts...)
 	if err != nil {
 		return nil, err
 	}
