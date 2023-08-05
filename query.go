@@ -329,6 +329,10 @@ func BySearch(s *Selector) {
 			return nil, err
 		}
 
+		defer func() {
+			_ = dom.DiscardSearchResults(id).Do(ctx)
+		}()
+
 		if count < 1 {
 			return []cdp.NodeID{}, nil
 		}
