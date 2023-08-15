@@ -79,6 +79,53 @@ func TestScreenshot(t *testing.T) {
 	}
 }
 
+func TestScreenshotScale(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		sel   string
+		scale float64
+		want  string
+	}{
+		{
+			name:  "padding border",
+			sel:   "#padding-border",
+			scale: 2,
+			want:  "element-padding-border@2x.png",
+		},
+		{
+			name:  "svg",
+			sel:   "#svg-circle",
+			scale: 3,
+			want:  "element-svg@3x.png",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ctx, cancel := testAllocate(t, "screenshot.html")
+			defer cancel()
+
+			var buf []byte
+			if err := Run(ctx,
+				ScreenshotScale(test.sel, test.scale, &buf, ByQuery),
+			); err != nil {
+				t.Fatal(err)
+			}
+			diff, err := matchPixel(buf, test.want)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff != 0 {
+				t.Fatalf("screenshot does not match. diff: %v", diff)
+			}
+		})
+	}
+}
+
 func TestScreenshotHighDPI(t *testing.T) {
 	t.Parallel()
 
