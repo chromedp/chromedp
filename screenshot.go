@@ -30,6 +30,12 @@ import (
 //
 // [screenshot]: https://github.com/chromedp/examples/tree/master/screenshot
 func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) QueryAction {
+	return ScreenshotScale(sel, 1, picbuf, opts...)
+}
+
+// ScreenshotScale is like [Screenshot] but accepts a scale parameter that
+// specifies the page scale factor.
+func ScreenshotScale(sel interface{}, scale float64, picbuf *[]byte, opts ...QueryOption) QueryAction {
 	if picbuf == nil {
 		panic("picbuf cannot be nil")
 	}
@@ -52,9 +58,7 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) QueryActio
 		clip.Width, clip.Height = math.Round(clip.Width+clip.X-x), math.Round(clip.Height+clip.Y-y)
 		clip.X, clip.Y = x, y
 
-		// The next comment is copied from the original code.
-		// This seems to be necessary? Seems to do the right thing regardless of DPI.
-		clip.Scale = 1
+		clip.Scale = scale
 
 		// take screenshot of the box
 		buf, err := page.CaptureScreenshot().
