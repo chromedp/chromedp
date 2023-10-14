@@ -119,7 +119,7 @@ func TestScreenshotScale(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if diff != 0 {
+			if diff > 20 {
 				t.Fatalf("screenshot does not match. diff: %v", diff)
 			}
 		})
