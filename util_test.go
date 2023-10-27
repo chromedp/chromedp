@@ -13,7 +13,7 @@ import (
 	"github.com/chromedp/cdproto/runtime"
 )
 
-// dumpJS is a javascript snippet that dumps the passed element node in the
+// dumpJS is a JavaScript snippet that dumps the passed element node in the
 // same text format as cdproto/cdp/Node.Dump.
 //
 // Used to verify that the DOM tree built by chromedp is the same as what
