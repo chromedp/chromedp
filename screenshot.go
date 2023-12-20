@@ -33,9 +33,38 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) QueryActio
 	return ScreenshotScale(sel, 1, picbuf, opts...)
 }
 
+// ScreenshotWithFormat is a chromedp element query action that captures a screenshot
+// in the specified image format of the first element node matching the selector.
+//
+// It's supposed to act the same as the command "Capture node screenshot" in Chrome.
+//
+// Behavior notes: the Protocol Monitor shows that the command sends the following
+// CDP commands too:
+//   - Emulation.clearDeviceMetricsOverride
+//   - Network.setUserAgentOverride with {"userAgent": ""}
+//   - Overlay.setShowViewportSizeOnResize with {"show": false}
+//
+// These CDP commands are not sent by chromedp. If it does not work as expected,
+// you can try to send those commands yourself.
+//
+// See [CaptureScreenshot] for capturing a screenshot of the browser viewport.
+//
+// See [screenshot] for an example of taking a screenshot of the entire page.
+//
+// [screenshot]: https://github.com/chromedp/examples/tree/master/screenshot
+func ScreenshotWithFormat(sel interface{}, picbuf *[]byte, opts ...QueryOption) QueryAction {
+	return ScreenshotScaleWithFormat(sel, page.CaptureScreenshotFormatPng, 1, picbuf, opts...)
+}
+
 // ScreenshotScale is like [Screenshot] but accepts a scale parameter that
 // specifies the page scale factor.
 func ScreenshotScale(sel interface{}, scale float64, picbuf *[]byte, opts ...QueryOption) QueryAction {
+	return ScreenshotScaleWithFormat(sel, page.CaptureScreenshotFormatPng, scale, picbuf, opts...)
+}
+
+// ScreenshotScaleWithFormat is like [Screenshot] but accepts the image format
+// and scale parameter that specifies the page scale factor.
+func ScreenshotScaleWithFormat(sel interface{}, imageFormat page.CaptureScreenshotFormat, scale float64, picbuf *[]byte, opts ...QueryOption) QueryAction {
 	if picbuf == nil {
 		panic("picbuf cannot be nil")
 	}
@@ -62,7 +91,7 @@ func ScreenshotScale(sel interface{}, scale float64, picbuf *[]byte, opts ...Que
 
 		// take screenshot of the box
 		buf, err := page.CaptureScreenshot().
-			WithFormat(page.CaptureScreenshotFormatPng).
+			WithFormat(imageFormat).
 			WithCaptureBeyondViewport(true).
 			WithFromSurface(true).
 			WithClip(&clip).
