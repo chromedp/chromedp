@@ -10,6 +10,9 @@ import (
 	"path"
 	"testing"
 
+	_ "golang.org/x/image/webp"
+
+	"github.com/chromedp/cdproto/page"
 	"github.com/orisano/pixelmatch"
 )
 
@@ -68,6 +71,73 @@ func TestScreenshot(t *testing.T) {
 			); err != nil {
 				t.Fatal(err)
 			}
+			diff, err := matchPixel(buf, test.want)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff != 0 {
+				t.Fatalf("screenshot does not match. diff: %v", diff)
+			}
+		})
+	}
+}
+
+func TestScreenshotWithFormat(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		sel  string
+		want string
+	}{
+		{
+			name: "padding border",
+			sel:  "#padding-border",
+			want: "element-padding-border.webp",
+		},
+		{
+			name: "larger than viewport",
+			sel:  "#larger-than-viewport",
+			want: "element-larger-than-viewport.webp",
+		},
+		{
+			name: "outside viewport",
+			sel:  "#outside-viewport",
+			want: "element-scrolled-into-view.webp",
+		},
+		{
+			name: "rotate element",
+			sel:  "#rotated",
+			want: "element-rotate.webp",
+		},
+		{
+			name: "fractional dimensions",
+			sel:  "#fractional-dimensions",
+			want: "element-fractional.webp",
+		},
+		{
+			name: "fractional offset",
+			sel:  "#fractional-offset",
+			want: "element-fractional-offset.webp",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ctx, cancel := testAllocate(t, "screenshot.html")
+			defer cancel()
+
+			var buf []byte
+			if err := Run(ctx,
+				EmulateViewport(500, 500),
+				EvaluateAsDevTools("document.documentElement.scrollTo(20,  30)", nil),
+				ScreenshotWithFormat(test.sel, &buf, page.CaptureScreenshotFormatWebp, ByQuery),
+			); err != nil {
+				t.Fatal(err)
+			}
+
 			diff, err := matchPixel(buf, test.want)
 			if err != nil {
 				t.Fatal(err)
