@@ -82,7 +82,7 @@ func TestScreenshot(t *testing.T) {
 	}
 }
 
-func TestScreenshotWithFormat(t *testing.T) {
+func TestScreenshotWithFormatWebp(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
@@ -134,6 +134,73 @@ func TestScreenshotWithFormat(t *testing.T) {
 				EmulateViewport(500, 500),
 				EvaluateAsDevTools("document.documentElement.scrollTo(20,  30)", nil),
 				ScreenshotWithFormat(test.sel, &buf, page.CaptureScreenshotFormatWebp, ByQuery),
+			); err != nil {
+				t.Fatal(err)
+			}
+
+			diff, err := matchPixel(buf, test.want)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff != 0 {
+				t.Fatalf("screenshot does not match. diff: %v", diff)
+			}
+		})
+	}
+}
+
+func TestScreenshotWithFormatJpeg(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		sel  string
+		want string
+	}{
+		{
+			name: "padding border",
+			sel:  "#padding-border",
+			want: "element-padding-border.jpg",
+		},
+		{
+			name: "larger than viewport",
+			sel:  "#larger-than-viewport",
+			want: "element-larger-than-viewport.jpg",
+		},
+		{
+			name: "outside viewport",
+			sel:  "#outside-viewport",
+			want: "element-scrolled-into-view.jpg",
+		},
+		{
+			name: "rotate element",
+			sel:  "#rotated",
+			want: "element-rotate.jpg",
+		},
+		{
+			name: "fractional dimensions",
+			sel:  "#fractional-dimensions",
+			want: "element-fractional.jpg",
+		},
+		{
+			name: "fractional offset",
+			sel:  "#fractional-offset",
+			want: "element-fractional-offset.jpg",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ctx, cancel := testAllocate(t, "screenshot.html")
+			defer cancel()
+
+			var buf []byte
+			if err := Run(ctx,
+				EmulateViewport(500, 500),
+				EvaluateAsDevTools("document.documentElement.scrollTo(20,  30)", nil),
+				ScreenshotWithFormat(test.sel, &buf, page.CaptureScreenshotFormatJpeg, ByQuery),
 			); err != nil {
 				t.Fatal(err)
 			}
