@@ -52,8 +52,8 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) QueryActio
 // See [screenshot] for an example of taking a screenshot of the entire page.
 //
 // [screenshot]: https://github.com/chromedp/examples/tree/master/screenshot
-func ScreenshotWithFormat(sel interface{}, picbuf *[]byte, opts ...QueryOption) QueryAction {
-	return ScreenshotScaleWithFormat(sel, page.CaptureScreenshotFormatPng, 1, picbuf, opts...)
+func ScreenshotWithFormat(sel interface{}, picbuf *[]byte, imgFormat page.CaptureScreenshotFormat, opts ...QueryOption) QueryAction {
+	return ScreenshotScaleWithFormat(sel, imgFormat, 1, picbuf, opts...)
 }
 
 // ScreenshotScale is like [Screenshot] but accepts a scale parameter that
