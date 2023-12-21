@@ -315,6 +315,52 @@ func TestCaptureScreenshot(t *testing.T) {
 	}
 }
 
+func TestCaptureScreenshotWithFormatJpeg(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "grid.html")
+	defer cancel()
+
+	var buf []byte
+	if err := Run(ctx,
+		EmulateViewport(500, 500),
+		CaptureScreenshotWithFormat(&buf, page.CaptureScreenshotFormatJpeg),
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	diff, err := matchPixel(buf, "sanity.jpeg")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff != 0 {
+		t.Fatalf("screenshot does not match. diff: %v", diff)
+	}
+}
+
+func TestCaptureScreenshotWithFormatWebp(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "grid.html")
+	defer cancel()
+
+	var buf []byte
+	if err := Run(ctx,
+		EmulateViewport(500, 500),
+		CaptureScreenshotWithFormat(&buf, page.CaptureScreenshotFormatWebp),
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	diff, err := matchPixel(buf, "sanity.webp")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff != 0 {
+		t.Fatalf("screenshot does not match. diff: %v", diff)
+	}
+}
+
 func TestFullScreenshot(t *testing.T) {
 	t.Parallel()
 

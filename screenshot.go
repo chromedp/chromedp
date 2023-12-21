@@ -35,23 +35,6 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) QueryActio
 
 // ScreenshotWithFormat is a chromedp element query action that captures a screenshot
 // in the specified image format of the first element node matching the selector.
-//
-// It's supposed to act the same as the command "Capture node screenshot" in Chrome.
-//
-// Behavior notes: the Protocol Monitor shows that the command sends the following
-// CDP commands too:
-//   - Emulation.clearDeviceMetricsOverride
-//   - Network.setUserAgentOverride with {"userAgent": ""}
-//   - Overlay.setShowViewportSizeOnResize with {"show": false}
-//
-// These CDP commands are not sent by chromedp. If it does not work as expected,
-// you can try to send those commands yourself.
-//
-// See [CaptureScreenshot] for capturing a screenshot of the browser viewport.
-//
-// See [screenshot] for an example of taking a screenshot of the entire page.
-//
-// [screenshot]: https://github.com/chromedp/examples/tree/master/screenshot
 func ScreenshotWithFormat(sel interface{}, picbuf *[]byte, imgFormat page.CaptureScreenshotFormat, opts ...QueryOption) QueryAction {
 	return ScreenshotScaleWithFormat(sel, imgFormat, 1, picbuf, opts...)
 }
@@ -124,6 +107,23 @@ func CaptureScreenshot(res *[]byte) Action {
 	return ActionFunc(func(ctx context.Context) error {
 		var err error
 		*res, err = page.CaptureScreenshot().
+			WithFromSurface(true).
+			Do(ctx)
+		return err
+	})
+}
+
+// CaptureScreenshotWithFormat is an action that captures/takes a screenshot of the
+// current browser viewport for the provided image format.
+func CaptureScreenshotWithFormat(res *[]byte, format page.CaptureScreenshotFormat) Action {
+	if res == nil {
+		panic("res cannot be nil")
+	}
+
+	return ActionFunc(func(ctx context.Context) error {
+		var err error
+		*res, err = page.CaptureScreenshot().
+			WithFormat(format).
 			WithFromSurface(true).
 			Do(ctx)
 		return err
