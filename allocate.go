@@ -211,9 +211,6 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	case <-c.allocated: // for this browser's root context
 	}
 	a.wg.Add(1) // for the entire allocator
-	if a.combinedOutputWriter != nil {
-		a.wg.Add(1) // for the io.Copy in a separate goroutine
-	}
 	go func() {
 		// First wait for the process to be finished.
 		// TODO: do we care about this error in any scenario? if the
@@ -236,24 +233,38 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		close(c.allocated)
 	}()
 
-	var wsURL string
-	wsURLChan := make(chan struct{}, 1)
+	bufr := bufio.NewReader(stdout)
+	wsURLChan := make(chan string, 1)
+	errChan := make(chan error, 1)
 	go func() {
-		wsURL, err = readOutput(stdout, a.combinedOutputWriter, a.wg.Done)
-		wsURLChan <- struct{}{}
+		wsURL, err := readWebSocketURL(bufr, a.combinedOutputWriter)
+		if err != nil {
+			errChan <- err
+		} else {
+			wsURLChan <- wsURL
+		}
 	}()
+	var wsURL string
 	select {
-	case <-wsURLChan:
+	case wsURL = <-wsURLChan:
+	case err = <-errChan:
 	case <-time.After(a.wsURLReadTimeout):
 		err = errors.New("websocket url timeout reached")
 	}
 	if err != nil {
-		if a.combinedOutputWriter != nil {
-			// There's no io.Copy goroutine to call the done func.
-			// TODO: a cleaner way to deal with this edge case?
-			a.wg.Done()
-		}
 		return nil, err
+	}
+
+	if a.combinedOutputWriter == nil {
+		// We don't need the process's output anymore.
+		stdout.Close()
+	} else {
+		// Copy the rest of the output in a separate goroutine
+		a.wg.Add(1)
+		go func() {
+			io.Copy(a.combinedOutputWriter, bufr)
+			a.wg.Done()
+		}()
 	}
 
 	browser, err := NewBrowser(ctx, wsURL, opts...)
@@ -279,47 +290,26 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	return browser, nil
 }
 
-// readOutput grabs the websocket address from chrome's output, returning as
+// readWebSocketURL grabs the websocket address from chrome's output, returning as
 // soon as it is found. All read output is forwarded to forward, if non-nil.
-// done is used to signal that the asynchronous io.Copy is done, if any.
-func readOutput(rc io.ReadCloser, forward io.Writer, done func()) (wsURL string, _ error) {
+func readWebSocketURL(bufr *bufio.Reader, forward io.Writer) (string, error) {
 	prefix := []byte("DevTools listening on")
 	var accumulated bytes.Buffer
-	bufr := bufio.NewReader(rc)
-readLoop:
 	for {
 		line, err := bufr.ReadBytes('\n')
 		if err != nil {
-			return "", fmt.Errorf("chrome failed to start:\n%s",
-				accumulated.Bytes())
+			return "", fmt.Errorf("chrome failed to start:\n%s", accumulated.Bytes())
 		}
 		if forward != nil {
 			if _, err := forward.Write(line); err != nil {
 				return "", err
 			}
 		}
-
 		if bytes.HasPrefix(line, prefix) {
-			line = line[len(prefix):]
-			// use TrimSpace, to also remove \r on Windows
-			line = bytes.TrimSpace(line)
-			wsURL = string(line)
-			break readLoop
+			return string(bytes.TrimSpace(line[len(prefix):])), nil
 		}
 		accumulated.Write(line)
 	}
-	if forward == nil {
-		// We don't need the process's output anymore.
-		rc.Close()
-	} else {
-		// Copy the rest of the output in a separate goroutine, as we
-		// need to return with the websocket URL.
-		go func() {
-			io.Copy(forward, bufr)
-			done()
-		}()
-	}
-	return wsURL, nil
 }
 
 // Wait satisfies the Allocator interface.

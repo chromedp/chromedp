@@ -1,6 +1,7 @@
 package chromedp
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"errors"
@@ -211,7 +212,8 @@ func testRemoteAllocator(t *testing.T, modifyURL func(wsURL string) string, want
 	if err := cmd.Start(); err != nil {
 		t.Fatal(err)
 	}
-	wsURL, err := readOutput(stderr, nil, nil)
+	bufr := bufio.NewReader(stderr)
+	wsURL, err := readWebSocketURL(bufr, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
