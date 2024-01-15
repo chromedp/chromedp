@@ -4,7 +4,7 @@ jobs:
   test:
     strategy:
       matrix:
-        go-version: [1.16.x, oldstable, stable]
+        go-version: [1.20.x, oldstable, stable]
     runs-on: ubuntu-latest
     steps:
     - name: Install Go
