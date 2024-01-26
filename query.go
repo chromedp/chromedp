@@ -859,10 +859,6 @@ func AttributesAll(sel interface{}, attributes *[]map[string]string, opts ...Que
 	}
 
 	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
-		if len(nodes) < 1 {
-			return fmt.Errorf("selector %q did not return any nodes", sel)
-		}
-
 		for _, node := range nodes {
 			node.RLock()
 			m := make(map[string]string)
