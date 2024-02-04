@@ -30,7 +30,10 @@ func writeHTML(content string) http.Handler {
 }
 
 func ExampleTitle() {
-	ctx, cancel := chromedp.NewContext(context.Background())
+	opts := append(chromedp.DefaultExecAllocatorOptions[:], chromedp.Headless)
+	ctx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	defer cancel()
+	ctx, cancel = chromedp.NewContext(ctx)
 	defer cancel()
 
 	ts := httptest.NewServer(writeHTML(`
@@ -57,7 +60,10 @@ func ExampleTitle() {
 }
 
 func ExampleRunResponse() {
-	ctx, cancel := chromedp.NewContext(context.Background())
+	opts := append(chromedp.DefaultExecAllocatorOptions[:], chromedp.Headless)
+	ctx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	defer cancel()
+	ctx, cancel = chromedp.NewContext(ctx)
 	defer cancel()
 
 	// This server simply shows the URL path as the page title, and contains
@@ -122,6 +128,7 @@ func ExampleExecAllocator() {
 	defer os.RemoveAll(dir)
 
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
+		chromedp.Headless,
 		chromedp.DisableGPU,
 		chromedp.UserDataDir(dir),
 	)
@@ -168,7 +175,10 @@ func ExampleNewContext_reuseBrowser() {
 	defer ts.Close()
 
 	// create a new browser
-	ctx, cancel := chromedp.NewContext(context.Background())
+	opts := append(chromedp.DefaultExecAllocatorOptions[:], chromedp.Headless)
+	ctx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	defer cancel()
+	ctx, cancel = chromedp.NewContext(ctx)
 	defer cancel()
 
 	// start the browser without a timeout
@@ -199,8 +209,11 @@ func ExampleNewContext_reuseBrowser() {
 }
 
 func ExampleNewContext_manyTabs() {
+	opts := append(chromedp.DefaultExecAllocatorOptions[:], chromedp.Headless)
+	ctx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	defer cancel()
 	// new browser, first tab
-	ctx1, cancel := chromedp.NewContext(context.Background())
+	ctx1, cancel := chromedp.NewContext(ctx)
 	defer cancel()
 
 	// ensure the first tab is created
@@ -228,7 +241,10 @@ func ExampleNewContext_manyTabs() {
 }
 
 func ExampleListenTarget_consoleLog() {
-	ctx, cancel := chromedp.NewContext(context.Background())
+	opts := append(chromedp.DefaultExecAllocatorOptions[:], chromedp.Headless)
+	ctx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	defer cancel()
+	ctx, cancel = chromedp.NewContext(ctx)
 	defer cancel()
 
 	ts := httptest.NewServer(writeHTML(`
@@ -280,7 +296,10 @@ func ExampleListenTarget_consoleLog() {
 }
 
 func ExampleWaitNewTarget() {
-	ctx, cancel := chromedp.NewContext(context.Background())
+	opts := append(chromedp.DefaultExecAllocatorOptions[:], chromedp.Headless)
+	ctx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	defer cancel()
+	ctx, cancel = chromedp.NewContext(ctx)
 	defer cancel()
 
 	mux := http.NewServeMux()
@@ -315,7 +334,10 @@ func ExampleWaitNewTarget() {
 }
 
 func ExampleListenTarget_acceptAlert() {
-	ctx, cancel := chromedp.NewContext(context.Background())
+	opts := append(chromedp.DefaultExecAllocatorOptions[:], chromedp.Headless)
+	ctx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	defer cancel()
+	ctx, cancel = chromedp.NewContext(ctx)
 	defer cancel()
 
 	mux := http.NewServeMux()
@@ -350,7 +372,10 @@ func ExampleListenTarget_acceptAlert() {
 }
 
 func Example_retrieveHTML() {
-	ctx, cancel := chromedp.NewContext(context.Background())
+	opts := append(chromedp.DefaultExecAllocatorOptions[:], chromedp.Headless)
+	ctx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	defer cancel()
+	ctx, cancel = chromedp.NewContext(ctx)
 	defer cancel()
 
 	ts := httptest.NewServer(writeHTML(`
@@ -387,7 +412,10 @@ function changeText() {
 }
 
 func ExampleEmulate() {
-	ctx, cancel := chromedp.NewContext(context.Background())
+	opts := append(chromedp.DefaultExecAllocatorOptions[:], chromedp.Headless)
+	ctx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	defer cancel()
+	ctx, cancel = chromedp.NewContext(ctx)
 	defer cancel()
 
 	var buf []byte
@@ -409,7 +437,10 @@ func ExampleEmulate() {
 }
 
 func ExamplePrintToPDF() {
-	ctx, cancel := chromedp.NewContext(context.Background())
+	opts := append(chromedp.DefaultExecAllocatorOptions[:], chromedp.Headless)
+	ctx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	defer cancel()
+	ctx, cancel = chromedp.NewContext(ctx)
 	defer cancel()
 
 	var buf []byte
@@ -435,7 +466,10 @@ func ExamplePrintToPDF() {
 }
 
 func ExampleByJSPath() {
-	ctx, cancel := chromedp.NewContext(context.Background())
+	opts := append(chromedp.DefaultExecAllocatorOptions[:], chromedp.Headless)
+	ctx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	defer cancel()
+	ctx, cancel = chromedp.NewContext(ctx)
 	defer cancel()
 
 	ts := httptest.NewServer(writeHTML(`
@@ -470,7 +504,10 @@ func ExampleByJSPath() {
 }
 
 func ExampleFromNode() {
-	ctx, cancel := chromedp.NewContext(context.Background())
+	opts := append(chromedp.DefaultExecAllocatorOptions[:], chromedp.Headless)
+	ctx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	defer cancel()
+	ctx, cancel = chromedp.NewContext(ctx)
 	defer cancel()
 
 	ts := httptest.NewServer(writeHTML(`
@@ -518,7 +555,10 @@ func ExampleFromNode() {
 }
 
 func Example_documentDump() {
-	ctx, cancel := chromedp.NewContext(context.Background())
+	opts := append(chromedp.DefaultExecAllocatorOptions[:], chromedp.Headless)
+	ctx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	defer cancel()
+	ctx, cancel = chromedp.NewContext(ctx)
 	defer cancel()
 
 	ts := httptest.NewServer(writeHTML(`<!doctype html>
@@ -575,7 +615,10 @@ func Example_documentDump() {
 }
 
 func ExampleFullScreenshot() {
-	ctx, cancel := chromedp.NewContext(context.Background())
+	opts := append(chromedp.DefaultExecAllocatorOptions[:], chromedp.Headless)
+	ctx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	defer cancel()
+	ctx, cancel = chromedp.NewContext(ctx)
 	defer cancel()
 
 	var buf []byte

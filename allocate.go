@@ -56,7 +56,6 @@ func setupExecAllocator(opts ...ExecAllocatorOption) *ExecAllocator {
 var DefaultExecAllocatorOptions = [...]ExecAllocatorOption{
 	NoFirstRun,
 	NoDefaultBrowserCheck,
-	Headless,
 
 	// After Puppeteer's default behavior.
 	Flag("disable-background-networking", true),
