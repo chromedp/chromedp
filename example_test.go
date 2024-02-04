@@ -13,13 +13,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/chromedp/chromedp"
+	"github.com/chromedp/chromedp/device"
+
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
-	"github.com/chromedp/chromedp"
-	"github.com/chromedp/chromedp/device"
 )
 
 func writeHTML(content string) http.Handler {
@@ -517,14 +518,14 @@ func ExampleFromNode() {
 	// Nested query from the document root: inner content
 }
 
-func Example_documentDump() {
+func Example_dump() {
 	ctx, cancel := chromedp.NewContext(context.Background())
 	defer cancel()
 
 	ts := httptest.NewServer(writeHTML(`<!doctype html>
 <html>
 <body>
-  <div id="content">the content</div>
+  <div id="content" style="display:block;">the content</div>
 </body>
 </html>`))
 	defer ts.Close()
@@ -537,22 +538,64 @@ func Example_documentDump() {
 		b.insertBefore(el, b.childNodes[0]);
 	})(document, %q, %q);`
 
+	s := fmt.Sprintf(expr, "thing", "a new thing!")
+
+	var buf bytes.Buffer
+	if err := chromedp.Run(ctx,
+		chromedp.Navigate(ts.URL),
+		chromedp.WaitVisible(`#content`),
+		chromedp.Evaluate(s, nil),
+		chromedp.WaitVisible(`#thing`),
+		chromedp.Dump(`document`, &buf, chromedp.ByJSPath),
+	); err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println("Document tree:")
+	fmt.Print(buf.String())
+
+	// Output:
+	// Document tree:
+	// #document <Document>
+	//   html <DocumentType>
+	//   html
+	//     head
+	//     body
+	//       div#thing
+	//         #text "a new thing!"
+	//       div#content [style="display:block;"]
+	//         #text "the content"
+}
+
+func Example_documentDump() {
+	ctx, cancel := chromedp.NewContext(context.Background())
+	defer cancel()
+
+	ts := httptest.NewServer(writeHTML(`<!doctype html>
+<html>
+<body>
+  <div id="content" style="display:block;">the content</div>
+</body>
+</html>`))
+	defer ts.Close()
+
+	const expr = `(function(d, id, v) {
+		var b = d.querySelector('body');
+		var el = d.createElement('div');
+		el.id = id;
+		el.innerText = v;
+		b.insertBefore(el, b.childNodes[0]);
+	})(document, %q, %q);`
+
+	s := fmt.Sprintf(expr, "thing", "a new thing!")
+
 	var nodes []*cdp.Node
 	if err := chromedp.Run(ctx,
 		chromedp.Navigate(ts.URL),
-		chromedp.Nodes(`document`, &nodes, chromedp.ByJSPath),
+		chromedp.Nodes(`document`, &nodes,
+			chromedp.ByJSPath, chromedp.Populate(-1, true)),
 		chromedp.WaitVisible(`#content`),
-		chromedp.ActionFunc(func(ctx context.Context) error {
-			s := fmt.Sprintf(expr, "thing", "a new thing!")
-			_, exp, err := runtime.Evaluate(s).Do(ctx)
-			if err != nil {
-				return err
-			}
-			if exp != nil {
-				return exp
-			}
-			return nil
-		}),
+		chromedp.Evaluate(s, nil),
 		chromedp.WaitVisible(`#thing`),
 	); err != nil {
 		log.Fatal(err)
@@ -570,7 +613,7 @@ func Example_documentDump() {
 	//       body
 	//         div#thing
 	//           #text "a new thing!"
-	//         div#content
+	//         div#content [style="display:block;"]
 	//           #text "the content"
 }
 
@@ -586,7 +629,7 @@ func ExampleFullScreenshot() {
 		log.Fatal(err)
 	}
 
-	if err := os.WriteFile("fullScreenshot.jpeg", buf, 0644); err != nil {
+	if err := os.WriteFile("fullScreenshot.jpeg", buf, 0o644); err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("wrote fullScreenshot.jpeg")

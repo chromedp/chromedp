@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 	"sync"
@@ -33,7 +34,7 @@ type Selector struct {
 	exp           int
 	by            func(context.Context, *cdp.Node) ([]cdp.NodeID, error)
 	wait          func(context.Context, *cdp.Frame, runtime.ExecutionContextID, ...cdp.NodeID) ([]*cdp.Node, error)
-	after         func(context.Context, runtime.ExecutionContextID, ...*cdp.Node) error
+	after         []func(context.Context, runtime.ExecutionContextID, ...*cdp.Node) error
 }
 
 // Query is a query action that queries the browser for specific element
@@ -211,8 +212,8 @@ func (s *Selector) Do(ctx context.Context) error {
 		if nodes == nil || err != nil {
 			return false, nil
 		}
-		if s.after != nil {
-			if err := s.after(ctx, execCtx, nodes...); err != nil {
+		for _, f := range s.after {
+			if err := f(ctx, execCtx, nodes...); err != nil {
 				return true, err
 			}
 		}
@@ -588,7 +589,45 @@ func RetryInterval(interval time.Duration) QueryOption {
 // condition is true.
 func After(f func(context.Context, runtime.ExecutionContextID, ...*cdp.Node) error) QueryOption {
 	return func(s *Selector) {
-		s.after = f
+		s.after = append(s.after, f)
+	}
+}
+
+// Populate is an element query option that causes the queried nodes to be
+// retrieved for later use. Use a depth of -1 to retrieve all child nodes. When
+// pierce is true, will pierce child containers (e.g. iframes and the like)
+//
+// NOTE: this could be extremely resource intensive. Avoid doing this unless
+// necessary.
+func Populate(depth int64, pierce bool, opts ...PopulateOption) QueryOption {
+	return After(func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+		var d time.Duration
+		for _, o := range opts {
+			o(&d)
+		}
+		for _, n := range nodes {
+			if err := dom.RequestChildNodes(n.NodeID).
+				WithDepth(depth).
+				WithPierce(pierce).
+				Do(ctx); err != nil {
+				return err
+			}
+		}
+		if d != 0 {
+			<-time.After(d)
+		}
+		return nil
+	})
+}
+
+// PopulateOption is an element populate action option.
+type PopulateOption = func(*time.Duration)
+
+// PopulateWait is populate option to set a wait interval after requesting
+// child nodes.
+func PopulateWait(wait time.Duration) PopulateOption {
+	return func(d *time.Duration) {
+		*d = wait
 	}
 }
 
@@ -1187,4 +1226,33 @@ func ScrollIntoView(sel interface{}, opts ...QueryOption) QueryAction {
 
 		return dom.ScrollIntoViewIfNeeded().WithNodeID(nodes[0].NodeID).Do(ctx)
 	}, opts...)
+}
+
+// DumpTo is an element query action that writes a readable tree of the first
+// element node matching the selector and its children, up to the specified
+// depth.
+//
+// See [Dump] for a simpler interface.
+func DumpTo(sel interface{}, w io.Writer, prefix, indent string, nodeIDs bool, depth int64, pierce bool, wait time.Duration, opts ...QueryOption) QueryAction {
+	return Query(sel, append(opts,
+		Populate(depth, pierce, PopulateWait(wait)),
+		After(func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+			var n *cdp.Node
+			if len(nodes) > 0 {
+				n = nodes[0]
+			}
+			_, err := n.WriteTo(w, prefix, indent, nodeIDs)
+			return err
+		}),
+	)...)
+}
+
+// Dump is an element query action that writes a readable tree of the first
+// element node matching the selector and its children, up to the specified
+// depth.
+//
+// See [DumpTo] for more configurable options, which includes the ability to
+// set the sleep wait timeout.
+func Dump(sel interface{}, w io.Writer, opts ...QueryOption) QueryAction {
+	return DumpTo(sel, w, "", "  ", false, -1, true, 80*time.Millisecond, opts...)
 }
