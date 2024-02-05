@@ -33,9 +33,21 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) QueryActio
 	return ScreenshotScale(sel, 1, picbuf, opts...)
 }
 
+// ScreenshotWithFormat is a chromedp element query action that captures a screenshot
+// in the specified image format of the first element node matching the selector.
+func ScreenshotWithFormat(sel interface{}, picbuf *[]byte, imgFormat page.CaptureScreenshotFormat, opts ...QueryOption) QueryAction {
+	return ScreenshotScaleWithFormat(sel, imgFormat, 1, picbuf, opts...)
+}
+
 // ScreenshotScale is like [Screenshot] but accepts a scale parameter that
 // specifies the page scale factor.
 func ScreenshotScale(sel interface{}, scale float64, picbuf *[]byte, opts ...QueryOption) QueryAction {
+	return ScreenshotScaleWithFormat(sel, page.CaptureScreenshotFormatPng, scale, picbuf, opts...)
+}
+
+// ScreenshotScaleWithFormat is like [Screenshot] but accepts the image format
+// and scale parameter that specifies the page scale factor.
+func ScreenshotScaleWithFormat(sel interface{}, imageFormat page.CaptureScreenshotFormat, scale float64, picbuf *[]byte, opts ...QueryOption) QueryAction {
 	if picbuf == nil {
 		panic("picbuf cannot be nil")
 	}
@@ -89,7 +101,7 @@ func ScreenshotNodes(nodes []*cdp.Node, scale float64, picbuf *[]byte) Action {
 
 		// take screenshot of the box
 		buf, err := page.CaptureScreenshot().
-			WithFormat(page.CaptureScreenshotFormatPng).
+			WithFormat(imageFormat).
 			WithCaptureBeyondViewport(true).
 			WithFromSurface(true).
 			WithClip(&clip).
@@ -122,6 +134,23 @@ func CaptureScreenshot(res *[]byte) Action {
 	return ActionFunc(func(ctx context.Context) error {
 		var err error
 		*res, err = page.CaptureScreenshot().
+			WithFromSurface(true).
+			Do(ctx)
+		return err
+	})
+}
+
+// CaptureScreenshotWithFormat is an action that captures/takes a screenshot of the
+// current browser viewport for the provided image format.
+func CaptureScreenshotWithFormat(res *[]byte, format page.CaptureScreenshotFormat) Action {
+	if res == nil {
+		panic("res cannot be nil")
+	}
+
+	return ActionFunc(func(ctx context.Context) error {
+		var err error
+		*res, err = page.CaptureScreenshot().
+			WithFormat(format).
 			WithFromSurface(true).
 			Do(ctx)
 		return err
