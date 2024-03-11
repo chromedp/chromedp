@@ -30,6 +30,12 @@ import (
 //
 // [screenshot]: https://github.com/chromedp/examples/tree/master/screenshot
 func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) QueryAction {
+	return ScreenshotScale(sel, 1, picbuf, opts...)
+}
+
+// ScreenshotScale is like [Screenshot] but accepts a scale parameter that
+// specifies the page scale factor.
+func ScreenshotScale(sel interface{}, scale float64, picbuf *[]byte, opts ...QueryOption) QueryAction {
 	if picbuf == nil {
 		panic("picbuf cannot be nil")
 	}
@@ -38,11 +44,38 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) QueryActio
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
+		return ScreenshotNodes(nodes, scale, picbuf).Do(ctx)
+	}, append(opts, NodeVisible)...)
+}
 
-		// get box model
+// ScreenshotNodes is an action that captures/takes a screenshot of the
+// specified nodes, by calculating the extents of the top most left node and
+// bottom most right node.
+func ScreenshotNodes(nodes []*cdp.Node, scale float64, picbuf *[]byte) Action {
+	if len(nodes) == 0 {
+		panic("nodes must be non-empty")
+	}
+	if picbuf == nil {
+		panic("picbuf cannot be nil")
+	}
+
+	return ActionFunc(func(ctx context.Context) error {
 		var clip page.Viewport
+
+		// get box model of first node
 		if err := callFunctionOnNode(ctx, nodes[0], getClientRectJS, &clip); err != nil {
 			return err
+		}
+
+		// remainder
+		for _, node := range nodes[1:] {
+			var v page.Viewport
+			// get box model of first node
+			if err := callFunctionOnNode(ctx, node, getClientRectJS, &v); err != nil {
+				return err
+			}
+			clip.X, clip.Width = extents(clip.X, clip.Width, v.X, v.Width)
+			clip.Y, clip.Height = extents(clip.Y, clip.Height, v.Y, v.Height)
 		}
 
 		// The "Capture node screenshot" command does not handle fractional dimensions properly.
@@ -52,9 +85,7 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) QueryActio
 		clip.Width, clip.Height = math.Round(clip.Width+clip.X-x), math.Round(clip.Height+clip.Y-y)
 		clip.X, clip.Y = x, y
 
-		// The next comment is copied from the original code.
-		// This seems to be necessary? Seems to do the right thing regardless of DPI.
-		clip.Scale = 1
+		clip.Scale = scale
 
 		// take screenshot of the box
 		buf, err := page.CaptureScreenshot().
@@ -69,7 +100,7 @@ func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) QueryActio
 
 		*picbuf = buf
 		return nil
-	}, append(opts, NodeVisible)...)
+	})
 }
 
 // CaptureScreenshot is an action that captures/takes a screenshot of the
@@ -128,4 +159,24 @@ func FullScreenshot(res *[]byte, quality int) EmulateAction {
 		}
 		return nil
 	})
+}
+
+func extents(m, n, o, p float64) (float64, float64) {
+	a := min(m, o)
+	b := max(m+n, o+p)
+	return a, b - a
+}
+
+func min(a, b float64) float64 {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func max(a, b float64) float64 {
+	if a > b {
+		return a
+	}
+	return b
 }

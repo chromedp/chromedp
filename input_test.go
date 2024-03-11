@@ -11,7 +11,7 @@ import (
 	"github.com/chromedp/chromedp/kb"
 )
 
-// inViewportJS is a javascript snippet that will get the specified node
+// inViewportJS is a JavaScript snippet that will get the specified node
 // position relative to the viewport and returns true if the specified node
 // is within the window's viewport.
 const inViewportJS = `(function(a) {

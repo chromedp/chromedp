@@ -138,8 +138,7 @@ func testAllocateSeparate(tb testing.TB) (context.Context, context.CancelFunc) {
 		tb.Fatal(err)
 	}
 	ListenBrowser(ctx, func(ev interface{}) {
-		switch ev := ev.(type) {
-		case *runtime.EventExceptionThrown:
+		if ev, ok := ev.(*runtime.EventExceptionThrown); ok {
 			tb.Errorf("%+v\n", ev.ExceptionDetails)
 		}
 	})
@@ -179,7 +178,7 @@ func BenchmarkTabNavigate(b *testing.B) {
 	})
 }
 
-// checkPages fatals if the browser behind the chromedp context has an
+// checkTargets fatals if the browser behind the chromedp context has an
 // unexpected number of pages (tabs).
 func checkTargets(tb testing.TB, ctx context.Context, want int) {
 	tb.Helper()
@@ -261,6 +260,10 @@ func TestCancelError(t *testing.T) {
 		t.Fatalf("expected a nil error, got %v", err)
 	}
 
+	if err := Cancel(allocCtx); err != ErrInvalidContext {
+		t.Fatalf("want error %q, got %q", ErrInvalidContext, err)
+	}
+
 	/*
 		// NOTE: the following test no longer is applicable, as a slight change
 		// to chromium's 89 API deprecated the boolean return value
@@ -333,12 +336,21 @@ func TestConcurrentCancel(t *testing.T) {
 		ExecPath("/do-not-run-chrome"))
 	defer cancel()
 
+	var wg sync.WaitGroup
 	// 50 is enough for 'go test -race' to easily spot issues.
 	for i := 0; i < 50; i++ {
+		wg.Add(2)
 		ctx, cancel := NewContext(allocCtx)
-		go cancel()
-		go Run(ctx)
+		go func() {
+			cancel()
+			wg.Done()
+		}()
+		go func() {
+			_ = Run(ctx)
+			wg.Done()
+		}()
 	}
+	wg.Wait()
 }
 
 func TestListenBrowser(t *testing.T) {
@@ -581,6 +593,339 @@ func TestLogOptions(t *testing.T) {
 			t.Errorf("expected output to contain %q", want)
 		}
 	}
+}
+
+func TestBrowserContext(t *testing.T) {
+	ctx, cancel := testAllocate(t, "child1.html")
+	defer cancel()
+	// There is not a dedicated cdp command to get the default browser context.
+	// Our workaround is to get it from a target which is created without the
+	// "browserContextId" parameter.
+	defaultBrowserContextID := getBrowserContext(t, ctx)
+
+	// Prepare 2 browser contexts to be used later.
+	rootCtx1, cancel := NewContext(browserCtx, WithNewBrowserContext())
+	defer cancel()
+	if err := Run(rootCtx1); err != nil {
+		t.Fatal(err)
+	}
+	rootBrowserContextID1 := FromContext(rootCtx1).BrowserContextID
+
+	rootCtx2, cancel := NewContext(browserCtx, WithNewBrowserContext())
+	defer cancel()
+	if err := Run(rootCtx2); err != nil {
+		t.Fatal(err)
+	}
+	rootBrowserContextID2 := FromContext(rootCtx2).BrowserContextID
+
+	tests := []struct {
+		name         string
+		arrange      func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID)
+		wantDisposed bool
+		wantPanic    string
+	}{
+		{
+			name: "default",
+			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
+				ctx, cancel := NewContext(browserCtx)
+				if err := Run(ctx); err != nil {
+					t.Fatal(err)
+				}
+				return ctx, cancel, defaultBrowserContextID
+			},
+			wantDisposed: false,
+			wantPanic:    "",
+		},
+		{
+			name: "new",
+			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
+				ctx, cancel := NewContext(browserCtx, WithNewBrowserContext())
+				if err := Run(ctx); err != nil {
+					t.Fatal(err)
+				}
+				c := FromContext(ctx)
+				return ctx, cancel, c.BrowserContextID
+			},
+			wantDisposed: true,
+			wantPanic:    "",
+		},
+		{
+			name: "existing",
+			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
+				ctx, cancel := NewContext(browserCtx, WithExistingBrowserContext(rootBrowserContextID1))
+				if err := Run(ctx); err != nil {
+					t.Fatal(err)
+				}
+				return ctx, cancel, rootBrowserContextID1
+			},
+			wantDisposed: false,
+			wantPanic:    "",
+		},
+		{
+			name: "inherited 1",
+			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
+				ctx, cancel := NewContext(rootCtx1)
+				if err := Run(ctx); err != nil {
+					t.Fatal(err)
+				}
+				return ctx, cancel, rootBrowserContextID1
+			},
+			wantDisposed: false,
+			wantPanic:    "",
+		},
+		{
+			name: "inherited 2",
+			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
+				ctx1, _ := NewContext(rootCtx1)
+				if err := Run(ctx1); err != nil {
+					t.Fatal(err)
+				}
+				ctx, cancel := NewContext(ctx1)
+				if err := Run(ctx); err != nil {
+					t.Fatal(err)
+				}
+				return ctx, cancel, rootBrowserContextID1
+			},
+			wantDisposed: false,
+			wantPanic:    "",
+		},
+		{
+			name: "inherited 3",
+			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
+				ctx1, _ := NewContext(browserCtx, WithExistingBrowserContext(rootBrowserContextID1))
+				if err := Run(ctx1); err != nil {
+					t.Fatal(err)
+				}
+				ctx, cancel := NewContext(ctx1)
+				if err := Run(ctx); err != nil {
+					t.Fatal(err)
+				}
+				return ctx, cancel, rootBrowserContextID1
+			},
+			wantDisposed: false,
+			wantPanic:    "",
+		},
+		{
+			name: "break inheritance 1",
+			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
+				ctx, cancel := NewContext(rootCtx1, WithExistingBrowserContext(rootBrowserContextID2))
+				if err := Run(ctx); err != nil {
+					t.Fatal(err)
+				}
+				// The target should be added to the second browser context.
+				return ctx, cancel, rootBrowserContextID2
+			},
+			wantDisposed: false,
+			wantPanic:    "",
+		},
+		{
+			name: "break inheritance 2",
+			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
+				ctx, cancel := NewContext(rootCtx1, WithNewBrowserContext())
+				if err := Run(ctx); err != nil {
+					t.Fatal(err)
+				}
+				c := FromContext(ctx)
+				if c.BrowserContextID == rootBrowserContextID1 {
+					t.Fatal("a new BrowserContext should be created")
+				}
+				return ctx, cancel, c.BrowserContextID
+			},
+			wantDisposed: true,
+			wantPanic:    "",
+		},
+		{
+			name: "break inheritance 3",
+			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
+				ctx, cancel := NewContext(rootCtx1, WithTargetID(FromContext(rootCtx2).Target.TargetID))
+				if err := Run(ctx); err != nil {
+					t.Fatal(err)
+				}
+
+				c := FromContext(ctx)
+				if c.BrowserContextID != "" {
+					t.Fatal("when a context is used to attach to a tab, its BrowserContextID should be empty")
+				}
+
+				return ctx, cancel, rootBrowserContextID2
+			},
+			wantDisposed: false,
+			wantPanic:    "",
+		},
+		{
+			name: "WithNewBrowserContext when WithTargetID is specified",
+			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
+				ctx, _ := NewContext(rootCtx1)
+				if err := Run(ctx); err != nil {
+					t.Fatal(err)
+				}
+				ctx, cancel := NewContext(browserCtx, WithTargetID(FromContext(ctx).Target.TargetID), WithNewBrowserContext())
+				if err := Run(ctx); err != nil {
+					t.Fatal(err)
+				}
+
+				return ctx, cancel, rootBrowserContextID1
+			},
+			wantDisposed: false,
+			wantPanic:    "WithNewBrowserContext can not be used when WithTargetID is specified",
+		},
+		{
+			name: "WithExistingBrowserContext when WithTargetID is specified",
+			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
+				ctx, _ := NewContext(rootCtx1)
+				if err := Run(ctx); err != nil {
+					t.Fatal(err)
+				}
+				ctx, cancel := NewContext(browserCtx, WithTargetID(FromContext(ctx).Target.TargetID), WithExistingBrowserContext(rootBrowserContextID2))
+				if err := Run(ctx); err != nil {
+					t.Fatal(err)
+				}
+
+				return ctx, cancel, rootBrowserContextID1
+			},
+			wantDisposed: false,
+			wantPanic:    "WithExistingBrowserContext can not be used when WithTargetID is specified",
+		},
+		{
+			name: "WithNewBrowserContext before Browser is initialized",
+			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
+				ctx, cancel := NewContext(context.Background(), WithNewBrowserContext())
+				if err := Run(ctx); err != nil {
+					t.Fatal(err)
+				}
+
+				return ctx, cancel, ""
+			},
+			wantDisposed: false,
+			wantPanic:    "WithNewBrowserContext can not be used before Browser is initialized",
+		},
+		{
+			name: "WithExistingBrowserContext before Browser is initialized",
+			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
+				ctx, cancel := NewContext(context.Background(), WithExistingBrowserContext(rootBrowserContextID1))
+				if err := Run(ctx); err != nil {
+					t.Fatal(err)
+				}
+
+				return ctx, cancel, ""
+			},
+			wantDisposed: false,
+			wantPanic:    "WithExistingBrowserContext can not be used before Browser is initialized",
+		},
+		{
+			name: "remote allocator WithExistingBrowserContext ",
+			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
+				c := FromContext(browserCtx)
+				var conn *net.TCPConn
+				if chromedpConn, ok := c.Browser.conn.(*Conn); ok {
+					conn, _ = chromedpConn.conn.(*net.TCPConn)
+				}
+				if conn == nil {
+					t.Skip("skip when the remote debugging address is not available")
+				}
+				actx, _ := NewRemoteAllocator(context.Background(), "ws://"+conn.RemoteAddr().String())
+				ctx, cancel := NewContext(actx, WithExistingBrowserContext(rootBrowserContextID1))
+				if err := Run(ctx); err != nil {
+					t.Fatal(err)
+				}
+
+				return ctx, cancel, rootBrowserContextID1
+			},
+			wantDisposed: false,
+			wantPanic:    "",
+		},
+		{
+			name: "remote allocator WithNewBrowserContext",
+			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
+				c := FromContext(browserCtx)
+				var conn *net.TCPConn
+				if chromedpConn, ok := c.Browser.conn.(*Conn); ok {
+					conn, _ = chromedpConn.conn.(*net.TCPConn)
+				}
+				if conn == nil {
+					t.Skip("skip when the remote debugging address is not available")
+				}
+				actx, _ := NewRemoteAllocator(context.Background(), "ws://"+conn.RemoteAddr().String())
+				ctx, cancel := NewContext(actx, WithNewBrowserContext())
+				if err := Run(ctx); err != nil {
+					t.Fatal(err)
+				}
+
+				return ctx, cancel, FromContext(ctx).BrowserContextID
+			},
+			wantDisposed: true,
+			wantPanic:    "",
+		},
+	}
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.wantPanic != "" {
+				defer func() {
+					if got := fmt.Sprint(recover()); got != tt.wantPanic {
+						t.Errorf("want panic %q, got %q", tt.wantPanic, got)
+					}
+				}()
+			}
+			ctx, cancel, want := tt.arrange(t)
+			defer cancel()
+
+			got := getBrowserContext(t, ctx)
+
+			if got != want {
+				switch want {
+				case defaultBrowserContextID:
+					t.Errorf("want default browser context %q, got %q", want, got)
+				case rootBrowserContextID1:
+					t.Errorf("want root browser context 1 %q, got %q", want, got)
+				case rootBrowserContextID2:
+					t.Errorf("want root browser context 2 %q, got %q", want, got)
+				default:
+					t.Errorf("want browser context %q, got %q", want, got)
+				}
+			}
+
+			if want == defaultBrowserContextID {
+				// There is not way to check whether the default browser context
+				// is disposed, so stop here.
+				return
+			}
+
+			cancel()
+
+			var ids []cdp.BrowserContextID
+			if err := Run(browserCtx,
+				ActionFunc(func(ctx context.Context) error {
+					c := FromContext(ctx)
+					var err error
+					ids, err = target.GetBrowserContexts().Do(cdp.WithExecutor(ctx, c.Browser))
+					return err
+				}),
+			); err != nil {
+				t.Fatal(err)
+			}
+
+			disposed := !contains(ids, want)
+
+			if disposed != tt.wantDisposed {
+				t.Errorf("browser context disposed = %v, want %v", disposed, tt.wantDisposed)
+			}
+		})
+	}
+}
+
+func getBrowserContext(tb testing.TB, ctx context.Context) cdp.BrowserContextID {
+	var id cdp.BrowserContextID
+	if err := Run(ctx,
+		ActionFunc(func(ctx context.Context) error {
+			info, err := target.GetTargetInfo().Do(ctx)
+			id = info.BrowserContextID
+			return err
+		}),
+	); err != nil {
+		tb.Fatal(err)
+	}
+	return id
 }
 
 func TestLargeOutboundMessages(t *testing.T) {
@@ -984,6 +1329,16 @@ func TestRunResponse(t *testing.T) {
 			if want := test.wantStatus; want != 0 && status != want {
 				t.Fatalf("wanted status code %d, got %d", want, status)
 			}
+
+			if resp != nil {
+				latency := time.Since(resp.ResponseTime.Time())
+				if latency > time.Hour || latency < -time.Hour {
+					t.Errorf("responseTime does not hold a reasonable value %s. "+
+						"Maybe it's in seconds now and we should remove the workaround. "+
+						"See https://github.com/chromedp/pdlgen/issues/22.",
+						resp.ResponseTime.Time())
+				}
+			}
 		}
 		t.Run("Navigate"+test.name, func(t *testing.T) {
 			t.Parallel()
@@ -1178,4 +1533,13 @@ func TestPDFTemplate(t *testing.T) {
 	if !bytes.Equal(buf, want) {
 		t.Errorf("page.PrintToPDF produces unexpected content. got: %q, want: %q", buf, want)
 	}
+}
+
+func contains(v []cdp.BrowserContextID, id cdp.BrowserContextID) bool {
+	for _, i := range v {
+		if i == id {
+			return true
+		}
+	}
+	return false
 }

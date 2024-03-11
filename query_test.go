@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"path/filepath"
 	"reflect"
 	"runtime"
 	"strings"
@@ -226,7 +227,7 @@ func TestRetryInterval(t *testing.T) {
 			// only after the number of result nodes >= s.exp .
 			count := WaitFunc(
 				func(ctx context.Context, f *cdp.Frame, eci cdpruntime.ExecutionContextID, ni ...cdp.NodeID) ([]*cdp.Node, error) {
-					retryCount += 1
+					retryCount++
 					return nil, ErrInvalidTarget
 				},
 			)
@@ -245,6 +246,36 @@ func TestRetryInterval(t *testing.T) {
 			}
 			if retryCount > tc.wantCountMax {
 				t.Fatalf("want retry count < %d, got: %d", tc.wantCountMax, retryCount)
+			}
+		})
+	}
+}
+
+func TestNoRetryForInvalidSelector(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "table.html")
+	defer cancel()
+
+	ctx, cancel = context.WithTimeout(ctx, time.Second)
+	defer cancel()
+
+	tests := []struct {
+		name    string
+		sel     string
+		by      QueryOption
+		wantErr string
+	}{
+		{`pseudo class`, `#a:b`, ByQuery, "DOM Error while querying (-32000)"},
+		{`leading number`, `#3`, ByQuery, "DOM Error while querying (-32000)"},
+		{`empty selector`, ``, ByQuery, "DOM Error while querying (-32000)"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var nodes []*cdp.Node
+			if err := Run(ctx, Nodes(test.sel, &nodes, test.by)); err.Error() != test.wantErr {
+				t.Fatalf("want error %v, got error: %v", test.wantErr, err)
 			}
 		})
 	}
@@ -1245,25 +1276,16 @@ func TestFileUpload(t *testing.T) {
 	s := httptest.NewServer(mux)
 	defer s.Close()
 
-	// create temporary file on disk
-	tmpfile, err := os.CreateTemp("", "chromedp-upload-test")
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer os.Remove(tmpfile.Name())
-	defer tmpfile.Close()
-	if _, err := tmpfile.WriteString(uploadHTML); err != nil {
-		t.Fatal(err)
-	}
-	if err := tmpfile.Close(); err != nil {
+	uploadFile := filepath.Join(t.TempDir(), "chromedp-upload-test")
+	if err := os.WriteFile(uploadFile, []byte(uploadHTML), 0o666); err != nil {
 		t.Fatal(err)
 	}
 
 	tests := []struct {
 		a Action
 	}{
-		{SendKeys(`input[name="upload"]`, tmpfile.Name(), NodeVisible)},
-		{SetUploadFiles(`input[name="upload"]`, []string{tmpfile.Name()}, NodeVisible)},
+		{SendKeys(`input[name="upload"]`, uploadFile, NodeVisible)},
+		{SetUploadFiles(`input[name="upload"]`, []string{uploadFile}, NodeVisible)},
 	}
 
 	// Don't run these tests in parallel. The only way to do so would be to

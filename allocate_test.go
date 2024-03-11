@@ -157,11 +157,11 @@ func TestRemoteAllocator(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
-				_, post, err := net.SplitHostPort(u.Host)
+				_, port, err := net.SplitHostPort(u.Host)
 				if err != nil {
 					t.Fatal(err)
 				}
-				u.Host = net.JoinHostPort(h, post)
+				u.Host = net.JoinHostPort(h, port)
 				u.Path = "/"
 				return u.String()
 			},
@@ -186,8 +186,8 @@ func TestRemoteAllocator(t *testing.T) {
 func testRemoteAllocator(t *testing.T, modifyURL func(wsURL string) string, wantErr string, opts []RemoteAllocatorOption) {
 	tempDir := t.TempDir()
 
-	procCtx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	procCtx, procCancel := context.WithCancel(context.Background())
+	defer procCancel()
 	cmd := exec.CommandContext(procCtx, execPath,
 		// TODO: deduplicate these with allocOpts in chromedp_test.go
 		"--no-first-run",
@@ -229,6 +229,9 @@ func testRemoteAllocator(t *testing.T, modifyURL func(wsURL string) string, want
 			if err == nil || !strings.Contains(err.Error(), wantErr) {
 				t.Fatalf("\ngot error:\n\t%v\nwant error contains:\n\t%s", err, wantErr)
 			}
+
+			procCancel()
+			cmd.Wait()
 			return
 		}
 		if err != nil {
@@ -277,16 +280,14 @@ func testRemoteAllocator(t *testing.T, modifyURL func(wsURL string) string, want
 	// TODO: a "defer cancel()" here adds a 1s timeout, since we try to
 	// close the target twice. Fix that.
 	ctx, _ := NewContext(allocCtx)
-	ctx, cancel = context.WithTimeout(ctx, 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
 	// Connect to the browser, then kill it.
 	if err := Run(ctx); err != nil {
 		t.Fatal(err)
 	}
-	if err := cmd.Process.Signal(os.Kill); err != nil {
-		t.Error(err)
-	}
+	procCancel()
 	switch err := Run(ctx, Navigate(testdataDir+"/form.html")); err {
 	case nil:
 		// TODO: figure out why this happens sometimes on Travis
@@ -294,6 +295,7 @@ func testRemoteAllocator(t *testing.T, modifyURL func(wsURL string) string, want
 	case context.DeadlineExceeded:
 		t.Fatalf("did not expect a standard context error: %v", err)
 	}
+	cmd.Wait()
 }
 
 func TestExecAllocatorMissingWebsocketAddr(t *testing.T) {
@@ -454,7 +456,7 @@ func TestStartsWithNonBlankTab(t *testing.T) {
 	t.Parallel()
 
 	allocCtx, cancel := NewExecAllocator(context.Background(),
-		append(allocOpts[:],
+		append(allocOpts,
 			ModifyCmdFunc(func(cmd *exec.Cmd) {
 				// it assumes that the last argument is "about:blank" and
 				// replace it with other URL.

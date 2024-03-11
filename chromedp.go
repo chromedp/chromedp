@@ -49,6 +49,28 @@ type Context struct {
 	// unused page target, or create a new one.
 	targetID target.ID
 
+	// createBrowserContextParams is set up by WithNewBrowserContext. It is used
+	// to create a new BrowserContext.
+	createBrowserContextParams *target.CreateBrowserContextParams
+
+	// browserContextOwner indicates whether this context is a BrowserContext
+	// owner. The owner is responsible for disposing the BrowserContext once
+	// the context is done.
+	browserContextOwner bool
+
+	// BrowserContextID is set up by WithExistingBrowserContext.
+	//
+	// Otherwise, BrowserContextID holds a non-empty value in the following cases:
+	//
+	// 1. if the context is created with the WithNewBrowserContext option, a new
+	// BrowserContext is created on its first run, and BrowserContextID holds
+	// the id of that new BrowserContext;
+	//
+	// 2. if the context is not created with the WithTargetID option, and its
+	// parent context has a non-empty BrowserContextID, this context's
+	// BrowserContextID is copied from the parent context.
+	BrowserContextID cdp.BrowserContextID
+
 	browserListeners []cancelableListener
 	targetListeners  []cancelableListener
 
@@ -73,7 +95,7 @@ type Context struct {
 	closedTarget sync.WaitGroup
 
 	// allocated is closed when an allocated browser completely stops. If no
-	// browser needs to be allocated, the channel is simply not initialised
+	// browser needs to be allocated, the channel is simply not initialized
 	// and remains nil.
 	allocated chan struct{}
 
@@ -101,9 +123,11 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 	ctx, cancel := context.WithCancel(parent)
 
 	c := &Context{cancel: cancel, first: true}
+	var parentBrowserContextID cdp.BrowserContextID
 	if pc := FromContext(parent); pc != nil {
 		c.Allocator = pc.Allocator
 		c.Browser = pc.Browser
+		parentBrowserContextID = pc.BrowserContextID
 		// don't inherit Target, so that NewContext can be used to
 		// create a new tab on the same browser.
 
@@ -123,6 +147,23 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 	for _, o := range opts {
 		o(c)
 	}
+	if c.createBrowserContextParams != nil && c.BrowserContextID != "" {
+		panic("WithExistingBrowserContext can not be used when WithNewBrowserContext is specified")
+	}
+	if c.targetID == "" {
+		if c.BrowserContextID == "" {
+			// Inherit BrowserContextID from its parent context.
+			c.BrowserContextID = parentBrowserContextID
+		}
+	} else {
+		if c.createBrowserContextParams != nil {
+			panic("WithNewBrowserContext can not be used when WithTargetID is specified")
+		}
+		if c.BrowserContextID != "" {
+			panic("WithExistingBrowserContext can not be used when WithTargetID is specified")
+		}
+	}
+
 	if c.Allocator == nil {
 		c.Allocator = setupExecAllocator(DefaultExecAllocatorOptions[:]...)
 	}
@@ -148,15 +189,22 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 		// We need a new context, as ctx is cancelled; use a 1s timeout.
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
+		browserExecutor := cdp.WithExecutor(ctx, c.Browser)
 		if id := c.Target.SessionID; id != "" {
 			action := target.DetachFromTarget().WithSessionID(id)
-			if err := action.Do(cdp.WithExecutor(ctx, c.Browser)); c.cancelErr == nil && err != nil {
+			if err := action.Do(browserExecutor); c.cancelErr == nil && err != nil {
 				c.cancelErr = err
 			}
 		}
 		if id := c.Target.TargetID; id != "" {
 			action := target.CloseTarget(id)
-			if err := action.Do(cdp.WithExecutor(ctx, c.Browser)); c.cancelErr == nil && err != nil {
+			if err := action.Do(browserExecutor); c.cancelErr == nil && err != nil {
+				c.cancelErr = err
+			}
+		}
+		if c.browserContextOwner {
+			action := target.DisposeBrowserContext(c.BrowserContextID)
+			if err := action.Do(browserExecutor); c.cancelErr == nil && err != nil {
 				c.cancelErr = err
 			}
 		}
@@ -196,7 +244,9 @@ func FromContext(ctx context.Context) *Context {
 // underlying errors happening during cancellation.
 func Cancel(ctx context.Context) error {
 	c := FromContext(ctx)
-	if c == nil {
+	// c.cancel is nil when Cancel is wrongly called with a context returned
+	// by chromedp.NewExecAllocator or chromedp.NewRemoteAllocator.
+	if c == nil || c.cancel == nil {
 		return ErrInvalidContext
 	}
 	graceful := c.first && c.Browser != nil
@@ -263,6 +313,15 @@ func initContextBrowser(ctx context.Context) (*Context, error) {
 // Note that the first time Run is called on a context, a browser will be
 // allocated via Allocator. Thus, it's generally a bad idea to use a context
 // timeout on the first Run call, as it will stop the entire browser.
+//
+// Also note that the actions are run with the Target executor. In the case that
+// a Browser executor is required, the action can be written like this:
+//
+//	err := chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
+//		c := chromedp.FromContext(ctx)
+//		id, err := target.CreateBrowserContext().Do(cdp.WithExecutor(ctx, c.Browser))
+//		return err
+//	}))
 func Run(ctx context.Context, actions ...Action) error {
 	c, err := initContextBrowser(ctx)
 	if err != nil {
@@ -292,15 +351,28 @@ func (c *Context) newTarget(ctx context.Context) error {
 			if err != nil {
 				return err
 			}
+
+			c.Target.frameMu.Lock()
 			c.Target.frames[tree.Frame.ID] = tree.Frame
 			c.Target.cur = tree.Frame.ID
+			c.Target.frameMu.Unlock()
+
 			c.Target.documentUpdated(ctx)
 		}
 		return nil
 	}
 	if !c.first {
 		var err error
-		c.targetID, err = target.CreateTarget("about:blank").Do(cdp.WithExecutor(ctx, c.Browser))
+		browserExecutor := cdp.WithExecutor(ctx, c.Browser)
+		if c.createBrowserContextParams != nil {
+			c.BrowserContextID, err = c.createBrowserContextParams.Do(browserExecutor)
+			if err != nil {
+				return err
+			}
+			c.browserContextOwner = true
+			c.createBrowserContextParams = nil
+		}
+		c.targetID, err = target.CreateTarget("about:blank").WithBrowserContextID(c.BrowserContextID).Do(browserExecutor)
 		if err != nil {
 			return err
 		}
@@ -411,6 +483,38 @@ func WithTargetID(id target.ID) ContextOption {
 	return func(c *Context) { c.targetID = id }
 }
 
+// CreateBrowserContextOption is a BrowserContext creation options.
+type CreateBrowserContextOption = func(*target.CreateBrowserContextParams) *target.CreateBrowserContextParams
+
+// WithNewBrowserContext sets up a context to create a new BrowserContext, and
+// create a new target in this BrowserContext. A child context will create its
+// target in this BrowserContext too, unless it's set up with other options.
+// The new BrowserContext will be disposed when the context is done.
+func WithNewBrowserContext(options ...CreateBrowserContextOption) ContextOption {
+	return func(c *Context) {
+		if c.first {
+			panic("WithNewBrowserContext can not be used before Browser is initialized")
+		}
+
+		params := target.CreateBrowserContext().WithDisposeOnDetach(true)
+		for _, o := range options {
+			params = o(params)
+		}
+		c.createBrowserContextParams = params
+	}
+}
+
+// WithExistingBrowserContext sets up a context to create a new target in the
+// specified browser context.
+func WithExistingBrowserContext(id cdp.BrowserContextID) ContextOption {
+	return func(c *Context) {
+		if c.first {
+			panic("WithExistingBrowserContext can not be used before Browser is initialized")
+		}
+		c.BrowserContextID = id
+	}
+}
+
 // WithLogf is a shortcut for WithBrowserOption(WithBrowserLogf(f)).
 func WithLogf(f func(string, ...interface{})) ContextOption {
 	return WithBrowserOption(WithBrowserLogf(f))
@@ -519,9 +623,9 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 
 		// Obtain frameID from the target.
 		c := FromContext(ctx)
-		c.Target.frameMu.Lock()
+		c.Target.frameMu.RLock()
 		frameID = c.Target.cur
-		c.Target.frameMu.Unlock()
+		c.Target.frameMu.RUnlock()
 
 		ListenTarget(lctx, func(ev interface{}) {
 			if loaderID != "" {
