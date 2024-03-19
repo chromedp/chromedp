@@ -615,6 +615,11 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 					finished = true
 					lcancel()
 				}
+			case *page.EventFrameStoppedLoading:
+				if hasInit && ev.FrameID == frameID {
+					finished = true
+					lcancel()
+				}
 			}
 		}
 		// earlyEvents is a buffered list of events which happened
