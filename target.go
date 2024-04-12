@@ -246,6 +246,8 @@ func (t *Target) pageEvent(ev interface{}) {
 		return
 	case *page.EventDownloadWillBegin:
 		return
+	case *page.EventDownloadProgress:
+		return
 
 	default:
 		t.errf("unhandled page event %T", ev)
