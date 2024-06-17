@@ -32,7 +32,7 @@ jobs:
       run: docker run -d -t --name chromedp-125.0.6422.142 chromedp/headless-shell:125.0.6422.142
 
     - name: Grep for network v125.0.6422.142 is listening on
-      run: docker exec -it chromedp-125.0.6422.142 bash -c 'apt -qq update && apt install -qq -y iproute2 > /dev/null 2>&1 && ss -a | grep 9222'
+      run: docker exec chromedp-125.0.6422.142 bash -c 'apt -qq update && apt install -qq -y iproute2 > /dev/null 2>&1 && ss -a | grep 9222'
 
     - name: Curl to v125.0.6422.142 of headless-shell
       run: curl -v http://localhost:9222/json/version
@@ -46,7 +46,7 @@ jobs:
       run: docker run -d -t --name chromedp-latest chromedp/headless-shell:latest
 
     - name: Grep for network vlatest is listening on
-      run: docker exec -it chromedp-latest bash -c 'apt -qq update && apt install -qq -y iproute2 > /dev/null 2>&1 && ss -a | grep 9222'
+      run: docker exec chromedp-latest bash -c 'apt -qq update && apt install -qq -y iproute2 > /dev/null 2>&1 && ss -a | grep 9222'
 
     - name: Curl to latest headless-shell - we expect this to fail
       run: curl -v http://localhost:9222/json/version
