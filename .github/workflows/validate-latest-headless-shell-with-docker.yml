@@ -37,6 +37,12 @@ jobs:
     - name: Curl to v125.0.6422.142 of headless-shell
       run: curl -v http://localhost:9222/json/version
 
+    - name: Stop chromedp-125.0.6422.142 containers
+      if: always()
+      run: |
+        docker stop chromedp-125.0.6422.142
+        docker rm chromedp-125.0.6422.142
+
     - name: Start headless-shell at latest
       run: docker run -d -t -p 9222:9222 --name chromedp-latest chromedp/headless-shell:latest
 
@@ -46,10 +52,8 @@ jobs:
     - name: Curl to latest headless-shell - we expect this to fail
       run: curl -v http://localhost:9222/json/version
 
-    - name: Stop containers
+    - name: Stop chromedp-latest containers
       if: always()
       run: |
-        docker stop chromedp-125.0.6422.142
-        docker rm chromedp-125.0.6422.142
         docker stop chromedp-latest
         docker rm chromedp-latest
