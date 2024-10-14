@@ -357,6 +357,11 @@ func distributedNodesUpdated(nodes []*cdp.BackendNode) nodeOp {
 	}
 }
 
+func scrollableFlagUpdated(m map[cdp.NodeID]*cdp.Node, id cdp.NodeID) nodeOp {
+	return func(n *cdp.Node) {
+	}
+}
+
 func insertNode(n []*cdp.Node, prevID cdp.NodeID, c *cdp.Node) []*cdp.Node {
 	var i int
 	var found bool

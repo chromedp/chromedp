@@ -415,6 +415,9 @@ func (t *Target) domEvent(ctx context.Context, ev interface{}) {
 	case *dom.EventDistributedNodesUpdated:
 		id, op = e.InsertionPointID, distributedNodesUpdated(e.DistributedNodes)
 
+	case *dom.EventScrollableFlagUpdated:
+		id, op = e.NodeID, scrollableFlagUpdated(f.Nodes, e.NodeID)
+
 	default:
 		t.errf("unhandled node event %T", ev)
 		return
