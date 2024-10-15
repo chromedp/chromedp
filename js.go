@@ -56,4 +56,11 @@ var (
 	// It's modified to make mutation polling respect timeout even when there is not a DOM mutation.
 	//go:embed js/waitForPredicatePageFunction.js
 	waitForPredicatePageFunction string
+
+	// exposedJS is a javascript snippet that wraps the function (CDP binding)
+	// It refers to puppeteer. See
+	// https://github.com/puppeteer/puppeteer/blob/main/packages/puppeteer-core/src/common/util.ts#L248-L327
+	// It's modified to make BindingFunc takes exactly one argument, this argument should be string
+	//go:embed js/expose.js
+	exposeJS string
 )
