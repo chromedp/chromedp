@@ -85,6 +85,10 @@ type Context struct {
 	// cancel function doesn't do any waiting.
 	cancel func()
 
+	// dontClose configures whether the browser or the tab should be closed
+	// after the context was canceled.
+	dontClose bool
+
 	// first records whether this context created a brand new Chrome
 	// process. This is important, because its cancellation should stop the
 	// entire browser and its handler, and not just a portion of its pages.
@@ -196,7 +200,7 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 				c.cancelErr = err
 			}
 		}
-		if id := c.Target.TargetID; id != "" {
+		if id := c.Target.TargetID; !c.dontClose && id != "" {
 			action := target.CloseTarget(id)
 			if err := action.Do(browserExecutor); c.cancelErr == nil && err != nil {
 				c.cancelErr = err
@@ -540,6 +544,11 @@ func WithBrowserOption(opts ...BrowserOption) ContextOption {
 		}
 		c.browserOpts = append(c.browserOpts, opts...)
 	}
+}
+
+// WithDontClose allows keeping the browser / tab running after disconnecting closing the context
+func WithDontClose() ContextOption {
+	return func(c *Context) { c.dontClose = true }
 }
 
 // RunResponse is an alternative to Run which can be used with a list of actions
