@@ -336,6 +336,8 @@ func (t *Target) pageEvent(ev interface{}) {
 		*page.EventWindowOpen,
 		*page.EventBackForwardCacheNotUsed:
 		return
+	case *page.EventDownloadProgress:
+		return
 
 	default:
 		t.errf("unhandled page event %T", ev)
