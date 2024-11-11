@@ -334,7 +334,8 @@ func (t *Target) pageEvent(ev interface{}) {
 		*page.EventScreencastFrame,
 		*page.EventScreencastVisibilityChanged,
 		*page.EventWindowOpen,
-		*page.EventBackForwardCacheNotUsed:
+		*page.EventBackForwardCacheNotUsed,
+		*page.EventFrameSubtreeWillBeDetached:
 		return
 
 	default:
