@@ -78,7 +78,21 @@ func (c *Conn) Read(_ context.Context, msg *cdproto.Message) error {
 	if err != nil {
 		return err
 	}
-	if h.OpCode != ws.OpText {
+
+	if h.OpCode == ws.OpPing { // ping
+		if c.dbgf != nil {
+			c.dbgf("received ping frame, ignoring...")
+		}
+		return nil
+	} else if h.OpCode == ws.OpClose { // close
+		if c.dbgf != nil {
+			c.dbgf("received close frame")
+		}
+		return io.EOF
+	} else if h.OpCode != ws.OpText {
+		if c.dbgf != nil {
+			c.dbgf("unknown OpCode: %s", h.OpCode)
+		}
 		return ErrInvalidWebsocketMessage
 	}
 
