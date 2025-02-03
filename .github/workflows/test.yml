@@ -4,20 +4,20 @@ jobs:
   test:
     strategy:
       matrix:
-        go-version: [1.16.x, oldstable, stable]
+        go-version: [oldstable, stable]
     runs-on: ubuntu-latest
     steps:
-    - name: Install Go
-      uses: actions/setup-go@v4
-      with:
-        go-version: ${{ matrix.go-version }}
-    - name: Install Packages
-      run: |
-        sudo apt-get -qq update
-        sudo apt-get install -y build-essential
-    - name: Checkout code
-      uses: actions/checkout@v3
-    - name: Test Chrome
-      run: go test -v ./...
-    - name: Test headless-shell
-      run: ./contrib/docker-test.sh
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go-version }}
+      - name: Install Packages
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get install -y build-essential
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Test Chrome
+        run: go test -v ./...
+      - name: Test headless-shell
+        run: ./contrib/docker-test.sh
