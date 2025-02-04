@@ -10,6 +10,9 @@ import (
 	"path"
 	"testing"
 
+	_ "golang.org/x/image/webp"
+
+	"github.com/chromedp/cdproto/page"
 	"github.com/orisano/pixelmatch"
 )
 
@@ -68,6 +71,140 @@ func TestScreenshot(t *testing.T) {
 			); err != nil {
 				t.Fatal(err)
 			}
+			diff, err := matchPixel(buf, test.want)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff != 0 {
+				t.Fatalf("screenshot does not match. diff: %v", diff)
+			}
+		})
+	}
+}
+
+func TestScreenshotWithFormatWebp(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		sel  string
+		want string
+	}{
+		{
+			name: "padding border",
+			sel:  "#padding-border",
+			want: "element-padding-border.webp",
+		},
+		{
+			name: "larger than viewport",
+			sel:  "#larger-than-viewport",
+			want: "element-larger-than-viewport.webp",
+		},
+		{
+			name: "outside viewport",
+			sel:  "#outside-viewport",
+			want: "element-scrolled-into-view.webp",
+		},
+		{
+			name: "rotate element",
+			sel:  "#rotated",
+			want: "element-rotate.webp",
+		},
+		{
+			name: "fractional dimensions",
+			sel:  "#fractional-dimensions",
+			want: "element-fractional.webp",
+		},
+		{
+			name: "fractional offset",
+			sel:  "#fractional-offset",
+			want: "element-fractional-offset.webp",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ctx, cancel := testAllocate(t, "screenshot.html")
+			defer cancel()
+
+			var buf []byte
+			if err := Run(ctx,
+				EmulateViewport(500, 500),
+				EvaluateAsDevTools("document.documentElement.scrollTo(20,  30)", nil),
+				ScreenshotWithFormat(test.sel, &buf, page.CaptureScreenshotFormatWebp, ByQuery),
+			); err != nil {
+				t.Fatal(err)
+			}
+
+			diff, err := matchPixel(buf, test.want)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if diff != 0 {
+				t.Fatalf("screenshot does not match. diff: %v", diff)
+			}
+		})
+	}
+}
+
+func TestScreenshotWithFormatJpeg(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		sel  string
+		want string
+	}{
+		{
+			name: "padding border",
+			sel:  "#padding-border",
+			want: "element-padding-border.jpg",
+		},
+		{
+			name: "larger than viewport",
+			sel:  "#larger-than-viewport",
+			want: "element-larger-than-viewport.jpg",
+		},
+		{
+			name: "outside viewport",
+			sel:  "#outside-viewport",
+			want: "element-scrolled-into-view.jpg",
+		},
+		{
+			name: "rotate element",
+			sel:  "#rotated",
+			want: "element-rotate.jpg",
+		},
+		{
+			name: "fractional dimensions",
+			sel:  "#fractional-dimensions",
+			want: "element-fractional.jpg",
+		},
+		{
+			name: "fractional offset",
+			sel:  "#fractional-offset",
+			want: "element-fractional-offset.jpg",
+		},
+	}
+
+	for _, test := range tests {
+		test := test
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			ctx, cancel := testAllocate(t, "screenshot.html")
+			defer cancel()
+
+			var buf []byte
+			if err := Run(ctx,
+				EmulateViewport(500, 500),
+				EvaluateAsDevTools("document.documentElement.scrollTo(20,  30)", nil),
+				ScreenshotWithFormat(test.sel, &buf, page.CaptureScreenshotFormatJpeg, ByQuery),
+			); err != nil {
+				t.Fatal(err)
+			}
+
 			diff, err := matchPixel(buf, test.want)
 			if err != nil {
 				t.Fatal(err)
@@ -170,6 +307,52 @@ func TestCaptureScreenshot(t *testing.T) {
 	}
 
 	diff, err := matchPixel(buf, "sanity.png")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff != 0 {
+		t.Fatalf("screenshot does not match. diff: %v", diff)
+	}
+}
+
+func TestCaptureScreenshotWithFormatJpeg(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "grid.html")
+	defer cancel()
+
+	var buf []byte
+	if err := Run(ctx,
+		EmulateViewport(500, 500),
+		CaptureScreenshotWithFormat(&buf, page.CaptureScreenshotFormatJpeg),
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	diff, err := matchPixel(buf, "sanity.jpeg")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if diff != 0 {
+		t.Fatalf("screenshot does not match. diff: %v", diff)
+	}
+}
+
+func TestCaptureScreenshotWithFormatWebp(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "grid.html")
+	defer cancel()
+
+	var buf []byte
+	if err := Run(ctx,
+		EmulateViewport(500, 500),
+		CaptureScreenshotWithFormat(&buf, page.CaptureScreenshotFormatWebp),
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	diff, err := matchPixel(buf, "sanity.webp")
 	if err != nil {
 		t.Fatal(err)
 	}
