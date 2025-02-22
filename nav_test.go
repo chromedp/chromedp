@@ -329,7 +329,7 @@ func TestNavigateWhileLoading(t *testing.T) {
 			var wg sync.WaitGroup
 			wg.Add(1)
 			lctx, cancel := context.WithCancel(ctx)
-			ListenTarget(lctx, func(ev interface{}) {
+			ListenTarget(lctx, func(ev any) {
 				if ev, ok := ev.(*page.EventLifecycleEvent); ok {
 					if ev.Name == "init" {
 						cancel()

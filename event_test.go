@@ -119,7 +119,7 @@ func TestCloseDialog(t *testing.T) {
 			ctx, cancel := testAllocate(t, "")
 			defer cancel()
 
-			ListenTarget(ctx, func(ev interface{}) {
+			ListenTarget(ctx, func(ev any) {
 				switch e := ev.(type) {
 				case *page.EventJavascriptDialogOpening:
 					if e.Type != test.dialogType {

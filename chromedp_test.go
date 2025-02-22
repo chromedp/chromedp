@@ -137,7 +137,7 @@ func testAllocateSeparate(tb testing.TB) (context.Context, context.CancelFunc) {
 	if err := Run(ctx); err != nil {
 		tb.Fatal(err)
 	}
-	ListenBrowser(ctx, func(ev interface{}) {
+	ListenBrowser(ctx, func(ev any) {
 		if ev, ok := ev.(*runtime.EventExceptionThrown); ok {
 			tb.Errorf("%+v\n", ev.ExceptionDetails)
 		}
@@ -362,7 +362,7 @@ func TestListenBrowser(t *testing.T) {
 	// Check that many ListenBrowser callbacks work, including adding
 	// callbacks after the browser has been allocated.
 	var totalCount int32
-	ListenBrowser(ctx, func(ev interface{}) {
+	ListenBrowser(ctx, func(ev any) {
 		// using sync/atomic, as the browser is shared.
 		atomic.AddInt32(&totalCount, 1)
 	})
@@ -370,7 +370,7 @@ func TestListenBrowser(t *testing.T) {
 		t.Fatal(err)
 	}
 	seenSessions := make(map[target.SessionID]bool)
-	ListenBrowser(ctx, func(ev interface{}) {
+	ListenBrowser(ctx, func(ev any) {
 		if ev, ok := ev.(*target.EventAttachedToTarget); ok {
 			seenSessions[ev.SessionID] = true
 		}
@@ -399,7 +399,7 @@ func TestListenTarget(t *testing.T) {
 	// Check that many listen callbacks work, including adding callbacks
 	// after the target has been attached to.
 	var navigatedCount, updatedCount int
-	ListenTarget(ctx, func(ev interface{}) {
+	ListenTarget(ctx, func(ev any) {
 		if _, ok := ev.(*page.EventFrameNavigated); ok {
 			navigatedCount++
 		}
@@ -407,7 +407,7 @@ func TestListenTarget(t *testing.T) {
 	if err := Run(ctx); err != nil {
 		t.Fatal(err)
 	}
-	ListenTarget(ctx, func(ev interface{}) {
+	ListenTarget(ctx, func(ev any) {
 		if _, ok := ev.(*dom.EventDocumentUpdated); ok {
 			updatedCount++
 		}
@@ -437,7 +437,7 @@ func TestLargeEventCount(t *testing.T) {
 	// make the test fail somewhat reliably on old chromedp versions,
 	// without making the test too slow.
 	first := true
-	ListenTarget(ctx, func(ev interface{}) {
+	ListenTarget(ctx, func(ev any) {
 		if _, ok := ev.(*runtime.EventConsoleAPICalled); ok && first {
 			time.Sleep(50 * time.Millisecond)
 			first = false
@@ -537,13 +537,13 @@ func TestListenCancel(t *testing.T) {
 	var browserCount, targetCount int
 
 	ctx1, cancel1 := context.WithCancel(ctx)
-	ListenBrowser(ctx1, func(ev interface{}) {
+	ListenBrowser(ctx1, func(ev any) {
 		browserCount++
 		cancel1()
 	})
 
 	ctx2, cancel2 := context.WithCancel(ctx)
-	ListenTarget(ctx2, func(ev interface{}) {
+	ListenTarget(ctx2, func(ev any) {
 		targetCount++
 		cancel2()
 	})
@@ -564,7 +564,7 @@ func TestLogOptions(t *testing.T) {
 
 	var bufMu sync.Mutex
 	var buf bytes.Buffer
-	fn := func(format string, a ...interface{}) {
+	fn := func(format string, a ...any) {
 		bufMu.Lock()
 		fmt.Fprintf(&buf, format, a...)
 		fmt.Fprintln(&buf)
@@ -1003,7 +1003,7 @@ func TestDownloadIntoDir(t *testing.T) {
 	defer s.Close()
 
 	done := make(chan string, 1)
-	ListenTarget(ctx, func(v interface{}) {
+	ListenTarget(ctx, func(v any) {
 		if ev, ok := v.(*browser.EventDownloadProgress); ok {
 			if ev.State == browser.DownloadProgressStateCompleted {
 				done <- ev.GUID
@@ -1116,7 +1116,7 @@ func TestAttachingToWorkers(t *testing.T) {
 
 			ch := make(chan target.ID, 1)
 
-			ListenTarget(ctx, func(ev interface{}) {
+			ListenTarget(ctx, func(ev any) {
 				if ev, ok := ev.(*target.EventAttachedToTarget); ok {
 					if !strings.Contains(ev.TargetInfo.Type, "worker") {
 						return

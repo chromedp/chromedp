@@ -36,7 +36,7 @@ type Allocator interface {
 // to create the allocator without the unnecessary context layer.
 func setupExecAllocator(opts ...ExecAllocatorOption) *ExecAllocator {
 	ep := &ExecAllocator{
-		initFlags:        make(map[string]interface{}),
+		initFlags:        make(map[string]any),
 		wsURLReadTimeout: 20 * time.Second,
 	}
 	for _, o := range opts {
@@ -104,7 +104,7 @@ type ExecAllocatorOption = func(*ExecAllocator)
 // machine.
 type ExecAllocator struct {
 	execPath  string
-	initFlags map[string]interface{}
+	initFlags map[string]any
 	initEnv   []string
 
 	// Chrome will sometimes fail to print the websocket, or run for a long
@@ -397,7 +397,7 @@ func findExecPath() string {
 // Flag is a generic command line option to pass a flag to Chrome. If the value
 // is a string, it will be passed as --name=value. If it's a boolean, it will be
 // passed as --name if value is true.
-func Flag(name string, value interface{}) ExecAllocatorOption {
+func Flag(name string, value any) ExecAllocatorOption {
 	return func(a *ExecAllocator) {
 		a.initFlags[name] = value
 	}

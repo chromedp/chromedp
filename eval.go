@@ -32,7 +32,7 @@ type EvaluateAction Action
 // and the value that res points to can not be nil (only the value of a chan,
 // func, interface, map, pointer, or slice can be nil), it returns [ErrJSUndefined]
 // or [ErrJSNull] respectively.
-func Evaluate(expression string, res interface{}, opts ...EvaluateOption) EvaluateAction {
+func Evaluate(expression string, res any, opts ...EvaluateOption) EvaluateAction {
 	return ActionFunc(func(ctx context.Context) error {
 		// set up parameters
 		p := runtime.Evaluate(expression)
@@ -60,7 +60,7 @@ func Evaluate(expression string, res interface{}, opts ...EvaluateOption) Evalua
 	})
 }
 
-func parseRemoteObject(v *runtime.RemoteObject, res interface{}) (err error) {
+func parseRemoteObject(v *runtime.RemoteObject, res any) (err error) {
 	if res == nil {
 		return
 	}
@@ -108,7 +108,7 @@ func parseRemoteObject(v *runtime.RemoteObject, res interface{}) (err error) {
 // See [Evaluate] for more information on how script expressions are evaluated.
 //
 // Note: this should not be used with untrusted JavaScript.
-func EvaluateAsDevTools(expression string, res interface{}, opts ...EvaluateOption) EvaluateAction {
+func EvaluateAsDevTools(expression string, res any, opts ...EvaluateOption) EvaluateAction {
 	return Evaluate(expression, res, append(opts, EvalObjectGroup("console"), EvalWithCommandLineAPI)...)
 }
 

@@ -29,13 +29,13 @@ import (
 // See [screenshot] for an example of taking a screenshot of the entire page.
 //
 // [screenshot]: https://github.com/chromedp/examples/tree/master/screenshot
-func Screenshot(sel interface{}, picbuf *[]byte, opts ...QueryOption) QueryAction {
+func Screenshot(sel any, picbuf *[]byte, opts ...QueryOption) QueryAction {
 	return ScreenshotScale(sel, 1, picbuf, opts...)
 }
 
 // ScreenshotScale is like [Screenshot] but accepts a scale parameter that
 // specifies the page scale factor.
-func ScreenshotScale(sel interface{}, scale float64, picbuf *[]byte, opts ...QueryOption) QueryAction {
+func ScreenshotScale(sel any, scale float64, picbuf *[]byte, opts ...QueryOption) QueryAction {
 	if picbuf == nil {
 		panic("picbuf cannot be nil")
 	}

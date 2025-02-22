@@ -382,7 +382,7 @@ func (c *Context) newTarget(ctx context.Context) error {
 	// This is like WaitNewTarget, but for the entire browser.
 	ch := make(chan target.ID, 1)
 	lctx, cancel := context.WithCancel(ctx)
-	ListenBrowser(lctx, func(ev interface{}) {
+	ListenBrowser(lctx, func(ev any) {
 		var info *target.Info
 		switch ev := ev.(type) {
 		case *target.EventTargetCreated:
@@ -516,17 +516,17 @@ func WithExistingBrowserContext(id cdp.BrowserContextID) ContextOption {
 }
 
 // WithLogf is a shortcut for WithBrowserOption(WithBrowserLogf(f)).
-func WithLogf(f func(string, ...interface{})) ContextOption {
+func WithLogf(f func(string, ...any)) ContextOption {
 	return WithBrowserOption(WithBrowserLogf(f))
 }
 
 // WithErrorf is a shortcut for WithBrowserOption(WithBrowserErrorf(f)).
-func WithErrorf(f func(string, ...interface{})) ContextOption {
+func WithErrorf(f func(string, ...any)) ContextOption {
 	return WithBrowserOption(WithBrowserErrorf(f))
 }
 
 // WithDebugf is a shortcut for WithBrowserOption(WithBrowserDebugf(f)).
-func WithDebugf(f func(string, ...interface{})) ContextOption {
+func WithDebugf(f func(string, ...any)) ContextOption {
 	return WithBrowserOption(WithBrowserDebugf(f))
 }
 
@@ -584,7 +584,7 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 
 		lctx, lcancel := context.WithCancel(ctx)
 		defer lcancel()
-		handleEvent := func(ev interface{}) {
+		handleEvent := func(ev any) {
 			switch ev := ev.(type) {
 			case *network.EventRequestWillBeSent:
 				if ev.LoaderID == loaderID && ev.Type == network.ResourceTypeDocument {
@@ -619,7 +619,7 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 		}
 		// earlyEvents is a buffered list of events which happened
 		// before we knew what loaderID to look for.
-		var earlyEvents []interface{}
+		var earlyEvents []any
 
 		// Obtain frameID from the target.
 		c := FromContext(ctx)
@@ -627,7 +627,7 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 		frameID = c.Target.cur
 		c.Target.frameMu.RUnlock()
 
-		ListenTarget(lctx, func(ev interface{}) {
+		ListenTarget(lctx, func(ev any) {
 			if loaderID != "" {
 				handleEvent(ev)
 				return
@@ -777,7 +777,7 @@ func retryWithSleep(ctx context.Context, d time.Duration, f func(ctx context.Con
 
 type cancelableListener struct {
 	ctx context.Context
-	fn  func(ev interface{})
+	fn  func(ev any)
 }
 
 // ListenBrowser adds a function which will be called whenever a browser event
@@ -789,7 +789,7 @@ type cancelableListener struct {
 // function should avoid blocking at all costs. For example, any Actions must be
 // run via a separate goroutine (otherwise, it could result in a deadlock if the
 // action sends CDP messages).
-func ListenBrowser(ctx context.Context, fn func(ev interface{})) {
+func ListenBrowser(ctx context.Context, fn func(ev any)) {
 	c := FromContext(ctx)
 	if c == nil {
 		panic(ErrInvalidContext)
@@ -812,7 +812,7 @@ func ListenBrowser(ctx context.Context, fn func(ev interface{})) {
 // function should avoid blocking at all costs. For example, any Actions must be
 // run via a separate goroutine (otherwise, it could result in a deadlock if the
 // action sends CDP messages).
-func ListenTarget(ctx context.Context, fn func(ev interface{})) {
+func ListenTarget(ctx context.Context, fn func(ev any)) {
 	c := FromContext(ctx)
 	if c == nil {
 		panic(ErrInvalidContext)
@@ -833,7 +833,7 @@ func ListenTarget(ctx context.Context, fn func(ev interface{})) {
 func WaitNewTarget(ctx context.Context, fn func(*target.Info) bool) <-chan target.ID {
 	ch := make(chan target.ID, 1)
 	lctx, cancel := context.WithCancel(ctx)
-	ListenTarget(lctx, func(ev interface{}) {
+	ListenTarget(lctx, func(ev any) {
 		var info *target.Info
 		switch ev := ev.(type) {
 		case *target.EventTargetCreated:

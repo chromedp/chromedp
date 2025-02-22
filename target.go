@@ -7,14 +7,13 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/mailru/easyjson"
-
 	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
+	jsonv2 "github.com/go-json-experiment/json"
 )
 
 // Target manages a Chrome DevTools Protocol target.
@@ -37,7 +36,7 @@ type Target struct {
 	cur cdp.FrameID
 
 	// logging funcs
-	logf, errf func(string, ...interface{})
+	logf, errf func(string, ...any)
 
 	// Indicates if the target is a worker target.
 	isWorker bool
@@ -91,7 +90,7 @@ func (t *Target) ensureFrame() (*cdp.Frame, *cdp.Node, runtime.ExecutionContextI
 func (t *Target) run(ctx context.Context) {
 	type eventValue struct {
 		method cdproto.MethodType
-		value  interface{}
+		value  any
 	}
 	// syncEventQueue is used to handle events synchronously within Target.
 	// TODO: If this queue gets full, the goroutine below could get stuck on
@@ -159,7 +158,7 @@ func (t *Target) run(ctx context.Context) {
 	}
 }
 
-func (t *Target) Execute(ctx context.Context, method string, params easyjson.Marshaler, res easyjson.Unmarshaler) error {
+func (t *Target) Execute(ctx context.Context, method string, params, res any) error {
 	if method == target.CommandCloseTarget {
 		return errors.New("to close the target, cancel its context or use chromedp.Cancel")
 	}
@@ -167,7 +166,7 @@ func (t *Target) Execute(ctx context.Context, method string, params easyjson.Mar
 	id := atomic.AddInt64(&t.browser.next, 1)
 	lctx, cancel := context.WithCancel(ctx)
 	ch := make(chan *cdproto.Message, 1)
-	fn := func(ev interface{}) {
+	fn := func(ev any) {
 		if msg, ok := ev.(*cdproto.Message); ok && msg.ID == id {
 			select {
 			case <-ctx.Done():
@@ -184,8 +183,7 @@ func (t *Target) Execute(ctx context.Context, method string, params easyjson.Mar
 	var buf []byte
 	if params != nil {
 		var err error
-		buf, err = easyjson.Marshal(params)
-		if err != nil {
+		if buf, err = jsonv2.Marshal(params); err != nil {
 			return err
 		}
 	}
@@ -212,14 +210,14 @@ func (t *Target) Execute(ctx context.Context, method string, params easyjson.Mar
 		case msg.Error != nil:
 			return msg.Error
 		case res != nil:
-			return easyjson.Unmarshal(msg.Result, res)
+			return jsonv2.Unmarshal(msg.Result, res)
 		}
 	}
 	return nil
 }
 
 // runtimeEvent handles incoming runtime events.
-func (t *Target) runtimeEvent(ev interface{}) {
+func (t *Target) runtimeEvent(ev any) {
 	switch ev := ev.(type) {
 	case *runtime.EventExecutionContextCreated:
 		var aux struct {
@@ -289,7 +287,7 @@ func (t *Target) documentUpdated(ctx context.Context) {
 }
 
 // pageEvent handles incoming page events.
-func (t *Target) pageEvent(ev interface{}) {
+func (t *Target) pageEvent(ev any) {
 	var id cdp.FrameID
 	var op frameOp
 
@@ -360,7 +358,7 @@ func (t *Target) pageEvent(ev interface{}) {
 }
 
 // domEvent handles incoming DOM events.
-func (t *Target) domEvent(ctx context.Context, ev interface{}) {
+func (t *Target) domEvent(ctx context.Context, ev any) {
 	t.frameMu.RLock()
 	f := t.frames[t.cur]
 	t.frameMu.RUnlock()

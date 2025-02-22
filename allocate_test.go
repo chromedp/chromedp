@@ -220,7 +220,7 @@ func testRemoteAllocator(t *testing.T, modifyURL func(wsURL string) string, want
 
 	taskCtx, taskCancel := NewContext(allocCtx,
 		// This used to crash when used with RemoteAllocator.
-		WithLogf(func(format string, args ...interface{}) {}),
+		WithLogf(func(format string, args ...any) {}),
 	)
 
 	{
@@ -412,7 +412,7 @@ func TestWithBrowserOptionAlreadyAllocated(t *testing.T) {
 	// This needs to panic, as we try to set up a browser logf function
 	// after the browser has already been set up earlier.
 	_, _ = NewContext(ctx,
-		WithLogf(func(format string, args ...interface{}) {}),
+		WithLogf(func(format string, args ...any) {}),
 	)
 }
 
