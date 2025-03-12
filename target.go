@@ -336,6 +336,8 @@ func (t *Target) pageEvent(ev any) {
 		*page.EventFrameSubtreeWillBeDetached,
 		*page.EventFrameStartedNavigating:
 		return
+	case *page.EventDownloadProgress:
+		return
 
 	default:
 		t.errf("unhandled page event %T", ev)
