@@ -2,9 +2,9 @@ package chromedp
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/chromedp/cdproto/runtime"
+	jsonv2 "github.com/go-json-experiment/json"
 )
 
 // CallAction are actions that calls a JavaScript function using
@@ -68,8 +68,8 @@ func callFunctionOn(ctx context.Context, functionDeclaration string, res any, op
 	return v, parseRemoteObject(v, res)
 }
 
-// CallOption is a function to modify the runtime.CallFunctionOnParams
-// to provide more information.
+// CallOption is a function to modify the runtime.CallFunctionOnParams to
+// provide more information.
 type CallOption = func(params *runtime.CallFunctionOnParams) *runtime.CallFunctionOnParams
 
 // errAppender is to help accumulating the arguments and simplifying error checks.
@@ -80,14 +80,16 @@ type errAppender struct {
 	err  error
 }
 
-// append method calls the json.Marshal method to marshal the value and appends it to the slice.
-// It records the first error for future reference.
-// As soon as an error occurs, the append method becomes a no-op but the error value is saved.
+// append method calls the jsonv2.Marshal method to marshal the value and
+// appends it to the slice. It records the first error for future reference.
+//
+// As soon as an error occurs, the append method becomes a no-op but the error
+// value is saved.
 func (ea *errAppender) append(v any) {
 	if ea.err != nil {
 		return
 	}
 	var b []byte
-	b, ea.err = json.Marshal(v)
+	b, ea.err = jsonv2.Marshal(v, DefaultMarshalOptions)
 	ea.args = append(ea.args, &runtime.CallArgument{Value: b})
 }

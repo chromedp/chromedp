@@ -183,7 +183,7 @@ func (t *Target) Execute(ctx context.Context, method string, params, res any) er
 	var buf []byte
 	if params != nil {
 		var err error
-		if buf, err = jsonv2.Marshal(params); err != nil {
+		if buf, err = jsonv2.Marshal(params, DefaultMarshalOptions); err != nil {
 			return err
 		}
 	}

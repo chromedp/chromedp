@@ -127,7 +127,7 @@ func (c *Conn) Write(_ context.Context, msg *cdproto.Message) error {
 	// Perform marshal, reusing encoder
 	var b bytes.Buffer
 	c.encoder.Reset(&b)
-	if err := jsonv2.MarshalEncode(&c.encoder, msg); err != nil {
+	if err := jsonv2.MarshalEncode(&c.encoder, msg, DefaultMarshalOptions); err != nil {
 		return err
 	}
 
