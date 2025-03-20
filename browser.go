@@ -259,6 +259,10 @@ func (b *Browser) run(ctx context.Context) {
 		for {
 			msg := new(cdproto.Message)
 			if err := b.conn.Read(ctx, msg); err != nil {
+				var syntacticError *jsontext.SyntacticError
+				if errors.As(err, &syntacticError) {
+					b.errf("%s", err)
+				}
 				return
 			}
 
