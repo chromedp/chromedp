@@ -105,8 +105,8 @@ func (c *Conn) Read(_ context.Context, msg *cdproto.Message) error {
 	}
 
 	// unmarshal, reusing decoder
-	c.decoder.Reset(&b)
-	return jsonv2.UnmarshalDecode(&c.decoder, msg)
+	c.decoder.Reset(&b, DefaultUnmarshalOptions)
+	return jsonv2.UnmarshalDecode(&c.decoder, msg, DefaultUnmarshalOptions)
 }
 
 // Write writes a message.
@@ -126,7 +126,7 @@ func (c *Conn) Write(_ context.Context, msg *cdproto.Message) error {
 
 	// Perform marshal, reusing encoder
 	var b bytes.Buffer
-	c.encoder.Reset(&b)
+	c.encoder.Reset(&b, DefaultMarshalOptions)
 	if err := jsonv2.MarshalEncode(&c.encoder, msg, DefaultMarshalOptions); err != nil {
 		return err
 	}

@@ -208,7 +208,7 @@ func (b *Browser) execute(ctx context.Context, method string, params, res any) e
 	var buf []byte
 	if params != nil {
 		var err error
-		if buf, err = jsonv2.Marshal(params); err != nil {
+		if buf, err = jsonv2.Marshal(params, DefaultMarshalOptions); err != nil {
 			return err
 		}
 	}
