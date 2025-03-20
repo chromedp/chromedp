@@ -114,7 +114,7 @@ func (t *Target) run(ctx context.Context) {
 					t.listenersMu.Unlock()
 					continue
 				}
-				ev, err := cdproto.UnmarshalMessage(msg)
+				ev, err := cdproto.UnmarshalMessage(msg, DefaultUnmarshalOptions)
 				if err != nil {
 					if _, ok := err.(cdp.ErrUnknownCommandOrEvent); ok {
 						// This is most likely an event received from an older
@@ -210,7 +210,7 @@ func (t *Target) Execute(ctx context.Context, method string, params, res any) er
 		case msg.Error != nil:
 			return msg.Error
 		case res != nil:
-			return jsonv2.Unmarshal(msg.Result, res)
+			return jsonv2.Unmarshal(msg.Result, res, DefaultUnmarshalOptions)
 		}
 	}
 	return nil
