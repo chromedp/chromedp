@@ -211,9 +211,6 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	case <-c.allocated: // for this browser's root context
 	}
 	a.wg.Add(1) // for the entire allocator
-	if a.combinedOutputWriter != nil {
-		a.wg.Add(1) // for the io.Copy in a separate goroutine
-	}
 	go func() {
 		// First wait for the process to be finished.
 		// TODO: do we care about this error in any scenario? if the
@@ -239,7 +236,7 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	var wsURL string
 	wsURLChan := make(chan struct{}, 1)
 	go func() {
-		wsURL, err = readOutput(stdout, a.combinedOutputWriter, a.wg.Done)
+		wsURL, err = readOutput(stdout, a.combinedOutputWriter, &a.wg)
 		wsURLChan <- struct{}{}
 	}()
 	select {
@@ -248,11 +245,6 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		err = errors.New("websocket url timeout reached")
 	}
 	if err != nil {
-		if a.combinedOutputWriter != nil {
-			// There's no io.Copy goroutine to call the done func.
-			// TODO: a cleaner way to deal with this edge case?
-			a.wg.Done()
-		}
 		return nil, err
 	}
 
@@ -282,11 +274,10 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 // readOutput grabs the websocket address from chrome's output, returning as
 // soon as it is found. All read output is forwarded to forward, if non-nil.
 // done is used to signal that the asynchronous io.Copy is done, if any.
-func readOutput(rc io.ReadCloser, forward io.Writer, done func()) (wsURL string, _ error) {
+func readOutput(rc io.ReadCloser, forward io.Writer, wg *sync.WaitGroup) (wsURL string, _ error) {
 	prefix := []byte("DevTools listening on")
 	var accumulated bytes.Buffer
 	bufr := bufio.NewReader(rc)
-readLoop:
 	for {
 		line, err := bufr.ReadBytes('\n')
 		if err != nil {
@@ -300,11 +291,9 @@ readLoop:
 		}
 
 		if bytes.HasPrefix(line, prefix) {
-			line = line[len(prefix):]
 			// use TrimSpace, to also remove \r on Windows
-			line = bytes.TrimSpace(line)
-			wsURL = string(line)
-			break readLoop
+			wsURL = string(bytes.TrimSpace(line[len(prefix):]))
+			break
 		}
 		accumulated.Write(line)
 	}
@@ -314,9 +303,10 @@ readLoop:
 	} else {
 		// Copy the rest of the output in a separate goroutine, as we
 		// need to return with the websocket URL.
+		wg.Add(1)
 		go func() {
 			io.Copy(forward, bufr)
-			done()
+			wg.Done()
 		}()
 	}
 	return wsURL, nil
