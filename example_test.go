@@ -740,7 +740,6 @@ func ExampleEvaluate() {
 	// Output:
 	// 3
 	// encountered an undefined value
-	// encountered a null value
 	// <nil>
 	// [1 2]
 	// slice is nil: true

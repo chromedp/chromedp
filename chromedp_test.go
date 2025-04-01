@@ -15,6 +15,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -905,7 +906,7 @@ func TestBrowserContext(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			disposed := !contains(ids, want)
+			disposed := !slices.Contains(ids, want)
 
 			if disposed != tt.wantDisposed {
 				t.Errorf("browser context disposed = %v, want %v", disposed, tt.wantDisposed)
@@ -1516,7 +1517,7 @@ func TestPDFTemplate(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	want := []byte("PDF Template -- about:blank" + "(1 / 1)" + "Hello World!")
+	want := []byte("Hello World!PDF Template -- about:blank(1 / 1)")
 	l := len(want)
 	// try to reuse buf
 	if len(buf) >= l {
@@ -1535,11 +1536,39 @@ func TestPDFTemplate(t *testing.T) {
 	}
 }
 
-func contains(v []cdp.BrowserContextID, id cdp.BrowserContextID) bool {
-	for _, i := range v {
-		if i == id {
-			return true
-		}
+// regression test for https://github.com/chromedp/chromedp/issues/1551
+func TestPDFBackground(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+
+	var buf []byte
+	if err := Run(ctx,
+		Navigate("about:blank"),
+		ActionFunc(func(ctx context.Context) error {
+			frameTree, err := page.GetFrameTree().Do(ctx)
+			if err != nil {
+				return err
+			}
+			return page.SetDocumentContent(frameTree.Frame.ID, `
+				<html lang="en">
+					<head></head>
+					<body style="background-color:green">
+						<p>Lorem ipsum</p>
+					</body>
+				</html>
+			`).Do(ctx)
+		}),
+		ActionFunc(func(ctx context.Context) error {
+			var err error
+			buf, _, err = page.PrintToPDF().Do(ctx)
+			return err
+		}),
+	); err != nil {
+		t.Fatal(err)
 	}
-	return false
+	if err := os.WriteFile("background.pdf", buf, 0o644); err != nil {
+		t.Fatal(err)
+	}
 }
