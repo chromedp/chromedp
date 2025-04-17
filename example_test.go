@@ -176,7 +176,7 @@ func ExampleNewContext_reuseBrowser() {
 		log.Fatal(err)
 	}
 
-	for i := 0; i < 2; i++ {
+	for i := range 2 {
 		func() {
 			ctx, cancel := context.WithTimeout(ctx, time.Second)
 			defer cancel()

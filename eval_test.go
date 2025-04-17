@@ -28,21 +28,21 @@ func TestEvaluateNumber(t *testing.T) {
 			wantErr:    "encountered an undefined value",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			ctx, cancel := testAllocate(t, "")
 			defer cancel()
 
 			err := Run(ctx,
-				Evaluate(tt.expression, &tt.res),
+				Evaluate(test.expression, &test.res),
 			)
-			if tt.wantErr == "" && err != nil {
+			if test.wantErr == "" && err != nil {
 				t.Fatalf("got error: %v", err)
 			}
-			if tt.wantErr != "" && (err == nil || tt.wantErr != err.Error()) {
-				t.Fatalf("wanted error: %q, got: %q", tt.wantErr, err)
-			} else if tt.res != tt.want {
-				t.Fatalf("want: %v, got: %v", tt.want, tt.res)
+			if test.wantErr != "" && (err == nil || test.wantErr != err.Error()) {
+				t.Fatalf("wanted error: %q, got: %q", test.wantErr, err)
+			} else if test.res != test.want {
+				t.Fatalf("want: %v, got: %v", test.want, test.res)
 			}
 		})
 	}
@@ -69,21 +69,21 @@ func TestEvaluateString(t *testing.T) {
 			wantErr:    "encountered an undefined value",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			ctx, cancel := testAllocate(t, "")
 			defer cancel()
 
 			err := Run(ctx,
-				Evaluate(tt.expression, &tt.res),
+				Evaluate(test.expression, &test.res),
 			)
-			if tt.wantErr == "" && err != nil {
+			if test.wantErr == "" && err != nil {
 				t.Fatalf("got error: %v", err)
 			}
-			if tt.wantErr != "" && (err == nil || tt.wantErr != err.Error()) {
-				t.Fatalf("wanted error: %q, got: %q", tt.wantErr, err)
-			} else if tt.res != tt.want {
-				t.Fatalf("want: %v, got: %v", tt.want, tt.res)
+			if test.wantErr != "" && (err == nil || test.wantErr != err.Error()) {
+				t.Fatalf("wanted error: %q, got: %q", test.wantErr, err)
+			} else if test.res != test.want {
+				t.Fatalf("want: %v, got: %v", test.want, test.res)
 			}
 		})
 	}
@@ -109,19 +109,19 @@ func TestEvaluateBytes(t *testing.T) {
 			want:       []byte(nil),
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			ctx, cancel := testAllocate(t, "")
 			defer cancel()
 
 			err := Run(ctx,
-				Evaluate(tt.expression, &tt.res),
+				Evaluate(test.expression, &test.res),
 			)
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
-			if !reflect.DeepEqual(tt.res, tt.want) {
-				t.Fatalf("want: %v, got: %v", tt.want, tt.res)
+			if !reflect.DeepEqual(test.res, test.want) {
+				t.Fatalf("want: %v, got: %v", test.want, test.res)
 			}
 		})
 	}
@@ -152,19 +152,19 @@ func TestEvaluateRemoteObject(t *testing.T) {
 			wantType:   "undefined",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			ctx, cancel := testAllocate(t, "")
 			defer cancel()
 
 			err := Run(ctx,
-				Evaluate(tt.expression, &tt.res),
+				Evaluate(test.expression, &test.res),
 			)
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
-			if string(tt.res.Type) != tt.wantType {
-				t.Fatalf("want type: %v, got type: %v", tt.wantType, tt.res.Type)
+			if string(test.res.Type) != test.wantType {
+				t.Fatalf("want type: %v, got type: %v", test.wantType, test.res.Type)
 			}
 		})
 	}
@@ -190,13 +190,13 @@ func TestEvaluateNil(t *testing.T) {
 			expression: "",
 		},
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
 			ctx, cancel := testAllocate(t, "")
 			defer cancel()
 
 			err := Run(ctx,
-				Evaluate(tt.expression, nil),
+				Evaluate(test.expression, nil),
 			)
 			if err != nil {
 				t.Fatalf("got error: %v", err)

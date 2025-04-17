@@ -86,7 +86,6 @@ func TestMouseClickNode(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		test := test
 		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
 			t.Parallel()
 
@@ -130,7 +129,6 @@ func TestMouseClickOffscreenNode(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		test := test
 		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
 			t.Parallel()
 
@@ -194,7 +192,6 @@ func TestKeyEvent(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		test := test
 		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
 			t.Parallel()
 
@@ -253,7 +250,6 @@ func TestKeyEventNode(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		test := test
 		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
 			t.Parallel()
 

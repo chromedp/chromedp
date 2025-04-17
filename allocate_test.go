@@ -175,10 +175,9 @@ func TestRemoteAllocator(t *testing.T) {
 			wantErr: "could not dial",
 		},
 	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			testRemoteAllocator(t, tt.modifyURL, tt.wantErr, tt.opts)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			testRemoteAllocator(t, test.modifyURL, test.wantErr, test.opts)
 		})
 	}
 }

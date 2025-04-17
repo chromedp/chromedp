@@ -339,7 +339,7 @@ func TestConcurrentCancel(t *testing.T) {
 
 	var wg sync.WaitGroup
 	// 50 is enough for 'go test -race' to easily spot issues.
-	for i := 0; i < 50; i++ {
+	for range 50 {
 		wg.Add(2)
 		ctx, cancel := NewContext(allocCtx)
 		go func() {
@@ -461,7 +461,7 @@ func TestLargeQuery(t *testing.T) {
 
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "<html><body>\n")
-		for i := 0; i < 2000; i++ {
+		for i := range 2000 {
 			fmt.Fprintf(w, `<div>`)
 			fmt.Fprintf(w, `<a href="/%d">link %d</a>`, i, i)
 			fmt.Fprintf(w, `</div>`)
@@ -858,17 +858,16 @@ func TestBrowserContext(t *testing.T) {
 			wantPanic:    "",
 		},
 	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			if tt.wantPanic != "" {
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if test.wantPanic != "" {
 				defer func() {
-					if got := fmt.Sprint(recover()); got != tt.wantPanic {
-						t.Errorf("want panic %q, got %q", tt.wantPanic, got)
+					if got := fmt.Sprint(recover()); got != test.wantPanic {
+						t.Errorf("want panic %q, got %q", test.wantPanic, got)
 					}
 				}()
 			}
-			ctx, cancel, want := tt.arrange(t)
+			ctx, cancel, want := test.arrange(t)
 			defer cancel()
 
 			got := getBrowserContext(t, ctx)
@@ -908,8 +907,8 @@ func TestBrowserContext(t *testing.T) {
 
 			disposed := !slices.Contains(ids, want)
 
-			if disposed != tt.wantDisposed {
-				t.Errorf("browser context disposed = %v, want %v", disposed, tt.wantDisposed)
+			if disposed != test.wantDisposed {
+				t.Errorf("browser context disposed = %v, want %v", disposed, test.wantDisposed)
 			}
 		})
 	}
@@ -953,7 +952,7 @@ func TestDirectCloseTarget(t *testing.T) {
 	want := "to close the target, cancel its context"
 
 	// Check that nothing is closed by running the action twice.
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		err := Run(ctx, ActionFunc(func(ctx context.Context) error {
 			return target.CloseTarget(c.Target.TargetID).Do(ctx)
 		}))
@@ -974,7 +973,7 @@ func TestDirectCloseBrowser(t *testing.T) {
 	want := "use chromedp.Cancel"
 
 	// Check that nothing is closed by running the action twice.
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		err := browser.Close().Do(cdp.WithExecutor(ctx, c.Browser))
 		got := fmt.Sprint(err)
 		if !strings.Contains(got, want) {
@@ -1293,7 +1292,6 @@ func TestRunResponse(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		allocate := func(t *testing.T) context.Context {
 			ctx, cancel := testAllocate(t, "")
 			t.Cleanup(cancel)

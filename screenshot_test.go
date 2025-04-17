@@ -54,7 +54,6 @@ func TestScreenshot(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			ctx, cancel := testAllocate(t, "screenshot.html")
@@ -103,7 +102,6 @@ func TestScreenshotScale(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			ctx, cancel := testAllocate(t, "screenshot.html")
@@ -199,7 +197,6 @@ func TestFullScreenshot(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
 			ctx, cancel := testAllocate(t, "grid.html")
