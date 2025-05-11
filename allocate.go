@@ -206,14 +206,6 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	go func() {
 		defer a.wg.Done()
 
-		// Wait for allocated semaphore before starting the process
-		select {
-		case <-ctx.Done():
-			startResult <- ctx.Err()
-			return
-		case <-c.allocated: // for this browser's root context
-		}
-
 		// On Linux, this ensures Pdeathsig works the way we expect.
 		// This should not negatively impact other situations
 		runtime.LockOSThread()
@@ -250,6 +242,13 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	// wait for a response from start
 	if err := <-startResult; err != nil {
 		return nil, err
+	}
+
+	// Wait for allocated semaphore before starting the process
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case <-c.allocated: // for this browser's root context
 	}
 
 	if a.combinedOutputWriter != nil {
