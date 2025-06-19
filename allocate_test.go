@@ -71,6 +71,37 @@ func TestExecAllocatorCancelParent(t *testing.T) {
 	}
 }
 
+func TestExecAllocatorCombinedOutputPanic(t *testing.T) {
+	t.Parallel()
+
+	buf := new(bytes.Buffer)
+	allocCtx, cancel := NewExecAllocator(context.Background(),
+		append([]ExecAllocatorOption{
+			CombinedOutput(buf),
+			Flag("enable-logging", true),
+			WSURLReadTimeout(1), // trigger err
+		}, allocOpts...)...)
+	defer cancel()
+
+	ctx, _ := NewContext(allocCtx, browserOpts...)
+
+	if _, err := FromContext(ctx).Allocator.Allocate(ctx, WithDialTimeout(1)); err != nil &&
+		err.Error() != "websocket url timeout reached" &&
+		!strings.Contains(err.Error(), "i/o timeout") {
+		t.Fatal(err)
+	}
+
+	// give time for the `readOutput` goroutine to finish
+	// this can vary depending on the system, so we give it a bit more time
+	time.Sleep(5 * time.Second)
+
+	cancel()
+	// dir cleanup occurs after 10 milliseconds so this gives a bit more time
+	// for the cleanup, otherwise the test may fail with a panic about the
+	// directory not being removed
+	time.Sleep(20 * time.Millisecond)
+}
+
 func TestExecAllocatorKillBrowser(t *testing.T) {
 	t.Parallel()
 
@@ -210,7 +241,7 @@ func testRemoteAllocator(t *testing.T, modifyURL func(wsURL string) string, want
 	if err := cmd.Start(); err != nil {
 		t.Fatal(err)
 	}
-	wsURL, err := readOutput(stderr, nil, nil)
+	wsURL, _, err := readOutput(stderr, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

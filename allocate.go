@@ -211,9 +211,6 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	case <-c.allocated: // for this browser's root context
 	}
 	a.wg.Add(1) // for the entire allocator
-	if a.combinedOutputWriter != nil {
-		a.wg.Add(1) // for the io.Copy in a separate goroutine
-	}
 	go func() {
 		// First wait for the process to be finished.
 		// TODO: do we care about this error in any scenario? if the
@@ -237,23 +234,28 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	}()
 
 	var wsURL string
-	wsURLChan := make(chan struct{}, 1)
+	wsURLChan := make(chan struct{})
+	var copy func()
 	go func() {
-		wsURL, err = readOutput(stdout, a.combinedOutputWriter, a.wg.Done)
-		wsURLChan <- struct{}{}
+		wsURL, copy, err = readOutput(stdout, a.combinedOutputWriter)
+		close(wsURLChan)
 	}()
 	select {
 	case <-wsURLChan:
-	case <-time.After(a.wsURLReadTimeout):
-		err = errors.New("websocket url timeout reached")
-	}
-	if err != nil {
-		if a.combinedOutputWriter != nil {
-			// There's no io.Copy goroutine to call the done func.
-			// TODO: a cleaner way to deal with this edge case?
-			a.wg.Done()
+		if err != nil {
+			return nil, err
 		}
-		return nil, err
+
+	case <-time.After(a.wsURLReadTimeout):
+		return nil, errors.New("websocket url timeout reached")
+	}
+
+	if a.combinedOutputWriter != nil && copy != nil {
+		a.wg.Add(1)
+		go func() {
+			copy()
+			a.wg.Done()
+		}()
 	}
 
 	browser, err := NewBrowser(ctx, wsURL, opts...)
@@ -282,7 +284,7 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 // readOutput grabs the websocket address from chrome's output, returning as
 // soon as it is found. All read output is forwarded to forward, if non-nil.
 // done is used to signal that the asynchronous io.Copy is done, if any.
-func readOutput(rc io.ReadCloser, forward io.Writer, done func()) (wsURL string, _ error) {
+func readOutput(rc io.ReadCloser, forward io.Writer) (wsURL string, _ func(), _ error) {
 	prefix := []byte("DevTools listening on")
 	var accumulated bytes.Buffer
 	bufr := bufio.NewReader(rc)
@@ -290,12 +292,12 @@ readLoop:
 	for {
 		line, err := bufr.ReadBytes('\n')
 		if err != nil {
-			return "", fmt.Errorf("chrome failed to start:\n%s",
+			return "", nil, fmt.Errorf("chrome failed to start:\n%s",
 				accumulated.Bytes())
 		}
 		if forward != nil {
 			if _, err := forward.Write(line); err != nil {
-				return "", err
+				return "", nil, err
 			}
 		}
 
@@ -308,18 +310,17 @@ readLoop:
 		}
 		accumulated.Write(line)
 	}
+	copy := func() {}
 	if forward == nil {
 		// We don't need the process's output anymore.
 		rc.Close()
 	} else {
-		// Copy the rest of the output in a separate goroutine, as we
+		// Return a function that will be called later to
+		// copy the rest of the output in a separate goroutine, as we
 		// need to return with the websocket URL.
-		go func() {
-			io.Copy(forward, bufr)
-			done()
-		}()
+		copy = func() { io.Copy(forward, bufr) }
 	}
-	return wsURL, nil
+	return wsURL, copy, nil
 }
 
 // Wait satisfies the Allocator interface.
