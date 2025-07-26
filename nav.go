@@ -18,11 +18,10 @@ type NavigateAction Action
 // Navigate is an action that navigates the current frame.
 func Navigate(urlstr string) NavigateAction {
 	return responseAction(nil, ActionFunc(func(ctx context.Context) error {
-		_, _, errorText, err := page.Navigate(urlstr).Do(ctx)
-		if err != nil {
+		switch _, _, errorText, _, err := page.Navigate(urlstr).Do(ctx); {
+		case err != nil:
 			return err
-		}
-		if errorText != "" {
+		case errorText != "":
 			return fmt.Errorf("page load error %s", errorText)
 		}
 		return nil

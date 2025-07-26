@@ -338,7 +338,7 @@ func TestNavigateWhileLoading(t *testing.T) {
 				}
 			})
 
-			_, _, _, err := page.Navigate(s.URL).Do(ctx)
+			_, _, _, _, err := page.Navigate(s.URL).Do(ctx)
 
 			// Make sure the Page.lifecycleEvent with the name "init" is emitted
 			// before starting the second navigate.
@@ -380,7 +380,7 @@ func TestNavigateWithoutWaitingForLoad(t *testing.T) {
 	// to panic.
 	if err := Run(ctx,
 		ActionFunc(func(ctx context.Context) error {
-			_, _, _, err := page.Navigate(testdataDir + "/form.html").Do(ctx)
+			_, _, _, _, err := page.Navigate(testdataDir + "/form.html").Do(ctx)
 			return err
 		}),
 		WaitVisible(`#form`, ByID), // for form.html
@@ -410,7 +410,7 @@ func TestNavigateCancelled(t *testing.T) {
 	// it has the HTML and starts loading an image, cancel the Run context.
 	// This should result in us seeing a context error.
 	action := ActionFunc(func(ctx context.Context) error {
-		_, _, _, err := page.Navigate(s.URL).Do(ctx)
+		_, _, _, _, err := page.Navigate(s.URL).Do(ctx)
 		loadStarted <- struct{}{}
 		return err
 	})
