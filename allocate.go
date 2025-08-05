@@ -491,8 +491,13 @@ func Headless(a *ExecAllocator) {
 //
 // But according to this reported issue, it's still required in some cases:
 //   - https://github.com/chromedp/chromedp/issues/904
+//
+// Chromium 139+ doesn't provide fallback to Swiftshader unless the
+// --enable-unsafe-swiftshader option is passed:
+//   - https://chromestatus.com/feature/5166674414927872
 func DisableGPU(a *ExecAllocator) {
 	Flag("disable-gpu", true)(a)
+	Flag("enable-unsafe-swiftshader", true)(a)
 }
 
 // CombinedOutput is used to set an io.Writer where stdout and stderr
