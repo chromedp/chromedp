@@ -251,11 +251,9 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	}
 
 	if a.combinedOutputWriter != nil && copy != nil {
-		a.wg.Add(1)
-		go func() {
+		a.wg.Go(func() {
 			copy()
-			a.wg.Done()
-		}()
+		})
 	}
 
 	browser, err := NewBrowser(ctx, wsURL, opts...)
@@ -579,13 +577,12 @@ func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (
 	wctx, cancel := context.WithCancel(context.Background())
 
 	close(c.allocated)
-	a.wg.Add(1) // for the entire allocator
-	go func() {
+	// for the entire allocator
+	a.wg.Go(func() {
 		<-ctx.Done()
 		Cancel(ctx) // block until all pages are closed
 		cancel()    // close the websocket connection
-		a.wg.Done()
-	}()
+	})
 
 	browser, err := NewBrowser(wctx, wsURL, opts...)
 	if err != nil {

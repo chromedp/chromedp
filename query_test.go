@@ -1093,7 +1093,6 @@ func TestSendKeys(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		i, test := i, test
 		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
 			if runtime.GOOS == "darwin" && i == 5 {
 				t.Skipf("skipping test %d on darwin -- FIXME!", i)

@@ -495,8 +495,7 @@ func TestDialTimeout(t *testing.T) {
 		url := "ws://" + l.(*net.TCPListener).Addr().String()
 		defer l.Close()
 
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
+		ctx := t.Context()
 		_, err = NewBrowser(ctx, url, WithDialTimeout(time.Microsecond))
 		got, want := fmt.Sprintf("%v", err), "i/o timeout"
 		if !strings.Contains(got, want) {
@@ -518,8 +517,7 @@ func TestDialTimeout(t *testing.T) {
 			}
 		}()
 
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
+		ctx := t.Context()
 		_, err = NewBrowser(ctx, url, WithDialTimeout(0))
 		got := fmt.Sprintf("%v", err)
 		if !strings.Contains(got, "EOF") && !strings.Contains(got, "connection reset") {
