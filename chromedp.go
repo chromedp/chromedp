@@ -372,8 +372,8 @@ func (c *Context) newTarget(ctx context.Context) error {
 			c.browserContextOwner = true
 			c.createBrowserContextParams = nil
 		}
-		c.targetID, err = target.CreateTarget("about:blank").
-			WithNewWindow(true).
+		c.targetID, err = target.
+			CreateTarget("about:blank").
 			WithBrowserContextID(c.BrowserContextID).
 			Do(browserExecutor)
 		if err != nil {
