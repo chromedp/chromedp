@@ -73,40 +73,86 @@ func (c *Conn) Close() error {
 func (c *Conn) Read(_ context.Context, msg *cdproto.Message) error {
 	// get websocket reader
 	c.reader = wsutil.Reader{Source: c.conn, State: ws.StateClientSide}
-	h, err := c.reader.NextFrame()
-	if err != nil {
-		return err
-	}
 
-	if h.OpCode == ws.OpPing { // ping
-		if c.debugf != nil {
-			c.debugf("received ping frame, ignoring...")
+	for {
+		h, err := c.reader.NextFrame()
+		if err != nil {
+			return err
 		}
-		return nil
-	} else if h.OpCode == ws.OpClose { // close
-		if c.debugf != nil {
-			c.debugf("received close frame")
+
+		switch h.OpCode {
+		case ws.OpPing:
+			// Read the ping payload and send a pong response
+			if c.debugf != nil {
+				c.debugf("received ping frame, sending pong...")
+			}
+			// Read the ping payload
+			payload := make([]byte, h.Length)
+			if h.Length > 0 {
+				if _, err := io.ReadFull(&c.reader, payload); err != nil {
+					return err
+				}
+			}
+			// Send pong with the same payload (masked for client-side)
+			pongHeader := ws.Header{
+				Fin:    true,
+				OpCode: ws.OpPong,
+				Masked: true,
+				Length: h.Length,
+			}
+			if err := ws.WriteHeader(c.conn, pongHeader); err != nil {
+				return err
+			}
+			if h.Length > 0 {
+				// Write masked payload
+				mask := pongHeader.Mask
+				ws.Cipher(payload, mask, 0)
+				if _, err := c.conn.Write(payload); err != nil {
+					return err
+				}
+			}
+			continue // Read next frame
+
+		case ws.OpPong:
+			// Discard pong payload and continue reading
+			if c.debugf != nil {
+				c.debugf("received pong frame, discarding...")
+			}
+			if h.Length > 0 {
+				if _, err := io.CopyN(io.Discard, &c.reader, h.Length); err != nil {
+					return err
+				}
+			}
+			continue // Read next frame
+
+		case ws.OpClose:
+			if c.debugf != nil {
+				c.debugf("received close frame")
+			}
+			return io.EOF
+
+		case ws.OpText:
+			// This is the expected CDP message, process it
+			var b bytes.Buffer
+			if _, err := b.ReadFrom(&c.reader); err != nil {
+				return err
+			}
+
+			if c.debugf != nil {
+				c.debugf("<- %s", b.Bytes())
+			}
+
+			// unmarshal, reusing decoder
+			c.decoder.Reset(&b, DefaultUnmarshalOptions)
+			return jsonv2.UnmarshalDecode(&c.decoder, msg, DefaultUnmarshalOptions)
+
+		default:
+			if c.debugf != nil {
+				c.debugf("unknown OpCode: %s", h.OpCode)
+			}
+			return ErrInvalidWebsocketMessage
 		}
-		return io.EOF
-	} else if h.OpCode != ws.OpText {
-		if c.debugf != nil {
-			c.debugf("unknown OpCode: %s", h.OpCode)
-		}
-		return ErrInvalidWebsocketMessage
 	}
-
-	var b bytes.Buffer
-	if _, err := b.ReadFrom(&c.reader); err != nil {
-		return err
-	}
-
-	if c.debugf != nil {
-		c.debugf("<- %s", b.Bytes())
-	}
-
-	// unmarshal, reusing decoder
-	c.decoder.Reset(&b, DefaultUnmarshalOptions)
-	return jsonv2.UnmarshalDecode(&c.decoder, msg, DefaultUnmarshalOptions)
 }
 
 // Write writes a message.
