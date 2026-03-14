@@ -290,8 +290,8 @@ readLoop:
 	for {
 		line, err := bufr.ReadBytes('\n')
 		if err != nil {
-			return "", nil, fmt.Errorf("chrome failed to start:\n%s",
-				accumulated.Bytes())
+			return "", nil, fmt.Errorf("chrome failed to start: %v\n%s",
+				err, accumulated.Bytes())
 		}
 		if forward != nil {
 			if _, err := forward.Write(line); err != nil {
@@ -299,6 +299,7 @@ readLoop:
 			}
 		}
 
+		fmt.Printf(">>>line: %s\n", line)
 		if bytes.HasPrefix(line, prefix) {
 			line = line[len(prefix):]
 			// use TrimSpace, to also remove \r on Windows
