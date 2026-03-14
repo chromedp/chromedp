@@ -1,4 +1,4 @@
-module github.com/cnicolaou/chromedp
+module github.com/cloudengio/chromedp
 
 go 1.25.0
 
