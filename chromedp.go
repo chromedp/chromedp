@@ -228,6 +228,10 @@ func FromContext(ctx context.Context) *Context {
 	return c
 }
 
+func WithContext(ctx context.Context, c *Context) context.Context {
+	return context.WithValue(ctx, contextKey{}, c)
+}
+
 // Cancel cancels a chromedp context, waits for its resources to be cleaned up,
 // and returns any error encountered during that process.
 //
