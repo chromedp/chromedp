@@ -228,6 +228,8 @@ func FromContext(ctx context.Context) *Context {
 	return c
 }
 
+// WithContext returns a context derived from the parent context
+// that stores the provided *Context value.
 func WithContext(ctx context.Context, c *Context) context.Context {
 	return context.WithValue(ctx, contextKey{}, c)
 }
