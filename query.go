@@ -1178,7 +1178,7 @@ func ComputedStyle(sel any, style *[]*css.ComputedStyleProperty, opts ...QueryOp
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
-		computed, err := css.GetComputedStyleForNode(nodes[0].NodeID).Do(ctx)
+		computed, _, err := css.GetComputedStyleForNode(nodes[0].NodeID).Do(ctx)
 		if err != nil {
 			return err
 		}

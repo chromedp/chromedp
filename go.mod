@@ -3,7 +3,7 @@ module github.com/chromedp/chromedp
 go 1.26
 
 require (
-	github.com/chromedp/cdproto v0.0.0-20260320225252-cf654f46fc63
+	github.com/chromedp/cdproto v0.0.0-20260321001828-e3e3800016bc
 	github.com/go-json-experiment/json v0.0.0-20260214004413-d219187c3433
 	github.com/gobwas/ws v1.4.0
 	github.com/ledongthuc/pdf v0.0.0-20220302134840-0c2507a12d80
