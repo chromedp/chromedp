@@ -896,7 +896,7 @@ func TestBrowserContext(t *testing.T) {
 				ActionFunc(func(ctx context.Context) error {
 					c := FromContext(ctx)
 					var err error
-					ids, err = target.GetBrowserContexts().Do(cdp.WithExecutor(ctx, c.Browser))
+					ids, _, err = target.GetBrowserContexts().Do(cdp.WithExecutor(ctx, c.Browser))
 					return err
 				}),
 			); err != nil {
