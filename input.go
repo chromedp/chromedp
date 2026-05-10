@@ -170,6 +170,15 @@ func KeyEvent(keys string, opts ...KeyOption) KeyAction {
 				for _, o := range opts {
 					o(k)
 				}
+				// Issue #1384: when a non-shift modifier (Ctrl/Alt/Meta) is
+				// applied, skip the synthesized "char" event. Otherwise the
+				// keyDown fires the accelerator (e.g. Ctrl+A select-all) AND
+				// the char event inserts the literal text ("a") into the
+				// focused field. Shift is preserved because it produces a
+				// printable variant (uppercase) that callers expect.
+				if k.Type == input.KeyChar && k.Modifiers&^input.ModifierShift != 0 {
+					continue
+				}
 				if err := k.Do(ctx); err != nil {
 					return err
 				}
