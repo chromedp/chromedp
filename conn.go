@@ -1,10 +1,12 @@
 package chromedp
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"io"
 	"net"
+	"net/http"
 
 	"github.com/chromedp/cdproto"
 	jsonv2 "github.com/go-json-experiment/json"
@@ -39,18 +41,37 @@ type Conn struct {
 	debugf func(string, ...any)
 }
 
-// DialContext dials the specified websocket URL using gobwas/ws.
-func DialContext(ctx context.Context, urlstr string, opts ...DialOption) (*Conn, error) {
-	// connect
-	conn, br, _, err := ws.Dial(ctx, urlstr)
+func dialWebSocket(ctx context.Context, urlstr string, header http.Header) (net.Conn, error) {
+	var (
+		conn net.Conn
+		br   *bufio.Reader
+		err  error
+	)
+	if len(header) == 0 {
+		conn, br, _, err = ws.Dial(ctx, urlstr)
+	} else {
+		conn, br, _, err = ws.Dialer{Header: ws.HandshakeHeaderHTTP(header)}.Dial(ctx, urlstr)
+	}
 	if err != nil {
 		return nil, err
 	}
 	if br != nil {
 		panic("br should be nil")
 	}
+	return conn, nil
+}
 
-	// apply opts
+// DialContext dials the specified websocket URL using gobwas/ws.
+func DialContext(ctx context.Context, urlstr string, opts ...DialOption) (*Conn, error) {
+	return dialContext(ctx, urlstr, nil, opts...)
+}
+
+func dialContext(ctx context.Context, urlstr string, header http.Header, opts ...DialOption) (*Conn, error) {
+	conn, err := dialWebSocket(ctx, urlstr, header)
+	if err != nil {
+		return nil, err
+	}
+
 	c := &Conn{
 		conn: conn,
 		// pass 0 to use the default initial buffer size (4KiB).

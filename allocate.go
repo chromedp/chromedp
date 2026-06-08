@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -550,8 +551,9 @@ type RemoteAllocatorOption = func(*RemoteAllocator)
 // RemoteAllocator is an Allocator which connects to an already running Chrome
 // process via a websocket URL.
 type RemoteAllocator struct {
-	wsURL         string
-	modifyURLFunc func(ctx context.Context, wsURL string) (string, error)
+	wsURL          string
+	modifyURLFunc  func(ctx context.Context, wsURL string) (string, error)
+	dialHTTPHeader http.Header
 
 	wg sync.WaitGroup
 }
@@ -584,7 +586,11 @@ func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (
 		cancel()    // close the websocket connection
 	})
 
-	browser, err := NewBrowser(wctx, wsURL, opts...)
+	browserOpts := opts
+	if a.dialHTTPHeader != nil {
+		browserOpts = append([]BrowserOption{WithDialHTTPHeader(a.dialHTTPHeader)}, opts...)
+	}
+	browser, err := NewBrowser(wctx, wsURL, browserOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -610,4 +616,12 @@ func (a *RemoteAllocator) Wait() {
 // from modifying the websocket debugger URL passed to it.
 func NoModifyURL(a *RemoteAllocator) {
 	a.modifyURLFunc = nil
+}
+
+// WithRemoteDialHTTPHeader is a RemoteAllocatorOption to set HTTP headers on
+// the WebSocket upgrade request when connecting to a remote debugger URL.
+func WithRemoteDialHTTPHeader(h http.Header) RemoteAllocatorOption {
+	return func(a *RemoteAllocator) {
+		a.dialHTTPHeader = h
+	}
 }
