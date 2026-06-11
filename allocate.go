@@ -299,7 +299,6 @@ readLoop:
 			}
 		}
 
-		fmt.Printf(">>>line: %s\n", line)
 		if bytes.HasPrefix(line, prefix) {
 			line = line[len(prefix):]
 			// use TrimSpace, to also remove \r on Windows
