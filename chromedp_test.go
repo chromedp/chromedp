@@ -362,10 +362,10 @@ func TestListenBrowser(t *testing.T) {
 
 	// Check that many ListenBrowser callbacks work, including adding
 	// callbacks after the browser has been allocated.
-	var totalCount int32
+	var totalCount atomic.Int32
 	ListenBrowser(ctx, func(ev any) {
 		// using sync/atomic, as the browser is shared.
-		atomic.AddInt32(&totalCount, 1)
+		totalCount.Add(1)
 	})
 	if err := Run(ctx); err != nil {
 		t.Fatal(err)
@@ -386,7 +386,7 @@ func TestListenBrowser(t *testing.T) {
 	if id := FromContext(newTabCtx).Target.SessionID; !seenSessions[id] {
 		t.Fatalf("did not see Target.attachedToTarget for %q", id)
 	}
-	if want, got := int32(1), atomic.LoadInt32(&totalCount); got < want {
+	if want, got := int32(1), totalCount.Load(); got < want {
 		t.Fatalf("want at least %d browser events; got %d", want, got)
 	}
 }
