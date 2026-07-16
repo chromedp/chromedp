@@ -633,7 +633,7 @@ func PopulateWait(wait time.Duration) PopulateOption {
 // WaitReady is an element query action that waits until the element matching
 // the selector is ready (i.e., has been "loaded").
 func WaitReady(sel any, opts ...QueryOption) QueryAction {
-	return Query(sel, opts...)
+	return Query(sel, append(opts, NodeReady)...)
 }
 
 // WaitVisible is an element query action that waits until the element matching
