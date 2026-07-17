@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -53,7 +54,8 @@ type Browser struct {
 	// saving its state to disk.
 	closingGracefully chan struct{}
 
-	dialTimeout time.Duration
+	dialTimeout    time.Duration
+	dialHTTPHeader http.Header
 
 	// pages keeps track of the attached targets, indexed by each's session
 	// ID. The only reason this is a field is so that the tests can check the
@@ -122,7 +124,7 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 	}
 
 	var err error
-	b.conn, err = DialContext(dialCtx, urlstr, WithConnDebugf(b.dbgf))
+	b.conn, err = dialContext(dialCtx, urlstr, b.dialHTTPHeader, WithConnDebugf(b.dbgf))
 	if err != nil {
 		return nil, fmt.Errorf("could not dial %q: %w", urlstr, err)
 	}
@@ -372,4 +374,10 @@ func WithConsolef(f func(string, ...any)) BrowserOption {
 // to not use a timeout.
 func WithDialTimeout(d time.Duration) BrowserOption {
 	return func(b *Browser) { b.dialTimeout = d }
+}
+
+// WithDialHTTPHeader is a browser option to set HTTP headers on the
+// WebSocket upgrade request when dialing a remote debugger URL.
+func WithDialHTTPHeader(h http.Header) BrowserOption {
+	return func(b *Browser) { b.dialHTTPHeader = h }
 }
