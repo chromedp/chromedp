@@ -222,6 +222,8 @@ func TestPollTimeout(t *testing.T) {
 
 	ctx, cancel := testAllocate(t, "poll.html")
 	defer cancel()
+	ctx, cancel = context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
 
 	if err := Run(ctx, Poll("false", nil, WithPollingTimeout(10*time.Millisecond))); err != ErrPollingTimeout {
 		t.Errorf("got error: %v, want error: %v", err, ErrPollingTimeout)
