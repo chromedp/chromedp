@@ -229,6 +229,54 @@ func TestKeyEvent(t *testing.T) {
 	}
 }
 
+// TestKeyEvent_ModifierDoesNotInsertText is a regression for issue #1384:
+// KeyEvent("a", KeyModifiers(input.ModifierCtrl)) used to fire the Ctrl+A
+// accelerator AND emit a Char event that inserted the literal "a" into the
+// focused field. After the fix, Char events with non-Shift modifiers are
+// suppressed — Ctrl+A selects all and leaves the value untouched.
+func TestKeyEvent_ModifierDoesNotInsertText(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "input.html")
+	defer cancel()
+
+	const seed = "admin123"
+	if err := Run(ctx,
+		Focus(`#input4`, ByID),
+		// clear whatever the fixture pre-populated, then seed a known value
+		KeyEvent(kb.Home),
+		KeyEvent(kb.End, KeyModifiers(input.ModifierShift)),
+		KeyEvent(seed),
+	); err != nil {
+		t.Fatalf("seed: %v", err)
+	}
+
+	var before string
+	if err := Run(ctx, Value(`#input4`, &before, ByID)); err != nil {
+		t.Fatalf("read seeded value: %v", err)
+	}
+	if before != seed {
+		t.Fatalf("seed didn't take: got %q, want %q", before, seed)
+	}
+
+	// Send Ctrl+A only — should select-all and leave the value identical.
+	// Pre-fix: a stray Char event with text="a" would replace the selection,
+	// leaving value="a".
+	if err := Run(ctx,
+		KeyEvent("a", KeyModifiers(input.ModifierCtrl)),
+	); err != nil {
+		t.Fatalf("ctrl+a: %v", err)
+	}
+
+	var after string
+	if err := Run(ctx, Value(`#input4`, &after, ByID)); err != nil {
+		t.Fatalf("read post-ctrl+a value: %v", err)
+	}
+	if after != seed {
+		t.Fatalf("Ctrl+A mutated input value (issue #1384): got %q, want %q", after, seed)
+	}
+}
+
 func TestKeyEventNode(t *testing.T) {
 	if os.Getenv("HEADLESS_SHELL") != "" {
 		t.Skip(`Skip in headless-shell due to "Check failed: IsSupportedClipboardBuffer(buffer)"`)
