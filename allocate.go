@@ -199,19 +199,26 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		cmd.Env = append(cmd.Env, a.initEnv...)
 	}
 
-	// We must start the cmd before calling cmd.Wait, as otherwise the two
-	// can run into a data race.
-	if err := cmd.Start(); err != nil {
-		return nil, err
-	}
+	// startResult is a one use only channel to know if the start succeeded or not
+	startResult := make(chan error, 1)
 
-	select {
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	case <-c.allocated: // for this browser's root context
-	}
 	a.wg.Add(1) // for the entire allocator
 	go func() {
+		defer a.wg.Done()
+
+		// On Linux, this ensures Pdeathsig works the way we expect.
+		// This should not negatively impact other situations
+		runtime.LockOSThread()
+		defer runtime.UnlockOSThread()
+
+		// Start the cmd, report the result in startResult even if nil
+		err := cmd.Start()
+		startResult <- err
+		if err != nil {
+			// if start failed, do not continue
+			return
+		}
+
 		// First wait for the process to be finished.
 		// TODO: do we care about this error in any scenario? if the
 		// user cancelled the context and killed chrome, this will most
@@ -229,9 +236,24 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 				c.cancelErr = err
 			}
 		}
-		a.wg.Done()
 		close(c.allocated)
 	}()
+
+	// wait for a response from start
+	if err := <-startResult; err != nil {
+		return nil, err
+	}
+
+	// Wait for allocated semaphore before starting the process
+	select {
+	case <-ctx.Done():
+		return nil, ctx.Err()
+	case <-c.allocated: // for this browser's root context
+	}
+
+	if a.combinedOutputWriter != nil {
+		a.wg.Add(1) // for the io.Copy in a separate goroutine
+	}
 
 	var wsURL string
 	wsURLChan := make(chan struct{})
