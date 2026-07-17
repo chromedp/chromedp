@@ -611,3 +611,329 @@ func (a *RemoteAllocator) Wait() {
 func NoModifyURL(a *RemoteAllocator) {
 	a.modifyURLFunc = nil
 }
+
+// PipeAllocator implements Allocator for pipe-based CDP communication.
+// This is useful for sandboxed environments (gVisor, Firecracker) where
+// runtime TCP bind/listen is restricted.
+type PipeAllocator struct {
+	execPath      string
+	initFlags     map[string]any
+	initEnv       []string
+	modifyCmdFunc func(*exec.Cmd)
+
+	wg sync.WaitGroup
+}
+
+// PipeAllocatorOption is a function that configures a PipeAllocator.
+type PipeAllocatorOption func(*PipeAllocator)
+
+// DefaultPipeAllocatorOptions are the default options for PipeAllocator.
+// Similar to DefaultExecAllocatorOptions but for pipe-based communication.
+var DefaultPipeAllocatorOptions = [...]PipeAllocatorOption{
+	PipeNoFirstRun,
+	PipeNoDefaultBrowserCheck,
+	PipeHeadless,
+
+	// After Puppeteer's default behavior.
+	PipeFlag("disable-background-networking", true),
+	PipeFlag("enable-features", "NetworkService,NetworkServiceInProcess"),
+	PipeFlag("disable-background-timer-throttling", true),
+	PipeFlag("disable-backgrounding-occluded-windows", true),
+	PipeFlag("disable-breakpad", true),
+	PipeFlag("disable-client-side-phishing-detection", true),
+	PipeFlag("disable-default-apps", true),
+	PipeFlag("disable-dev-shm-usage", true),
+	PipeFlag("disable-extensions", true),
+	PipeFlag("disable-features", "site-per-process,Translate,BlinkGenPropertyTrees"),
+	PipeFlag("disable-hang-monitor", true),
+	PipeFlag("disable-ipc-flooding-protection", true),
+	PipeFlag("disable-popup-blocking", true),
+	PipeFlag("disable-prompt-on-repost", true),
+	PipeFlag("disable-renderer-backgrounding", true),
+	PipeFlag("disable-sync", true),
+	PipeFlag("force-color-profile", "srgb"),
+	PipeFlag("metrics-recording-only", true),
+	PipeFlag("safebrowsing-disable-auto-update", true),
+	PipeFlag("enable-automation", true),
+	PipeFlag("password-store", "basic"),
+	PipeFlag("use-mock-keychain", true),
+}
+
+// NewPipeAllocator creates a new pipe-based allocator. suitable
+// for use with NewContext.
+func NewPipeAllocator(parent context.Context, opts ...PipeAllocatorOption) (context.Context, context.CancelFunc) {
+	a := &PipeAllocator{
+		initFlags: make(map[string]any),
+	}
+	for _, o := range opts {
+		o(a)
+	}
+
+	// Use findExecPath if no path specified
+	if a.execPath == "" {
+		a.execPath = findExecPath()
+	}
+
+	c := &Context{Allocator: a}
+	ctx, cancel := context.WithCancel(parent)
+	ctx = context.WithValue(ctx, contextKey{}, c)
+
+	cancelWait := func() {
+		cancel()
+		c.Allocator.Wait()
+	}
+	return ctx, cancelWait
+}
+
+// Allocate starts a new browser process with pipe-based communication.
+func (a *PipeAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*Browser, error) {
+	c := FromContext(ctx)
+	if c == nil {
+		return nil, ErrInvalidContext
+	}
+
+	// Build command line args
+	var args []string
+	for name, value := range a.initFlags {
+		switch v := value.(type) {
+		case string:
+			args = append(args, fmt.Sprintf("--%s=%s", name, v))
+		case bool:
+			if v {
+				args = append(args, fmt.Sprintf("--%s", name))
+			}
+		default:
+			return nil, fmt.Errorf("invalid pipe allocator flag type")
+		}
+	}
+
+	// Handle user-data-dir
+	removeDir := false
+	dataDir, ok := a.initFlags["user-data-dir"].(string)
+	if !ok {
+		tempDir, err := os.MkdirTemp(allocTempDir, "chromedp-pipe-")
+		if err != nil {
+			return nil, err
+		}
+		args = append(args, "--user-data-dir="+tempDir)
+		dataDir = tempDir
+		removeDir = true
+	}
+
+	// Add no-sandbox if running as root
+	if _, ok := a.initFlags["no-sandbox"]; !ok && os.Getuid() == 0 {
+		args = append(args, "--no-sandbox")
+	}
+
+	// Use pipe instead of port
+	args = append(args, "--remote-debugging-pipe")
+
+	// Force blank first page
+	args = append(args, "about:blank")
+
+	// Create pipes for CDP communication
+	// Chrome reads from FD 3, writes to FD 4
+	chromeRead, appWrite, err := os.Pipe()
+	if err != nil {
+		return nil, fmt.Errorf("failed to create write pipe: %w", err)
+	}
+	appRead, chromeWrite, err := os.Pipe()
+	if err != nil {
+		chromeRead.Close()
+		appWrite.Close()
+		return nil, fmt.Errorf("failed to create read pipe: %w", err)
+	}
+
+	// Setup command
+	cmd := exec.CommandContext(ctx, a.execPath, args...)
+	cmd.ExtraFiles = []*os.File{chromeRead, chromeWrite} // FD 3, FD 4
+
+	if len(a.initEnv) > 0 {
+		cmd.Env = append(os.Environ(), a.initEnv...)
+	}
+
+	if a.modifyCmdFunc != nil {
+		a.modifyCmdFunc(cmd)
+	} else {
+		allocateCmdOptions(cmd)
+	}
+
+	cleanup := func() {
+		chromeRead.Close()
+		chromeWrite.Close()
+		appRead.Close()
+		appWrite.Close()
+		if removeDir {
+			os.RemoveAll(dataDir)
+		}
+	}
+
+	if err := cmd.Start(); err != nil {
+		cleanup()
+		return nil, fmt.Errorf("failed to start chrome: %w", err)
+	}
+
+	// Close Chrome's end of the pipes in our process
+	chromeRead.Close()
+	chromeWrite.Close()
+
+	pipeConn := &PipeConn{
+		reader:  bufio.NewReader(appRead),
+		writer:  appWrite,
+		readFd:  appRead,
+		writeFd: appWrite,
+	}
+
+	close(c.allocated)
+
+	browser, err := NewBrowser(ctx, "", append(opts, withConn(pipeConn))...)
+	if err != nil {
+		cmd.Process.Kill()
+		cmd.Wait()
+		appRead.Close()
+		appWrite.Close()
+		if removeDir {
+			os.RemoveAll(dataDir)
+		}
+		return nil, err
+	}
+
+	browser.process = cmd.Process
+	browser.userDataDir = dataDir
+
+	// Start cleanup goroutine. It blocks until the browser disconnects,
+	// then closes the pipe FDs, ensures the Chrome process is killed if
+	// not already shutting down gracefully, waits for process exit, and
+	// finally removes the temporary user data directory (after a short
+	// delay to let Chrome finish cleanup).
+	a.wg.Add(1)
+	go func() {
+		defer a.wg.Done()
+
+		<-browser.LostConnection
+
+		appRead.Close()
+		appWrite.Close()
+
+		select {
+		case <-browser.closingGracefully:
+		default:
+			cmd.Process.Kill()
+		}
+
+		cmd.Wait()
+
+		if removeDir {
+			<-time.After(10 * time.Millisecond)
+			if err := os.RemoveAll(dataDir); c.cancelErr == nil {
+				c.cancelErr = err
+			}
+		}
+	}()
+
+	return browser, nil
+}
+
+// Wait blocks until all browser processes have exited.
+func (a *PipeAllocator) Wait() {
+	a.wg.Wait()
+}
+
+// -----------------------------
+// PipeAllocatorOptions
+// -----------------------------
+
+// PipeExecPath sets the Chrome executable path.
+func PipeExecPath(path string) PipeAllocatorOption {
+	return func(a *PipeAllocator) {
+		// Convert to an absolute path if possible, to avoid
+		// repeated LookPath calls in each Allocate.
+		if fullPath, _ := exec.LookPath(path); fullPath != "" {
+			a.execPath = fullPath
+		} else {
+			a.execPath = path
+		}
+	}
+}
+
+// PipeFlag sets a Chrome command line flag.
+func PipeFlag(name string, value any) PipeAllocatorOption {
+	return func(a *PipeAllocator) {
+		a.initFlags[name] = value
+	}
+}
+
+// PipeUserDataDir sets the user data directory.
+func PipeUserDataDir(dir string) PipeAllocatorOption {
+	return func(a *PipeAllocator) {
+		a.initFlags["user-data-dir"] = dir
+	}
+}
+
+// PipeHeadless enables headless mode.
+func PipeHeadless(a *PipeAllocator) {
+	a.initFlags["headless"] = true
+}
+
+// PipeNoSandbox disables Chrome's sandbox.
+func PipeNoSandbox(a *PipeAllocator) {
+	a.initFlags["no-sandbox"] = true
+}
+
+// PipeDisableGPU disables GPU hardware acceleration.
+func PipeDisableGPU(a *PipeAllocator) {
+	a.initFlags["disable-gpu"] = true
+}
+
+// PipeWindowSize sets the initial window size.
+func PipeWindowSize(width, height int) PipeAllocatorOption {
+	return func(a *PipeAllocator) {
+		a.initFlags["window-size"] = fmt.Sprintf("%d,%d", width, height)
+	}
+}
+
+// PipeEnv sets environment variables for the Chrome process.
+func PipeEnv(env ...string) PipeAllocatorOption {
+	return func(a *PipeAllocator) {
+		a.initEnv = append(a.initEnv, env...)
+	}
+}
+
+// PipeModifyCmdFunc sets a function to modify the exec.Cmd before starting.
+func PipeModifyCmdFunc(fn func(*exec.Cmd)) PipeAllocatorOption {
+	return func(a *PipeAllocator) {
+		a.modifyCmdFunc = fn
+	}
+}
+
+// PipeDisableDevShmUsage disables /dev/shm usage (useful in containers).
+func PipeDisableDevShmUsage(a *PipeAllocator) {
+	a.initFlags["disable-dev-shm-usage"] = true
+}
+
+// PipeNoFirstRun disables first run experience.
+func PipeNoFirstRun(a *PipeAllocator) {
+	a.initFlags["no-first-run"] = true
+}
+
+// PipeNoDefaultBrowserCheck disables default browser check.
+func PipeNoDefaultBrowserCheck(a *PipeAllocator) {
+	a.initFlags["no-default-browser-check"] = true
+}
+
+// PipeProxyServer sets the proxy server.
+func PipeProxyServer(proxy string) PipeAllocatorOption {
+	return func(a *PipeAllocator) {
+		a.initFlags["proxy-server"] = proxy
+	}
+}
+
+// PipeDisableExtensions disables extensions.
+func PipeDisableExtensions(a *PipeAllocator) {
+	a.initFlags["disable-extensions"] = true
+}
+
+// PipeIgnoreCertificateErrors ignores certificate errors.
+func PipeIgnoreCertificateErrors(a *PipeAllocator) {
+	a.initFlags["ignore-certificate-errors"] = true
+}

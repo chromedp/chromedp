@@ -114,17 +114,19 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 		b.errf = func(s string, v ...any) { b.logf("ERROR: "+s, v...) }
 	}
 
-	dialCtx := ctx
-	if b.dialTimeout > 0 {
-		var cancel context.CancelFunc
-		dialCtx, cancel = context.WithTimeout(ctx, b.dialTimeout)
-		defer cancel()
-	}
+	if b.conn == nil {
+		dialCtx := ctx
+		if b.dialTimeout > 0 {
+			var cancel context.CancelFunc
+			dialCtx, cancel = context.WithTimeout(ctx, b.dialTimeout)
+			defer cancel()
+		}
 
-	var err error
-	b.conn, err = DialContext(dialCtx, urlstr, WithConnDebugf(b.dbgf))
-	if err != nil {
-		return nil, fmt.Errorf("could not dial %q: %w", urlstr, err)
+		var err error
+		b.conn, err = DialContext(dialCtx, urlstr, WithConnDebugf(b.dbgf))
+		if err != nil {
+			return nil, fmt.Errorf("could not dial %q: %w", urlstr, err)
+		}
 	}
 
 	go b.run(ctx)
@@ -372,4 +374,11 @@ func WithConsolef(f func(string, ...any)) BrowserOption {
 // to not use a timeout.
 func WithDialTimeout(d time.Duration) BrowserOption {
 	return func(b *Browser) { b.dialTimeout = d }
+}
+
+
+// WithConn is a browser option to provide a pre-established connection.
+// Used by PipeAllocator for pipe-based CDP communication.
+func withConn(conn Transport) BrowserOption {
+	return func(b *Browser) { b.conn = conn }
 }

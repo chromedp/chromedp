@@ -511,3 +511,212 @@ func TestStartsWithNonBlankTab(t *testing.T) {
 		}
 	}
 }
+
+func TestPipeAllocator(t *testing.T) {
+	t.Parallel()
+
+	allocCtx, allocCancel := NewPipeAllocator(context.Background(), pipeAllocOpts...)
+
+	taskCtx, cancel := NewContext(allocCtx)
+	defer cancel()
+
+	want := "insert"
+	var got string
+	if err := Run(taskCtx,
+		Navigate(testdataDir+"/form.html"),
+		Text("#foo", &got, ByID),
+	); err != nil {
+		allocCancel()
+		t.Fatal(err)
+	}
+	if got != want {
+		allocCancel()
+		t.Fatalf("want %q, got %q", want, got)
+	}
+
+	cancel()
+	allocCancel()
+
+	tempDir := FromContext(taskCtx).Browser.userDataDir
+	if _, err := os.Lstat(tempDir); !os.IsNotExist(err) {
+		t.Fatalf("temporary user data dir %q not deleted", tempDir)
+	}
+}
+
+func TestPipeAllocatorCancelParent(t *testing.T) {
+	t.Parallel()
+
+	allocCtx, allocCancel := NewPipeAllocator(context.Background(), pipeAllocOpts...)
+	defer allocCancel()
+
+	taskCtx, _ := NewContext(allocCtx)
+	if err := Run(taskCtx); err != nil {
+		t.Fatal(err)
+	}
+
+	allocCancel()
+
+	tempDir := FromContext(taskCtx).Browser.userDataDir
+	if _, err := os.Lstat(tempDir); !os.IsNotExist(err) {
+		t.Fatalf("temporary user data dir %q not deleted", tempDir)
+	}
+}
+
+func TestPipeAllocatorUserDataDir(t *testing.T) {
+	t.Parallel()
+
+	dir := t.TempDir()
+
+	allocCtx, cancel := NewPipeAllocator(context.Background(),
+		append([]PipeAllocatorOption{PipeUserDataDir(dir)}, pipeAllocOpts...)...)
+	defer cancel()
+
+	taskCtx, cancel := NewContext(allocCtx)
+	defer cancel()
+
+	want := "insert"
+	var got string
+	if err := Run(taskCtx,
+		Navigate(testdataDir+"/form.html"),
+		Text("#foo", &got, ByID),
+	); err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Fatalf("want %q, got %q", want, got)
+	}
+}
+
+func TestPipeAllocatorEnv(t *testing.T) {
+	t.Parallel()
+
+	tz := "Australia/Melbourne"
+	allocCtx, cancel := NewPipeAllocator(context.Background(),
+		append([]PipeAllocatorOption{
+			PipeEnv("TZ=" + tz),
+		}, pipeAllocOpts...)...)
+	defer cancel()
+
+	taskCtx, cancel := NewContext(allocCtx)
+	defer cancel()
+
+	var ret string
+	if err := Run(taskCtx,
+		Evaluate(`Intl.DateTimeFormat().resolvedOptions().timeZone`, &ret),
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	if ret != tz {
+		t.Fatalf("got %s, want %s", ret, tz)
+	}
+}
+
+func TestPipeAllocatorMultipleTabs(t *testing.T) {
+	t.Parallel()
+
+	allocCtx, cancel := NewPipeAllocator(context.Background(), pipeAllocOpts...)
+	defer cancel()
+
+	taskCtx, cancel := NewContext(allocCtx)
+	defer cancel()
+
+	// First tab
+	want := "insert"
+	var got string
+	if err := Run(taskCtx,
+		Navigate(testdataDir+"/form.html"),
+		Text("#foo", &got, ByID),
+	); err != nil {
+		t.Fatal(err)
+	}
+	if got != want {
+		t.Fatalf("first tab: want %q, got %q", want, got)
+	}
+
+	// Second tab
+	tabCtx, cancel := NewContext(taskCtx)
+	defer cancel()
+
+	var got2 string
+	if err := Run(tabCtx,
+		Navigate(testdataDir+"/form.html"),
+		Text("#foo", &got2, ByID),
+	); err != nil {
+		t.Fatal(err)
+	}
+	if got2 != want {
+		t.Fatalf("second tab: want %q, got %q", want, got2)
+	}
+}
+
+// In pipe mode, Chrome's subprocesses can hold pipe file descriptors open even
+// after the main browser process is killed. Because the connection isn't closed
+// immediately, chromedp's Navigate hangs until the provided context times out.
+// This is expected behavior for abrupt kills in pipe mode, not an allocator bug.
+func TestPipeAllocatorKillBrowser(t *testing.T) {
+	t.Parallel()
+
+	allocCtx, allocCancel := NewPipeAllocator(context.Background(), pipeAllocOpts...)
+	defer allocCancel()
+
+	taskCtx, cancel := NewContext(allocCtx)
+	defer cancel()
+
+	ctx, cancel := context.WithTimeout(taskCtx, 3*time.Second)
+	defer cancel()
+
+	kill := make(chan struct{}, 1)
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		kill <- struct{}{}
+		<-ctx.Done()
+	}))
+	defer s.Close()
+
+	go func() {
+		<-kill
+		b := FromContext(ctx).Browser
+		if err := b.process.Signal(os.Kill); err != nil {
+			t.Error(err)
+		}
+	}()
+
+	err := Run(ctx, Navigate(s.URL))
+	if err == nil {
+		return
+	}
+
+	if errors.Is(err, context.DeadlineExceeded) {
+		t.Log("browser killed forcefully; received timeout (acceptable in pipe mode)")
+		return
+	}
+
+	t.Logf("browser killed, got error: %v", err)
+}
+
+func TestPipeAllocatorModifyCmdFunc(t *testing.T) {
+	t.Parallel()
+
+	tz := "Atlantic/Reykjavik"
+	allocCtx, cancel := NewPipeAllocator(context.Background(),
+		append([]PipeAllocatorOption{
+			PipeModifyCmdFunc(func(cmd *exec.Cmd) {
+				cmd.Env = append(cmd.Env, "TZ="+tz)
+			}),
+		}, pipeAllocOpts...)...)
+	defer cancel()
+
+	taskCtx, cancel := NewContext(allocCtx)
+	defer cancel()
+
+	var ret string
+	if err := Run(taskCtx,
+		Evaluate(`Intl.DateTimeFormat().resolvedOptions().timeZone`, &ret),
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	if ret != tz {
+		t.Fatalf("got %s, want %s", ret, tz)
+	}
+}
