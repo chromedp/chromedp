@@ -418,6 +418,20 @@ func (t *Target) domEvent(ctx context.Context, ev any) {
 	case *dom.EventScrollableFlagUpdated:
 		id, op = e.NodeID, scrollableFlagUpdated(f.Nodes, e.NodeID)
 
+	case *dom.EventAdRelatedStateUpdated:
+		id, op = e.NodeID, adRelatedStateUpdated(e.AdProvenance)
+
+	case *dom.EventAdoptedStyleSheetsModified:
+		id, op = e.NodeID, adoptedStyleSheetsModified(e.AdoptedStyleSheets)
+
+	case *dom.EventAffectedByStartingStylesFlagUpdated:
+		id, op = e.NodeID, affectedByStartingStylesFlagUpdated(e.AffectedByStartingStyles)
+
+	// DOM.topLayerElementsUpdated carries no parameters, so there is no node
+	// to update -- but it is not an error either.
+	case *dom.EventTopLayerElementsUpdated:
+		return
+
 	default:
 		t.errf("unhandled node event %T", ev)
 		return
