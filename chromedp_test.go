@@ -354,6 +354,48 @@ func TestConcurrentCancel(t *testing.T) {
 	wg.Wait()
 }
 
+// TestCancelDuringAttachTarget covers the race in issue 1638: the tab
+// context's cancellation watcher used to read Context.Target while
+// attachTarget published that same pointer, with no synchronization.
+//
+// A real browser is not required. Publishing a Target with empty IDs is
+// enough for the watcher to observe the pointer and skip CDP teardown.
+func TestCancelDuringAttachTarget(t *testing.T) {
+	t.Parallel()
+
+	allocCtx, cancel := NewExecAllocator(context.Background(),
+		ExecPath("/do-not-run-chrome"))
+	defer cancel()
+
+	bctx, bcancel := NewContext(allocCtx)
+	defer bcancel()
+	// A non-nil Browser makes the child a tab context (first == false),
+	// so its watcher will look at Target on cancel.
+	FromContext(bctx).Browser = &Browser{}
+
+	var wg sync.WaitGroup
+	for range 50 {
+		tabCtx, tabCancel := NewContext(bctx)
+		c := FromContext(tabCtx)
+		if c.first {
+			t.Fatal("expected a tab context so the cancel watcher observes Target")
+		}
+		wg.Add(2)
+		go func() {
+			defer wg.Done()
+			tgt := &Target{}
+			c.targetMu.Lock()
+			c.Target = tgt
+			c.targetMu.Unlock()
+		}()
+		go func() {
+			defer wg.Done()
+			tabCancel()
+		}()
+	}
+	wg.Wait()
+}
+
 func TestListenBrowser(t *testing.T) {
 	t.Parallel()
 

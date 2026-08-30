@@ -45,6 +45,11 @@ type Context struct {
 	// have its own unique Target pointing to a separate browser tab (page).
 	Target *Target
 
+	// targetMu protects Target. attachTarget publishes the pointer while
+	// NewContext's cancellation watcher may read it on another goroutine
+	// if the parent context is cancelled mid-attach. See issue 1638.
+	targetMu sync.Mutex
+
 	// targetID is set up by WithTargetID. If nil, Run will pick the only
 	// unused page target, or create a new one.
 	targetID target.ID
@@ -179,7 +184,10 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 			return
 		}
 
-		if c.Target == nil {
+		c.targetMu.Lock()
+		t := c.Target
+		c.targetMu.Unlock()
+		if t == nil {
 			// This is a new tab, but we didn't create it and attach
 			// to it yet. Nothing to do.
 			return
@@ -190,13 +198,13 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
 		browserExecutor := cdp.WithExecutor(ctx, c.Browser)
-		if id := c.Target.SessionID; id != "" {
+		if id := t.SessionID; id != "" {
 			action := target.DetachFromTarget().WithSessionID(id)
 			if err := action.Do(browserExecutor); c.cancelErr == nil && err != nil {
 				c.cancelErr = err
 			}
 		}
-		if id := c.Target.TargetID; id != "" {
+		if id := t.TargetID; id != "" {
 			action := target.CloseTarget(id)
 			if err := action.Do(browserExecutor); c.cancelErr == nil && err != nil {
 				c.cancelErr = err
@@ -431,10 +439,13 @@ func (c *Context) attachTarget(ctx context.Context, targetID target.ID) error {
 		return err
 	}
 
-	c.Target, err = c.Browser.newExecutorForTarget(ctx, targetID, sessionID)
+	t, err := c.Browser.newExecutorForTarget(ctx, targetID, sessionID)
 	if err != nil {
 		return err
 	}
+	c.targetMu.Lock()
+	c.Target = t
+	c.targetMu.Unlock()
 
 	c.Target.listeners = append(c.Target.listeners, c.targetListeners...)
 	go c.Target.run(ctx)
