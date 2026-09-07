@@ -3,12 +3,12 @@ package chromedp
 import (
 	"bytes"
 	"context"
+	"encoding/json/jsontext"
+	jsonv2 "encoding/json/v2"
 	"io"
 	"net"
 
 	"github.com/chromedp/cdproto"
-	jsonv2 "github.com/go-json-experiment/json"
-	"github.com/go-json-experiment/json/jsontext"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 )

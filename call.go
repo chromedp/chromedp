@@ -2,9 +2,9 @@ package chromedp
 
 import (
 	"context"
+	jsonv2 "encoding/json/v2"
 
 	"github.com/chromedp/cdproto/runtime"
-	jsonv2 "github.com/go-json-experiment/json"
 )
 
 // CallAction are actions that calls a JavaScript function using
