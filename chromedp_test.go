@@ -8,6 +8,7 @@ import (
 	"image/color"
 	"image/png"
 	"io"
+	"io/fs"
 	"log"
 	"net"
 	"net/http"
@@ -93,8 +94,13 @@ func TestMain(m *testing.M) {
 	cancel()
 
 	if infos, _ := os.ReadDir(allocTempDir); len(infos) > 0 {
+		var leaks []string
+		for _, info := range infos {
+			leaks = append(leaks, describeLeak(filepath.Join(allocTempDir, info.Name())))
+		}
 		os.RemoveAll(allocTempDir)
-		panic(fmt.Sprintf("leaked %d temporary dirs under %s", len(infos), allocTempDir))
+		panic(fmt.Sprintf("leaked %d temporary dirs under %s:\n%s",
+			len(infos), allocTempDir, strings.Join(leaks, "\n")))
 	} else {
 		os.Remove(allocTempDir)
 	}
@@ -1577,4 +1583,20 @@ func TestPDFBackground(t *testing.T) {
 	if err := os.WriteFile("background.pdf", buf, 0o644); err != nil {
 		t.Fatal(err)
 	}
+}
+
+// describeLeak lists the files under dir, to help find who left it.
+func describeLeak(dir string) string {
+	var files []string
+	filepath.WalkDir(dir, func(p string, d fs.DirEntry, err error) error {
+		if err != nil {
+			files = append(files, fmt.Sprintf("%s (error: %v)", p, err))
+			return nil
+		}
+		if p != dir {
+			files = append(files, strings.TrimPrefix(p, dir))
+		}
+		return nil
+	})
+	return fmt.Sprintf("%s: %d entries: %s", dir, len(files), strings.Join(files, " "))
 }

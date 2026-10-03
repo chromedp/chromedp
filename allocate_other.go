@@ -6,3 +6,7 @@ import "os/exec"
 
 func allocateCmdOptions(cmd *exec.Cmd) {
 }
+
+// killProcessGroup does nothing on this platform.
+func killProcessGroup(cmd *exec.Cmd) {
+}

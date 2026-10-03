@@ -207,6 +207,13 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 
 	select {
 	case <-ctx.Done():
+		// Chrome started, but nothing else will wait for it or remove
+		// its directory. The context is done, so Chrome is killed.
+		cmd.Wait()
+		killProcessGroup(cmd)
+		if removeDir {
+			removeAllRetry(dataDir)
+		}
 		return nil, ctx.Err()
 	case <-c.allocated: // for this browser's root context
 	}
@@ -217,6 +224,7 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		// user cancelled the context and killed chrome, this will most
 		// likely just be "signal: killed", which isn't interesting.
 		cmd.Wait()
+		killProcessGroup(cmd)
 
 		// Then delete the temporary user data directory, if needed.
 		if removeDir {
@@ -225,7 +233,7 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 			// the reason is unknown yet. As a workaround, we will just wait a
 			// little while before removing the directory.
 			<-time.After(10 * time.Millisecond)
-			if err := os.RemoveAll(dataDir); c.cancelErr == nil {
+			if err := removeAllRetry(dataDir); c.cancelErr == nil {
 				c.cancelErr = err
 			}
 		}
@@ -277,6 +285,21 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	browser.process = cmd.Process
 	browser.userDataDir = dataDir
 	return browser, nil
+}
+
+// removeAllRetry removes dir like os.RemoveAll. Chrome child processes, such as
+// the crashpad handler, can still write files in dir after the main process
+// exits, and then os.RemoveAll fails with "directory not empty". So it tries
+// again for a few seconds.
+func removeAllRetry(dir string) error {
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		err := os.RemoveAll(dir)
+		if err == nil || !time.Now().Before(deadline) {
+			return err
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
 }
 
 // readOutput grabs the websocket address from chrome's output, returning as
