@@ -1,4 +1,4 @@
-package chromedp
+package test
 
 import (
 	"bytes"
@@ -10,6 +10,8 @@ import (
 	"path"
 	"testing"
 
+	"github.com/chromedp/chromedp"
+	"github.com/chromedp/chromedp/internal/chromedptest"
 	"github.com/orisano/pixelmatch"
 )
 
@@ -56,14 +58,14 @@ func TestScreenshot(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			ctx, cancel := testAllocate(t, "screenshot.html")
+			ctx, cancel := chromedptest.Allocate(t, "screenshot.html")
 			defer cancel()
 
 			var buf []byte
-			if err := Do(ctx,
-				EmulateViewport(500, 500),
-				EvaluateAsDevTools[Void]("document.documentElement.scrollTo(20,  30)"),
-				into(&buf, Screenshot(CSS(test.sel))),
+			if err := chromedp.Do(ctx,
+				chromedp.EmulateViewport(500, 500),
+				chromedp.EvaluateAsDevTools[chromedp.Void]("document.documentElement.scrollTo(20,  30)"),
+				chromedptest.Into(&buf, chromedp.Screenshot(chromedp.CSS(test.sel))),
 			); err != nil {
 				t.Fatal(err)
 			}
@@ -104,12 +106,12 @@ func TestScreenshotScale(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			ctx, cancel := testAllocate(t, "screenshot.html")
+			ctx, cancel := chromedptest.Allocate(t, "screenshot.html")
 			defer cancel()
 
 			var buf []byte
-			if err := Do(ctx,
-				into(&buf, ScreenshotScale(CSS(test.sel), test.scale)),
+			if err := chromedp.Do(ctx,
+				chromedptest.Into(&buf, chromedp.ScreenshotScale(chromedp.CSS(test.sel), test.scale)),
 			); err != nil {
 				t.Fatal(err)
 			}
@@ -127,19 +129,19 @@ func TestScreenshotScale(t *testing.T) {
 func TestScreenshotHighDPI(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := testAllocate(t, "image.html")
+	ctx, cancel := chromedptest.Allocate(t, "image.html")
 	defer cancel()
 
 	// Use a weird screen dimension with a 1.5 scale factor, so that cropping
 	// the screenshot must use floating point arithmetic. It must also keep the
 	// high DPI in mind. The dimensions must be large enough to show the
 	// element that we want, because we do not scroll to bring it into view.
-	if err := Do(ctx, EmulateViewport(905, 705, EmulateScale(1.5))); err != nil {
+	if err := chromedp.Do(ctx, chromedp.EmulateViewport(905, 705, chromedp.EmulateScale(1.5))); err != nil {
 		t.Fatal(err)
 	}
 
 	var buf []byte
-	if err := Do(ctx, into(&buf, Screenshot(ID("half-color")))); err != nil {
+	if err := chromedp.Do(ctx, chromedptest.Into(&buf, chromedp.Screenshot(chromedp.ID("half-color")))); err != nil {
 		t.Fatal(err)
 	}
 
@@ -155,13 +157,13 @@ func TestScreenshotHighDPI(t *testing.T) {
 func TestCaptureScreenshot(t *testing.T) {
 	t.Parallel()
 
-	ctx, cancel := testAllocate(t, "grid.html")
+	ctx, cancel := chromedptest.Allocate(t, "grid.html")
 	defer cancel()
 
 	var buf []byte
-	if err := Do(ctx,
-		EmulateViewport(500, 500),
-		into(&buf, CaptureScreenshot()),
+	if err := chromedp.Do(ctx,
+		chromedp.EmulateViewport(500, 500),
+		chromedptest.Into(&buf, chromedp.CaptureScreenshot()),
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -198,14 +200,14 @@ func TestFullScreenshot(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			t.Parallel()
-			ctx, cancel := testAllocate(t, "grid.html")
+			ctx, cancel := chromedptest.Allocate(t, "grid.html")
 			defer cancel()
 
 			var buf []byte
-			if err := Do(ctx,
-				EmulateViewport(500, 500),
-				EvaluateAsDevTools[Void]("document.documentElement.scrollTo(20,  30)"),
-				into(&buf, FullScreenshot(test.quality)),
+			if err := chromedp.Do(ctx,
+				chromedp.EmulateViewport(500, 500),
+				chromedp.EvaluateAsDevTools[chromedp.Void]("document.documentElement.scrollTo(20,  30)"),
+				chromedptest.Into(&buf, chromedp.FullScreenshot(test.quality)),
 			); err != nil {
 				t.Fatal(err)
 			}

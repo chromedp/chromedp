@@ -31,7 +31,7 @@ import (
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
-	"github.com/ledongthuc/pdf"
+	"github.com/chromedp/chromedp/internal/testenv"
 )
 
 var (
@@ -63,20 +63,19 @@ func init() {
 	// and can slightly speed up the tests on other systems.
 	allocOpts = append(allocOpts, DisableGPU)
 
-	// CHROMEDP_NO_HEADLESS is the old name of CHROMEDP_VISIBLEWINDOW.
-	if noHeadless := os.Getenv("CHROMEDP_NO_HEADLESS"); visibleWindowFromEnv() || (noHeadless != "" && noHeadless != "false") {
+	if testenv.VisibleWindow() {
 		allocOpts = append(allocOpts, VisibleWindow)
 	}
 
 	// Find the exec path once at startup.
-	execPath = os.Getenv("CHROMEDP_TEST_RUNNER")
+	execPath = testenv.ExecPath()
 	if execPath == "" {
 		execPath = findExecPath()
 	}
 	allocOpts = append(allocOpts, ExecPath(execPath))
 
 	// Not explicitly needed to be set, as this speeds up the tests
-	if noSandbox := os.Getenv("CHROMEDP_NO_SANDBOX"); noSandbox != "false" {
+	if testenv.NoSandbox() {
 		allocOpts = append(allocOpts, NoSandbox)
 	}
 }
@@ -87,7 +86,7 @@ func TestMain(m *testing.M) {
 	var cancel context.CancelFunc
 	allocCtx, cancel = NewExecAllocator(context.Background(), allocOpts...)
 
-	if debug := os.Getenv("CHROMEDP_DEBUG"); debug != "" && debug != "false" {
+	if testenv.Debug() {
 		browserOpts = append(browserOpts, WithDebugf(log.Printf))
 	}
 
@@ -1577,87 +1576,6 @@ func TestWebGL(t *testing.T) {
 
 // TestPDFTemplate tests that the resource pack is loaded in headless-shell.
 //
-// When it is loaded correctly, the header and footer templates that use these
-// values work as expected:
-//   - title
-//   - url
-//   - pageNumber
-//   - totalPages
-//
-// This is a regression test for https://github.com/chromedp/chromedp/issues/922.
-func TestPDFTemplate(t *testing.T) {
-	t.Parallel()
-
-	ctx, cancel := testAllocate(t, "")
-	defer cancel()
-
-	var buf []byte
-	if err := Do(ctx,
-		Navigate("about:blank"),
-		Func(func(ctx context.Context, t *Target) error {
-			frameTree, err := Call(ctx, page.GetFrameTree, cdp.Empty{})
-			if err != nil {
-				return err
-			}
-
-			_, err = Call(ctx, page.SetDocumentContent, page.SetDocumentContentParams{
-				FrameID: frameTree.FrameTree.Frame.ID,
-				HTML: `
-				<html>
-					<head>
-						<title>PDF Template</title>
-					</head>
-					<body>
-						Hello World!
-					</body>
-				</html>
-			`,
-			})
-			return err
-		}),
-		Func(func(ctx context.Context, t *Target) error {
-			res, err := Call(ctx, page.PrintToPDF, page.PrintToPDFParams{
-				MarginTop:           0.5,
-				MarginBottom:        0.5,
-				DisplayHeaderFooter: new(true),
-				HeaderTemplate:      `<div style="font-size:8px;width:100%;text-align:center;"><span class="title"></span> -- <span class="url"></span></div>`,
-				FooterTemplate:      `<div style="font-size:8px;width:100%;text-align:center;">(<span class="pageNumber"></span> / <span class="totalPages"></span>)</div>`,
-			})
-			buf = res.Data
-			return err
-		}),
-	); err != nil {
-		t.Fatal(err)
-	}
-
-	r, err := pdf.NewReader(bytes.NewReader(buf), int64(len(buf)))
-	if err != nil {
-		t.Fatal(err)
-	}
-	b, err := r.GetPlainText()
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	want := []byte("Hello World!PDF Template -- about:blank(1 / 1)")
-	l := len(want)
-	// try to reuse buf
-	if len(buf) >= l {
-		buf = buf[0:l]
-	} else {
-		buf = make([]byte, l)
-	}
-	n, err := io.ReadFull(b, buf)
-	if err != nil && !(errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF)) {
-		t.Fatal(err)
-	}
-	buf = buf[:n]
-
-	if !bytes.Equal(buf, want) {
-		t.Errorf("page.PrintToPDF produces unexpected content. got: %q, want: %q", buf, want)
-	}
-}
-
 // regression test for https://github.com/chromedp/chromedp/issues/1551
 func TestPDFBackground(t *testing.T) {
 	t.Parallel()
