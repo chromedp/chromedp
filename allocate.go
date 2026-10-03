@@ -256,17 +256,17 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		cmd.Env = append(cmd.Env, a.initEnv...)
 	}
 
-	// We must start the cmd before we call cmd.Wait. Otherwise the two can
-	// race.
-	if err := cmd.Start(); err != nil {
+	// The goroutine of startCmd starts the browser and waits for it.
+	run := startCmd(cmd)
+	if err := <-run.started; err != nil {
 		return nil, err
 	}
 
 	select {
 	case <-ctx.Done():
-		// Chrome started, but nothing else will wait for it or remove
-		// its directory. The context is done, so Chrome is killed.
-		cmd.Wait()
+		// Chrome started, but nothing else will remove its directory. The
+		// context is done, so Chrome is killed.
+		<-run.done
 		if removeDir {
 			killLeftovers(dataDir)
 			removeAllRetry(dataDir)
@@ -284,10 +284,7 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	a.wg.Add(1) // for the entire allocator
 	go func() {
 		// First wait for the process to finish.
-		// TODO: do we care about this error in any scenario? If the user
-		// canceled the context and killed chrome, it is most likely
-		// "signal: killed", which is not interesting.
-		cmd.Wait()
+		<-run.done
 		if out != nil {
 			out.finish()
 		}
@@ -342,6 +339,48 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	browser.userDataDir = dataDir
 	browser.exited = exited
 	return browser, nil
+}
+
+// cmdRun is a browser process that startCmd started.
+type cmdRun struct {
+	// started receives the error of cmd.Start. It receives nil when the
+	// process runs.
+	started chan error
+
+	// done closes when the process exits. It never closes when Start failed.
+	done chan struct{}
+}
+
+// startCmd starts cmd and waits for it in one goroutine, which it locks to its
+// OS thread.
+//
+// On Linux, the option Pdeathsig of the allocator makes the kernel kill the
+// browser when the OS thread that started it exits, and not when the process
+// exits. A goroutine can move to another thread, and a thread can end, for
+// example when a locked goroutine ends without an unlock. So the browser must
+// start from a goroutine that stays on its thread until the browser exits. See
+// https://go.dev/issue/27505 and the issue 1566 of chromedp.
+func startCmd(cmd *exec.Cmd) *cmdRun {
+	r := &cmdRun{
+		started: make(chan error, 1),
+		done:    make(chan struct{}),
+	}
+	go func() {
+		runtime.LockOSThread()
+		defer runtime.UnlockOSThread()
+
+		// Start the process before Wait, as the two race otherwise.
+		err := cmd.Start()
+		r.started <- err
+		if err != nil {
+			return
+		}
+		// A user that stopped the browser gets an error such as "signal:
+		// killed", which is not interesting here.
+		cmd.Wait()
+		close(r.done)
+	}()
+	return r
 }
 
 // flagArgs returns the command line arguments for the flags of the allocator.
