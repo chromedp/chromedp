@@ -1,17 +1,16 @@
 # Replace the Action interface with a generic and iterator API
 
-Status: Proposed.
+Status: Decided.
 
 The maintainer asked on 2026-10-03 whether an API built on generics and
 iterators must replace the `chromedp.Action` interface, which is old and not
 friendly. The maintainer then asked us to build the change. Then the maintainer
-can see the final API before approving it. We built it on the local branch
-`typed-api`. Nobody has approved it, and it is not on GitHub.
+saw the final API before approving it. We built it on a branch. The
+maintainer approved it, and the work was merged on 2026-10-04.
 
-## What the branch has
+## What the change has
 
-The branch uses the typed `cdproto` that `pdlgen` writes on its own branch
-`typed-api`. A protocol command is a value, and `cdp.Call` runs it on a session.
+The code uses the typed `cdproto` that `pdlgen` writes. A protocol command is a value, and `cdp.Call` runs it on a session.
 `chromedp.Browser` and `chromedp.Target` are sessions.
 
 - `type Action[T any] func(ctx context.Context, t *Target) (T, error)`.
@@ -37,9 +36,9 @@ The branch uses the typed `cdproto` that `pdlgen` writes on its own branch
   `ListenBrowser` are gone. `docs/MIGRATION.md` lists every renamed and removed
   name, and `docs/API.md` shows the old and the new code side by side.
 
-The full suite passes on the branch with the same tests, ported to the new API.
+The full suite passed with the same tests, ported to the new API.
 
-## What the maintainer must look at
+## What the maintainer looked at
 
 1. Every user of `chromedp` changes code. `*cdp.Node` is `*chromedp.Node`, an
    action returns its value, a protocol command is called with `cdp.Call`, and
@@ -59,9 +58,8 @@ The full suite passes on the branch with the same tests, ported to the new API.
 6. `Func` and `Steps` are not in the first design. They are the smallest way to
    put an action that returns an error into a `Do`.
 
-## What happens next
+## What happened next
 
-If the maintainer approves, we review the branch and push it. We merge the
-`pdlgen` branch first, because the typed `cdproto` comes from it. If the
-maintainer does not approve, we drop the branch. Then `chromedp` stays on the
-current API with the pushed port to `cdproto` `v0.157.1`.
+The `pdlgen` work was merged first, because the typed `cdproto` comes from it.
+`cdproto` v0.157.2 is the first release of the typed API. `chromedp` v0.17.0
+uses it.

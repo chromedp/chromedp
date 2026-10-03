@@ -1,11 +1,11 @@
 # A visible window is an opt-in
 
-Status: Proposed.
+Status: Decided.
 
 Headless mode stays the default. A program that wants a visible window, or a
-window that stays open after the program ends, asks for it. The change is on
-the local branch `typed-api`. The maintainer fixed the names. Nobody has
-approved the change as a whole, and it is not on GitHub.
+window that stays open after the program ends, asks for it. The maintainer
+fixed the names and approved the change. The work was done on a branch and
+merged on 2026-10-04.
 
 ## Why headless stays the default
 
@@ -68,6 +68,5 @@ The traps, and what the code does about each one:
 
 ## What remains
 
-The maintainer must approve the names and the flags. No Windows machine ran the
-tests, so the Windows detach flags are not tested. A test for the visible
+No Windows machine ran the tests, so the Windows detach flags are not tested. A test for the visible
 window needs a display, and it skips on Linux without one.

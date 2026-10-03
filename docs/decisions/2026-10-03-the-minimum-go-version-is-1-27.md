@@ -18,7 +18,7 @@ The `go` line of `go.mod` and the Go versions in the `Test` workflow changed.
 The workflow tests Go 1.27 and the newest stable release.
 
 The code then moved to `encoding/json/v2` and `encoding/json/jsontext`, and
-`go.mod` requires the tagged release `v0.157.1` of `cdproto`. It no longer
+`go.mod` requires a tagged release of `cdproto`. It no longer
 lists `github.com/go-json-experiment/json`. This changes where the JSON package
 comes from. `2025-02-22-use-json-v2.md` records the first choice. See
 `2026-10-03-stop-relying-on-removed-cdproto-helpers.md` for the types that
