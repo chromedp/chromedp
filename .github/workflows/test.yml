@@ -16,7 +16,25 @@ jobs:
           sudo apt-get install -y build-essential
       - name: Allow unprivileged user namespaces
         run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-      - name: Test Chrome
+      # The repository has three modules: the core in the root, remote and test.
+      # remote and test use the core in the root through a replace directive in
+      # their go.mod. Run every module with GOWORK=off, so that no workspace
+      # changes the result.
+      - name: Test Chrome, core
         run: go test -v ./...
+        env:
+          GOWORK: "off"
+      - name: Test Chrome, remote
+        run: go test -v ./...
+        working-directory: remote
+        env:
+          GOWORK: "off"
+      - name: Test Chrome, test
+        run: go test -v ./...
+        working-directory: test
+        env:
+          GOWORK: "off"
       - name: Test headless-shell
         run: ./contrib/docker-test.sh
+        env:
+          GOWORK: "off"

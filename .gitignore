@@ -5,8 +5,8 @@ cdp-*.log
 cdp-*.txt
 *.out
 
-/chromedp.test
-/chromedp.test.exe
+chromedp.test
+chromedp.test.exe
 
 /*.jpeg
 /*.png
