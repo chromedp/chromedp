@@ -184,22 +184,24 @@ func TestNodeOp(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		// wait for events to propagate
-		time.Sleep(5 * time.Millisecond)
-
-		tree := nodes[0].Dump("", "  ", false)
+		// wait for the events to propagate: poll until the node tree matches
+		// the view of the browser. A fixed short sleep is not enough on a slow
+		// machine.
+		var tree, exp string
+		for deadline := time.Now().Add(5 * time.Second); ; time.Sleep(5 * time.Millisecond) {
+			tree = nodes[0].Dump("", "  ", false)
+			if err := Run(ctx,
+				EvaluateAsDevTools(fmt.Sprintf(dumpJS, `document`, "", "  ", false), &exp),
+			); err != nil {
+				t.Fatal(err)
+			}
+			if (tree != prev && tree == exp) || time.Now().After(deadline) {
+				break
+			}
+		}
 		if prev == tree {
 			t.Fatalf("test %d expected tree to change (prev == tree)\n-- PREV:\n%s\n-- TREE:\n%s\n--\n", i, prev, tree)
 		}
-
-		// retrieve browser's tree view
-		var exp string
-		if err := Run(ctx,
-			EvaluateAsDevTools(fmt.Sprintf(dumpJS, `document`, "", "  ", false), &exp),
-		); err != nil {
-			t.Fatal(err)
-		}
-
 		if exp != tree {
 			t.Errorf("test %d expected tree and node tree do not match:\n-- EXPECTED:\n%s\n-- GOT:\n%s\n--\n", i, exp, tree)
 		}

@@ -210,8 +210,8 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		// Chrome started, but nothing else will wait for it or remove
 		// its directory. The context is done, so Chrome is killed.
 		cmd.Wait()
-		killProcessGroup(cmd)
 		if removeDir {
+			killLeftovers(dataDir)
 			removeAllRetry(dataDir)
 		}
 		return nil, ctx.Err()
@@ -224,10 +224,12 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		// user cancelled the context and killed chrome, this will most
 		// likely just be "signal: killed", which isn't interesting.
 		cmd.Wait()
-		killProcessGroup(cmd)
 
 		// Then delete the temporary user data directory, if needed.
 		if removeDir {
+			// Child processes of Chrome can outlive it, and write in the
+			// directory after it is removed.
+			killLeftovers(dataDir)
 			// Sometimes files/directories are still created in the user data
 			// directory at this point. I can not reproduce it with strace, so
 			// the reason is unknown yet. As a workaround, we will just wait a
