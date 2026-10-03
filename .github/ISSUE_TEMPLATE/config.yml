@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+- name: Ask a question
+  url: https://github.com/chromedp/chromedp/discussions/categories/q-a
+  about: Ask how to do something with chromedp, or why something works the way it does.
+- name: Suggest a feature
+  url: https://github.com/chromedp/chromedp/discussions/categories/ideas
+  about: Suggest a change or a new feature, and discuss it before you write code.
+- name: Chat
+  url: https://discord.gg/WDWAgXwJqN
+  about: Chat with other people who use chromedp.

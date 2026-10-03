@@ -1,6 +1,12 @@
+---
+name: Bug report
+about: Report something that does not work. Ask questions in Discussions.
+---
+
 <!---
-This issue tracker is mainly for bugs and feature requests. Before asking a
-question, search online and try to investigate on your own.
+This issue tracker is for bugs. Ask a question, or suggest a feature, in
+Discussions: https://github.com/chromedp/chromedp/discussions
+Before you report a bug, search the issues and try to find the cause yourself.
 -->
 
 #### What versions are you running?
