@@ -4,7 +4,7 @@
 the Chrome DevTools Protocol. The protocol is the JSON message format that
 Chrome uses for remote control. `chromedp` needs no external driver. It
 starts the browser or connects to one, then sends protocol commands over a
-WebSocket.
+pipe or a WebSocket.
 
 The generated protocol types live in a separate module, `cdproto`, which
 `pdlgen` writes. This module holds the high level API on top of it:
@@ -43,7 +43,7 @@ you trust it, because a later decision can amend or replace it.
 | starting work | `docs/PLAN.md`, then `docs/PROGRESS.md` |
 | looking for known work that is not done | `docs/BACKLOG.md` |
 | asking why something is the way it is | the index in `docs/decisions/README.md` |
-| changing the public API | `docs/PLAN.md` under Architecture, `docs/API.md`, `docs/MIGRATION.md`, then the proposed decisions in `docs/decisions/` |
+| changing the public API | `docs/PLAN.md` under Architecture, `docs/API.md`, `docs/MIGRATION.md`, then the decisions in `docs/decisions/` |
 | looking for the old and the new name of an API | `docs/MIGRATION.md` |
 | looking for the API with before and after code | `docs/API.md` |
 | changing the cdproto dependency | `docs/decisions/2026-10-03-stop-relying-on-removed-cdproto-helpers.md` |
@@ -84,8 +84,8 @@ The root package `chromedp` holds the API. The files group by topic.
 
 | Path | Holds |
 | --- | --- |
-| `allocate.go`, `allocate_linux.go`, `allocate_other.go`, `allocate_detach_unix.go`, `allocate_detach_windows.go`, `keepopen.go` | `Allocator`, `ExecAllocator` and `RemoteAllocator`, which start or reach a browser, and the options that keep a browser open |
-| `browser.go`, `conn.go` | `Browser` and the WebSocket connection |
+| `allocate.go`, `allocate_linux.go`, `allocate_other.go`, `allocate_pipe.go`, `allocate_detach_unix.go`, `allocate_detach_windows.go`, `keepopen.go` | `Allocator`, `ExecAllocator` and `RemoteAllocator`, which start or reach a browser, and the options that keep a browser open |
+| `browser.go`, `conn.go`, `pipe.go`, `pipe_unix.go`, `pipe_windows.go` | `Browser`, the `Transport` interface, the WebSocket connection and the pipe connection |
 | `chromedp.go`, `action.go` | `Context`, `NewContext`, `RunResponse`, `Action[T]`, `Run`, `Do` and the events |
 | `target.go`, `util.go` | `Target`, which tracks frames and the DOM tree from events |
 | `frame.go`, `node.go` | `Frame` and `Node`, which add the tree state to the protocol types |
@@ -169,9 +169,10 @@ go test ./docs/
 
 `gofmt -l .` must print nothing.
 
-On the branch `typed-api`, the code needs the typed `cdproto`, and `go.mod`
-does not name it yet. A `go.work` file, which git ignores, makes the module use
-a local copy such as `../cdproto-typed`. Without that file, `go build` fails.
+`go.mod` requires the released typed `cdproto`, so these commands need no
+other setup. The maintainer can try an unreleased `cdproto` with a local
+`go.work` file. Git ignores that file. Do not commit it, and do not add a
+`replace` directive to `go.mod`.
 
 The full test suite needs a browser, and it is the only way to test the
 package. Run it where Chrome is installed:

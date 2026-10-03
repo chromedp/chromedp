@@ -15,7 +15,9 @@ driver.
 
 ## Installing
 
-Install the package with `go get`. The module needs Go 1.27 or newer.
+Install the package with `go get`. The module needs Go 1.27 or newer. Version
+v0.17.0 uses the typed `cdproto` v0.157.2 and has the generic and iterator API.
+The earlier versions of `cdproto`, v0.157.0 and v0.157.1, have the old API.
 
 ```sh
 go get -u github.com/chromedp/chromedp
@@ -115,7 +117,8 @@ By default, through a pipe. `chromedp` starts Chrome with `--remote-debugging-pi
 and uses two extra file descriptors, so Chrome opens no debugging port. To use a
 websocket and a debugging port instead, add the `chromedp.WebSocket` option to the
 exec allocator. A `remote-debugging-port` or `remote-debugging-address` flag also
-selects the websocket. On Windows `chromedp` always uses the websocket.
+selects the websocket, and so does `WithKeepOpen`. On Windows `chromedp` always
+uses the websocket.
 
 > Chrome exits as soon as my Go program finishes
 

@@ -1,6 +1,6 @@
 # The chromedp API
 
-This document describes the generic action API of `chromedp`. It shows the new code next to the old code. The old code is the API on the `main` branch. The new code is the API on the `typed-api` branch. The change is a proposal. Nobody has approved it. See `docs/decisions/2026-10-03-generic-iterator-api-instead-of-action.md`.
+This document describes the generic action API of `chromedp`. It shows the new code next to the old code. The old code is the API of `chromedp` v0.16.0. The new code is the API of v0.17.0. See `docs/decisions/2026-10-03-generic-iterator-api-instead-of-action.md`.
 
 ## Principles
 
@@ -23,7 +23,7 @@ title, err := chromedp.Run(ctx, chromedp.Title())
 
 ## Before and after
 
-Each example has the old code first and the new code second. The new code comes from `example_test.go`. The examples 9, 11 and 14 use a live website and have no `Output` comment, so `go test` builds them and does not run them. In every example, `ctx` is a chromedp context made with `chromedp.NewContext`, and `ts` is a test server. The old code of some examples chose a lookup with an option. The Before blocks leave it out, because the default lookup finds the same elements. `docs/MIGRATION.md` lists the old options and the selector types that replace them.
+Each example has the old code first and the new code second. The new code comes from `example_test.go`. The examples 9, 11 and 14 use a live website and have no `Output` comment, so `go test` builds them and does not run them. Example 7 also uses a live website, but it has an `Output` comment, so `go test` runs it. In every example, `ctx` is a chromedp context made with `chromedp.NewContext`, and `ts` is a test server. The old code of some examples chose a lookup with an option. The Before blocks leave it out, because the default lookup finds the same elements. `docs/MIGRATION.md` lists the old options and the selector types that replace them.
 
 ### 1. Navigate and read a value
 
@@ -704,9 +704,9 @@ func WithBrowserOption(opts ...BrowserOption) ContextOption
 func WithDebugf(f func(string, ...any)) ContextOption
 func WithErrorf(f func(string, ...any)) ContextOption
 func WithExistingBrowserContext(id cdp.BrowserContextID) ContextOption
+func WithKeepOpen() ContextOption
 func WithLogf(f func(string, ...any)) ContextOption
 func WithNewBrowserContext(options ...CreateBrowserContextOption) ContextOption
-func WithKeepOpen() ContextOption
 func WithTargetID(id target.ID) ContextOption
 func WithVisibleWindow() ContextOption
 

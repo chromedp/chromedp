@@ -1,9 +1,13 @@
 # Migrate to the new API
 
-This document lists the public API changes of the branch `typed-api`. It has
-four parts, in the order of the changes: the move to `cdproto` v0.157.1, the
-move to the typed `cdproto`, the move to the generic action API, and the move
-to typed selectors. Apply the parts in this order. A later part can replace a rule of an earlier part.
+This document lists the public API changes from `chromedp` v0.16.0 to v0.17.0.
+Version v0.17.0 uses `cdproto` v0.157.2, which is the first release of the typed
+API. The versions v0.157.0 and v0.157.1 of `cdproto` have the old API. The
+document has six parts, in the order of the changes: the move to `cdproto`
+v0.157.1, the move to the typed `cdproto`, the move to the generic action API,
+the move to typed selectors, the pipe transport, and the options for a visible
+window. Apply the parts in this order. A later part can replace a rule of an
+earlier part.
 
 ## Migrate to cdproto v0.157.1
 
