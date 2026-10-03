@@ -95,6 +95,9 @@ func TestNodeStateEvents(t *testing.T) {
 // module cache, so a new version of cdproto in go.mod is checked as well.
 func protocolEventNames(t *testing.T, pkg string) []string {
 	t.Helper()
+	if _, err := exec.LookPath("go"); err != nil {
+		t.Skipf("the test needs the go command to find the protocol package: %v", err)
+	}
 	out, err := exec.Command("go", "list", "-f", "{{.Dir}}", pkg).Output()
 	if err != nil {
 		t.Fatalf("finding the package %s: %v", pkg, err)

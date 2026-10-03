@@ -2,6 +2,7 @@ package chromedp
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/chromedp/cdproto/browser"
@@ -43,18 +44,25 @@ func TestWithNewWindow(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
+			if test.same && os.Getenv("HEADLESS_SHELL") != "" {
+				t.Skip("headless-shell gives every target its own window id, so no tab can share a window")
+			}
 			tab, cancel := NewContext(root, test.opts...)
 			defer cancel()
 			if _, err := Run(tab, Title()); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
-			if got := windowID(t, tab) == first; got != test.same {
-				t.Errorf("expected the same window as the first tab to be %t, got %t", test.same, got)
+			id := windowID(t, tab)
+			if got := id == first; got != test.same {
+				t.Errorf("expected the same window as the first tab to be %t, got %t (window %d, first window %d)", test.same, got, id, first)
 			}
 		})
 	}
 
 	t.Run("Inherited", func(t *testing.T) {
+		if os.Getenv("HEADLESS_SHELL") != "" {
+			t.Skip("headless-shell gives every target its own window id, so no tab can share a window")
+		}
 		parent, cancel := NewContext(root, WithNewWindow(false))
 		defer cancel()
 		if _, err := Run(parent, Title()); err != nil {
