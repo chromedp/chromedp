@@ -175,6 +175,11 @@ func TestReload(t *testing.T) {
 	// create test server
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(res http.ResponseWriter, req *http.Request) {
+		// Current Chrome also requests "/favicon.ico". Do not count it.
+		if req.URL.Path != "/" {
+			http.NotFound(res, req)
+			return
+		}
 		fmt.Fprintf(res, `<html>
 <head>
 	<title>Title %d</title>
