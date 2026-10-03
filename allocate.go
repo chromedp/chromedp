@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -246,8 +245,9 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	var wsURL string
 	wsURLChan := make(chan struct{})
 	var copy func()
+	var output syncBuffer
 	go func() {
-		wsURL, copy, err = readOutput(stdout, a.combinedOutputWriter)
+		wsURL, copy, err = readOutputTo(stdout, a.combinedOutputWriter, &output)
 		close(wsURLChan)
 	}()
 	select {
@@ -257,7 +257,7 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		}
 
 	case <-time.After(a.wsURLReadTimeout):
-		return nil, errors.New("websocket url timeout reached")
+		return nil, fmt.Errorf("websocket url timeout reached after %v, chrome printed:\n%s", a.wsURLReadTimeout, output.String())
 	}
 
 	if a.combinedOutputWriter != nil && copy != nil {
@@ -308,15 +308,42 @@ func removeAllRetry(dir string) error {
 // soon as it is found. All read output is forwarded to forward, if non-nil.
 // done is used to signal that the asynchronous io.Copy is done, if any.
 func readOutput(rc io.ReadCloser, forward io.Writer) (wsURL string, _ func(), _ error) {
+	return readOutputTo(rc, forward, new(syncBuffer))
+}
+
+// syncBuffer is a bytes.Buffer that is safe to use from more than one
+// goroutine.
+type syncBuffer struct {
+	mu  sync.Mutex
+	buf bytes.Buffer
+}
+
+// Write satisfies the io.Writer interface.
+func (b *syncBuffer) Write(p []byte) (int, error) {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.Write(p)
+}
+
+// String returns the text that was written.
+func (b *syncBuffer) String() string {
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	return b.buf.String()
+}
+
+// readOutputTo is readOutput, and it writes the output that it has read before
+// the websocket address to accumulated, so that a caller that gives up waiting
+// can show what the browser printed.
+func readOutputTo(rc io.ReadCloser, forward io.Writer, accumulated *syncBuffer) (wsURL string, _ func(), _ error) {
 	prefix := []byte("DevTools listening on")
-	var accumulated bytes.Buffer
 	bufr := bufio.NewReader(rc)
 readLoop:
 	for {
 		line, err := bufr.ReadBytes('\n')
 		if err != nil {
 			return "", nil, fmt.Errorf("chrome failed to start:\n%s",
-				accumulated.Bytes())
+				accumulated.String())
 		}
 		if forward != nil {
 			if _, err := forward.Write(line); err != nil {

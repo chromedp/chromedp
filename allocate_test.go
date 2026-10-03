@@ -86,7 +86,7 @@ func TestExecAllocatorCombinedOutputPanic(t *testing.T) {
 	ctx, _ := NewContext(allocCtx, browserOpts...)
 
 	if _, err := FromContext(ctx).Allocator.Allocate(ctx, WithDialTimeout(1)); err != nil &&
-		err.Error() != "websocket url timeout reached" &&
+		!strings.HasPrefix(err.Error(), "websocket url timeout reached") &&
 		!strings.Contains(err.Error(), "i/o timeout") {
 		t.Fatal(err)
 	}
