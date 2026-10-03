@@ -374,6 +374,7 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	browser.process = cmd.Process
 	browser.userDataDir = dataDir
 	browser.exited = exited
+	browser.reaped = run.done
 	browser.exitErr = &run.err
 	return browser, nil
 }

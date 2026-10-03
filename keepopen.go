@@ -238,6 +238,7 @@ func (a *ExecAllocator) allocateKeepOpen(ctx context.Context, c *Context, opts [
 	browser.process = cmd.Process
 	browser.userDataDir = dataDir
 	browser.exited = exited
+	browser.reaped = exited
 	browser.exitErr = &waitErr
 	browser.keptOpen = true
 	browser.wsURL = wsURL

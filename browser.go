@@ -117,6 +117,12 @@ type Browser struct {
 	// allocator does not start the process. WaitClosed uses it.
 	exited <-chan struct{}
 
+	// reaped is closed when the wait for the browser process returns, and
+	// exitErr is valid then. It can close before exited, because exited also
+	// waits for the output of the browser. Child processes of the browser can
+	// hold the output open for a while, especially on Windows.
+	reaped <-chan struct{}
+
 	// keptOpen is true when the allocator started the browser with KeepOpen.
 	// wsURL is then the websocket address of the browser.
 	keptOpen bool
@@ -430,14 +436,14 @@ func (e *browserExitError) Unwrap() []error {
 // the process died while nobody had asked the browser to stop. Otherwise it
 // returns err. It waits a short time for the process to be reaped.
 func (b *Browser) withExitError(err error) error {
-	if err == nil || b == nil || !b.diedUnexpectedly.Load() || b.exited == nil || b.exitErr == nil {
+	if err == nil || b == nil || !b.diedUnexpectedly.Load() || b.reaped == nil || b.exitErr == nil {
 		return err
 	}
 	if _, ok := errors.AsType[*browserExitError](err); ok {
 		return err
 	}
 	select {
-	case <-b.exited:
+	case <-b.reaped:
 	case <-time.After(time.Second):
 		return err
 	}
