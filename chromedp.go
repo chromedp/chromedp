@@ -374,6 +374,10 @@ func (c *Context) newTarget(ctx context.Context) error {
 		}
 		c.targetID, err = target.
 			CreateTarget("about:blank").
+			// The generated params always send "focus". If it is
+			// false, Chrome opens the tab hidden and the page gets
+			// no animation frames.
+			WithFocus(true).
 			WithBrowserContextID(c.BrowserContextID).
 			Do(browserExecutor)
 		if err != nil {
