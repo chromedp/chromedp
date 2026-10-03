@@ -437,7 +437,23 @@ func (t *Target) domEvent(ctx context.Context, ev any) {
 		id, op = e.InsertionPointID, distributedNodesUpdated(e.DistributedNodes)
 
 	case *dom.EventScrollableFlagUpdated:
-		id, op = e.NodeID, scrollableFlagUpdated(f.Nodes, e.NodeID)
+		id, op = e.NodeID, scrollableFlagUpdated(e.IsScrollable)
+
+	case *dom.EventAdRelatedStateUpdated:
+		id, op = e.NodeID, adRelatedStateUpdated(e.AdProvenance)
+
+	case *dom.EventAdoptedStyleSheetsModified:
+		id, op = e.NodeID, adoptedStyleSheetsModified(e.AdoptedStyleSheets)
+
+	case *dom.EventAffectedByStartingStylesFlagUpdated:
+		id, op = e.NodeID, affectedByStartingStylesFlagUpdated(e.AffectedByStartingStyles)
+
+		// ignored events
+	case *dom.EventTopLayerElementsUpdated:
+		// The event has no parameters and names no node. The top layer
+		// holds the elements that a page shows above all others, and
+		// chromedp does not keep it.
+		return
 
 	default:
 		t.errf("unhandled node event %T", ev)

@@ -358,8 +358,39 @@ func distributedNodesUpdated(nodes []*cdp.BackendNode) nodeOp {
 	}
 }
 
-func scrollableFlagUpdated(m map[cdp.NodeID]*Node, id cdp.NodeID) nodeOp {
+func scrollableFlagUpdated(isScrollable bool) nodeOp {
 	return func(n *Node) {
+		n.Lock()
+		defer n.Unlock()
+
+		n.IsScrollable = isScrollable
+	}
+}
+
+func adRelatedStateUpdated(provenance *cdp.AdProvenance) nodeOp {
+	return func(n *Node) {
+		n.Lock()
+		defer n.Unlock()
+
+		n.AdProvenance = provenance
+	}
+}
+
+func adoptedStyleSheetsModified(ids []cdp.StyleSheetID) nodeOp {
+	return func(n *Node) {
+		n.Lock()
+		defer n.Unlock()
+
+		n.AdoptedStyleSheets = ids
+	}
+}
+
+func affectedByStartingStylesFlagUpdated(affected bool) nodeOp {
+	return func(n *Node) {
+		n.Lock()
+		defer n.Unlock()
+
+		n.AffectedByStartingStyles = affected
 	}
 }
 
