@@ -1585,7 +1585,7 @@ func TestSelectorSearch(t *testing.T) {
 	defer cancel()
 
 	// Search matches an XPath query, a CSS selector and plain text, as the
-	// old option BySearch did. A CSS selector gives every match, not the first.
+	// old Search lookup did. A CSS selector gives every match, not the first.
 	if got, want := selectedIDs(ctx, t, Search(`//p`)), []string{"one", "two", "three"}; !reflect.DeepEqual(got, want) {
 		t.Errorf("XPath: want %v, got %v", want, got)
 	}
@@ -1639,7 +1639,7 @@ func TestSelectorCSS(t *testing.T) {
 	ctx, cancel := testAllocate(t, "selectors.html")
 	defer cancel()
 
-	// CSS gives only the first match, as the old option ByQuery did.
+	// CSS gives only the first match, as the old lookup of a single CSS query did.
 	if got, want := selectedIDs(ctx, t, CSS(`.item`)), []string{"one"}; !reflect.DeepEqual(got, want) {
 		t.Errorf("want %v, got %v", want, got)
 	}
@@ -1659,7 +1659,7 @@ func TestSelectorCSSAll(t *testing.T) {
 	ctx, cancel := testAllocate(t, "selectors.html")
 	defer cancel()
 
-	// CSSAll gives every match, as the old option ByQueryAll did.
+	// CSSAll gives every match, as the old lookup of every CSS match did.
 	if got, want := selectedIDs(ctx, t, CSSAll(`.item`)), []string{"one", "two"}; !reflect.DeepEqual(got, want) {
 		t.Errorf("want %v, got %v", want, got)
 	}
@@ -1675,7 +1675,7 @@ func TestSelectorID(t *testing.T) {
 	defer cancel()
 
 	// ID selects the element with this id, with or without a leading "#", as
-	// the old option ByID did.
+	// the old lookup by id did.
 	for _, id := range []ID{"two", "#two"} {
 		if got, want := selectedIDs(ctx, t, id), []string{"two"}; !reflect.DeepEqual(got, want) {
 			t.Errorf("%q: want %v, got %v", id, want, got)
@@ -1695,7 +1695,7 @@ func TestSelectorJSPath(t *testing.T) {
 	defer cancel()
 
 	// JSPath runs the expression and selects the node that it gives, as the
-	// old option ByJSPath did. Here the node is in a shadow tree.
+	// old lookup by JavaScript path did. Here the node is in a shadow tree.
 	const path = `document.getElementById('host').shadowRoot.querySelector('.inner')`
 	nodes, err := Run(ctx, Nodes(JSPath(path)))
 	if err != nil {
@@ -1717,8 +1717,8 @@ func TestSelectorNodeIDs(t *testing.T) {
 	ctx, cancel := testAllocate(t, "selectors.html")
 	defer cancel()
 
-	// NodeIDs selects the nodes with these ids, as the old option ByNodeID
-	// did.
+	// NodeIDs selects the nodes with these ids, as the old lookup by
+	// node ids did.
 	ids, err := Run(ctx, QueryNodeIDs(CSSAll(`.item`)))
 	if err != nil {
 		t.Fatalf("got error: %v", err)
