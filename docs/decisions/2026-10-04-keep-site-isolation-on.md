@@ -1,10 +1,11 @@
 # Keep site isolation on
 
-Status: Proposed.
+Status: Decided.
 
 The default exec allocator options no longer pass `site-per-process` in
 `--disable-features`. This file records what the flag did, and why the option is
-removed and not renamed. The maintainer must confirm it.
+removed and not renamed. The maintainer decided on 2026-10-04 to keep site
+isolation on, so pull request 1606 and issue 1605 are closed.
 
 ## What the flag did
 
@@ -25,10 +26,11 @@ security model of the browser, and it changes how frames become targets in
 `chromedp`. The change is silent, and the option has never worked, so
 nobody depends on it. Removing the dead name keeps the behavior of today.
 
-## What the maintainer can decide
+## What the maintainer decided
 
-- Keep it as it is. This is the current state.
-- Turn off site isolation on purpose, with `Flag("disable-features", "SitePerProcess")`. A program that wants it can add it today. The default options then need a note in the docs.
+Keep it as it is. A program that wants to turn off site isolation can add
+`Flag("disable-features", "SitePerProcess")` to its allocator options. The default
+options do not do it.
 
 The test `TestDefaultFeatureNames` fails when a name in `enable-features` or
 `disable-features` has the form of a switch.

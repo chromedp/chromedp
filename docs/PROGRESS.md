@@ -11,7 +11,7 @@ These commits are in the release v0.18.0. Each one has its own test.
 
 - Fixed: the data race on `Context.Target` between the cancellation watcher and `attachTarget` (issue 1638).
 - Fixed: the kernel killed Chrome when the OS thread that started it ended. Chrome now starts from a goroutine that stays on its thread (issue 1566).
-- Fixed: the default options passed the name `site-per-process` as a feature. It did nothing and is removed (issue 1605). The decision is proposed in `decisions/2026-10-04-keep-site-isolation-on.md`.
+- Fixed: the default options passed the name `site-per-process` as a feature. It did nothing and is removed (issue 1605). The decision is in `decisions/2026-10-04-keep-site-isolation-on.md`.
 - Fixed: the target logged `unhandled node event` for four DOM events, and `DOM.scrollableFlagUpdated` changed nothing. A test fails when a new event of the `dom` or `page` package is neither handled nor ignored (issue 1530).
 - Fixed: the websocket did not answer ping frames, and `DialContext` panicked when the server sent frames with the handshake (pull request 1611).
 - Fixed: a key with Ctrl, Alt or Meta typed its character (issue 1384).
