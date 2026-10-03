@@ -2,9 +2,13 @@ package chromedp
 
 import (
 	"context"
+	"errors"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/chromedp/cdproto"
+	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/target"
 )
@@ -185,5 +189,62 @@ func TestWaitNewTarget(t *testing.T) {
 	}
 	if !strings.HasSuffix(urlstr, "form.html") {
 		t.Errorf("want to be on form.html, at %q", urlstr)
+	}
+}
+
+func TestSubscribe(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+	if err := Run(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	tctx, tcancel := context.WithTimeout(ctx, 10*time.Second)
+	defer tcancel()
+
+	// The subscription starts when Events returns, so the event of the
+	// navigation below is not lost before the loop starts.
+	events := cdp.Events(tctx, FromContext(ctx).Target, page.LoadEventFired)
+	if err := Run(ctx, ActionFunc(func(ctx context.Context) error {
+		_, err := Call(ctx, page.Navigate, page.NavigateParams{URL: testdataDir + "/form.html"})
+		return err
+	})); err != nil {
+		t.Fatal(err)
+	}
+
+	for ev, err := range events {
+		if err != nil {
+			t.Fatal(err)
+		}
+		if ev.Timestamp == 0 {
+			t.Error("the load event has no timestamp")
+		}
+		return
+	}
+	t.Error("the subscription ended without a load event")
+}
+
+func TestCallInvalidContext(t *testing.T) {
+	t.Parallel()
+
+	if _, err := Call(context.Background(), page.GetFrameTree, cdp.Empty{}); err != ErrInvalidContext {
+		t.Errorf("Call: got error %v, want %v", err, ErrInvalidContext)
+	}
+	if _, err := CallBrowser(context.Background(), target.GetTargets, target.GetTargetsParams{}); err != ErrInvalidContext {
+		t.Errorf("CallBrowser: got error %v, want %v", err, ErrInvalidContext)
+	}
+}
+
+func TestCallBrowserError(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+
+	_, err := CallBrowser(ctx, target.CloseTarget, target.CloseTargetParams{TargetID: "no-such-target"})
+	if _, ok := errors.AsType[*cdproto.Error](err); !ok {
+		t.Errorf("got error %v (%T), want a *cdproto.Error", err, err)
 	}
 }
