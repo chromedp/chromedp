@@ -208,6 +208,12 @@ const (
 	// IPhoneSElandscape is the "iPhone SE landscape" device.
 	IPhoneSElandscape
 
+	// IPhoneSE3rdgen is the "iPhone SE (3rd gen)" device.
+	IPhoneSE3rdgen
+
+	// IPhoneSE3rdgenlandscape is the "iPhone SE (3rd gen) landscape" device.
+	IPhoneSE3rdgenlandscape
+
 	// IPhoneX is the "iPhone X" device.
 	IPhoneX
 
@@ -333,6 +339,66 @@ const (
 
 	// IPhone15ProMaxlandscape is the "iPhone 15 Pro Max landscape" device.
 	IPhone15ProMaxlandscape
+
+	// IPhone16 is the "iPhone 16" device.
+	IPhone16
+
+	// IPhone16landscape is the "iPhone 16 landscape" device.
+	IPhone16landscape
+
+	// IPhone16Plus is the "iPhone 16 Plus" device.
+	IPhone16Plus
+
+	// IPhone16Pluslandscape is the "iPhone 16 Plus landscape" device.
+	IPhone16Pluslandscape
+
+	// IPhone16Pro is the "iPhone 16 Pro" device.
+	IPhone16Pro
+
+	// IPhone16Prolandscape is the "iPhone 16 Pro landscape" device.
+	IPhone16Prolandscape
+
+	// IPhone16ProMax is the "iPhone 16 Pro Max" device.
+	IPhone16ProMax
+
+	// IPhone16ProMaxlandscape is the "iPhone 16 Pro Max landscape" device.
+	IPhone16ProMaxlandscape
+
+	// IPhone16e is the "iPhone 16e" device.
+	IPhone16e
+
+	// IPhone16elandscape is the "iPhone 16e landscape" device.
+	IPhone16elandscape
+
+	// IPhone17 is the "iPhone 17" device.
+	IPhone17
+
+	// IPhone17landscape is the "iPhone 17 landscape" device.
+	IPhone17landscape
+
+	// IPhoneAir is the "iPhone Air" device.
+	IPhoneAir
+
+	// IPhoneAirlandscape is the "iPhone Air landscape" device.
+	IPhoneAirlandscape
+
+	// IPhone17Pro is the "iPhone 17 Pro" device.
+	IPhone17Pro
+
+	// IPhone17Prolandscape is the "iPhone 17 Pro landscape" device.
+	IPhone17Prolandscape
+
+	// IPhone17ProMax is the "iPhone 17 Pro Max" device.
+	IPhone17ProMax
+
+	// IPhone17ProMaxlandscape is the "iPhone 17 Pro Max landscape" device.
+	IPhone17ProMaxlandscape
+
+	// IPhone17e is the "iPhone 17e" device.
+	IPhone17e
+
+	// IPhone17elandscape is the "iPhone 17e landscape" device.
+	IPhone17elandscape
 
 	// JioPhone2 is the "JioPhone 2" device.
 	JioPhone2
@@ -509,6 +575,8 @@ var devices = [...]Info{
 	{"iPhone 8 Plus landscape", "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1", 736, 414, 3.000000, true, true, true},
 	{"iPhone SE", "Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_1 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/10.0 Mobile/14E304 Safari/602.1", 320, 568, 2.000000, false, true, true},
 	{"iPhone SE landscape", "Mozilla/5.0 (iPhone; CPU iPhone OS 10_3_1 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/10.0 Mobile/14E304 Safari/602.1", 568, 320, 2.000000, true, true, true},
+	{"iPhone SE (3rd gen)", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/26.5 Mobile/19E241 Safari/602.1", 375, 667, 2.000000, false, true, true},
+	{"iPhone SE (3rd gen) landscape", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit/603.1.30 (KHTML, like Gecko) Version/26.5 Mobile/19E241 Safari/602.1", 667, 375, 2.000000, true, true, true},
 	{"iPhone X", "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1", 375, 812, 3.000000, false, true, true},
 	{"iPhone X landscape", "Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1", 812, 375, 3.000000, true, true, true},
 	{"iPhone XR", "Mozilla/5.0 (iPhone; CPU iPhone OS 12_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/12.0 Mobile/15E148 Safari/604.1", 414, 896, 3.000000, false, true, true},
@@ -551,6 +619,26 @@ var devices = [...]Info{
 	{"iPhone 15 Pro landscape", "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1", 734, 343, 3.000000, true, true, true},
 	{"iPhone 15 Pro Max", "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1", 430, 739, 3.000000, false, true, true},
 	{"iPhone 15 Pro Max landscape", "Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1", 814, 380, 3.000000, true, true, true},
+	{"iPhone 16", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1", 393, 659, 3.000000, false, true, true},
+	{"iPhone 16 landscape", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1", 734, 343, 3.000000, true, true, true},
+	{"iPhone 16 Plus", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1", 430, 739, 3.000000, false, true, true},
+	{"iPhone 16 Plus landscape", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1", 814, 380, 3.000000, true, true, true},
+	{"iPhone 16 Pro", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1", 402, 681, 3.000000, false, true, true},
+	{"iPhone 16 Pro landscape", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1", 756, 352, 3.000000, true, true, true},
+	{"iPhone 16 Pro Max", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1", 440, 763, 3.000000, false, true, true},
+	{"iPhone 16 Pro Max landscape", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1", 838, 390, 3.000000, true, true, true},
+	{"iPhone 16e", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1", 390, 651, 3.000000, false, true, true},
+	{"iPhone 16e landscape", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1", 726, 340, 3.000000, true, true, true},
+	{"iPhone 17", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1", 402, 681, 3.000000, false, true, true},
+	{"iPhone 17 landscape", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1", 756, 352, 3.000000, true, true, true},
+	{"iPhone Air", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1", 420, 719, 3.000000, false, true, true},
+	{"iPhone Air landscape", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1", 794, 370, 3.000000, true, true, true},
+	{"iPhone 17 Pro", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1", 402, 681, 3.000000, false, true, true},
+	{"iPhone 17 Pro landscape", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1", 756, 352, 3.000000, true, true, true},
+	{"iPhone 17 Pro Max", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1", 440, 763, 3.000000, false, true, true},
+	{"iPhone 17 Pro Max landscape", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1", 838, 390, 3.000000, true, true, true},
+	{"iPhone 17e", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1", 390, 651, 3.000000, false, true, true},
+	{"iPhone 17e landscape", "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1", 726, 340, 3.000000, true, true, true},
 	{"JioPhone 2", "Mozilla/5.0 (Mobile; LYF/F300B/LYF-F300B-001-01-15-130718-i;Android; rv:48.0) Gecko/48.0 Firefox/48.0 KAIOS/2.5", 240, 320, 1.000000, false, true, true},
 	{"JioPhone 2 landscape", "Mozilla/5.0 (Mobile; LYF/F300B/LYF-F300B-001-01-15-130718-i;Android; rv:48.0) Gecko/48.0 Firefox/48.0 KAIOS/2.5", 320, 240, 1.000000, true, true, true},
 	{"Kindle Fire HDX", "Mozilla/5.0 (Linux; U; en-us; KFAPWI Build/JDQ39) AppleWebKit/535.19 (KHTML, like Gecko) Silk/3.13 Safari/535.19 Silk-Accelerated=true", 800, 1280, 2.000000, false, true, true},
