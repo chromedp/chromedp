@@ -281,8 +281,8 @@ func TestNavigateContextTimeout(t *testing.T) {
 	defer cancel()
 
 	// Serve the page, but cancel the context almost immediately after.
-	// Navigate shouldn't block waiting for the load to finish, which may
-	// not come as the target is cancelled.
+	// Navigate must not block while it waits for the load to finish, because
+	// the load can never come when the target is canceled.
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		time.AfterFunc(time.Millisecond, cancel)
 	}))
@@ -317,16 +317,15 @@ func TestNavigateWhileLoading(t *testing.T) {
 	s := httptest.NewServer(mux)
 	defer s.Close()
 
-	// First, navigate to a page that starts loading, but doesn't finish.
+	// First, navigate to a page that starts loading, but does not finish.
 	// Then, tell the server to finish loading the page.
 	// Immediately after, navigate to another page.
-	// Finally, grab the page title, which should correspond with the last
-	// page.
+	// Finally, get the page title, which must match the last page.
 	//
-	// This has caused problems in the past. Because the first page might
-	// fire its load event just as we start the second navigate, the second
-	// navigate used to get confused, either blocking forever or not waiting
-	// for the right load event (the second).
+	// This caused problems in the past. The first page can fire its load event
+	// just as we start the second navigate. Then the second navigate got
+	// confused. It blocked forever, or it did not wait for the right load
+	// event (the second).
 	var title string
 	if err := Do(ctx,
 		Func(func(ctx context.Context, t *Target) error {
@@ -339,21 +338,21 @@ func TestNavigateWhileLoading(t *testing.T) {
 				return err
 			}
 
-			// Make sure the Page.lifecycleEvent with the name "init" is emitted
-			// before starting the second navigate.
+			// Make sure that the Page.lifecycleEvent with the name "init" is
+			// emitted before the second navigate starts.
 			//
-			// Otherwise, it's possible that this event is emitted after the
-			// second navigate, and the second navigate will handle the wrong
-			// events. See https://github.com/chromedp/chromedp/issues/1080.
+			// Otherwise, this event can be emitted after the second navigate
+			// starts, and the second navigate handles the wrong events. See
+			// https://github.com/chromedp/chromedp/issues/1080.
 			//
 			// The implementation of responseAction() is buggy in this case.
-			// But it's hard to fix it since there is not a way to tell whether
-			// the events are from the first navigate.
+			// It is hard to fix, because there is no way to tell whether the
+			// events are from the first navigate.
 			//
-			// I (ZekeLu) will just deflake this test by making sure the second
-			// navigate won't see this event from the first navigate.
+			// ZekeLu deflakes this test by making sure that the second
+			// navigate does not see this event from the first navigate.
 			//
-			// The issue can be reproduced by commenting out the next line.
+			// You can reproduce the issue if you comment out the next line.
 			for ev, err := range events {
 				if err != nil {
 					return err
@@ -412,9 +411,9 @@ func TestNavigateCancelled(t *testing.T) {
 	defer s.Close()
 	defer cancel() // if we call s.Close first, the ctx.Done above hangs
 
-	// Navigate to a page that will navigate, but never finish loading. Once
-	// it has the HTML and starts loading an image, cancel the Run context.
-	// This should result in us seeing a context error.
+	// Navigate to a page that navigates, but never finishes loading. When the
+	// page has the HTML and starts to load an image, cancel the Run context.
+	// This must result in a context error.
 	action := Func(func(ctx context.Context, t *Target) error {
 		_, err := cdp.Call(ctx, t, page.Navigate, page.NavigateParams{URL: s.URL})
 		loadStarted <- struct{}{}

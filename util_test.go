@@ -16,11 +16,11 @@ import (
 // dumpJS is a JavaScript snippet that dumps the passed element node in the
 // same text format as cdproto/cdp/Node.Dump.
 //
-// Used to verify that the DOM tree built by chromedp is the same as what
-// chrome itself sees.
+// Use it to make sure that the DOM tree of chromedp equals what chrome itself
+// sees.
 //
-// Note: written to be "line-by-line equivalent" with Node.Dump's
-// implementation.
+// Note: it is written to be "line-by-line equivalent" with the implementation
+// of Node.Dump.
 const dumpJS = `(function dump(n, prefix, indent, nodeIDs) {
 	if (n === null || typeof n !== 'object') {
 		return prefix + '<nil>';

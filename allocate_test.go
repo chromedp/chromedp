@@ -62,7 +62,7 @@ func TestExecAllocatorCancelParent(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Canceling the pool context should stop all browsers too.
+	// Canceling the pool context must stop all browsers too.
 	allocCancel()
 
 	tempDir := FromContext(taskCtx).Browser.userDataDir
@@ -97,8 +97,8 @@ func TestExecAllocatorCombinedOutputPanic(t *testing.T) {
 
 	cancel()
 	// dir cleanup occurs after 10 milliseconds so this gives a bit more time
-	// for the cleanup, otherwise the test may fail with a panic about the
-	// directory not being removed
+	// for it. Otherwise the test can fail with a panic about the directory
+	// that is not removed
 	time.Sleep(20 * time.Millisecond)
 }
 
@@ -106,7 +106,7 @@ func TestExecAllocatorKillBrowser(t *testing.T) {
 	t.Parallel()
 
 	// Simulate a scenario where we navigate to a page that never responds,
-	// and the browser is killed while it's loading.
+	// and the browser is killed while it is loading.
 	ctx, _ := testAllocateSeparate(t)
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
@@ -125,8 +125,8 @@ func TestExecAllocatorKillBrowser(t *testing.T) {
 		}
 	}()
 
-	// Run should error with something other than "deadline exceeded" in
-	// much less than 3s.
+	// Run must return an error other than "deadline exceeded" in much less
+	// than 3s.
 	switch err := Do(ctx, Navigate(s.URL)); err {
 	case nil:
 		// TODO: figure out why this happens sometimes on Travis
@@ -143,7 +143,7 @@ func TestSkipNewContext(t *testing.T) {
 	defer cancel()
 
 	// Using the allocator context directly (without calling NewContext)
-	// should be an immediate error.
+	// must return an error at once.
 	err := Do(ctx, Navigate(testdataDir+"/form.html"))
 
 	want := ErrInvalidContext
@@ -303,8 +303,8 @@ func testRemoteAllocator(t *testing.T, modifyURL func(wsURL string) string, want
 		t.Fatal(err)
 	}
 
-	// Check that cancel closed the tabs. Don't just count the
-	// number of targets, as perhaps the initial blank tab hasn't
+	// Check that cancel closed the tabs. Do not just count the
+	// number of targets, as perhaps the initial blank tab has not
 	// come up yet.
 	targetsCtx, targetsCancel := NewContext(allocCtx)
 	defer targetsCancel()
@@ -320,8 +320,8 @@ func testRemoteAllocator(t *testing.T, modifyURL func(wsURL string) string, want
 	targetsCancel()
 
 	// Finally, if we kill the browser and the websocket connection drops,
-	// Run should error way before the 5s timeout.
-	// TODO: a "defer cancel()" here adds a 1s timeout, since we try to
+	// Run must return an error well before the 5s timeout.
+	// TODO: a "defer cancel()" here adds a 1s timeout, because we try to
 	// close the target twice. Fix that.
 	ctx, _ := NewContext(allocCtx)
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
@@ -356,7 +356,7 @@ func TestExecAllocatorMissingWebsocketAddr(t *testing.T) {
 	defer cancel()
 
 	// set the "s" flag to let "." match "\n"
-	// in GitHub Actions, the error text could be:
+	// in GitHub Actions, the error text can be:
 	// "chrome failed to start:\n/bin/bash: /etc/profile.d/env_vars.sh: Permission denied\nmkdir: cannot create directory ‘/run/user/1001’: Permission denied\n[0321/081807.491906:ERROR:chrome_main_delegate.cc(1164)] Remote debugging pipe file descriptors are not open.\n"
 	want := `failed to start`
 	got := fmt.Sprintf("%v", Do(ctx))
@@ -386,8 +386,8 @@ func TestCombinedOutput(t *testing.T) {
 	if !strings.Contains(buf.String(), "DevTools listening on") {
 		t.Fatalf("failed to find websocket string in browser output test")
 	}
-	// Recent chrome versions have started replacing many "spam" messages
-	// with "spam 1", "spam 2", and so on. Search for the prefix only.
+	// Recent chrome versions replace many "spam" messages with "spam 1",
+	// "spam 2", and so on. Search for the prefix only.
 	if want, got := 2000, strings.Count(buf.String(), `"spam`); want != got {
 		t.Fatalf("want %d spam console logs, got %d", want, got)
 	}
@@ -397,8 +397,8 @@ func TestCombinedOutputError(t *testing.T) {
 	t.Parallel()
 
 	// CombinedOutput used to hang the allocator if Chrome errored straight
-	// away, as there was no output to copy and the CombinedOutput would
-	// never signal it's done.
+	// away, because there was no output to copy and CombinedOutput never
+	// signaled that it was done.
 	buf := new(bytes.Buffer)
 	allocCtx, cancel := NewExecAllocator(context.Background(),
 		// Ask for a debugging pipe that is not open, so Chrome exits
@@ -455,8 +455,8 @@ func TestWithBrowserOptionAlreadyAllocated(t *testing.T) {
 			t.Errorf("expected a panic containing %q, got %q", want, got)
 		}
 	}()
-	// This needs to panic, as we try to set up a browser logf function
-	// after the browser has already been set up earlier.
+	// This must panic, because we try to set up a browser logf func after the
+	// browser was set up earlier.
 	_, _ = NewContext(ctx,
 		WithLogf(func(format string, args ...any) {}),
 	)
@@ -489,15 +489,15 @@ func TestModifyCmdFunc(t *testing.T) {
 	}
 }
 
-// TestStartsWithNonBlankTab is a regression test to make sure chromedp won't
-// hang when the browser is started with a non-blank tab.
+// TestStartsWithNonBlankTab is a regression test. It makes sure that chromedp
+// does not hang when the browser starts with a non-blank tab.
 //
-// In the following cases, the browser will start with a non-blank tab:
-// 1. with the "--app" option (should disable headless mode);
-// 2. URL other than "about:blank" is placed in the command line arguments.
+// The browser starts with a non-blank tab in these cases:
+// 1. The "--app" option is used (this disables headless mode).
+// 2. The command line arguments hold a URL other than "about:blank".
 //
-// It's hard to disable headless mode on test servers, so we will go with
-// case 2 here.
+// It is hard to disable headless mode on test servers, so this test uses
+// case 2.
 func TestStartsWithNonBlankTab(t *testing.T) {
 	t.Parallel()
 
@@ -505,7 +505,7 @@ func TestStartsWithNonBlankTab(t *testing.T) {
 		append(allocOpts,
 			ModifyCmdFunc(func(cmd *exec.Cmd) {
 				// it assumes that the last argument is "about:blank" and
-				// replace it with other URL.
+				// replaces it with another URL.
 				cmd.Args[len(cmd.Args)-1] = testdataDir + "/form.html"
 			}),
 		)...)

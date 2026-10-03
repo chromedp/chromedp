@@ -1278,11 +1278,10 @@ func TestFileUpload(t *testing.T) {
 		{SetUploadFiles(`input[name="upload"]`, []string{uploadFile}, NodeVisible)},
 	}
 
-	// Don't run these tests in parallel. The only way to do so would be to
-	// fire a separate httptest server and tmpfile for each. There's no way
-	// to share these resources easily among parallel subtests, as the
-	// parent must finish for the children to run, made impossible by the
-	// defers above.
+	// Do not run these tests in parallel. The only way is to fire a separate
+	// httptest server and tmpfile for each. We cannot share these resources
+	// among parallel subtests, because the parent must finish for the children
+	// to run, and the defers above prevent that.
 	for i, test := range tests {
 		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
 			ctx, cancel := testAllocate(t, "")

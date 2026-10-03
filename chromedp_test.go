@@ -40,10 +40,10 @@ var (
 	testdataDir string
 	allocOpts   = DefaultExecAllocatorOptions[:]
 
-	// allocCtx is initialised in TestMain, to cancel before exiting.
+	// allocCtx is initialized in TestMain, to cancel before exiting.
 	allocCtx context.Context
 
-	// browserCtx is initialised with allocateOnce
+	// browserCtx is initialized with allocateOnce
 	browserCtx context.Context
 )
 
@@ -128,15 +128,15 @@ func testAllocate(tb testing.TB, name string) (context.Context, context.CancelFu
 	allocateOnce.Do(func() { browserCtx, _ = testAllocateSeparate(tb) })
 
 	if browserCtx == nil {
-		// allocateOnce.Do failed; continuing would result in panics.
+		// allocateOnce.Do failed. If we continue, the test panics.
 		tb.FailNow()
 	}
 
-	// Same browser, new tab; not needing to start new chrome browsers for
-	// each test gives a huge speed-up.
+	// Same browser, new tab. We do not need to start a new chrome browser for
+	// each test, and this gives a huge speed-up.
 	ctx, _ := NewContext(browserCtx)
 
-	// Only navigate if we want an HTML file name, otherwise leave the blank page.
+	// Navigate only if we want an HTML file name. Otherwise leave the blank page.
 	if name != "" {
 		if err := Do(ctx, Navigate(testdataDir+"/"+name)); err != nil {
 			tb.Fatal(err)
@@ -242,22 +242,22 @@ func TestTargets(t *testing.T) {
 	}
 	checkTargets(t, ctx2, 2)
 
-	// The first context should also see both targets.
+	// The first context must also see both targets.
 	checkTargets(t, ctx1, 2)
 
-	// Cancelling the second context should close the second tab alone.
+	// Canceling the second context must close only the second tab.
 	cancel2()
 	checkTargets(t, ctx1, 1)
 
-	// We used to have a bug where Run would reset the first context as if
-	// it weren't the first, breaking its cancellation.
+	// We used to have a bug. Run reset the first context as if it was not the
+	// first, and this broke its cancellation.
 	if err := Do(ctx1); err != nil {
 		t.Fatal(err)
 	}
 
-	// We should see one attached target, since we closed the second a while
-	// ago. If we see two, that means there's a memory leak, as we're
-	// holding onto the detached target.
+	// We must see one attached target, because we closed the second a while
+	// ago. If we see two, there is a memory leak, because we hold onto the
+	// detached target.
 	pages := FromContext(ctx1).Browser.pages
 	if len(pages) != 1 {
 		t.Fatalf("expected one attached target, got %d", len(pages))
@@ -273,7 +273,7 @@ func TestCancelError(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Open and close a target normally; no error.
+	// Open and close a target normally. There is no error.
 	ctx2, cancel2 := NewContext(ctx1)
 	defer cancel2()
 	if err := Do(ctx2); err != nil {
@@ -286,22 +286,6 @@ func TestCancelError(t *testing.T) {
 	if err := Cancel(allocCtx); err != ErrInvalidContext {
 		t.Fatalf("want error %q, got %q", ErrInvalidContext, err)
 	}
-
-	/*
-		// NOTE: the following test no longer is applicable, as a slight change
-		// to chromium's 89 API deprecated the boolean return value
-
-		// Make "cancel" close the wrong target; error.
-		ctx3, cancel3 := NewContext(ctx1)
-		defer cancel3()
-		if err := Do(ctx3); err != nil {
-			t.Fatal(err)
-		}
-		FromContext(ctx3).Target.TargetID = "wrong"
-		if err := Cancel(ctx3); err == nil {
-			t.Fatalf("expected a non-nil error, got %v", err)
-		}
-	*/
 }
 
 func TestPrematureCancel(t *testing.T) {
@@ -327,7 +311,7 @@ func TestPrematureCancelTab(t *testing.T) {
 	}
 
 	ctx2, cancel := NewContext(ctx1)
-	// Cancel after the browser is allocated, but before we've created a new
+	// Cancel after the browser is allocated, but before we have created a new
 	// tab.
 	cancel()
 	if err := Do(ctx2); err != context.Canceled {
@@ -338,7 +322,7 @@ func TestPrematureCancelTab(t *testing.T) {
 func TestPrematureCancelAllocator(t *testing.T) {
 	t.Parallel()
 
-	// To ensure we don't actually fire any Chrome processes.
+	// To ensure we do not actually fire any Chrome processes.
 	allocCtx, cancel := NewExecAllocator(context.Background(),
 		ExecPath("/do-not-run-chrome"))
 	// Cancel before the browser is allocated.
@@ -354,7 +338,7 @@ func TestPrematureCancelAllocator(t *testing.T) {
 func TestConcurrentCancel(t *testing.T) {
 	t.Parallel()
 
-	// To ensure we don't actually fire any Chrome processes.
+	// To ensure we do not actually fire any Chrome processes.
 	allocCtx, cancel := NewExecAllocator(context.Background(),
 		ExecPath("/do-not-run-chrome"))
 	defer cancel()
@@ -386,7 +370,7 @@ func TestBrowserEvents(t *testing.T) {
 	}
 
 	// Check that many subscriptions work, including a subscription that
-	// starts after the browser has been allocated. The subscriptions give up
+	// starts after the browser is allocated. The subscriptions give up
 	// when the test takes too long.
 	sctx, scancel := context.WithTimeout(ctx, time.Minute)
 	defer scancel()
@@ -431,7 +415,7 @@ func TestEvents(t *testing.T) {
 	defer cancel()
 
 	// Check that many subscriptions work, including a subscription that
-	// starts after the target has been attached to. The first one starts
+	// starts after the target is attached. The first one starts
 	// before the target exists, and so it opens the target. The second one
 	// outlives the context, so that it delivers all events up to the end of
 	// the target.
@@ -484,9 +468,9 @@ func TestLargeEventCount(t *testing.T) {
 
 	// Simulate an environment where Chrome sends 2000 console log events,
 	// and we are slow at processing them. In older chromedp versions, this
-	// would crash as we would fill eventQueue and panic. 50ms is enough to
-	// make the test fail somewhat reliably on old chromedp versions,
-	// without making the test too slow.
+	// crashed, because we filled eventQueue and panicked. 50ms is enough to
+	// make the test fail often on old chromedp versions, without making the
+	// test too slow.
 	events := Events(ctx, runtime.ConsoleAPICalled)
 	go func() {
 		first := true
@@ -527,9 +511,9 @@ func TestLargeQuery(t *testing.T) {
 	defer s.Close()
 
 	// ByQueryAll queries thousands of events, which triggers thousands of
-	// DOM events. The target handler used to get into a deadlock, as the
-	// event queues would fill up and prevent the wait function from
-	// receiving any result.
+	// DOM events. The target handler used to deadlock, because the event
+	// queues filled up and prevented the wait function from receiving any
+	// result.
 	var nodes []*Node
 	if err := Do(ctx,
 		Navigate(s.URL),
@@ -610,7 +594,7 @@ func TestEventsCancel(t *testing.T) {
 	ctx, cancel := testAllocateSeparate(t)
 	defer cancel()
 
-	// Check that cancelling the context of an iterator ends the iteration
+	// Check that canceling the context of an iterator ends the iteration
 	// and removes the subscription.
 	browserCtx, browserCancel := context.WithCancel(ctx)
 	defer browserCancel()
@@ -684,9 +668,9 @@ func TestLogOptions(t *testing.T) {
 func TestBrowserContext(t *testing.T) {
 	ctx, cancel := testAllocate(t, "child1.html")
 	defer cancel()
-	// There is not a dedicated cdp command to get the default browser context.
-	// Our workaround is to get it from a target which is created without the
-	// "browserContextId" parameter.
+	// There is no dedicated protocol command to get the default browser
+	// context. Our workaround is to get it from a target that we create
+	// without the "browserContextId" parameter.
 	defaultBrowserContextID := getBrowserContext(t, ctx)
 
 	// Prepare 2 browser contexts to be used later.
@@ -798,7 +782,7 @@ func TestBrowserContext(t *testing.T) {
 				if err := Do(ctx); err != nil {
 					t.Fatal(err)
 				}
-				// The target should be added to the second browser context.
+				// The target must be added to the second browser context.
 				return ctx, cancel, rootBrowserContextID2
 			},
 			wantDisposed: false,
@@ -971,7 +955,7 @@ func TestBrowserContext(t *testing.T) {
 			}
 
 			if want == defaultBrowserContextID {
-				// There is not way to check whether the default browser context
+				// There is no way to check whether the default browser context
 				// is disposed, so stop here.
 				return
 			}
@@ -1124,7 +1108,7 @@ func TestGracefulBrowserShutdown(t *testing.T) {
 
 	dir := t.TempDir()
 
-	// TODO(mvdan): this doesn't work with DefaultExecAllocatorOptions+UserDataDir
+	// TODO(mvdan): this does not work with DefaultExecAllocatorOptions+UserDataDir
 	opts := []ExecAllocatorOption{
 		NoFirstRun,
 		NoDefaultBrowserCheck,
@@ -1248,14 +1232,14 @@ func TestAttachingToWorkers(t *testing.T) {
 func TestRunResponse(t *testing.T) {
 	t.Parallel()
 
-	// This test includes many edge cases for RunResponse; navigations that
+	// This test includes many edge cases for RunResponse: navigations that
 	// fail to start, responses that return errors, responses that redirect,
 	// and so on.
 	// We also test each of those with different actions, such as a straight
-	// navigation, as well as a click.
-	// What's important here is that we have an iframe that keeps reloading
-	// every 100ms in the main page. If RunResponse doesn't properly filter
-	// events for the top level frame, the tests should fail pretty often.
+	// navigation and a click.
+	// The important part is an iframe that keeps reloading every 100ms in the
+	// main page. If RunResponse does not filter the events for the top level
+	// frame properly, the tests fail often.
 
 	indexTmpl := template.Must(template.New("").Parse(`
 		<html>
@@ -1340,10 +1324,10 @@ func TestRunResponse(t *testing.T) {
 			wantStatus: 500,
 		},
 
-		// Use the local http server as https, which should be a TLS
-		// error and fail to load. If we don't capture the "loading
-		// failed" error, we will block until the timeout is hit and
-		// give a generic "deadline exceeded" error.
+		// Use the local http server as https. This is a TLS error and the
+		// load fails. If we do not capture the "loading failed" error, we
+		// block until the timeout and give a generic "deadline exceeded"
+		// error.
 		{
 			name:    "BadTLS",
 			url:     strings.ReplaceAll(ts.URL, "http://", "https://") + "/index",
@@ -1351,7 +1335,7 @@ func TestRunResponse(t *testing.T) {
 		},
 
 		// In this case, the "loading failed" event is received, but the
-		// load itself is cancelled immediately, so we never receive a
+		// load itself is canceled immediately, so we never receive a
 		// load event of any sort.
 		{
 			name:    "BadProtocol",
@@ -1500,7 +1484,7 @@ func TestRunResponse_noResponse(t *testing.T) {
 
 		{"Blank", Navigate("about:blank"), false},
 	}
-	// Don't use sub-tests, as these are all sequential steps that can't
+	// Do not use sub-tests, as these are all sequential steps that cannot
 	// happen independently of each other.
 	for _, step := range steps {
 		resp, err := RunResponse(ctx, step.action)
@@ -1517,7 +1501,7 @@ func TestRunResponse_noResponse(t *testing.T) {
 
 // TestWebGL tests that WebGL is correctly configured in headless-shell.
 //
-// This is a regress test for https://github.com/chromedp/chromedp/issues/1073.
+// This is a regression test for https://github.com/chromedp/chromedp/issues/1073.
 func TestWebGL(t *testing.T) {
 	t.Parallel()
 
@@ -1557,14 +1541,14 @@ func TestWebGL(t *testing.T) {
 
 // TestPDFTemplate tests that the resource pack is loaded in headless-shell.
 //
-// When it's correctly loaded, the header/footer templates that use the
-// following values should work as expected:
+// When it is loaded correctly, the header and footer templates that use these
+// values work as expected:
 //   - title
 //   - url
 //   - pageNumber
 //   - totalPages
 //
-// This is a regress test for https://github.com/chromedp/chromedp/issues/922.
+// This is a regression test for https://github.com/chromedp/chromedp/issues/922.
 func TestPDFTemplate(t *testing.T) {
 	t.Parallel()
 

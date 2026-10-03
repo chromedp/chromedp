@@ -62,7 +62,7 @@ func ExampleRunResponse() {
 	ctx, cancel := chromedp.NewContext(context.Background())
 	defer cancel()
 
-	// This server simply shows the URL path as the page title, and contains
+	// This server shows the URL path as the page title, and contains
 	// a link that points to /foo.
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
@@ -84,8 +84,8 @@ func ExampleRunResponse() {
 	}
 	fmt.Println("first title:", firstTitle)
 
-	// However, actions like Click don't always trigger a page navigation,
-	// so they don't wait for a page load directly. Wrapping them with
+	// However, actions like Click do not always trigger a page navigation,
+	// so they do not wait for a page load directly. Wrapping them with
 	// RunResponse does that waiting, and also obtains the HTTP response.
 	resp, err := chromedp.RunResponse(ctx, chromedp.Click("#foo", chromedp.ByID))
 	if err != nil {
@@ -93,16 +93,16 @@ func ExampleRunResponse() {
 	}
 	fmt.Println("second status code:", resp.Status)
 
-	// Grabbing the title again should work, as the page has finished
-	// loading once more.
+	// Getting the title again works, because the page finished loading once
+	// more.
 	secondTitle, err := chromedp.Run(ctx, chromedp.Title())
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println("second title:", secondTitle)
 
-	// It's always possible to wrap Navigate with RunResponse, if one wants
-	// the response information for that case too.
+	// You can also wrap Navigate with RunResponse to get the response
+	// information for that case too.
 	resp, err = chromedp.RunResponse(ctx, chromedp.Navigate(ts.URL+"/bar"))
 	if err != nil {
 		log.Fatal(err)
@@ -143,7 +143,7 @@ func ExampleExecAllocator() {
 	taskCtx, cancel := chromedp.NewContext(allocCtx, chromedp.WithLogf(log.Printf))
 	defer cancel()
 
-	// ensure that the browser process is started
+	// make sure that the browser process is started
 	if err := chromedp.Do(taskCtx); err != nil {
 		log.Fatal(err)
 	}
@@ -213,7 +213,7 @@ func ExampleNewContext_manyTabs() {
 	ctx1, cancel := chromedp.NewContext(context.Background())
 	defer cancel()
 
-	// ensure the first tab is created
+	// make sure that the first tab is created
 	if err := chromedp.Do(ctx1); err != nil {
 		log.Fatal(err)
 	}
@@ -221,7 +221,7 @@ func ExampleNewContext_manyTabs() {
 	// same browser, second tab
 	ctx2, _ := chromedp.NewContext(ctx1)
 
-	// ensure the second tab is created
+	// make sure that the second tab is created
 	if err := chromedp.Do(ctx2); err != nil {
 		log.Fatal(err)
 	}
@@ -281,10 +281,10 @@ func ExampleEvents_consoleLog() {
 		// Since ts.URL uses a random port, replace it.
 		s := (&chromedp.ExceptionError{ExceptionDetails: ev.ExceptionDetails}).Error()
 		s = strings.ReplaceAll(s, ts.URL, "<server>")
-		// V8 has changed the error messages for property access on null/undefined in version 9.3.310.
+		// V8 changed the error messages for property access on null/undefined in version 9.3.310.
 		// see: https://chromium.googlesource.com/v8/v8/+/c0fd89c3c089e888c4f4e8582e56db7066fa779b
 		//      https://github.com/chromium/chromium/commit/1735cbf94c98c70ff7554a1e9e01bb9a4f91beb6
-		// The message is normalized to make it compatible with the versions before this change.
+		// The test normalizes the message to stay compatible with the versions before this change.
 		s = strings.ReplaceAll(s, "Cannot read property 'throwsException' of null", "Cannot read properties of null (reading 'throwsException')")
 		fmt.Printf("* %s\n", s)
 		break
@@ -312,7 +312,7 @@ func ExampleWaitNewTarget() {
 	ts := httptest.NewServer(mux)
 	defer ts.Close()
 
-	// Grab the first spawned tab that isn't blank.
+	// Grab the first spawned tab that is not blank.
 	ch := chromedp.WaitNewTarget(ctx, func(info *target.Info) bool {
 		return info.URL != ""
 	})
@@ -524,23 +524,23 @@ func ExampleFromNode() {
 	}
 	sectionNode := nodes[0]
 
-	// Queries run from the document root by default, so Text will pick the
-	// first node it finds.
+	// Queries run from the document root by default, so Text picks the
+	// first node that it finds.
 	queryRoot, err := chromedp.Run(ctx, chromedp.Text(".content", chromedp.ByQuery))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// We can specify a different node to run the query from; in this case,
-	// we can tailor the search within #section.
+	// We can choose a different node to run the query from. In this case,
+	// we can narrow the search to #section.
 	queryFromNode, err := chromedp.Run(ctx, chromedp.Text(".content", chromedp.ByQuery, chromedp.FromNode(sectionNode)))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// A CSS selector like "#section > .content" achieves the same here, but
-	// FromNode allows us to use a node obtained by an entirely separate
-	// step, allowing for custom logic.
+	// A CSS selector like "#section > .content" achieves the same here. But
+	// FromNode accepts a node from an entirely separate step, so it allows
+	// custom logic.
 	queryNestedSelector, err := chromedp.Run(ctx, chromedp.Text("#section > .content", chromedp.ByQuery))
 	if err != nil {
 		log.Fatal(err)
@@ -779,7 +779,7 @@ func ExampleClick() {
 	}))
 	defer ts.Close()
 
-	// Click does not wait for a page load, so WaitEvent subscribes to the
+	// Click does not wait for a page load. So WaitEvent subscribes to the
 	// load event first, then runs the click, and returns the first event
 	// that comes after it. No event is lost between the click and the wait.
 	if err := chromedp.Do(ctx, chromedp.Navigate(ts.URL)); err != nil {

@@ -10,9 +10,9 @@ import (
 	"github.com/chromedp/chromedp/kb"
 )
 
-// inViewportJS is a JavaScript snippet that will get the specified node
-// position relative to the viewport and returns true if the specified node
-// is within the window's viewport.
+// inViewportJS is a JavaScript snippet that gets the position of the specified
+// node relative to the viewport. It returns true if the node is within the
+// viewport of the window.
 const inViewportJS = `(function(a) {
 		var r = a[0].getBoundingClientRect();
 		return r.top >= 0 && r.left >= 0 && r.bottom <= window.innerHeight && r.right <= window.innerWidth;
