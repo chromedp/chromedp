@@ -1,5 +1,9 @@
 # About chromedp
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/chromedp/logo/main/chromedp.svg" alt="chromedp logo" width="160">
+</p>
+
 Package `chromedp` is a faster, simpler way to drive browsers supporting the
 [Chrome DevTools Protocol][devtools-protocol] in Go without external dependencies.
 
