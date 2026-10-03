@@ -191,7 +191,8 @@ func TestAtLeast(t *testing.T) {
 }
 
 func TestRetryInterval(t *testing.T) {
-	t.Parallel()
+	// Do not run in parallel. The test counts the retries in 100 ms, so it
+	// fails when other tests keep Chrome busy (0 to 4 retries were seen).
 
 	tests := []struct {
 		name         string
