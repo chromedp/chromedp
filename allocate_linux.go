@@ -44,7 +44,13 @@ func allocateCmdOptions(cmd *exec.Cmd) {
 // is unique. So the command line finds the leftovers without a process group.
 // A process group does not work: on the CI runner Chrome did not start in its
 // own group.
+//
+// It never kills the processes of a browser that started with KeepOpen. That
+// browser must outlive the program, and a later run must not kill it.
 func killLeftovers(dir string) {
+	if isKeepOpenDir(dir) {
+		return
+	}
 	const (
 		quietPasses = 3
 		pause       = 10 * time.Millisecond

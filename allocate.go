@@ -91,10 +91,13 @@ var DefaultExecAllocatorOptions = [...]ExecAllocatorOption{
 // the default allocator. It is the only place that builds that list from
 // DefaultExecAllocatorOptions, so that the options of NewContext and the options
 // that a caller of NewExecAllocator builds from the same list cannot drift.
-func defaultExecAllocatorOptions(visibleWindow bool) []ExecAllocatorOption {
+func defaultExecAllocatorOptions(visibleWindow, keepOpen bool) []ExecAllocatorOption {
 	opts := slices.Clone(DefaultExecAllocatorOptions[:])
 	if visibleWindow {
 		opts = append(opts, VisibleWindow)
+	}
+	if keepOpen {
+		opts = append(opts, KeepOpen)
 	}
 	return opts
 }
@@ -134,6 +137,9 @@ type ExecAllocator struct {
 
 	modifyCmdFunc func(cmd *exec.Cmd)
 
+	// keepOpen is set by KeepOpen. See keepopen.go.
+	keepOpen bool
+
 	// visibleWindow is set by VisibleWindow. Allocate then checks for a
 	// display before it starts the browser.
 	visibleWindow bool
@@ -161,18 +167,13 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		}
 	}
 
-	var args []string
-	for name, value := range a.initFlags {
-		switch value := value.(type) {
-		case string:
-			args = append(args, fmt.Sprintf("--%s=%s", name, value))
-		case bool:
-			if value {
-				args = append(args, fmt.Sprintf("--%s", name))
-			}
-		default:
-			return nil, fmt.Errorf("invalid exec pool flag")
-		}
+	if a.keepOpen {
+		return a.allocateKeepOpen(ctx, c, opts)
+	}
+
+	args, err := a.flagArgs()
+	if err != nil {
+		return nil, err
 	}
 
 	removeDir := false
@@ -339,7 +340,26 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	}()
 	browser.process = cmd.Process
 	browser.userDataDir = dataDir
+	browser.exited = exited
 	return browser, nil
+}
+
+// flagArgs returns the command line arguments for the flags of the allocator.
+func (a *ExecAllocator) flagArgs() ([]string, error) {
+	var args []string
+	for name, value := range a.initFlags {
+		switch value := value.(type) {
+		case string:
+			args = append(args, fmt.Sprintf("--%s=%s", name, value))
+		case bool:
+			if value {
+				args = append(args, fmt.Sprintf("--%s", name))
+			}
+		default:
+			return nil, fmt.Errorf("invalid exec pool flag")
+		}
+	}
+	return args, nil
 }
 
 // connectWebSocket waits for the websocket address in the output of the
@@ -374,10 +394,10 @@ func (a *ExecAllocator) connectWebSocket(ctx context.Context, stdout io.ReadClos
 }
 
 // usesPipe reports whether Allocate connects to the browser with a pipe. It
-// does not when the WebSocket option is set, when the platform cannot pass the
+// does not when the WebSocket option or the KeepOpen option is set, when the platform cannot pass the
 // pipe to the process, or when the flags ask for a debugging port or address.
 func (a *ExecAllocator) usesPipe() bool {
-	if a.webSocket || !usePipe() {
+	if a.webSocket || a.keepOpen || !usePipe() {
 		return false
 	}
 	for _, name := range []string{"remote-debugging-port", "remote-debugging-address"} {

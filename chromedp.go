@@ -86,6 +86,10 @@ type Context struct {
 	// some of its pages.
 	first bool
 
+	// keepOpen is set by WithKeepOpen. NewContext uses it in the same way as
+	// visibleWindow.
+	keepOpen bool
+
 	// visibleWindow is set by WithVisibleWindow. NewContext uses it to build
 	// the default allocator. It has no effect on an allocator that the caller
 	// made.
@@ -164,7 +168,7 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 
 	if c.Allocator == nil {
 		c.Allocator = setupExecAllocator(defaultExecAllocatorOptions(
-			c.visibleWindow || visibleWindowFromEnv())...)
+			c.visibleWindow || visibleWindowFromEnv(), c.keepOpen)...)
 	}
 
 	ctx = context.WithValue(ctx, contextKey{}, c)
@@ -260,7 +264,8 @@ func Cancel(ctx context.Context) error {
 	if c == nil || c.cancel == nil {
 		return ErrInvalidContext
 	}
-	graceful := c.first && c.Browser != nil
+	// A browser that was kept open must stay open, so Cancel does not close it.
+	graceful := c.first && c.Browser != nil && !c.Browser.keptOpen
 	if graceful {
 		close(c.Browser.closingGracefully)
 		if err := c.Browser.execute(ctx, browser.CommandClose, nil, nil); err != nil {

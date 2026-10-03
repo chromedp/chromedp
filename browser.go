@@ -89,6 +89,15 @@ type Browser struct {
 	// userDataDir can be set by the allocators that set user data directories
 	// directly.
 	userDataDir string
+
+	// exited is closed when the browser process exits. It is nil when the
+	// allocator does not start the process. WaitClosed uses it.
+	exited <-chan struct{}
+
+	// keptOpen is true when the allocator started the browser with KeepOpen.
+	// wsURL is then the websocket address of the browser.
+	keptOpen bool
+	wsURL    string
 }
 
 // NewBrowser creates a new browser. Typically you do not call it directly,
