@@ -4,6 +4,11 @@ package chromedp
 
 import "os/exec"
 
+// checkDisplay does nothing on this platform.
+func checkDisplay() error {
+	return nil
+}
+
 func allocateCmdOptions(cmd *exec.Cmd) {
 }
 

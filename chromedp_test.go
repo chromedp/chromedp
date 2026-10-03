@@ -63,8 +63,9 @@ func init() {
 	// and can slightly speed up the tests on other systems.
 	allocOpts = append(allocOpts, DisableGPU)
 
-	if noHeadless := os.Getenv("CHROMEDP_NO_HEADLESS"); noHeadless != "" && noHeadless != "false" {
-		allocOpts = append(allocOpts, Flag("headless", false))
+	// CHROMEDP_NO_HEADLESS is the old name of CHROMEDP_VISIBLEWINDOW.
+	if noHeadless := os.Getenv("CHROMEDP_NO_HEADLESS"); visibleWindowFromEnv() || (noHeadless != "" && noHeadless != "false") {
+		allocOpts = append(allocOpts, VisibleWindow)
 	}
 
 	// Find the exec path once at startup.

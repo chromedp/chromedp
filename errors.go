@@ -71,6 +71,10 @@ const (
 	// ErrInvalidTarget is the invalid target error.
 	ErrInvalidTarget Error = "invalid target"
 
+	// ErrNoDisplay is the error when a visible window is requested on Linux
+	// and the environment has no display.
+	ErrNoDisplay Error = "a visible window needs a display, but DISPLAY and WAYLAND_DISPLAY are not set: start a display, or unset CHROMEDP_VISIBLEWINDOW and remove WithVisibleWindow and VisibleWindow to run headless"
+
 	// ErrInvalidContext is the invalid context error.
 	ErrInvalidContext Error = "invalid context"
 

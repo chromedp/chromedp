@@ -11,6 +11,15 @@ import (
 	"time"
 )
 
+// checkDisplay returns ErrNoDisplay when the environment has no X11 and no
+// Wayland display.
+func checkDisplay() error {
+	if os.Getenv("DISPLAY") == "" && os.Getenv("WAYLAND_DISPLAY") == "" {
+		return ErrNoDisplay
+	}
+	return nil
+}
+
 func allocateCmdOptions(cmd *exec.Cmd) {
 	if _, ok := os.LookupEnv("LAMBDA_TASK_ROOT"); ok {
 		// do nothing on AWS Lambda

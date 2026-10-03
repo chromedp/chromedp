@@ -10,6 +10,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"slices"
+	"strings"
 	"sync"
 	"time"
 )
@@ -50,6 +52,10 @@ func setupExecAllocator(opts ...ExecAllocatorOption) *ExecAllocator {
 // uses when the parent context has no allocator. Do not modify this global.
 // Use NewExecAllocator instead. See [ExampleExecAllocator].
 //
+// The list runs the browser in headless mode. To get a visible window, add
+// [VisibleWindow] to a copy of the list, or give [WithVisibleWindow] to
+// NewContext.
+//
 // [ExampleExecAllocator]: https://pkg.go.dev/github.com/chromedp/chromedp#example-ExecAllocator
 var DefaultExecAllocatorOptions = [...]ExecAllocatorOption{
 	NoFirstRun,
@@ -79,6 +85,18 @@ var DefaultExecAllocatorOptions = [...]ExecAllocatorOption{
 	Flag("enable-automation", true),
 	Flag("password-store", "basic"),
 	Flag("use-mock-keychain", true),
+}
+
+// defaultExecAllocatorOptions returns the options that NewContext uses to make
+// the default allocator. It is the only place that builds that list from
+// DefaultExecAllocatorOptions, so that the options of NewContext and the options
+// that a caller of NewExecAllocator builds from the same list cannot drift.
+func defaultExecAllocatorOptions(visibleWindow bool) []ExecAllocatorOption {
+	opts := slices.Clone(DefaultExecAllocatorOptions[:])
+	if visibleWindow {
+		opts = append(opts, VisibleWindow)
+	}
+	return opts
 }
 
 // NewExecAllocator creates a new context with an ExecAllocator. Use it with
@@ -116,6 +134,10 @@ type ExecAllocator struct {
 
 	modifyCmdFunc func(cmd *exec.Cmd)
 
+	// visibleWindow is set by VisibleWindow. Allocate then checks for a
+	// display before it starts the browser.
+	visibleWindow bool
+
 	wg sync.WaitGroup
 
 	combinedOutputWriter io.Writer
@@ -131,6 +153,12 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	c := FromContext(ctx)
 	if c == nil {
 		return nil, ErrInvalidContext
+	}
+
+	if a.visibleWindow {
+		if err := checkDisplay(); err != nil {
+			return nil, err
+		}
 	}
 
 	var args []string
@@ -597,6 +625,51 @@ func Headless(a *ExecAllocator) {
 	// Like in Puppeteer.
 	Flag("hide-scrollbars", true)(a)
 	Flag("mute-audio", true)(a)
+}
+
+// VisibleWindow is the command line option to run the browser with a visible
+// window. It removes the flags that make the browser quiet or hidden, and it
+// starts the window maximized.
+//
+// It removes these flags: headless, hide-scrollbars, mute-audio,
+// enable-automation (the infobar that says that software controls the
+// browser) and disable-extensions. It keeps every other flag, and it adds
+// start-maximized. It does not open the developer tools. To open them for every
+// tab, add Flag("auto-open-devtools-for-tabs", true).
+//
+// Add VisibleWindow after the options that it must change. It only removes the
+// flags that exist when it runs. For example:
+//
+//	opts := append(chromedp.DefaultExecAllocatorOptions[:], chromedp.VisibleWindow)
+//	ctx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+//
+// On Linux, Allocate returns ErrNoDisplay when the environment variables
+// DISPLAY and WAYLAND_DISPLAY are both empty. The allocator never falls back to
+// headless mode. Allocate does no such check on macOS and Windows.
+func VisibleWindow(a *ExecAllocator) {
+	for _, name := range []string{
+		"headless",
+		"hide-scrollbars",
+		"mute-audio",
+		"enable-automation",
+		"disable-extensions",
+	} {
+		delete(a.initFlags, name)
+	}
+	Flag("start-maximized", true)(a)
+	a.visibleWindow = true
+}
+
+// visibleWindowEnv is the name of the environment variable that has the same
+// effect as WithVisibleWindow.
+const visibleWindowEnv = "CHROMEDP_VISIBLEWINDOW"
+
+// visibleWindowFromEnv reports whether the environment variable
+// CHROMEDP_VISIBLEWINDOW asks for a visible window. Any value other than the
+// empty string, "false" and "0" does.
+func visibleWindowFromEnv() bool {
+	v := os.Getenv(visibleWindowEnv)
+	return v != "" && v != "0" && !strings.EqualFold(v, "false")
 }
 
 // DisableGPU is the command line option to disable the GPU process.

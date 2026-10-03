@@ -86,6 +86,11 @@ type Context struct {
 	// some of its pages.
 	first bool
 
+	// visibleWindow is set by WithVisibleWindow. NewContext uses it to build
+	// the default allocator. It has no effect on an allocator that the caller
+	// made.
+	visibleWindow bool
+
 	// closedTarget lets a cancellation wait until the page of a target is
 	// closed.
 	closedTarget sync.WaitGroup
@@ -158,7 +163,8 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 	}
 
 	if c.Allocator == nil {
-		c.Allocator = setupExecAllocator(DefaultExecAllocatorOptions[:]...)
+		c.Allocator = setupExecAllocator(defaultExecAllocatorOptions(
+			c.visibleWindow || visibleWindowFromEnv())...)
 	}
 
 	ctx = context.WithValue(ctx, contextKey{}, c)
@@ -475,6 +481,27 @@ func (c *Context) attachTarget(ctx context.Context, targetID target.ID) error {
 
 // ContextOption is a context option.
 type ContextOption = func(*Context)
+
+// WithVisibleWindow makes NewContext build the default allocator with
+// [VisibleWindow] and without Headless, so that the browser opens a visible
+// window. The window stays open until the context ends. See also
+// [WithKeepOpen] and [WaitClosed].
+//
+// The environment variable CHROMEDP_VISIBLEWINDOW has the same effect with no
+// change in the code. Any value other than the empty string, "false" and "0"
+// turns it on.
+//
+// The option only applies when the parent context has no allocator, because
+// then NewContext builds the allocator. It has no effect on an allocator that
+// the caller made with NewExecAllocator or NewRemoteAllocator, and it has no
+// effect on a context that inherits a browser. For an allocator that you make,
+// add [VisibleWindow] to the options of NewExecAllocator instead.
+//
+// On Linux, the first Run returns [ErrNoDisplay] when the environment has no
+// display.
+func WithVisibleWindow() ContextOption {
+	return func(c *Context) { c.visibleWindow = true }
+}
 
 // WithTargetID makes a context attach to an existing target, and not create a
 // new one.
