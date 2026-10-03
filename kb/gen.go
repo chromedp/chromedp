@@ -1,5 +1,21 @@
 //go:build ignore
 
+// Command gen.go generates kb.go from the key tables of the chromium source
+// tree. Run it with "go run gen.go" in the kb directory.
+//
+// The generator downloads these files, relative to the root of the tree:
+//
+//	ui/events/keycodes/dom_us_layout_data.h
+//	ui/events/keycodes/dom/dom_code_data.inc
+//	ui/events/keycodes/dom/dom_key_data.inc
+//	ui/events/keycodes/keyboard_codes_posix.h
+//	ui/events/keycodes/keyboard_codes_win.h
+//	third_party/blink/renderer/platform/windows_keyboard_codes.h
+//
+// It reads the files from the first source that works:
+//
+//	https://chromium.googlesource.com/chromium/src/+/main/
+//	https://raw.githubusercontent.com/chromium/chromium/main/
 package main
 
 import (
@@ -213,7 +229,7 @@ func loadPrintable(keys map[rune]Key, domCodeMap, domKeyMap map[string][]string,
 	return nil
 }
 
-var domKeyRE = regexp.MustCompile(`(?m)^\s+DOM_KEY_(?:UNI|MAP)\("(.+?)",\s*(.+?),\s*(0x[0-9A-F]{4})\)`)
+var domKeyRE = regexp.MustCompile(`(?m)^\s*DOM_KEY_(?:UNI|MAP)\("(.+?)",\s*(.+?),\s*(0x[0-9A-F]{4})\)`)
 
 // loadDomKeyData loads the dom key data definitions.
 func loadDomKeyData() (map[string][]string, error) {
@@ -395,23 +411,30 @@ func loadKeyboardCodes(vkeyCodeMap map[string][]int64, lookup map[string]string,
 	}
 	buf = extract(buf, "KeyboardCode")
 	matches := keyboardCodeRE.FindAllStringSubmatch(string(buf), -1)
+	local := make(map[string]string)
 	for _, m := range matches {
 		v := m[2]
 		switch {
 		case strings.HasPrefix(m[2], "'"):
 			v = fmt.Sprintf("0x%04x", m[2][1])
 		case !strings.HasPrefix(m[2], "0x") && m[2] != "0":
-			z, ok := lookup[v]
+			// the value is either an alias of an earlier VKEY in the same
+			// enum or a Windows VK_ define
+			z, ok := local[v]
 			if !ok {
-				panic(fmt.Sprintf("could not find %s in lookup", v))
+				z, ok = lookup[v]
+			}
+			if !ok {
+				return fmt.Errorf("could not find %s in lookup", v)
 			}
 			v = z
 		}
 		// load the value
 		i, err := strconv.ParseInt(v, 0, 32)
 		if err != nil {
-			panic(fmt.Sprintf("could not parse %s // %s // %s", m[1], m[2], v))
+			return fmt.Errorf("could not parse %s // %s // %s: %w", m[1], m[2], v, err)
 		}
+		local[m[1]] = v
 		vkey, ok := vkeyCodeMap[m[1]]
 		if !ok {
 			vkey = make([]int64, 2)
@@ -431,22 +454,47 @@ func extract(buf []byte, name string) []byte {
 	return buf[:endRE.FindIndex(buf)[1]]
 }
 
-// grab retrieves a file from the chromium source code.
+// grab retrieves a file from the chromium source code. It tries each source
+// in order and returns the first file that it can download and that is not
+// empty. A source that fails does not stop the generator while another source
+// works.
 func grab(path string) ([]byte, error) {
-	res, err := http.Get(path)
+	var errs []error
+	for _, src := range sources {
+		buf, err := fetch(src, path)
+		if err == nil {
+			return buf, nil
+		}
+		errs = append(errs, err)
+	}
+	return nil, errors.Join(errs...)
+}
+
+// fetch downloads path from one source.
+func fetch(src source, path string) ([]byte, error) {
+	u := src.base + path + src.suffix
+	res, err := http.Get(u)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get %s: %w", path, err)
+		return nil, fmt.Errorf("getting %s: %w", u, err)
 	}
 	defer res.Body.Close()
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("getting %s: unexpected status %s", u, res.Status)
+	}
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return nil, fmt.Errorf("unable to read %s: %w", path, err)
+		return nil, fmt.Errorf("reading %s: %w", u, err)
 	}
-	buf, err := base64.StdEncoding.DecodeString(string(body))
-	if err != nil {
-		return nil, fmt.Errorf("unable to base64 decode %s: %w\n>>>\n%s\n<<<", path, err, string(body))
+	if src.base64 {
+		body, err = base64.StdEncoding.DecodeString(string(body))
+		if err != nil {
+			return nil, fmt.Errorf("decoding %s: %w", u, err)
+		}
 	}
-	return buf, nil
+	if len(body) == 0 {
+		return nil, fmt.Errorf("getting %s: empty file", u)
+	}
+	return body, nil
 }
 
 var goCodes = map[rune]string{
@@ -461,22 +509,35 @@ var goCodes = map[rune]string{
 	'\'': `\'`,
 }
 
+// source describes one place that serves the files of the chromium source tree.
+type source struct {
+	base   string
+	suffix string
+	base64 bool
+}
+
+// sources lists the places to download the chromium files from, in order of
+// preference. The first one serves the files base64 encoded.
+var sources = []source{
+	{"https://chromium.googlesource.com/chromium/src/+/main/", "?format=TEXT", true},
+	{"https://raw.githubusercontent.com/chromium/chromium/main/", "", false},
+}
+
+// Paths of the files in the chromium source tree.
 const (
-	// chromiumSrc is the base chromium source repo location
-	chromiumSrc = "https://chromium.googlesource.com/chromium/src/+/main/"
 	// domUsLayoutDataH contains the {printable,non-printable} DomCode -> DomKey
 	// also contains DomKey -> VKEY (not used)
-	domUsLayoutDataH = chromiumSrc + "ui/events/keycodes/dom_us_layout_data.h?format=TEXT"
+	domUsLayoutDataH = "ui/events/keycodes/dom_us_layout_data.h"
 	// domCodeDataInc contains DomKey -> Key Name
-	domCodeDataInc = chromiumSrc + "ui/events/keycodes/dom/dom_code_data.inc?format=TEXT"
+	domCodeDataInc = "ui/events/keycodes/dom/dom_code_data.inc"
 	// domKeyDataInc contains DomKey -> Key Name + unicode (non-printable)
-	domKeyDataInc = chromiumSrc + "ui/events/keycodes/dom/dom_key_data.inc?format=TEXT"
+	domKeyDataInc = "ui/events/keycodes/dom/dom_key_data.inc"
 	// keyboardCodesPosixH contains the scan code definitions for posix (that is, native) keys.
-	keyboardCodesPosixH = chromiumSrc + "ui/events/keycodes/keyboard_codes_posix.h?format=TEXT"
+	keyboardCodesPosixH = "ui/events/keycodes/keyboard_codes_posix.h"
 	// keyboardCodesWinH contains the scan code definitions for Windows keys.
-	keyboardCodesWinH = chromiumSrc + "ui/events/keycodes/keyboard_codes_win.h?format=TEXT"
+	keyboardCodesWinH = "ui/events/keycodes/keyboard_codes_win.h"
 	// windowsKeyboardCodesH contains the actual #defs for Windows.
-	windowsKeyboardCodesH = chromiumSrc + "third_party/blink/renderer/platform/windows_keyboard_codes.h?format=TEXT"
+	windowsKeyboardCodesH = "third_party/blink/renderer/platform/windows_keyboard_codes.h"
 )
 
 type Key struct {

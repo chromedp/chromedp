@@ -360,7 +360,7 @@ var Keys = map[rune]*Key{
 	'\u0102': &Key{"AltLeft", "Alt", "", "", 164, 164, false, false},
 	'\u0104': &Key{"CapsLock", "CapsLock", "", "", 20, 20, false, false},
 	'\u0105': &Key{"ControlLeft", "Control", "", "", 162, 162, false, false},
-	'\u0106': &Key{"Fn", "Fn", "", "", 0, 0, false, false},
+	'\u0106': &Key{"Fn", "Fn", "", "", 255, 0, false, false},
 	'\u0107': &Key{"FnLock", "FnLock", "", "", 0, 0, false, false},
 	'\u0108': &Key{"Hyper", "Hyper", "", "", 0, 0, false, false},
 	'\u0109': &Key{"MetaLeft", "Meta", "", "", 91, 91, false, false},
