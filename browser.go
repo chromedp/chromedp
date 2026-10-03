@@ -61,6 +61,16 @@ type Browser struct {
 	// the websocket handshake.
 	dialHTTPHeader http.Header
 
+	// diedUnexpectedly is true when the connection to the browser process
+	// dropped while nobody had asked the browser to stop. The caller did not
+	// cancel the context, and did not close the browser. See noteLost.
+	diedUnexpectedly atomic.Bool
+
+	// exitErr points to the error of the wait for the browser process. It is
+	// nil for a browser that this program did not start. The error is valid
+	// after exited closes.
+	exitErr *error
+
 	// pages tracks the attached targets by session ID. It is a field only so
 	// that the tests can read the map after a browser closes.
 	pages map[target.SessionID]*Target
@@ -397,6 +407,66 @@ func (b *Browser) run(ctx context.Context) {
 			return // to avoid "write: broken pipe" errors
 		}
 	}
+}
+
+// noteLost records that the connection to the browser process dropped. The
+// allocator calls it when the connection drops without a graceful close. If
+// the context ctx of the allocation is done, the program stopped the browser,
+// so the loss is no surprise. Otherwise the process died, for example when the
+// kernel killed it for lack of memory, or when it crashed.
+//
+// The allocator calls noteLost before it cancels the context. A call that
+// fails because of the cancellation then sees the flag.
+func (b *Browser) noteLost(ctx context.Context) {
+	select {
+	case <-ctx.Done():
+	default:
+		b.diedUnexpectedly.Store(true)
+	}
+}
+
+// browserExitError is the error of a call that failed because the browser
+// process died. It holds the error of the call and the exit error of the
+// process.
+type browserExitError struct {
+	// exit is the error of the wait for the process, such as "signal: killed".
+	exit error
+	// err is the error that the call returned.
+	err error
+}
+
+// Error satisfies the error interface.
+func (e *browserExitError) Error() string {
+	return fmt.Sprintf("browser process exited: %v: %v", e.exit, e.err)
+}
+
+// Unwrap returns the exit error and the error of the call, so that errors.Is
+// and errors.As find both. For example, errors.As finds the *exec.ExitError,
+// and errors.Is finds context.Canceled.
+func (e *browserExitError) Unwrap() []error {
+	return []error{e.exit, e.err}
+}
+
+// withExitError returns err with the exit error of the browser process, when
+// the process died while nobody had asked the browser to stop. Otherwise it
+// returns err. It waits a short time for the process to be reaped.
+func (b *Browser) withExitError(err error) error {
+	if err == nil || b == nil || !b.diedUnexpectedly.Load() || b.exited == nil || b.exitErr == nil {
+		return err
+	}
+	if _, ok := errors.AsType[*browserExitError](err); ok {
+		return err
+	}
+	select {
+	case <-b.exited:
+	case <-time.After(time.Second):
+		return err
+	}
+	exit := *b.exitErr
+	if exit == nil {
+		exit = errors.New("exit status 0")
+	}
+	return &browserExitError{exit: exit, err: err}
 }
 
 // BrowserOption is a browser option.

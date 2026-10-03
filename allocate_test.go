@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -156,6 +157,71 @@ func TestDefaultFeatureNames(t *testing.T) {
 				t.Errorf("%s has the name %q, which is not a feature name", flag, name)
 			}
 		}
+	}
+}
+
+// TestExitErrorAfterKill kills the browser process and checks that the next
+// call returns the exit error of the process. See the issue 408.
+func TestExitErrorAfterKill(t *testing.T) {
+	t.Parallel()
+
+	for _, name := range []string{"pipe", "websocket"} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			opts := allocOpts
+			if name == "websocket" {
+				opts = append(slices.Clone(allocOpts), WebSocket)
+			}
+			allocCtx, cancel := NewExecAllocator(context.Background(), opts...)
+			defer cancel()
+			ctx, cancel := NewContext(allocCtx)
+			defer cancel()
+			if err := Do(ctx); err != nil {
+				t.Fatal(err)
+			}
+			b := FromContext(ctx).Browser
+			if err := b.process.Signal(os.Kill); err != nil {
+				t.Fatal(err)
+			}
+
+			// The first call can race with the loss of the connection, so
+			// ask until the call fails. Every later call must fail in the
+			// same way.
+			for i := range 3 {
+				_, err := Run(ctx, Evaluate[int](`1 + 2`))
+				if err == nil {
+					t.Fatalf("call %d: want an error from a dead browser", i)
+				}
+				var exit *exec.ExitError
+				if !errors.As(err, &exit) {
+					t.Fatalf("call %d: want an *exec.ExitError in %q", i, err)
+				}
+				if !strings.Contains(err.Error(), "signal: killed") {
+					t.Fatalf("call %d: want the signal in %q", i, err)
+				}
+				if !errors.Is(err, context.Canceled) {
+					t.Fatalf("call %d: want context.Canceled in %q", i, err)
+				}
+			}
+		})
+	}
+}
+
+// TestNoExitErrorAfterCancel makes sure that a program that stops the browser
+// itself gets no exit error. The process ends with a signal then, too.
+func TestNoExitErrorAfterCancel(t *testing.T) {
+	t.Parallel()
+
+	allocCtx, cancel := NewExecAllocator(context.Background(), allocOpts...)
+	defer cancel()
+	ctx, cancel := NewContext(allocCtx)
+	if err := Do(ctx); err != nil {
+		t.Fatal(err)
+	}
+	cancel()
+	if _, err := Run(ctx, Evaluate[int](`1 + 2`)); err != context.Canceled {
+		t.Fatalf("want exactly context.Canceled, got %v", err)
 	}
 }
 

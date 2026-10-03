@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -160,6 +161,20 @@ func TestCancelKeepsKeptBrowser(t *testing.T) {
 	case <-b.exited:
 		t.Fatal("Cancel closed a browser that was kept open")
 	case <-time.After(500 * time.Millisecond):
+	}
+}
+
+func TestExitErrorKeptBrowser(t *testing.T) {
+	t.Parallel()
+
+	ctx, _ := startKept(t, UserDataDir(filepath.Join(t.TempDir(), "profile")))
+	if err := FromContext(ctx).Browser.process.Kill(); err != nil {
+		t.Fatal(err)
+	}
+	_, err := Run(ctx, Evaluate[int](`1 + 2`))
+	var exit *exec.ExitError
+	if !errors.As(err, &exit) || !strings.Contains(err.Error(), "signal: killed") {
+		t.Fatalf("want the exit error of the killed browser, got %v", err)
 	}
 }
 

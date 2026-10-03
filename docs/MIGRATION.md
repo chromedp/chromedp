@@ -218,3 +218,4 @@ These names are new, and no old code needs a change. Headless mode is still the 
 These changes need no change in old code, unless a bullet says so.
 
 - `WithRemoteDialHTTPHeader`, `WithDialHTTPHeader` and `WithConnHTTPHeader` set HTTP headers on the websocket request to a remote browser. See example 15 in `docs/API.md`.
+- `Run`, `Do`, `Call` and `CallBrowser` now return the exit error of the browser process when the process dies while nobody asked it to stop. The error wraps the error of the context, so `errors.Is(err, context.Canceled)` still works. It also wraps an `*exec.ExitError`, so `errors.As` gives the signal or the exit status. A program that compared the error with `==` to `context.Canceled` must use `errors.Is`. A browser that the program stops with `Cancel` or with a canceled context gives no exit error.

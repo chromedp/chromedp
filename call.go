@@ -23,9 +23,10 @@ func Call[P, R any](ctx context.Context, cmd cdp.Command[P, R], params P) (R, er
 	c, err := initContextTarget(ctx)
 	if err != nil {
 		var zero R
-		return zero, err
+		return zero, FromContext(ctx).withExitError(err)
 	}
-	return cdp.Call(ctx, c.Target, cmd, params)
+	v, err := cdp.Call(ctx, c.Target, cmd, params)
+	return v, c.withExitError(err)
 }
 
 // CallBrowser runs the protocol command with the params on the browser of the
@@ -38,9 +39,10 @@ func CallBrowser[P, R any](ctx context.Context, cmd cdp.Command[P, R], params P)
 	c, err := initContextBrowser(ctx)
 	if err != nil {
 		var zero R
-		return zero, err
+		return zero, FromContext(ctx).withExitError(err)
 	}
-	return cdp.Call(ctx, c.Browser, cmd, params)
+	v, err := cdp.Call(ctx, c.Browser, cmd, params)
+	return v, c.withExitError(err)
 }
 
 // CallFunctionOn is an action that calls a JavaScript function and decodes the

@@ -192,8 +192,9 @@ func (a *ExecAllocator) allocateKeepOpen(ctx context.Context, c *Context, opts [
 	}
 	// Reap the process, so that it does not stay as a zombie.
 	exited := make(chan struct{})
+	var waitErr error
 	go func() {
-		cmd.Wait()
+		waitErr = cmd.Wait()
 		close(exited)
 	}()
 	stop := func() {
@@ -235,12 +236,14 @@ func (a *ExecAllocator) allocateKeepOpen(ctx context.Context, c *Context, opts [
 		select {
 		case <-browser.closingGracefully:
 		default:
+			browser.noteLost(ctx)
 			c.cancel()
 		}
 	}()
 	browser.process = cmd.Process
 	browser.userDataDir = dataDir
 	browser.exited = exited
+	browser.exitErr = &waitErr
 	browser.keptOpen = true
 	browser.wsURL = wsURL
 	return browser, nil

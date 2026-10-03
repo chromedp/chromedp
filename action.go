@@ -41,14 +41,21 @@ type Action[T any] func(ctx context.Context, t *Target) (T, error)
 //
 //	title, err := chromedp.Run(ctx, chromedp.Title())
 //
+// If the browser process dies while nobody has asked it to stop, for example
+// when it crashes or when the system kills it for lack of memory, then Run
+// returns an error that wraps the exit error of the process and the error of
+// the context. Use [errors.As] with a pointer to an [os/exec.ExitError] to read
+// the signal or the status.
+//
 // Use [Do] to run several actions that return no value.
 func Run[T any](ctx context.Context, a Action[T]) (T, error) {
 	c, err := initContextTarget(ctx)
 	if err != nil {
 		var zero T
-		return zero, err
+		return zero, FromContext(ctx).withExitError(err)
 	}
-	return a(ctx, c.Target)
+	v, err := a(ctx, c.Target)
+	return v, c.withExitError(err)
 }
 
 // Do runs the actions against the target of the context, in order. It stops at

@@ -333,12 +333,14 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		select {
 		case <-browser.closingGracefully:
 		default:
+			browser.noteLost(ctx)
 			c.cancel()
 		}
 	}()
 	browser.process = cmd.Process
 	browser.userDataDir = dataDir
 	browser.exited = exited
+	browser.exitErr = &run.err
 	return browser, nil
 }
 
@@ -350,6 +352,11 @@ type cmdRun struct {
 
 	// done closes when the process exits. It never closes when Start failed.
 	done chan struct{}
+
+	// err is the error of cmd.Wait. It is valid after done closes. It is an
+	// *exec.ExitError when the process ended with a signal or with a status
+	// other than zero.
+	err error
 }
 
 // startCmd starts cmd and waits for it in one goroutine, which it locks to its
@@ -376,9 +383,7 @@ func startCmd(cmd *exec.Cmd) *cmdRun {
 		if err != nil {
 			return
 		}
-		// A user that stopped the browser gets an error such as "signal:
-		// killed", which is not interesting here.
-		cmd.Wait()
+		r.err = cmd.Wait()
 		close(r.done)
 	}()
 	return r

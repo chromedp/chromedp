@@ -246,6 +246,15 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 	return ctx, cancelWait
 }
 
+// withExitError adds the exit error of the browser process to err. See
+// [Browser.withExitError]. It accepts a nil Context.
+func (c *Context) withExitError(err error) error {
+	if c == nil {
+		return err
+	}
+	return c.Browser.withExitError(err)
+}
+
 type contextKey struct{}
 
 // FromContext returns the Context that a context.Context holds, or nil.
