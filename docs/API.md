@@ -23,7 +23,7 @@ title, err := chromedp.Run(ctx, chromedp.Title())
 
 ## Before and after
 
-Each example has the old code first and the new code second. The new code comes from `example_test.go`. These examples run as tests. In every example, `ctx` is a chromedp context made with `chromedp.NewContext`, and `ts` is a test server.
+Each example has the old code first and the new code second. The new code comes from `example_test.go`. The examples 9 and 11 use a live website and have no `Output` comment, so `go test` builds them and does not run them. In every example, `ctx` is a chromedp context made with `chromedp.NewContext`, and `ts` is a test server.
 
 ### 1. Navigate and read a value
 
@@ -523,7 +523,7 @@ The new API removes the interface `Action`, the type `ActionFunc`, the type `Tas
 
 ## The exported funcs and types
 
-This part comes from `go doc -all`. Run `go doc` on a name for its documentation.
+This part lists the signatures that `go doc -all` prints for the package. Run `go doc` on a name for its documentation.
 
 ## Functions
 
@@ -855,13 +855,6 @@ It has these variables:
 
 ```go
 DefaultUnmarshalOptions
-jsonv2.DefaultOptionsV2(),
-jsontext.AllowInvalidUTF8(true),
-)
 DefaultMarshalOptions
-jsonv2.DefaultOptionsV2(),
-jsontext.AllowInvalidUTF8(true),
-)
 DefaultExecAllocatorOptions
 ```
-
