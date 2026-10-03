@@ -332,8 +332,8 @@ func (b *syncBuffer) String() string {
 }
 
 // readOutputTo is like readOutput. It also writes the output that it read
-// before the websocket address to accumulated, so that a caller that gives up
-// can show what the browser printed.
+// before the websocket address to accumulated. A caller that gives up can then
+// show what the browser printed.
 func readOutputTo(rc io.ReadCloser, forward io.Writer, accumulated *syncBuffer) (wsURL string, _ func(), _ error) {
 	prefix := []byte("DevTools listening on")
 	bufr := bufio.NewReader(rc)
@@ -574,7 +574,7 @@ func WSURLReadTimeout(t time.Duration) ExecAllocatorOption {
 //   - http://127.0.0.1:9222/
 //
 // It does not accept "ws://127.0.0.1:9222/devtools/browser/", because the
-// allocator does not try to modify it and it is obviously invalid.
+// allocator does not try to modify it and it is invalid.
 //
 // Use NoModifyURL to stop NewRemoteAllocator from changing the url.
 func NewRemoteAllocator(parent context.Context, url string, opts ...RemoteAllocatorOption) (context.Context, context.CancelFunc) {
@@ -596,7 +596,7 @@ func NewRemoteAllocator(parent context.Context, url string, opts ...RemoteAlloca
 type RemoteAllocatorOption = func(*RemoteAllocator)
 
 // RemoteAllocator is an Allocator which connects to an already running Chrome
-// process via a websocket URL.
+// process through a websocket URL.
 type RemoteAllocator struct {
 	wsURL         string
 	modifyURLFunc func(ctx context.Context, wsURL string) (string, error)

@@ -111,12 +111,12 @@ type Selector struct {
 // visible.
 //
 // The [NodeEnabled] option makes the query wait until the browser has returned
-// all element nodes that match the selector, and they are enabled (that is,
-// they have no 'disabled' attribute).
+// all element nodes that match the selector. The nodes must be enabled (that
+// is, they have no 'disabled' attribute).
 //
 // The [NodeSelected] option makes the query wait until the browser has
-// returned all element nodes that match the selector, and they are selected
-// (that is, they have a 'selected' attribute).
+// returned all element nodes that match the selector. The nodes must be
+// selected (that is, they have a 'selected' attribute).
 //
 // The [NodeNotPresent] option makes the query wait until no element node
 // matches the selector.
@@ -209,8 +209,8 @@ func (s *Selector) run(ctx context.Context, t *Target, last func(context.Context
 			t.frameMu.RUnlock()
 
 			// TODO: we probably want to use the nested frame
-			// instead, but note that util.go stores the nested
-			// frame's nodes in the root frame's Nodes map.
+			// instead. Note that util.go stores the nodes of the
+			// nested frame in the Nodes map of the root frame.
 			// frame = t.frames[fromNode.FrameID]
 			// if frame == nil {
 			// 	return fmt.Errorf("FromNode provided does not belong to any active frame")
@@ -503,7 +503,7 @@ func callFunctionOnNode[T any](ctx context.Context, t *Target, node *Node, funct
 // all queried element nodes and they are visible.
 func NodeVisible(s *Selector) {
 	WaitFunc(s.waitReady(func(ctx context.Context, t *Target, execCtx runtime.ExecutionContextID, n *Node) error {
-		// check box model
+		// get the box model
 		_, err := cdp.Call(ctx, t, dom.GetBoxModel, dom.GetBoxModelParams{NodeID: n.NodeID})
 		if err != nil {
 			if isCouldNotComputeBoxModelError(err) {
@@ -513,7 +513,7 @@ func NodeVisible(s *Selector) {
 			return err
 		}
 
-		// check visibility
+		// make sure that the visibility is as expected
 		res, err := callFunctionOnNode[bool](ctx, t, n, visibleJS)
 		if err != nil {
 			return err
@@ -529,7 +529,7 @@ func NodeVisible(s *Selector) {
 // sent all queried element nodes and they are not visible.
 func NodeNotVisible(s *Selector) {
 	WaitFunc(s.waitReady(func(ctx context.Context, t *Target, execCtx runtime.ExecutionContextID, n *Node) error {
-		// check box model
+		// get the box model
 		_, err := cdp.Call(ctx, t, dom.GetBoxModel, dom.GetBoxModelParams{NodeID: n.NodeID})
 		if err != nil {
 			if isCouldNotComputeBoxModelError(err) {
@@ -539,7 +539,7 @@ func NodeNotVisible(s *Selector) {
 			return err
 		}
 
-		// check visibility
+		// make sure that the visibility is as expected
 		res, err := callFunctionOnNode[bool](ctx, t, n, visibleJS)
 		if err != nil {
 			return err
@@ -552,7 +552,7 @@ func NodeNotVisible(s *Selector) {
 }
 
 // NodeEnabled is an element query option that waits until the browser has sent
-// all queried element nodes and they are enabled (that is, they have no
+// all queried element nodes. The nodes must be enabled (that is, they have no
 // 'disabled' attribute).
 func NodeEnabled(s *Selector) {
 	WaitFunc(s.waitReady(func(ctx context.Context, t *Target, execCtx runtime.ExecutionContextID, n *Node) error {
@@ -570,8 +570,8 @@ func NodeEnabled(s *Selector) {
 }
 
 // NodeSelected is an element query option that waits until the browser has
-// sent all queried element nodes and they are selected (that is, they have a
-// 'selected' attribute).
+// sent all queried element nodes. The nodes must be selected (that is, they
+// have a 'selected' attribute).
 func NodeSelected(s *Selector) {
 	WaitFunc(s.waitReady(func(ctx context.Context, t *Target, execCtx runtime.ExecutionContextID, n *Node) error {
 		n.RLock()
@@ -621,7 +621,7 @@ func RetryInterval(interval time.Duration) QueryOption {
 	}
 }
 
-// After is an element query option that sets a func to run after the browser
+// After is an element query option that sets a func to run when the browser
 // has returned the matched nodes and the node condition is true.
 func After(f func(ctx context.Context, t *Target, nodes []*Node) error) QueryOption {
 	return func(s *Selector) {
@@ -1083,9 +1083,9 @@ func DoubleClick(sel any, opts ...QueryOption) Action[Void] {
 	}, withOpts(opts, NodeVisible)...)
 }
 
-// SendKeys is an element query action that synthesizes the key up, char, and
-// down events that the runes in v need, and sends them to the first element
-// node that matches the selector.
+// SendKeys is an element query action that sends key events to the first
+// element node that matches the selector. It synthesizes the key down, char,
+// and key up events that the runes in v need.
 //
 // See [keys] for a complete example of how to use SendKeys.
 //
@@ -1121,8 +1121,9 @@ func SendKeys(sel any, v string, opts ...QueryOption) Action[Void] {
 	}, withOpts(opts, NodeVisible)...)
 }
 
-// SetUploadFiles is an element query action that sets the files to upload (that is, for an
-// input[type="file"] node) for the first element node matching the selector.
+// SetUploadFiles is an element query action that sets the files to upload for
+// the first element node matching the selector. The node must be an
+// input[type="file"] node.
 func SetUploadFiles(sel any, files []string, opts ...QueryOption) Action[Void] {
 	return queryDo(sel, func(ctx context.Context, t *Target, nodes []*Node) error {
 		n, err := first(sel, nodes)
@@ -1230,8 +1231,8 @@ func ScrollIntoView(sel any, opts ...QueryOption) Action[Void] {
 }
 
 // DumpTo is an element query action that writes a readable tree of the first
-// element node matching the selector and its children, up to the specified
-// depth.
+// element node matching the selector and its children. The tree ends at the
+// specified depth.
 //
 // See [Dump] for a simpler interface.
 func DumpTo(sel any, w io.Writer, prefix, indent string, nodeIDs bool, depth int64, pierce bool, wait time.Duration, opts ...QueryOption) Action[Void] {
@@ -1249,8 +1250,8 @@ func DumpTo(sel any, w io.Writer, prefix, indent string, nodeIDs bool, depth int
 }
 
 // Dump is an element query action that writes a readable tree of the first
-// element node matching the selector and its children, up to the specified
-// depth.
+// element node matching the selector and its children. The tree ends at the
+// specified depth.
 //
 // See [DumpTo] for more options, which include the sleep wait timeout.
 func Dump(sel any, w io.Writer, opts ...QueryOption) Action[Void] {

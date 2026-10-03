@@ -72,8 +72,8 @@ func (s *subscribers) close() {
 }
 
 // subscription is one subscriber. It keeps the events in a queue without a
-// limit, so that publishing never blocks the handling of the events of the
-// browser, and a goroutine moves them to the channel of the subscriber.
+// limit, so that publishing never blocks the handling of the browser events.
+// A goroutine moves the events to the channel of the subscriber.
 type subscription struct {
 	out  chan jsontext.Value
 	wake chan struct{}

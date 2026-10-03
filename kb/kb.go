@@ -103,8 +103,8 @@ func Encode(r rune) []*input.DispatchKeyEventParams {
 		keyChar.Type = KeyChar
 		keyChar.Text = v.Text
 		keyChar.UnmodifiedText = v.Unmodified
-		// the virtual key code for char events for printable characters will
-		// be different than the defined keycode when not shifted...
+		// the virtual key code of a char event for a printable character
+		// differs from the defined keycode when the key is not shifted.
 		//
 		// specifically, it always sends the ascii value as the scan code,
 		// which is available as the rune.

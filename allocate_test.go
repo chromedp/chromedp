@@ -303,7 +303,7 @@ func testRemoteAllocator(t *testing.T, modifyURL func(wsURL string) string, want
 		t.Fatal(err)
 	}
 
-	// Check that cancel closed the tabs. Do not just count the
+	// Make sure that cancel closed the tabs. Do not just count the
 	// number of targets, as perhaps the initial blank tab has not
 	// come up yet.
 	targetsCtx, targetsCancel := NewContext(allocCtx)

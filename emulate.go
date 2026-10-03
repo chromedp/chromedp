@@ -129,7 +129,7 @@ func Emulate(device Device) Action[Void] {
 // EmulateReset is an action that resets the device emulation.
 //
 // It resets the viewport, the screen orientation, the user agent, and the
-// mobile and touch emulation of the browser to the original values from the
+// mobile and touch emulation. The new values are the original values from the
 // start of the browser.
 func EmulateReset() Action[Void] {
 	return Emulate(device.Reset)

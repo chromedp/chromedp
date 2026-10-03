@@ -78,8 +78,8 @@ func runPoll[T any](ctx context.Context, t *Target, p *pollTask) (T, error) {
 // This is a copy of [page.waitForFunction] of puppeteer.
 // It is named Poll on purpose, so that it does not mix with the Wait* query actions.
 // The behavior is not guaranteed to be compatible.
-// For example, in our implementation the poll task does not survive a navigation,
-// and the action returns an error in this case (see unit test TestPoll/NotSurviveNavigation).
+// For example, in our implementation the poll task does not survive a navigation.
+// In this case the action returns an error (see unit test TestPoll/NotSurviveNavigation).
 //
 // # Polling Options
 //

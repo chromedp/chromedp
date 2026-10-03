@@ -322,7 +322,7 @@ func TestPrematureCancelTab(t *testing.T) {
 func TestPrematureCancelAllocator(t *testing.T) {
 	t.Parallel()
 
-	// To ensure we do not actually fire any Chrome processes.
+	// To make sure that we do not start any Chrome processes.
 	allocCtx, cancel := NewExecAllocator(context.Background(),
 		ExecPath("/do-not-run-chrome"))
 	// Cancel before the browser is allocated.
@@ -338,7 +338,7 @@ func TestPrematureCancelAllocator(t *testing.T) {
 func TestConcurrentCancel(t *testing.T) {
 	t.Parallel()
 
-	// To ensure we do not actually fire any Chrome processes.
+	// To make sure that we do not start any Chrome processes.
 	allocCtx, cancel := NewExecAllocator(context.Background(),
 		ExecPath("/do-not-run-chrome"))
 	defer cancel()
@@ -369,7 +369,7 @@ func TestBrowserEvents(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Check that many subscriptions work, including a subscription that
+	// Make sure that many subscriptions work, including a subscription that
 	// starts after the browser is allocated. The subscriptions give up
 	// when the test takes too long.
 	sctx, scancel := context.WithTimeout(ctx, time.Minute)
@@ -414,7 +414,7 @@ func TestEvents(t *testing.T) {
 	ctx, cancel := testAllocate(t, "")
 	defer cancel()
 
-	// Check that many subscriptions work, including a subscription that
+	// Make sure that many subscriptions work, including a subscription that
 	// starts after the target is attached. The first one starts
 	// before the target exists, and so it opens the target. The second one
 	// outlives the context, so that it delivers all events up to the end of
@@ -468,9 +468,9 @@ func TestLargeEventCount(t *testing.T) {
 
 	// Simulate an environment where Chrome sends 2000 console log events,
 	// and we are slow at processing them. In older chromedp versions, this
-	// crashed, because we filled eventQueue and panicked. 50ms is enough to
-	// make the test fail often on old chromedp versions, without making the
-	// test too slow.
+	// crashed. We filled eventQueue and panicked. 50ms is enough to make the
+	// test fail often on old chromedp versions, without making the test too
+	// slow.
 	events := Events(ctx, runtime.ConsoleAPICalled)
 	go func() {
 		first := true
@@ -594,7 +594,7 @@ func TestEventsCancel(t *testing.T) {
 	ctx, cancel := testAllocateSeparate(t)
 	defer cancel()
 
-	// Check that canceling the context of an iterator ends the iteration
+	// Make sure that canceling the context of an iterator ends the iteration
 	// and removes the subscription.
 	browserCtx, browserCancel := context.WithCancel(ctx)
 	defer browserCancel()
@@ -955,7 +955,7 @@ func TestBrowserContext(t *testing.T) {
 			}
 
 			if want == defaultBrowserContextID {
-				// There is no way to check whether the default browser context
+				// There is no way to find out whether the default browser context
 				// is disposed, so stop here.
 				return
 			}
@@ -1021,7 +1021,7 @@ func TestDirectCloseTarget(t *testing.T) {
 	c := FromContext(ctx)
 	want := "to close the target, cancel its context"
 
-	// Check that nothing is closed by running the action twice.
+	// Make sure that nothing is closed by running the action twice.
 	for range 2 {
 		err := Do(ctx, Func(func(ctx context.Context, t *Target) error {
 			_, err := Call(ctx, target.CloseTarget, target.CloseTargetParams{TargetID: c.Target.TargetID})
@@ -1042,7 +1042,7 @@ func TestDirectCloseBrowser(t *testing.T) {
 
 	want := "use chromedp.Cancel"
 
-	// Check that nothing is closed by running the action twice.
+	// Make sure that nothing is closed by running the action twice.
 	for range 2 {
 		_, err := CallBrowser(ctx, browser.Close, cdp.Empty{})
 		got := fmt.Sprint(err)
@@ -1343,7 +1343,7 @@ func TestRunResponse(t *testing.T) {
 			wantErr: "ERR_ABORTED",
 		},
 
-		// Check that loading a non-HTML document still works normally.
+		// Make sure that loading a non-HTML document still works normally.
 		{
 			name:          "NonHTML",
 			url:           "plain",

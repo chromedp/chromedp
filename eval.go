@@ -23,9 +23,9 @@ import (
 // `runtime.ReleaseObjectGroup` to ask the browser to release them.
 //
 // For all other types, the script returns the result "by value" (that is,
-// JSON-encoded), and Evaluate then decodes it into a value of type T. When the
-// script result is "undefined" or "null" and T cannot be nil (only a chan,
-// func, interface, map, pointer, or slice type can be nil), the action returns
+// JSON-encoded). Evaluate then decodes it into a value of type T. Only a chan,
+// func, interface, map, pointer, or slice type can be nil. When the script
+// result is "undefined" or "null" and T cannot be nil, the action returns
 // [ErrJSUndefined] or [ErrJSNull] respectively.
 //
 // For example:

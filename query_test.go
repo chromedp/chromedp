@@ -292,7 +292,7 @@ func TestByJSPath(t *testing.T) {
 	ctx, cancel := testAllocate(t, "image2.html")
 	defer cancel()
 
-	// check nodes == 1
+	// make sure that nodes == 1
 	var nodes []*Node
 	if err := Do(ctx,
 		into(&nodes, Nodes(`document.querySelector('#imagething').shadowRoot.querySelector('.container')`, ByJSPath)),
@@ -303,7 +303,7 @@ func TestByJSPath(t *testing.T) {
 		t.Errorf("expected nodes to have len 1, got: %d", len(nodes))
 	}
 
-	// check class
+	// make sure that the class is right
 	class := nodes[0].AttributeValue("class")
 	if class != "container" {
 		t.Errorf("expected class to be 'container', got: %q", class)
@@ -871,7 +871,7 @@ func TestSetAttributes(t *testing.T) {
 				t.Fatalf("got error: %v", err)
 			}
 
-			// TODO: figure why this test is flaky without this
+			// TODO: find out why this test is flaky without this
 			time.Sleep(10 * time.Millisecond)
 
 			var attrs map[string]string
@@ -946,7 +946,7 @@ func TestSetAttributeValue(t *testing.T) {
 				t.Fatalf("got error: %v", err)
 			}
 
-			// TODO: figure why this test is flaky without this
+			// TODO: find out why this test is flaky without this
 			time.Sleep(10 * time.Millisecond)
 
 			attr, err := Run(ctx, AttributeValue(test.sel, test.attr, test.by))
@@ -989,7 +989,7 @@ func TestRemoveAttribute(t *testing.T) {
 				t.Fatalf("got error: %v", err)
 			}
 
-			// TODO: figure why this test is flaky without this
+			// TODO: find out why this test is flaky without this
 			time.Sleep(10 * time.Millisecond)
 
 			attr, err := Run(ctx, AttributeValue(test.sel, test.attr, test.by))
@@ -1234,7 +1234,7 @@ func TestMatchedStyle(t *testing.T) {
 				t.Fatalf("got error: %v", err)
 			}
 
-			// TODO: Add logic to check if the style returned is true and valid.
+			// TODO: Add logic to make sure that the returned style is true and valid.
 		})
 	}
 }

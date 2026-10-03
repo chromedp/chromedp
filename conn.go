@@ -104,7 +104,7 @@ func (c *Conn) Read(_ context.Context, msg *cdproto.Message) error {
 		c.debugf("<- %s", b.Bytes())
 	}
 
-	// unmarshal, reusing decoder
+	// unmarshal, and reuse the decoder
 	c.decoder.Reset(&b, DefaultUnmarshalOptions)
 	return jsonv2.UnmarshalDecode(&c.decoder, msg, DefaultUnmarshalOptions)
 }
@@ -124,7 +124,7 @@ func (c *Conn) Write(_ context.Context, msg *cdproto.Message) error {
 	// but it does make the buffer grow when needed.
 	c.writer.DisableFlush()
 
-	// Perform marshal, reusing encoder
+	// Marshal the value, and reuse the encoder
 	var b bytes.Buffer
 	c.encoder.Reset(&b, DefaultMarshalOptions)
 	if err := jsonv2.MarshalEncode(&c.encoder, msg, DefaultMarshalOptions); err != nil {

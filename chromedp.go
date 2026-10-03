@@ -560,12 +560,12 @@ func RunResponse(ctx context.Context, steps ...Action[Void]) (*network.Response,
 func responseAction(steps ...Action[Void]) Action[*network.Response] {
 	return func(ctx context.Context, t *Target) (*network.Response, error) {
 		var resp *network.Response
-		// loaderID lets us filter the requests from the currently
-		// loading navigation.
+		// loaderID lets us filter the requests of the navigation that
+		// loads now.
 		var loaderID cdp.LoaderID
 
-		// reqID is the request we are currently looking at. This can
-		// go through multiple values, e.g. if the page redirects.
+		// reqID is the request that we look at now. It can go through
+		// several values, for example when the page redirects.
 		var reqID network.RequestID
 
 		// frameID corresponds to the target's root frame.

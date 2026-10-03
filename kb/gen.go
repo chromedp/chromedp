@@ -471,7 +471,7 @@ const (
 	domCodeDataInc = chromiumSrc + "ui/events/keycodes/dom/dom_code_data.inc?format=TEXT"
 	// domKeyDataInc contains DomKey -> Key Name + unicode (non-printable)
 	domKeyDataInc = chromiumSrc + "ui/events/keycodes/dom/dom_key_data.inc?format=TEXT"
-	// keyboardCodesPosixH contains the scan code definitions for posix (i.e. native) keys.
+	// keyboardCodesPosixH contains the scan code definitions for posix (that is, native) keys.
 	keyboardCodesPosixH = chromiumSrc + "ui/events/keycodes/keyboard_codes_posix.h?format=TEXT"
 	// keyboardCodesWinH contains the scan code definitions for Windows keys.
 	keyboardCodesWinH = chromiumSrc + "ui/events/keycodes/keyboard_codes_win.h?format=TEXT"
@@ -612,8 +612,8 @@ func Encode(r rune) []*input.DispatchKeyEventParams {
 		keyChar.Type = KeyChar
 		keyChar.Text = v.Text
 		keyChar.UnmodifiedText = v.Unmodified
-		// the virtual key code for char events for printable characters will
-		// be different than the defined keycode when not shifted...
+		// the virtual key code of a char event for a printable character
+		// differs from the defined keycode when the key is not shifted.
 		//
 		// specifically, it always sends the ascii value as the scan code,
 		// which is available as the rune.

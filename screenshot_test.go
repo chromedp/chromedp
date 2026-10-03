@@ -131,9 +131,9 @@ func TestScreenshotHighDPI(t *testing.T) {
 	defer cancel()
 
 	// Use a weird screen dimension with a 1.5 scale factor, so that cropping
-	// the screenshot must use floating point arithmetic and keep the high DPI
-	// in mind. The dimensions must also be large enough to show the element
-	// that we want, because we do not scroll to bring it into view.
+	// the screenshot must use floating point arithmetic. It must also keep the
+	// high DPI in mind. The dimensions must be large enough to show the
+	// element that we want, because we do not scroll to bring it into view.
 	if err := Do(ctx, EmulateViewport(905, 705, EmulateScale(1.5))); err != nil {
 		t.Fatal(err)
 	}
