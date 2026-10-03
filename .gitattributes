@@ -1,0 +1,6 @@
+# Every text file is LF on every checkout, including a checkout on Windows.
+#
+# Git for Windows writes CRLF by default. The golden images and the
+# JavaScript snippets that chromedp embeds must keep the same bytes on every
+# machine.
+* text=auto eol=lf

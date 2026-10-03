@@ -17,7 +17,7 @@ Package `chromedp` is a faster, simpler way to drive browsers supporting the
 Install in the usual Go way:
 
 ```sh
-$ go get -u github.com/chromedp/chromedp
+go get -u github.com/chromedp/chromedp
 ```
 
 ## Examples
@@ -37,8 +37,8 @@ By default, Chrome is run in headless mode. See `DefaultExecAllocatorOptions`, a
 > I'm seeing "context canceled" errors
 
 When the connection to the browser is lost, `chromedp` cancels the context, and
-it may result in this error. This occurs, for example, if the browser is closed
-manually, or if the browser process has been killed or otherwise terminated.
+it can result in this error. This occurs, for example, if the browser is closed
+manually, or if the browser process was killed or otherwise terminated.
 
 > Chrome exits as soon as my Go program finishes
 
@@ -69,8 +69,20 @@ chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
 
 The simplest way is to run the Go program that uses chromedp inside the
 [chromedp/headless-shell][docker-headless-shell] image. That image contains
-`headless-shell`, a smaller headless build of Chrome, which `chromedp` is able
-to find out of the box.
+`headless-shell`, a smaller headless build of Chrome, which `chromedp` finds
+out of the box.
+
+## Contributing
+
+Read [CONTRIBUTING.md](CONTRIBUTING.md) before you send a change. The rules
+for people and coding agents are in [AGENTS.md](AGENTS.md). The plan, the
+backlog and every recorded decision are in [docs/](docs/PLAN.md). Running the
+tests needs Chrome or the `headless-shell` image.
+
+## Questions and ideas
+
+Ask a question, or suggest a feature, in [Discussions][discussions]. The issue
+tracker is for bugs. You can also chat on [Discord][discord].
 
 ## Resources
 
@@ -87,6 +99,7 @@ to find out of the box.
 [chromedp-examples]: https://github.com/chromedp/examples
 [chromedp-pdlgen]: https://github.com/chromedp/pdlgen
 [chromedp-proxy]: https://github.com/chromedp/chromedp-proxy
+[discussions]: https://github.com/chromedp/chromedp/discussions
 [discord]: https://discord.gg/WDWAgXwJqN "Discord Discussion"
 [discord-status]: https://img.shields.io/discord/829150509658013727.svg?label=Discord&logo=Discord&colorB=7289da&style=flat-square "Discord Discussion"
 [devtools-protocol]: https://chromedevtools.github.io/devtools-protocol/
