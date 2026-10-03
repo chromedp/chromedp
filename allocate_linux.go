@@ -18,9 +18,6 @@ func allocateCmdOptions(cmd *exec.Cmd) {
 	}
 	// When the parent process dies (Go), kill the child as well.
 	cmd.SysProcAttr.Pdeathsig = syscall.SIGKILL
-	// Give Chrome its own process group, so that killProcessGroup can stop
-	// its child processes too.
-	cmd.SysProcAttr.Setpgid = true
 }
 
 // killProcessGroup kills the processes that are still in the process group of
