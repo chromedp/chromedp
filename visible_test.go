@@ -54,7 +54,7 @@ func TestDefaultOptionsHeadless(t *testing.T) {
 	}
 
 	// The list that NewContext builds must be the same list.
-	b := setupExecAllocator(defaultExecAllocatorOptions(false)...)
+	b := setupExecAllocator(defaultExecAllocatorOptions(false, false)...)
 	if !maps.Equal(b.initFlags, headlessFlags) {
 		t.Fatalf("NewContext flags differ from the default list: %v", b.initFlags)
 	}
@@ -73,7 +73,7 @@ func TestVisibleWindowFlags(t *testing.T) {
 
 	for name, opts := range map[string][]ExecAllocatorOption{
 		"VisibleWindow after the defaults": append(DefaultExecAllocatorOptions[:len(DefaultExecAllocatorOptions):len(DefaultExecAllocatorOptions)], VisibleWindow),
-		"the list of NewContext":           defaultExecAllocatorOptions(true),
+		"the list of NewContext":           defaultExecAllocatorOptions(true, false),
 	} {
 		a := setupExecAllocator(opts...)
 		if !maps.Equal(a.initFlags, want) {
