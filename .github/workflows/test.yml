@@ -17,6 +17,8 @@ jobs:
           sudo apt-get install -y build-essential
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Allow unprivileged user namespaces
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
       - name: Test Chrome
         run: go test -v ./...
       - name: Test headless-shell
