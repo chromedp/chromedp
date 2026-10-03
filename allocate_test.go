@@ -78,7 +78,7 @@ func TestExecAllocatorCombinedOutputPanic(t *testing.T) {
 	allocCtx, cancel := NewExecAllocator(context.Background(),
 		append([]ExecAllocatorOption{
 			CombinedOutput(buf),
-			Flag("enable-logging", true),
+			Flag("enable-logging", "stderr"),
 			WSURLReadTimeout(1), // trigger err
 		}, allocOpts...)...)
 	defer cancel()
@@ -180,10 +180,10 @@ func TestRemoteAllocator(t *testing.T) {
 		{
 			name: "hostname",
 			modifyURL: func(wsURL string) string {
-				h, err := os.Hostname()
-				if err != nil {
-					t.Fatal(err)
-				}
+				// Chrome ignores "remote-debugging-address" and
+				// listens on the loopback interface only, so the
+				// machine hostname is not reachable.
+				h := "localhost"
 				u, err := url.Parse(wsURL)
 				if err != nil {
 					t.Fatal(err)
@@ -233,6 +233,12 @@ func testRemoteAllocator(t *testing.T, modifyURL func(wsURL string) string, want
 		"about:blank",
 	)
 
+	// Kill is too abrupt: the child processes of Chrome can still write to
+	// the temporary directory after the test, and then the cleanup fails.
+	// Ask Chrome to exit, and kill it only if it does not.
+	cmd.Cancel = func() error { return cmd.Process.Signal(os.Interrupt) }
+	cmd.WaitDelay = 10 * time.Second
+
 	stderr, err := cmd.StderrPipe()
 	if err != nil {
 		t.Fatal(err)
@@ -267,8 +273,16 @@ func testRemoteAllocator(t *testing.T, modifyURL func(wsURL string) string, want
 		if err != nil {
 			t.Fatal(err)
 		}
-		if len(infos) > 1 {
-			t.Fatalf("expected Targets on a new RemoteAllocator context to return at most one, got: %d", len(infos))
+		// Current Chrome also lists targets that are not pages, such as
+		// "browser_ui", "service_worker" and "background_page".
+		var pages int
+		for _, info := range infos {
+			if info.Type == "page" {
+				pages++
+			}
+		}
+		if pages > 1 {
+			t.Fatalf("expected Targets on a new RemoteAllocator context to return at most one page, got: %d", pages)
 		}
 	}
 
@@ -332,8 +346,9 @@ func TestExecAllocatorMissingWebsocketAddr(t *testing.T) {
 	t.Parallel()
 
 	allocCtx, cancel := NewExecAllocator(context.Background(),
-		// Use a bad listen address, so Chrome exits straight away.
-		append([]ExecAllocatorOption{Flag("remote-debugging-address", "_")},
+		// Ask for a debugging pipe that is not open, so Chrome exits
+		// straight away. Chrome ignores a bad "remote-debugging-address".
+		append([]ExecAllocatorOption{Flag("remote-debugging-pipe", true)},
 			allocOpts...)...)
 	defer cancel()
 
@@ -342,7 +357,7 @@ func TestExecAllocatorMissingWebsocketAddr(t *testing.T) {
 
 	// set the "s" flag to let "." match "\n"
 	// in GitHub Actions, the error text could be:
-	// "chrome failed to start:\n/bin/bash: /etc/profile.d/env_vars.sh: Permission denied\nmkdir: cannot create directory ‘/run/user/1001’: Permission denied\n[0321/081807.491906:ERROR:headless_shell.cc(720)] Invalid devtools server address\n"
+	// "chrome failed to start:\n/bin/bash: /etc/profile.d/env_vars.sh: Permission denied\nmkdir: cannot create directory ‘/run/user/1001’: Permission denied\n[0321/081807.491906:ERROR:chrome_main_delegate.cc(1164)] Remote debugging pipe file descriptors are not open.\n"
 	want := `failed to start`
 	got := fmt.Sprintf("%v", Run(ctx))
 	if !strings.Contains(got, want) {
@@ -357,7 +372,7 @@ func TestCombinedOutput(t *testing.T) {
 	allocCtx, cancel := NewExecAllocator(context.Background(),
 		append([]ExecAllocatorOption{
 			CombinedOutput(buf),
-			Flag("enable-logging", true),
+			Flag("enable-logging", "stderr"),
 		}, allocOpts...)...)
 	defer cancel()
 
@@ -386,9 +401,10 @@ func TestCombinedOutputError(t *testing.T) {
 	// never signal it's done.
 	buf := new(bytes.Buffer)
 	allocCtx, cancel := NewExecAllocator(context.Background(),
-		// Use a bad listen address, so Chrome exits straight away.
+		// Ask for a debugging pipe that is not open, so Chrome exits
+		// straight away. Chrome ignores a bad "remote-debugging-address".
 		append([]ExecAllocatorOption{
-			Flag("remote-debugging-address", "_"),
+			Flag("remote-debugging-pipe", true),
 			CombinedOutput(buf),
 		}, allocOpts...)...)
 	defer cancel()
