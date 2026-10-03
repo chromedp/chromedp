@@ -3,6 +3,8 @@ package docs_test
 import (
 	"bytes"
 	"fmt"
+	"go/parser"
+	"go/token"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -138,23 +140,92 @@ func TestProseIsSimpleEnglish(t *testing.T) {
 		if filepath.Base(path) == "README.md" && filepath.Dir(path) == root {
 			continue
 		}
-		text := notProse.ReplaceAllStringFunc(read(t, path), func(s string) string {
-			return strings.Map(func(r rune) rune {
-				if r == '\n' {
-					return r
-				}
-				return ' '
-			}, s)
-		})
-		for n, line := range strings.Split(text, "\n") {
-			for name, re := range proseRules {
-				for _, m := range re.FindAllString(line, -1) {
-					t.Errorf("%s:%d: %s %q", path, n+1, name, m)
-				}
+		checkProse(t, path, 1, read(t, path))
+	}
+}
+
+// TestCommentsAreSimpleEnglish applies the same rules to the comments in the Go
+// files. It skips the indented lines of a doc comment, because they are code.
+func TestCommentsAreSimpleEnglish(t *testing.T) {
+	for _, path := range goFiles(t) {
+		src := read(t, path)
+		if strings.HasPrefix(src, "// Code generated") {
+			continue
+		}
+		fset := token.NewFileSet()
+		f, err := parser.ParseFile(fset, path, src, parser.ParseComments)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, group := range f.Comments {
+			for _, c := range group.List {
+				checkProse(t, path, fset.Position(c.Pos()).Line, commentText(c.Text))
 			}
 		}
 	}
 }
+
+// commentText returns the text of a comment without its markers. A line of
+// code in a doc comment (gofmt indents it with a tab) and a directive become
+// empty lines.
+func commentText(text string) string {
+	if strings.HasPrefix(text, "//go:") || strings.HasPrefix(text, "//nolint") {
+		return ""
+	}
+	if strings.HasPrefix(text, "/*") {
+		return strings.TrimSuffix(strings.TrimPrefix(text, "/*"), "*/")
+	}
+	text = strings.TrimPrefix(text, "//")
+	if strings.HasPrefix(text, "\t") {
+		return ""
+	}
+	return text
+}
+
+// checkProse reports each hit of proseRules in text. The first line of text is
+// line first of the file.
+func checkProse(t *testing.T, path string, first int, text string) {
+	t.Helper()
+	text = notProse.ReplaceAllStringFunc(text, func(s string) string {
+		return strings.Map(func(r rune) rune {
+			if r == '\n' {
+				return r
+			}
+			return ' '
+		}, s)
+	})
+	for n, line := range strings.Split(text, "\n") {
+		for name, re := range proseRules {
+			for _, m := range re.FindAllString(line, -1) {
+				t.Errorf("%s:%d: %s %q", path, first+n, name, m)
+			}
+		}
+	}
+}
+
+// goFiles returns every Go file of the repository.
+func goFiles(t *testing.T) []string {
+	t.Helper()
+	var out []string
+	err := filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		switch {
+		case err != nil:
+			return err
+		case d.IsDir() && (skipDirs[d.Name()] || d.Name() == "js"):
+			return filepath.SkipDir
+		case strings.HasSuffix(path, ".go"):
+			out = append(out, path)
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return out
+}
+
+// skipDirs are the directories that hold no text of this project.
+var skipDirs = map[string]bool{".git": true, ".agents": true, ".claude": true, "testdata": true}
 
 // markdown returns every document that this project writes. The skills come
 // from elsewhere and are skipped.
@@ -165,7 +236,7 @@ func markdown(t *testing.T) []string {
 		switch {
 		case err != nil:
 			return err
-		case d.IsDir() && (d.Name() == ".git" || d.Name() == ".agents" || d.Name() == ".claude" || d.Name() == "testdata"):
+		case d.IsDir() && skipDirs[d.Name()]:
 			return filepath.SkipDir
 		case strings.HasSuffix(path, ".md"):
 			out = append(out, path)
