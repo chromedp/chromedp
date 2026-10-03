@@ -3,7 +3,7 @@ module github.com/chromedp/chromedp/remote
 go 1.27
 
 require (
-	github.com/chromedp/cdproto v0.157.3
+	github.com/chromedp/cdproto v0.157.4
 	github.com/chromedp/chromedp v0.18.0
 	github.com/gobwas/ws v1.4.0
 )

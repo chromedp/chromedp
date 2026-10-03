@@ -690,7 +690,7 @@ func Populate(depth int64, pierce bool, opts ...PopulateOption) QueryOption {
 		for _, n := range nodes {
 			_, err := cdp.Call(ctx, t, dom.RequestChildNodes, dom.RequestChildNodesParams{
 				NodeID: n.NodeID,
-				Depth:  depth,
+				Depth:  &depth,
 				Pierce: &pierce,
 			})
 			if err != nil {

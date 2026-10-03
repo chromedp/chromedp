@@ -1,2 +1,4 @@
 github.com/chromedp/cdproto v0.157.3 h1:GEMGBiP23qiQ+OusBkMfSFFawvKvXPK7onkvIRpnshY=
 github.com/chromedp/cdproto v0.157.3/go.mod h1:scNPhJ/A4T8BVkyR5k2Uocvoju3iBRZS4cg3uMlxuMk=
+github.com/chromedp/cdproto v0.157.4 h1:UleIu3RHfaQmhE0ri9GpCbHrGpe0HgV55HVhzhPWglI=
+github.com/chromedp/cdproto v0.157.4/go.mod h1:scNPhJ/A4T8BVkyR5k2Uocvoju3iBRZS4cg3uMlxuMk=

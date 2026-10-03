@@ -54,8 +54,8 @@ func TestPDFTemplate(t *testing.T) {
 		}),
 		chromedp.Func(func(ctx context.Context, t *chromedp.Target) error {
 			res, err := chromedp.Call(ctx, page.PrintToPDF, page.PrintToPDFParams{
-				MarginTop:           0.5,
-				MarginBottom:        0.5,
+				MarginTop:           new(0.5),
+				MarginBottom:        new(0.5),
 				DisplayHeaderFooter: new(true),
 				HeaderTemplate:      `<div style="font-size:8px;width:100%;text-align:center;"><span class="title"></span> -- <span class="url"></span></div>`,
 				FooterTemplate:      `<div style="font-size:8px;width:100%;text-align:center;">(<span class="pageNumber"></span> / <span class="totalPages"></span>)</div>`,

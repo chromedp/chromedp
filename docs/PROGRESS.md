@@ -5,9 +5,9 @@ crashes can resume. Update it when a piece of work starts or ends. Work that
 is known and not done goes in [`BACKLOG.md`](BACKLOG.md), and a decision goes
 in [`decisions/`](decisions/README.md).
 
-## Changes since v0.17.1
+## Changes in v0.18.0
 
-These commits are on `main` and are not released. Each one has its own test.
+These commits are in the release v0.18.0. Each one has its own test.
 
 - Fixed: the data race on `Context.Target` between the cancellation watcher and `attachTarget` (issue 1638).
 - Fixed: the kernel killed Chrome when the OS thread that started it ended. Chrome now starts from a goroutine that stays on its thread (issue 1566).

@@ -129,11 +129,12 @@ func FullScreenshot(quality int) Action[[]byte] {
 		}
 
 		// capture screenshot
+		q := int64(quality)
 		r, err := cdp.Call(ctx, t, page.CaptureScreenshot, page.CaptureScreenshotParams{
 			CaptureBeyondViewport: new(true),
 			FromSurface:           new(true),
 			Format:                format,
-			Quality:               int64(quality),
+			Quality:               &q,
 		})
 		if err != nil {
 			return nil, err

@@ -1,9 +1,9 @@
 # Migrate to the new API
 
-This document lists the public API changes from `chromedp` v0.16.0 to v0.17.0.
-Version v0.17.0 uses `cdproto` v0.157.3, which is the first release of the typed
-API. The versions v0.157.0, v0.157.1 and v0.157.2 of `cdproto` have the old API. The
-document has seven parts, in the order of the changes: the move to `cdproto`
+This document lists the public API changes from `chromedp` v0.16.0 to v0.18.0.
+Version v0.18.0 uses `cdproto` v0.157.4. The release v0.157.3 is the first one of
+the typed API, and v0.157.4 makes some optional numbers pointers. The versions v0.157.0, v0.157.1 and v0.157.2 of `cdproto` have the old API. The
+document has eight parts, in the order of the changes: the move to `cdproto`
 v0.157.1, the move to the typed `cdproto`, the move to the generic action API,
 the move to typed selectors, the pipe transport, the options for a visible
 window, and the move of the websocket code to the module `remote`. Apply the parts in this order. A later part can replace a rule of an
@@ -213,7 +213,7 @@ These names are new, and no old code needs a change. Headless mode is still the 
 - `ErrNoDisplay` is the error on Linux when a visible window has no display.
 - `remote.WithKeepOpen` and the allocator option `KeepOpen` leave the browser open. `KeepOpen` also needs `remote.WebSocket`. `KeptOpen` returns its address and profile directory. `WaitClosed` waits until the browser exits.
 
-## Changes since v0.17.1
+## Changes in v0.18.0
 
 These changes need no change in old code, unless a bullet says so.
 
@@ -271,3 +271,28 @@ How to change old code:
 - A program that gave the flag `remote-debugging-port` or `remote-debugging-address` adds `remote.WebSocket`.
 - A program that used `chromedp.WithDialHTTPHeader` or `chromedp.WithDialTimeout` as a `BrowserOption` gives `remote.WithDialHTTPHeader` or `remote.WithDialTimeout` to `remote.NewAllocator`.
 - A program for Windows needs no change, because the pipe transport works on Windows.
+
+## Migrate to cdproto v0.157.4
+
+In `cdproto` v0.157.3, a number that is not set was left out of the request, and
+there was no way to send the value zero. In v0.157.4, 71 optional number fields
+in the parameters and types of commands are pointers, where zero is a different
+value from "not set". A nil pointer leaves the field out. A pointer to zero sends
+zero, the same as the optional boolean fields. Use `new(0.5)`, or the address of
+a variable, to set one.
+
+- The fields are, for example, `Depth` of `dom.RequestChildNodesParams`,
+  `dom.GetDocumentParams`, `dom.DescribeNodeParams` and
+  `accessibility.GetFullAXTreeParams`, the four margins of `page.PrintToPDFParams`,
+  `Quality` of `page.CaptureScreenshotParams`, the seven values of
+  `emulation.SetGeolocationOverrideParams`, and `ID`, `RadiusX`, `RadiusY` and
+  `Force` of `input.TouchPoint`. The decision
+  `docs/decisions/2026-10-04-an-optional-number-can-be-a-pointer.md` of the
+  `pdlgen` project lists all of them.
+- `FullScreenshot(quality)` now sends the quality that you give,
+  also when it is zero. A JPEG with quality 0 is the lowest quality. Before,
+  quality 0 was left out and Chrome used its default.
+- `network.CookiePartitionKey` decodes both the object that Chrome sends today and
+  the plain string that older versions of Chrome send.
+- `cdp.ErrInvalidContext` is removed from `cdproto`. `chromedp.ErrInvalidContext` is the
+  error of this package.

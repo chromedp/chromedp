@@ -16,7 +16,7 @@ driver.
 ## Installing
 
 Install the package with `go get`. The module needs Go 1.27 or newer. Version
-v0.17.0 uses the typed `cdproto` v0.157.3 and has the generic and iterator API.
+v0.18.0 uses the typed `cdproto` v0.157.4 and has the generic and iterator API.
 The earlier versions of `cdproto`, v0.157.0, v0.157.1 and v0.157.2, have the old API.
 
 ```sh
