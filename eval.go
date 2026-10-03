@@ -9,25 +9,24 @@ import (
 	"github.com/chromedp/cdproto/runtime"
 )
 
-// Evaluate is an action to evaluate the JavaScript expression, and decode the
-// result of the script into the type T.
+// Evaluate is an action that evaluates the JavaScript expression and decodes
+// the result of the script into the type T.
 //
-// When T is [Void], the script result is ignored.
+// When T is [Void], Evaluate ignores the script result.
 //
 // When T is []byte, the result is the raw JSON-encoded value of the script
 // result.
 //
 // When T is *runtime.RemoteObject, the result is the low-level protocol type,
-// and no attempt is made to convert the result. The original objects could be
-// maintained in memory until the page is navigated or closed.
-// `runtime.ReleaseObject` or `runtime.ReleaseObjectGroup` can be used to ask
-// the browser to release the original objects.
+// and Evaluate does not convert it. The original objects can stay in memory
+// until the page navigates or closes. Use `runtime.ReleaseObject` or
+// `runtime.ReleaseObjectGroup` to ask the browser to release them.
 //
-// For all other types, the result of the script is returned "by value" (i.e.,
-// JSON-encoded), and subsequently an attempt is made to decode it into a
-// value of type T. When the script result is "undefined" or "null", and T can
-// not be nil (only a chan, func, interface, map, pointer, or slice type can
-// be nil), the action returns [ErrJSUndefined] or [ErrJSNull] respectively.
+// For all other types, the script returns the result "by value" (that is,
+// JSON-encoded), and Evaluate then decodes it into a value of type T. When the
+// script result is "undefined" or "null" and T cannot be nil (only a chan,
+// func, interface, map, pointer, or slice type can be nil), the action returns
+// [ErrJSUndefined] or [ErrJSNull] respectively.
 //
 // For example:
 //
@@ -88,18 +87,17 @@ func parseRemoteObject[T any](v *runtime.RemoteObject) (T, error) {
 		switch reflect.TypeFor[T]().Kind() {
 		// Common kinds that can be nil.
 		case reflect.Pointer, reflect.Map, reflect.Slice:
-		// It's weird that T is one of the following kinds,
-		// but they can be nil too.
+		// These kinds are unusual for T, but they can be nil too.
 		case reflect.Chan, reflect.Func, reflect.Interface:
 		default:
-			// When the value of the type T can not be nil, return
+			// When the value of the type T cannot be nil, return
 			// [ErrJSUndefined] or [ErrJSNull] respectively.
 			if v.Type == "undefined" {
 				return res, ErrJSUndefined
 			}
 			return res, ErrJSNull
 		}
-		// Change the value to the json literal null to make json.Unmarshal happy.
+		// Change the value to the JSON literal null, so that json.Unmarshal accepts it.
 		value = []byte("null")
 	}
 
@@ -108,12 +106,12 @@ func parseRemoteObject[T any](v *runtime.RemoteObject) (T, error) {
 }
 
 // EvaluateAsDevTools is an action that evaluates a JavaScript expression as
-// Chrome DevTools would, evaluating the expression in the "console" context,
-// and making the Command Line API available to the script.
+// Chrome DevTools does. It evaluates the expression in the "console" context
+// and makes the Command Line API available to the script.
 //
-// See [Evaluate] for more information on how script expressions are evaluated.
+// See [Evaluate] for how the expressions are evaluated.
 //
-// Note: this should not be used with untrusted JavaScript.
+// Note: do not use this with untrusted JavaScript.
 func EvaluateAsDevTools[T any](expression string, opts ...EvaluateOption) Action[T] {
 	return Evaluate[T](expression, append(opts[:len(opts):len(opts)], EvalObjectGroup("console"), EvalWithCommandLineAPI)...)
 }
@@ -128,24 +126,24 @@ func EvalObjectGroup(objectGroup string) EvaluateOption {
 	}
 }
 
-// EvalWithCommandLineAPI is an evaluate option to make the DevTools Command
+// EvalWithCommandLineAPI is an evaluate option that makes the DevTools Command
 // Line API available to the evaluated script.
 //
-// See [Evaluate] for more information on how evaluate actions work.
+// See [Evaluate] for how evaluate actions work.
 //
-// Note: this should not be used with untrusted JavaScript.
+// Note: do not use this with untrusted JavaScript.
 func EvalWithCommandLineAPI(p *runtime.EvaluateParams) {
 	p.IncludeCommandLineAPI = new(true)
 }
 
-// EvalIgnoreExceptions is an evaluate option that will cause JavaScript
-// evaluation to ignore exceptions.
+// EvalIgnoreExceptions is an evaluate option that makes the evaluation ignore
+// exceptions.
 func EvalIgnoreExceptions(p *runtime.EvaluateParams) {
 	p.Silent = new(true)
 }
 
-// EvalAsValue is an evaluate option that will cause the evaluated JavaScript
-// expression to encode the result of the expression as a JSON-encoded value.
+// EvalAsValue is an evaluate option that makes the evaluation encode the
+// result of the expression as a JSON-encoded value.
 func EvalAsValue(p *runtime.EvaluateParams) {
 	p.ReturnByValue = new(true)
 }

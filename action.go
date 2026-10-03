@@ -30,12 +30,12 @@ type Void = struct{}
 type Action[T any] func(ctx context.Context, t *Target) (T, error)
 
 // Run runs the action against the target of the context, and returns its
-// value. The provided context must be a valid chromedp context, typically
-// created with [NewContext].
+// value. The context must be a chromedp context, typically made with
+// [NewContext].
 //
-// Note that the first time Run is called on a context, a browser will be
-// allocated via Allocator. Thus, it's generally a bad idea to use a context
-// timeout on the first Run call, as it will stop the entire browser.
+// The first time that you call Run on a context, Run allocates a browser with
+// the Allocator. Do not set a timeout on the context of that first call,
+// because the timeout stops the whole browser.
 //
 // For example:
 //
@@ -86,8 +86,8 @@ func Func(f func(ctx context.Context, t *Target) error) Action[Void] {
 	}
 }
 
-// OldAction is the interface of the actions that were written for the
-// previous version of chromedp. It was named Action.
+// OldAction is the interface of an action of the previous version of chromedp.
+// The previous version named it Action.
 type OldAction interface {
 	// Do runs the action. The context holds the chromedp context.
 	Do(context.Context) error

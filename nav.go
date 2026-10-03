@@ -10,11 +10,11 @@ import (
 	"github.com/chromedp/cdproto/page"
 )
 
-// Navigate is an action that navigates the current frame, and waits for the
+// Navigate is an action that navigates the current frame and waits for the
 // page to load.
 //
-// Note that this action does not collect HTTP response information. For that,
-// see [NavigateResponse] and [RunResponse].
+// This action does not collect HTTP response information. To get it, use
+// [NavigateResponse] or [RunResponse].
 func Navigate(urlstr string) Action[Void] {
 	return waitLoad(navigate(urlstr))
 }

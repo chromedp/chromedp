@@ -149,25 +149,25 @@ func (n *Node) attributeValueLocked(name string) string {
 	return ""
 }
 
-// PartialXPathByID returns the partial XPath for the node, stopping at the
-// first parent with an id attribute or at nearest parent document node.
+// PartialXPathByID returns the partial XPath for the node. It stops at the
+// first parent with an id attribute or at the nearest parent document node.
 func (n *Node) PartialXPathByID() string {
 	return n.xpath(true, true)
 }
 
-// PartialXPath returns the partial XPath for the node, stopping at the nearest
+// PartialXPath returns the partial XPath for the node. It stops at the nearest
 // parent document node.
 func (n *Node) PartialXPath() string {
 	return n.xpath(true, false)
 }
 
-// FullXPathByID returns the full XPath for the node, stopping at the top most
+// FullXPathByID returns the full XPath for the node. It stops at the top most
 // document root or at the closest parent node with an id attribute.
 func (n *Node) FullXPathByID() string {
 	return n.xpath(false, true)
 }
 
-// FullXPath returns the full XPath for the node, stopping only at the top most
+// FullXPath returns the full XPath for the node. It stops only at the top most
 // document root.
 func (n *Node) FullXPath() string {
 	return n.xpath(false, false)

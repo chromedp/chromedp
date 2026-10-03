@@ -8,31 +8,31 @@ import (
 	"github.com/chromedp/cdproto/page"
 )
 
-// Screenshot is an element query action that takes a screenshot of the first element
-// node matching the selector.
+// Screenshot is an element query action that takes a screenshot of the first
+// element node that matches the selector.
 //
-// It's supposed to act the same as the command "Capture node screenshot" in Chrome.
+// It acts like the command "Capture node screenshot" in Chrome.
 //
-// Behavior notes: the Protocol Monitor shows that the command sends the following
-// CDP commands too:
+// Behavior notes: the Protocol Monitor shows that the command also sends these
+// protocol commands:
 //   - Emulation.clearDeviceMetricsOverride
 //   - Network.setUserAgentOverride with {"userAgent": ""}
 //   - Overlay.setShowViewportSizeOnResize with {"show": false}
 //
-// These CDP commands are not sent by chromedp. If it does not work as expected,
-// you can try to send those commands yourself.
+// chromedp does not send these protocol commands. If the result is not what
+// you expect, send them yourself.
 //
-// See [CaptureScreenshot] for capturing a screenshot of the browser viewport.
+// To capture the browser viewport, see [CaptureScreenshot].
 //
-// See [screenshot] for an example of taking a screenshot of the entire page.
+// For an example that takes a screenshot of the entire page, see [screenshot].
 //
 // [screenshot]: https://github.com/chromedp/examples/tree/master/screenshot
 func Screenshot(sel any, opts ...QueryOption) Action[[]byte] {
 	return ScreenshotScale(sel, 1, opts...)
 }
 
-// ScreenshotScale is like [Screenshot] but accepts a scale parameter that
-// specifies the page scale factor.
+// ScreenshotScale is like [Screenshot] but takes a scale parameter, which is
+// the page scale factor.
 func ScreenshotScale(sel any, scale float64, opts ...QueryOption) Action[[]byte] {
 	return QueryAfter(sel, func(ctx context.Context, t *Target, nodes []*Node) ([]byte, error) {
 		if _, err := first(sel, nodes); err != nil {
@@ -42,9 +42,9 @@ func ScreenshotScale(sel any, scale float64, opts ...QueryOption) Action[[]byte]
 	}, withOpts(opts, NodeVisible)...)
 }
 
-// ScreenshotNodes is an action that captures/takes a screenshot of the
-// specified nodes, by calculating the extents of the top most left node and
-// bottom most right node.
+// ScreenshotNodes is an action that takes a screenshot of the specified nodes.
+// It calculates the extents from the top most left node and the bottom most
+// right node.
 func ScreenshotNodes(nodes []*Node, scale float64) Action[[]byte] {
 	if len(nodes) == 0 {
 		panic("nodes must be non-empty")
@@ -69,7 +69,7 @@ func ScreenshotNodes(nodes []*Node, scale float64) Action[[]byte] {
 		}
 
 		// The "Capture node screenshot" command does not handle fractional dimensions properly.
-		// Let's align with puppeteer:
+		// Do the same as puppeteer:
 		// https://github.com/puppeteer/puppeteer/blob/bba3f41286908ced8f03faf98242d4c3359a5efc/src/common/Page.ts#L2002-L2011
 		x, y := math.Round(clip.X), math.Round(clip.Y)
 		clip.Width, clip.Height = math.Round(clip.Width+clip.X-x), math.Round(clip.Height+clip.Y-y)
@@ -92,15 +92,15 @@ func ScreenshotNodes(nodes []*Node, scale float64) Action[[]byte] {
 	}
 }
 
-// CaptureScreenshot is an action that captures/takes a screenshot of the
-// current browser viewport.
+// CaptureScreenshot is an action that takes a screenshot of the current browser
+// viewport.
 //
-// It's supposed to act the same as the command "Capture screenshot" in
-// Chrome. See the behavior notes of Screenshot for more information.
+// It acts like the command "Capture screenshot" in Chrome. See the behavior
+// notes of Screenshot for more information.
 //
-// See the [Screenshot] action to take a screenshot of a specific element.
+// To take a screenshot of one element, use the [Screenshot] action.
 //
-// See [screenshot] for an example of taking a screenshot of the entire page.
+// For an example that takes a screenshot of the entire page, see [screenshot].
 //
 // [screenshot]: https://github.com/chromedp/examples/tree/master/screenshot
 func CaptureScreenshot() Action[[]byte] {
@@ -113,14 +113,14 @@ func CaptureScreenshot() Action[[]byte] {
 	}
 }
 
-// FullScreenshot takes a full screenshot with the specified image quality of
-// the entire browser viewport.
+// FullScreenshot takes a full screenshot of the entire browser viewport, with
+// the given image quality.
 //
-// It's supposed to act the same as the command "Capture full size screenshot"
-// in Chrome. See the behavior notes of Screenshot for more information.
+// It acts like the command "Capture full size screenshot" in Chrome. See the
+// behavior notes of Screenshot for more information.
 //
-// The valid range of the compression quality is [0..100]. When this value is
-// 100, the image format is png; otherwise, the image format is jpeg.
+// The valid range of the compression quality is [0..100]. When the quality is
+// 100, the image format is png. Otherwise the image format is jpeg.
 func FullScreenshot(quality int) Action[[]byte] {
 	return func(ctx context.Context, t *Target) ([]byte, error) {
 		format := page.CaptureScreenshotFormatPng

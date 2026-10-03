@@ -44,8 +44,8 @@ func MouseEvent(typ input.DispatchMouseEventType, x, y float64, opts ...MouseOpt
 	})
 }
 
-// MouseClickXY is an action that sends a left mouse button click (i.e.,
-// mousePressed and mouseReleased event) to the X, Y location.
+// MouseClickXY is an action that sends a left mouse button click (that is, a
+// mousePressed and a mouseReleased event) to the X, Y location.
 func MouseClickXY(x, y float64, opts ...MouseOption) Action[Void] {
 	return Func(func(ctx context.Context, t *Target) error {
 		p := &input.DispatchMouseEventParams{
@@ -71,11 +71,11 @@ func MouseClickXY(x, y float64, opts ...MouseOption) Action[Void] {
 	})
 }
 
-// MouseClickNode is an action that dispatches a mouse left button click event
-// at the center of a specified node.
+// MouseClickNode is an action that dispatches a left mouse button click event
+// at the center of a node.
 //
-// Note that the window will be scrolled if the node is not within the window's
-// viewport.
+// Note: the action scrolls the window if the node is not within the viewport
+// of the window.
 func MouseClickNode(n *Node, opts ...MouseOption) Action[Void] {
 	return Func(func(ctx context.Context, t *Target) error {
 		if _, err := cdp.Call(ctx, t, dom.ScrollIntoViewIfNeeded, dom.ScrollIntoViewIfNeededParams{NodeID: n.NodeID}); err != nil {
@@ -150,8 +150,8 @@ func ButtonNone(p *input.DispatchMouseEventParams) {
 	p.Button = input.MouseButtonNone
 }
 
-// ButtonModifiers is a mouse action option to add additional input modifiers
-// for a button click.
+// ButtonModifiers is a mouse action option to add input modifiers for a button
+// click.
 func ButtonModifiers(modifiers ...Modifier) MouseOption {
 	return func(p *input.DispatchMouseEventParams) {
 		for _, m := range modifiers {
@@ -168,15 +168,15 @@ func ClickCount(n int) MouseOption {
 }
 
 // KeyEvent is a key action that synthesizes a keyDown, char, and keyUp event
-// for each rune contained in keys along with any supplied key options.
+// for each rune in keys, with any key options.
 //
-// Only well-known, "printable" characters will have char events synthesized.
+// Only well-known, "printable" characters get char events.
 //
 // See the [SendKeys] action to synthesize key events for a specific element
 // node.
 //
-// See the [kb] package for implementation details and list of
-// well-known keys.
+// See the [kb] package for implementation details and a list of well-known
+// keys.
 func KeyEvent(keys string, opts ...KeyOption) Action[Void] {
 	return Func(func(ctx context.Context, t *Target) error {
 		for _, r := range keys {
@@ -209,8 +209,7 @@ func KeyEventNode(n *Node, keys string, opts ...KeyOption) Action[Void] {
 // KeyOption is a key action option.
 type KeyOption = func(*input.DispatchKeyEventParams)
 
-// KeyModifiers is a key action option to add additional modifiers on the key
-// press.
+// KeyModifiers is a key action option to add modifiers to the key press.
 func KeyModifiers(modifiers ...Modifier) KeyOption {
 	return func(p *input.DispatchKeyEventParams) {
 		for _, m := range modifiers {

@@ -8,15 +8,15 @@ import (
 	"github.com/chromedp/chromedp/device"
 )
 
-// EmulateViewport is an action to change the browser viewport.
+// EmulateViewport is an action that changes the browser viewport.
 //
-// Wraps calls to emulation.SetDeviceMetricsOverride and emulation.SetTouchEmulationEnabled.
+// It wraps calls to emulation.SetDeviceMetricsOverride and
+// emulation.SetTouchEmulationEnabled.
 //
-// Note: this has the effect of setting/forcing the screen orientation to
-// landscape, and will disable mobile and touch emulation by default. If this
-// is not the desired behavior, use the emulate viewport options
-// EmulateOrientation (or EmulateLandscape/EmulatePortrait), EmulateMobile, and
-// EmulateTouch, respectively.
+// Note: by default, this action sets the screen orientation to landscape and
+// disables mobile and touch emulation. To change that, use the emulate
+// viewport options EmulateOrientation (or EmulateLandscape or
+// EmulatePortrait), EmulateMobile, and EmulateTouch.
 func EmulateViewport(width, height int64, opts ...EmulateViewportOption) Action[Void] {
 	p1 := &emulation.SetDeviceMetricsOverrideParams{Width: width, Height: height, DeviceScaleFactor: 1.0}
 	p2 := &emulation.SetTouchEmulationEnabledParams{}
@@ -77,17 +77,17 @@ func EmulateTouch(p1 *emulation.SetDeviceMetricsOverrideParams, p2 *emulation.Se
 	p2.Enabled = true
 }
 
-// ResetViewport is an action to reset the browser viewport to the default
-// values the browser was started with.
+// ResetViewport is an action that resets the browser viewport to the values
+// that the browser started with.
 //
-// Note: does not modify / change the browser's emulated User-Agent, if any.
+// Note: it does not change the emulated User-Agent of the browser, if any.
 func ResetViewport() Action[Void] {
 	return EmulateViewport(0, 0, EmulatePortrait)
 }
 
 // Device is the shared interface for known device types.
 //
-// See [device] for a set of off-the-shelf devices and modes.
+// See [device] for a set of ready-made devices and modes.
 type Device interface {
 	// Device returns the device info.
 	Device() device.Info
@@ -95,7 +95,7 @@ type Device interface {
 
 // Emulate is an action to emulate a specific device.
 //
-// See [device] for a set of off-the-shelf devices and modes.
+// See [device] for a set of ready-made devices and modes.
 func Emulate(device Device) Action[Void] {
 	d := device.Device()
 
@@ -126,11 +126,11 @@ func Emulate(device Device) Action[Void] {
 	})
 }
 
-// EmulateReset is an action to reset the device emulation.
+// EmulateReset is an action that resets the device emulation.
 //
-// Resets the browser's viewport, screen orientation, user-agent, and
-// mobile/touch emulation settings to the original values the browser was
-// started with.
+// It resets the viewport, the screen orientation, the user agent, and the
+// mobile and touch emulation of the browser to the original values from the
+// start of the browser.
 func EmulateReset() Action[Void] {
 	return Emulate(device.Reset)
 }

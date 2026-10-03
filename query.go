@@ -17,10 +17,9 @@ import (
 	"github.com/chromedp/cdproto/runtime"
 )
 
-// Selector holds information pertaining to an element selection query.
+// Selector holds the data of an element selection query.
 //
-// See [Query] for information on building an element selector and relevant
-// options.
+// See [Query] for how to build an element selector and its options.
 type Selector struct {
 	sel           any
 	fromNode      *Node
@@ -31,109 +30,103 @@ type Selector struct {
 	after         []func(context.Context, *Target, []*Node) error
 }
 
-// Query is an action that queries the browser for specific element node(s)
-// matching the criteria, and waits until they match the node conditions. It
-// returns no value. See [Nodes] to get the nodes.
+// Query is an action that queries the browser for element nodes that match the
+// criteria, and waits until they meet the node conditions. It returns no
+// value. To get the nodes, see [Nodes].
 //
-// Query actions that target a browser DOM element node (or nodes) make use of
-// the same selector, in conjunction with the [After] option or with
-// [QueryAfter] to retrieve data or to modify the element(s) selected by the
-// query.
+// Query actions that target element nodes share one selector. Use the [After]
+// option or [QueryAfter] to read data from the selected elements or to change
+// them.
 //
 // For example:
 //
-//	chromedp.Do(ctx, chromedp.SendKeys(`thing`, chromedp.ByID))
+//	chromedp.Do(ctx, chromedp.SendKeys("thing", "hello", chromedp.ByID))
 //
-// The above will perform a [SendKeys] action on the first element matching a
-// browser CSS query for "#thing".
+// This runs a [SendKeys] action on the first element that matches the CSS
+// query "#thing".
 //
-// Element selection queries work in conjunction with specific actions and form
-// the primary way of automating steps in the browser. They are typically
-// written in the following form:
+// Element selection queries work with specific actions. They are the main way
+// to automate steps in the browser. They have this form:
 //
 //	Action(selector[, parameter1, ...parameterN][, queryOptions...])
 //
 // Where:
 //
-//   - Action - the action to perform
-//   - selector - element query selection (typically a string), that any matching node(s) will have the action applied
-//   - parameter[1-N] - parameter(s) needed for the individual action (if any)
-//   - queryOptions - changes how queries are executed, or how nodes are waited for
+//   - Action - the action to run
+//   - selector - the element query (typically a string). The action applies to every node that matches it.
+//   - parameter[1-N] - the parameters that the action needs (if any)
+//   - queryOptions - change how the query runs, or how it waits for nodes
 //
-// An action that reads a value returns it, for example [Text] returns the
+// An action that reads a value returns it. For example, [Text] returns the
 // text as a string.
 //
 // # Query Options
 //
-// By* options specify the type of element query used By the browser to perform
-// the selection query. When not specified, element queries will use [BySearch]
-// (a wrapper for DOM.performSearch).
+// The By* options choose the type of element query that the browser runs.
+// Without a By* option, the query uses [BySearch] (a wrapper for
+// DOM.performSearch).
 //
-// Node* options specify node conditions that cause the query to wait until the
-// specified condition is true. When not specified, queries will use the
-// [NodeReady] wait condition.
+// The Node* options set node conditions. The query waits until the condition
+// is true. Without a Node* option, the query uses the [NodeReady] condition.
 //
-// The [AtLeast] option alters the minimum number of nodes that must be returned
-// by the element query. If not specified, the default value is 1.
+// The [AtLeast] option sets the minimum number of nodes that the query must
+// return. The default is 1.
 //
-// The [After] option is used to specify a func that will be executed when
-// element query has returned one or more elements, and after the node condition is
-// true.
+// The [After] option sets a func that runs after the query returns one or more
+// elements and the node condition is true.
 //
 // # By Options
 //
-// The [BySearch] (default) option enables querying for elements by plain text,
-// CSS selector or XPath query, wrapping DOM.performSearch.
+// The [BySearch] option (the default) queries elements by plain text, CSS
+// selector, or XPath query. It wraps DOM.performSearch.
 //
-// The [ByID] option enables querying for a single element with the matching CSS
-// ID, wrapping DOM.querySelector. ByID is similar to calling
-// document.querySelector('#' + ID) from within the browser.
+// The [ByID] option queries a single element by its CSS ID. It wraps
+// DOM.querySelector. ByID is like document.querySelector('#' + ID) in the
+// browser.
 //
-// The [ByQuery] option enables querying for a single element using a CSS
-// selector, wrapping DOM.querySelector. ByQuery is similar to calling
-// document.querySelector() from within the browser.
+// The [ByQuery] option queries a single element with a CSS selector. It wraps
+// DOM.querySelector. ByQuery is like document.querySelector() in the browser.
 //
-// The [ByQueryAll] option enables querying for elements using a CSS selector,
-// wrapping DOM.querySelectorAll. ByQueryAll is similar to calling
-// document.querySelectorAll() from within the browser.
+// The [ByQueryAll] option queries elements with a CSS selector. It wraps
+// DOM.querySelectorAll. ByQueryAll is like document.querySelectorAll() in the
+// browser.
 //
-// The [ByJSPath] option enables querying for a single element using its "JS
-// Path" value, wrapping Runtime.evaluate. ByJSPath is similar to executing a
-// JavaScript snippet that returns an element from within the browser. ByJSPath
-// should be used only with trusted element queries, as it is passed directly
-// to Runtime.evaluate, and no attempt is made to sanitize the query. Useful
-// for querying DOM elements that cannot be retrieved using other By* funcs,
-// such as ShadowDOM elements.
+// The [ByJSPath] option queries a single element by its "JS Path" value. It
+// wraps Runtime.evaluate. ByJSPath is like a JavaScript snippet that returns
+// an element in the browser. Use it only with trusted element queries.
+// chromedp passes the query directly to Runtime.evaluate and does not
+// sanitize it. The option is useful for DOM elements that the other By* funcs
+// cannot retrieve, such as ShadowDOM elements.
 //
 // # Node Options
 //
-// The [NodeReady] (default) option causes the query to wait until all element
-// nodes matching the selector have been retrieved from the browser.
+// The [NodeReady] option (the default) makes the query wait until the browser
+// has returned all element nodes that match the selector.
 //
-// The [NodeVisible] option causes the query to wait until all element nodes
-// matching the selector have been retrieved from the browser, and are visible.
+// The [NodeVisible] option makes the query wait until the browser has returned
+// all element nodes that match the selector, and they are visible.
 //
-// The [NodeNotVisible] option causes the query to wait until all element nodes
-// matching the selector have been retrieved from the browser, and are not
+// The [NodeNotVisible] option makes the query wait until the browser has
+// returned all element nodes that match the selector, and they are not
 // visible.
 //
-// The [NodeEnabled] option causes the query to wait until all element nodes
-// matching the selector have been retrieved from the browser, and are enabled
-// (i.e., do not have a 'disabled' attribute).
+// The [NodeEnabled] option makes the query wait until the browser has returned
+// all element nodes that match the selector, and they are enabled (that is,
+// they have no 'disabled' attribute).
 //
-// The [NodeSelected] option causes the query to wait until all element nodes
-// matching the selector have been retrieved from the browser, and are
-// selected (i.e., has a 'selected' attribute).
+// The [NodeSelected] option makes the query wait until the browser has
+// returned all element nodes that match the selector, and they are selected
+// (that is, they have a 'selected' attribute).
 //
-// The [NodeNotPresent] option causes the query to wait until there are no
-// element nodes matching the selector.
+// The [NodeNotPresent] option makes the query wait until no element node
+// matches the selector.
 func Query(sel any, opts ...QueryOption) Action[Void] {
 	return queryDo(sel, nil, opts...)
 }
 
 // QueryAfter is an element query action that queries the browser for selector
-// sel. Waits until the visibility conditions of the query have been met, after
-// which executes f and returns its value.
+// sel. It waits until the node conditions of the query are met, then runs f
+// and returns its value.
 func QueryAfter[T any](sel any, f func(ctx context.Context, t *Target, nodes []*Node) (T, error), opts ...QueryOption) Action[T] {
 	s := newSelector(sel, opts)
 	return func(ctx context.Context, t *Target) (T, error) {
@@ -196,8 +189,8 @@ func newSelector(sel any, opts []QueryOption) *Selector {
 	return s
 }
 
-// run executes the selector, only finishing if the selector's by, wait, after
-// and last funcs succeed, or if the context is cancelled. The last func may be
+// run executes the selector. It finishes only when the by, wait, after, and
+// last funcs succeed, or when the context is canceled. The last func can be
 // nil.
 func (s *Selector) run(ctx context.Context, t *Target, last func(context.Context, []*Node) error) error {
 	return retryWithSleep(ctx, s.retryInterval, func(ctx context.Context) (bool, error) {
@@ -234,12 +227,12 @@ func (s *Selector) run(ctx context.Context, t *Target, last func(context.Context
 		ids, err := s.by(ctx, t, fromNode)
 		if err != nil {
 			var e *cdproto.Error
-			// When the selector is invalid (for example, "#a:b" or "#3"), it will
-			// always fail with "DOM Error while querying". It does not make sense
-			// to retry in this case.
-			// Maybe "DOM Error while querying" is also used for other errors other
-			// than invalid selector. But the response does not contain anything
-			// else that can be used to distinguish them. So we have to go with it.
+			// When the selector is invalid (for example, "#a:b" or "#3"), the
+			// browser always fails with "DOM Error while querying". It makes no
+			// sense to retry in this case.
+			// "DOM Error while querying" can also mean other errors. But the
+			// response has nothing else that tells them apart. So we have to go
+			// with it.
 			if errors.As(err, &e) && e.Message == "DOM Error while querying" {
 				return true, err
 			}
@@ -249,7 +242,7 @@ func (s *Selector) run(ctx context.Context, t *Target, last func(context.Context
 			return false, nil
 		}
 		nodes, err := s.wait(ctx, t, frame, execCtx, ids...)
-		// if nodes==nil, we're not yet ready
+		// if nodes==nil, we are not yet ready
 		if nodes == nil || err != nil {
 			return false, nil
 		}
@@ -320,17 +313,18 @@ func (s *Selector) waitReady(check func(context.Context, *Target, runtime.Execut
 // QueryOption is an element query action option.
 type QueryOption = func(*Selector)
 
-// FromNode is an element query action option where a query will be run. That
-// is, the query will only look at the node's element sub-tree. By default, or
-// when passed nil, the document's root element will be used.
+// FromNode is an element query action option that sets the node where the
+// query runs. That is, the query looks only at the element sub-tree of the
+// node. By default, or when you pass nil, the query uses the root element of
+// the document.
 //
-// Note that, at present, BySearch and ByJSPath do not support FromNode; this
-// option is mainly useful for ByQuery selectors.
+// Note: BySearch and ByJSPath do not support FromNode now. The option is
+// mainly useful for ByQuery selectors.
 func FromNode(node *Node) QueryOption {
 	return func(s *Selector) { s.fromNode = node }
 }
 
-// ByFunc is an element query action option to set the func used to select elements.
+// ByFunc is an element query action option that sets the func that selects elements.
 func ByFunc(f func(context.Context, *Target, *Node) ([]cdp.NodeID, error)) QueryOption {
 	return func(s *Selector) {
 		s.by = f
@@ -404,14 +398,14 @@ func BySearch(s *Selector) {
 	})(s)
 }
 
-// ByJSPath is an element query option to select elements by the "JS Path"
-// value (as shown in the Chrome DevTools UI).
+// ByJSPath is an element query option that selects elements by the "JS Path"
+// value (as the Chrome DevTools UI shows it).
 //
-// Allows for the direct querying of DOM elements that otherwise cannot be
-// retrieved using the other By* funcs, such as ShadowDOM elements.
+// It queries DOM elements that the other By* funcs cannot retrieve, such as
+// ShadowDOM elements.
 //
-// Note: Do not use with an untrusted selector value, as any defined selector
-// will be passed to runtime.Evaluate.
+// Note: do not use it with an untrusted selector value, because chromedp
+// passes any selector to runtime.Evaluate.
 func ByJSPath(s *Selector) {
 	ByFunc(func(ctx context.Context, t *Target, n *Node) ([]cdp.NodeID, error) {
 		// set up eval command
@@ -443,11 +437,11 @@ func ByJSPath(s *Selector) {
 	})(s)
 }
 
-// ByNodeID is an element query option to select elements by their node IDs.
+// ByNodeID is an element query option that selects elements by their node IDs.
 //
-// Uses DOM.requestChildNodes to retrieve elements with specific node IDs.
+// It uses DOM.requestChildNodes to retrieve elements with the given node IDs.
 //
-// Note: must be used with []cdp.NodeID.
+// Note: use it with []cdp.NodeID.
 func ByNodeID(s *Selector) {
 	ids, ok := s.sel.([]cdp.NodeID)
 	if !ok {
@@ -473,8 +467,8 @@ func WaitFunc(wait func(context.Context, *Target, *Frame, runtime.ExecutionConte
 	}
 }
 
-// NodeReady is an element query option to wait until all queried element nodes
-// have been sent by the browser.
+// NodeReady is an element query option that waits until the browser has sent
+// all queried element nodes.
 func NodeReady(s *Selector) {
 	WaitFunc(s.waitReady(nil))(s)
 }
@@ -498,15 +492,15 @@ func callFunctionOnNode[T any](ctx context.Context, t *Target, node *Node, funct
 	}
 
 	// Try to release the remote object.
-	// It will fail if the page is navigated or closed,
-	// and it's okay to ignore the error in this case.
+	// It fails if the page navigated or closed,
+	// and we can ignore the error in this case.
 	_, _ = cdp.Call(ctx, t, runtime.ReleaseObject, runtime.ReleaseObjectParams{ObjectID: r.Object.ObjectID})
 
 	return res, nil
 }
 
-// NodeVisible is an element query option to wait until all queried element
-// nodes have been sent by the browser and are visible.
+// NodeVisible is an element query option that waits until the browser has sent
+// all queried element nodes and they are visible.
 func NodeVisible(s *Selector) {
 	WaitFunc(s.waitReady(func(ctx context.Context, t *Target, execCtx runtime.ExecutionContextID, n *Node) error {
 		// check box model
@@ -531,8 +525,8 @@ func NodeVisible(s *Selector) {
 	}))(s)
 }
 
-// NodeNotVisible is an element query option to wait until all queried element
-// nodes have been sent by the browser and are not visible.
+// NodeNotVisible is an element query option that waits until the browser has
+// sent all queried element nodes and they are not visible.
 func NodeNotVisible(s *Selector) {
 	WaitFunc(s.waitReady(func(ctx context.Context, t *Target, execCtx runtime.ExecutionContextID, n *Node) error {
 		// check box model
@@ -557,8 +551,8 @@ func NodeNotVisible(s *Selector) {
 	}))(s)
 }
 
-// NodeEnabled is an element query option to wait until all queried element
-// nodes have been sent by the browser and are enabled (i.e., do not have a
+// NodeEnabled is an element query option that waits until the browser has sent
+// all queried element nodes and they are enabled (that is, they have no
 // 'disabled' attribute).
 func NodeEnabled(s *Selector) {
 	WaitFunc(s.waitReady(func(ctx context.Context, t *Target, execCtx runtime.ExecutionContextID, n *Node) error {
@@ -575,9 +569,9 @@ func NodeEnabled(s *Selector) {
 	}))(s)
 }
 
-// NodeSelected is an element query option to wait until all queried element
-// nodes have been sent by the browser and are selected (i.e., has 'selected'
-// attribute).
+// NodeSelected is an element query option that waits until the browser has
+// sent all queried element nodes and they are selected (that is, they have a
+// 'selected' attribute).
 func NodeSelected(s *Selector) {
 	WaitFunc(s.waitReady(func(ctx context.Context, t *Target, execCtx runtime.ExecutionContextID, n *Node) error {
 		n.RLock()
@@ -593,10 +587,10 @@ func NodeSelected(s *Selector) {
 	}))(s)
 }
 
-// NodeNotPresent is an element query option to wait until no elements are
-// present that match the query.
+// NodeNotPresent is an element query option that waits until no element
+// matches the query.
 //
-// Note: forces the expected number of element nodes to be 0.
+// Note: it sets the expected number of element nodes to 0.
 func NodeNotPresent(s *Selector) {
 	s.exp = 0
 	WaitFunc(func(ctx context.Context, t *Target, cur *Frame, execCtx runtime.ExecutionContextID, ids ...cdp.NodeID) ([]*Node, error) {
@@ -607,41 +601,39 @@ func NodeNotPresent(s *Selector) {
 	})(s)
 }
 
-// AtLeast is an element query option to set a minimum number of elements that
-// must be returned by the query.
+// AtLeast is an element query option that sets the minimum number of elements
+// that the query must return.
 //
-// By default, a query will have a value of 1.
+// By default, a query needs 1.
 func AtLeast(n int) QueryOption {
 	return func(s *Selector) {
 		s.exp = n
 	}
 }
 
-// RetryInterval is an element query action option to set the retry interval to specify
-// how often it should retry when it failed to select the target element(s).
+// RetryInterval is an element query action option that sets how often the
+// query retries when it fails to select the target elements.
 //
-// The default value is 5ms.
+// The default is 5ms.
 func RetryInterval(interval time.Duration) QueryOption {
 	return func(s *Selector) {
 		s.retryInterval = interval
 	}
 }
 
-// After is an element query option that sets a func to execute after the
-// matched nodes have been returned by the browser, and after the node
-// condition is true.
+// After is an element query option that sets a func to run after the browser
+// has returned the matched nodes and the node condition is true.
 func After(f func(ctx context.Context, t *Target, nodes []*Node) error) QueryOption {
 	return func(s *Selector) {
 		s.after = append(s.after, f)
 	}
 }
 
-// Populate is an element query option that causes the queried nodes to be
-// retrieved for later use. Use a depth of -1 to retrieve all child nodes. When
-// pierce is true, will pierce child containers (e.g. iframes and the like)
+// Populate is an element query option that retrieves the queried nodes for
+// later use. Use a depth of -1 to retrieve all child nodes. When pierce is
+// true, it also pierces child containers (for example iframes).
 //
-// NOTE: this could be extremely resource intensive. Avoid doing this unless
-// necessary.
+// NOTE: this can use a lot of resources. Use it only when necessary.
 func Populate(depth int64, pierce bool, opts ...PopulateOption) QueryOption {
 	return After(func(ctx context.Context, t *Target, nodes []*Node) error {
 		var d time.Duration
@@ -668,16 +660,16 @@ func Populate(depth int64, pierce bool, opts ...PopulateOption) QueryOption {
 // PopulateOption is an element populate action option.
 type PopulateOption = func(*time.Duration)
 
-// PopulateWait is populate option to set a wait interval after requesting
-// child nodes.
+// PopulateWait is a populate option that sets a wait interval after the
+// request for child nodes.
 func PopulateWait(wait time.Duration) PopulateOption {
 	return func(d *time.Duration) {
 		*d = wait
 	}
 }
 
-// WaitReady is an element query action that waits until the element matching
-// the selector is ready (i.e., has been "loaded").
+// WaitReady is an element query action that waits until the element that
+// matches the selector is ready (that is, "loaded").
 func WaitReady(sel any, opts ...QueryOption) Action[Void] {
 	return Query(sel, opts...)
 }
@@ -694,20 +686,20 @@ func WaitNotVisible(sel any, opts ...QueryOption) Action[Void] {
 	return Query(sel, withOpts(opts, NodeNotVisible)...)
 }
 
-// WaitEnabled is an element query action that waits until the element matching
-// the selector is enabled (i.e., does not have attribute 'disabled').
+// WaitEnabled is an element query action that waits until the element that
+// matches the selector is enabled (that is, it has no attribute 'disabled').
 func WaitEnabled(sel any, opts ...QueryOption) Action[Void] {
 	return Query(sel, withOpts(opts, NodeEnabled)...)
 }
 
-// WaitSelected is an element query action that waits until the element
-// matching the selector is selected (i.e., has attribute 'selected').
+// WaitSelected is an element query action that waits until the element that
+// matches the selector is selected (that is, it has the attribute 'selected').
 func WaitSelected(sel any, opts ...QueryOption) Action[Void] {
 	return Query(sel, withOpts(opts, NodeSelected)...)
 }
 
-// WaitNotPresent is an element query action that waits until no elements are
-// present matching the selector.
+// WaitNotPresent is an element query action that waits until no element
+// that matches the selector is present.
 func WaitNotPresent(sel any, opts ...QueryOption) Action[Void] {
 	return Query(sel, withOpts(opts, NodeNotPresent)...)
 }
@@ -870,8 +862,8 @@ func Clear(sel any, opts ...QueryOption) Action[Void] {
 // Value is an element query action that retrieves the JavaScript value field of the
 // first element node matching the selector.
 //
-// Useful for retrieving an element's JavaScript value, namely form, input,
-// textarea, select, or any other element with a '.value' field.
+// Use it to read the JavaScript value of a form, input, textarea, select, or
+// other element with a '.value' field.
 func Value(sel any, opts ...QueryOption) Action[string] {
 	return JavascriptAttribute[string](sel, "value", opts...)
 }
@@ -879,8 +871,8 @@ func Value(sel any, opts ...QueryOption) Action[string] {
 // SetValue is an element query action that sets the JavaScript value of the first
 // element node matching the selector.
 //
-// Useful for setting an element's JavaScript value, namely form, input,
-// textarea, select, or other element with a '.value' field.
+// Use it to set the JavaScript value of a form, input, textarea, select, or
+// other element with a '.value' field.
 func SetValue(sel any, value string, opts ...QueryOption) Action[Void] {
 	return SetJavascriptAttribute(sel, "value", value, opts...)
 }
@@ -912,8 +904,7 @@ func Attributes(sel any, opts ...QueryOption) Action[map[string]string] {
 
 // AttributesAll is an element query action that retrieves the element attributes for
 // all element nodes matching the selector.
-//
-// Note: this should be used with the ByQueryAll query option.
+// Note: use it with the ByQueryAll query option.
 func AttributesAll(sel any, opts ...QueryOption) Action[[]map[string]string] {
 	return QueryAfter(sel, func(ctx context.Context, t *Target, nodes []*Node) ([]map[string]string, error) {
 		if _, err := first(sel, nodes); err != nil {
@@ -1092,14 +1083,14 @@ func DoubleClick(sel any, opts ...QueryOption) Action[Void] {
 	}, withOpts(opts, NodeVisible)...)
 }
 
-// SendKeys is an element query action that synthesizes the key up, char, and down
-// events as needed for the runes in v, sending them to the first element node
-// matching the selector.
+// SendKeys is an element query action that synthesizes the key up, char, and
+// down events that the runes in v need, and sends them to the first element
+// node that matches the selector.
 //
-// See the [keys] for a complete example on how to use SendKeys.
+// See [keys] for a complete example of how to use SendKeys.
 //
-// Note: when the element query matches an input[type="file"] node, then
-// dom.SetFileInputFiles is used to set the upload path of the input node to v.
+// Note: when the element query matches an input[type="file"] node, SendKeys
+// uses dom.SetFileInputFiles to set the upload path of the input node to v.
 //
 // [keys]: https://github.com/chromedp/examples/tree/master/keys
 func SendKeys(sel any, v string, opts ...QueryOption) Action[Void] {
@@ -1130,7 +1121,7 @@ func SendKeys(sel any, v string, opts ...QueryOption) Action[Void] {
 	}, withOpts(opts, NodeVisible)...)
 }
 
-// SetUploadFiles is an element query action that sets the files to upload (i.e., for a
+// SetUploadFiles is an element query action that sets the files to upload (that is, for an
 // input[type="file"] node) for the first element node matching the selector.
 func SetUploadFiles(sel any, files []string, opts ...QueryOption) Action[Void] {
 	return queryDo(sel, func(ctx context.Context, t *Target, nodes []*Node) error {
@@ -1261,8 +1252,7 @@ func DumpTo(sel any, w io.Writer, prefix, indent string, nodeIDs bool, depth int
 // element node matching the selector and its children, up to the specified
 // depth.
 //
-// See [DumpTo] for more configurable options, which includes the ability to
-// set the sleep wait timeout.
+// See [DumpTo] for more options, which include the sleep wait timeout.
 func Dump(sel any, w io.Writer, opts ...QueryOption) Action[Void] {
 	return DumpTo(sel, w, "", "  ", false, -1, true, 80*time.Millisecond, opts...)
 }

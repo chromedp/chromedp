@@ -45,7 +45,7 @@ type Target struct {
 	// logging funcs
 	logf, errf func(string, ...any)
 
-	// Indicates if the target is a worker target.
+	// isWorker is true when the target is a worker target.
 	isWorker bool
 }
 
@@ -57,8 +57,8 @@ func (t *Target) enclosingFrame(node *Node) cdp.FrameID {
 	defer top.RUnlock()
 	for {
 		if node == nil {
-			// Avoid crashing. This can happen if we're using an old
-			// node that has been replaced, for example.
+			// Avoid crashing. This can happen if we are using an old
+			// node that the browser replaced, for example.
 			return ""
 		}
 		if node.FrameID != "" {
@@ -69,16 +69,16 @@ func (t *Target) enclosingFrame(node *Node) cdp.FrameID {
 	return node.FrameID
 }
 
-// ensureFrame ensures the top frame of this target is loaded and returns the top frame,
-// the root node and the ExecutionContextID of this top frame; otherwise, it will return
-// false as its last return value.
+// ensureFrame makes sure that the top frame of this target is loaded. It
+// returns the top frame, the root node, and the ExecutionContextID of the top
+// frame. Otherwise it returns false as its last return value.
 func (t *Target) ensureFrame() (*Frame, *Node, runtime.ExecutionContextID, bool) {
 	t.frameMu.RLock()
 	frame := t.frames[t.cur]
 	execCtx := t.execContexts[t.cur]
 	t.frameMu.RUnlock()
 
-	// the frame hasn't loaded yet.
+	// the frame has not loaded yet.
 	if frame == nil || execCtx == 0 {
 		return nil, nil, 0, false
 	}
@@ -100,9 +100,9 @@ func (t *Target) run(ctx context.Context) {
 		value  any
 	}
 	// syncEventQueue is used to handle events synchronously within Target.
-	// TODO: If this queue gets full, the goroutine below could get stuck on
-	// a send, and response callbacks would never run, resulting in a
-	// deadlock. Can we fix this without potentially using lots of memory?
+	// TODO: If this queue gets full, the goroutine below can get stuck on a
+	// send. Then the response callbacks never run, and this causes a deadlock.
+	// Can we fix this without potentially using lots of memory?
 	syncEventQueue := make(chan eventValue, 4096)
 
 	// This goroutine receives events from the browser, calls listeners, and
@@ -126,8 +126,8 @@ func (t *Target) run(ctx context.Context) {
 				ev, err := cdproto.UnmarshalMessage(msg, DefaultUnmarshalOptions)
 				if err != nil {
 					if _, ok := err.(cdp.ErrUnknownCommandOrEvent); ok {
-						// This is most likely an event received from an older
-						// Chrome which a newer cdproto doesn't have, as it is
+						// This is most likely an event from an older Chrome
+						// that a newer cdproto does not have, because it is
 						// deprecated. Ignore that error.
 						continue
 					}
@@ -170,7 +170,7 @@ func (t *Target) run(ctx context.Context) {
 // Call sends the command to the target, waits for the response, and decodes
 // the result into res. It satisfies [cdp.Session].
 //
-// A browser error is returned as a [*cdproto.Error].
+// Call returns a browser error as a [*cdproto.Error].
 func (t *Target) Call(ctx context.Context, method string, params, res any) error {
 	if method == target.CommandCloseTarget {
 		return errors.New("to close the target, cancel its context or use chromedp.Cancel")
@@ -273,8 +273,8 @@ func (t *Target) runtimeEvent(ev any) {
 	}
 }
 
-// documentUpdated handles the document updated event, retrieving the document
-// root for the root frame.
+// documentUpdated handles the document updated event. It retrieves the
+// document root for the root frame.
 func (t *Target) documentUpdated(ctx context.Context) {
 	t.frameMu.RLock()
 	f := t.frames[t.cur]
@@ -367,8 +367,8 @@ func (t *Target) pageEvent(ev any) {
 	f := t.frames[id]
 	if f == nil {
 		// This can happen if a frame is attached or starts loading
-		// before it's ever navigated to. We won't have all the frame
-		// details just yet, but that's okay.
+		// before it is ever navigated to. We do not have all the frame
+		// details yet, but that is fine.
 		f = &Frame{Frame: &cdp.Frame{ID: id}}
 		t.frames[id] = f
 	}
@@ -446,7 +446,7 @@ func (t *Target) domEvent(ctx context.Context, ev any) {
 
 	n, ok := f.Nodes[id]
 	if !ok {
-		// Node ID has been invalidated. Nothing to do.
+		// The node ID is no longer valid. Nothing to do.
 		return
 	}
 

@@ -385,9 +385,9 @@ func loadPosixWinKeyboardCodes() (map[string][]int64, error) {
 
 var keyboardCodeRE = regexp.MustCompile(`(?m)^\s+(VKEY_.+?)\s+=\s+(.+?),`)
 
-// loadKeyboardCodes loads the enum definition from the specified path, saving
-// the resolved symbol value to the specified position for the resulting dom
-// key name in the vkeyCodeMap.
+// loadKeyboardCodes loads the enum definition from the specified path. It
+// saves the resolved symbol value to the specified position for the resulting
+// dom key name in the vkeyCodeMap.
 func loadKeyboardCodes(vkeyCodeMap map[string][]int64, lookup map[string]string, path string, pos int) error {
 	buf, err := grab(path)
 	if err != nil {
@@ -498,11 +498,11 @@ type Key struct {
 	// Windows is the Windows scan code.
 	// 								0x13  0x13  | 0xbc  0xbc  | 0x61  0x41 | 0xe024
 	Windows int64
-	// Shift indicates whether or not the Shift modifier should be sent.
+	// Shift indicates whether the Shift modifier is sent.
 	// 								false false | false true  | false true | false
 	Shift bool
-	// Print indicates whether or not the character is a printable character
-	// (i.e., should a "char" event be generated).
+	// Print indicates whether the character is a printable character
+	// (that is, whether a "char" event is generated).
 	// 								true  true  | true  true  | true  true | false
 	Print bool
 }
@@ -550,10 +550,10 @@ type Key struct {
 	Native int64
 	// Windows is the Windows scan code.
 	Windows int64
-	// Shift indicates whether or not the Shift modifier should be sent.
+	// Shift indicates whether the Shift modifier is sent.
 	Shift bool
-	// Print indicates whether or not the character is a printable character
-	// (i.e., should a "char" event be generated).
+	// Print indicates whether the character is a printable character
+	// (that is, whether a "char" event is generated).
 	Print bool
 }
 
@@ -563,7 +563,7 @@ func EncodeUnidentified(r rune) []*input.DispatchKeyEventParams {
 	// create
 	keyDown := input.DispatchKeyEventParams{
 		Key: "Unidentified",
-		/*NativeVirtualKeyCode:  int64(r), // not sure if should be specifying the key code or not ...
+		/*NativeVirtualKeyCode:  int64(r), // not sure whether to specify the key code ...
 		WindowsVirtualKeyCode: int64(r),*/
 	}
 	keyUp := keyDown

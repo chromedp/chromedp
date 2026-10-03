@@ -1,12 +1,11 @@
-// Package chromedp is a high level Chrome DevTools Protocol client that
-// simplifies driving browsers for scraping, unit testing, or profiling web
-// pages using the CDP.
+// Package chromedp is a high level Chrome DevTools Protocol client. It drives
+// browsers to scrape web pages, to test them, and to profile them.
 //
-// chromedp requires no third-party dependencies, implementing the async Chrome
-// DevTools Protocol entirely in Go.
+// chromedp needs no external driver. It implements the asynchronous protocol
+// in Go.
 //
-// This package includes a number of simple examples. Additionally,
-// [chromedp/examples] contains more complex examples.
+// This package includes a number of simple examples. The module
+// [chromedp/examples] has more complex examples.
 //
 // [chromedp/examples]: https://github.com/chromedp/examples
 package chromedp
@@ -32,92 +31,87 @@ import (
 	"github.com/chromedp/cdproto/target"
 )
 
-// Context is attached to any context.Context which is valid for use with Run.
+// Context is the data that NewContext stores in a context.Context. Run needs
+// it.
 type Context struct {
-	// Allocator is used to create new browsers. It is inherited from the
-	// parent context when using NewContext.
+	// Allocator creates new browsers. A child context inherits it from the
+	// parent context.
 	Allocator Allocator
 
-	// Browser is the browser being used in the context. It is inherited
-	// from the parent context when using NewContext.
+	// Browser is the browser of the context. A child context inherits it from
+	// the parent context.
 	Browser *Browser
 
-	// Target is the target to run actions (commands) against. It is not
-	// inherited from the parent context, and typically each context will
-	// have its own unique Target pointing to a separate browser tab (page).
+	// Target is the target that actions run against. A child context does not
+	// inherit it. Typically each context has its own Target, which points to a
+	// separate browser tab (page).
 	Target *Target
 
-	// targetID is set up by WithTargetID. If nil, Run will pick the only
-	// unused page target, or create a new one.
+	// targetID is set by WithTargetID. If it is nil, Run uses the only unused
+	// page target, or creates a new one.
 	targetID target.ID
 
-	// createBrowserContextParams is set up by WithNewBrowserContext. It is used
+	// createBrowserContextParams is set by WithNewBrowserContext. Run uses it
 	// to create a new BrowserContext.
 	createBrowserContextParams *target.CreateBrowserContextParams
 
-	// browserContextOwner indicates whether this context is a BrowserContext
-	// owner. The owner is responsible for disposing the BrowserContext once
-	// the context is done.
+	// browserContextOwner is true when this context owns its BrowserContext.
+	// The owner disposes the BrowserContext when the context is done.
 	browserContextOwner bool
 
-	// BrowserContextID is set up by WithExistingBrowserContext.
+	// BrowserContextID is set by WithExistingBrowserContext.
 	//
-	// Otherwise, BrowserContextID holds a non-empty value in the following cases:
+	// Otherwise, BrowserContextID is not empty in these cases:
 	//
-	// 1. if the context is created with the WithNewBrowserContext option, a new
-	// BrowserContext is created on its first run, and BrowserContextID holds
-	// the id of that new BrowserContext;
+	// 1. The context was made with WithNewBrowserContext. Its first run creates
+	// a new BrowserContext, and BrowserContextID holds the id of that
+	// BrowserContext.
 	//
-	// 2. if the context is not created with the WithTargetID option, and its
-	// parent context has a non-empty BrowserContextID, this context's
-	// BrowserContextID is copied from the parent context.
+	// 2. The context was not made with WithTargetID, and the parent context
+	// has a BrowserContextID that is not empty. The context copies it from the
+	// parent context.
 	BrowserContextID cdp.BrowserContextID
 
-	// browserOpts holds the browser options passed to NewContext via
-	// WithBrowserOption, so that they can later be used when allocating a
-	// browser in Run.
+	// browserOpts holds the browser options that NewContext receives from
+	// WithBrowserOption. Run uses them when it allocates a browser.
 	browserOpts []BrowserOption
 
-	// cancel simply cancels the context that was used to start Browser.
-	// This is useful to stop all activity and avoid deadlocks if we detect
-	// that the browser was closed or happened to crash. Note that this
-	// cancel function doesn't do any waiting.
+	// cancel cancels the context that started Browser. Use it to stop all
+	// activity and to prevent deadlocks when the browser closes or crashes. It
+	// does not wait for anything.
 	cancel func()
 
-	// first records whether this context created a brand new Chrome
-	// process. This is important, because its cancellation should stop the
-	// entire browser and its handler, and not just a portion of its pages.
+	// first is true when this context started a new Chrome process. Its
+	// cancellation then stops the whole browser and its handler, and not only
+	// some of its pages.
 	first bool
 
-	// closedTarget allows waiting for a target's page to be closed on
-	// cancellation.
+	// closedTarget lets a cancellation wait until the page of a target is
+	// closed.
 	closedTarget sync.WaitGroup
 
-	// allocated is closed when an allocated browser completely stops. If no
-	// browser needs to be allocated, the channel is simply not initialized
-	// and remains nil.
+	// allocated is closed when an allocated browser stops completely. It is
+	// nil when no browser needs allocation.
 	allocated chan struct{}
-
-	// cancelErr is the first error encountered when cancelling this
-	// context, for example if a browser's temporary user data directory
-	// couldn't be deleted.
+	// cancelErr is the first error that the cancellation of this context met.
+	// For example, the context failed to delete the temporary user data
+	// directory of a browser.
 	cancelErr error
 }
 
-// NewContext creates a chromedp context from the parent context. The parent
-// context's Allocator is inherited, defaulting to an ExecAllocator with
-// DefaultExecAllocatorOptions.
+// NewContext creates a chromedp context from the parent context. The context
+// inherits the Allocator of the parent. By default, that is an ExecAllocator
+// with DefaultExecAllocatorOptions.
 //
-// If the parent context contains an allocated Browser, the child context
-// inherits it, and its first Run creates a new tab on that browser. Otherwise,
-// its first Run will allocate a new browser.
+// If the parent context holds an allocated Browser, the child context inherits
+// it, and its first Run creates a new tab on that browser. Otherwise, its
+// first Run allocates a new browser.
 //
-// Cancelling the returned context will close a tab or an entire browser,
-// depending on the logic described above. To cancel a context while checking
-// for errors, see [Cancel].
+// Canceling the returned context closes a tab or a whole browser, as the
+// rules above describe. To cancel a context and read the errors, see [Cancel].
 //
-// Note that NewContext doesn't allocate nor start a browser; that happens the
-// first time Run is used on the context.
+// NewContext does not allocate or start a browser. That happens the first time
+// that you call Run on the context.
 func NewContext(parent context.Context, opts ...ContextOption) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(parent)
 
@@ -127,7 +121,7 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 		c.Allocator = pc.Allocator
 		c.Browser = pc.Browser
 		parentBrowserContextID = pc.BrowserContextID
-		// don't inherit Target, so that NewContext can be used to
+		// do not inherit Target, so that NewContext can be used to
 		// create a new tab on the same browser.
 
 		c.first = c.Browser == nil
@@ -179,13 +173,13 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 		}
 
 		if c.Target == nil {
-			// This is a new tab, but we didn't create it and attach
+			// This is a new tab, but we did not create it and attach
 			// to it yet. Nothing to do.
 			return
 		}
 
-		// Not the original browser tab; simply detach and close it.
-		// We need a new context, as ctx is cancelled; use a 1s timeout.
+		// This is not the original browser tab. Detach and close it.
+		// The context ctx is canceled, so make a new context with a 1s timeout.
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
 		if id := c.Target.SessionID; id != "" {
@@ -203,9 +197,9 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 				// Current Chrome answers CloseTarget before the
 				// target is gone. Wait until it is not listed.
 				// A destroyed event is not enough, because a
-				// browser connection may not receive it.
+				// browser connection can miss it.
 				// A tab with a request that never ends can stay
-				// for long, so give up after a short time.
+				// for a long time, so give up after a short time.
 				wctx, wcancel := context.WithTimeout(ctx, 500*time.Millisecond)
 				err := waitTargetGone(wctx, c.Browser, id)
 				wcancel()
@@ -234,30 +228,29 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 
 type contextKey struct{}
 
-// FromContext extracts the Context data stored inside a context.Context.
+// FromContext returns the Context that a context.Context holds, or nil.
 func FromContext(ctx context.Context) *Context {
 	c, _ := ctx.Value(contextKey{}).(*Context)
 	return c
 }
 
-// Cancel cancels a chromedp context, waits for its resources to be cleaned up,
-// and returns any error encountered during that process.
+// Cancel cancels a chromedp context, waits until the context frees its
+// resources, and returns any error that occurred.
 //
-// If the context allocated a browser, the browser will be closed gracefully by
-// Cancel. A timeout can be attached to this context to determine how long to
-// wait for the browser to close itself:
+// If the context allocated a browser, Cancel closes the browser gracefully. To
+// limit how long Cancel waits for the browser to close, give the context a
+// timeout:
 //
 //	tctx, tcancel := context.WithTimeout(ctx, 10 * time.Second)
 //	defer tcancel()
 //	chromedp.Cancel(tctx)
 //
-// Usually a "defer cancel()" will be enough for most use cases. However, Cancel
-// is the better option if one wants to gracefully close a browser, or catch
-// underlying errors happening during cancellation.
+// A "defer cancel()" is enough in most cases. Use Cancel to close a browser
+// gracefully, or to get the errors that occur during the cancellation.
 func Cancel(ctx context.Context) error {
 	c := FromContext(ctx)
-	// c.cancel is nil when Cancel is wrongly called with a context returned
-	// by chromedp.NewExecAllocator or chromedp.NewRemoteAllocator.
+	// c.cancel is nil when the caller passes to Cancel a context from
+	// NewExecAllocator or NewRemoteAllocator.
 	if c == nil || c.cancel == nil {
 		return ErrInvalidContext
 	}
@@ -281,18 +274,17 @@ func Cancel(ctx context.Context) error {
 		case <-ctx.Done():
 		}
 	}
-	// If this was a graceful close, cancel the entire context, in case any
-	// goroutines or resources are left, or if we hit the timeout above and
-	// the browser hasn't finished yet. Note that, in the non-graceful path,
-	// we already called c.cancel above.
+	// After a graceful close, cancel the whole context. This frees any
+	// goroutines or resources that are left, and it stops a browser that did
+	// not finish before the timeout above. The non-graceful path already
+	// called c.cancel above.
 	if graceful {
 		c.cancel()
 	}
 
-	// If we allocated and we hit ctx.Done earlier, we can't rely on
-	// cancelErr being ready until the allocated channel is closed, as that
-	// is racy. If we didn't hit ctx.Done earlier, then c.allocated was
-	// already cancelled then, so this will be a no-op.
+	// If we allocated and hit ctx.Done earlier, cancelErr is not ready until
+	// the allocated channel is closed, because the two race. If we did not hit
+	// ctx.Done earlier, c.allocated was already closed, so this does nothing.
 	if !ready && c.allocated != nil {
 		<-c.allocated
 	}
@@ -301,10 +293,10 @@ func Cancel(ctx context.Context) error {
 
 func initContextBrowser(ctx context.Context) (*Context, error) {
 	c := FromContext(ctx)
-	// If c is nil, it's not a chromedp context.
-	// If c.Allocator is nil, NewContext wasn't used properly.
-	// If c.cancel is nil, Run is being called directly with an allocator
-	// context.
+	// If c is nil, it is not a chromedp context.
+	// If c.Allocator is nil, NewContext was not used properly.
+	// If c.cancel is nil, the caller passed an allocator context to Run
+	// directly.
 	if c == nil || c.Allocator == nil || c.cancel == nil {
 		return nil, ErrInvalidContext
 	}
@@ -338,12 +330,10 @@ func (c *Context) newTarget(ctx context.Context) error {
 		if err := c.attachTarget(ctx, c.targetID); err != nil {
 			return err
 		}
-		// This new page might have already loaded its top-level frame
-		// already, in which case we wouldn't see the frameNavigated and
-		// documentUpdated events. Load them here.
-		// Since at the time of writing this (2020-1-27), Page.* CDP methods are
-		// not implemented in worker targets, we need to skip this step when we
-		// attach to workers.
+		// A new page can load its top-level frame before we listen. Then we do
+		// not see the frameNavigated and documentUpdated events, so load them
+		// here. As of 2020-1-27, worker targets do not implement the Page.*
+		// methods, so skip this step for workers.
 		if !c.Target.isWorker {
 			tree, err := cdp.Call(ctx, c.Target, page.GetFrameTree, cdp.Empty{})
 			if err != nil {
@@ -373,8 +363,8 @@ func (c *Context) newTarget(ctx context.Context) error {
 			URL:              "about:blank",
 			BrowserContextID: c.BrowserContextID,
 			// A tab in a shared window is hidden when another tab is
-			// active, and a hidden page gets no animation frames, so
-			// Poll never returns. Each target gets its own window.
+			// active. A hidden page gets no animation frames, so Poll never
+			// returns. Each target gets its own window.
 			NewWindow: new(true),
 		})
 		if err != nil {
@@ -397,14 +387,13 @@ func (c *Context) newTarget(ctx context.Context) error {
 		default:
 			return
 		}
-		// In the following cases, the browser will start with a non-blank tab:
-		// 1. with the "--app" option (should disable headless mode);
-		// 2. URL other than "about:blank" is placed in the command line arguments.
-		// So we should not require that the URL to be "about:blank".
+		// The browser starts with a tab that is not blank in these cases:
+		// 1. The "--app" option is used (this disables headless mode).
+		// 2. The command line arguments hold a URL other than "about:blank".
+		// So do not require that the URL is "about:blank".
 		// See issue https://github.com/chromedp/chromedp/issues/1076
-		// In any cases that the browser starts with multiple tabs open,
-		// it should be okay to attach to any one of them (no matter whether it
-		// is blank).
+		// When the browser starts with several tabs, attach to any one of them,
+		// blank or not.
 		if info.Type == "page" {
 			select {
 			case <-lctx.Done():
@@ -442,9 +431,9 @@ func (c *Context) attachTarget(ctx context.Context, targetID target.ID) error {
 
 	go c.Target.run(ctx)
 
-	// Check if this is a worker target. We cannot use Target.getTargetInfo or
-	// Target.getTargets in a worker, so we check if "self" refers to a
-	// WorkerGlobalScope or ServiceWorkerGlobalScope.
+	// Find out whether this is a worker target. A worker cannot use
+	// Target.getTargetInfo or Target.getTargets, so find out whether "self"
+	// refers to a WorkerGlobalScope or a ServiceWorkerGlobalScope.
 	if _, err := cdp.Call(ctx, c.Target, runtime.Enable, cdp.Empty{}); err != nil {
 		return err
 	}
@@ -487,19 +476,19 @@ func (c *Context) attachTarget(ctx context.Context, targetID target.ID) error {
 // ContextOption is a context option.
 type ContextOption = func(*Context)
 
-// WithTargetID sets up a context to be attached to an existing target, instead
-// of creating a new one.
+// WithTargetID makes a context attach to an existing target, and not create a
+// new one.
 func WithTargetID(id target.ID) ContextOption {
 	return func(c *Context) { c.targetID = id }
 }
 
-// CreateBrowserContextOption is a BrowserContext creation options.
+// CreateBrowserContextOption is an option for the creation of a BrowserContext.
 type CreateBrowserContextOption = func(*target.CreateBrowserContextParams)
 
-// WithNewBrowserContext sets up a context to create a new BrowserContext, and
-// create a new target in this BrowserContext. A child context will create its
-// target in this BrowserContext too, unless it's set up with other options.
-// The new BrowserContext will be disposed when the context is done.
+// WithNewBrowserContext makes a context create a new BrowserContext and a new
+// target in it. A child context creates its target in this BrowserContext too,
+// unless another option applies. The context disposes the new BrowserContext
+// when the context is done.
 func WithNewBrowserContext(options ...CreateBrowserContextOption) ContextOption {
 	return func(c *Context) {
 		if c.first {
@@ -514,8 +503,8 @@ func WithNewBrowserContext(options ...CreateBrowserContextOption) ContextOption 
 	}
 }
 
-// WithExistingBrowserContext sets up a context to create a new target in the
-// specified browser context.
+// WithExistingBrowserContext makes a context create a new target in the given
+// BrowserContext.
 func WithExistingBrowserContext(id cdp.BrowserContextID) ContextOption {
 	return func(c *Context) {
 		if c.first {
@@ -540,9 +529,9 @@ func WithDebugf(f func(string, ...any)) ContextOption {
 	return WithBrowserOption(WithBrowserDebugf(f))
 }
 
-// WithBrowserOption allows passing a number of browser options to the allocator
-// when allocating a new browser. As such, this context option can only be used
-// when NewContext is allocating a new browser.
+// WithBrowserOption passes browser options to the allocator when it allocates
+// a new browser. As a result, you can use this option only when the context
+// allocates a new browser.
 func WithBrowserOption(opts ...BrowserOption) ContextOption {
 	return func(c *Context) {
 		if c.Browser != nil {
@@ -552,16 +541,16 @@ func WithBrowserOption(opts ...BrowserOption) ContextOption {
 	}
 }
 
-// RunResponse is an alternative to [Do] which can be used with a list of
-// actions that trigger a page navigation, such as clicking on a link or button.
+// RunResponse is an alternative to [Do] for a list of actions that trigger a
+// page navigation, such as a click on a link or a button.
 //
-// RunResponse will run the actions and block until a page loads, returning the
-// HTTP response information for its HTML document. This can be useful to wait
-// for the page to be ready, or to catch 404 status codes, for example.
+// RunResponse runs the actions and blocks until a page loads. Then it returns
+// the HTTP response of the HTML document. Use it to wait for the page, or to
+// catch 404 status codes.
 //
-// Note that if the actions trigger multiple navigations, only the first is
-// used. And if the actions trigger no navigations at all, RunResponse will
-// block until the context is cancelled.
+// If the actions trigger several navigations, RunResponse uses only the first.
+// If the actions trigger no navigation, RunResponse blocks until the context
+// is canceled.
 func RunResponse(ctx context.Context, steps ...Action[Void]) (*network.Response, error) {
 	return Run(ctx, responseAction(steps...))
 }
@@ -575,7 +564,7 @@ func responseAction(steps ...Action[Void]) Action[*network.Response] {
 		// loading navigation.
 		var loaderID cdp.LoaderID
 
-		// reqID is the request we're currently looking at. This can
+		// reqID is the request we are currently looking at. This can
 		// go through multiple values, e.g. if the page redirects.
 		var reqID network.RequestID
 
@@ -586,14 +575,12 @@ func responseAction(steps ...Action[Void]) Action[*network.Response] {
 		hasInit := false
 		finished := false
 
-		// First, set up the function to handle events.
-		// We are listening for lifecycle events, so we will use those to
-		// make sure we grab the response for a request initiated by the
-		// loaderID that we want.
+		// First, set up the func that handles events.
+		// It listens for lifecycle events. It uses them to make sure that we
+		// get the response of a request from the loaderID that we want.
 		//
-		// The events of several methods must arrive in order, so this
-		// uses the internal listener and not one subscription for each
-		// method.
+		// The events of several methods must arrive in order, so this uses the
+		// internal listener and not one subscription for each method.
 
 		lctx, lcancel := context.WithCancel(ctx)
 		defer lcancel()
@@ -606,7 +593,7 @@ func responseAction(steps ...Action[Void]) Action[*network.Response] {
 			case *network.EventLoadingFailed:
 				if ev.RequestID == reqID {
 					loadErr = fmt.Errorf("page load error %s", ev.ErrorText)
-					// If Canceled is true, we won't receive a
+					// If Canceled is true, we will not receive a
 					// loadEventFired at all.
 					if ev.Canceled {
 						finished = true
@@ -635,8 +622,8 @@ func responseAction(steps ...Action[Void]) Action[*network.Response] {
 				}
 			}
 		}
-		// earlyEvents is a buffered list of events which happened
-		// before we knew what loaderID to look for.
+		// earlyEvents buffers the events that arrive before we know which loaderID
+		// to look for.
 		var earlyEvents []any
 
 		// Obtain frameID from the target.
@@ -657,11 +644,11 @@ func responseAction(steps ...Action[Void]) Action[*network.Response] {
 					frameID = ev.Frame.ID
 				}
 			case *network.EventRequestWillBeSent:
-				// Under some circumstances like ERR_TOO_MANY_REDIRECTS, we never
-				// see the "init" lifecycle event we want. Those "lone" requests
-				// also tend to have a loaderID that matches their requestID, for
-				// some reason. If such a request is seen, use it.
-				// TODO: research this some more when we have the time.
+				// In some cases, such as ERR_TOO_MANY_REDIRECTS, we never see the
+				// "init" lifecycle event that we want. Such "lone" requests also
+				// tend to have a loaderID that matches their requestID, for an
+				// unknown reason. If we see such a request, use it.
+				// TODO: research this more when we have the time.
 				if ev.FrameID == frameID && string(ev.LoaderID) == string(ev.RequestID) {
 					loaderID = ev.LoaderID
 				}
@@ -670,7 +657,7 @@ func responseAction(steps ...Action[Void]) Action[*network.Response] {
 					loaderID = ev.LoaderID
 				}
 			case *page.EventNavigatedWithinDocument:
-				// A fragment navigation doesn't need extra steps.
+				// A fragment navigation does not need extra steps.
 				finished = true
 				lcancel()
 			}
@@ -694,12 +681,10 @@ func responseAction(steps ...Action[Void]) Action[*network.Response] {
 				return nil, loadErr
 			}
 
-			// If the ctx parameter was cancelled by the caller (or
-			// by a timeout etc.) the select will race between
-			// lctx.Done and ctx.Done, since lctx is a sub-context
-			// of ctx. So we can't return nil here, as otherwise
-			// that race would mean that we would drop 50% of the
-			// parent context cancellation errors.
+			// If the caller canceled ctx (or a timeout ended it), the select
+			// races between lctx.Done and ctx.Done, because lctx is a
+			// sub-context of ctx. So we cannot return nil here. Otherwise the
+			// race drops 50% of the cancellation errors of the parent context.
 			if !finished {
 				return nil, ctx.Err()
 			}
@@ -720,15 +705,15 @@ func waitLoad(steps ...Action[Void]) Action[Void] {
 	}
 }
 
-// Targets lists all the targets in the browser attached to the given context.
+// Targets lists the targets of the browser of the context.
 func Targets(ctx context.Context) ([]*target.Info, error) {
 	c, err := initContextBrowser(ctx)
 	if err != nil {
 		return nil, err
 	}
-	// TODO: If this is a new browser, the initial target (tab) might not be
-	// ready yet. Should we block until at least one target is available?
-	// Right now, the caller has to add retries with a timeout.
+	// TODO: The initial target (tab) of a new browser can be not ready yet.
+	// Do we block until at least one target is available? Right now, the
+	// caller has to retry with a timeout.
 	res, err := cdp.Call(ctx, c.Browser, target.GetTargets, target.GetTargetsParams{})
 	if err != nil {
 		return nil, err
@@ -737,7 +722,7 @@ func Targets(ctx context.Context) ([]*target.Info, error) {
 }
 
 // sleepContext sleeps for the specified duration. It returns ctx.Err() immediately
-// if the context is cancelled.
+// if the context is canceled.
 func sleepContext(ctx context.Context, d time.Duration) error {
 	timer := time.NewTimer(d)
 	select {
@@ -751,8 +736,8 @@ func sleepContext(ctx context.Context, d time.Duration) error {
 	}
 }
 
-// retryWithSleep reties the execution of the specified func until the func returns
-// true (means to stop) or a non-nil error.
+// retryWithSleep calls f again and again, with a sleep of d between the calls,
+// until f returns true (stop) or a non-nil error.
 func retryWithSleep(ctx context.Context, d time.Duration, f func(ctx context.Context) (bool, error)) error {
 	for {
 		toStop, err := f(ctx)
@@ -771,12 +756,12 @@ type cancelableListener struct {
 	fn  func(ev any)
 }
 
-// listen adds a func that is called whenever a target event is received.
-// Cancelling ctx stops the listener from receiving any more events.
+// listen adds a func that the target calls for each event. Canceling ctx
+// stops the calls.
 //
-// The func is called synchronously when the target handles events, so it must
-// not block. Unlike the subscriptions of [Events], it sees the events of all
-// methods in the order in which they arrive.
+// The target calls the func synchronously, so the func must not block. Unlike
+// the subscriptions of [Events], the func sees the events of all methods in
+// the order in which they arrive.
 func (t *Target) listen(ctx context.Context, fn func(ev any)) {
 	t.listenersMu.Lock()
 	t.listeners = append(t.listeners, cancelableListener{ctx, fn})
@@ -790,9 +775,9 @@ func (b *Browser) listen(ctx context.Context, fn func(ev any)) {
 	b.listenersMu.Unlock()
 }
 
-// WaitNewTarget can be used to wait for the current target to open a new
-// target. Once fn matches a new unattached target, its target ID is sent via
-// the returned channel. The channel closes without a value when the context
+// WaitNewTarget waits for the current target to open a new target. When fn
+// matches a new target that is not attached, WaitNewTarget sends its target ID
+// on the returned channel. The channel closes without a value when the context
 // has no valid target.
 func WaitNewTarget(ctx context.Context, fn func(*target.Info) bool) <-chan target.ID {
 	ch := make(chan target.ID, 1)
@@ -816,7 +801,7 @@ func WaitNewTarget(ctx context.Context, fn func(*target.Info) bool) <-chan targe
 			return // not a child target
 		}
 		if info.Attached {
-			return // already attached; not a new target
+			return // already attached, so not a new target
 		}
 		if fn(info) {
 			select {

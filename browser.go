@@ -32,32 +32,31 @@ var (
 	)
 )
 
-// Browser is the high-level Chrome DevTools Protocol browser manager, handling
-// the browser process runner, WebSocket clients, associated targets, and
+// Browser manages a browser through the Chrome DevTools Protocol. It handles
+// the browser process runner, the WebSocket clients, the targets, and the
 // network, page, and DOM events.
 type Browser struct {
 	// next is the next message id.
-	// NOTE: needs to be 64-bit aligned for 32-bit targets too, so be careful when moving this field.
-	// This will be eventually done by the compiler once https://github.com/golang/go/issues/599 is fixed.
+	// NOTE: it must be 64-bit aligned on 32-bit targets too, so be careful when you move this field.
+	// The compiler will do this when https://github.com/golang/go/issues/599 is fixed.
 	next int64
 
-	// LostConnection is closed when the websocket connection to Chrome is
-	// dropped. This can be useful to make sure that Browser's context is
-	// cancelled (and the handler stopped) once the connection has failed.
+	// LostConnection is closed when the websocket connection to Chrome drops.
+	// Use it to make sure that the context of the Browser is canceled (and the
+	// handler stopped) after the connection fails.
 	LostConnection chan struct{}
 
-	// closingGracefully is closed by Close before gracefully shutting down
-	// the browser. This way, when the connection to the browser is lost and
-	// LostConnection is closed, we will know not to immediately kill the
-	// Chrome process. This is important to let the browser shut itself off,
-	// saving its state to disk.
+	// closingGracefully is closed by Close before it shuts the browser down
+	// gracefully. If the connection to the browser is lost and LostConnection
+	// is closed, we then know not to kill the Chrome process at once. This is
+	// important, because the browser must shut itself off and save its state
+	// to disk.
 	closingGracefully chan struct{}
 
 	dialTimeout time.Duration
 
-	// pages keeps track of the attached targets, indexed by each's session
-	// ID. The only reason this is a field is so that the tests can check the
-	// map once a browser is closed.
+	// pages tracks the attached targets by session ID. It is a field only so
+	// that the tests can read the map after a browser closes.
 	pages map[target.SessionID]*Target
 
 	listenersMu sync.Mutex
@@ -68,9 +67,9 @@ type Browser struct {
 
 	conn Transport
 
-	// newTabQueue is the queue used to create new target handlers, once a new
-	// tab is created and attached to. The newly created Target is sent back
-	// via newTabResult.
+	// newTabQueue is the queue of requests to create new target handlers,
+	// after a new tab is created and attached. The new Target is sent back on
+	// newTabResult.
 	newTabQueue chan *Target
 
 	// cmdQueue is the outgoing command queue.
@@ -81,19 +80,19 @@ type Browser struct {
 	errf func(string, ...any)
 	dbgf func(string, ...any)
 
-	// The optional fields below are helpful for some tests.
+	// The optional fields below help some tests.
 
-	// process can be initialized by the allocators which start a process
-	// when allocating a browser.
+	// process can be set by the allocators that start a process when they
+	// allocate a browser.
 	process *os.Process
 
-	// userDataDir can be initialized by the allocators which set up user
-	// data dirs directly.
+	// userDataDir can be set by the allocators that set user data directories
+	// directly.
 	userDataDir string
 }
 
-// NewBrowser creates a new browser. Typically, this function wouldn't be called
-// directly, as the Allocator interface takes care of it.
+// NewBrowser creates a new browser. Typically you do not call it directly,
+// because the Allocator interface does it.
 func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Browser, error) {
 	b := &Browser{
 		LostConnection:    make(chan struct{}),
@@ -112,7 +111,7 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 	for _, o := range opts {
 		o(b)
 	}
-	// ensure errf is set
+	// make sure that errf is set
 	if b.errf == nil {
 		b.errf = func(s string, v ...any) { b.logf("ERROR: "+s, v...) }
 	}
@@ -136,9 +135,9 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 
 // Process returns the process object of the browser.
 //
-// It could be nil when the browser is allocated with RemoteAllocator.
-// It could be useful for a monitoring system to collect process metrics of the browser process.
-// (See [prometheus.NewProcessCollector] for an example).
+// It is nil when the browser was allocated with RemoteAllocator. A monitoring
+// system can use it to collect process metrics of the browser process (see
+// [prometheus.NewProcessCollector] for an example).
 //
 // Example:
 //
@@ -173,8 +172,8 @@ func (b *Browser) newTarget(ctx context.Context, targetID target.ID, sessionID t
 		errf: b.errf,
 	}
 
-	// This send should be blocking, to ensure the tab is inserted into the
-	// map before any more target events are routed.
+	// This send must block, so that the tab is in the map before any more
+	// target events are routed.
 	select {
 	case <-ctx.Done():
 		return nil, ctx.Err()
@@ -186,9 +185,9 @@ func (b *Browser) newTarget(ctx context.Context, targetID target.ID, sessionID t
 // Call sends the command to the browser, waits for the response, and decodes
 // the result into res. It satisfies [cdp.Session].
 //
-// A browser error is returned as a [*cdproto.Error].
+// Call returns a browser error as a [*cdproto.Error].
 func (b *Browser) Call(ctx context.Context, method string, params, res any) error {
-	// Certain methods aren't available to the user directly.
+	// Certain methods are not available to the user directly.
 	if method == browser.CommandClose {
 		return fmt.Errorf("to close the browser gracefully, use chromedp.Cancel")
 	}
@@ -265,9 +264,9 @@ func (b *Browser) run(ctx context.Context) {
 
 	delTabQueue := make(chan target.SessionID, 1)
 
-	// This goroutine continuously reads events from the websocket
-	// connection. The separate goroutine is needed since a websocket read
-	// is blocking, so it cannot be used in a select statement.
+	// This goroutine reads events from the websocket connection all the time.
+	// It needs its own goroutine, because a websocket read blocks and cannot
+	// be part of a select statement.
 	go func() {
 		// Signal to run and exit the browser cleanup goroutine.
 		defer close(b.LostConnection)
@@ -342,7 +341,7 @@ func (b *Browser) run(ctx context.Context) {
 		case m := <-incomingQueue:
 			page, ok := b.pages[m.SessionID]
 			if !ok {
-				// A page we recently closed still sending events.
+				// A page that we closed recently still sends events.
 				continue
 			}
 
@@ -361,32 +360,35 @@ func (b *Browser) run(ctx context.Context) {
 // BrowserOption is a browser option.
 type BrowserOption = func(*Browser)
 
-// WithBrowserLogf is a browser option to specify a func to receive general logging.
+// WithBrowserLogf is a browser option that sets the func that receives general
+// log messages.
 func WithBrowserLogf(f func(string, ...any)) BrowserOption {
 	return func(b *Browser) { b.logf = f }
 }
 
-// WithBrowserErrorf is a browser option to specify a func to receive error logging.
+// WithBrowserErrorf is a browser option that sets the func that receives error
+// messages.
 func WithBrowserErrorf(f func(string, ...any)) BrowserOption {
 	return func(b *Browser) { b.errf = f }
 }
 
-// WithBrowserDebugf is a browser option to specify a func to log actual
+// WithBrowserDebugf is a browser option that sets the func that receives the
 // websocket messages.
 func WithBrowserDebugf(f func(string, ...any)) BrowserOption {
 	return func(b *Browser) { b.dbgf = f }
 }
 
-// WithConsolef is a browser option to specify a func to receive chrome log events.
+// WithConsolef is a browser option that sets the func that receives chrome log
+// events.
 //
-// Note: NOT YET IMPLEMENTED.
+// Note: it is not implemented yet.
 func WithConsolef(f func(string, ...any)) BrowserOption {
 	return func(b *Browser) {}
 }
 
-// WithDialTimeout is a browser option to specify the timeout when dialing a
-// browser's websocket address. The default is ten seconds; use a zero duration
-// to not use a timeout.
+// WithDialTimeout is a browser option that sets the timeout for dialing the
+// websocket address of the browser. The default is ten seconds. Use a zero
+// duration for no timeout.
 func WithDialTimeout(d time.Duration) BrowserOption {
 	return func(b *Browser) { b.dialTimeout = d }
 }

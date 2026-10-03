@@ -8,9 +8,9 @@ import (
 	"github.com/chromedp/cdproto/runtime"
 )
 
-// pollTask holds information pertaining to a poll task.
+// pollTask holds the data of a poll task.
 //
-// See Poll for details on building poll tasks.
+// See Poll for how to build poll tasks.
 type pollTask struct {
 	frame     *Node // the frame to evaluate the predicate, defaults to the root page
 	predicate string
@@ -20,8 +20,8 @@ type pollTask struct {
 	args      []any
 }
 
-// run executes the poll task in the browser,
-// until the predicate either returns truthy value or the timeout happens.
+// run executes the poll task in the browser until the predicate returns a
+// truthy value or the timeout ends.
 func runPoll[T any](ctx context.Context, t *Target, p *pollTask) (T, error) {
 	var (
 		zero    T
@@ -72,35 +72,34 @@ func runPoll[T any](ctx context.Context, t *Target, p *pollTask) (T, error) {
 	return res, err
 }
 
-// Poll is a poll action that will wait for a general JavaScript predicate.
+// Poll is a poll action that waits for a general JavaScript predicate.
 // It builds the predicate from a JavaScript expression.
 //
-// This is a copy of puppeteer's [page.waitForFunction].
-// It's named Poll intentionally to avoid messing up with the Wait* query actions.
+// This is a copy of [page.waitForFunction] of puppeteer.
+// It is named Poll on purpose, so that it does not mix with the Wait* query actions.
 // The behavior is not guaranteed to be compatible.
-// For example, our implementation makes the poll task not survive from a navigation,
-// and an error is raised in this case (see unit test TestPoll/NotSurviveNavigation).
+// For example, in our implementation the poll task does not survive a navigation,
+// and the action returns an error in this case (see unit test TestPoll/NotSurviveNavigation).
 //
 // # Polling Options
 //
-// The default polling mode is "raf", to constantly execute pageFunction in requestAnimationFrame callback.
-// This is the tightest polling mode which is suitable to observe styling changes.
-// The WithPollingInterval option makes it to poll the predicate with a specified interval.
-// The WithPollingMutation option makes it to poll the predicate on every DOM mutation.
+// The default polling mode is "raf". It runs pageFunction in a requestAnimationFrame callback all the time.
+// This is the tightest polling mode, and it is suitable to observe styling changes.
+// The WithPollingInterval option polls the predicate at a given interval.
+// The WithPollingMutation option polls the predicate on every DOM mutation.
 //
-// The WithPollingTimeout option specifies the maximum time to wait for the predicate returns truthy value.
-// It defaults to 30 seconds. Pass 0 to disable timeout.
+// The WithPollingTimeout option sets the maximum time to wait until the predicate returns a truthy value.
+// It defaults to 30 seconds. Pass 0 to disable the timeout.
 //
-// The WithPollingInFrame option specifies the frame in which to evaluate the predicate.
-// If not specified, it will be evaluated in the root page of the current tab.
+// The WithPollingInFrame option sets the frame in which to evaluate the predicate.
+// Without it, the action evaluates the predicate in the root page of the current tab.
 //
-// The WithPollingArgs option provides extra arguments to pass to the predicate.
-// Only apply this option when the predicate is built from a function.
+// The WithPollingArgs option gives extra arguments to the predicate.
+// Use this option only when the predicate is built from a function.
 // See [PollFunction].
 //
 // The action returns the truthy value of the predicate, decoded into the type
-// T. The handling of T is the same as that of [Evaluate]. Use [Void] when the
-// value does not matter.
+// T. T is handled as in [Evaluate]. Use [Void] when the value does not matter.
 //
 // [page.waitForFunction]: https://github.com/puppeteer/puppeteer/blob/v8.0.0/docs/api.md#pagewaitforfunctionpagefunction-options-args
 func Poll[T any](expression string, opts ...PollOption) Action[T] {
@@ -108,10 +107,10 @@ func Poll[T any](expression string, opts ...PollOption) Action[T] {
 	return poll[T](predicate, opts...)
 }
 
-// PollFunction is a poll action that will wait for a general JavaScript predicate.
+// PollFunction is a poll action that waits for a general JavaScript predicate.
 // It builds the predicate from a JavaScript function.
 //
-// See [Poll] for details on building poll tasks.
+// See [Poll] for how to build poll tasks.
 func PollFunction[T any](pageFunction string, opts ...PollOption) Action[T] {
 	predicate := fmt.Sprintf(`return (%s)(...args);`, pageFunction)
 
@@ -137,7 +136,7 @@ func poll[T any](predicate string, opts ...PollOption) Action[T] {
 // PollOption is a poll task option.
 type PollOption = func(task *pollTask)
 
-// WithPollingInterval makes it to poll the predicate with the specified interval.
+// WithPollingInterval polls the predicate at the given interval.
 func WithPollingInterval(interval time.Duration) PollOption {
 	return func(w *pollTask) {
 		w.polling = ""
@@ -145,7 +144,7 @@ func WithPollingInterval(interval time.Duration) PollOption {
 	}
 }
 
-// WithPollingMutation makes it to poll the predicate on every DOM mutation.
+// WithPollingMutation polls the predicate on every DOM mutation.
 func WithPollingMutation() PollOption {
 	return func(w *pollTask) {
 		w.polling = "mutation"
@@ -153,16 +152,16 @@ func WithPollingMutation() PollOption {
 	}
 }
 
-// WithPollingTimeout specifies the maximum time to wait for the predicate returns truthy value.
-// It defaults to 30 seconds. Pass 0 to disable timeout.
+// WithPollingTimeout sets the maximum time to wait until the predicate returns a truthy value.
+// It defaults to 30 seconds. Pass 0 to disable the timeout.
 func WithPollingTimeout(timeout time.Duration) PollOption {
 	return func(w *pollTask) {
 		w.timeout = timeout
 	}
 }
 
-// WithPollingInFrame specifies the frame in which to evaluate the predicate.
-// If not specified, it will be evaluated in the root page of the current tab.
+// WithPollingInFrame sets the frame in which to evaluate the predicate.
+// Without it, the action evaluates the predicate in the root page of the current tab.
 func WithPollingInFrame(frame *Node) PollOption {
 	return func(w *pollTask) {
 		w.frame = frame

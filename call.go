@@ -43,16 +43,16 @@ func CallBrowser[P, R any](ctx context.Context, cmd cdp.Command[P, R], params P)
 	return cdp.Call(ctx, c.Browser, cmd, params)
 }
 
-// CallFunctionOn is an action to call a JavaScript function, and decode the
+// CallFunctionOn is an action that calls a JavaScript function and decodes the
 // result of the function into the type T.
 //
-// The handling of T is the same as that of [Evaluate].
+// T is handled as in [Evaluate].
 //
-// Do not set the following fields of runtime.CallFunctionOnParams:
-// - ReturnByValue: it will be set depending on the type T;
-// - Arguments: pass the arguments with args instead.
+// Do not set these fields of runtime.CallFunctionOnParams:
+//   - ReturnByValue: CallFunctionOn sets it from the type T.
+//   - Arguments: pass the arguments with args instead.
 //
-// Note: any exception encountered will be returned as an error.
+// If the function throws an exception, CallFunctionOn returns it as an error.
 func CallFunctionOn[T any](functionDeclaration string, opt CallOption, args ...any) Action[T] {
 	return func(ctx context.Context, t *Target) (T, error) {
 		res, _, err := callFunctionOn[T](ctx, t, functionDeclaration, opt, args...)
@@ -104,23 +104,21 @@ func callFunctionOn[T any](ctx context.Context, t *Target, functionDeclaration s
 	return res, r.Result, err
 }
 
-// CallOption is a function to modify the runtime.CallFunctionOnParams to
-// provide more information.
+// CallOption is a func that changes the runtime.CallFunctionOnParams of a
+// call.
 type CallOption = func(params *runtime.CallFunctionOnParams)
 
-// errAppender is to help accumulating the arguments and simplifying error checks.
-//
-// see https://blog.golang.org/errors-are-values
+// errAppender collects the arguments of a call and keeps the first error, so
+// that the caller makes one error check. See
+// https://blog.golang.org/errors-are-values.
 type errAppender struct {
 	args []*runtime.CallArgument
 	err  error
 }
 
-// append method calls the jsonv2.Marshal method to marshal the value and
-// appends it to the slice. It records the first error for future reference.
-//
-// As soon as an error occurs, the append method becomes a no-op but the error
-// value is saved.
+// append calls the jsonv2.Marshal func on the value and appends the result to
+// the slice. It records the first error. After an error, append does nothing
+// and the error stays.
 func (ea *errAppender) append(v any) {
 	if ea.err != nil {
 		return

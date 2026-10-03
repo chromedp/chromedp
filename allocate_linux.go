@@ -24,17 +24,17 @@ func allocateCmdOptions(cmd *exec.Cmd) {
 }
 
 // killLeftovers kills the processes that still use dir as the user data
-// directory of a Chrome that was started with it.
+// directory of a Chrome that started with it.
 //
 // Chrome child processes, such as the network service and the zygote, can
-// outlive the main process when it is killed, and they can write files in the
-// user data directory after it is removed. A child can also be forked just as
-// the main process dies, and show up after the first look, so killLeftovers
-// looks again until it finds nothing for a few passes in a row. Chrome passes
+// outlive the main process when someone kills it. They can write files in the
+// user data directory after it is removed. A child can also fork just as the
+// main process dies, and show up after the first look. So killLeftovers looks
+// again until it finds nothing for a few passes in a row. Chrome passes
 // --user-data-dir to every child, and the directory of a temporary allocation
-// is unique, so the command line finds the leftovers without a process group. A
-// process group does not work: on the CI runner Chrome did not start in its own
-// group.
+// is unique. So the command line finds the leftovers without a process group.
+// A process group does not work: on the CI runner Chrome did not start in its
+// own group.
 func killLeftovers(dir string) {
 	const (
 		quietPasses = 3

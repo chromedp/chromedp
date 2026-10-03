@@ -14,25 +14,24 @@ import (
 	"time"
 )
 
-// An Allocator is responsible for creating and managing a number of browsers.
+// An Allocator creates and manages a number of browsers.
 //
-// This interface abstracts away how the browser process is actually run. For
-// example, an Allocator implementation may reuse browser processes, or connect
-// to already-running browsers on remote machines.
+// This interface hides how the browser process runs. For example, an Allocator
+// can reuse browser processes, or connect to browsers that already run on
+// remote machines.
 type Allocator interface {
-	// Allocate creates a new browser. It can be cancelled via the provided
-	// context, at which point all the resources used by the browser (such
-	// as temporary directories) will be freed.
+	// Allocate creates a new browser. Canceling the provided context frees all
+	// resources of the browser, such as temporary directories.
 	Allocate(context.Context, ...BrowserOption) (*Browser, error)
 
-	// Wait blocks until an allocator has freed all of its resources.
-	// Cancelling the allocator context will already perform this operation,
-	// so normally there's no need to call Wait directly.
+	// Wait blocks until the allocator has freed all of its resources.
+	// Canceling the allocator context does this too, so normally you do not
+	// need to call Wait.
 	Wait()
 }
 
-// setupExecAllocator is similar to NewExecAllocator, but it allows NewContext
-// to create the allocator without the unnecessary context layer.
+// setupExecAllocator is like NewExecAllocator, but NewContext uses it to
+// create the allocator without an extra context layer.
 func setupExecAllocator(opts ...ExecAllocatorOption) *ExecAllocator {
 	ep := &ExecAllocator{
 		initFlags:        make(map[string]any),
@@ -47,9 +46,9 @@ func setupExecAllocator(opts ...ExecAllocatorOption) *ExecAllocator {
 	return ep
 }
 
-// DefaultExecAllocatorOptions are the ExecAllocator options used by NewContext
-// if the given parent context doesn't have an allocator set up. Do not modify
-// this global; instead, use NewExecAllocator. See [ExampleExecAllocator].
+// DefaultExecAllocatorOptions are the ExecAllocator options that NewContext
+// uses when the parent context has no allocator. Do not modify this global.
+// Use NewExecAllocator instead. See [ExampleExecAllocator].
 //
 // [ExampleExecAllocator]: https://pkg.go.dev/github.com/chromedp/chromedp#example-ExecAllocator
 var DefaultExecAllocatorOptions = [...]ExecAllocatorOption{
@@ -82,8 +81,8 @@ var DefaultExecAllocatorOptions = [...]ExecAllocatorOption{
 	Flag("use-mock-keychain", true),
 }
 
-// NewExecAllocator creates a new context set up with an ExecAllocator, suitable
-// for use with NewContext.
+// NewExecAllocator creates a new context with an ExecAllocator. Use it with
+// NewContext.
 func NewExecAllocator(parent context.Context, opts ...ExecAllocatorOption) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(parent)
 	c := &Context{Allocator: setupExecAllocator(opts...)}
@@ -106,9 +105,9 @@ type ExecAllocator struct {
 	initFlags map[string]any
 	initEnv   []string
 
-	// Chrome will sometimes fail to print the websocket, or run for a long
-	// time, without properly exiting. To avoid blocking forever in those
-	// cases, give up after a specified timeout.
+	// Chrome sometimes does not print the websocket address, or runs for a
+	// long time without exit. Give up after a timeout, so that we do not block
+	// forever.
 	wsURLReadTimeout time.Duration
 
 	modifyCmdFunc func(cmd *exec.Cmd)
@@ -118,9 +117,9 @@ type ExecAllocator struct {
 	combinedOutputWriter io.Writer
 }
 
-// allocTempDir is used to group all ExecAllocator temporary user data dirs in
-// the same location, useful for the tests. If left empty, the system's default
-// temporary directory is used.
+// allocTempDir is the location of all temporary user data directories of
+// ExecAllocator. The tests use it. If it is empty, ExecAllocator uses the
+// default temporary directory of the system.
 var allocTempDir string
 
 // Allocate satisfies the Allocator interface.
@@ -156,25 +155,25 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		removeDir = true
 	}
 	if _, ok := a.initFlags["no-sandbox"]; !ok && os.Getuid() == 0 {
-		// Running as root, for example in a Linux container. Chrome
-		// needs --no-sandbox when running as root, so make that the
-		// default, unless the user set Flag("no-sandbox", false).
+		// We run as root, for example in a Linux container. Chrome needs
+		// --no-sandbox as root, so make that the default, unless the user set
+		// Flag("no-sandbox", false).
 		args = append(args, "--no-sandbox")
 	}
 	if _, ok := a.initFlags["remote-debugging-port"]; !ok {
 		args = append(args, "--remote-debugging-port=0")
 	}
 
-	// Force the first page to be blank, instead of the welcome page;
-	// --no-first-run doesn't enforce that.
+	// Force the first page to be blank, and not the welcome page.
+	// --no-first-run does not do that.
 	args = append(args, "about:blank")
 
 	cmd := exec.CommandContext(ctx, a.execPath, args...)
 	defer func() {
 		if removeDir && cmd.Process == nil {
-			// We couldn't start the process, so we didn't get to
-			// the goroutine that handles RemoveAll below. Remove it
-			// to not leave an empty directory.
+			// The process did not start, so we do not reach the goroutine that
+			// calls RemoveAll below. Remove the directory here, so that no
+			// empty directory stays.
 			os.RemoveAll(dataDir)
 		}
 	}()
@@ -198,8 +197,8 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		cmd.Env = append(cmd.Env, a.initEnv...)
 	}
 
-	// We must start the cmd before calling cmd.Wait, as otherwise the two
-	// can run into a data race.
+	// We must start the cmd before we call cmd.Wait. Otherwise the two can
+	// race.
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
@@ -218,10 +217,10 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 	}
 	a.wg.Add(1) // for the entire allocator
 	go func() {
-		// First wait for the process to be finished.
-		// TODO: do we care about this error in any scenario? if the
-		// user cancelled the context and killed chrome, this will most
-		// likely just be "signal: killed", which isn't interesting.
+		// First wait for the process to finish.
+		// TODO: do we care about this error in any scenario? If the user
+		// canceled the context and killed chrome, it is most likely
+		// "signal: killed", which is not interesting.
 		cmd.Wait()
 
 		// Then delete the temporary user data directory, if needed.
@@ -229,10 +228,10 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 			// Child processes of Chrome can outlive it, and write in the
 			// directory after it is removed.
 			killLeftovers(dataDir)
-			// Sometimes files/directories are still created in the user data
-			// directory at this point. I can not reproduce it with strace, so
-			// the reason is unknown yet. As a workaround, we will just wait a
-			// little while before removing the directory.
+			// Sometimes Chrome still creates files or directories in the user
+			// data directory at this point. We cannot reproduce it with strace,
+			// so the reason is unknown. As a workaround, wait a short time
+			// before we remove the directory.
 			<-time.After(10 * time.Millisecond)
 			if err := removeAllRetry(dataDir); c.cancelErr == nil {
 				c.cancelErr = err
@@ -271,12 +270,11 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		return nil, err
 	}
 	go func() {
-		// If the browser loses connection, kill the entire process and
-		// handler at once. Don't use Cancel, as that will attempt to
-		// gracefully close the browser, which will hang.
-		// Don't cancel if we're in the middle of a graceful Close,
-		// since we want to let Chrome shut itself when it is fully
-		// finished.
+		// If the browser loses the connection, kill the whole process and the
+		// handler at once. Do not use Cancel, because Cancel tries to close the
+		// browser gracefully, and that hangs.
+		// Do not cancel in the middle of a graceful Close, because Chrome must
+		// shut itself down when it finishes.
 		<-browser.LostConnection
 		select {
 		case <-browser.closingGracefully:
@@ -291,8 +289,8 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 
 // removeAllRetry removes dir like os.RemoveAll. Chrome child processes, such as
 // the crashpad handler, can still write files in dir after the main process
-// exits, and then os.RemoveAll fails with "directory not empty". So it tries
-// again for a few seconds.
+// exits. Then os.RemoveAll fails with "directory not empty". So
+// removeAllRetry tries again for a few seconds.
 func removeAllRetry(dir string) error {
 	deadline := time.Now().Add(5 * time.Second)
 	for {
@@ -304,9 +302,10 @@ func removeAllRetry(dir string) error {
 	}
 }
 
-// readOutput grabs the websocket address from chrome's output, returning as
-// soon as it is found. All read output is forwarded to forward, if non-nil.
-// done is used to signal that the asynchronous io.Copy is done, if any.
+// readOutput reads the websocket address from the output of Chrome and returns
+// as soon as it finds the address. It forwards all output that it reads to
+// forward, if forward is not nil. It signals on done when the asynchronous
+// io.Copy ends, if there is one.
 func readOutput(rc io.ReadCloser, forward io.Writer) (wsURL string, _ func(), _ error) {
 	return readOutputTo(rc, forward, new(syncBuffer))
 }
@@ -332,8 +331,8 @@ func (b *syncBuffer) String() string {
 	return b.buf.String()
 }
 
-// readOutputTo is readOutput, and it writes the output that it has read before
-// the websocket address to accumulated, so that a caller that gives up waiting
+// readOutputTo is like readOutput. It also writes the output that it read
+// before the websocket address to accumulated, so that a caller that gives up
 // can show what the browser printed.
 func readOutputTo(rc io.ReadCloser, forward io.Writer, accumulated *syncBuffer) (wsURL string, _ func(), _ error) {
 	prefix := []byte("DevTools listening on")
@@ -362,12 +361,12 @@ readLoop:
 	}
 	copy := func() {}
 	if forward == nil {
-		// We don't need the process's output anymore.
+		// We do not need the process's output anymore.
 		rc.Close()
 	} else {
-		// Return a function that will be called later to
-		// copy the rest of the output in a separate goroutine, as we
-		// need to return with the websocket URL.
+		// Return a func that the caller calls later to copy the rest of the
+		// output in a separate goroutine. We must return the websocket URL
+		// now.
 		copy = func() { io.Copy(forward, bufr) }
 	}
 	return wsURL, copy, nil
@@ -378,9 +377,9 @@ func (a *ExecAllocator) Wait() {
 	a.wg.Wait()
 }
 
-// ExecPath returns an ExecAllocatorOption which uses the given path to execute
-// browser processes. The given path can be an absolute path to a binary, or
-// just the name of the program to find via exec.LookPath.
+// ExecPath returns an ExecAllocatorOption that uses the given path to run
+// browser processes. The path can be an absolute path to a binary, or the name
+// of a program that exec.LookPath finds.
 func ExecPath(path string) ExecAllocatorOption {
 	return func(a *ExecAllocator) {
 		// Convert to an absolute path if possible, to avoid
@@ -393,10 +392,10 @@ func ExecPath(path string) ExecAllocatorOption {
 	}
 }
 
-// findExecPath tries to find the Chrome browser somewhere in the current
-// system. It finds in different locations on different OS systems.
-// It could perform a rather aggressive search. That may make it a bit slow,
-// but it will only be run when creating a new ExecAllocator.
+// findExecPath looks for the Chrome browser on the system. It looks in
+// different places on different operating systems. The search can be
+// aggressive and a bit slow, but it runs only when you create a new
+// ExecAllocator.
 func findExecPath() string {
 	var locations []string
 	switch runtime.GOOS {
@@ -445,39 +444,36 @@ func findExecPath() string {
 	return "google-chrome"
 }
 
-// Flag is a generic command line option to pass a flag to Chrome. If the value
-// is a string, it will be passed as --name=value. If it's a boolean, it will be
-// passed as --name if value is true.
+// Flag is a generic command line option that passes a flag to Chrome. If the
+// value is a string, Flag passes --name=value. If it is a boolean, Flag passes
+// --name when the value is true.
 func Flag(name string, value any) ExecAllocatorOption {
 	return func(a *ExecAllocator) {
 		a.initFlags[name] = value
 	}
 }
 
-// Env is a list of generic environment variables in the form NAME=value
-// to pass into the new Chrome process. These will be appended to the
-// environment of the Go process as retrieved by os.Environ.
+// Env sets environment variables, in the form NAME=value, for the new Chrome
+// process. They add to the environment of the Go process, which os.Environ
+// returns.
 func Env(vars ...string) ExecAllocatorOption {
 	return func(a *ExecAllocator) {
 		a.initEnv = append(a.initEnv, vars...)
 	}
 }
 
-// ModifyCmdFunc allows for running an arbitrary function on the
-// browser exec.Cmd object. This overrides the default version
-// of the command which sends SIGKILL to any open browsers when
-// the Go program exits.
+// ModifyCmdFunc runs a func on the exec.Cmd of the browser. It replaces the
+// default func, which sends SIGKILL to any open browsers when the Go program
+// exits.
 func ModifyCmdFunc(f func(cmd *exec.Cmd)) ExecAllocatorOption {
 	return func(a *ExecAllocator) {
 		a.modifyCmdFunc = f
 	}
 }
 
-// UserDataDir is the command line option to set the user data dir.
-//
-// Note: set this option to manually set the profile directory used by Chrome.
-// When this is not set, then a default path will be created in the /tmp
-// directory.
+// UserDataDir is the command line option to set the user data directory. Use
+// it to choose the profile directory of Chrome. Without it, ExecAllocator
+// creates a default path in the /tmp directory.
 func UserDataDir(dir string) ExecAllocatorOption {
 	return Flag("user-data-dir", dir)
 }
@@ -487,9 +483,8 @@ func ProxyServer(proxy string) ExecAllocatorOption {
 	return Flag("proxy-server", proxy)
 }
 
-// IgnoreCertErrors is the command line option to ignore certificate-related
-// errors. This option is useful when you need to access an HTTPS website
-// through a proxy.
+// IgnoreCertErrors is the command line option to ignore certificate errors.
+// Use it to access an HTTPS website through a proxy.
 func IgnoreCertErrors(a *ExecAllocator) {
 	Flag("ignore-certificate-errors", true)(a)
 }
@@ -522,8 +517,8 @@ func NoDefaultBrowserCheck(a *ExecAllocator) {
 	Flag("no-default-browser-check", true)(a)
 }
 
-// Headless is the command line option to run in headless mode. On top of
-// setting the headless flag, it also hides scrollbars and mutes audio.
+// Headless is the command line option to run in headless mode. It sets the
+// headless flag, hides scrollbars, and mutes audio.
 func Headless(a *ExecAllocator) {
 	Flag("headless", true)(a)
 	// Like in Puppeteer.
@@ -533,54 +528,55 @@ func Headless(a *ExecAllocator) {
 
 // DisableGPU is the command line option to disable the GPU process.
 //
-// The --disable-gpu option is a temporary workaround for a few bugs
-// in headless mode. According to the references below, it's no longer required:
+// The --disable-gpu option is a temporary workaround for a few bugs in
+// headless mode. The references below say that it is no longer required:
 //   - https://bugs.chromium.org/p/chromium/issues/detail?id=737678
 //   - https://github.com/puppeteer/puppeteer/pull/2908
 //   - https://github.com/puppeteer/puppeteer/pull/4523
 //
-// But according to this reported issue, it's still required in some cases:
+// But this issue says that it is still required in some cases:
 //   - https://github.com/chromedp/chromedp/issues/904
 //
-// Chromium 139+ doesn't provide fallback to Swiftshader unless the
-// --enable-unsafe-swiftshader option is passed:
+// Chromium 139 and later has no fallback to Swiftshader, unless you pass the
+// --enable-unsafe-swiftshader option:
 //   - https://chromestatus.com/feature/5166674414927872
 func DisableGPU(a *ExecAllocator) {
 	Flag("disable-gpu", true)(a)
 	Flag("enable-unsafe-swiftshader", true)(a)
 }
 
-// CombinedOutput is used to set an io.Writer where stdout and stderr
-// from the browser will be sent
+// CombinedOutput sets the io.Writer that receives the stdout and stderr of the
+// browser.
 func CombinedOutput(w io.Writer) ExecAllocatorOption {
 	return func(a *ExecAllocator) {
 		a.combinedOutputWriter = w
 	}
 }
 
-// WSURLReadTimeout sets the waiting time for reading the WebSocket URL.
-// The default value is 20 seconds.
+// WSURLReadTimeout sets how long ExecAllocator waits to read the WebSocket
+// URL. The default is 20 seconds.
 func WSURLReadTimeout(t time.Duration) ExecAllocatorOption {
 	return func(a *ExecAllocator) {
 		a.wsURLReadTimeout = t
 	}
 }
 
-// NewRemoteAllocator creates a new context set up with a RemoteAllocator,
-// suitable for use with NewContext. The url should point to the browser's
-// websocket address, such as "ws://127.0.0.1:$PORT/devtools/browser/...".
+// NewRemoteAllocator creates a new context with a RemoteAllocator. Use it with
+// NewContext. The url must point to the websocket address of the browser, such
+// as "ws://127.0.0.1:$PORT/devtools/browser/...".
 //
-// If the url does not contain "/devtools/browser/", it will try to detect
-// the correct one by sending a request to "http://$HOST:$PORT/json/version".
+// If the url does not contain "/devtools/browser/", NewRemoteAllocator tries
+// to find the correct url. It sends a request to
+// "http://$HOST:$PORT/json/version".
 //
-// The url with the following formats are accepted:
+// NewRemoteAllocator accepts urls of these formats:
 //   - ws://127.0.0.1:9222/
 //   - http://127.0.0.1:9222/
 //
-// But "ws://127.0.0.1:9222/devtools/browser/" are not accepted.
-// Because the allocator won't try to modify it and it's obviously invalid.
+// It does not accept "ws://127.0.0.1:9222/devtools/browser/", because the
+// allocator does not try to modify it and it is obviously invalid.
 //
-// Use chromedp.NoModifyURL to prevent it from modifying the url.
+// Use NoModifyURL to stop NewRemoteAllocator from changing the url.
 func NewRemoteAllocator(parent context.Context, url string, opts ...RemoteAllocatorOption) (context.Context, context.CancelFunc) {
 	a := &RemoteAllocator{
 		wsURL:         url,
@@ -624,8 +620,8 @@ func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (
 		}
 	}
 
-	// Use a different context for the websocket, so we can have a chance at
-	// closing the relevant pages before closing the websocket connection.
+	// Use a different context for the websocket, so that we can close the
+	// relevant pages before we close the websocket connection.
 	wctx, cancel := context.WithCancel(context.Background())
 
 	close(c.allocated)

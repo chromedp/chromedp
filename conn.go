@@ -13,10 +13,10 @@ import (
 	"github.com/gobwas/ws/wsutil"
 )
 
-// Transport is the common interface to send/receive messages to a target.
+// Transport is the common interface to send and receive messages for a target.
 //
-// This interface is currently used internally by Browser, but it is exposed as
-// it will be useful as part of the public API in the future.
+// Browser uses this interface internally. It is exported because it can be
+// useful in the public API later.
 type Transport interface {
 	Read(context.Context, *cdproto.Message) error
 	Write(context.Context, *cdproto.Message) error
@@ -39,7 +39,7 @@ type Conn struct {
 	debugf func(string, ...any)
 }
 
-// DialContext dials the specified websocket URL using gobwas/ws.
+// DialContext dials the websocket URL with gobwas/ws.
 func DialContext(ctx context.Context, urlstr string, opts ...DialOption) (*Conn, error) {
 	// connect
 	conn, br, _, err := ws.Dial(ctx, urlstr)
@@ -112,16 +112,16 @@ func (c *Conn) Read(_ context.Context, msg *cdproto.Message) error {
 // Write writes a message.
 func (c *Conn) Write(_ context.Context, msg *cdproto.Message) error {
 	c.writer.Reset(c.conn, ws.StateClientSide, ws.OpText)
-	// Chrome doesn't support fragmentation of incoming websocket messages. To
-	// compensate this, they support single-fragment messages of up to 100MiB.
+	// Chrome does not support fragmentation of incoming websocket messages.
+	// Instead, it supports single-fragment messages of up to 100MiB.
 	//
 	// See https://github.com/ChromeDevTools/devtools-protocol/issues/175.
 	//
-	// And according to https://bugs.chromium.org/p/chromium/issues/detail?id=1069431,
-	// it seems like that fragmentation won't be supported very soon.
-	// Luckily, now github.com/gobwas/ws will grow the buffer if needed.
+	// According to https://bugs.chromium.org/p/chromium/issues/detail?id=1069431,
+	// Chrome will probably not support fragmentation soon.
+	// Luckily, github.com/gobwas/ws now grows the buffer when it needs to.
 	// The func name DisableFlush is a little misleading,
-	// but it do make it grow the buffer if needed.
+	// but it does make the buffer grow when needed.
 	c.writer.DisableFlush()
 
 	// Perform marshal, reusing encoder
