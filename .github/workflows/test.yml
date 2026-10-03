@@ -39,13 +39,17 @@ jobs:
       # The runner images have Google Chrome installed.
       - name: Test Chrome, core
         run: go test -v ./...
+      # The next steps run even when an earlier step failed, so that one run
+      # shows every failure.
       - name: Test Chrome, remote
+        if: success() || failure()
         run: go test -v ./...
         working-directory: remote
       - name: Test Chrome, test
+        if: success() || failure()
         run: go test -v ./...
         working-directory: test
       # The headless-shell image is a Linux container.
       - name: Test headless-shell
-        if: runner.os == 'Linux'
+        if: runner.os == 'Linux' && (success() || failure())
         run: ./contrib/docker-test.sh
