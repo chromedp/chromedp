@@ -2,7 +2,20 @@ on: [push, pull_request]
 name: Test
 jobs:
   test:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    # The repository has three modules: the core in the root, remote and test.
+    # remote and test use the core in the root through a replace directive in
+    # their go.mod. Run every module with GOWORK=off, so that no workspace
+    # changes the result.
+    env:
+      GOWORK: "off"
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -11,30 +24,23 @@ jobs:
         with:
           go-version: stable
       - name: Install Packages
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get -qq update
           sudo apt-get install -y build-essential
       - name: Allow unprivileged user namespaces
+        if: runner.os == 'Linux'
         run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-      # The repository has three modules: the core in the root, remote and test.
-      # remote and test use the core in the root through a replace directive in
-      # their go.mod. Run every module with GOWORK=off, so that no workspace
-      # changes the result.
+      # The runner images have Google Chrome installed.
       - name: Test Chrome, core
         run: go test -v ./...
-        env:
-          GOWORK: "off"
       - name: Test Chrome, remote
         run: go test -v ./...
         working-directory: remote
-        env:
-          GOWORK: "off"
       - name: Test Chrome, test
         run: go test -v ./...
         working-directory: test
-        env:
-          GOWORK: "off"
+      # The headless-shell image is a Linux container.
       - name: Test headless-shell
+        if: runner.os == 'Linux'
         run: ./contrib/docker-test.sh
-        env:
-          GOWORK: "off"
