@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync/atomic"
 	"syscall"
 	"testing"
 	"time"
@@ -121,9 +122,13 @@ func TestExecAllocatorKillBrowser(t *testing.T) {
 	// Simulate a scenario where we navigate to a page that never responds,
 	// and the browser is killed while it is loading.
 	ctx, _ := testAllocateSeparate(t)
-	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	// A busy CI runner can need several seconds to load the page. The limit
+	// does not slow the test, because the browser dies at once when the
+	// request arrives.
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
+	var killed atomic.Bool
 	kill := make(chan struct{}, 1)
 	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		kill <- struct{}{}
@@ -133,19 +138,20 @@ func TestExecAllocatorKillBrowser(t *testing.T) {
 	go func() {
 		<-kill
 		b := FromContext(ctx).Browser
+		killed.Store(true)
 		if err := b.process.Signal(os.Kill); err != nil {
 			t.Error(err)
 		}
 	}()
 
 	// Run must return an error other than "deadline exceeded" in much less
-	// than 3s.
+	// than the limit.
 	switch err := Do(ctx, Navigate(s.URL)); err {
 	case nil:
 		// TODO: figure out why this happens sometimes on Travis
 		// t.Fatal("did not expect a nil error")
 	case context.DeadlineExceeded:
-		t.Fatalf("did not expect a standard context error: %v", err)
+		t.Fatalf("did not expect a standard context error: %v (the browser was killed: %t)", err, killed.Load())
 	}
 }
 

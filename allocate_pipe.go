@@ -24,8 +24,11 @@ const (
 	outputGrace = time.Second
 
 	// exitGrace is how long an ExecAllocator waits for the browser process
-	// to exit after the pipe closed during the start.
-	exitGrace = 2 * time.Second
+	// to exit after the pipe closed during the start. A busy machine can need
+	// several seconds to load the browser, and the process prints its reason
+	// before it exits. A browser that does not exit in this time is killed, and
+	// then the error has no reason.
+	exitGrace = 10 * time.Second
 )
 
 // pipeFiles holds the files of the pipe transport of an ExecAllocator.
