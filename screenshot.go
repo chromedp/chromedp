@@ -27,13 +27,13 @@ import (
 // For an example that takes a screenshot of the entire page, see [screenshot].
 //
 // [screenshot]: https://github.com/chromedp/examples/tree/master/screenshot
-func Screenshot(sel any, opts ...QueryOption) Action[[]byte] {
+func Screenshot[S Selectable](sel S, opts ...QueryOption) Action[[]byte] {
 	return ScreenshotScale(sel, 1, opts...)
 }
 
 // ScreenshotScale is like [Screenshot] but takes a scale parameter, which is
 // the page scale factor.
-func ScreenshotScale(sel any, scale float64, opts ...QueryOption) Action[[]byte] {
+func ScreenshotScale[S Selectable](sel S, scale float64, opts ...QueryOption) Action[[]byte] {
 	return QueryAfter(sel, func(ctx context.Context, t *Target, nodes []*Node) ([]byte, error) {
 		if _, err := first(sel, nodes); err != nil {
 			return nil, err

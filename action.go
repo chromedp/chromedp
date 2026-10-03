@@ -58,7 +58,7 @@ func Run[T any](ctx context.Context, a Action[T]) (T, error) {
 //
 //	err := chromedp.Do(ctx,
 //		chromedp.Navigate("https://example.com"),
-//		chromedp.Click("a", chromedp.ByQuery),
+//		chromedp.Click(chromedp.CSS("a")),
 //	)
 func Do(ctx context.Context, steps ...Action[Void]) error {
 	_, err := Run(ctx, Steps(steps...))
@@ -156,7 +156,7 @@ func failed[E any](err error) iter.Seq2[E, error] {
 // For example, to wait for the load event that a click causes:
 //
 //	_, err := chromedp.Run(ctx, chromedp.WaitEvent(page.LoadEventFired, nil,
-//		chromedp.Click("a", chromedp.ByQuery)))
+//		chromedp.Click(chromedp.CSS("a"))))
 //
 // When the context ends before a matching event arrives, WaitEvent returns the
 // error of the context.
