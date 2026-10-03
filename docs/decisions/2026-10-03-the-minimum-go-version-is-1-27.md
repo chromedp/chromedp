@@ -17,10 +17,13 @@ repository. `cdproto` needs Go 1.27, so `chromedp` needs it too.
 The `go` line of `go.mod` and the Go versions in the `Test` workflow changed.
 The workflow tests Go 1.27 and the newest stable release.
 
+The code then moved to `encoding/json/v2` and `encoding/json/jsontext`, and
+`go.mod` requires the tagged release `v0.157.1` of `cdproto`. It no longer
+lists `github.com/go-json-experiment/json`. This changes where the JSON package
+comes from. `2025-02-22-use-json-v2.md` records the first choice. See
+`2026-10-03-stop-relying-on-removed-cdproto-helpers.md` for the types that
+`chromedp` defines for itself.
+
 ## What remains
 
-`go.mod` still requires `github.com/go-json-experiment/json` and a `cdproto`
-pseudo-version from before the change. Moving the code to `encoding/json/v2`,
-and requiring a tagged release of `cdproto`, wait for the first release of
-`cdproto`. Until then `chromedp` does not build against the new `cdproto`. See
-`2026-10-03-stop-relying-on-removed-cdproto-helpers.md`.
+Nothing remains.

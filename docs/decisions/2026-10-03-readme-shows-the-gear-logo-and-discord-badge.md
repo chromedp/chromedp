@@ -6,7 +6,7 @@ The maintainer decided on 2026-10-03 that the `chromedp` README shows the new ge
 from `github.com/chromedp/logo` and a Discord badge.
 
 The logo repository holds the logo as `chromedp.svg`, with a PNG render. The
-README loads the SVG from the raw address of that repository, so a later change
+README loads the SVG from the raw address of that repository. A later change
 to the logo shows in the README without a change here.
 
 Both are on `main`. The logo is commit `53e08ac` and the badge is commit

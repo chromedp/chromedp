@@ -11,5 +11,5 @@ It opens with `# <Title>`, a blank line and a status line. The status is
 
 A decision is named by its file name, never by a number. An amendment is
 stated in both files. `docs/decisions/README.md` is the index, with the columns
-Date, Decision and Status. `go test ./docs/` checks the index and prints the
+Date, Decision and Status. `go test ./docs/` tests the index and prints the
 row to add.

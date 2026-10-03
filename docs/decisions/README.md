@@ -7,8 +7,8 @@ table is the index.
 Each file opens with its status. "Decided" means the maintainer chose it. "Proposed"
 means somebody suggested it and the maintainer has not confirmed it. "Open" means nobody
 has chosen yet. A decision that changes an earlier one says so in its status,
-as "Amends 2021-04-29-wrap-errors-with-w.md", and the earlier one says it back,
-as "Superseded by <file>". Read the status before the decision.
+as "Amends 2021-04-29-wrap-errors-with-w.md". The earlier one says it back, as
+"Superseded by <file>". Read the status before the decision.
 
 Refer to a decision by its file name, never by a number. A new decision is a
 new file with the date of the decision. Add its row here. `go test ./docs/`

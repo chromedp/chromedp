@@ -3,8 +3,8 @@
 Status: Decided.
 
 The maintainer decided on 2026-10-03 that `chromedp` moves its questions and
-feature ideas to GitHub Discussions, as the `xo` projects did, and keeps the
-issue tracker for bugs.
+feature ideas to GitHub Discussions, as the `xo` projects did. The issue
+tracker stays for bugs.
 
 ## What was done
 
