@@ -405,7 +405,9 @@ func ExampleEmulate() {
 		log.Fatal(err)
 	}
 
-	// Output:
+	// This example uses a live website and writes a file, so it has no
+	// Output comment: go test builds it and does not run it. A live website
+	// can change or be slow, and the example made the tests fail on CI.
 }
 
 func ExamplePrintToPDF() {
@@ -431,7 +433,9 @@ func ExamplePrintToPDF() {
 		log.Fatal(err)
 	}
 
-	// Output:
+	// This example uses a live website and writes a file, so it has no
+	// Output comment: go test builds it and does not run it. A live website
+	// can change or be slow, and the example made the tests fail on CI.
 }
 
 func ExampleByJSPath() {
