@@ -197,10 +197,28 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 			}
 		}
 		if id := c.Target.TargetID; id != "" {
+			// Current Chrome answers CloseTarget before the target
+			// is gone, so wait for the destroyed event.
+			destroyed := make(chan struct{})
+			lctx, lcancel := context.WithCancel(ctx)
+			c.Browser.listenersMu.Lock()
+			c.Browser.listeners = append(c.Browser.listeners, cancelableListener{lctx, func(ev any) {
+				if ev, ok := ev.(*target.EventTargetDestroyed); ok && ev.TargetID == id {
+					close(destroyed)
+					lcancel()
+				}
+			}})
+			c.Browser.listenersMu.Unlock()
 			action := target.CloseTarget(id)
 			if err := action.Do(browserExecutor); c.cancelErr == nil && err != nil {
 				c.cancelErr = err
+			} else if err == nil {
+				select {
+				case <-destroyed:
+				case <-ctx.Done():
+				}
 			}
+			lcancel()
 		}
 		if c.browserContextOwner {
 			action := target.DisposeBrowserContext(c.BrowserContextID)
