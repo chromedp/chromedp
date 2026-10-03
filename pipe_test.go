@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -287,17 +286,8 @@ func TestBrowserTransportPipe(t *testing.T) {
 	}
 }
 
-// skipUnlessPipe skips a test that needs the pipe mode of ExecAllocator.
-func skipUnlessPipe(t *testing.T) {
-	t.Helper()
-	if !usePipe() {
-		t.Skip("the platform cannot pass extra file descriptors")
-	}
-}
-
 func TestExecAllocatorPipe(t *testing.T) {
 	t.Parallel()
-	skipUnlessPipe(t)
 
 	allocCtx, cancel := NewExecAllocator(context.Background(), allocOpts...)
 	defer cancel()
@@ -334,7 +324,6 @@ func TestExecAllocatorPipe(t *testing.T) {
 // TestExecAllocatorPipeKillBrowser checks that a killed Chrome closes the pipe.
 func TestExecAllocatorPipeKillBrowser(t *testing.T) {
 	t.Parallel()
-	skipUnlessPipe(t)
 
 	ctx, _ := testAllocateSeparate(t)
 	b := FromContext(ctx).Browser
@@ -367,7 +356,6 @@ func TestExecAllocatorPipeKillBrowser(t *testing.T) {
 
 func TestExecAllocatorPipeStartFailure(t *testing.T) {
 	t.Parallel()
-	skipUnlessPipe(t)
 
 	t.Run("pipe not open", func(t *testing.T) {
 		t.Parallel()
@@ -378,7 +366,7 @@ func TestExecAllocatorPipeStartFailure(t *testing.T) {
 		allocCtx, cancel := NewExecAllocator(context.Background(),
 			append([]ExecAllocatorOption{
 				CombinedOutput(buf),
-				ModifyCmdFunc(func(cmd *exec.Cmd) { cmd.ExtraFiles = nil }),
+				ModifyCmdFunc(dropChildPipes),
 			}, allocOpts...)...)
 		defer cancel()
 		ctx, cancel := NewContext(allocCtx)
@@ -397,12 +385,15 @@ func TestExecAllocatorPipeStartFailure(t *testing.T) {
 	})
 	t.Run("program that exits", func(t *testing.T) {
 		t.Parallel()
-		if runtime.GOOS == "windows" {
-			t.Skip("needs a shell script")
-		}
-
 		script := filepath.Join(t.TempDir(), "fake-chrome")
-		if err := os.WriteFile(script, []byte("#!/bin/sh\necho 'fake chrome says no' >&2\nexit 3\n"), 0o755); err != nil {
+		body := "#!/bin/sh\necho 'fake chrome says no' >&2\nexit 3\n"
+		if runtime.GOOS == "windows" {
+			// Windows runs a batch file only when its name has the
+			// extension.
+			script += ".bat"
+			body = "@echo fake chrome says no 1>&2\r\n@exit /b 3\r\n"
+		}
+		if err := os.WriteFile(script, []byte(body), 0o755); err != nil {
 			t.Fatal(err)
 		}
 		allocCtx, cancel := NewExecAllocator(context.Background(),

@@ -285,6 +285,12 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		cmd.Env = append(cmd.Env, a.initEnv...)
 	}
 
+	// A canceled context must give its own error. On Windows, os/exec
+	// reports a program that it cannot find before it looks at the context.
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+
 	// The goroutine of startCmd starts the browser and waits for it.
 	run := startCmd(cmd)
 	if err := <-run.started; err != nil {
@@ -477,11 +483,10 @@ func (a *ExecAllocator) dial(ctx context.Context, wsURL string, opts []BrowserOp
 }
 
 // usesPipe reports whether Allocate connects to the browser with a pipe. It
-// does not when the allocator has a dialer or the KeepOpen option is set, when
-// the platform cannot pass the pipe to the process, or when the flags ask for a
-// debugging port or address.
+// does not when the allocator has a dialer or the KeepOpen option is set, or
+// when the flags ask for a debugging port or address.
 func (a *ExecAllocator) usesPipe() bool {
-	if a.dialer != nil || a.keepOpen || !usePipe() {
+	if a.dialer != nil || a.keepOpen {
 		return false
 	}
 	for _, name := range []string{"remote-debugging-port", "remote-debugging-address"} {

@@ -30,8 +30,8 @@ const (
 
 // pipeFiles holds the files of the pipe transport of an ExecAllocator.
 type pipeFiles struct {
-	// childR and childW are the ends that the browser uses. They are its
-	// file descriptors 3 and 4.
+	// childR and childW are the ends that the browser uses. On Unix they are
+	// its file descriptors 3 and 4.
 	childR, childW *os.File
 
 	// parentW writes the commands, and parentR reads the responses and the
@@ -43,7 +43,8 @@ type pipeFiles struct {
 	outW, outR *os.File
 }
 
-// newPipeFiles creates the pipes and sets cmd.ExtraFiles and the output of cmd.
+// newPipeFiles creates the pipes and gives the ends of the browser and the
+// output of the browser to cmd.
 // The caller must call closeChild after the process starts, or when it does
 // not start, and closeParent when it does not use the pipes.
 func newPipeFiles(cmd *exec.Cmd) (*pipeFiles, error) {
@@ -62,10 +63,13 @@ func newPipeFiles(cmd *exec.Cmd) (*pipeFiles, error) {
 		p.closeParent()
 		return nil, fmt.Errorf("creating the output pipe: %w", err)
 	}
-	// Index 0 becomes file descriptor 3 and index 1 becomes 4.
-	cmd.ExtraFiles = []*os.File{p.childR, p.childW}
 	cmd.Stdout = p.outW
 	cmd.Stderr = p.outW
+	if err := setChildPipes(cmd, p); err != nil {
+		p.closeChild()
+		p.closeParent()
+		return nil, err
+	}
 	return p, nil
 }
 
