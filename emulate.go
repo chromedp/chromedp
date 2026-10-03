@@ -1,6 +1,8 @@
 package chromedp
 
 import (
+	"context"
+
 	"github.com/chromedp/cdproto/emulation"
 	"github.com/chromedp/chromedp/device"
 )
@@ -19,12 +21,18 @@ type EmulateAction Action
 // EmulateOrientation (or EmulateLandscape/EmulatePortrait), EmulateMobile, and
 // EmulateTouch, respectively.
 func EmulateViewport(width, height int64, opts ...EmulateViewportOption) EmulateAction {
-	p1 := emulation.SetDeviceMetricsOverride(width, height, 1.0, false)
-	p2 := emulation.SetTouchEmulationEnabled(false)
+	p1 := &emulation.SetDeviceMetricsOverrideParams{Width: width, Height: height, DeviceScaleFactor: 1.0}
+	p2 := &emulation.SetTouchEmulationEnabledParams{}
 	for _, o := range opts {
 		o(p1, p2)
 	}
-	return Tasks{p1, p2}
+	return ActionFunc(func(ctx context.Context) error {
+		if _, err := Call(ctx, emulation.SetDeviceMetricsOverride, *p1); err != nil {
+			return err
+		}
+		_, err := Call(ctx, emulation.SetTouchEmulationEnabled, *p2)
+		return err
+	})
 }
 
 // EmulateViewportOption is the type for emulate viewport options.
@@ -100,15 +108,25 @@ func Emulate(device Device) EmulateAction {
 		orientation, angle = emulation.ScreenOrientationTypeLandscapePrimary, 90
 	}
 
-	return Tasks{
-		emulation.SetUserAgentOverride(d.UserAgent),
-		emulation.SetDeviceMetricsOverride(d.Width, d.Height, d.Scale, d.Mobile).
-			WithScreenOrientation(&emulation.ScreenOrientation{
+	return ActionFunc(func(ctx context.Context) error {
+		if _, err := Call(ctx, emulation.SetUserAgentOverride, emulation.SetUserAgentOverrideParams{UserAgent: d.UserAgent}); err != nil {
+			return err
+		}
+		if _, err := Call(ctx, emulation.SetDeviceMetricsOverride, emulation.SetDeviceMetricsOverrideParams{
+			Width:             d.Width,
+			Height:            d.Height,
+			DeviceScaleFactor: d.Scale,
+			Mobile:            d.Mobile,
+			ScreenOrientation: &emulation.ScreenOrientation{
 				Type:  orientation,
 				Angle: angle,
-			}),
-		emulation.SetTouchEmulationEnabled(d.Touch),
-	}
+			},
+		}); err != nil {
+			return err
+		}
+		_, err := Call(ctx, emulation.SetTouchEmulationEnabled, emulation.SetTouchEmulationEnabledParams{Enabled: d.Touch})
+		return err
+	})
 }
 
 // EmulateReset is an action to reset the device emulation.

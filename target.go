@@ -7,6 +7,7 @@ import (
 	"sync"
 	"sync/atomic"
 
+	"encoding/json/jsontext"
 	jsonv2 "encoding/json/v2"
 	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/cdp"
@@ -26,6 +27,9 @@ type Target struct {
 	listeners   []cancelableListener
 
 	messageQueue chan *cdproto.Message
+
+	// events holds the subscriptions made with Subscribe.
+	events subscribers
 
 	// frameMu protects frames, execContexts, and cur.
 	frameMu sync.RWMutex
@@ -105,6 +109,7 @@ func (t *Target) run(ctx context.Context) {
 	// then passes the events onto the main goroutine for the target handler
 	// to update itself.
 	go func() {
+		defer t.events.close()
 		for {
 			select {
 			case <-ctx.Done():
@@ -117,6 +122,7 @@ func (t *Target) run(ctx context.Context) {
 					t.listenersMu.Unlock()
 					continue
 				}
+				t.events.publish(string(msg.Method), msg.Params)
 				ev, err := cdproto.UnmarshalMessage(msg, DefaultUnmarshalOptions)
 				if err != nil {
 					if _, ok := err.(cdp.ErrUnknownCommandOrEvent); ok {
@@ -161,7 +167,11 @@ func (t *Target) run(ctx context.Context) {
 	}
 }
 
-func (t *Target) Execute(ctx context.Context, method string, params, res any) error {
+// Call sends the command to the target, waits for the response, and decodes
+// the result into res. It satisfies [cdp.Session].
+//
+// A browser error is returned as a [*cdproto.Error].
+func (t *Target) Call(ctx context.Context, method string, params, res any) error {
 	if method == target.CommandCloseTarget {
 		return errors.New("to close the target, cancel its context or use chromedp.Cancel")
 	}
@@ -217,6 +227,13 @@ func (t *Target) Execute(ctx context.Context, method string, params, res any) er
 		}
 	}
 	return nil
+}
+
+// Subscribe starts to buffer the target events with the method, and returns
+// the channel that the raw event parameters arrive on. It satisfies
+// [cdp.Session].
+func (t *Target) Subscribe(method string) (<-chan jsontext.Value, func()) {
+	return t.events.subscribe(method)
 }
 
 // runtimeEvent handles incoming runtime events.
@@ -277,9 +294,7 @@ func (t *Target) documentUpdated(ctx context.Context) {
 	}
 
 	f.Nodes = make(map[cdp.NodeID]*Node)
-	var err error
-	var root *cdp.Node
-	root, err = dom.GetDocument().Do(cdp.WithExecutor(ctx, t))
+	res, err := cdp.Call(ctx, t, dom.GetDocument, dom.GetDocumentParams{})
 	if err == context.Canceled {
 		return // TODO: perhaps not necessary, but useful to keep the tests less noisy
 	}
@@ -287,7 +302,7 @@ func (t *Target) documentUpdated(ctx context.Context) {
 		t.errf("could not retrieve document root for %s: %v", f.ID, err)
 		return
 	}
-	f.Root = newNode(root)
+	f.Root = newNode(res.Root)
 	f.Root.Invalidated = make(chan struct{})
 	walk(f.Nodes, f.Root)
 }

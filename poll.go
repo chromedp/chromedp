@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/runtime"
 )
 
@@ -30,10 +29,11 @@ type pollTask struct {
 // Do executes the poll task in the browser,
 // until the predicate either returns truthy value or the timeout happens.
 func (p *pollTask) Do(ctx context.Context) error {
-	t := cdp.ExecutorFromContext(ctx).(*Target)
-	if t == nil {
+	c := FromContext(ctx)
+	if c == nil || c.Target == nil {
 		return ErrInvalidTarget
 	}
+	t := c.Target
 	var (
 		execCtx runtime.ExecutionContextID
 		ok      bool
@@ -67,10 +67,10 @@ func (p *pollTask) Do(ctx context.Context) error {
 	args = append(args, p.args...)
 
 	r, err := callFunctionOn(ctx, waitForPredicatePageFunction, p.res,
-		func(p *runtime.CallFunctionOnParams) *runtime.CallFunctionOnParams {
-			return p.WithExecutionContextID(execCtx).
-				WithAwaitPromise(true).
-				WithUserGesture(true)
+		func(p *runtime.CallFunctionOnParams) {
+			p.ExecutionContextID = execCtx
+			p.AwaitPromise = new(true)
+			p.UserGesture = new(true)
 		},
 		args...,
 	)

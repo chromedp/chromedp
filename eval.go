@@ -35,28 +35,28 @@ type EvaluateAction Action
 func Evaluate(expression string, res any, opts ...EvaluateOption) EvaluateAction {
 	return ActionFunc(func(ctx context.Context) error {
 		// set up parameters
-		p := runtime.Evaluate(expression)
+		p := &runtime.EvaluateParams{Expression: expression}
 		switch res.(type) {
 		case **runtime.RemoteObject:
 		default:
-			p = p.WithReturnByValue(true)
+			p.ReturnByValue = new(true)
 		}
 
 		// apply opts
 		for _, o := range opts {
-			p = o(p)
+			o(p)
 		}
 
 		// evaluate
-		v, exp, err := p.Do(ctx)
+		r, err := Call(ctx, runtime.Evaluate, *p)
 		if err != nil {
 			return err
 		}
-		if exp != nil {
-			return &ExceptionError{exp}
+		if r.ExceptionDetails != nil {
+			return &ExceptionError{r.ExceptionDetails}
 		}
 
-		return parseRemoteObject(v, res)
+		return parseRemoteObject(r.Result, res)
 	})
 }
 
@@ -113,12 +113,12 @@ func EvaluateAsDevTools(expression string, res any, opts ...EvaluateOption) Eval
 }
 
 // EvaluateOption is the type for JavaScript evaluation options.
-type EvaluateOption = func(*runtime.EvaluateParams) *runtime.EvaluateParams
+type EvaluateOption = func(*runtime.EvaluateParams)
 
 // EvalObjectGroup is an evaluate option to set the object group.
 func EvalObjectGroup(objectGroup string) EvaluateOption {
-	return func(p *runtime.EvaluateParams) *runtime.EvaluateParams {
-		return p.WithObjectGroup(objectGroup)
+	return func(p *runtime.EvaluateParams) {
+		p.ObjectGroup = objectGroup
 	}
 }
 
@@ -128,18 +128,18 @@ func EvalObjectGroup(objectGroup string) EvaluateOption {
 // See [Evaluate] for more information on how evaluate actions work.
 //
 // Note: this should not be used with untrusted JavaScript.
-func EvalWithCommandLineAPI(p *runtime.EvaluateParams) *runtime.EvaluateParams {
-	return p.WithIncludeCommandLineAPI(true)
+func EvalWithCommandLineAPI(p *runtime.EvaluateParams) {
+	p.IncludeCommandLineAPI = new(true)
 }
 
 // EvalIgnoreExceptions is an evaluate option that will cause JavaScript
 // evaluation to ignore exceptions.
-func EvalIgnoreExceptions(p *runtime.EvaluateParams) *runtime.EvaluateParams {
-	return p.WithSilent(true)
+func EvalIgnoreExceptions(p *runtime.EvaluateParams) {
+	p.Silent = new(true)
 }
 
 // EvalAsValue is an evaluate option that will cause the evaluated JavaScript
 // expression to encode the result of the expression as a JSON-encoded value.
-func EvalAsValue(p *runtime.EvaluateParams) *runtime.EvaluateParams {
-	return p.WithReturnByValue(true)
+func EvalAsValue(p *runtime.EvaluateParams) {
+	p.ReturnByValue = new(true)
 }

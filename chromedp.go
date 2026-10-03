@@ -191,16 +191,14 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 		// We need a new context, as ctx is cancelled; use a 1s timeout.
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
-		browserExecutor := cdp.WithExecutor(ctx, c.Browser)
 		if id := c.Target.SessionID; id != "" {
-			action := target.DetachFromTarget().WithSessionID(id)
-			if err := action.Do(browserExecutor); c.cancelErr == nil && err != nil {
+			_, err := cdp.Call(ctx, c.Browser, target.DetachFromTarget, target.DetachFromTargetParams{SessionID: id})
+			if c.cancelErr == nil && err != nil {
 				c.cancelErr = err
 			}
 		}
 		if id := c.Target.TargetID; id != "" {
-			action := target.CloseTarget(id)
-			if err := action.Do(browserExecutor); err != nil {
+			if _, err := cdp.Call(ctx, c.Browser, target.CloseTarget, target.CloseTargetParams{TargetID: id}); err != nil {
 				if c.cancelErr == nil {
 					c.cancelErr = err
 				}
@@ -212,7 +210,7 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 				// A tab with a request that never ends can stay
 				// for long, so give up after a short time.
 				wctx, wcancel := context.WithTimeout(ctx, 500*time.Millisecond)
-				err := waitTargetGone(wctx, browserExecutor, id)
+				err := waitTargetGone(wctx, c.Browser, id)
 				wcancel()
 				if err != nil && !errors.Is(err, context.DeadlineExceeded) && c.cancelErr == nil {
 					c.cancelErr = err
@@ -220,8 +218,8 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 			}
 		}
 		if c.browserContextOwner {
-			action := target.DisposeBrowserContext(c.BrowserContextID)
-			if err := action.Do(browserExecutor); c.cancelErr == nil && err != nil {
+			_, err := cdp.Call(ctx, c.Browser, target.DisposeBrowserContext, target.DisposeBrowserContextParams{BrowserContextID: c.BrowserContextID})
+			if c.cancelErr == nil && err != nil {
 				c.cancelErr = err
 			}
 		}
@@ -331,25 +329,33 @@ func initContextBrowser(ctx context.Context) (*Context, error) {
 // allocated via Allocator. Thus, it's generally a bad idea to use a context
 // timeout on the first Run call, as it will stop the entire browser.
 //
-// Also note that the actions are run with the Target executor. In the case that
-// a Browser executor is required, the action can be written like this:
+// Also note that the commands that an action sends with [Call] go to the
+// Target. To send a command to the Browser, use [CallBrowser]:
 //
 //	err := chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
-//		c := chromedp.FromContext(ctx)
-//		id, err := target.CreateBrowserContext().Do(cdp.WithExecutor(ctx, c.Browser))
+//		_, err := chromedp.CallBrowser(ctx, target.CreateBrowserContext, target.CreateBrowserContextParams{})
 //		return err
 //	}))
 func Run(ctx context.Context, actions ...Action) error {
+	if _, err := initContextTarget(ctx); err != nil {
+		return err
+	}
+	return Tasks(actions).Do(ctx)
+}
+
+// initContextTarget is like initContextBrowser, and also attaches the target
+// of the context when it has none yet.
+func initContextTarget(ctx context.Context) (*Context, error) {
 	c, err := initContextBrowser(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if c.Target == nil {
 		if err := c.newTarget(ctx); err != nil {
-			return err
+			return nil, err
 		}
 	}
-	return Tasks(actions).Do(cdp.WithExecutor(ctx, c.Target))
+	return c, nil
 }
 
 func (c *Context) newTarget(ctx context.Context) error {
@@ -364,14 +370,14 @@ func (c *Context) newTarget(ctx context.Context) error {
 		// not implemented in worker targets, we need to skip this step when we
 		// attach to workers.
 		if !c.Target.isWorker {
-			tree, err := page.GetFrameTree().Do(cdp.WithExecutor(ctx, c.Target))
+			tree, err := cdp.Call(ctx, c.Target, page.GetFrameTree, cdp.Empty{})
 			if err != nil {
 				return err
 			}
 
 			c.Target.frameMu.Lock()
-			c.Target.frames[tree.Frame.ID] = &Frame{Frame: tree.Frame}
-			c.Target.cur = tree.Frame.ID
+			c.Target.frames[tree.FrameTree.Frame.ID] = &Frame{Frame: tree.FrameTree.Frame}
+			c.Target.cur = tree.FrameTree.Frame.ID
 			c.Target.frameMu.Unlock()
 
 			c.Target.documentUpdated(ctx)
@@ -379,31 +385,23 @@ func (c *Context) newTarget(ctx context.Context) error {
 		return nil
 	}
 	if !c.first {
-		var err error
-		browserExecutor := cdp.WithExecutor(ctx, c.Browser)
 		if c.createBrowserContextParams != nil {
-			c.BrowserContextID, err = c.createBrowserContextParams.Do(browserExecutor)
+			res, err := cdp.Call(ctx, c.Browser, target.CreateBrowserContext, *c.createBrowserContextParams)
 			if err != nil {
 				return err
 			}
+			c.BrowserContextID = res.BrowserContextID
 			c.browserContextOwner = true
 			c.createBrowserContextParams = nil
 		}
-		c.targetID, err = target.
-			CreateTarget("about:blank").
-			// The generated params always send "focus" and
-			// "newWindow", even when false. With "focus":false,
-			// current Chrome opens the tab hidden. A tab in a
-			// shared window is hidden when another tab is active,
-			// and a hidden page gets no animation frames. A tab in
-			// a new browser context needs its own window.
-			WithFocus(true).
-			WithNewWindow(true).
-			WithBrowserContextID(c.BrowserContextID).
-			Do(browserExecutor)
+		res, err := cdp.Call(ctx, c.Browser, target.CreateTarget, target.CreateTargetParams{
+			URL:              "about:blank",
+			BrowserContextID: c.BrowserContextID,
+		})
 		if err != nil {
 			return err
 		}
+		c.targetID = res.TargetID
 		return c.attachTarget(ctx, c.targetID)
 	}
 
@@ -438,8 +436,7 @@ func (c *Context) newTarget(ctx context.Context) error {
 	})
 
 	// wait for the first tab to appear
-	action := target.SetDiscoverTargets(true)
-	if err := action.Do(cdp.WithExecutor(ctx, c.Browser)); err != nil {
+	if _, err := cdp.Call(ctx, c.Browser, target.SetDiscoverTargets, target.SetDiscoverTargetsParams{Discover: true}); err != nil {
 		return err
 	}
 	select {
@@ -451,12 +448,15 @@ func (c *Context) newTarget(ctx context.Context) error {
 }
 
 func (c *Context) attachTarget(ctx context.Context, targetID target.ID) error {
-	sessionID, err := target.AttachToTarget(targetID).WithFlatten(true).Do(cdp.WithExecutor(ctx, c.Browser))
+	res, err := cdp.Call(ctx, c.Browser, target.AttachToTarget, target.AttachToTargetParams{
+		TargetID: targetID,
+		Flatten:  new(true),
+	})
 	if err != nil {
 		return err
 	}
 
-	c.Target, err = c.Browser.newExecutorForTarget(ctx, targetID, sessionID)
+	c.Target, err = c.Browser.newTarget(ctx, targetID, res.SessionID)
 	if err != nil {
 		return err
 	}
@@ -467,36 +467,40 @@ func (c *Context) attachTarget(ctx context.Context, targetID target.ID) error {
 	// Check if this is a worker target. We cannot use Target.getTargetInfo or
 	// Target.getTargets in a worker, so we check if "self" refers to a
 	// WorkerGlobalScope or ServiceWorkerGlobalScope.
-	if err := runtime.Enable().Do(cdp.WithExecutor(ctx, c.Target)); err != nil {
+	if _, err := cdp.Call(ctx, c.Target, runtime.Enable, cdp.Empty{}); err != nil {
 		return err
 	}
-	res, _, err := runtime.Evaluate("self").Do(cdp.WithExecutor(ctx, c.Target))
+	self, err := cdp.Call(ctx, c.Target, runtime.Evaluate, runtime.EvaluateParams{Expression: "self"})
 	if err != nil {
 		return err
 	}
-	c.Target.isWorker = strings.Contains(res.ClassName, "WorkerGlobalScope")
+	c.Target.isWorker = strings.Contains(self.Result.ClassName, "WorkerGlobalScope")
 
 	// Enable available domains and discover targets.
-	actions := []Action{
-		log.Enable(),
-		network.Enable(),
+	type step struct {
+		method string
+		params any
 	}
-	// These actions are not available on a worker target.
+	steps := []step{
+		{log.Enable.Method, cdp.Empty{}},
+		{network.Enable.Method, network.EnableParams{}},
+	}
+	// These steps are not available on a worker target.
 	if !c.Target.isWorker {
-		actions = append(actions, []Action{
-			inspector.Enable(),
-			page.Enable(),
-			dom.Enable(),
-			css.Enable(),
-			target.SetDiscoverTargets(true),
-			target.SetAutoAttach(true, false).WithFlatten(true),
-			page.SetLifecycleEventsEnabled(true),
-		}...)
+		steps = append(steps,
+			step{inspector.Enable.Method, cdp.Empty{}},
+			step{page.Enable.Method, page.EnableParams{}},
+			step{dom.Enable.Method, dom.EnableParams{}},
+			step{css.Enable.Method, cdp.Empty{}},
+			step{target.SetDiscoverTargets.Method, target.SetDiscoverTargetsParams{Discover: true}},
+			step{target.SetAutoAttach.Method, target.SetAutoAttachParams{AutoAttach: true, Flatten: new(true)}},
+			step{page.SetLifecycleEventsEnabled.Method, page.SetLifecycleEventsEnabledParams{Enabled: true}},
+		)
 	}
 
-	for _, action := range actions {
-		if err := action.Do(cdp.WithExecutor(ctx, c.Target)); err != nil {
-			return fmt.Errorf("unable to execute %T: %w", action, err)
+	for _, s := range steps {
+		if err := c.Target.Call(ctx, s.method, s.params, nil); err != nil {
+			return fmt.Errorf("unable to execute %s: %w", s.method, err)
 		}
 	}
 	return nil
@@ -512,7 +516,7 @@ func WithTargetID(id target.ID) ContextOption {
 }
 
 // CreateBrowserContextOption is a BrowserContext creation options.
-type CreateBrowserContextOption = func(*target.CreateBrowserContextParams) *target.CreateBrowserContextParams
+type CreateBrowserContextOption = func(*target.CreateBrowserContextParams)
 
 // WithNewBrowserContext sets up a context to create a new BrowserContext, and
 // create a new target in this BrowserContext. A child context will create its
@@ -524,9 +528,9 @@ func WithNewBrowserContext(options ...CreateBrowserContextOption) ContextOption 
 			panic("WithNewBrowserContext can not be used before Browser is initialized")
 		}
 
-		params := target.CreateBrowserContext().WithDisposeOnDetach(true)
+		params := &target.CreateBrowserContextParams{DisposeOnDetach: new(true)}
 		for _, o := range options {
-			params = o(params)
+			o(params)
 		}
 		c.createBrowserContextParams = params
 	}
@@ -735,7 +739,11 @@ func Targets(ctx context.Context) ([]*target.Info, error) {
 	// TODO: If this is a new browser, the initial target (tab) might not be
 	// ready yet. Should we block until at least one target is available?
 	// Right now, the caller has to add retries with a timeout.
-	return target.GetTargets().Do(cdp.WithExecutor(ctx, c.Browser))
+	res, err := cdp.Call(ctx, c.Browser, target.GetTargets, target.GetTargetsParams{})
+	if err != nil {
+		return nil, err
+	}
+	return res.TargetInfos, nil
 }
 
 // Action is the common interface for an action that will be executed against a
@@ -896,13 +904,13 @@ func WaitNewTarget(ctx context.Context, fn func(*target.Info) bool) <-chan targe
 
 // waitTargetGone polls the browser until the target with the given id is no
 // longer listed, or until ctx is done.
-func waitTargetGone(ctx context.Context, browserExecutor context.Context, id target.ID) error {
+func waitTargetGone(ctx context.Context, browser cdp.Session, id target.ID) error {
 	for {
-		infos, err := target.GetTargets().Do(browserExecutor)
+		res, err := cdp.Call(ctx, browser, target.GetTargets, target.GetTargetsParams{})
 		if err != nil {
 			return err
 		}
-		if !slices.ContainsFunc(infos, func(info *target.Info) bool { return info.TargetID == id }) {
+		if !slices.ContainsFunc(res.TargetInfos, func(info *target.Info) bool { return info.TargetID == id }) {
 			return nil
 		}
 		if err := sleepContext(ctx, 5*time.Millisecond); err != nil {

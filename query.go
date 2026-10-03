@@ -155,10 +155,11 @@ func Query(sel any, opts ...QueryOption) QueryAction {
 // Do executes the selector, only finishing if the selector's by, wait, and
 // after funcs succeed, or if the context is cancelled.
 func (s *Selector) Do(ctx context.Context) error {
-	t := cdp.ExecutorFromContext(ctx).(*Target)
-	if t == nil {
+	c := FromContext(ctx)
+	if c == nil || c.Target == nil {
 		return ErrInvalidTarget
 	}
+	t := c.Target
 	return retryWithSleep(ctx, s.retryInterval, func(ctx context.Context) (bool, error) {
 		frame, root, execCtx, ok := t.ensureFrame()
 		if !ok {
@@ -304,16 +305,16 @@ func ByFunc(f func(context.Context, *Node) ([]cdp.NodeID, error)) QueryOption {
 // Similar to calling document.querySelector() in the browser.
 func ByQuery(s *Selector) {
 	ByFunc(func(ctx context.Context, n *Node) ([]cdp.NodeID, error) {
-		nodeID, err := dom.QuerySelector(n.NodeID, s.selAsString()).Do(ctx)
+		res, err := Call(ctx, dom.QuerySelector, dom.QuerySelectorParams{NodeID: n.NodeID, Selector: s.selAsString()})
 		if err != nil {
 			return nil, err
 		}
 
-		if nodeID == EmptyNodeID {
+		if res.NodeID == EmptyNodeID {
 			return []cdp.NodeID{}, nil
 		}
 
-		return []cdp.NodeID{nodeID}, nil
+		return []cdp.NodeID{res.NodeID}, nil
 	})(s)
 }
 
@@ -323,7 +324,8 @@ func ByQuery(s *Selector) {
 // Similar to calling document.querySelectorAll() in the browser.
 func ByQueryAll(s *Selector) {
 	ByFunc(func(ctx context.Context, n *Node) ([]cdp.NodeID, error) {
-		return dom.QuerySelectorAll(n.NodeID, s.selAsString()).Do(ctx)
+		res, err := Call(ctx, dom.QuerySelectorAll, dom.QuerySelectorAllParams{NodeID: n.NodeID, Selector: s.selAsString()})
+		return res.NodeIDs, err
 	})(s)
 }
 
@@ -339,25 +341,28 @@ func ByID(s *Selector) {
 // command. It matches nodes by plain text, CSS selector or XPath query.
 func BySearch(s *Selector) {
 	ByFunc(func(ctx context.Context, n *Node) ([]cdp.NodeID, error) {
-		id, count, err := dom.PerformSearch(s.selAsString()).Do(ctx)
+		search, err := Call(ctx, dom.PerformSearch, dom.PerformSearchParams{Query: s.selAsString()})
 		if err != nil {
 			return nil, err
 		}
 
 		defer func() {
-			_ = dom.DiscardSearchResults(id).Do(ctx)
+			_, _ = Call(ctx, dom.DiscardSearchResults, dom.DiscardSearchResultsParams{SearchID: search.SearchID})
 		}()
 
-		if count < 1 {
+		if search.ResultCount < 1 {
 			return []cdp.NodeID{}, nil
 		}
 
-		nodes, err := dom.GetSearchResults(id, 0, count).Do(ctx)
+		res, err := Call(ctx, dom.GetSearchResults, dom.GetSearchResultsParams{
+			SearchID: search.SearchID,
+			ToIndex:  search.ResultCount,
+		})
 		if err != nil {
 			return nil, err
 		}
 
-		return nodes, nil
+		return res.NodeIDs, nil
 	})(s)
 }
 
@@ -372,31 +377,31 @@ func BySearch(s *Selector) {
 func ByJSPath(s *Selector) {
 	ByFunc(func(ctx context.Context, n *Node) ([]cdp.NodeID, error) {
 		// set up eval command
-		p := runtime.Evaluate(s.selAsString()).
-			WithAwaitPromise(true).
-			WithObjectGroup("console").
-			WithIncludeCommandLineAPI(true)
-
 		// execute
-		v, exp, err := p.Do(ctx)
+		v, err := Call(ctx, runtime.Evaluate, runtime.EvaluateParams{
+			Expression:            s.selAsString(),
+			AwaitPromise:          new(true),
+			ObjectGroup:           "console",
+			IncludeCommandLineAPI: new(true),
+		})
 		if err != nil {
 			return nil, err
 		}
-		if exp != nil {
-			return nil, &ExceptionError{exp}
+		if v.ExceptionDetails != nil {
+			return nil, &ExceptionError{v.ExceptionDetails}
 		}
 
 		// use the ObjectID from the evaluation to get the nodeID
-		nodeID, err := dom.RequestNode(v.ObjectID).Do(ctx)
+		res, err := Call(ctx, dom.RequestNode, dom.RequestNodeParams{ObjectID: v.Result.ObjectID})
 		if err != nil {
 			return nil, err
 		}
 
-		if nodeID == EmptyNodeID {
+		if res.NodeID == EmptyNodeID {
 			return []cdp.NodeID{}, nil
 		}
 
-		return []cdp.NodeID{nodeID}, nil
+		return []cdp.NodeID{res.NodeID}, nil
 	})(s)
 }
 
@@ -413,7 +418,7 @@ func ByNodeID(s *Selector) {
 
 	ByFunc(func(ctx context.Context, n *Node) ([]cdp.NodeID, error) {
 		for _, id := range ids {
-			err := dom.RequestChildNodes(id).WithPierce(true).Do(ctx)
+			_, err := Call(ctx, dom.RequestChildNodes, dom.RequestChildNodesParams{NodeID: id, Pierce: new(true)})
 			if err != nil {
 				return nil, err
 			}
@@ -437,13 +442,13 @@ func NodeReady(s *Selector) {
 }
 
 func callFunctionOnNode(ctx context.Context, node *Node, function string, res any, args ...any) error {
-	r, err := dom.ResolveNode().WithNodeID(node.NodeID).Do(ctx)
+	r, err := Call(ctx, dom.ResolveNode, dom.ResolveNodeParams{NodeID: node.NodeID})
 	if err != nil {
 		return err
 	}
 	err = CallFunctionOn(function, res,
-		func(p *runtime.CallFunctionOnParams) *runtime.CallFunctionOnParams {
-			return p.WithObjectID(r.ObjectID)
+		func(p *runtime.CallFunctionOnParams) {
+			p.ObjectID = r.Object.ObjectID
 		},
 		args...,
 	).Do(ctx)
@@ -454,7 +459,7 @@ func callFunctionOnNode(ctx context.Context, node *Node, function string, res an
 	// Try to release the remote object.
 	// It will fail if the page is navigated or closed,
 	// and it's okay to ignore the error in this case.
-	_ = runtime.ReleaseObject(r.ObjectID).Do(ctx)
+	_, _ = Call(ctx, runtime.ReleaseObject, runtime.ReleaseObjectParams{ObjectID: r.Object.ObjectID})
 
 	return nil
 }
@@ -464,7 +469,7 @@ func callFunctionOnNode(ctx context.Context, node *Node, function string, res an
 func NodeVisible(s *Selector) {
 	WaitFunc(s.waitReady(func(ctx context.Context, execCtx runtime.ExecutionContextID, n *Node) error {
 		// check box model
-		_, err := dom.GetBoxModel().WithNodeID(n.NodeID).Do(ctx)
+		_, err := Call(ctx, dom.GetBoxModel, dom.GetBoxModelParams{NodeID: n.NodeID})
 		if err != nil {
 			if isCouldNotComputeBoxModelError(err) {
 				return ErrNotVisible
@@ -491,7 +496,7 @@ func NodeVisible(s *Selector) {
 func NodeNotVisible(s *Selector) {
 	WaitFunc(s.waitReady(func(ctx context.Context, execCtx runtime.ExecutionContextID, n *Node) error {
 		// check box model
-		_, err := dom.GetBoxModel().WithNodeID(n.NodeID).Do(ctx)
+		_, err := Call(ctx, dom.GetBoxModel, dom.GetBoxModelParams{NodeID: n.NodeID})
 		if err != nil {
 			if isCouldNotComputeBoxModelError(err) {
 				return nil
@@ -605,10 +610,12 @@ func Populate(depth int64, pierce bool, opts ...PopulateOption) QueryOption {
 			o(&d)
 		}
 		for _, n := range nodes {
-			if err := dom.RequestChildNodes(n.NodeID).
-				WithDepth(depth).
-				WithPierce(pierce).
-				Do(ctx); err != nil {
+			_, err := Call(ctx, dom.RequestChildNodes, dom.RequestChildNodesParams{
+				NodeID: n.NodeID,
+				Depth:  depth,
+				Pierce: &pierce,
+			})
+			if err != nil {
 				return err
 			}
 		}
@@ -706,7 +713,8 @@ func Focus(sel any, opts ...QueryOption) QueryAction {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
-		return dom.Focus().WithNodeID(nodes[0].NodeID).Do(ctx)
+		_, err := Call(ctx, dom.Focus, dom.FocusParams{NodeID: nodes[0].NodeID})
+		return err
 	}, opts...)
 }
 
@@ -742,9 +750,12 @@ func Dimensions(sel any, model **dom.BoxModel, opts ...QueryOption) QueryAction 
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
-		var err error
-		*model, err = dom.GetBoxModel().WithNodeID(nodes[0].NodeID).Do(ctx)
-		return err
+		res, err := Call(ctx, dom.GetBoxModel, dom.GetBoxModelParams{NodeID: nodes[0].NodeID})
+		if err != nil {
+			return err
+		}
+		*model = res.Model
+		return nil
 	}, opts...)
 }
 
@@ -801,9 +812,8 @@ func Clear(sel any, opts ...QueryOption) QueryAction {
 			go func(i int, n *Node) {
 				defer wg.Done()
 
-				var a Action
 				if n.NodeName == "INPUT" {
-					a = dom.SetAttributeValue(n.NodeID, "value", "")
+					_, errs[i] = Call(ctx, dom.SetAttributeValue, dom.SetAttributeValueParams{NodeID: n.NodeID, Name: "value"})
 				} else {
 					// find textarea's child #text node
 					var textID cdp.NodeID
@@ -821,9 +831,8 @@ func Clear(sel any, opts ...QueryOption) QueryAction {
 						return
 					}
 
-					a = dom.SetNodeValue(textID, "")
+					_, errs[i] = Call(ctx, dom.SetNodeValue, dom.SetNodeValueParams{NodeID: textID})
 				}
-				errs[i] = a.Do(ctx)
 			}(i, n)
 		}
 		wg.Wait()
@@ -929,7 +938,11 @@ func SetAttributes(sel any, attributes map[string]string, opts ...QueryOption) Q
 			i++
 		}
 
-		return dom.SetAttributesAsText(nodes[0].NodeID, strings.Join(attrs, " ")).Do(ctx)
+		_, err := Call(ctx, dom.SetAttributesAsText, dom.SetAttributesAsTextParams{
+			NodeID: nodes[0].NodeID,
+			Text:   strings.Join(attrs, " "),
+		})
+		return err
 	}, opts...)
 }
 
@@ -975,7 +988,8 @@ func SetAttributeValue(sel any, name, value string, opts ...QueryOption) QueryAc
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
-		return dom.SetAttributeValue(nodes[0].NodeID, name, value).Do(ctx)
+		_, err := Call(ctx, dom.SetAttributeValue, dom.SetAttributeValueParams{NodeID: nodes[0].NodeID, Name: name, Value: value})
+		return err
 	}, opts...)
 }
 
@@ -987,7 +1001,8 @@ func RemoveAttribute(sel any, name string, opts ...QueryOption) QueryAction {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
-		return dom.RemoveAttribute(nodes[0].NodeID, name).Do(ctx)
+		_, err := Call(ctx, dom.RemoveAttribute, dom.RemoveAttributeParams{NodeID: nodes[0].NodeID, Name: name})
+		return err
 	}, opts...)
 }
 
@@ -1103,7 +1118,8 @@ func SendKeys(sel any, v string, opts ...QueryOption) QueryAction {
 
 		// when working with input[type="file"], call dom.SetFileInputFiles
 		if n.NodeName == "INPUT" && typ == "file" {
-			return dom.SetFileInputFiles([]string{v}).WithNodeID(n.NodeID).Do(ctx)
+			_, err := Call(ctx, dom.SetFileInputFiles, dom.SetFileInputFilesParams{Files: []string{v}, NodeID: n.NodeID})
+			return err
 		}
 
 		return KeyEventNode(n, v).Do(ctx)
@@ -1118,7 +1134,8 @@ func SetUploadFiles(sel any, files []string, opts ...QueryOption) QueryAction {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
-		return dom.SetFileInputFiles(files).WithNodeID(nodes[0].NodeID).Do(ctx)
+		_, err := Call(ctx, dom.SetFileInputFiles, dom.SetFileInputFilesParams{Files: files, NodeID: nodes[0].NodeID})
+		return err
 	}, opts...)
 }
 
@@ -1178,12 +1195,12 @@ func ComputedStyle(sel any, style *[]*css.ComputedStyleProperty, opts ...QueryOp
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
-		computed, _, err := css.GetComputedStyleForNode(nodes[0].NodeID).Do(ctx)
+		res, err := Call(ctx, css.GetComputedStyleForNode, css.GetComputedStyleForNodeParams{NodeID: nodes[0].NodeID})
 		if err != nil {
 			return err
 		}
 
-		*style = computed
+		*style = res.ComputedStyle
 
 		return nil
 	}, opts...)
@@ -1191,7 +1208,7 @@ func ComputedStyle(sel any, style *[]*css.ComputedStyleProperty, opts ...QueryOp
 
 // MatchedStyle is an element query action that retrieves the matched style information
 // for the first element node matching the selector.
-func MatchedStyle(sel any, style **css.GetMatchedStylesForNodeReturns, opts ...QueryOption) QueryAction {
+func MatchedStyle(sel any, style **css.GetMatchedStylesForNodeResult, opts ...QueryOption) QueryAction {
 	if style == nil {
 		panic("style cannot be nil")
 	}
@@ -1201,15 +1218,12 @@ func MatchedStyle(sel any, style **css.GetMatchedStylesForNodeReturns, opts ...Q
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
-		var err error
-		ret := &css.GetMatchedStylesForNodeReturns{}
-		p := css.GetMatchedStylesForNode(nodes[0].NodeID)
-		err = cdp.Execute(ctx, css.CommandGetMatchedStylesForNode, p, ret)
+		res, err := Call(ctx, css.GetMatchedStylesForNode, css.GetMatchedStylesForNodeParams{NodeID: nodes[0].NodeID})
 		if err != nil {
 			return err
 		}
 
-		*style = ret
+		*style = &res
 
 		return nil
 	}, opts...)
@@ -1223,7 +1237,8 @@ func ScrollIntoView(sel any, opts ...QueryOption) QueryAction {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
-		return dom.ScrollIntoViewIfNeeded().WithNodeID(nodes[0].NodeID).Do(ctx)
+		_, err := Call(ctx, dom.ScrollIntoViewIfNeeded, dom.ScrollIntoViewIfNeededParams{NodeID: nodes[0].NodeID})
+		return err
 	}, opts...)
 }
 

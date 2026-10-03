@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/page"
 )
 
@@ -18,11 +19,11 @@ type NavigateAction Action
 // Navigate is an action that navigates the current frame.
 func Navigate(urlstr string) NavigateAction {
 	return responseAction(nil, ActionFunc(func(ctx context.Context) error {
-		switch _, _, errorText, _, err := page.Navigate(urlstr).Do(ctx); {
+		switch res, err := Call(ctx, page.Navigate, page.NavigateParams{URL: urlstr}); {
 		case err != nil:
 			return err
-		case errorText != "":
-			return fmt.Errorf("page load error %s", errorText)
+		case res.ErrorText != "":
+			return fmt.Errorf("page load error %s", res.ErrorText)
 		}
 		return nil
 	}))
@@ -36,33 +37,36 @@ func NavigationEntries(currentIndex *int64, entries *[]*page.NavigationEntry) Ac
 	}
 
 	return ActionFunc(func(ctx context.Context) error {
-		var err error
-		*currentIndex, *entries, err = page.GetNavigationHistory().Do(ctx)
-		return err
+		res, err := Call(ctx, page.GetNavigationHistory, cdp.Empty{})
+		if err != nil {
+			return err
+		}
+		*currentIndex, *entries = res.CurrentIndex, res.Entries
+		return nil
 	})
 }
 
 // NavigateToHistoryEntry is an action to navigate to the specified navigation
 // entry.
 func NavigateToHistoryEntry(entryID int64) NavigateAction {
-	return responseAction(nil, page.NavigateToHistoryEntry(entryID))
+	return responseAction(nil, navigateToHistoryEntry(entryID))
 }
 
 // NavigateBack is an action that navigates the current frame backwards in its
 // history.
 func NavigateBack() NavigateAction {
 	return responseAction(nil, ActionFunc(func(ctx context.Context) error {
-		cur, entries, err := page.GetNavigationHistory().Do(ctx)
+		res, err := Call(ctx, page.GetNavigationHistory, cdp.Empty{})
 		if err != nil {
 			return err
 		}
 
+		cur, entries := res.CurrentIndex, res.Entries
 		if cur <= 0 || cur > int64(len(entries)-1) {
 			return errors.New("invalid navigation entry")
 		}
 
-		entryID := entries[cur-1].ID
-		return page.NavigateToHistoryEntry(entryID).Do(ctx)
+		return navigateToHistoryEntry(entries[cur-1].ID).Do(ctx)
 	}))
 }
 
@@ -70,28 +74,42 @@ func NavigateBack() NavigateAction {
 // its history.
 func NavigateForward() NavigateAction {
 	return responseAction(nil, ActionFunc(func(ctx context.Context) error {
-		cur, entries, err := page.GetNavigationHistory().Do(ctx)
+		res, err := Call(ctx, page.GetNavigationHistory, cdp.Empty{})
 		if err != nil {
 			return err
 		}
 
+		cur, entries := res.CurrentIndex, res.Entries
 		if cur < 0 || cur >= int64(len(entries)-1) {
 			return errors.New("invalid navigation entry")
 		}
 
-		entryID := entries[cur+1].ID
-		return page.NavigateToHistoryEntry(entryID).Do(ctx)
+		return navigateToHistoryEntry(entries[cur+1].ID).Do(ctx)
 	}))
 }
 
 // Reload is an action that reloads the current page.
 func Reload() NavigateAction {
-	return responseAction(nil, page.Reload())
+	return responseAction(nil, ActionFunc(func(ctx context.Context) error {
+		_, err := Call(ctx, page.Reload, page.ReloadParams{})
+		return err
+	}))
 }
 
 // Stop is an action that stops all navigation and pending resource retrieval.
 func Stop() Action {
-	return page.StopLoading()
+	return ActionFunc(func(ctx context.Context) error {
+		_, err := Call(ctx, page.StopLoading, cdp.Empty{})
+		return err
+	})
+}
+
+// navigateToHistoryEntry is an action that sends Page.navigateToHistoryEntry.
+func navigateToHistoryEntry(entryID int64) Action {
+	return ActionFunc(func(ctx context.Context) error {
+		_, err := Call(ctx, page.NavigateToHistoryEntry, page.NavigateToHistoryEntryParams{EntryID: entryID})
+		return err
+	})
 }
 
 // Location is an action that retrieves the document location.

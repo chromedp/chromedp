@@ -4,8 +4,42 @@ import (
 	"context"
 
 	jsonv2 "encoding/json/v2"
+	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/runtime"
 )
+
+// Call runs the protocol command with the params on the target of the chromedp
+// context, and returns its result. As [Run] does, it starts the browser and
+// opens the target when the context has none yet.
+//
+// For example, inside an [ActionFunc]:
+//
+//	res, err := chromedp.Call(ctx, page.Navigate, page.NavigateParams{URL: urlstr})
+//
+// It returns [ErrInvalidContext] when ctx is not a chromedp context.
+func Call[P, R any](ctx context.Context, cmd cdp.Command[P, R], params P) (R, error) {
+	c, err := initContextTarget(ctx)
+	if err != nil {
+		var zero R
+		return zero, err
+	}
+	return cdp.Call(ctx, c.Target, cmd, params)
+}
+
+// CallBrowser runs the protocol command with the params on the browser of the
+// chromedp context, and returns its result. Use it for the commands of the
+// browser and target domains. As [Run] does, it starts the browser when the
+// context has none yet.
+//
+// It returns [ErrInvalidContext] when ctx is not a chromedp context.
+func CallBrowser[P, R any](ctx context.Context, cmd cdp.Command[P, R], params P) (R, error) {
+	c, err := initContextBrowser(ctx)
+	if err != nil {
+		var zero R
+		return zero, err
+	}
+	return cdp.Call(ctx, c.Browser, cmd, params)
+}
 
 // CallAction are actions that calls a JavaScript function using
 // runtime.CallFunctionOn.
@@ -16,9 +50,9 @@ type CallAction Action
 //
 // The handling of res is the same as that of Evaluate.
 //
-// Do not call the following methods on runtime.CallFunctionOnParams:
-// - WithReturnByValue: it will be set depending on the type of res;
-// - WithArguments: pass the arguments with args instead.
+// Do not set the following fields of runtime.CallFunctionOnParams:
+// - ReturnByValue: it will be set depending on the type of res;
+// - Arguments: pass the arguments with args instead.
 //
 // Note: any exception encountered will be returned as an error.
 func CallFunctionOn(functionDeclaration string, res any, opt CallOption, args ...any) CallAction {
@@ -30,18 +64,20 @@ func CallFunctionOn(functionDeclaration string, res any, opt CallOption, args ..
 
 func callFunctionOn(ctx context.Context, functionDeclaration string, res any, opt CallOption, args ...any) (*runtime.RemoteObject, error) {
 	// set up parameters
-	p := runtime.CallFunctionOn(functionDeclaration).
-		WithSilent(true)
+	p := &runtime.CallFunctionOnParams{
+		FunctionDeclaration: functionDeclaration,
+		Silent:              new(true),
+	}
 
 	switch res.(type) {
 	case **runtime.RemoteObject:
 	default:
-		p = p.WithReturnByValue(true)
+		p.ReturnByValue = new(true)
 	}
 
 	// apply opt
 	if opt != nil {
-		p = opt(p)
+		opt(p)
 	}
 
 	// arguments
@@ -53,24 +89,24 @@ func callFunctionOn(ctx context.Context, functionDeclaration string, res any, op
 		if ea.err != nil {
 			return nil, ea.err
 		}
-		p = p.WithArguments(ea.args)
+		p.Arguments = ea.args
 	}
 
 	// call
-	v, exp, err := p.Do(ctx)
+	r, err := Call(ctx, runtime.CallFunctionOn, *p)
 	if err != nil {
 		return nil, err
 	}
-	if exp != nil {
-		return nil, &ExceptionError{exp}
+	if r.ExceptionDetails != nil {
+		return nil, &ExceptionError{r.ExceptionDetails}
 	}
 
-	return v, parseRemoteObject(v, res)
+	return r.Result, parseRemoteObject(r.Result, res)
 }
 
 // CallOption is a function to modify the runtime.CallFunctionOnParams to
 // provide more information.
-type CallOption = func(params *runtime.CallFunctionOnParams) *runtime.CallFunctionOnParams
+type CallOption = func(params *runtime.CallFunctionOnParams)
 
 // errAppender is to help accumulating the arguments and simplifying error checks.
 //

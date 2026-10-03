@@ -63,6 +63,9 @@ type Browser struct {
 	listenersMu sync.Mutex
 	listeners   []cancelableListener
 
+	// events holds the subscriptions made with Subscribe.
+	events subscribers
+
 	conn Transport
 
 	// newTabQueue is the queue used to create new target handlers, once a new
@@ -148,7 +151,7 @@ func (b *Browser) Process() *os.Process {
 	return b.process
 }
 
-func (b *Browser) newExecutorForTarget(ctx context.Context, targetID target.ID, sessionID target.SessionID) (*Target, error) {
+func (b *Browser) newTarget(ctx context.Context, targetID target.ID, sessionID target.SessionID) (*Target, error) {
 	if targetID == "" {
 		return nil, errors.New("empty target ID")
 	}
@@ -180,12 +183,23 @@ func (b *Browser) newExecutorForTarget(ctx context.Context, targetID target.ID, 
 	return t, nil
 }
 
-func (b *Browser) Execute(ctx context.Context, method string, params, res any) error {
+// Call sends the command to the browser, waits for the response, and decodes
+// the result into res. It satisfies [cdp.Session].
+//
+// A browser error is returned as a [*cdproto.Error].
+func (b *Browser) Call(ctx context.Context, method string, params, res any) error {
 	// Certain methods aren't available to the user directly.
 	if method == browser.CommandClose {
 		return fmt.Errorf("to close the browser gracefully, use chromedp.Cancel")
 	}
 	return b.execute(ctx, method, params, res)
+}
+
+// Subscribe starts to buffer the browser events with the method, and returns
+// the channel that the raw event parameters arrive on. It satisfies
+// [cdp.Session].
+func (b *Browser) Subscribe(method string) (<-chan jsontext.Value, func()) {
+	return b.events.subscribe(method)
 }
 
 func (b *Browser) execute(ctx context.Context, method string, params, res any) error {
@@ -243,6 +257,7 @@ func (b *Browser) execute(ctx context.Context, method string, params, res any) e
 
 func (b *Browser) run(ctx context.Context) {
 	defer b.conn.Close()
+	defer b.events.close()
 
 	// incomingQueue is the queue of incoming target events, to be routed by
 	// their session ID.
@@ -275,6 +290,7 @@ func (b *Browser) run(ctx context.Context) {
 				}
 
 			case msg.Method != "":
+				b.events.publish(string(msg.Method), msg.Params)
 				ev, err := cdproto.UnmarshalMessage(msg, DefaultUnmarshalOptions)
 				if err != nil {
 					b.errf("%s", err)

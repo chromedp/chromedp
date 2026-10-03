@@ -87,17 +87,17 @@ func ScreenshotNodes(nodes []*Node, scale float64, picbuf *[]byte) Action {
 		clip.Scale = scale
 
 		// take screenshot of the box
-		buf, err := page.CaptureScreenshot().
-			WithFormat("png").
-			WithCaptureBeyondViewport(true).
-			WithFromSurface(true).
-			WithClip(&clip).
-			Do(ctx)
+		res, err := Call(ctx, page.CaptureScreenshot, page.CaptureScreenshotParams{
+			Format:                page.CaptureScreenshotFormatPng,
+			CaptureBeyondViewport: new(true),
+			FromSurface:           new(true),
+			Clip:                  &clip,
+		})
 		if err != nil {
 			return err
 		}
 
-		*picbuf = buf
+		*picbuf = res.Data
 		return nil
 	})
 }
@@ -119,11 +119,12 @@ func CaptureScreenshot(res *[]byte) Action {
 	}
 
 	return ActionFunc(func(ctx context.Context) error {
-		var err error
-		*res, err = page.CaptureScreenshot().
-			WithFromSurface(true).
-			Do(ctx)
-		return err
+		r, err := Call(ctx, page.CaptureScreenshot, page.CaptureScreenshotParams{FromSurface: new(true)})
+		if err != nil {
+			return err
+		}
+		*res = r.Data
+		return nil
 	})
 }
 
@@ -146,16 +147,16 @@ func FullScreenshot(res *[]byte, quality int) EmulateAction {
 		}
 
 		// capture screenshot
-		var err error
-		*res, err = page.CaptureScreenshot().
-			WithCaptureBeyondViewport(true).
-			WithFromSurface(true).
-			WithFormat(format).
-			WithQuality(int64(quality)).
-			Do(ctx)
+		r, err := Call(ctx, page.CaptureScreenshot, page.CaptureScreenshotParams{
+			CaptureBeyondViewport: new(true),
+			FromSurface:           new(true),
+			Format:                format,
+			Quality:               int64(quality),
+		})
 		if err != nil {
 			return err
 		}
+		*res = r.Data
 		return nil
 	})
 }

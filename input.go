@@ -3,7 +3,6 @@ package chromedp
 import (
 	"context"
 
-	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/cdproto/input"
 	"github.com/chromedp/chromedp/kb"
@@ -36,12 +35,15 @@ type MouseAction Action
 // MouseEvent is a mouse event action to dispatch the specified mouse event
 // type at coordinates x, y.
 func MouseEvent(typ input.DispatchMouseEventType, x, y float64, opts ...MouseOption) MouseAction {
-	p := input.DispatchMouseEvent(typ, x, y)
-	// apply opts
-	for _, o := range opts {
-		p = o(p)
-	}
-	return p
+	return ActionFunc(func(ctx context.Context) error {
+		p := &input.DispatchMouseEventParams{Type: typ, X: x, Y: y}
+		// apply opts
+		for _, o := range opts {
+			o(p)
+		}
+		_, err := Call(ctx, input.DispatchMouseEvent, *p)
+		return err
+	})
 }
 
 // MouseClickXY is an action that sends a left mouse button click (i.e.,
@@ -58,15 +60,16 @@ func MouseClickXY(x, y float64, opts ...MouseOption) MouseAction {
 
 		// apply opts
 		for _, o := range opts {
-			p = o(p)
+			o(p)
 		}
 
-		if err := p.Do(ctx); err != nil {
+		if _, err := Call(ctx, input.DispatchMouseEvent, *p); err != nil {
 			return err
 		}
 
 		p.Type = MouseReleased
-		return p.Do(ctx)
+		_, err := Call(ctx, input.DispatchMouseEvent, *p)
+		return err
 	})
 }
 
@@ -77,25 +80,24 @@ func MouseClickXY(x, y float64, opts ...MouseOption) MouseAction {
 // viewport.
 func MouseClickNode(n *Node, opts ...MouseOption) MouseAction {
 	return ActionFunc(func(ctx context.Context) error {
-		t := cdp.ExecutorFromContext(ctx).(*Target)
-		if t == nil {
+		if c := FromContext(ctx); c == nil || c.Target == nil {
 			return ErrInvalidTarget
 		}
 
-		if err := dom.ScrollIntoViewIfNeeded().WithNodeID(n.NodeID).Do(ctx); err != nil {
+		if _, err := Call(ctx, dom.ScrollIntoViewIfNeeded, dom.ScrollIntoViewIfNeededParams{NodeID: n.NodeID}); err != nil {
 			return err
 		}
 
-		boxes, err := dom.GetContentQuads().WithNodeID(n.NodeID).Do(ctx)
+		res, err := Call(ctx, dom.GetContentQuads, dom.GetContentQuadsParams{NodeID: n.NodeID})
 		if err != nil {
 			return err
 		}
 
-		if len(boxes) == 0 {
+		if len(res.Quads) == 0 {
 			return ErrInvalidDimensions
 		}
 
-		content := boxes[0]
+		content := res.Quads[0]
 
 		c := len(content)
 		if c%2 != 0 || c < 1 {
@@ -115,7 +117,7 @@ func MouseClickNode(n *Node, opts ...MouseOption) MouseAction {
 }
 
 // MouseOption is a mouse action option.
-type MouseOption = func(*input.DispatchMouseEventParams) *input.DispatchMouseEventParams
+type MouseOption = func(*input.DispatchMouseEventParams)
 
 // Button is a mouse action option to set the button to click from a string.
 func Button(btn string) MouseOption {
@@ -124,50 +126,49 @@ func Button(btn string) MouseOption {
 
 // ButtonType is a mouse action option to set the button to click.
 func ButtonType(button input.MouseButton) MouseOption {
-	return func(p *input.DispatchMouseEventParams) *input.DispatchMouseEventParams {
-		return p.WithButton(button)
+	return func(p *input.DispatchMouseEventParams) {
+		p.Button = button
 	}
 }
 
 // ButtonLeft is a mouse action option to set the button clicked as the left
 // mouse button.
-func ButtonLeft(p *input.DispatchMouseEventParams) *input.DispatchMouseEventParams {
-	return p.WithButton(input.MouseButtonLeft)
+func ButtonLeft(p *input.DispatchMouseEventParams) {
+	p.Button = input.MouseButtonLeft
 }
 
 // ButtonMiddle is a mouse action option to set the button clicked as the middle
 // mouse button.
-func ButtonMiddle(p *input.DispatchMouseEventParams) *input.DispatchMouseEventParams {
-	return p.WithButton(input.MouseButtonMiddle)
+func ButtonMiddle(p *input.DispatchMouseEventParams) {
+	p.Button = input.MouseButtonMiddle
 }
 
 // ButtonRight is a mouse action option to set the button clicked as the right
 // mouse button.
-func ButtonRight(p *input.DispatchMouseEventParams) *input.DispatchMouseEventParams {
-	return p.WithButton(input.MouseButtonRight)
+func ButtonRight(p *input.DispatchMouseEventParams) {
+	p.Button = input.MouseButtonRight
 }
 
 // ButtonNone is a mouse action option to set the button clicked as none (used
 // for mouse movements).
-func ButtonNone(p *input.DispatchMouseEventParams) *input.DispatchMouseEventParams {
-	return p.WithButton(input.MouseButtonNone)
+func ButtonNone(p *input.DispatchMouseEventParams) {
+	p.Button = input.MouseButtonNone
 }
 
 // ButtonModifiers is a mouse action option to add additional input modifiers
 // for a button click.
 func ButtonModifiers(modifiers ...Modifier) MouseOption {
-	return func(p *input.DispatchMouseEventParams) *input.DispatchMouseEventParams {
+	return func(p *input.DispatchMouseEventParams) {
 		for _, m := range modifiers {
 			p.Modifiers |= int64(m)
 		}
-		return p
 	}
 }
 
 // ClickCount is a mouse action option to set the click count.
 func ClickCount(n int) MouseOption {
-	return func(p *input.DispatchMouseEventParams) *input.DispatchMouseEventParams {
-		return p.WithClickCount(int64(n))
+	return func(p *input.DispatchMouseEventParams) {
+		p.ClickCount = int64(n)
 	}
 }
 
@@ -191,7 +192,7 @@ func KeyEvent(keys string, opts ...KeyOption) KeyAction {
 				for _, o := range opts {
 					o(k)
 				}
-				if err := k.Do(ctx); err != nil {
+				if _, err := Call(ctx, input.DispatchKeyEvent, *k); err != nil {
 					return err
 				}
 			}
@@ -204,8 +205,7 @@ func KeyEvent(keys string, opts ...KeyOption) KeyAction {
 // KeyEventNode is a key action that dispatches a key event on an element node.
 func KeyEventNode(n *Node, keys string, opts ...KeyOption) KeyAction {
 	return ActionFunc(func(ctx context.Context) error {
-		err := dom.Focus().WithNodeID(n.NodeID).Do(ctx)
-		if err != nil {
+		if _, err := Call(ctx, dom.Focus, dom.FocusParams{NodeID: n.NodeID}); err != nil {
 			return err
 		}
 
@@ -214,15 +214,14 @@ func KeyEventNode(n *Node, keys string, opts ...KeyOption) KeyAction {
 }
 
 // KeyOption is a key action option.
-type KeyOption = func(*input.DispatchKeyEventParams) *input.DispatchKeyEventParams
+type KeyOption = func(*input.DispatchKeyEventParams)
 
 // KeyModifiers is a key action option to add additional modifiers on the key
 // press.
 func KeyModifiers(modifiers ...Modifier) KeyOption {
-	return func(p *input.DispatchKeyEventParams) *input.DispatchKeyEventParams {
+	return func(p *input.DispatchKeyEventParams) {
 		for _, m := range modifiers {
 			p.Modifiers |= int64(m)
 		}
-		return p
 	}
 }
