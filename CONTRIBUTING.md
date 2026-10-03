@@ -26,17 +26,18 @@ go test -v ./...
 your machine, run `./contrib/docker-test.sh`. It runs the tests inside the
 `chromedp/headless-shell` image. CI runs both ways on every push.
 
-If you do not have a browser, run `go test ./docs/`. It needs none and checks
-the documents.
+If you do not have a browser, run `go test ./docs/`. It needs none and tests
+the documents and the Go comments.
 
 ## Writing
 
 Write in plain English. Use short sentences and the active voice. The
 `simple-english` skill in `.agents/skills` has the full rules, and
-`go test ./docs/` checks the ones that a machine can check.
+`go test ./docs/` finds the violations that a machine can find, in the
+documents and in the Go comments.
 
-To record a decision, add a file to `docs/decisions/` named by the date, such
-as `2026-10-03-short-title.md`, and add its row to the index. The test prints
+To record a decision, add a file to `docs/decisions/`. Name it with the date, as
+in `2026-10-03-short-title.md`. Then add its row to the index. The test prints
 the row for you.
 
 ## Questions
