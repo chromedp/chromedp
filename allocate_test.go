@@ -77,6 +77,7 @@ func TestExecAllocatorCombinedOutputPanic(t *testing.T) {
 	buf := new(bytes.Buffer)
 	allocCtx, cancel := NewExecAllocator(context.Background(),
 		append([]ExecAllocatorOption{
+			WebSocket, // the timeout only applies to the websocket mode
 			CombinedOutput(buf),
 			Flag("enable-logging", "stderr"),
 			WSURLReadTimeout(1), // trigger err
@@ -348,7 +349,8 @@ func TestExecAllocatorMissingWebsocketAddr(t *testing.T) {
 	allocCtx, cancel := NewExecAllocator(context.Background(),
 		// Ask for a debugging pipe that is not open, so Chrome exits
 		// straight away. Chrome ignores a bad "remote-debugging-address".
-		append([]ExecAllocatorOption{Flag("remote-debugging-pipe", true)},
+		// This needs the websocket mode, as the pipe mode opens the pipe.
+		append([]ExecAllocatorOption{WebSocket, Flag("remote-debugging-pipe", true)},
 			allocOpts...)...)
 	defer cancel()
 
@@ -368,28 +370,43 @@ func TestExecAllocatorMissingWebsocketAddr(t *testing.T) {
 func TestCombinedOutput(t *testing.T) {
 	t.Parallel()
 
-	buf := new(bytes.Buffer)
-	allocCtx, cancel := NewExecAllocator(context.Background(),
-		append([]ExecAllocatorOption{
-			CombinedOutput(buf),
-			Flag("enable-logging", "stderr"),
-		}, allocOpts...)...)
-	defer cancel()
+	for _, test := range []struct {
+		name string
+		opts []ExecAllocatorOption
+		// wantListening is true when the output must have the websocket
+		// address line, which only the websocket mode prints.
+		wantListening bool
+	}{
+		{name: "Pipe"},
+		{name: "WebSocket", opts: []ExecAllocatorOption{WebSocket}, wantListening: true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
 
-	taskCtx, _ := NewContext(allocCtx)
-	if err := Do(taskCtx,
-		Navigate(testdataDir+"/consolespam.html"),
-	); err != nil {
-		t.Fatal(err)
-	}
-	cancel()
-	if !strings.Contains(buf.String(), "DevTools listening on") {
-		t.Fatalf("failed to find websocket string in browser output test")
-	}
-	// Recent chrome versions have started replacing many "spam" messages
-	// with "spam 1", "spam 2", and so on. Search for the prefix only.
-	if want, got := 2000, strings.Count(buf.String(), `"spam`); want != got {
-		t.Fatalf("want %d spam console logs, got %d", want, got)
+			buf := new(syncBuffer)
+			allocCtx, cancel := NewExecAllocator(context.Background(),
+				append(append([]ExecAllocatorOption{
+					CombinedOutput(buf),
+					Flag("enable-logging", "stderr"),
+				}, test.opts...), allocOpts...)...)
+			defer cancel()
+
+			taskCtx, _ := NewContext(allocCtx)
+			if err := Do(taskCtx,
+				Navigate(testdataDir+"/consolespam.html"),
+			); err != nil {
+				t.Fatal(err)
+			}
+			cancel()
+			if got := strings.Contains(buf.String(), "DevTools listening on"); got != test.wantListening {
+				t.Fatalf("output has the websocket string: %v, want %v", got, test.wantListening)
+			}
+			// Recent chrome versions have started replacing many "spam" messages
+			// with "spam 1", "spam 2", and so on. Search for the prefix only.
+			if want, got := 2000, strings.Count(buf.String(), `"spam`); want != got {
+				t.Fatalf("want %d spam console logs, got %d", want, got)
+			}
+		})
 	}
 }
 
@@ -404,6 +421,7 @@ func TestCombinedOutputError(t *testing.T) {
 		// Ask for a debugging pipe that is not open, so Chrome exits
 		// straight away. Chrome ignores a bad "remote-debugging-address".
 		append([]ExecAllocatorOption{
+			WebSocket,
 			Flag("remote-debugging-pipe", true),
 			CombinedOutput(buf),
 		}, allocOpts...)...)
