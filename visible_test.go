@@ -27,7 +27,7 @@ var headlessFlags = map[string]any{
 	"disable-default-apps":                   true,
 	"disable-dev-shm-usage":                  true,
 	"disable-extensions":                     true,
-	"disable-features":                       "site-per-process,Translate,BlinkGenPropertyTrees",
+	"disable-features":                       "Translate,BlinkGenPropertyTrees",
 	"disable-hang-monitor":                   true,
 	"disable-ipc-flooding-protection":        true,
 	"disable-popup-blocking":                 true,

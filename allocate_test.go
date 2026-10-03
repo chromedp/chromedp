@@ -137,6 +137,28 @@ func TestExecAllocatorKillBrowser(t *testing.T) {
 	}
 }
 
+// TestDefaultFeatureNames makes sure that no feature in the list of the
+// default options has the form of a command line switch. Chrome names a
+// feature in CamelCase, and it ignores a name that it does not know. The old
+// value "site-per-process" is a switch name, so it did nothing. See the issue
+// 1605.
+func TestDefaultFeatureNames(t *testing.T) {
+	t.Parallel()
+
+	a := setupExecAllocator(DefaultExecAllocatorOptions[:]...)
+	for _, flag := range []string{"enable-features", "disable-features"} {
+		value, ok := a.initFlags[flag].(string)
+		if !ok {
+			continue
+		}
+		for name := range strings.SplitSeq(value, ",") {
+			if name == "" || strings.Contains(name, "-") {
+				t.Errorf("%s has the name %q, which is not a feature name", flag, name)
+			}
+		}
+	}
+}
+
 func TestSkipNewContext(t *testing.T) {
 	t.Parallel()
 
