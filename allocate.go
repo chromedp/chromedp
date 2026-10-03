@@ -612,10 +612,25 @@ func ExecPath(path string) ExecAllocatorOption {
 // findExecPath looks for the Chrome browser on the system. It looks in
 // different places on different operating systems. The search can be
 // aggressive and a bit slow, but it runs only when you create a new
-// ExecAllocator.
+// ExecAllocator. On Windows, it looks for Chrome first and for Microsoft Edge
+// after it.
 func findExecPath() string {
+	for _, path := range execLocations(runtime.GOOS) {
+		found, err := exec.LookPath(path)
+		if err == nil {
+			return found
+		}
+	}
+	// Fall back to something simple and sensible, to give a useful error
+	// message.
+	return "google-chrome"
+}
+
+// execLocations returns the names and paths that findExecPath tries for the
+// operating system goos, in order.
+func execLocations(goos string) []string {
 	var locations []string
-	switch runtime.GOOS {
+	switch goos {
 	case "darwin":
 		locations = []string{
 			// Mac
@@ -631,6 +646,12 @@ func findExecPath() string {
 			`C:\Program Files\Google\Chrome\Application\chrome.exe`,
 			filepath.Join(os.Getenv("USERPROFILE"), `AppData\Local\Google\Chrome\Application\chrome.exe`),
 			filepath.Join(os.Getenv("USERPROFILE"), `AppData\Local\Chromium\Application\chrome.exe`),
+			// Microsoft Edge is built on Chromium. Windows has it on every
+			// machine, so use it when no Chrome is installed.
+			"msedge",
+			"msedge.exe", // in case PATHEXT is misconfigured
+			`C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`,
+			`C:\Program Files\Microsoft\Edge\Application\msedge.exe`,
 		}
 	default:
 		locations = []string{
@@ -650,15 +671,7 @@ func findExecPath() string {
 		}
 	}
 
-	for _, path := range locations {
-		found, err := exec.LookPath(path)
-		if err == nil {
-			return found
-		}
-	}
-	// Fall back to something simple and sensible, to give a useful error
-	// message.
-	return "google-chrome"
+	return locations
 }
 
 // Flag is a generic command line option that passes a flag to Chrome. If the
