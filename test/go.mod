@@ -8,5 +8,3 @@ require (
 	github.com/ledongthuc/pdf v0.0.0-20220302134840-0c2507a12d80
 	github.com/orisano/pixelmatch v0.0.0-20220722002657-fb0b55479cde
 )
-
-replace github.com/chromedp/chromedp => ../

@@ -21,15 +21,13 @@ maintainer whether CI must add it.
 
 ## Release
 
-### Remove the replace directives before the release
+### Keep the replace directives out of the release
 
-The `go.mod` of `remote` and of `test` hold `replace github.com/chromedp/chromedp => ../`
-and require `github.com/chromedp/chromedp v0.18.0`, a version that does not
-exist yet. When the maintainer tags the core, set the real version and remove
-the directive in both files, and run `go mod tidy` in both directories. Do this
-before the tag `remote/v0.1.0`. Nothing in the repository fails the release when
-a directive stays. A Dependabot configuration, if the repository gets one, must
-list the directories `/`, `/remote` and `/test`.
+The `go.mod` of `remote` and of `test` require the released core and hold no
+`replace` directive. A change to the core that `remote` or `test` needs must be
+tagged first, and then the two files must require that tag. Nothing in the
+repository fails a release when a directive stays. A Dependabot configuration, if
+the repository gets one, must list the directories `/`, `/remote` and `/test`.
 
 ## API
 

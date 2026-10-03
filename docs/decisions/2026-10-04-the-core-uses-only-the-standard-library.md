@@ -89,18 +89,18 @@ the message names `remote.WebSocket`. The flags `remote-debugging-port` and
 
 ## Development setup
 
-The `go.mod` of `remote` and of `test` require `github.com/chromedp/chromedp
-v0.18.0`, the next release of the core. That version does not exist yet. Each
-file has the directive `replace github.com/chromedp/chromedp => ../`, so the go
-command uses the root directory, and `go mod tidy` works. The directives are for
-development. When the maintainer tags the core, the maintainer sets the real
-version and removes the directive, and then tags `remote/v0.1.0`. A program
-outside this repository that depends on `remote` is not affected by a `replace`
-directive in the `go.mod` of `remote`, because the go command ignores the
-directives of a dependency.
+The `go.mod` of `remote` and of `test` required `github.com/chromedp/chromedp
+v0.18.0` and held the directive `replace github.com/chromedp/chromedp => ../`
+while the core had no tag for v0.18.0. The directive made the go command use the
+root directory. When the core was tagged v0.18.0 on 2026-10-04, the maintainer
+removed the directives, before the tag `remote/v0.1.0`. A program outside this
+repository that depends on `remote` is not affected by a `replace` directive in
+the `go.mod` of `remote`, because the go command ignores the directives of a
+dependency. CI adds the directive at run time, so that `remote` and `test` run
+against the core of the commit under test.
 
 Nobody commits a `go.work` file. `.gitignore` lists `go.work` and `go.work.sum`,
-and the workflow of CI uses the replace directives. Each module runs
+and the workflow of CI adds the replace directives at run time. Each module runs
 `go test ./...` in its own directory.
 
 ## Tests that changed

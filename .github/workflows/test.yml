@@ -8,9 +8,10 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     # The repository has three modules: the core in the root, remote and test.
-    # remote and test use the core in the root through a replace directive in
-    # their go.mod. Run every module with GOWORK=off, so that no workspace
-    # changes the result.
+    # The go.mod of remote and test require a released core. The first step
+    # adds a replace directive at run time, so that they test the core of this
+    # commit. Run every module with GOWORK=off, so that no workspace changes
+    # the result.
     env:
       GOWORK: "off"
     defaults:
@@ -31,6 +32,10 @@ jobs:
       - name: Allow unprivileged user namespaces
         if: runner.os == 'Linux'
         run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - name: Use the core of this commit in remote and test
+        run: |
+          (cd remote && go mod edit -replace github.com/chromedp/chromedp=../)
+          (cd test && go mod edit -replace github.com/chromedp/chromedp=../)
       # The runner images have Google Chrome installed.
       - name: Test Chrome, core
         run: go test -v ./...

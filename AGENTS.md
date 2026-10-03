@@ -195,16 +195,14 @@ any other. `.gitignore` lists them. The maintainer can try an unreleased
 `cdproto` with a local `go.work` file. Do not add a `replace` directive to the
 `go.mod` of the core.
 
-The `go.mod` of `remote/` and of `test/` holds the directive
-`replace github.com/chromedp/chromedp => ../` and requires
-`github.com/chromedp/chromedp v0.18.0`. That version does not exist until the
-maintainer tags the core, and the directive makes it resolve to the root
-directory. `go mod tidy` works with the directive. The directives are for
-development. When the maintainer tags the core, the maintainer sets the real
-version in both files and removes the directive, before the tag `remote/v0.1.0`.
-A module outside this repository that depends on `remote` is not affected by a
-`replace` directive in the `go.mod` of `remote`, because the go command ignores
-the directives of a dependency. Do not create a tag.
+The `go.mod` of `remote/` and of `test/` require a released version of the core,
+`github.com/chromedp/chromedp v0.18.0` at this time, and hold no `replace`
+directive. To try a change of the core in `remote` or `test`, add
+`replace github.com/chromedp/chromedp => ../` to that `go.mod` while you work,
+and never commit it. CI adds the directive at run time, so that `remote` and
+`test` run against the core of the commit under test. Before the maintainer tags
+`remote`, make sure that no `go.mod` holds a `replace` directive, and set the
+version of the core to the newest tag. Do not create a tag.
 
 The full test suite needs a browser, and it is the only way to test the
 package. Run it where Chrome is installed. Each module runs in its own
