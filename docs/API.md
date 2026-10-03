@@ -723,6 +723,7 @@ func WithExistingBrowserContext(id cdp.BrowserContextID) ContextOption
 func WithKeepOpen() ContextOption
 func WithLogf(f func(string, ...any)) ContextOption
 func WithNewBrowserContext(options ...CreateBrowserContextOption) ContextOption
+func WithNewWindow(newWindow bool) ContextOption
 func WithTargetID(id target.ID) ContextOption
 func WithVisibleWindow() ContextOption
 

@@ -62,6 +62,11 @@ type Context struct {
 	// to create a new BrowserContext.
 	createBrowserContextParams *target.CreateBrowserContextParams
 
+	// sharedWindow is set by WithNewWindow(false). A new tab then opens in
+	// the window of the browser and not in a new window. A child context
+	// inherits it.
+	sharedWindow bool
+
 	// browserContextOwner is true when this context owns its BrowserContext.
 	// The owner disposes the BrowserContext when the context is done.
 	browserContextOwner bool
@@ -137,6 +142,7 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 		c.Allocator = pc.Allocator
 		c.Browser = pc.Browser
 		parentBrowserContextID = pc.BrowserContextID
+		c.sharedWindow = pc.sharedWindow
 		// do not inherit Target, so that NewContext can be used to
 		// create a new tab on the same browser.
 
@@ -394,8 +400,9 @@ func (c *Context) newTarget(ctx context.Context) error {
 			BrowserContextID: c.BrowserContextID,
 			// A tab in a shared window is hidden when another tab is
 			// active. A hidden page gets no animation frames, so Poll never
-			// returns. Each target gets its own window.
-			NewWindow: new(true),
+			// returns. By default, each target gets its own window. See
+			// WithNewWindow.
+			NewWindow: new(!c.sharedWindow),
 		})
 		if err != nil {
 			return err
@@ -528,6 +535,26 @@ type ContextOption = func(*Context)
 // display.
 func WithVisibleWindow() ContextOption {
 	return func(c *Context) { c.visibleWindow = true }
+}
+
+// WithNewWindow chooses where a new tab opens. By default, the first Run of a
+// context that creates a tab opens it in a new window, so that each tab is
+// visible and gets animation frames. WithNewWindow(false) opens the tab in the
+// window of the browser, as a real tab. A child context inherits the choice.
+//
+// Chrome hides every tab of a window except the active one, and a hidden page
+// gets no animation frames. So an action that waits for a frame, such as
+// [Poll] and the actions that use it, can wait for ever on a tab that is not
+// active. Make a tab active with the command [target.ActivateTarget], or with
+// [page.BringToFront] in the tab, before you run such an action on it.
+//
+// WithNewWindow has no effect on the first context of a browser, which uses the
+// tab that the browser opens, or on a context that attaches to an existing
+// target with WithTargetID.
+func WithNewWindow(newWindow bool) ContextOption {
+	return func(c *Context) {
+		c.sharedWindow = !newWindow
+	}
 }
 
 // WithTargetID makes a context attach to an existing target, and not create a
