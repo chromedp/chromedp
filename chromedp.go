@@ -374,10 +374,14 @@ func (c *Context) newTarget(ctx context.Context) error {
 		}
 		c.targetID, err = target.
 			CreateTarget("about:blank").
-			// The generated params always send "focus". If it is
-			// false, Chrome opens the tab hidden and the page gets
-			// no animation frames.
+			// The generated params always send "focus" and
+			// "newWindow", even when false. With "focus":false,
+			// current Chrome opens the tab hidden. A tab in a
+			// shared window is hidden when another tab is active,
+			// and a hidden page gets no animation frames. A tab in
+			// a new browser context needs its own window.
 			WithFocus(true).
+			WithNewWindow(true).
 			WithBrowserContextID(c.BrowserContextID).
 			Do(browserExecutor)
 		if err != nil {
