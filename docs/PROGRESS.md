@@ -17,6 +17,7 @@ These commits are on `main` and are not released. Each one has its own test.
 - Fixed: a key with Ctrl, Alt or Meta typed its character (issue 1384).
 - Added: `WithDialHTTPHeader`, `WithRemoteDialHTTPHeader` and `WithConnHTTPHeader` (pull request 1631).
 - Added: `WithNewWindow(bool)`. By default, each new tab opens in a new window, as before in this version. `WithNewWindow(false)` opens it as a tab in the window of the browser. Switch tabs with `target.ActivateTarget`.
+- Fixed: a tab in a browser context that has no window, with `WithNewWindow(false)`, failed with `Failed to open new tab - no browser is open`. The first tab of a new browser context now opens in a new window, and a tab for an existing browser context retries in a new window (the error of issue 1601).
 - Added: the exit error of a browser process that died is in the error of `Run`, `Do`, `Call` and `CallBrowser` (issue 408).
 - Added: `LoadError` and `ErrPageLoad` for a page that did not load (issue 793).
 - Not reproduced: `WaitReady` after a fresh navigation (issue 1593). A test covers it.

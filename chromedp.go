@@ -19,6 +19,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/browser"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/css"
@@ -386,6 +387,7 @@ func (c *Context) newTarget(ctx context.Context) error {
 		return nil
 	}
 	if !c.first {
+		newWindow := !c.sharedWindow
 		if c.createBrowserContextParams != nil {
 			res, err := cdp.Call(ctx, c.Browser, target.CreateBrowserContext, *c.createBrowserContextParams)
 			if err != nil {
@@ -394,16 +396,28 @@ func (c *Context) newTarget(ctx context.Context) error {
 			c.BrowserContextID = res.BrowserContextID
 			c.browserContextOwner = true
 			c.createBrowserContextParams = nil
+			// A new browser context has no window yet, so its first tab
+			// needs a window of its own.
+			newWindow = true
 		}
-		res, err := cdp.Call(ctx, c.Browser, target.CreateTarget, target.CreateTargetParams{
-			URL:              "about:blank",
-			BrowserContextID: c.BrowserContextID,
-			// A tab in a shared window is hidden when another tab is
-			// active. A hidden page gets no animation frames, so Poll never
-			// returns. By default, each target gets its own window. See
-			// WithNewWindow.
-			NewWindow: new(!c.sharedWindow),
-		})
+		create := func(newWindow bool) (target.CreateTargetResult, error) {
+			return cdp.Call(ctx, c.Browser, target.CreateTarget, target.CreateTargetParams{
+				URL:              "about:blank",
+				BrowserContextID: c.BrowserContextID,
+				// A tab in a shared window is hidden when another tab is
+				// active. A hidden page gets no animation frames, so Poll
+				// never returns. By default, each target gets its own
+				// window. See WithNewWindow.
+				NewWindow: &newWindow,
+			})
+		}
+		res, err := create(newWindow)
+		var cerr *cdproto.Error
+		if err != nil && !newWindow && errors.As(err, &cerr) && strings.Contains(cerr.Message, "no browser is open") {
+			// The browser context has no window to put a tab in. This is
+			// the case of a context that WithExistingBrowserContext names.
+			res, err = create(true)
+		}
 		if err != nil {
 			return err
 		}
