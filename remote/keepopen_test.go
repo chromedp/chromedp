@@ -193,7 +193,7 @@ func TestExitErrorKeptBrowser(t *testing.T) {
 	}
 	_, err := chromedp.Run(ctx, chromedp.Evaluate[int](`1 + 2`))
 	var exit *exec.ExitError
-	if !errors.As(err, &exit) || !strings.Contains(err.Error(), "signal: killed") {
+	if !errors.As(err, &exit) || !strings.Contains(err.Error(), killedText) {
 		t.Fatalf("want the exit error of the killed browser, got %v", err)
 	}
 }

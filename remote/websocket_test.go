@@ -8,6 +8,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
@@ -57,9 +58,11 @@ func TestDialTimeout(t *testing.T) {
 		ctx, cancel := chromedp.NewContext(allocCtx)
 		defer cancel()
 		err = chromedp.Do(ctx)
-		got, want := fmt.Sprintf("%v", err), "i/o timeout"
-		if !strings.Contains(got, want) {
-			t.Fatalf("got %q, want %q", got, want)
+		// The text depends on the system. Windows can report the deadline
+		// of the context and not the timeout of the network.
+		got := fmt.Sprintf("%v", err)
+		if !strings.Contains(got, "i/o timeout") && !strings.Contains(got, "deadline exceeded") {
+			t.Fatalf("got %q, want %q or %q", got, "i/o timeout", "deadline exceeded")
 		}
 	})
 	t.Run("NoTimeoutSuccess", func(t *testing.T) {
@@ -83,8 +86,10 @@ func TestDialTimeout(t *testing.T) {
 		defer cancel()
 		err = chromedp.Do(ctx)
 		got := fmt.Sprintf("%v", err)
-		if !strings.Contains(got, "EOF") && !strings.Contains(got, "connection reset") {
-			t.Fatalf("got %q, want %q or %q", got, "EOF", "connection reset")
+		// Windows words a closed connection in its own way.
+		if !strings.Contains(got, "EOF") && !strings.Contains(got, "connection reset") &&
+			!strings.Contains(got, "connection was aborted") && !strings.Contains(got, "forcibly closed") {
+			t.Fatalf("got %q, want a closed connection", got)
 		}
 	})
 }
@@ -187,8 +192,8 @@ func TestExitErrorAfterKill(t *testing.T) {
 		if !errors.As(err, &exit) {
 			t.Fatalf("call %d: want an *exec.ExitError in %q", i, err)
 		}
-		if !strings.Contains(err.Error(), "signal: killed") {
-			t.Fatalf("call %d: want the signal in %q", i, err)
+		if !strings.Contains(err.Error(), killedText) {
+			t.Fatalf("call %d: want %q in %q", i, killedText, err)
 		}
 		if !errors.Is(err, context.Canceled) {
 			t.Fatalf("call %d: want context.Canceled in %q", i, err)
@@ -421,3 +426,12 @@ func TestAllocatorBrowserContext(t *testing.T) {
 		}
 	})
 }
+
+// killedText is the text that the error of a killed process has. Windows has no
+// signals, and it ends the process with the exit status 1.
+var killedText = func() string {
+	if runtime.GOOS == "windows" {
+		return "exit status 1"
+	}
+	return "signal: killed"
+}()

@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"syscall"
 	"testing"
@@ -200,8 +201,8 @@ func TestExitErrorAfterKill(t *testing.T) {
 		if !errors.As(err, &exit) {
 			t.Fatalf("call %d: want an *exec.ExitError in %q", i, err)
 		}
-		if !strings.Contains(err.Error(), "signal: killed") {
-			t.Fatalf("call %d: want the signal in %q", i, err)
+		if !strings.Contains(err.Error(), killedText) {
+			t.Fatalf("call %d: want %q in %q", i, killedText, err)
 		}
 		if !errors.Is(err, context.Canceled) {
 			t.Fatalf("call %d: want context.Canceled in %q", i, err)
@@ -387,8 +388,19 @@ func TestCombinedOutputError(t *testing.T) {
 	}
 }
 
+// skipTimeZoneEnvOnWindows skips a test that sets the time zone of the browser
+// with the variable TZ. The browser reads the time zone from the system on
+// Windows and ignores the variable.
+func skipTimeZoneEnvOnWindows(t *testing.T) {
+	t.Helper()
+	if runtime.GOOS == "windows" {
+		t.Skip("the browser ignores the TZ variable on Windows")
+	}
+}
+
 func TestEnv(t *testing.T) {
 	t.Parallel()
+	skipTimeZoneEnvOnWindows(t)
 
 	tz := "Australia/Melbourne"
 	allocCtx, cancel := NewExecAllocator(context.Background(),
@@ -433,6 +445,7 @@ func TestWithBrowserOptionAlreadyAllocated(t *testing.T) {
 
 func TestModifyCmdFunc(t *testing.T) {
 	t.Parallel()
+	skipTimeZoneEnvOnWindows(t)
 
 	tz := "Atlantic/Reykjavik"
 	allocCtx, cancel := NewExecAllocator(context.Background(),
@@ -496,3 +509,12 @@ func TestStartsWithNonBlankTab(t *testing.T) {
 		}
 	}
 }
+
+// killedText is the text that the error of a killed process has. Windows has no
+// signals, and it ends the process with the exit status 1.
+var killedText = func() string {
+	if runtime.GOOS == "windows" {
+		return "exit status 1"
+	}
+	return "signal: killed"
+}()

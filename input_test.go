@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -91,6 +92,12 @@ func TestMouseClickNode(t *testing.T) {
 func mouseClickNodeTest[S Selectable](sel S, exp string, opt MouseOption) func(t *testing.T) {
 	return func(t *testing.T) {
 		t.Parallel()
+		if runtime.GOOS == "windows" && exp == "bar-middle" {
+			// The page of the test scrolls sideways. On Windows, a press of
+			// the middle button on a page that scrolls starts autoscroll, and
+			// then the browser sends no auxclick event.
+			t.Skip("autoscroll swallows the auxclick event of the middle button on Windows")
+		}
 
 		ctx, cancel := testAllocate(t, "input.html")
 		defer cancel()
