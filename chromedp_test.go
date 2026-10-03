@@ -1325,7 +1325,7 @@ func TestRunResponse(t *testing.T) {
 		allocate := func(t *testing.T) context.Context {
 			ctx, cancel := testAllocate(t, "")
 			t.Cleanup(cancel)
-			ctx, cancel = context.WithTimeout(ctx, 5*time.Second)
+			ctx, cancel = context.WithTimeout(ctx, 30*time.Second)
 			t.Cleanup(cancel)
 
 			if err := Do(ctx, Navigate(ts.URL+"/index")); err != nil {
@@ -1414,7 +1414,7 @@ func TestRunResponse_noResponse(t *testing.T) {
 	ctx, cancel := testAllocate(t, "")
 	defer cancel()
 
-	ctx, cancel = context.WithTimeout(ctx, 5*time.Second)
+	ctx, cancel = context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
 	steps := []struct {

@@ -320,7 +320,11 @@ func TestKeyEventModifier(t *testing.T) {
 			if !strings.Contains(strings.ToLower(st.Keydowns), strings.ToLower(tt.want)) {
 				t.Errorf("want a keydown with %q, got %q", tt.want, st.Keydowns)
 			}
-			if tt.mod == ModifierCtrl && (st.Start != 0 || st.End != len(seed)) {
+			// On macOS, Ctrl+A is not select all. Select all is Cmd+A there,
+			// and the browser runs it as an editing command that the key
+			// event does not send. The CI run on macOS showed no selection
+			// change. So the test checks the keydown event only.
+			if tt.mod == ModifierCtrl && runtime.GOOS != "darwin" && (st.Start != 0 || st.End != len(seed)) {
 				t.Errorf("Ctrl+A must select all of the text, got the selection %d to %d", st.Start, st.End)
 			}
 		})

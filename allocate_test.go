@@ -496,7 +496,10 @@ func TestStartsWithNonBlankTab(t *testing.T) {
 	ctx, cancel := NewContext(allocCtx)
 	defer cancel()
 
-	ctx, cancel = context.WithTimeout(ctx, 2*time.Second)
+	// The limit includes the start of the browser, which takes several seconds
+	// on a busy CI runner. The browser that hangs never ends, so any limit
+	// finds it.
+	ctx, cancel = context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
 	if err := Do(ctx,

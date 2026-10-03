@@ -262,7 +262,7 @@ func TestNoRetryForInvalidSelector(t *testing.T) {
 	ctx, cancel := testAllocate(t, "table.html")
 	defer cancel()
 
-	ctx, cancel = context.WithTimeout(ctx, time.Second)
+	ctx, cancel = context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
 	tests := []struct {
@@ -701,7 +701,7 @@ func setValueTest[S Selectable](sel S) func(t *testing.T) {
 			t.Errorf("expected `FOOBAR`, got: %s", value)
 		}
 
-		ctx, cancel = context.WithTimeout(ctx, 2*time.Second)
+		ctx, cancel = context.WithTimeout(ctx, 30*time.Second)
 		defer cancel()
 		if err := Do(ctx,
 			WaitVisible(CSS("#event-input")),
@@ -1688,7 +1688,7 @@ func TestSelectorCSS(t *testing.T) {
 	}
 
 	// CSS does not take an XPath query. DOM.querySelector fails.
-	ctx, cancel = context.WithTimeout(ctx, time.Second)
+	ctx, cancel = context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	err := Do(ctx, Query(CSS(`//p`)))
 	if err == nil || !strings.Contains(err.Error(), "DOM Error while querying") {

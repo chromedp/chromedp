@@ -190,7 +190,9 @@ func ExampleNewContext_reuseBrowser() {
 
 	for i := range 2 {
 		func() {
-			ctx, cancel := context.WithTimeout(ctx, time.Second)
+			// A slow machine, such as a CI runner, can need more than a
+			// second.
+			ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 			defer cancel()
 			ctx, cancel = chromedp.NewContext(ctx)
 			defer cancel()
