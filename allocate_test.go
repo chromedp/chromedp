@@ -11,8 +11,10 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"slices"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -223,6 +225,71 @@ func TestNoExitErrorAfterCancel(t *testing.T) {
 	if _, err := Run(ctx, Evaluate[int](`1 + 2`)); err != context.Canceled {
 		t.Fatalf("want exactly context.Canceled, got %v", err)
 	}
+}
+
+// TestRetryRemove checks that the removal of a user data directory tries again
+// when it fails. Child processes of Chrome can write in the directory after the
+// browser exits, and then os.RemoveAll fails with "directory not empty". The
+// retry must have a bound. See the issue 1544.
+func TestRetryRemove(t *testing.T) {
+	t.Parallel()
+
+	notEmpty := &os.PathError{Op: "unlinkat", Path: "dir", Err: syscall.ENOTEMPTY}
+
+	t.Run("succeeds after failures", func(t *testing.T) {
+		t.Parallel()
+
+		calls := 0
+		remove := func(string) error {
+			calls++
+			if calls < 4 {
+				return notEmpty
+			}
+			return nil
+		}
+		if err := retryRemove("dir", remove, 5*time.Second, time.Millisecond); err != nil {
+			t.Fatal(err)
+		}
+		if calls != 4 {
+			t.Fatalf("want 4 calls, got %d", calls)
+		}
+	})
+
+	t.Run("gives up", func(t *testing.T) {
+		t.Parallel()
+
+		calls := 0
+		remove := func(string) error {
+			calls++
+			return notEmpty
+		}
+		start := time.Now()
+		err := retryRemove("dir", remove, 50*time.Millisecond, 5*time.Millisecond)
+		if !errors.Is(err, syscall.ENOTEMPTY) {
+			t.Fatalf("want the last error, got %v", err)
+		}
+		if calls < 2 {
+			t.Fatalf("want a retry, got %d calls", calls)
+		}
+		if time.Since(start) > 2*time.Second {
+			t.Fatalf("the retry took %v, which is far above the limit", time.Since(start))
+		}
+	})
+
+	t.Run("real directory", func(t *testing.T) {
+		t.Parallel()
+
+		dir := filepath.Join(t.TempDir(), "profile")
+		if err := os.MkdirAll(filepath.Join(dir, "Default"), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := removeAllRetry(dir); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := os.Stat(dir); !errors.Is(err, os.ErrNotExist) {
+			t.Fatalf("the directory is still there: %v", err)
+		}
+	})
 }
 
 func TestSkipNewContext(t *testing.T) {

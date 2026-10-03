@@ -459,13 +459,19 @@ func (a *ExecAllocator) usesPipe() bool {
 // exits. Then os.RemoveAll fails with "directory not empty". So
 // removeAllRetry tries again for a few seconds.
 func removeAllRetry(dir string) error {
-	deadline := time.Now().Add(5 * time.Second)
+	return retryRemove(dir, os.RemoveAll, 5*time.Second, 20*time.Millisecond)
+}
+
+// retryRemove calls remove with dir until it returns nil, or until the limit
+// is over. It waits pause between two calls, and returns the last error.
+func retryRemove(dir string, remove func(string) error, limit, pause time.Duration) error {
+	deadline := time.Now().Add(limit)
 	for {
-		err := os.RemoveAll(dir)
+		err := remove(dir)
 		if err == nil || !time.Now().Before(deadline) {
 			return err
 		}
-		time.Sleep(20 * time.Millisecond)
+		time.Sleep(pause)
 	}
 }
 

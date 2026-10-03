@@ -129,7 +129,17 @@ func ExampleExecAllocator() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer os.RemoveAll(dir)
+	defer func() {
+		// The child processes of Chrome can still write in the directory for
+		// a short time after the browser stops. Then RemoveAll fails with
+		// "directory not empty", so try again.
+		for range 50 {
+			if err := os.RemoveAll(dir); err == nil {
+				return
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+	}()
 
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
 		chromedp.DisableGPU,
