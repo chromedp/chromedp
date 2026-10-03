@@ -21,6 +21,8 @@ func TestPoll(t *testing.T) {
 		opts   []PollOption
 		hash   string
 		err    string
+		// errAlt is the text of err in newer Chrome versions.
+		errAlt string
 		delay  time.Duration
 	}{
 		{
@@ -78,6 +80,7 @@ func TestPoll(t *testing.T) {
 			isFunc: true,
 			hash:   "#navigate",
 			err:    "Execution context was destroyed. (-32000)",
+			errAlt: "Inspected target navigated or closed (-32000)",
 		},
 		{
 			name:   "PollingInterval",
@@ -160,7 +163,7 @@ func TestPoll(t *testing.T) {
 			} else {
 				if err == nil {
 					t.Fatalf("expected err to be %q, got: %v", test.err, err)
-				} else if test.err != err.Error() {
+				} else if test.err != err.Error() && (test.errAlt == "" || test.errAlt != err.Error()) {
 					t.Fatalf("want error to be %v, got: %v", test.err, err)
 				}
 			}
