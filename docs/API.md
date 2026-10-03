@@ -1,0 +1,867 @@
+# The chromedp API
+
+This document describes the generic action API of `chromedp`. It shows the new code next to the old code. The old code is the API on the `main` branch. The new code is the API on the `typed-api` branch. The change is a proposal. Nobody has approved it. See `docs/decisions/2026-10-03-generic-iterator-api-instead-of-action.md`.
+
+## Principles
+
+1. An action returns its value. The old API filled a pointer that the caller declared first. The new action has the type `Action[T]` and returns a `T`. An action that returns nothing has the type `Action[Void]`.
+2. One type describes every step. An action is a plain func, `func(ctx context.Context, t *Target) (T, error)`. A program can write its own action with a func literal. No interface is needed.
+3. The target is a session. The `Target` and the `Browser` implement `cdp.Session`. An action sends a protocol command with `cdp.Call(ctx, t, command, params)`. The target is an argument, so it cannot be missing. The old API hid an executor in the context, and a call without it failed at run time.
+4. A protocol command is a value. A command has the type `cdp.Command[P, R]`, where `P` is the struct of the parameters and `R` is the struct of the result. A new field in the protocol adds a field to a struct. It does not change a function signature.
+5. An event is a value, and an event stream is an iterator. `Events(ctx, page.LoadEventFired)` returns an `iter.Seq2[E, error]` of typed payloads. The subscription starts when `Events` returns. A program can subscribe, trigger the event and then range over the events, so no event is lost.
+6. A selector keeps its form. The query options, such as `ByQuery`, `NodeVisible` and `FromNode`, keep their names and their use. The action returns the value that it read.
+7. Old code still runs. `Legacy` wraps an action of the old interface, so a program can move to the new API one step at a time.
+
+Two funcs run actions. `Run` runs one action and returns its value. `Do` runs several actions that return no value, in order, and stops at the first error. Both start the browser and open the tab when the context has none yet.
+
+```go
+if err := chromedp.Do(ctx, chromedp.Navigate(url)); err != nil {
+	return err
+}
+title, err := chromedp.Run(ctx, chromedp.Title())
+```
+
+## Before and after
+
+Each example has the old code first and the new code second. The new code comes from `example_test.go`. These examples run as tests. In every example, `ctx` is a chromedp context made with `chromedp.NewContext`, and `ts` is a test server.
+
+### 1. Navigate and read a value
+
+The old code declared `title` first and passed its address. The new code gets the title from `Run`.
+
+Before:
+
+```go
+var title string
+if err := chromedp.Run(ctx,
+	chromedp.Navigate(ts.URL),
+	chromedp.Title(&title),
+); err != nil {
+	log.Fatal(err)
+}
+fmt.Println(title)
+```
+
+After:
+
+```go
+if err := chromedp.Do(ctx, chromedp.Navigate(ts.URL)); err != nil {
+	log.Fatal(err)
+}
+title, err := chromedp.Run(ctx, chromedp.Title())
+if err != nil {
+	log.Fatal(err)
+}
+fmt.Println(title)
+```
+
+### 2. Read the HTML of an element, click and read again
+
+The new code has one `Run` for each value. Steps with no value go in `Do`.
+
+Before:
+
+```go
+var outerBefore, outerAfter string
+if err := chromedp.Run(ctx,
+	chromedp.Navigate(ts.URL),
+	chromedp.OuterHTML("#content", &outerBefore, chromedp.ByQuery),
+	chromedp.Click("#content", chromedp.ByQuery),
+	chromedp.OuterHTML("#content", &outerAfter, chromedp.ByQuery),
+); err != nil {
+	log.Fatal(err)
+}
+```
+
+After:
+
+```go
+if err := chromedp.Do(ctx, chromedp.Navigate(ts.URL)); err != nil {
+	log.Fatal(err)
+}
+outerBefore, err := chromedp.Run(ctx, chromedp.OuterHTML("#content", chromedp.ByQuery))
+if err != nil {
+	log.Fatal(err)
+}
+if err := chromedp.Do(ctx, chromedp.Click("#content", chromedp.ByQuery)); err != nil {
+	log.Fatal(err)
+}
+outerAfter, err := chromedp.Run(ctx, chromedp.OuterHTML("#content", chromedp.ByQuery))
+if err != nil {
+	log.Fatal(err)
+}
+```
+
+### 3. Click a link and wait for the new page
+
+A click does not always cause a navigation, so the old `Run` did not wait for a load. `RunResponse` waited and returned the HTTP response. It still does. `WaitEvent` is the new way to wait for any event. It subscribes to the event, runs the click, and returns the first payload that comes after it.
+
+Before:
+
+```go
+resp, err := chromedp.RunResponse(ctx, chromedp.Click("#foo", chromedp.ByID))
+if err != nil {
+	log.Fatal(err)
+}
+fmt.Println("status code:", resp.Status)
+```
+
+After:
+
+```go
+resp, err := chromedp.RunResponse(ctx, chromedp.Click("#foo", chromedp.ByID))
+if err != nil {
+	log.Fatal(err)
+}
+fmt.Println("status code:", resp.Status)
+
+// Or wait for the load event, with no response.
+_, err = chromedp.Run(ctx, chromedp.WaitEvent(page.LoadEventFired, nil,
+	chromedp.Click("#next", chromedp.ByID)))
+```
+
+`NavigateResponse(url)` is new. It is an `Action[*network.Response]`:
+
+```go
+resp, err := chromedp.Run(ctx, chromedp.NavigateResponse(ts.URL+"/baz"))
+```
+
+### 4. Fill a form
+
+`SendKeys` and `SetValue` return no value. `Value` returns the value of the field.
+
+Before:
+
+```go
+var name, color string
+if err := chromedp.Run(ctx,
+	chromedp.Navigate(ts.URL),
+	chromedp.SendKeys("#name", "Ada", chromedp.ByID),
+	chromedp.SetValue("#color", "green", chromedp.ByID),
+	chromedp.Value("#name", &name, chromedp.ByID),
+	chromedp.Value("#color", &color, chromedp.ByID),
+); err != nil {
+	log.Fatal(err)
+}
+```
+
+After:
+
+```go
+if err := chromedp.Do(ctx,
+	chromedp.Navigate(ts.URL),
+	chromedp.SendKeys("#name", "Ada", chromedp.ByID),
+	chromedp.SetValue("#color", "green", chromedp.ByID),
+); err != nil {
+	log.Fatal(err)
+}
+name, err := chromedp.Run(ctx, chromedp.Value("#name", chromedp.ByID))
+if err != nil {
+	log.Fatal(err)
+}
+color, err := chromedp.Run(ctx, chromedp.Value("#color", chromedp.ByID))
+if err != nil {
+	log.Fatal(err)
+}
+```
+
+### 5. Wait for an event with no race
+
+The old `ListenTarget` called a func inside the loop that handles the browser events. The func switched on the type of the event and had to return fast. A program that waited for an event needed a channel, and it had to register the func before the trigger. The new code subscribes first, triggers the event and then reads it.
+
+In both blocks, `exceptionText` is a small helper that formats the details of the exception as text.
+
+Before:
+
+```go
+gotException := make(chan bool, 1)
+chromedp.ListenTarget(ctx, func(ev any) {
+	switch ev := ev.(type) {
+	case *runtime.EventConsoleAPICalled:
+		fmt.Printf("* console.%s call:\n", ev.Type)
+		for _, arg := range ev.Args {
+			fmt.Printf("%s - %s\n", arg.Type, arg.Value)
+		}
+	case *runtime.EventExceptionThrown:
+		fmt.Printf("* %s\n", exceptionText(ev))
+		gotException <- true
+	}
+})
+if err := chromedp.Run(ctx, chromedp.Navigate(ts.URL)); err != nil {
+	log.Fatal(err)
+}
+<-gotException
+```
+
+After:
+
+```go
+// Subscribe first. The subscriptions buffer the events, so the loops
+// below see the events of the navigation although they start later.
+console := chromedp.Events(ctx, runtime.ConsoleAPICalled)
+exceptions := chromedp.Events(ctx, runtime.ExceptionThrown)
+
+if err := chromedp.Do(ctx, chromedp.Navigate(ts.URL)); err != nil {
+	log.Fatal(err)
+}
+
+calls := 0
+for ev, err := range console {
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("* console.%s call:\n", ev.Type)
+	for _, arg := range ev.Args {
+		fmt.Printf("%s - %s\n", arg.Type, arg.Value)
+	}
+	if calls++; calls == 2 {
+		break
+	}
+}
+for ev, err := range exceptions {
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Printf("* %s\n", exceptionText(ev))
+	break
+}
+```
+
+The payload `ev` has its own type in each loop. Nothing is converted from `any`. The loop ends when the context ends, and the last value is the error of the context.
+
+### 6. Close a dialog while an action waits
+
+An alert blocks the page, and so it blocks the click that opened it. A second goroutine must close the dialog. The new code uses a typed event and a typed command.
+
+Before:
+
+```go
+chromedp.ListenTarget(ctx, func(ev any) {
+	if ev, ok := ev.(*page.EventJavascriptDialogOpening); ok {
+		fmt.Println("closing alert:", ev.Message)
+		go func() {
+			if err := chromedp.Run(ctx, page.HandleJavaScriptDialog(true)); err != nil {
+				log.Fatal(err)
+			}
+		}()
+	}
+})
+```
+
+After:
+
+```go
+dialogs := chromedp.Events(ctx, page.JavascriptDialogOpening)
+go func() {
+	for ev, err := range dialogs {
+		if err != nil {
+			return
+		}
+		fmt.Println("closing alert:", ev.Message)
+		_, err := chromedp.Call(ctx, page.HandleJavaScriptDialog, page.HandleJavaScriptDialogParams{Accept: true})
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+}()
+```
+
+### 7. Screenshots
+
+A screenshot action returns the bytes of the image. The old code passed the address of a byte slice.
+
+Before:
+
+```go
+var buf []byte
+if err := chromedp.Run(ctx,
+	chromedp.Navigate(`https://google.com`),
+	chromedp.FullScreenshot(&buf, 90),
+); err != nil {
+	log.Fatal(err)
+}
+```
+
+After:
+
+```go
+if err := chromedp.Do(ctx, chromedp.Navigate(`https://google.com`)); err != nil {
+	log.Fatal(err)
+}
+buf, err := chromedp.Run(ctx, chromedp.FullScreenshot(90))
+if err != nil {
+	log.Fatal(err)
+}
+```
+
+The same change applies to `Screenshot(sel, opts...)`, `ScreenshotScale`, `ScreenshotNodes` and `CaptureScreenshot()`. Each returns an `Action[[]byte]`.
+
+### 8. Evaluate with a typed result
+
+`Evaluate[T]` decodes the result into the type `T`. The type replaces the pointer, and the type decides how the result is read. `Void` ignores the result. `[]byte` returns the raw JSON. `*runtime.RemoteObject` returns the object without a conversion.
+
+Before:
+
+```go
+var sum int
+if err := chromedp.Run(ctx, chromedp.Evaluate(`1 + 2`, &sum)); err != nil {
+	log.Fatal(err)
+}
+
+var raw []byte
+err := chromedp.Run(ctx, chromedp.Evaluate(`({ a: 1 })`, &raw))
+
+var obj *runtime.RemoteObject
+err = chromedp.Run(ctx, chromedp.Evaluate(`({ a: 1 })`, &obj))
+
+// Ignore the result.
+err = chromedp.Run(ctx, chromedp.Evaluate(`window.scrollTo(0, 100)`, nil))
+```
+
+After:
+
+```go
+sum, err := chromedp.Run(ctx, chromedp.Evaluate[int](`1 + 2`))
+if err != nil {
+	log.Fatal(err)
+}
+
+raw, err := chromedp.Run(ctx, chromedp.Evaluate[[]byte](`({ a: 1 })`))
+
+obj, err := chromedp.Run(ctx, chromedp.Evaluate[*runtime.RemoteObject](`({ a: 1 })`))
+
+// Ignore the result.
+err = chromedp.Do(ctx, chromedp.Evaluate[chromedp.Void](`window.scrollTo(0, 100)`))
+```
+
+`CallFunctionOn[T]`, `JavascriptAttribute[T]`, `Poll[T]` and `PollFunction[T]` work in the same way.
+
+### 9. Emulate a device
+
+`Emulate` returns no value, so it goes in `Do` with the navigation. The screenshot comes from `Run`.
+
+Before:
+
+```go
+var buf []byte
+if err := chromedp.Run(ctx,
+	chromedp.Emulate(device.IPhone7),
+	chromedp.Navigate(`https://duckduckgo.com/`),
+	chromedp.SendKeys(`textarea[name=q]`, "what's my user agent?\n"),
+	chromedp.WaitVisible(`#zci-answer`, chromedp.ByID),
+	chromedp.CaptureScreenshot(&buf),
+); err != nil {
+	log.Fatal(err)
+}
+```
+
+After:
+
+```go
+if err := chromedp.Do(ctx,
+	chromedp.Emulate(device.IPhone7),
+	chromedp.Navigate(`https://duckduckgo.com/`),
+	chromedp.SendKeys(`textarea[name=q]`, "what's my user agent?\n"),
+	chromedp.WaitVisible(`#zci-answer`, chromedp.ByID),
+); err != nil {
+	log.Fatal(err)
+}
+buf, err := chromedp.Run(ctx, chromedp.CaptureScreenshot())
+if err != nil {
+	log.Fatal(err)
+}
+```
+
+### 10. Listen to network events with an iterator
+
+The old code needed a listener, and the program had to keep its own state. The new code ranges over the events and stops with `break`.
+
+Before:
+
+```go
+chromedp.ListenTarget(ctx, func(ev any) {
+	if ev, ok := ev.(*network.EventResponseReceived); ok {
+		fmt.Println(ev.Response.URL, ev.Response.Status)
+	}
+})
+if err := chromedp.Run(ctx, chromedp.Navigate(ts.URL)); err != nil {
+	log.Fatal(err)
+}
+```
+
+After:
+
+```go
+// Subscribe before the navigation. The loop below can start after it.
+responses := chromedp.Events(ctx, network.ResponseReceived)
+
+if err := chromedp.Do(ctx, chromedp.Navigate(ts.URL)); err != nil {
+	log.Fatal(err)
+}
+for ev, err := range responses {
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(strings.TrimPrefix(ev.Response.URL, ts.URL), ev.Response.Status)
+	if ev.Type == network.ResourceTypeImage {
+		break
+	}
+}
+```
+
+`BrowserEvents` is the same for the events of the browser, such as `target.TargetCreated`.
+
+### 11. Send a custom command with cdp.Call
+
+A protocol command is not an action any more. An action sends it with `cdp.Call` on its target. The old code used a `Do` method on the generated parameters. The new parameter types have no methods.
+
+Before:
+
+```go
+var buf []byte
+if err := chromedp.Run(ctx,
+	chromedp.Navigate(`https://pkg.go.dev/github.com/chromedp/chromedp`),
+	chromedp.ActionFunc(func(ctx context.Context) error {
+		var err error
+		buf, _, err = page.PrintToPDF().WithDisplayHeaderFooter(false).WithLandscape(true).Do(ctx)
+		return err
+	}),
+); err != nil {
+	log.Fatal(err)
+}
+```
+
+After:
+
+```go
+printToPDF := func(ctx context.Context, t *chromedp.Target) ([]byte, error) {
+	res, err := cdp.Call(ctx, t, page.PrintToPDF, page.PrintToPDFParams{
+		DisplayHeaderFooter: new(false),
+		Landscape:           new(true),
+	})
+	return res.Data, err
+}
+
+if err := chromedp.Do(ctx, chromedp.Navigate(`https://pkg.go.dev/github.com/chromedp/chromedp`)); err != nil {
+	log.Fatal(err)
+}
+buf, err := chromedp.Run(ctx, printToPDF)
+if err != nil {
+	log.Fatal(err)
+}
+```
+
+Outside an action, `chromedp.Call(ctx, command, params)` runs the command on the target of the context. `chromedp.CallBrowser` runs it on the browser.
+
+```go
+res, err := chromedp.Call(ctx, page.GetFrameTree, cdp.Empty{})
+```
+
+### 12. Run an old action with Legacy
+
+An action of the old interface has a `Do(context.Context) error` method. `Legacy` makes it an `Action[Void]`. The old action receives the same context, so `chromedp.Call` works inside it.
+
+Before:
+
+```go
+var title string
+if err := chromedp.Run(ctx,
+	chromedp.Navigate(ts.URL),
+	oldTitle{&title},
+); err != nil {
+	log.Fatal(err)
+}
+```
+
+After:
+
+```go
+var title string
+if err := chromedp.Do(ctx,
+	chromedp.Navigate(ts.URL),
+	chromedp.Legacy(oldTitle{&title}),
+); err != nil {
+	log.Fatal(err)
+}
+```
+
+The type `oldTitle` is the same in both. It has the method `Do(ctx context.Context) error`, and it sends its commands with `chromedp.Call(ctx, ...)`.
+
+### 13. Run a query from another node
+
+`FromNode` and the `By` options keep their names. Each `Text` returns its value.
+
+Before:
+
+```go
+var queryRoot, queryFromNode string
+if err := chromedp.Run(ctx,
+	chromedp.Text(".content", &queryRoot, chromedp.ByQuery),
+	chromedp.Text(".content", &queryFromNode, chromedp.ByQuery, chromedp.FromNode(sectionNode)),
+); err != nil {
+	log.Fatal(err)
+}
+```
+
+After:
+
+```go
+queryRoot, err := chromedp.Run(ctx, chromedp.Text(".content", chromedp.ByQuery))
+if err != nil {
+	log.Fatal(err)
+}
+queryFromNode, err := chromedp.Run(ctx,
+	chromedp.Text(".content", chromedp.ByQuery, chromedp.FromNode(sectionNode)))
+if err != nil {
+	log.Fatal(err)
+}
+```
+
+## What the new API removes
+
+The new API removes the interface `Action`, the type `ActionFunc`, the type `Tasks`, and the funcs `ListenTarget` and `ListenBrowser`. It also removes the types `QueryAction`, `NavigateAction`, `EvaluateAction`, `CallAction`, `PollAction`, `MouseAction`, `KeyAction` and `EmulateAction`. Each type is now `Action[T]`. `docs/MIGRATION.md` lists every change, with the old name and the new name.
+
+## The exported funcs and types
+
+This part comes from `go doc -all`. Run `go doc` on a name for its documentation.
+
+## Functions
+
+These are the functions of the package that no type owns.
+
+```go
+func BrowserEvents[E any](ctx context.Context, ev cdp.Event[E]) iter.Seq2[E, error]
+func ButtonLeft(p *input.DispatchMouseEventParams)
+func ButtonMiddle(p *input.DispatchMouseEventParams)
+func ButtonNone(p *input.DispatchMouseEventParams)
+func ButtonRight(p *input.DispatchMouseEventParams)
+func ByID(s *Selector)
+func ByJSPath(s *Selector)
+func ByNodeID(s *Selector)
+func ByQuery(s *Selector)
+func ByQueryAll(s *Selector)
+func BySearch(s *Selector)
+func Call[P, R any](ctx context.Context, cmd cdp.Command[P, R], params P) (R, error)
+func CallBrowser[P, R any](ctx context.Context, cmd cdp.Command[P, R], params P) (R, error)
+func Cancel(ctx context.Context) error
+func DisableGPU(a *ExecAllocator)
+func Do(ctx context.Context, steps ...Action[Void]) error
+func EmulateLandscape(p1 *emulation.SetDeviceMetricsOverrideParams, p2 *emulation.SetTouchEmulationEnabledParams)
+func EmulateMobile(p1 *emulation.SetDeviceMetricsOverrideParams, p2 *emulation.SetTouchEmulationEnabledParams)
+func EmulatePortrait(p1 *emulation.SetDeviceMetricsOverrideParams, p2 *emulation.SetTouchEmulationEnabledParams)
+func EmulateTouch(p1 *emulation.SetDeviceMetricsOverrideParams, p2 *emulation.SetTouchEmulationEnabledParams)
+func EvalAsValue(p *runtime.EvaluateParams)
+func EvalIgnoreExceptions(p *runtime.EvaluateParams)
+func EvalWithCommandLineAPI(p *runtime.EvaluateParams)
+func Events[E any](ctx context.Context, ev cdp.Event[E]) iter.Seq2[E, error]
+func Headless(a *ExecAllocator)
+func IgnoreCertErrors(a *ExecAllocator)
+func NewContext(parent context.Context, opts ...ContextOption) (context.Context, context.CancelFunc)
+func NewExecAllocator(parent context.Context, opts ...ExecAllocatorOption) (context.Context, context.CancelFunc)
+func NewRemoteAllocator(parent context.Context, url string, opts ...RemoteAllocatorOption) (context.Context, context.CancelFunc)
+func NoDefaultBrowserCheck(a *ExecAllocator)
+func NoFirstRun(a *ExecAllocator)
+func NoModifyURL(a *RemoteAllocator)
+func NoSandbox(a *ExecAllocator)
+func NodeEnabled(s *Selector)
+func NodeNotPresent(s *Selector)
+func NodeNotVisible(s *Selector)
+func NodeReady(s *Selector)
+func NodeSelected(s *Selector)
+func NodeVisible(s *Selector)
+func Run[T any](ctx context.Context, a Action[T]) (T, error)
+func RunResponse(ctx context.Context, steps ...Action[Void]) (*network.Response, error)
+func Targets(ctx context.Context) ([]*target.Info, error)
+func WaitNewTarget(ctx context.Context, fn func(*target.Info) bool) <-chan target.ID
+```
+
+## Types, with their constructors and methods
+
+```go
+type Action[T any] func(ctx context.Context, t *Target) (T, error)
+func AttributeValue(sel any, name string, opts ...QueryOption) Action[AttributeResult]
+func Attributes(sel any, opts ...QueryOption) Action[map[string]string]
+func AttributesAll(sel any, opts ...QueryOption) Action[[]map[string]string]
+func Blur(sel any, opts ...QueryOption) Action[Void]
+func CallFunctionOn[T any](functionDeclaration string, opt CallOption, args ...any) Action[T]
+func CaptureScreenshot() Action[[]byte]
+func Clear(sel any, opts ...QueryOption) Action[Void]
+func Click(sel any, opts ...QueryOption) Action[Void]
+func ComputedStyle(sel any, opts ...QueryOption) Action[[]*css.ComputedStyleProperty]
+func Dimensions(sel any, opts ...QueryOption) Action[*dom.BoxModel]
+func DoubleClick(sel any, opts ...QueryOption) Action[Void]
+func Dump(sel any, w io.Writer, opts ...QueryOption) Action[Void]
+func DumpTo(sel any, w io.Writer, prefix, indent string, nodeIDs bool, depth int64, pierce bool, wait time.Duration, opts ...QueryOption) Action[Void]
+func Emulate(device Device) Action[Void]
+func EmulateReset() Action[Void]
+func EmulateViewport(width, height int64, opts ...EmulateViewportOption) Action[Void]
+func Evaluate[T any](expression string, opts ...EvaluateOption) Action[T]
+func EvaluateAsDevTools[T any](expression string, opts ...EvaluateOption) Action[T]
+func Focus(sel any, opts ...QueryOption) Action[Void]
+func FullScreenshot(quality int) Action[[]byte]
+func Func(f func(ctx context.Context, t *Target) error) Action[Void]
+func InnerHTML(sel any, opts ...QueryOption) Action[string]
+func JavascriptAttribute[T any](sel any, name string, opts ...QueryOption) Action[T]
+func KeyEvent(keys string, opts ...KeyOption) Action[Void]
+func KeyEventNode(n *Node, keys string, opts ...KeyOption) Action[Void]
+func Legacy(a OldAction) Action[Void]
+func Location() Action[string]
+func MatchedStyle(sel any, opts ...QueryOption) Action[*css.GetMatchedStylesForNodeResult]
+func MouseClickNode(n *Node, opts ...MouseOption) Action[Void]
+func MouseClickXY(x, y float64, opts ...MouseOption) Action[Void]
+func MouseEvent(typ input.DispatchMouseEventType, x, y float64, opts ...MouseOption) Action[Void]
+func Navigate(urlstr string) Action[Void]
+func NavigateBack() Action[Void]
+func NavigateForward() Action[Void]
+func NavigateResponse(urlstr string) Action[*network.Response]
+func NavigateToHistoryEntry(entryID int64) Action[Void]
+func NavigationEntries() Action[page.GetNavigationHistoryResult]
+func NodeIDs(sel any, opts ...QueryOption) Action[[]cdp.NodeID]
+func Nodes(sel any, opts ...QueryOption) Action[[]*Node]
+func OuterHTML(sel any, opts ...QueryOption) Action[string]
+func Poll[T any](expression string, opts ...PollOption) Action[T]
+func PollFunction[T any](pageFunction string, opts ...PollOption) Action[T]
+func Query(sel any, opts ...QueryOption) Action[Void]
+func QueryAfter[T any](sel any, f func(ctx context.Context, t *Target, nodes []*Node) (T, error), opts ...QueryOption) Action[T]
+func Reload() Action[Void]
+func RemoveAttribute(sel any, name string, opts ...QueryOption) Action[Void]
+func Reset(sel any, opts ...QueryOption) Action[Void]
+func ResetViewport() Action[Void]
+func Screenshot(sel any, opts ...QueryOption) Action[[]byte]
+func ScreenshotNodes(nodes []*Node, scale float64) Action[[]byte]
+func ScreenshotScale(sel any, scale float64, opts ...QueryOption) Action[[]byte]
+func ScrollIntoView(sel any, opts ...QueryOption) Action[Void]
+func SendKeys(sel any, v string, opts ...QueryOption) Action[Void]
+func SetAttributeValue(sel any, name, value string, opts ...QueryOption) Action[Void]
+func SetAttributes(sel any, attributes map[string]string, opts ...QueryOption) Action[Void]
+func SetJavascriptAttribute(sel any, name, value string, opts ...QueryOption) Action[Void]
+func SetUploadFiles(sel any, files []string, opts ...QueryOption) Action[Void]
+func SetValue(sel any, value string, opts ...QueryOption) Action[Void]
+func Sleep(d time.Duration) Action[Void]
+func Steps(steps ...Action[Void]) Action[Void]
+func Stop() Action[Void]
+func Submit(sel any, opts ...QueryOption) Action[Void]
+func Text(sel any, opts ...QueryOption) Action[string]
+func TextContent(sel any, opts ...QueryOption) Action[string]
+func Title() Action[string]
+func Value(sel any, opts ...QueryOption) Action[string]
+func WaitEnabled(sel any, opts ...QueryOption) Action[Void]
+func WaitEvent[E, T any](ev cdp.Event[E], match func(E) bool, trigger Action[T]) Action[E]
+func WaitNotPresent(sel any, opts ...QueryOption) Action[Void]
+func WaitNotVisible(sel any, opts ...QueryOption) Action[Void]
+func WaitReady(sel any, opts ...QueryOption) Action[Void]
+func WaitSelected(sel any, opts ...QueryOption) Action[Void]
+func WaitVisible(sel any, opts ...QueryOption) Action[Void]
+
+type Allocator interface { ... }
+
+type AttributeResult struct { ... }
+
+type Browser struct { ... }
+func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Browser, error)
+func (b *Browser) Call(ctx context.Context, method string, params, res any) error
+func (b *Browser) Process() *os.Process
+func (b *Browser) Subscribe(method string) (<-chan jsontext.Value, func())
+
+type BrowserOption = func(*Browser)
+func WithBrowserDebugf(f func(string, ...any)) BrowserOption
+func WithBrowserErrorf(f func(string, ...any)) BrowserOption
+func WithBrowserLogf(f func(string, ...any)) BrowserOption
+func WithConsolef(f func(string, ...any)) BrowserOption
+func WithDialTimeout(d time.Duration) BrowserOption
+
+type CallOption = func(params *runtime.CallFunctionOnParams)
+
+type Conn struct { ... }
+func DialContext(ctx context.Context, urlstr string, opts ...DialOption) (*Conn, error)
+func (c *Conn) Close() error
+func (c *Conn) Read(_ context.Context, msg *cdproto.Message) error
+func (c *Conn) Write(_ context.Context, msg *cdproto.Message) error
+
+type Context struct { ... }
+func FromContext(ctx context.Context) *Context
+
+type ContextOption = func(*Context)
+func WithBrowserOption(opts ...BrowserOption) ContextOption
+func WithDebugf(f func(string, ...any)) ContextOption
+func WithErrorf(f func(string, ...any)) ContextOption
+func WithExistingBrowserContext(id cdp.BrowserContextID) ContextOption
+func WithLogf(f func(string, ...any)) ContextOption
+func WithNewBrowserContext(options ...CreateBrowserContextOption) ContextOption
+func WithTargetID(id target.ID) ContextOption
+
+type CreateBrowserContextOption = func(*target.CreateBrowserContextParams)
+
+type Device interface { ... }
+
+type DialOption = func(*Conn)
+func WithConnDebugf(f func(string, ...any)) DialOption
+
+type EmulateViewportOption = func(*emulation.SetDeviceMetricsOverrideParams, *emulation.SetTouchEmulationEnabledParams)
+func EmulateOrientation(orientation emulation.ScreenOrientationType, angle int64) EmulateViewportOption
+func EmulateScale(scale float64) EmulateViewportOption
+
+type Error string
+func (err Error) Error() string
+
+type EvaluateOption = func(*runtime.EvaluateParams)
+func EvalObjectGroup(objectGroup string) EvaluateOption
+
+type ExceptionError struct { ... }
+func (e *ExceptionError) Error() string
+
+type ExecAllocator struct { ... }
+func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*Browser, error)
+func (a *ExecAllocator) Wait()
+
+type ExecAllocatorOption = func(*ExecAllocator)
+func CombinedOutput(w io.Writer) ExecAllocatorOption
+func Env(vars ...string) ExecAllocatorOption
+func ExecPath(path string) ExecAllocatorOption
+func Flag(name string, value any) ExecAllocatorOption
+func ModifyCmdFunc(f func(cmd *exec.Cmd)) ExecAllocatorOption
+func ProxyServer(proxy string) ExecAllocatorOption
+func UserAgent(userAgent string) ExecAllocatorOption
+func UserDataDir(dir string) ExecAllocatorOption
+func WSURLReadTimeout(t time.Duration) ExecAllocatorOption
+func WindowSize(width, height int) ExecAllocatorOption
+
+type Frame struct { ... }
+
+type FrameState uint16
+func (fs FrameState) String() string
+
+type KeyOption = func(*input.DispatchKeyEventParams)
+func KeyModifiers(modifiers ...Modifier) KeyOption
+
+type Modifier = kb.Modifier
+
+type MouseOption = func(*input.DispatchMouseEventParams)
+func Button(btn string) MouseOption
+func ButtonModifiers(modifiers ...Modifier) MouseOption
+func ButtonType(button input.MouseButton) MouseOption
+func ClickCount(n int) MouseOption
+
+type Node struct { ... }
+func (n *Node) Attribute(name string) (string, bool)
+func (n *Node) AttributeValue(name string) string
+func (n *Node) Dump(prefix, indent string, nodeIDs bool) string
+func (n *Node) FullXPath() string
+func (n *Node) FullXPathByID() string
+func (n *Node) PartialXPath() string
+func (n *Node) PartialXPathByID() string
+func (n *Node) WriteTo(w io.Writer, prefix, indent string, nodeIDs bool) (int, error)
+
+type NodeState uint8
+func (ns NodeState) String() string
+
+type NodeType int64
+func (t NodeType) String() string
+
+type OldAction interface { ... }
+
+type PollOption = func(task *pollTask)
+func WithPollingArgs(args ...any) PollOption
+func WithPollingInFrame(frame *Node) PollOption
+func WithPollingInterval(interval time.Duration) PollOption
+func WithPollingMutation() PollOption
+func WithPollingTimeout(timeout time.Duration) PollOption
+
+type PopulateOption = func(*time.Duration)
+func PopulateWait(wait time.Duration) PopulateOption
+
+type QueryOption = func(*Selector)
+func After(f func(ctx context.Context, t *Target, nodes []*Node) error) QueryOption
+func AtLeast(n int) QueryOption
+func ByFunc(f func(context.Context, *Target, *Node) ([]cdp.NodeID, error)) QueryOption
+func FromNode(node *Node) QueryOption
+func Populate(depth int64, pierce bool, opts ...PopulateOption) QueryOption
+func RetryInterval(interval time.Duration) QueryOption
+func WaitFunc(wait func(context.Context, *Target, *Frame, runtime.ExecutionContextID, ...cdp.NodeID) ([]*Node, error)) QueryOption
+
+type RemoteAllocator struct { ... }
+func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*Browser, error)
+func (a *RemoteAllocator) Wait()
+
+type RemoteAllocatorOption = func(*RemoteAllocator)
+
+type Selector struct { ... }
+
+type Target struct { ... }
+func (t *Target) Call(ctx context.Context, method string, params, res any) error
+func (t *Target) Subscribe(method string) (<-chan jsontext.Value, func())
+
+type Transport interface { ... }
+
+type Void = struct{}
+```
+
+## Constants and variables
+
+The package has these constants:
+
+```go
+MousePressed
+MouseReleased
+MouseMoved
+MouseWheel
+ModifierNone
+ModifierAlt
+ModifierCtrl
+ModifierMeta
+ModifierShift
+ModifierCommand
+NodeTypeElement
+NodeTypeAttribute
+NodeTypeText
+NodeTypeCDATA
+NodeTypeEntityReference
+NodeTypeEntity
+NodeTypeProcessingInstruction
+NodeTypeComment
+NodeTypeDocument
+NodeTypeDocumentType
+NodeTypeDocumentFragment
+NodeTypeNotation
+EmptyFrameID
+EmptyNodeID
+ErrInvalidWebsocketMessage
+ErrInvalidDimensions
+ErrNoResults
+ErrHasResults
+ErrNotVisible
+ErrVisible
+ErrDisabled
+ErrNotSelected
+ErrInvalidBoxModel
+ErrChannelClosed
+ErrInvalidTarget
+ErrInvalidContext
+ErrPollingTimeout
+ErrJSUndefined
+ErrJSNull
+FrameDOMContentEventFired
+FrameLoadEventFired
+FrameAttached
+FrameNavigated
+FrameLoading
+FrameScheduledNavigation
+NodeStateReady
+NodeStateVisible
+NodeStateHighlighted
+```
+
+It has these variables:
+
+```go
+DefaultUnmarshalOptions
+jsonv2.DefaultOptionsV2(),
+jsontext.AllowInvalidUTF8(true),
+)
+DefaultMarshalOptions
+jsonv2.DefaultOptionsV2(),
+jsontext.AllowInvalidUTF8(true),
+)
+DefaultExecAllocatorOptions
+```
+

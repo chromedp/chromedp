@@ -90,3 +90,67 @@ The generated `With...` methods are gone, so the option types of `chromedp` chan
 - `MatchedStyle` takes a `**css.GetMatchedStylesForNodeResult`. The old name was `css.GetMatchedStylesForNodeReturns`.
 - The result of a command that returns binary data, such as `page.CaptureScreenshot` and `page.PrintToPDF`, has a `Data []byte` field.
 - `chromedp` no longer sends `focus: true` when it creates a target. It still sends `newWindow: true`. Without it, a new tab in a shared window is hidden when another tab is active. A hidden page gets no animation frames, so `Poll` never returns.
+
+# Migrate to the generic action API
+
+This part lists the public API changes of the generic action API. An action now returns its value, so the program does not pass a pointer to receive it. Events arrive as iterators. The old name comes first, then the new name. `docs/API.md` shows the old and the new code side by side.
+
+## Actions
+
+- The interface `Action` becomes the func type `Action[T]`. It is `func(ctx context.Context, t *Target) (T, error)`. The target `t` is a `cdp.Session`, so an action sends a command with `cdp.Call(ctx, t, command, params)`.
+- `type Void = struct{}` is the value type of an action that returns no value. Such an action has the type `Action[Void]`.
+- `Run(ctx, actions...) error` becomes `Run[T](ctx, action) (T, error)` for one action that returns a value, and `Do(ctx, steps...) error` for actions that return no value. `Do` runs the steps in order and stops at the first error.
+- `Run(ctx)` with no action, which starts the browser and opens the tab, becomes `Do(ctx)`.
+- `Tasks` is gone. `Steps(steps...)` joins actions into one `Action[Void]`.
+- `ActionFunc` is gone. A func literal of the type `Action[T]` replaces it. `Func(f)` makes an `Action[Void]` from `func(ctx context.Context, t *Target) error`.
+- `Legacy(a)` makes an `Action[Void]` from a value of the interface `OldAction`. `OldAction` is the old interface, `interface{ Do(context.Context) error }`. The old action receives the same context, so `Call` and `CallBrowser` work inside it.
+- The types `QueryAction`, `NavigateAction`, `EvaluateAction`, `CallAction`, `PollAction`, `MouseAction`, `KeyAction` and `EmulateAction` are gone. Use `Action[T]`.
+- `Selector.Do` is gone. Run a query with `Run` or `Do`.
+
+## Actions that return a value
+
+The old action took a pointer to receive the value. The new action returns the value, and the pointer argument is gone.
+
+- `Text(sel, &s, opts...)` becomes `Text(sel, opts...)`, which is an `Action[string]`. `TextContent`, `Value`, `InnerHTML` and `OuterHTML` change in the same way.
+- `Nodes(sel, &nodes, opts...)` becomes `Nodes(sel, opts...)`, an `Action[[]*Node]`. `NodeIDs` returns `[]cdp.NodeID`.
+- `Attributes(sel, &m, opts...)` becomes `Attributes(sel, opts...)`, an `Action[map[string]string]`. `AttributesAll` returns `[]map[string]string`.
+- `AttributeValue(sel, name, &value, &ok, opts...)` becomes `AttributeValue(sel, name, opts...)`, an `Action[AttributeResult]`. The struct `AttributeResult` has the fields `Value` and `Exists`.
+- `JavascriptAttribute(sel, name, &res, opts...)` becomes `JavascriptAttribute[T](sel, name, opts...)`.
+- `Dimensions` returns `*dom.BoxModel`, `ComputedStyle` returns `[]*css.ComputedStyleProperty` and `MatchedStyle` returns `*css.GetMatchedStylesForNodeResult`.
+- `Screenshot(sel, &buf, opts...)` becomes `Screenshot(sel, opts...)`, an `Action[[]byte]`. `ScreenshotScale(sel, scale, opts...)`, `ScreenshotNodes(nodes, scale)`, `CaptureScreenshot()` and `FullScreenshot(quality)` change in the same way.
+- `Location(&s)` and `Title(&s)` become `Location()` and `Title()`, both `Action[string]`.
+- `NavigationEntries(&index, &entries)` becomes `NavigationEntries()`. It returns a `page.GetNavigationHistoryResult` with the fields `CurrentIndex` and `Entries`.
+- `Evaluate(expr, &res, opts...)` becomes `Evaluate[T](expr, opts...)`. The type `T` replaces the kind of pointer. `Evaluate(expr, nil)` becomes `Evaluate[Void]` with the same expression, `&[]byte` becomes `[]byte` and `**runtime.RemoteObject` becomes `*runtime.RemoteObject`. `EvaluateAsDevTools` changes in the same way.
+- `CallFunctionOn(fn, &res, opt, args...)` becomes `CallFunctionOn[T](fn, opt, args...)`.
+- `Poll(expr, &res, opts...)` and `PollFunction(fn, &res, opts...)` become `Poll[T](expr, opts...)` and `PollFunction[T](fn, opts...)`.
+
+## Actions that return no value
+
+These actions keep their arguments and now have the type `Action[Void]`: `Navigate`, `NavigateToHistoryEntry`, `NavigateBack`, `NavigateForward`, `Reload`, `Stop`, `Sleep`, `Click`, `DoubleClick`, `SendKeys`, `SetValue`, `Clear`, `Focus`, `Blur`, `Submit`, `Reset`, `ScrollIntoView`, `SetAttributes`, `SetAttributeValue`, `RemoveAttribute`, `SetJavascriptAttribute`, `SetUploadFiles`, `Dump`, `DumpTo`, `Query`, the `Wait...` actions, `MouseEvent`, `MouseClickXY`, `MouseClickNode`, `KeyEvent`, `KeyEventNode`, `EmulateViewport`, `ResetViewport`, `Emulate` and `EmulateReset`.
+
+`Navigate` still waits for the page to load. `NavigateResponse(url)` is new. It is an `Action[*network.Response]`. `RunResponse(ctx, steps...)` keeps its name, and it takes `Action[Void]` values.
+
+## Selectors and query options
+
+The selector options `ByQuery`, `ByID`, `NodeVisible`, `AtLeast`, `RetryInterval`, `FromNode` and the others keep their names and their use. Four option types receive the target, because the options send commands.
+
+- `ByFunc` takes `func(context.Context, *Target, *Node) ([]cdp.NodeID, error)`.
+- `WaitFunc` takes `func(context.Context, *Target, *Frame, runtime.ExecutionContextID, ...cdp.NodeID) ([]*Node, error)`.
+- `After` takes `func(ctx context.Context, t *Target, nodes []*Node) error`. The old func had the execution context id as its second argument and took the nodes as a variadic argument. Read the nodes from the slice. Call `t` for a command.
+- `QueryAfter(sel, f, opts...)` is generic. The func `f` is `func(ctx context.Context, t *Target, nodes []*Node) (T, error)` and the action is an `Action[T]`.
+- `Query(sel, opts...)` returns `Action[Void]`. It only waits for the nodes.
+
+## Events
+
+- `ListenTarget(ctx, fn)` becomes `Events(ctx, page.LoadEventFired)`. It returns an iterator `iter.Seq2[E, error]`. The payload has its own type, for example `page.EventLoadEventFired`, so the func does not switch on `any`.
+- `ListenBrowser(ctx, fn)` becomes `BrowserEvents(ctx, target.TargetCreated)`.
+- The subscription starts when `Events` returns. A program subscribes, triggers the event and then ranges over the iterator, and no event is lost. The iterator ends when the context ends and yields the error of the context.
+- A listener ran inside the loop that handles the events of the browser, so it had to be fast. The iterator buffers the events without a limit, so the program reads them at its own speed.
+- `WaitEvent(event, match, trigger)` is new. It subscribes, runs the trigger action and returns the first payload for which `match` is true. It replaces the pattern of a listener that closes a channel.
+- `WaitNewTarget` keeps its signature.
+
+## Other changes
+
+- `Call` and `CallBrowser` stay. Use them where only a context is at hand, for example in code that runs under `Legacy`. An action calls `cdp.Call(ctx, t, ...)` with its target.
+- `Poll` and `PollFunction` keep the polling options. A poll still runs in the page and does not use an iterator.
+- `Browser` and `Target` subscriptions deliver the events that they already hold when the session closes, so a reader sees every event up to the end.

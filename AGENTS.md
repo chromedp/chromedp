@@ -59,9 +59,10 @@ you trust it, because a later decision can amend or replace it.
 3. Hold the lock before you read a field of a `cdp.Node` or a `cdp.Frame`.
    The code in `query.go` and `target.go` calls `RLock` first, because the
    target updates the node tree from events while an action reads it.
-4. Run an action with `chromedp.Run`. An action needs an executor in its
-   context, and `Run` sets it. Do not call `Do` on a context that `Run` did
-   not prepare.
+4. Run an action with `chromedp.Run` or `chromedp.Do`. They start the browser
+   and the tab when the context has none, and they pass the `Target` to the
+   action. Do not call an action with a `Target` that these funcs did not
+   prepare.
 5. Wrap every error with `%w`. See the decision
    `docs/decisions/2021-04-29-wrap-errors-with-w.md`.
 6. Keep the tests compatible with `headless-shell`. CI runs them against both
@@ -69,7 +70,7 @@ you trust it, because a later decision can amend or replace it.
    of them must skip with a comment that says why. `input_test.go` shows how.
 7. Embed JavaScript from the `js/` folder with `go:embed`. Do not write
    JavaScript inside a Go string.
-8. Do not change the `Action` interface or the signature of an exported
+8. Do not change the type `Action[T]` or the signature of an exported
    function without asking the maintainer. See `docs/decisions/2026-10-03-generic-iterator-api-instead-of-action.md`.
 9. Do not add a helper that the `cdproto` module is dropping. See
    `docs/decisions/2026-10-03-stop-relying-on-removed-cdproto-helpers.md`.
@@ -82,7 +83,7 @@ The root package `chromedp` holds the API. The files group by topic.
 | --- | --- |
 | `allocate.go`, `allocate_linux.go`, `allocate_other.go` | `Allocator`, `ExecAllocator` and `RemoteAllocator`, which start or reach a browser |
 | `browser.go`, `conn.go` | `Browser` and the WebSocket connection |
-| `chromedp.go` | `Context`, `NewContext`, `Run`, the `Action` interface and the listeners |
+| `chromedp.go`, `action.go` | `Context`, `NewContext`, `RunResponse`, `Action[T]`, `Run`, `Do` and the events |
 | `target.go`, `util.go` | `Target`, which tracks frames and the DOM tree from events |
 | `query.go` | selectors, query options and the element actions |
 | `nav.go`, `input.go`, `emulate.go`, `screenshot.go`, `eval.go`, `call.go`, `poll.go` | actions by topic |
