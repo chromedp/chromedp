@@ -14,6 +14,7 @@ package chromedp
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -197,28 +198,20 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 			}
 		}
 		if id := c.Target.TargetID; id != "" {
-			// Current Chrome answers CloseTarget before the target
-			// is gone, so wait for the destroyed event.
-			destroyed := make(chan struct{})
-			lctx, lcancel := context.WithCancel(ctx)
-			c.Browser.listenersMu.Lock()
-			c.Browser.listeners = append(c.Browser.listeners, cancelableListener{lctx, func(ev any) {
-				if ev, ok := ev.(*target.EventTargetDestroyed); ok && ev.TargetID == id {
-					close(destroyed)
-					lcancel()
-				}
-			}})
-			c.Browser.listenersMu.Unlock()
 			action := target.CloseTarget(id)
-			if err := action.Do(browserExecutor); c.cancelErr == nil && err != nil {
-				c.cancelErr = err
-			} else if err == nil {
-				select {
-				case <-destroyed:
-				case <-ctx.Done():
+			if err := action.Do(browserExecutor); err != nil {
+				if c.cancelErr == nil {
+					c.cancelErr = err
+				}
+			} else {
+				// Current Chrome answers CloseTarget before the
+				// target is gone. Wait until it is not listed.
+				// A destroyed event is not enough, because a
+				// browser connection may not receive it.
+				if err := waitTargetGone(ctx, browserExecutor, id); c.cancelErr == nil && err != nil {
+					c.cancelErr = err
 				}
 			}
-			lcancel()
 		}
 		if c.browserContextOwner {
 			action := target.DisposeBrowserContext(c.BrowserContextID)
@@ -893,4 +886,21 @@ func WaitNewTarget(ctx context.Context, fn func(*target.Info) bool) <-chan targe
 		}
 	})
 	return ch
+}
+
+// waitTargetGone polls the browser until the target with the given id is no
+// longer listed, or until ctx is done.
+func waitTargetGone(ctx context.Context, browserExecutor context.Context, id target.ID) error {
+	for {
+		infos, err := target.GetTargets().Do(browserExecutor)
+		if err != nil {
+			return err
+		}
+		if !slices.ContainsFunc(infos, func(info *target.Info) bool { return info.TargetID == id }) {
+			return nil
+		}
+		if err := sleepContext(ctx, 5*time.Millisecond); err != nil {
+			return err
+		}
+	}
 }
