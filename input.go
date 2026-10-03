@@ -170,7 +170,10 @@ func ClickCount(n int) MouseOption {
 // KeyEvent is a key action that synthesizes a keyDown, char, and keyUp event
 // for each rune in keys, with any key options.
 //
-// Only well-known, "printable" characters get char events.
+// Only well-known, "printable" characters get char events. A key with the
+// modifier Ctrl, Alt or Meta gets no char event, because the char event types
+// the character on top of the shortcut. For example, Ctrl+A selects the
+// text and types no "a". A key with the modifier Shift keeps its char event.
 //
 // See the [SendKeys] action to synthesize key events for a specific element
 // node.
@@ -183,6 +186,9 @@ func KeyEvent(keys string, opts ...KeyOption) Action[Void] {
 			for _, k := range kb.Encode(r) {
 				for _, o := range opts {
 					o(k)
+				}
+				if k.Type == kb.KeyChar && k.Modifiers&^int64(ModifierShift) != 0 {
+					continue
 				}
 				if _, err := cdp.Call(ctx, t, input.DispatchKeyEvent, *k); err != nil {
 					return err

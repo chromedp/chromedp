@@ -1,9 +1,11 @@
 package chromedp
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
 
 	"github.com/chromedp/cdproto/input"
@@ -232,6 +234,114 @@ func keyEventTest[S Selectable](sel S, exp string) func(t *testing.T) {
 			t.Fatalf("expected to have value %s, got: %s", exp, value)
 		}
 	}
+}
+
+// TestKeyEventModifier checks that a letter with Ctrl, Alt or Meta fires the
+// key events with the modifier, and that it types no character. The old code
+// sent a char event with the text of the letter too, so Ctrl+A selected the
+// text, and then the char event replaced it with "a". See the issue 1384.
+func TestKeyEventModifier(t *testing.T) {
+	if os.Getenv("HEADLESS_SHELL") != "" {
+		t.Skip(`Skip in headless-shell due to "Check failed: IsSupportedClipboardBuffer(buffer)"`)
+	}
+
+	t.Parallel()
+
+	const seed = "admin123"
+	const probe = `(function() {
+		const el = document.getElementById("input4");
+		window.probe = {inputs: 0, keydowns: []};
+		el.addEventListener("input", () => window.probe.inputs++);
+		el.addEventListener("keydown", e => window.probe.keydowns.push(
+			[e.key, e.ctrlKey, e.altKey, e.metaKey, e.shiftKey].join(",")));
+	})()`
+	type state struct {
+		Value    string `json:"value"`
+		Start    int    `json:"start"`
+		End      int    `json:"end"`
+		Inputs   int    `json:"inputs"`
+		Keydowns string `json:"keydowns"`
+	}
+	read := func(t *testing.T, ctx context.Context) state {
+		t.Helper()
+		st, err := Run(ctx, Evaluate[state](`(function() {
+			const el = document.getElementById("input4");
+			return {value: el.value, start: el.selectionStart, end: el.selectionEnd,
+				inputs: window.probe.inputs, keydowns: window.probe.keydowns.join(";")};
+		})()`))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return st
+	}
+
+	for _, tt := range []struct {
+		name string
+		key  string
+		mod  Modifier
+		// want is the part of the Keydowns text that the page must see.
+		want string
+	}{
+		{"ctrl+a", "a", ModifierCtrl, "a,true,false,false,false"},
+		{"alt+x", "x", ModifierAlt, "x,false,true,false,false"},
+		{"meta+x", "x", ModifierMeta, "x,false,false,true,false"},
+		{"ctrl+shift+x", "x", ModifierCtrl | ModifierShift, "x,true,false,false,true"},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx, cancel := testAllocate(t, "input.html")
+			defer cancel()
+			if err := Do(ctx,
+				Focus(ID("input4")),
+				KeyEvent(kb.Home),
+				KeyEvent(kb.End, KeyModifiers(ModifierShift)),
+				KeyEvent(seed),
+			); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := Run(ctx, Evaluate[any](probe)); err != nil {
+				t.Fatal(err)
+			}
+			if err := Do(ctx, KeyEvent(tt.key, KeyModifiers(tt.mod))); err != nil {
+				t.Fatal(err)
+			}
+			st := read(t, ctx)
+			if st.Value != seed || st.Inputs != 0 {
+				t.Errorf("the key typed text: value %q after %d input events", st.Value, st.Inputs)
+			}
+			if !strings.Contains(strings.ToLower(st.Keydowns), strings.ToLower(tt.want)) {
+				t.Errorf("want a keydown with %q, got %q", tt.want, st.Keydowns)
+			}
+			if tt.mod == ModifierCtrl && (st.Start != 0 || st.End != len(seed)) {
+				t.Errorf("Ctrl+A must select all of the text, got the selection %d to %d", st.Start, st.End)
+			}
+		})
+	}
+
+	// Shift alone does not stop the char event. The text of the event is the
+	// letter that the caller gave.
+	t.Run("shift+e", func(t *testing.T) {
+		t.Parallel()
+
+		ctx, cancel := testAllocate(t, "input.html")
+		defer cancel()
+		if err := Do(ctx,
+			Focus(ID("input4")),
+			KeyEvent(kb.Home),
+			KeyEvent(kb.End, KeyModifiers(ModifierShift)),
+			KeyEvent("e", KeyModifiers(ModifierShift)),
+		); err != nil {
+			t.Fatal(err)
+		}
+		got, err := Run(ctx, Value(ID("input4")))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got != "e" {
+			t.Fatalf("want e, got %q", got)
+		}
+	})
 }
 
 func TestKeyEventNode(t *testing.T) {
