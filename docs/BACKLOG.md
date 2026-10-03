@@ -19,20 +19,6 @@ configuration and a CI step, then describe both in the Linting section of
 problems. The workflow runs `go test -v ./...` with no `-race`. Ask the maintainer
 whether CI must add it.
 
-## Transport
-
-### Use a pipe to the browser by default
-
-`chromedp` starts the browser with a remote debugging port and connects to it
-over a websocket. Change the default to a pipe to the browser process, as
-Puppeteer and the other DevTools packages do with `--remote-debugging-pipe`.
-The browser reads and writes the protocol messages on two extra file
-descriptors, 3 and 4, that the parent process opens, and each message ends with
-a zero byte. The pipe needs no port, so there is no port to find, to secure or
-to clash with another process. Keep the websocket as a choice for a browser that
-`chromedp` does not start, such as a remote one. The change touches `allocate.go`
-and `conn.go`.
-
 ## API
 
 ### Review and merge the new API

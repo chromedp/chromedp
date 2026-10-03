@@ -154,3 +154,18 @@ The selector options `ByQuery`, `ByID`, `NodeVisible`, `AtLeast`, `RetryInterval
 - `Call` and `CallBrowser` stay. Use them where only a context is at hand, for example in code that runs under `Legacy`. An action calls `cdp.Call(ctx, t, ...)` with its target.
 - `Poll` and `PollFunction` keep the polling options. A poll still runs in the page and does not use an iterator.
 - `Browser` and `Target` subscriptions deliver the events that they already hold when the session closes, so a reader sees every event up to the end.
+
+# Migrate to the pipe transport
+
+The `ExecAllocator` now talks to the browser that it starts through a pipe, and
+not through a websocket. This changes how the program and Chrome connect. It
+does not change the actions or the events.
+
+- The allocator starts Chrome with `--remote-debugging-pipe` and passes two extra file descriptors, 3 and 4. It does not add `--remote-debugging-port=0`. Chrome opens no port and writes no `DevTools listening on` line.
+- `WSURLReadTimeout` only applies to the websocket mode.
+- The file `DevToolsActivePort` in the user data directory does not exist in the pipe mode, because Chrome opens no port.
+- Add `chromedp.WebSocket` to the options of `NewExecAllocator` to get the old behavior. The flags `remote-debugging-port` and `remote-debugging-address` also select the websocket mode.
+- On Windows the allocator always uses the websocket, because `os/exec` cannot pass extra file descriptors there.
+- `RemoteAllocator` is not changed. It connects to a browser that `chromedp` did not start, so it uses the websocket.
+- `NewBrowserTransport` creates a `Browser` from a `Transport` that is already open. `NewPipeConn` makes a `Transport` for the two pipes of a browser. `NewBrowser` dials a websocket and then calls `NewBrowserTransport`.
+- A start that fails now gives an error that starts with `chrome failed to start:` and has the output of Chrome, in the pipe mode and in the websocket mode.
