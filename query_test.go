@@ -181,7 +181,7 @@ func TestAtLeast(t *testing.T) {
 	ctx, cancel := testAllocate(t, "js.html")
 	defer cancel()
 
-	var nodes []*cdp.Node
+	var nodes []*Node
 	if err := Run(ctx, Nodes("//input", &nodes, AtLeast(3))); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
@@ -226,7 +226,7 @@ func TestRetryInterval(t *testing.T) {
 			// counts the number of retries. Note that the wait func is called
 			// only after the number of result nodes >= s.exp .
 			count := WaitFunc(
-				func(ctx context.Context, f *cdp.Frame, eci cdpruntime.ExecutionContextID, ni ...cdp.NodeID) ([]*cdp.Node, error) {
+				func(ctx context.Context, f *Frame, eci cdpruntime.ExecutionContextID, ni ...cdp.NodeID) ([]*Node, error) {
 					retryCount++
 					return nil, ErrInvalidTarget
 				},
@@ -273,7 +273,7 @@ func TestNoRetryForInvalidSelector(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var nodes []*cdp.Node
+			var nodes []*Node
 			if err := Run(ctx, Nodes(test.sel, &nodes, test.by)); err.Error() != test.wantErr {
 				t.Fatalf("want error %v, got error: %v", test.wantErr, err)
 			}
@@ -288,7 +288,7 @@ func TestByJSPath(t *testing.T) {
 	defer cancel()
 
 	// check nodes == 1
-	var nodes []*cdp.Node
+	var nodes []*Node
 	if err := Run(ctx,
 		Nodes(`document.querySelector('#imagething').shadowRoot.querySelector('.container')`, &nodes, ByJSPath),
 	); err != nil {
@@ -324,7 +324,7 @@ func TestNodes(t *testing.T) {
 	}
 
 	for i, test := range tests {
-		var nodes []*cdp.Node
+		var nodes []*Node
 		if err := Run(ctx, Nodes(test.sel, &nodes, test.by)); err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
@@ -1403,7 +1403,7 @@ func TestSVGFullXPath(t *testing.T) {
 			ctx, cancel := testAllocate(t, "svg.html")
 			defer cancel()
 
-			var nodes []*cdp.Node
+			var nodes []*Node
 			if err := Run(ctx, Nodes(test.sel, &nodes, test.by)); err != nil {
 				t.Fatal(err)
 			}
@@ -1490,9 +1490,9 @@ func TestFromNode(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			var from *cdp.Node
+			var from *Node
 			if test.fromQuery != "" {
-				var nodes []*cdp.Node
+				var nodes []*Node
 				if err := Run(ctx,
 					Nodes(test.fromQuery, &nodes, ByQuery, AtLeast(0)),
 				); err != nil {
@@ -1503,7 +1503,7 @@ func TestFromNode(t *testing.T) {
 				}
 				from = nodes[0]
 			}
-			var nodes []*cdp.Node
+			var nodes []*Node
 			if err := Run(ctx,
 				Nodes(test.nodesQuery, &nodes, ByQueryAll, AtLeast(0), FromNode(from)),
 			); err != nil {

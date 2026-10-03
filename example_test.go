@@ -252,7 +252,7 @@ func ExampleListenTarget_consoleLog() {
 			}
 		case *runtime.EventExceptionThrown:
 			// Since ts.URL uses a random port, replace it.
-			s := ev.ExceptionDetails.Error()
+			s := (&chromedp.ExceptionError{ExceptionDetails: ev.ExceptionDetails}).Error()
 			s = strings.ReplaceAll(s, ts.URL, "<server>")
 			// V8 has changed the error messages for property access on null/undefined in version 9.3.310.
 			// see: https://chromium.googlesource.com/v8/v8/+/c0fd89c3c089e888c4f4e8582e56db7066fa779b
@@ -481,7 +481,7 @@ func ExampleFromNode() {
 	`))
 	defer ts.Close()
 
-	var nodes []*cdp.Node
+	var nodes []*chromedp.Node
 	if err := chromedp.Run(ctx,
 		chromedp.Navigate(ts.URL),
 		chromedp.Nodes("#section", &nodes, chromedp.ByQuery),
@@ -588,7 +588,7 @@ func Example_documentDump() {
 
 	s := fmt.Sprintf(expr, "thing", "a new thing!")
 
-	var nodes []*cdp.Node
+	var nodes []*chromedp.Node
 	if err := chromedp.Run(ctx,
 		chromedp.Navigate(ts.URL),
 		chromedp.Nodes(`document`, &nodes,

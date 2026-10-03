@@ -136,42 +136,42 @@ func runListeners(list []cancelableListener, ev any) []cancelableListener {
 }
 
 // frameOp is a frame manipulation operation.
-type frameOp func(*cdp.Frame)
+type frameOp func(*Frame)
 
 func frameAttached(id cdp.FrameID) frameOp {
-	return func(f *cdp.Frame) {
+	return func(f *Frame) {
 		f.ParentID = id
-		setFrameState(f, cdp.FrameAttached)
+		setFrameState(f, FrameAttached)
 	}
 }
 
-func frameDetached(f *cdp.Frame) {
-	f.ParentID = cdp.EmptyFrameID
-	clearFrameState(f, cdp.FrameAttached)
+func frameDetached(f *Frame) {
+	f.ParentID = EmptyFrameID
+	clearFrameState(f, FrameAttached)
 }
 
-func frameStartedLoading(f *cdp.Frame) {
-	setFrameState(f, cdp.FrameLoading)
+func frameStartedLoading(f *Frame) {
+	setFrameState(f, FrameLoading)
 }
 
-func frameStoppedLoading(f *cdp.Frame) {
-	clearFrameState(f, cdp.FrameLoading)
+func frameStoppedLoading(f *Frame) {
+	clearFrameState(f, FrameLoading)
 }
 
 // setFrameState sets the frame state via bitwise or (|).
-func setFrameState(f *cdp.Frame, fs cdp.FrameState) {
+func setFrameState(f *Frame, fs FrameState) {
 	f.State |= fs
 }
 
 // clearFrameState clears the frame state via bit clear (&^).
-func clearFrameState(f *cdp.Frame, fs cdp.FrameState) {
+func clearFrameState(f *Frame, fs FrameState) {
 	f.State &^= fs
 }
 
 // nodeOp is a node manipulation operation.
-type nodeOp func(*cdp.Node)
+type nodeOp func(*Node)
 
-func walk(m map[cdp.NodeID]*cdp.Node, n *cdp.Node) {
+func walk(m map[cdp.NodeID]*Node, n *Node) {
 	n.RLock()
 	defer n.RUnlock()
 	m[n.NodeID] = n
@@ -203,7 +203,7 @@ func walk(m map[cdp.NodeID]*cdp.Node, n *cdp.Node) {
 		walk(m, c)
 	}
 
-	for _, c := range []*cdp.Node{n.ContentDocument, n.TemplateContent} {
+	for _, c := range []*Node{n.ContentDocument, n.TemplateContent} {
 		if c == nil {
 			continue
 		}
@@ -217,8 +217,8 @@ func walk(m map[cdp.NodeID]*cdp.Node, n *cdp.Node) {
 	}
 }
 
-func setChildNodes(m map[cdp.NodeID]*cdp.Node, nodes []*cdp.Node) nodeOp {
-	return func(n *cdp.Node) {
+func setChildNodes(m map[cdp.NodeID]*Node, nodes []*Node) nodeOp {
+	return func(n *Node) {
 		n.Lock()
 		n.Children = nodes
 		n.Unlock()
@@ -228,7 +228,7 @@ func setChildNodes(m map[cdp.NodeID]*cdp.Node, nodes []*cdp.Node) nodeOp {
 }
 
 func attributeModified(name, value string) nodeOp {
-	return func(n *cdp.Node) {
+	return func(n *Node) {
 		n.Lock()
 		defer n.Unlock()
 
@@ -251,7 +251,7 @@ func attributeModified(name, value string) nodeOp {
 }
 
 func attributeRemoved(name string) nodeOp {
-	return func(n *cdp.Node) {
+	return func(n *Node) {
 		n.Lock()
 		defer n.Unlock()
 
@@ -267,12 +267,12 @@ func attributeRemoved(name string) nodeOp {
 }
 
 func inlineStyleInvalidated(ids []cdp.NodeID) nodeOp {
-	return func(n *cdp.Node) {
+	return func(n *Node) {
 	}
 }
 
 func characterDataModified(characterData string) nodeOp {
-	return func(n *cdp.Node) {
+	return func(n *Node) {
 		n.Lock()
 		defer n.Unlock()
 
@@ -281,7 +281,7 @@ func characterDataModified(characterData string) nodeOp {
 }
 
 func childNodeCountUpdated(count int64) nodeOp {
-	return func(n *cdp.Node) {
+	return func(n *Node) {
 		n.Lock()
 		defer n.Unlock()
 
@@ -289,8 +289,8 @@ func childNodeCountUpdated(count int64) nodeOp {
 	}
 }
 
-func childNodeInserted(m map[cdp.NodeID]*cdp.Node, prevID cdp.NodeID, c *cdp.Node) nodeOp {
-	return func(n *cdp.Node) {
+func childNodeInserted(m map[cdp.NodeID]*Node, prevID cdp.NodeID, c *Node) nodeOp {
+	return func(n *Node) {
 		n.Lock()
 		n.Children = insertNode(n.Children, prevID, c)
 		n.Unlock()
@@ -299,8 +299,8 @@ func childNodeInserted(m map[cdp.NodeID]*cdp.Node, prevID cdp.NodeID, c *cdp.Nod
 	}
 }
 
-func childNodeRemoved(m map[cdp.NodeID]*cdp.Node, id cdp.NodeID) nodeOp {
-	return func(n *cdp.Node) {
+func childNodeRemoved(m map[cdp.NodeID]*Node, id cdp.NodeID) nodeOp {
+	return func(n *Node) {
 		n.Lock()
 		defer n.Unlock()
 
@@ -309,8 +309,8 @@ func childNodeRemoved(m map[cdp.NodeID]*cdp.Node, id cdp.NodeID) nodeOp {
 	}
 }
 
-func shadowRootPushed(m map[cdp.NodeID]*cdp.Node, c *cdp.Node) nodeOp {
-	return func(n *cdp.Node) {
+func shadowRootPushed(m map[cdp.NodeID]*Node, c *Node) nodeOp {
+	return func(n *Node) {
 		n.Lock()
 		n.ShadowRoots = append(n.ShadowRoots, c)
 		n.Unlock()
@@ -319,8 +319,8 @@ func shadowRootPushed(m map[cdp.NodeID]*cdp.Node, c *cdp.Node) nodeOp {
 	}
 }
 
-func shadowRootPopped(m map[cdp.NodeID]*cdp.Node, id cdp.NodeID) nodeOp {
-	return func(n *cdp.Node) {
+func shadowRootPopped(m map[cdp.NodeID]*Node, id cdp.NodeID) nodeOp {
+	return func(n *Node) {
 		n.Lock()
 		defer n.Unlock()
 
@@ -329,8 +329,8 @@ func shadowRootPopped(m map[cdp.NodeID]*cdp.Node, id cdp.NodeID) nodeOp {
 	}
 }
 
-func pseudoElementAdded(m map[cdp.NodeID]*cdp.Node, c *cdp.Node) nodeOp {
-	return func(n *cdp.Node) {
+func pseudoElementAdded(m map[cdp.NodeID]*Node, c *Node) nodeOp {
+	return func(n *Node) {
 		n.Lock()
 		n.PseudoElements = append(n.PseudoElements, c)
 		n.Unlock()
@@ -339,8 +339,8 @@ func pseudoElementAdded(m map[cdp.NodeID]*cdp.Node, c *cdp.Node) nodeOp {
 	}
 }
 
-func pseudoElementRemoved(m map[cdp.NodeID]*cdp.Node, id cdp.NodeID) nodeOp {
-	return func(n *cdp.Node) {
+func pseudoElementRemoved(m map[cdp.NodeID]*Node, id cdp.NodeID) nodeOp {
+	return func(n *Node) {
 		n.Lock()
 		defer n.Unlock()
 
@@ -350,7 +350,7 @@ func pseudoElementRemoved(m map[cdp.NodeID]*cdp.Node, id cdp.NodeID) nodeOp {
 }
 
 func distributedNodesUpdated(nodes []*cdp.BackendNode) nodeOp {
-	return func(n *cdp.Node) {
+	return func(n *Node) {
 		n.Lock()
 		defer n.Unlock()
 
@@ -358,12 +358,12 @@ func distributedNodesUpdated(nodes []*cdp.BackendNode) nodeOp {
 	}
 }
 
-func scrollableFlagUpdated(m map[cdp.NodeID]*cdp.Node, id cdp.NodeID) nodeOp {
-	return func(n *cdp.Node) {
+func scrollableFlagUpdated(m map[cdp.NodeID]*Node, id cdp.NodeID) nodeOp {
+	return func(n *Node) {
 	}
 }
 
-func insertNode(n []*cdp.Node, prevID cdp.NodeID, c *cdp.Node) []*cdp.Node {
+func insertNode(n []*Node, prevID cdp.NodeID, c *Node) []*Node {
 	var i int
 	var found bool
 	for ; i < len(n); i++ {
@@ -374,7 +374,7 @@ func insertNode(n []*cdp.Node, prevID cdp.NodeID, c *cdp.Node) []*cdp.Node {
 	}
 
 	if !found {
-		return append([]*cdp.Node{c}, n...)
+		return append([]*Node{c}, n...)
 	}
 
 	i++
@@ -385,7 +385,7 @@ func insertNode(n []*cdp.Node, prevID cdp.NodeID, c *cdp.Node) []*cdp.Node {
 	return n
 }
 
-func removeNode(n []*cdp.Node, id cdp.NodeID) []*cdp.Node {
+func removeNode(n []*Node, id cdp.NodeID) []*Node {
 	if len(n) == 0 {
 		return n
 	}

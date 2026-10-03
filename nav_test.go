@@ -13,7 +13,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/page"
 )
 
@@ -245,7 +244,7 @@ func TestQueryIframe(t *testing.T) {
 	ctx, cancel := testAllocate(t, "iframe.html")
 	defer cancel()
 
-	var iframes, forms []*cdp.Node
+	var iframes, forms []*Node
 	if err := Run(ctx, Nodes(`iframe`, &iframes, ByQuery)); err != nil {
 		t.Fatal(err)
 	}

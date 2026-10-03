@@ -3,8 +3,8 @@ package chromedp
 import (
 	"context"
 
+	jsonv2 "encoding/json/v2"
 	"github.com/chromedp/cdproto/runtime"
-	jsonv2 "github.com/go-json-experiment/json"
 )
 
 // CallAction are actions that calls a JavaScript function using
@@ -62,7 +62,7 @@ func callFunctionOn(ctx context.Context, functionDeclaration string, res any, op
 		return nil, err
 	}
 	if exp != nil {
-		return nil, exp
+		return nil, &ExceptionError{exp}
 	}
 
 	return v, parseRemoteObject(v, res)

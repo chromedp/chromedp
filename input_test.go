@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/input"
 	"github.com/chromedp/chromedp/kb"
 )
@@ -75,14 +74,14 @@ func TestMouseClickNode(t *testing.T) {
 		opt      MouseOption
 		by       QueryOption
 	}{
-		{`button2`, "foo", ButtonType(input.None), ByID},
-		{`button2`, "bar", ButtonType(input.Left), ByID},
-		{`button2`, "bar-middle", ButtonType(input.Middle), ByID},
-		{`input3`, "foo", ButtonModifiers(input.ModifierNone), ByID},
-		{`input3`, "bar-right", ButtonType(input.Right), ByID},
+		{`button2`, "foo", ButtonType(input.MouseButtonNone), ByID},
+		{`button2`, "bar", ButtonType(input.MouseButtonLeft), ByID},
+		{`button2`, "bar-middle", ButtonType(input.MouseButtonMiddle), ByID},
+		{`input3`, "foo", ButtonModifiers(ModifierNone), ByID},
+		{`input3`, "bar-right", ButtonType(input.MouseButtonRight), ByID},
 		{`input3`, "bar-right", Button("right"), ByID},
-		{`document.querySelector('#input3')`, "bar-right", ButtonType(input.Right), ByJSPath},
-		{`link`, "clicked", ButtonType(input.Left), ByID},
+		{`document.querySelector('#input3')`, "bar-right", ButtonType(input.MouseButtonRight), ByJSPath},
+		{`link`, "clicked", ButtonType(input.MouseButtonLeft), ByID},
 	}
 
 	for i, test := range tests {
@@ -92,7 +91,7 @@ func TestMouseClickNode(t *testing.T) {
 			ctx, cancel := testAllocate(t, "input.html")
 			defer cancel()
 
-			var nodes []*cdp.Node
+			var nodes []*Node
 			if err := Run(ctx, Nodes(test.sel, &nodes, test.by)); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -135,7 +134,7 @@ func TestMouseClickOffscreenNode(t *testing.T) {
 			ctx, cancel := testAllocate(t, "input.html")
 			defer cancel()
 
-			var nodes []*cdp.Node
+			var nodes []*Node
 			if err := Run(ctx, Nodes(test.sel, &nodes, test.by)); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -198,7 +197,7 @@ func TestKeyEvent(t *testing.T) {
 			ctx, cancel := testAllocate(t, "input.html")
 			defer cancel()
 
-			var nodes []*cdp.Node
+			var nodes []*Node
 			if err := Run(ctx, Nodes(test.sel, &nodes, test.by)); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -209,9 +208,9 @@ func TestKeyEvent(t *testing.T) {
 			if err := Run(ctx,
 				Focus(test.sel, test.by),
 				KeyEvent(kb.Home),
-				// "KeyEvent(kb.End, KeyModifiers(input.ModifierShift))" crash headless-shell with this error:
+				// "KeyEvent(kb.End, KeyModifiers(ModifierShift))" crash headless-shell with this error:
 				// [...:FATAL:headless_clipboard.cc(296)] Check failed: IsSupportedClipboardBuffer(buffer)
-				KeyEvent(kb.End, KeyModifiers(input.ModifierShift)),
+				KeyEvent(kb.End, KeyModifiers(ModifierShift)),
 				KeyEvent(test.exp),
 			); err != nil {
 				t.Fatalf("got error: %v", err)
@@ -256,7 +255,7 @@ func TestKeyEventNode(t *testing.T) {
 			ctx, cancel := testAllocate(t, "input.html")
 			defer cancel()
 
-			var nodes []*cdp.Node
+			var nodes []*Node
 			if err := Run(ctx, Nodes(test.sel, &nodes, test.by)); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -267,9 +266,9 @@ func TestKeyEventNode(t *testing.T) {
 			var value string
 			if err := Run(ctx,
 				KeyEventNode(nodes[0], kb.Home),
-				// "KeyEventNode(nodes[0], kb.End, KeyModifiers(input.ModifierShift))" crash headless-shell with this error:
+				// "KeyEventNode(nodes[0], kb.End, KeyModifiers(ModifierShift))" crash headless-shell with this error:
 				// [...:FATAL:headless_clipboard.cc(296)] Check failed: IsSupportedClipboardBuffer(buffer)
-				KeyEventNode(nodes[0], kb.End, KeyModifiers(input.ModifierShift)),
+				KeyEventNode(nodes[0], kb.End, KeyModifiers(ModifierShift)),
 				KeyEventNode(nodes[0], test.exp),
 				Value(test.sel, &value, test.by),
 			); err != nil {

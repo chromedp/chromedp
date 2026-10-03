@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/runtime"
 )
 
@@ -141,7 +140,7 @@ func TestNodeOp(t *testing.T) {
 	defer cancel()
 
 	// get document root
-	var nodes []*cdp.Node
+	var nodes []*Node
 	if err := Run(ctx,
 		Navigate(s.URL),
 		Nodes(`//*`, &nodes),
@@ -177,7 +176,7 @@ func TestNodeOp(t *testing.T) {
 					return err
 				}
 				if exp != nil {
-					return exp
+					return &ExceptionError{exp}
 				}
 				return nil
 			}),

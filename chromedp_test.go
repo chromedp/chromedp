@@ -474,7 +474,7 @@ func TestLargeQuery(t *testing.T) {
 	// DOM events. The target handler used to get into a deadlock, as the
 	// event queues would fill up and prevent the wait function from
 	// receiving any result.
-	var nodes []*cdp.Node
+	var nodes []*Node
 	if err := Run(ctx,
 		Navigate(s.URL),
 		Nodes("a", &nodes, ByQueryAll),
@@ -1328,12 +1328,15 @@ func TestRunResponse(t *testing.T) {
 			}
 
 			if resp != nil {
-				latency := time.Since(resp.ResponseTime.Time())
+				// The protocol type says seconds, but the browser sends
+				// milliseconds. See https://github.com/chromedp/pdlgen/issues/22.
+				responseTime := time.UnixMilli(int64(resp.ResponseTime))
+				latency := time.Since(responseTime)
 				if latency > time.Hour || latency < -time.Hour {
 					t.Errorf("responseTime does not hold a reasonable value %s. "+
 						"Maybe it's in seconds now and we should remove the workaround. "+
 						"See https://github.com/chromedp/pdlgen/issues/22.",
-						resp.ResponseTime.Time())
+						responseTime)
 				}
 			}
 		}

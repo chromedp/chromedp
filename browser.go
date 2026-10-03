@@ -10,13 +10,13 @@ import (
 	"sync/atomic"
 	"time"
 
+	"encoding/json/jsontext"
+	jsonv2 "encoding/json/v2"
 	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/browser"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
-	jsonv2 "github.com/go-json-experiment/json"
-	"github.com/go-json-experiment/json/jsontext"
 )
 
 var (
@@ -160,10 +160,11 @@ func (b *Browser) newExecutorForTarget(ctx context.Context, targetID target.ID, 
 		TargetID:  targetID,
 		SessionID: sessionID,
 
-		messageQueue: make(chan *cdproto.Message, 1024),
-		frames:       make(map[cdp.FrameID]*cdp.Frame),
-		execContexts: make(map[cdp.FrameID]runtime.ExecutionContextID),
-		cur:          cdp.FrameID(targetID),
+		messageQueue:  make(chan *cdproto.Message, 1024),
+		frames:        make(map[cdp.FrameID]*Frame),
+		execContexts:  make(map[cdp.FrameID]runtime.ExecutionContextID),
+		execUniqueIDs: make(map[cdp.FrameID]string),
+		cur:           cdp.FrameID(targetID),
 
 		logf: b.logf,
 		errf: b.errf,

@@ -23,6 +23,6 @@ add.
 | 2026-10-03 | [Replace the Action interface with a generic and iterator API](2026-10-03-generic-iterator-api-instead-of-action.md) | Proposed |
 | 2026-10-03 | [Questions and ideas go to Discussions, and issues are for bugs](2026-10-03-questions-and-ideas-go-to-discussions.md) | Decided |
 | 2026-10-03 | [The README shows the gear logo and the Discord badge](2026-10-03-readme-shows-the-gear-logo-and-discord-badge.md) | Decided |
-| 2026-10-03 | [Stop relying on helpers that cdproto no longer generates](2026-10-03-stop-relying-on-removed-cdproto-helpers.md) | Proposed |
+| 2026-10-03 | [Stop relying on helpers that cdproto no longer generates](2026-10-03-stop-relying-on-removed-cdproto-helpers.md) | Decided |
 | 2026-10-03 | [The minimum Go version is 1.27](2026-10-03-the-minimum-go-version-is-1-27.md) | Decided |
 | 2026-10-03 | [chromedp projects use dated decision files](2026-10-03-use-dated-decision-files.md) | Decided |

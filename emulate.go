@@ -40,7 +40,7 @@ func EmulateScale(scale float64) EmulateViewportOption {
 
 // EmulateOrientation is an emulate viewport option to set the device viewport
 // screen orientation.
-func EmulateOrientation(orientation emulation.OrientationType, angle int64) EmulateViewportOption {
+func EmulateOrientation(orientation emulation.ScreenOrientationType, angle int64) EmulateViewportOption {
 	return func(p1 *emulation.SetDeviceMetricsOverrideParams, p2 *emulation.SetTouchEmulationEnabledParams) {
 		p1.ScreenOrientation = &emulation.ScreenOrientation{
 			Type:  orientation,
@@ -52,13 +52,13 @@ func EmulateOrientation(orientation emulation.OrientationType, angle int64) Emul
 // EmulateLandscape is an emulate viewport option to set the device viewport
 // screen orientation in landscape primary mode and an angle of 90.
 func EmulateLandscape(p1 *emulation.SetDeviceMetricsOverrideParams, p2 *emulation.SetTouchEmulationEnabledParams) {
-	EmulateOrientation(emulation.OrientationTypeLandscapePrimary, 90)(p1, p2)
+	EmulateOrientation(emulation.ScreenOrientationTypeLandscapePrimary, 90)(p1, p2)
 }
 
 // EmulatePortrait is an emulate viewport option to set the device viewport
 // screen orientation in portrait primary mode and an angle of 0.
 func EmulatePortrait(p1 *emulation.SetDeviceMetricsOverrideParams, p2 *emulation.SetTouchEmulationEnabledParams) {
-	EmulateOrientation(emulation.OrientationTypePortraitPrimary, 0)(p1, p2)
+	EmulateOrientation(emulation.ScreenOrientationTypePortraitPrimary, 0)(p1, p2)
 }
 
 // EmulateMobile is an emulate viewport option to toggle the device viewport to
@@ -95,9 +95,9 @@ func Emulate(device Device) EmulateAction {
 	d := device.Device()
 
 	var angle int64
-	orientation := emulation.OrientationTypePortraitPrimary
+	orientation := emulation.ScreenOrientationTypePortraitPrimary
 	if d.Landscape {
-		orientation, angle = emulation.OrientationTypeLandscapePrimary, 90
+		orientation, angle = emulation.ScreenOrientationTypeLandscapePrimary, 90
 	}
 
 	return Tasks{

@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/runtime"
 )
 
@@ -182,7 +181,7 @@ func TestPollFrame(t *testing.T) {
 	defer cancel()
 
 	var res string
-	var frames []*cdp.Node
+	var frames []*Node
 	if err := Run(ctx,
 		Nodes(`frame[src="child1.html"]`, &frames, ByQuery),
 		ActionFunc(func(ctx context.Context) error {

@@ -53,7 +53,7 @@ func Evaluate(expression string, res any, opts ...EvaluateOption) EvaluateAction
 			return err
 		}
 		if exp != nil {
-			return exp
+			return &ExceptionError{exp}
 		}
 
 		return parseRemoteObject(v, res)

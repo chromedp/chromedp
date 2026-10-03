@@ -1,5 +1,33 @@
 package chromedp
 
+import (
+	"fmt"
+	"strings"
+
+	"github.com/chromedp/cdproto/runtime"
+)
+
+// ExceptionError is the error for a JavaScript exception. It wraps the
+// protocol details of the exception.
+type ExceptionError struct {
+	*runtime.ExceptionDetails
+}
+
+// Error satisfies the error interface.
+func (e *ExceptionError) Error() string {
+	return exceptionString(e.ExceptionDetails)
+}
+
+// exceptionString returns a readable description of an exception.
+func exceptionString(e *runtime.ExceptionDetails) string {
+	var b strings.Builder
+	fmt.Fprintf(&b, "exception %q (%d:%d)", e.Text, e.LineNumber, e.ColumnNumber)
+	if obj := e.Exception; obj != nil {
+		fmt.Fprintf(&b, ": %s", obj.Description)
+	}
+	return b.String()
+}
+
 // Error is a chromedp error.
 type Error string
 

@@ -18,7 +18,7 @@ type PollAction Action
 //
 // See Poll for details on building poll tasks.
 type pollTask struct {
-	frame     *cdp.Node // the frame to evaluate the predicate, defaults to the root page
+	frame     *Node // the frame to evaluate the predicate, defaults to the root page
 	predicate string
 	polling   string        // the polling mode, defaults to "raf" (triggered by requestAnimationFrame)
 	interval  time.Duration // the interval when the poll is triggered by a timer
@@ -168,7 +168,7 @@ func WithPollingTimeout(timeout time.Duration) PollOption {
 
 // WithPollingInFrame specifies the frame in which to evaluate the predicate.
 // If not specified, it will be evaluated in the root page of the current tab.
-func WithPollingInFrame(frame *cdp.Node) PollOption {
+func WithPollingInFrame(frame *Node) PollOption {
 	return func(w *pollTask) {
 		w.frame = frame
 	}

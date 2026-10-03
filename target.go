@@ -7,13 +7,13 @@ import (
 	"sync"
 	"sync/atomic"
 
+	jsonv2 "encoding/json/v2"
 	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
-	jsonv2 "github.com/go-json-experiment/json"
 )
 
 // Target manages a Chrome DevTools Protocol target.
@@ -30,8 +30,11 @@ type Target struct {
 	// frameMu protects frames, execContexts, and cur.
 	frameMu sync.RWMutex
 	// frames is the set of encountered frames.
-	frames       map[cdp.FrameID]*cdp.Frame
+	frames       map[cdp.FrameID]*Frame
 	execContexts map[cdp.FrameID]runtime.ExecutionContextID
+	// execUniqueIDs holds the unique id of each execution context in
+	// execContexts, because the destroyed event names a context by it.
+	execUniqueIDs map[cdp.FrameID]string
 	// cur is the current top level frame.
 	cur cdp.FrameID
 
@@ -42,7 +45,7 @@ type Target struct {
 	isWorker bool
 }
 
-func (t *Target) enclosingFrame(node *cdp.Node) cdp.FrameID {
+func (t *Target) enclosingFrame(node *Node) cdp.FrameID {
 	t.frameMu.RLock()
 	top := t.frames[t.cur]
 	t.frameMu.RUnlock()
@@ -65,7 +68,7 @@ func (t *Target) enclosingFrame(node *cdp.Node) cdp.FrameID {
 // ensureFrame ensures the top frame of this target is loaded and returns the top frame,
 // the root node and the ExecutionContextID of this top frame; otherwise, it will return
 // false as its last return value.
-func (t *Target) ensureFrame() (*cdp.Frame, *cdp.Node, runtime.ExecutionContextID, bool) {
+func (t *Target) ensureFrame() (*Frame, *Node, runtime.ExecutionContextID, bool) {
 	t.frameMu.RLock()
 	frame := t.frames[t.cur]
 	execCtx := t.execContexts[t.cur]
@@ -233,21 +236,22 @@ func (t *Target) runtimeEvent(ev any) {
 		if aux.FrameID != "" {
 			t.frameMu.Lock()
 			t.execContexts[aux.FrameID] = ev.Context.ID
+			t.execUniqueIDs[aux.FrameID] = ev.Context.UniqueID
 			t.frameMu.Unlock()
 		}
 	case *runtime.EventExecutionContextDestroyed:
 		t.frameMu.Lock()
-		for frameID, ctxID := range t.execContexts {
-			if ctxID == ev.ExecutionContextID {
+		for frameID, uniqueID := range t.execUniqueIDs {
+			if uniqueID == ev.ExecutionContextUniqueID {
 				delete(t.execContexts, frameID)
+				delete(t.execUniqueIDs, frameID)
 			}
 		}
 		t.frameMu.Unlock()
 	case *runtime.EventExecutionContextsCleared:
 		t.frameMu.Lock()
-		for frameID := range t.execContexts {
-			delete(t.execContexts, frameID)
-		}
+		clear(t.execContexts)
+		clear(t.execUniqueIDs)
 		t.frameMu.Unlock()
 	}
 }
@@ -272,9 +276,10 @@ func (t *Target) documentUpdated(ctx context.Context) {
 		close(f.Root.Invalidated)
 	}
 
-	f.Nodes = make(map[cdp.NodeID]*cdp.Node)
+	f.Nodes = make(map[cdp.NodeID]*Node)
 	var err error
-	f.Root, err = dom.GetDocument().Do(cdp.WithExecutor(ctx, t))
+	var root *cdp.Node
+	root, err = dom.GetDocument().Do(cdp.WithExecutor(ctx, t))
 	if err == context.Canceled {
 		return // TODO: perhaps not necessary, but useful to keep the tests less noisy
 	}
@@ -282,6 +287,7 @@ func (t *Target) documentUpdated(ctx context.Context) {
 		t.errf("could not retrieve document root for %s: %v", f.ID, err)
 		return
 	}
+	f.Root = newNode(root)
 	f.Root.Invalidated = make(chan struct{})
 	walk(f.Nodes, f.Root)
 }
@@ -294,7 +300,7 @@ func (t *Target) pageEvent(ev any) {
 	switch e := ev.(type) {
 	case *page.EventFrameNavigated:
 		t.frameMu.Lock()
-		t.frames[e.Frame.ID] = e.Frame
+		t.frames[e.Frame.ID] = &Frame{Frame: e.Frame}
 		if e.Frame.ParentID == "" {
 			// This frame is only the new top-level frame if it has
 			// no parent.
@@ -348,7 +354,7 @@ func (t *Target) pageEvent(ev any) {
 		// This can happen if a frame is attached or starts loading
 		// before it's ever navigated to. We won't have all the frame
 		// details just yet, but that's okay.
-		f = &cdp.Frame{ID: id}
+		f = &Frame{Frame: &cdp.Frame{ID: id}}
 		t.frames[id] = f
 	}
 	t.frameMu.Unlock()
@@ -373,7 +379,7 @@ func (t *Target) domEvent(ctx context.Context, ev any) {
 		return
 
 	case *dom.EventSetChildNodes:
-		id, op = e.ParentID, setChildNodes(f.Nodes, e.Nodes)
+		id, op = e.ParentID, setChildNodes(f.Nodes, newNodes(e.Nodes))
 
 	case *dom.EventAttributeModified:
 		id, op = e.NodeID, attributeModified(e.Name, e.Value)
@@ -395,19 +401,19 @@ func (t *Target) domEvent(ctx context.Context, ev any) {
 		id, op = e.NodeID, childNodeCountUpdated(e.ChildNodeCount)
 
 	case *dom.EventChildNodeInserted:
-		id, op = e.ParentNodeID, childNodeInserted(f.Nodes, e.PreviousNodeID, e.Node)
+		id, op = e.ParentNodeID, childNodeInserted(f.Nodes, e.PreviousNodeID, newNode(e.Node))
 
 	case *dom.EventChildNodeRemoved:
 		id, op = e.ParentNodeID, childNodeRemoved(f.Nodes, e.NodeID)
 
 	case *dom.EventShadowRootPushed:
-		id, op = e.HostID, shadowRootPushed(f.Nodes, e.Root)
+		id, op = e.HostID, shadowRootPushed(f.Nodes, newNode(e.Root))
 
 	case *dom.EventShadowRootPopped:
 		id, op = e.HostID, shadowRootPopped(f.Nodes, e.RootID)
 
 	case *dom.EventPseudoElementAdded:
-		id, op = e.ParentID, pseudoElementAdded(f.Nodes, e.PseudoElement)
+		id, op = e.ParentID, pseudoElementAdded(f.Nodes, newNode(e.PseudoElement))
 
 	case *dom.EventPseudoElementRemoved:
 		id, op = e.ParentID, pseudoElementRemoved(f.Nodes, e.PseudoElementID)

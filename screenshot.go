@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
 )
@@ -40,7 +39,7 @@ func ScreenshotScale(sel any, scale float64, picbuf *[]byte, opts ...QueryOption
 		panic("picbuf cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -51,7 +50,7 @@ func ScreenshotScale(sel any, scale float64, picbuf *[]byte, opts ...QueryOption
 // ScreenshotNodes is an action that captures/takes a screenshot of the
 // specified nodes, by calculating the extents of the top most left node and
 // bottom most right node.
-func ScreenshotNodes(nodes []*cdp.Node, scale float64, picbuf *[]byte) Action {
+func ScreenshotNodes(nodes []*Node, scale float64, picbuf *[]byte) Action {
 	if len(nodes) == 0 {
 		panic("nodes must be non-empty")
 	}
@@ -89,7 +88,7 @@ func ScreenshotNodes(nodes []*cdp.Node, scale float64, picbuf *[]byte) Action {
 
 		// take screenshot of the box
 		buf, err := page.CaptureScreenshot().
-			WithFormat(page.CaptureScreenshotFormatPng).
+			WithFormat("png").
 			WithCaptureBeyondViewport(true).
 			WithFromSurface(true).
 			WithClip(&clip).

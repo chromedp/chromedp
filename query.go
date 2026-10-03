@@ -29,12 +29,12 @@ type QueryAction Action
 // options.
 type Selector struct {
 	sel           any
-	fromNode      *cdp.Node
+	fromNode      *Node
 	retryInterval time.Duration
 	exp           int
-	by            func(context.Context, *cdp.Node) ([]cdp.NodeID, error)
-	wait          func(context.Context, *cdp.Frame, runtime.ExecutionContextID, ...cdp.NodeID) ([]*cdp.Node, error)
-	after         []func(context.Context, runtime.ExecutionContextID, ...*cdp.Node) error
+	by            func(context.Context, *Node) ([]cdp.NodeID, error)
+	wait          func(context.Context, *Frame, runtime.ExecutionContextID, ...cdp.NodeID) ([]*Node, error)
+	after         []func(context.Context, runtime.ExecutionContextID, ...*Node) error
 }
 
 // Query is a query action that queries the browser for specific element
@@ -230,9 +230,9 @@ func (s *Selector) selAsString() string {
 }
 
 // waitReady waits for the specified nodes to be ready.
-func (s *Selector) waitReady(check func(context.Context, runtime.ExecutionContextID, *cdp.Node) error) func(context.Context, *cdp.Frame, runtime.ExecutionContextID, ...cdp.NodeID) ([]*cdp.Node, error) {
-	return func(ctx context.Context, cur *cdp.Frame, execCtx runtime.ExecutionContextID, ids ...cdp.NodeID) ([]*cdp.Node, error) {
-		nodes := make([]*cdp.Node, len(ids))
+func (s *Selector) waitReady(check func(context.Context, runtime.ExecutionContextID, *Node) error) func(context.Context, *Frame, runtime.ExecutionContextID, ...cdp.NodeID) ([]*Node, error) {
+	return func(ctx context.Context, cur *Frame, execCtx runtime.ExecutionContextID, ids ...cdp.NodeID) ([]*Node, error) {
+		nodes := make([]*Node, len(ids))
 		cur.RLock()
 		for i, id := range ids {
 			nodes[i] = cur.Nodes[id]
@@ -247,7 +247,7 @@ func (s *Selector) waitReady(check func(context.Context, runtime.ExecutionContex
 		if check != nil {
 			errc := make(chan error, 1)
 			for _, n := range nodes {
-				go func(n *cdp.Node) {
+				go func(n *Node) {
 					select {
 					case <-ctx.Done():
 						errc <- ctx.Err()
@@ -274,7 +274,7 @@ func (s *Selector) waitReady(check func(context.Context, runtime.ExecutionContex
 // QueryAfter is an element query action that queries the browser for selector
 // sel. Waits until the visibility conditions of the query have been met, after
 // which executes f.
-func QueryAfter(sel any, f func(context.Context, runtime.ExecutionContextID, ...*cdp.Node) error, opts ...QueryOption) QueryAction {
+func QueryAfter(sel any, f func(context.Context, runtime.ExecutionContextID, ...*Node) error, opts ...QueryOption) QueryAction {
 	return Query(sel, append(opts, After(f))...)
 }
 
@@ -287,12 +287,12 @@ type QueryOption = func(*Selector)
 //
 // Note that, at present, BySearch and ByJSPath do not support FromNode; this
 // option is mainly useful for ByQuery selectors.
-func FromNode(node *cdp.Node) QueryOption {
+func FromNode(node *Node) QueryOption {
 	return func(s *Selector) { s.fromNode = node }
 }
 
 // ByFunc is an element query action option to set the func used to select elements.
-func ByFunc(f func(context.Context, *cdp.Node) ([]cdp.NodeID, error)) QueryOption {
+func ByFunc(f func(context.Context, *Node) ([]cdp.NodeID, error)) QueryOption {
 	return func(s *Selector) {
 		s.by = f
 	}
@@ -303,13 +303,13 @@ func ByFunc(f func(context.Context, *cdp.Node) ([]cdp.NodeID, error)) QueryOptio
 //
 // Similar to calling document.querySelector() in the browser.
 func ByQuery(s *Selector) {
-	ByFunc(func(ctx context.Context, n *cdp.Node) ([]cdp.NodeID, error) {
+	ByFunc(func(ctx context.Context, n *Node) ([]cdp.NodeID, error) {
 		nodeID, err := dom.QuerySelector(n.NodeID, s.selAsString()).Do(ctx)
 		if err != nil {
 			return nil, err
 		}
 
-		if nodeID == cdp.EmptyNodeID {
+		if nodeID == EmptyNodeID {
 			return []cdp.NodeID{}, nil
 		}
 
@@ -322,7 +322,7 @@ func ByQuery(s *Selector) {
 //
 // Similar to calling document.querySelectorAll() in the browser.
 func ByQueryAll(s *Selector) {
-	ByFunc(func(ctx context.Context, n *cdp.Node) ([]cdp.NodeID, error) {
+	ByFunc(func(ctx context.Context, n *Node) ([]cdp.NodeID, error) {
 		return dom.QuerySelectorAll(n.NodeID, s.selAsString()).Do(ctx)
 	})(s)
 }
@@ -338,7 +338,7 @@ func ByID(s *Selector) {
 // BySearch is an element query option to select elements by the DOM.performSearch
 // command. It matches nodes by plain text, CSS selector or XPath query.
 func BySearch(s *Selector) {
-	ByFunc(func(ctx context.Context, n *cdp.Node) ([]cdp.NodeID, error) {
+	ByFunc(func(ctx context.Context, n *Node) ([]cdp.NodeID, error) {
 		id, count, err := dom.PerformSearch(s.selAsString()).Do(ctx)
 		if err != nil {
 			return nil, err
@@ -370,7 +370,7 @@ func BySearch(s *Selector) {
 // Note: Do not use with an untrusted selector value, as any defined selector
 // will be passed to runtime.Evaluate.
 func ByJSPath(s *Selector) {
-	ByFunc(func(ctx context.Context, n *cdp.Node) ([]cdp.NodeID, error) {
+	ByFunc(func(ctx context.Context, n *Node) ([]cdp.NodeID, error) {
 		// set up eval command
 		p := runtime.Evaluate(s.selAsString()).
 			WithAwaitPromise(true).
@@ -383,7 +383,7 @@ func ByJSPath(s *Selector) {
 			return nil, err
 		}
 		if exp != nil {
-			return nil, exp
+			return nil, &ExceptionError{exp}
 		}
 
 		// use the ObjectID from the evaluation to get the nodeID
@@ -392,7 +392,7 @@ func ByJSPath(s *Selector) {
 			return nil, err
 		}
 
-		if nodeID == cdp.EmptyNodeID {
+		if nodeID == EmptyNodeID {
 			return []cdp.NodeID{}, nil
 		}
 
@@ -411,7 +411,7 @@ func ByNodeID(s *Selector) {
 		panic("ByNodeID can only work on []cdp.NodeID")
 	}
 
-	ByFunc(func(ctx context.Context, n *cdp.Node) ([]cdp.NodeID, error) {
+	ByFunc(func(ctx context.Context, n *Node) ([]cdp.NodeID, error) {
 		for _, id := range ids {
 			err := dom.RequestChildNodes(id).WithPierce(true).Do(ctx)
 			if err != nil {
@@ -424,7 +424,7 @@ func ByNodeID(s *Selector) {
 }
 
 // WaitFunc is an element query option to set a custom node condition wait.
-func WaitFunc(wait func(context.Context, *cdp.Frame, runtime.ExecutionContextID, ...cdp.NodeID) ([]*cdp.Node, error)) QueryOption {
+func WaitFunc(wait func(context.Context, *Frame, runtime.ExecutionContextID, ...cdp.NodeID) ([]*Node, error)) QueryOption {
 	return func(s *Selector) {
 		s.wait = wait
 	}
@@ -436,7 +436,7 @@ func NodeReady(s *Selector) {
 	WaitFunc(s.waitReady(nil))(s)
 }
 
-func callFunctionOnNode(ctx context.Context, node *cdp.Node, function string, res any, args ...any) error {
+func callFunctionOnNode(ctx context.Context, node *Node, function string, res any, args ...any) error {
 	r, err := dom.ResolveNode().WithNodeID(node.NodeID).Do(ctx)
 	if err != nil {
 		return err
@@ -462,7 +462,7 @@ func callFunctionOnNode(ctx context.Context, node *cdp.Node, function string, re
 // NodeVisible is an element query option to wait until all queried element
 // nodes have been sent by the browser and are visible.
 func NodeVisible(s *Selector) {
-	WaitFunc(s.waitReady(func(ctx context.Context, execCtx runtime.ExecutionContextID, n *cdp.Node) error {
+	WaitFunc(s.waitReady(func(ctx context.Context, execCtx runtime.ExecutionContextID, n *Node) error {
 		// check box model
 		_, err := dom.GetBoxModel().WithNodeID(n.NodeID).Do(ctx)
 		if err != nil {
@@ -489,7 +489,7 @@ func NodeVisible(s *Selector) {
 // NodeNotVisible is an element query option to wait until all queried element
 // nodes have been sent by the browser and are not visible.
 func NodeNotVisible(s *Selector) {
-	WaitFunc(s.waitReady(func(ctx context.Context, execCtx runtime.ExecutionContextID, n *cdp.Node) error {
+	WaitFunc(s.waitReady(func(ctx context.Context, execCtx runtime.ExecutionContextID, n *Node) error {
 		// check box model
 		_, err := dom.GetBoxModel().WithNodeID(n.NodeID).Do(ctx)
 		if err != nil {
@@ -517,7 +517,7 @@ func NodeNotVisible(s *Selector) {
 // nodes have been sent by the browser and are enabled (i.e., do not have a
 // 'disabled' attribute).
 func NodeEnabled(s *Selector) {
-	WaitFunc(s.waitReady(func(ctx context.Context, execCtx runtime.ExecutionContextID, n *cdp.Node) error {
+	WaitFunc(s.waitReady(func(ctx context.Context, execCtx runtime.ExecutionContextID, n *Node) error {
 		n.RLock()
 		defer n.RUnlock()
 
@@ -535,7 +535,7 @@ func NodeEnabled(s *Selector) {
 // nodes have been sent by the browser and are selected (i.e., has 'selected'
 // attribute).
 func NodeSelected(s *Selector) {
-	WaitFunc(s.waitReady(func(ctx context.Context, execCtx runtime.ExecutionContextID, n *cdp.Node) error {
+	WaitFunc(s.waitReady(func(ctx context.Context, execCtx runtime.ExecutionContextID, n *Node) error {
 		n.RLock()
 		defer n.RUnlock()
 
@@ -555,11 +555,11 @@ func NodeSelected(s *Selector) {
 // Note: forces the expected number of element nodes to be 0.
 func NodeNotPresent(s *Selector) {
 	s.exp = 0
-	WaitFunc(func(ctx context.Context, cur *cdp.Frame, execCtx runtime.ExecutionContextID, ids ...cdp.NodeID) ([]*cdp.Node, error) {
+	WaitFunc(func(ctx context.Context, cur *Frame, execCtx runtime.ExecutionContextID, ids ...cdp.NodeID) ([]*Node, error) {
 		if len(ids) != 0 {
 			return nil, ErrHasResults
 		}
-		return []*cdp.Node{}, nil
+		return []*Node{}, nil
 	})(s)
 }
 
@@ -586,7 +586,7 @@ func RetryInterval(interval time.Duration) QueryOption {
 // After is an element query option that sets a func to execute after the
 // matched nodes have been returned by the browser, and after the node
 // condition is true.
-func After(f func(context.Context, runtime.ExecutionContextID, ...*cdp.Node) error) QueryOption {
+func After(f func(context.Context, runtime.ExecutionContextID, ...*Node) error) QueryOption {
 	return func(s *Selector) {
 		s.after = append(s.after, f)
 	}
@@ -599,7 +599,7 @@ func After(f func(context.Context, runtime.ExecutionContextID, ...*cdp.Node) err
 // NOTE: this could be extremely resource intensive. Avoid doing this unless
 // necessary.
 func Populate(depth int64, pierce bool, opts ...PopulateOption) QueryOption {
-	return After(func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+	return After(func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
 		var d time.Duration
 		for _, o := range opts {
 			o(&d)
@@ -668,12 +668,12 @@ func WaitNotPresent(sel any, opts ...QueryOption) QueryAction {
 
 // Nodes is an element query action that retrieves the document element nodes
 // matching the selector.
-func Nodes(sel any, nodes *[]*cdp.Node, opts ...QueryOption) QueryAction {
+func Nodes(sel any, nodes *[]*Node, opts ...QueryOption) QueryAction {
 	if nodes == nil {
 		panic("nodes cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, n ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, n ...*Node) error {
 		*nodes = n
 		return nil
 	}, opts...)
@@ -686,7 +686,7 @@ func NodeIDs(sel any, ids *[]cdp.NodeID, opts ...QueryOption) QueryAction {
 		panic("nodes cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
 		nodeIDs := make([]cdp.NodeID, len(nodes))
 		for i, n := range nodes {
 			nodeIDs[i] = n.NodeID
@@ -701,7 +701,7 @@ func NodeIDs(sel any, ids *[]cdp.NodeID, opts ...QueryOption) QueryAction {
 // Focus is an element query action that focuses the first element node matching the
 // selector.
 func Focus(sel any, opts ...QueryOption) QueryAction {
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -713,7 +713,7 @@ func Focus(sel any, opts ...QueryOption) QueryAction {
 // Blur is an element query action that unfocuses (blurs) the first element node
 // matching the selector.
 func Blur(sel any, opts ...QueryOption) QueryAction {
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -738,7 +738,7 @@ func Dimensions(sel any, model **dom.BoxModel, opts ...QueryOption) QueryAction 
 	if model == nil {
 		panic("model cannot be nil")
 	}
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -755,7 +755,7 @@ func Text(sel any, text *string, opts ...QueryOption) QueryAction {
 		panic("text cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -771,7 +771,7 @@ func TextContent(sel any, text *string, opts ...QueryOption) QueryAction {
 		panic("text cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -783,13 +783,13 @@ func TextContent(sel any, text *string, opts ...QueryOption) QueryAction {
 // Clear is an element query action that clears the values of any input/textarea element
 // nodes matching the selector.
 func Clear(sel any, opts ...QueryOption) QueryAction {
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
 
 		for _, n := range nodes {
-			if n.NodeType != cdp.NodeTypeElement || (n.NodeName != "INPUT" && n.NodeName != "TEXTAREA") {
+			if n.NodeType != NodeTypeElement || (n.NodeName != "INPUT" && n.NodeName != "TEXTAREA") {
 				return fmt.Errorf("selector %q matched node %d with name %s", sel, n.NodeID, strings.ToLower(n.NodeName))
 			}
 		}
@@ -798,7 +798,7 @@ func Clear(sel any, opts ...QueryOption) QueryAction {
 		var wg sync.WaitGroup
 		for i, n := range nodes {
 			wg.Add(1)
-			go func(i int, n *cdp.Node) {
+			go func(i int, n *Node) {
 				defer wg.Done()
 
 				var a Action
@@ -809,7 +809,7 @@ func Clear(sel any, opts ...QueryOption) QueryAction {
 					var textID cdp.NodeID
 					var found bool
 					for _, c := range n.Children {
-						if c.NodeType == cdp.NodeTypeText {
+						if c.NodeType == NodeTypeText {
 							textID = c.NodeID
 							found = true
 							break
@@ -867,7 +867,7 @@ func Attributes(sel any, attributes *map[string]string, opts ...QueryOption) Que
 		panic("attributes cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -896,7 +896,7 @@ func AttributesAll(sel any, attributes *[]map[string]string, opts ...QueryOption
 		panic("attributes cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -918,7 +918,7 @@ func AttributesAll(sel any, attributes *[]map[string]string, opts ...QueryOption
 // SetAttributes is an element query action that sets the element attributes for the
 // first element node matching the selector.
 func SetAttributes(sel any, attributes map[string]string, opts ...QueryOption) QueryAction {
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
 		if len(nodes) < 1 {
 			return errors.New("expected at least one element")
 		}
@@ -940,7 +940,7 @@ func AttributeValue(sel any, name string, value *string, ok *bool, opts ...Query
 		panic("value cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
 		if len(nodes) < 1 {
 			return errors.New("expected at least one element")
 		}
@@ -970,7 +970,7 @@ func AttributeValue(sel any, name string, value *string, ok *bool, opts ...Query
 // SetAttributeValue is an element query action that sets the element attribute with
 // name to value for the first element node matching the selector.
 func SetAttributeValue(sel any, name, value string, opts ...QueryOption) QueryAction {
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -982,7 +982,7 @@ func SetAttributeValue(sel any, name, value string, opts ...QueryOption) QueryAc
 // RemoveAttribute is an element query action that removes the element attribute with
 // name from the first element node matching the selector.
 func RemoveAttribute(sel any, name string, opts ...QueryOption) QueryAction {
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -997,7 +997,7 @@ func JavascriptAttribute(sel any, name string, res any, opts ...QueryOption) Que
 	if res == nil {
 		panic("res cannot be nil")
 	}
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -1013,7 +1013,7 @@ func JavascriptAttribute(sel any, name string, res any, opts ...QueryOption) Que
 // SetJavascriptAttribute is an element query action that sets the JavaScript attribute
 // for the first element node matching the selector.
 func SetJavascriptAttribute(sel any, name, value string, opts ...QueryOption) QueryAction {
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -1052,7 +1052,7 @@ func InnerHTML(sel any, html *string, opts ...QueryOption) QueryAction {
 // Click is an element query action that sends a mouse click event to the first element
 // node matching the selector.
 func Click(sel any, opts ...QueryOption) QueryAction {
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -1064,7 +1064,7 @@ func Click(sel any, opts ...QueryOption) QueryAction {
 // DoubleClick is an element query action that sends a mouse double click event to the
 // first element node matching the selector.
 func DoubleClick(sel any, opts ...QueryOption) QueryAction {
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -1084,7 +1084,7 @@ func DoubleClick(sel any, opts ...QueryOption) QueryAction {
 //
 // [keys]: https://github.com/chromedp/examples/tree/master/keys
 func SendKeys(sel any, v string, opts ...QueryOption) QueryAction {
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -1113,7 +1113,7 @@ func SendKeys(sel any, v string, opts ...QueryOption) QueryAction {
 // SetUploadFiles is an element query action that sets the files to upload (i.e., for a
 // input[type="file"] node) for the first element node matching the selector.
 func SetUploadFiles(sel any, files []string, opts ...QueryOption) QueryAction {
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -1125,7 +1125,7 @@ func SetUploadFiles(sel any, files []string, opts ...QueryOption) QueryAction {
 // Submit is an element query action that submits the parent form of the first element
 // node matching the selector.
 func Submit(sel any, opts ...QueryOption) QueryAction {
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -1147,7 +1147,7 @@ func Submit(sel any, opts ...QueryOption) QueryAction {
 // Reset is an element query action that resets the parent form of the first element
 // node matching the selector.
 func Reset(sel any, opts ...QueryOption) QueryAction {
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -1173,7 +1173,7 @@ func ComputedStyle(sel any, style *[]*css.ComputedStyleProperty, opts ...QueryOp
 		panic("style cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -1196,7 +1196,7 @@ func MatchedStyle(sel any, style **css.GetMatchedStylesForNodeReturns, opts ...Q
 		panic("style cannot be nil")
 	}
 
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -1218,7 +1218,7 @@ func MatchedStyle(sel any, style **css.GetMatchedStylesForNodeReturns, opts ...Q
 // ScrollIntoView is an element query action that scrolls the window to the
 // first element node matching the selector.
 func ScrollIntoView(sel any, opts ...QueryOption) QueryAction {
-	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
+	return QueryAfter(sel, func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
 		if len(nodes) < 1 {
 			return fmt.Errorf("selector %q did not return any nodes", sel)
 		}
@@ -1235,8 +1235,8 @@ func ScrollIntoView(sel any, opts ...QueryOption) QueryAction {
 func DumpTo(sel any, w io.Writer, prefix, indent string, nodeIDs bool, depth int64, pierce bool, wait time.Duration, opts ...QueryOption) QueryAction {
 	return Query(sel, append(opts,
 		Populate(depth, pierce, PopulateWait(wait)),
-		After(func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*cdp.Node) error {
-			var n *cdp.Node
+		After(func(ctx context.Context, execCtx runtime.ExecutionContextID, nodes ...*Node) error {
+			var n *Node
 			if len(nodes) > 0 {
 				n = nodes[0]
 			}

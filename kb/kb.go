@@ -58,11 +58,11 @@ func EncodeUnidentified(r rune) []*input.DispatchKeyEventParams {
 		WindowsVirtualKeyCode: int64(r),*/
 	}
 	keyUp := keyDown
-	keyDown.Type, keyUp.Type = input.KeyDown, input.KeyUp
+	keyDown.Type, keyUp.Type = KeyDown, KeyUp
 	// printable, so create char event
 	if unicode.IsPrint(r) {
 		keyChar := keyDown
-		keyChar.Type = input.KeyChar
+		keyChar.Type = KeyChar
 		keyChar.Text = string(r)
 		keyChar.UnmodifiedText = string(r)
 
@@ -93,14 +93,14 @@ func Encode(r rune) []*input.DispatchKeyEventParams {
 		keyDown.NativeVirtualKeyCode = 0
 	}
 	if v.Shift {
-		keyDown.Modifiers |= input.ModifierShift
+		keyDown.Modifiers |= int64(ModifierShift)
 	}
 	keyUp := keyDown
-	keyDown.Type, keyUp.Type = input.KeyDown, input.KeyUp
+	keyDown.Type, keyUp.Type = KeyDown, KeyUp
 	// printable, so create char event
 	if v.Print {
 		keyChar := keyDown
-		keyChar.Type = input.KeyChar
+		keyChar.Type = KeyChar
 		keyChar.Text = v.Text
 		keyChar.UnmodifiedText = v.Unmodified
 		// the virtual key code for char events for printable characters will

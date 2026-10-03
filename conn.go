@@ -6,9 +6,9 @@ import (
 	"io"
 	"net"
 
+	"encoding/json/jsontext"
+	jsonv2 "encoding/json/v2"
 	"github.com/chromedp/cdproto"
-	jsonv2 "github.com/go-json-experiment/json"
-	"github.com/go-json-experiment/json/jsontext"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 )
