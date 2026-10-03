@@ -84,6 +84,54 @@ func TestNavigationEntries(t *testing.T) {
 	}
 }
 
+// TestNavigateLoadError checks the error of a page that does not load. A
+// program must find it with errors.Is and errors.As. The text of the error is
+// the same as in earlier versions. See the issue 793.
+func TestNavigateLoadError(t *testing.T) {
+	t.Parallel()
+
+	// Nothing listens on port 1, so the browser gets a refused connection.
+	const urlstr = "http://127.0.0.1:1/"
+	tests := map[string]func(ctx context.Context) error{
+		"Navigate": func(ctx context.Context) error {
+			return Do(ctx, Navigate(urlstr))
+		},
+		"NavigateResponse": func(ctx context.Context) error {
+			_, err := Run(ctx, NavigateResponse(urlstr))
+			return err
+		},
+		"RunResponse": func(ctx context.Context) error {
+			_, err := RunResponse(ctx, Navigate(urlstr))
+			return err
+		},
+	}
+	for name, run := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx, cancel := testAllocate(t, "")
+			defer cancel()
+			err := run(ctx)
+			if err == nil {
+				t.Fatal("want a load error")
+			}
+			if !errors.Is(err, ErrPageLoad) {
+				t.Errorf("errors.Is(%q, ErrPageLoad) is false", err)
+			}
+			loadErr, ok := errors.AsType[*LoadError](err)
+			if !ok {
+				t.Fatalf("want a *LoadError in %q", err)
+			}
+			if !strings.HasPrefix(loadErr.ErrorText, "net::ERR_") {
+				t.Errorf("want a text with the prefix net::ERR_, got %q", loadErr.ErrorText)
+			}
+			if want := "page load error " + loadErr.ErrorText; err.Error() != want {
+				t.Errorf("want the text %q, got %q", want, err.Error())
+			}
+		})
+	}
+}
+
 func TestNavigateToHistoryEntry(t *testing.T) {
 	t.Parallel()
 

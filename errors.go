@@ -28,6 +28,29 @@ func exceptionString(e *runtime.ExceptionDetails) string {
 	return b.String()
 }
 
+// LoadError is the error for a page that did not load. Navigate and
+// RunResponse return it when the browser reports an error for the request of
+// the page, for example when the host name does not exist. Use [errors.As] to
+// read the text of the browser, or [errors.Is] with [ErrPageLoad] to test for
+// any load error.
+type LoadError struct {
+	// ErrorText is the error text of the browser, such as
+	// "net::ERR_NAME_NOT_RESOLVED". Chromium lists these texts in
+	// net/base/net_error_list.h.
+	ErrorText string
+}
+
+// Error satisfies the error interface. The text is the same as in earlier
+// versions.
+func (e *LoadError) Error() string {
+	return "page load error " + e.ErrorText
+}
+
+// Unwrap returns ErrPageLoad, so that errors.Is finds it.
+func (e *LoadError) Unwrap() error {
+	return ErrPageLoad
+}
+
 // Error is a chromedp error.
 type Error string
 
@@ -70,6 +93,9 @@ const (
 
 	// ErrInvalidTarget is the invalid target error.
 	ErrInvalidTarget Error = "invalid target"
+
+	// ErrPageLoad is the error that every [LoadError] wraps.
+	ErrPageLoad Error = "page load error"
 
 	// ErrNoDisplay is the error when a visible window is requested on Linux
 	// and the environment has no display.

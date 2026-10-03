@@ -646,7 +646,7 @@ func responseAction(steps ...Action[Void]) Action[*network.Response] {
 				}
 			case *network.EventLoadingFailed:
 				if ev.RequestID == reqID {
-					loadErr = fmt.Errorf("page load error %s", ev.ErrorText)
+					loadErr = &LoadError{ErrorText: ev.ErrorText}
 					// If Canceled is true, we will not receive a
 					// loadEventFired at all.
 					if ev.Canceled {

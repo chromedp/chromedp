@@ -3,7 +3,6 @@ package chromedp
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/network"
@@ -33,7 +32,7 @@ func navigate(urlstr string) Action[Void] {
 		case err != nil:
 			return err
 		case res.ErrorText != "":
-			return fmt.Errorf("page load error %s", res.ErrorText)
+			return &LoadError{ErrorText: res.ErrorText}
 		}
 		return nil
 	})

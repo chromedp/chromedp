@@ -775,6 +775,10 @@ type JSPath string
 type KeyOption = func(*input.DispatchKeyEventParams)
 func KeyModifiers(modifiers ...Modifier) KeyOption
 
+type LoadError struct { ... }
+func (e *LoadError) Error() string
+func (e *LoadError) Unwrap() error
+
 type Modifier = kb.Modifier
 
 type MouseOption = func(*input.DispatchMouseEventParams)
@@ -893,6 +897,7 @@ ErrNotSelected
 ErrInvalidBoxModel
 ErrChannelClosed
 ErrInvalidTarget
+ErrPageLoad
 ErrNoDisplay
 ErrInvalidContext
 ErrPollingTimeout
