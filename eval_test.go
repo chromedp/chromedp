@@ -1,7 +1,10 @@
 package chromedp
 
 import (
+	"context"
+	"fmt"
 	"reflect"
+	"slices"
 	"testing"
 
 	"github.com/chromedp/cdproto/runtime"
@@ -153,6 +156,45 @@ func TestEvaluateRemoteObject(t *testing.T) {
 			}
 			if string(res.Type) != test.wantType {
 				t.Fatalf("want type: %v, got type: %v", test.wantType, res.Type)
+			}
+		})
+	}
+}
+
+// TestEvaluateLargeResult makes the browser send one result of 30 MB on each
+// transport. The pipe reads up to a zero byte, and the websocket reads one
+// frame, so a limit in either one makes the test fail. See the issue 401.
+func TestEvaluateLargeResult(t *testing.T) {
+	t.Parallel()
+
+	const size = 30 << 20
+	for _, name := range []string{"pipe", "websocket"} {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			opts := allocOpts
+			if name == "websocket" {
+				opts = append(slices.Clone(allocOpts), WebSocket)
+			}
+			allocCtx, cancel := NewExecAllocator(context.Background(), opts...)
+			defer cancel()
+			ctx, cancel := NewContext(allocCtx)
+			defer cancel()
+
+			got, err := Run(ctx, Evaluate[string](fmt.Sprintf(`"x".repeat(%d)`, size)))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if len(got) != size {
+				t.Fatalf("want %d bytes, got %d", size, len(got))
+			}
+			if got[0] != 'x' || got[size-1] != 'x' {
+				t.Fatal("the result has the wrong content")
+			}
+
+			// The same connection must still work after a large message.
+			if n, err := Run(ctx, Evaluate[int](`1 + 2`)); err != nil || n != 3 {
+				t.Fatalf("want 3, got %d and %v", n, err)
 			}
 		})
 	}
