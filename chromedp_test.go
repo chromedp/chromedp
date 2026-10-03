@@ -367,11 +367,11 @@ func TestConcurrentCancel(t *testing.T) {
 func TestCancelTabDuringAttach(t *testing.T) {
 	t.Parallel()
 
-	ctx1, cancel := testAllocate(t, "")
+	// This test makes many tabs, and a new tab takes the focus of its window.
+	// A tab without focus gets no animation frames, which stops the tests that
+	// poll. So the test has a browser of its own.
+	ctx1, cancel := testAllocateSeparate(t)
 	defer cancel()
-	if err := Do(ctx1); err != nil {
-		t.Fatal(err)
-	}
 	b := FromContext(ctx1).Browser
 
 	var wg sync.WaitGroup
