@@ -1492,6 +1492,49 @@ const (
 </html>`
 )
 
+// TestWaitReadyAfterFreshNavigation runs WaitReady right after a navigation,
+// before the target has any reason to have the nodes of the new document. The
+// issue 1593 says that this always times out. It does not, because the query
+// polls until the DOM events fill the node tree of the frame.
+func TestWaitReadyAfterFreshNavigation(t *testing.T) {
+	t.Parallel()
+
+	for _, tt := range []struct {
+		name string
+		url  string
+		wait Action[Void]
+	}{
+		{"data url html", "data:text/html,<html><body>Hello</body></html>", WaitReady(CSS("html"))},
+		{"data url empty html", "data:text/html,<html></html>", WaitReady(CSS("html"))},
+		{"data url body", "data:text/html,<html><body>Hello</body></html>", WaitReady(CSS("body"))},
+		{"search", "data:text/html,<html><body><h1 id=x>Hi</h1></body></html>", WaitReady(Search("//h1"))},
+		{"file", testdataDir + "/form.html", WaitReady(ID("form"))},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx, cancel := testAllocate(t, "")
+			defer cancel()
+			// The first run attaches the tab, so it runs on the context of the
+			// tab, and not on a context with a timeout. The new tab has
+			// loaded nothing yet.
+			if err := Do(ctx, Navigate(tt.url), tt.wait); err != nil {
+				t.Fatalf("first navigation: %v", err)
+			}
+			// More navigations on the same tab. Each one replaces the node
+			// tree of the old document.
+			for i := range 4 {
+				tctx, tcancel := context.WithTimeout(ctx, 10*time.Second)
+				err := Do(tctx, Navigate(tt.url), tt.wait)
+				tcancel()
+				if err != nil {
+					t.Fatalf("navigation %d: %v", i+2, err)
+				}
+			}
+		})
+	}
+}
+
 func TestWaitReadyReuseAction(t *testing.T) {
 	t.Parallel()
 
