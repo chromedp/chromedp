@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log"
-	"net/http"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -33,6 +33,19 @@ var (
 	)
 )
 
+// Transport is the common interface to send and receive the protocol messages
+// of a browser. [PipeConn] implements it, and so does the websocket connection
+// of the module github.com/chromedp/chromedp/remote. Browser reads and writes
+// its messages through it, and NewBrowserTransport accepts any Transport.
+//
+// A Transport can also have the method SetDebugf(func(string, ...any)).
+// NewBrowserTransport then calls it with the protocol logger of the browser.
+type Transport interface {
+	Read(context.Context, *cdproto.Message) error
+	Write(context.Context, *cdproto.Message) error
+	io.Closer
+}
+
 // Browser manages a browser through the Chrome DevTools Protocol. It handles
 // the browser process runner, the connection to the browser, the targets, and
 // the network, page, and DOM events. The connection is a pipe or a websocket.
@@ -54,12 +67,6 @@ type Browser struct {
 	// important, because the browser must shut itself off and save its state
 	// to disk.
 	closingGracefully chan struct{}
-
-	dialTimeout time.Duration
-
-	// dialHTTPHeader is set by WithDialHTTPHeader. NewBrowser sends it with
-	// the websocket handshake.
-	dialHTTPHeader http.Header
 
 	// diedUnexpectedly is true when the connection to the browser process
 	// dropped while nobody had asked the browser to stop. The caller did not
@@ -116,41 +123,14 @@ type Browser struct {
 	wsURL    string
 }
 
-// NewBrowser creates a new browser. Typically you do not call it directly,
-// because the Allocator interface does it.
-//
-// It dials the websocket address urlstr. To use a connection that is already
-// open, see [NewBrowserTransport].
-func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Browser, error) {
-	// Apply the options once here, as the dial needs the timeout and the
-	// debug logger.
-	b := newBrowser(opts)
-
-	dialCtx := ctx
-	if b.dialTimeout > 0 {
-		var cancel context.CancelFunc
-		dialCtx, cancel = context.WithTimeout(ctx, b.dialTimeout)
-		defer cancel()
-	}
-
-	dialOpts := []DialOption{WithConnDebugf(b.dbgf)}
-	if len(b.dialHTTPHeader) > 0 {
-		dialOpts = append(dialOpts, WithConnHTTPHeader(b.dialHTTPHeader))
-	}
-	conn, err := DialContext(dialCtx, urlstr, dialOpts...)
-	if err != nil {
-		return nil, fmt.Errorf("could not dial %q: %w", urlstr, err)
-	}
-	return NewBrowserTransport(ctx, conn, opts...)
-}
-
 // NewBrowserTransport creates a new browser that uses tr, a connection to a
 // browser that is already open, such as a [*PipeConn]. The browser closes tr
-// when it stops.
+// when it stops. Typically you do not call it directly, because the Allocator
+// interface does it.
 func NewBrowserTransport(ctx context.Context, tr Transport, opts ...BrowserOption) (*Browser, error) {
 	b := newBrowser(opts)
-	if s, ok := tr.(interface{ setDebugf(func(string, ...any)) }); ok {
-		s.setDebugf(b.dbgf)
+	if s, ok := tr.(interface{ SetDebugf(func(string, ...any)) }); ok {
+		s.SetDebugf(b.dbgf)
 	}
 	b.conn = tr
 
@@ -164,8 +144,6 @@ func newBrowser(opts []BrowserOption) *Browser {
 	b := &Browser{
 		LostConnection:    make(chan struct{}),
 		closingGracefully: make(chan struct{}),
-
-		dialTimeout: 10 * time.Second,
 
 		newTabQueue: make(chan *Target),
 
@@ -187,7 +165,8 @@ func newBrowser(opts []BrowserOption) *Browser {
 
 // Process returns the process object of the browser.
 //
-// It is nil when the browser was allocated with RemoteAllocator. A monitoring
+// It is nil when the browser was allocated by an allocator that attaches to a
+// browser that runs already, such as the allocator of the remote module. A monitoring
 // system can use it to collect process metrics of the browser process (see
 // [prometheus.NewProcessCollector] for an example).
 //
@@ -496,27 +475,4 @@ func WithBrowserDebugf(f func(string, ...any)) BrowserOption {
 // Note: it is not implemented yet.
 func WithConsolef(f func(string, ...any)) BrowserOption {
 	return func(b *Browser) {}
-}
-
-// WithDialHTTPHeader is a browser option that sets HTTP headers on the websocket
-// handshake request. NewBrowser sends them when it dials the address of the
-// browser. For example, a hosted browser service can need an Authorization
-// header:
-//
-//	chromedp.NewRemoteAllocator(ctx, wsURL, chromedp.NoModifyURL,
-//		chromedp.WithRemoteDialHTTPHeader(http.Header{
-//			"Authorization": {"Bearer " + token},
-//		}))
-//
-// The option has no effect when the Browser uses a pipe or another transport
-// that [NewBrowserTransport] received.
-func WithDialHTTPHeader(h http.Header) BrowserOption {
-	return func(b *Browser) { b.dialHTTPHeader = h.Clone() }
-}
-
-// WithDialTimeout is a browser option that sets the timeout for dialing the
-// websocket address of the browser. The default is ten seconds. Use a zero
-// duration for no timeout.
-func WithDialTimeout(d time.Duration) BrowserOption {
-	return func(b *Browser) { b.dialTimeout = d }
 }

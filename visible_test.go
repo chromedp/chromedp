@@ -54,7 +54,7 @@ func TestDefaultOptionsHeadless(t *testing.T) {
 	}
 
 	// The list that NewContext builds must be the same list.
-	b := setupExecAllocator(defaultExecAllocatorOptions(false, false)...)
+	b := setupExecAllocator(defaultExecAllocatorOptions(false, nil)...)
 	if !maps.Equal(b.initFlags, headlessFlags) {
 		t.Fatalf("NewContext flags differ from the default list: %v", b.initFlags)
 	}
@@ -73,7 +73,7 @@ func TestVisibleWindowFlags(t *testing.T) {
 
 	for name, opts := range map[string][]ExecAllocatorOption{
 		"VisibleWindow after the defaults": append(DefaultExecAllocatorOptions[:len(DefaultExecAllocatorOptions):len(DefaultExecAllocatorOptions)], VisibleWindow),
-		"the list of NewContext":           defaultExecAllocatorOptions(true, false),
+		"the list of NewContext":           defaultExecAllocatorOptions(true, nil),
 	} {
 		a := setupExecAllocator(opts...)
 		if !maps.Equal(a.initFlags, want) {
@@ -210,5 +210,25 @@ func TestCheckDisplayLinux(t *testing.T) {
 		if err := checkDisplay(); (err != nil) != tt.wantErr {
 			t.Errorf("DISPLAY=%q WAYLAND_DISPLAY=%q: got %v", tt.display, tt.wayland, err)
 		}
+	}
+}
+
+// TestVisibleWindow starts a browser with a visible window. It needs a
+// display, so it skips on Linux without one.
+func TestVisibleWindow(t *testing.T) {
+	if runtime.GOOS == "linux" && os.Getenv("DISPLAY") == "" && os.Getenv("WAYLAND_DISPLAY") == "" {
+		t.Skip("a visible window needs DISPLAY or WAYLAND_DISPLAY")
+	}
+	t.Parallel()
+
+	allocCtx, allocCancel := NewExecAllocator(context.Background(), append(append([]ExecAllocatorOption{}, allocOpts...), VisibleWindow)...)
+	defer allocCancel()
+	ctx, cancel := NewContext(allocCtx)
+	defer cancel() // kills the browser, so that no process stays
+	if err := Do(ctx, Navigate(testdataDir+"/form.html")); err != nil {
+		t.Fatal(err)
+	}
+	if got, err := Run(ctx, Evaluate[int](`1 + 2`)); err != nil || got != 3 {
+		t.Fatalf("want 3, got %d and %v", got, err)
 	}
 }

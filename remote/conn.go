@@ -1,9 +1,20 @@
-package chromedp
+// Package remote connects chromedp to a browser with a websocket. It holds the
+// websocket connection, the allocator for a browser that runs already, the
+// websocket mode of the exec allocator and the option that keeps a browser
+// open. The core module github.com/chromedp/chromedp has none of this code, so
+// that it needs no library other than the standard library and cdproto.
+//
+// Use [NewAllocator] to attach to a browser that runs already, for example a
+// hosted browser service or a container. Use [WebSocket] to make the exec
+// allocator of chromedp connect with a websocket, and [WithKeepOpen] to leave
+// the browser open when the program ends.
+package remote
 
 import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"net"
 	"net/http"
@@ -12,20 +23,16 @@ import (
 	"encoding/json/jsontext"
 	jsonv2 "encoding/json/v2"
 	"github.com/chromedp/cdproto"
+	"github.com/chromedp/chromedp"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
 )
 
-// Transport is the common interface to send and receive the protocol messages
-// of a browser. Conn and PipeConn implement it. Browser reads and writes its
-// messages through it, and NewBrowserTransport accepts any Transport.
-type Transport interface {
-	Read(context.Context, *cdproto.Message) error
-	Write(context.Context, *cdproto.Message) error
-	io.Closer
-}
+// ErrInvalidMessage is the error of a websocket frame that is neither a text
+// frame nor a control frame.
+var ErrInvalidMessage = errors.New("invalid websocket message")
 
-// Conn implements Transport with a gobwas/ws websocket connection.
+// Conn implements [chromedp.Transport] with a gobwas/ws websocket connection.
 type Conn struct {
 	conn net.Conn
 
@@ -90,6 +97,12 @@ func (c *bufferedConn) Read(p []byte) (int, error) {
 	return c.r.Read(p)
 }
 
+// SetDebugf sets the protocol logger. chromedp.NewBrowserTransport calls it
+// with the logger of the browser.
+func (c *Conn) SetDebugf(f func(string, ...any)) {
+	c.debugf = f
+}
+
 // Close satisfies the io.Closer interface.
 func (c *Conn) Close() error {
 	return c.conn.Close()
@@ -143,7 +156,7 @@ func (c *Conn) Read(_ context.Context, msg *cdproto.Message) error {
 			if c.debugf != nil {
 				c.debugf("unknown OpCode: %s", h.OpCode)
 			}
-			return ErrInvalidWebsocketMessage
+			return ErrInvalidMessage
 		}
 
 		var b bytes.Buffer
@@ -156,8 +169,8 @@ func (c *Conn) Read(_ context.Context, msg *cdproto.Message) error {
 		}
 
 		// unmarshal, and reuse the decoder
-		c.decoder.Reset(&b, DefaultUnmarshalOptions)
-		return jsonv2.UnmarshalDecode(&c.decoder, msg, DefaultUnmarshalOptions)
+		c.decoder.Reset(&b, chromedp.DefaultUnmarshalOptions)
+		return jsonv2.UnmarshalDecode(&c.decoder, msg, chromedp.DefaultUnmarshalOptions)
 	}
 }
 
@@ -190,8 +203,8 @@ func (c *Conn) Write(_ context.Context, msg *cdproto.Message) error {
 
 	// Marshal the value, and reuse the encoder
 	var b bytes.Buffer
-	c.encoder.Reset(&b, DefaultMarshalOptions)
-	if err := jsonv2.MarshalEncode(&c.encoder, msg, DefaultMarshalOptions); err != nil {
+	c.encoder.Reset(&b, chromedp.DefaultMarshalOptions)
+	if err := jsonv2.MarshalEncode(&c.encoder, msg, chromedp.DefaultMarshalOptions); err != nil {
 		return err
 	}
 

@@ -11,7 +11,6 @@ import (
 	"io/fs"
 	"iter"
 	"log"
-	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -558,49 +557,6 @@ func TestLargeQuery(t *testing.T) {
 	}
 }
 
-func TestDialTimeout(t *testing.T) {
-	t.Parallel()
-
-	t.Run("ShortTimeoutError", func(t *testing.T) {
-		t.Parallel()
-		l, err := net.Listen("tcp", ":0")
-		if err != nil {
-			t.Fatal(err)
-		}
-		url := "ws://" + l.(*net.TCPListener).Addr().String()
-		defer l.Close()
-
-		ctx := t.Context()
-		_, err = NewBrowser(ctx, url, WithDialTimeout(time.Microsecond))
-		got, want := fmt.Sprintf("%v", err), "i/o timeout"
-		if !strings.Contains(got, want) {
-			t.Fatalf("got %q, want %q", got, want)
-		}
-	})
-	t.Run("NoTimeoutSuccess", func(t *testing.T) {
-		t.Parallel()
-		l, err := net.Listen("tcp", ":0")
-		if err != nil {
-			t.Fatal(err)
-		}
-		url := "ws://" + l.(*net.TCPListener).Addr().String()
-		defer l.Close()
-		go func() {
-			conn, err := l.Accept()
-			if err == nil {
-				conn.Close()
-			}
-		}()
-
-		ctx := t.Context()
-		_, err = NewBrowser(ctx, url, WithDialTimeout(0))
-		got := fmt.Sprintf("%v", err)
-		if !strings.Contains(got, "EOF") && !strings.Contains(got, "connection reset") {
-			t.Fatalf("got %q, want %q or %q", got, "EOF", "connection reset")
-		}
-	})
-}
-
 // cancelAfterFirst ranges over seq in a new goroutine. It calls cancel at the
 // first event. The returned channel receives the error that ends the
 // iteration, or nil when the iteration ends without an error.
@@ -917,50 +873,6 @@ func TestBrowserContext(t *testing.T) {
 			wantDisposed: false,
 			wantPanic:    "WithExistingBrowserContext can not be used before Browser is initialized",
 		},
-		{
-			name: "remote allocator WithExistingBrowserContext ",
-			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
-				c := FromContext(browserCtx)
-				var conn *net.TCPConn
-				if chromedpConn, ok := c.Browser.conn.(*Conn); ok {
-					conn, _ = chromedpConn.conn.(*net.TCPConn)
-				}
-				if conn == nil {
-					t.Skip("skip when the remote debugging address is not available")
-				}
-				actx, _ := NewRemoteAllocator(context.Background(), "ws://"+conn.RemoteAddr().String())
-				ctx, cancel := NewContext(actx, WithExistingBrowserContext(rootBrowserContextID1))
-				if err := Do(ctx); err != nil {
-					t.Fatal(err)
-				}
-
-				return ctx, cancel, rootBrowserContextID1
-			},
-			wantDisposed: false,
-			wantPanic:    "",
-		},
-		{
-			name: "remote allocator WithNewBrowserContext",
-			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
-				c := FromContext(browserCtx)
-				var conn *net.TCPConn
-				if chromedpConn, ok := c.Browser.conn.(*Conn); ok {
-					conn, _ = chromedpConn.conn.(*net.TCPConn)
-				}
-				if conn == nil {
-					t.Skip("skip when the remote debugging address is not available")
-				}
-				actx, _ := NewRemoteAllocator(context.Background(), "ws://"+conn.RemoteAddr().String())
-				ctx, cancel := NewContext(actx, WithNewBrowserContext())
-				if err := Do(ctx); err != nil {
-					t.Fatal(err)
-				}
-
-				return ctx, cancel, FromContext(ctx).BrowserContextID
-			},
-			wantDisposed: true,
-			wantPanic:    "",
-		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -1040,7 +952,8 @@ func TestLargeOutboundMessages(t *testing.T) {
 	ctx, cancel := testAllocate(t, "")
 	defer cancel()
 
-	// ~5MiB of JS to test the grow feature of github.com/gobwas/ws.
+	// ~5MiB of JS to test a large outbound message. The module remote tests the
+	// grow feature of its websocket.
 	expr := fmt.Sprintf("//%s\n", strings.Repeat("x", 5<<20))
 	if _, err := Run(ctx, Evaluate[[]byte](expr)); err != nil {
 		t.Fatal(err)

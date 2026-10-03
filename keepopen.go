@@ -23,16 +23,21 @@ const keepOpenPrefix = "keepopen-"
 
 // KeepOpen is an ExecAllocatorOption that leaves the browser open when the Go
 // program ends or when the context is canceled. Use it to look at the page
-// after the program is done. See also [WithKeepOpen], [KeptOpen] and
-// [VisibleWindow].
+// after the program is done. See also [KeptOpen] and [VisibleWindow].
+//
+// The allocator needs a dialer for a kept browser, as it connects with a
+// websocket. Without one, Allocate returns [ErrNoDialer]. Add [WithDialer], or
+// WebSocket of the module github.com/chromedp/chromedp/remote, to the options.
+// For the default allocator of NewContext, give the option WithKeepOpen of that
+// module to NewContext.
 //
 // The browser must outlive the program, so KeepOpen changes how the allocator
 // starts it:
 //   - The allocator uses the websocket and not the pipe, because the pipe
 //     closes when the Go process exits, and Chrome then exits too. It starts
 //     Chrome with --remote-debugging-port=0 and reads the address from the file
-//     DevToolsActivePort in the user data directory. [NewRemoteAllocator] can
-//     connect to that address later.
+//     DevToolsActivePort in the user data directory. The allocator of the
+//     remote module can connect to that address later.
 //   - The process starts detached: in a new session on Unix, and detached from
 //     the console and in a new process group on Windows. A func from
 //     [ModifyCmdFunc] runs first, and the detach settings come after it.
@@ -56,21 +61,11 @@ func KeepOpen(a *ExecAllocator) {
 	a.keepOpen = true
 }
 
-// WithKeepOpen makes NewContext build the default allocator with [KeepOpen].
-// It works with headless mode too.
-//
-// The option only applies when the parent context has no allocator. It has no
-// effect on an allocator that the caller made, and it has no effect on a
-// context that inherits a browser. For an allocator that you make, add
-// [KeepOpen] to the options of NewExecAllocator instead.
-func WithKeepOpen() ContextOption {
-	return func(c *Context) { c.keepOpen = true }
-}
-
 // KeptOpen returns the websocket address of the browser of the context and the
 // user data directory of the browser, so that a program can print them. Another
-// program can attach to the address with [NewRemoteAllocator]. The user can
-// delete the directory when the browser is closed.
+// program can attach to the address with the allocator of the module
+// github.com/chromedp/chromedp/remote. The user can delete the directory when
+// the browser is closed.
 //
 // KeptOpen returns two empty strings when the context has no browser yet, or
 // when the allocator did not start the browser with [KeepOpen]. The browser
@@ -89,8 +84,8 @@ func KeptOpen(ctx context.Context) (wsURL, userDataDir string) {
 // program that must stay alive while the user looks at the window.
 //
 // If the context has no browser yet, WaitClosed starts one, as Run does. For a
-// browser that a [RemoteAllocator] reaches, WaitClosed waits until the
-// connection drops, because there is no process to watch.
+// browser that an allocator of the remote module reaches, WaitClosed waits
+// until the connection drops, because there is no process to watch.
 func WaitClosed(ctx context.Context) error {
 	c, err := initContextBrowser(ctx)
 	if err != nil {
@@ -225,7 +220,7 @@ func (a *ExecAllocator) allocateKeepOpen(ctx context.Context, c *Context, opts [
 		stop()
 		return nil, err
 	}
-	browser, err := NewBrowser(ctx, wsURL, opts...)
+	browser, err := a.dial(ctx, wsURL, opts)
 	if err != nil {
 		stop()
 		return nil, err

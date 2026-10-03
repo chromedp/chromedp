@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"slices"
 	"testing"
 
 	"github.com/chromedp/cdproto/runtime"
@@ -161,42 +160,32 @@ func TestEvaluateRemoteObject(t *testing.T) {
 	}
 }
 
-// TestEvaluateLargeResult makes the browser send one result of 30 MB on each
-// transport. The pipe reads up to a zero byte, and the websocket reads one
-// frame, so a limit in either one makes the test fail. See the issue 401.
+// TestEvaluateLargeResult makes the browser send one result of 30 MB on the
+// pipe. The pipe reads up to a zero byte, so a limit makes the test fail. The
+// module remote has the same test for the websocket. See the issue 401.
 func TestEvaluateLargeResult(t *testing.T) {
 	t.Parallel()
 
 	const size = 30 << 20
-	for _, name := range []string{"pipe", "websocket"} {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
+	allocCtx, cancel := NewExecAllocator(context.Background(), allocOpts...)
+	defer cancel()
+	ctx, cancel := NewContext(allocCtx)
+	defer cancel()
 
-			opts := allocOpts
-			if name == "websocket" {
-				opts = append(slices.Clone(allocOpts), WebSocket)
-			}
-			allocCtx, cancel := NewExecAllocator(context.Background(), opts...)
-			defer cancel()
-			ctx, cancel := NewContext(allocCtx)
-			defer cancel()
+	got, err := Run(ctx, Evaluate[string](fmt.Sprintf(`"x".repeat(%d)`, size)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != size {
+		t.Fatalf("want %d bytes, got %d", size, len(got))
+	}
+	if got[0] != 'x' || got[size-1] != 'x' {
+		t.Fatal("the result has the wrong content")
+	}
 
-			got, err := Run(ctx, Evaluate[string](fmt.Sprintf(`"x".repeat(%d)`, size)))
-			if err != nil {
-				t.Fatal(err)
-			}
-			if len(got) != size {
-				t.Fatalf("want %d bytes, got %d", size, len(got))
-			}
-			if got[0] != 'x' || got[size-1] != 'x' {
-				t.Fatal("the result has the wrong content")
-			}
-
-			// The same connection must still work after a large message.
-			if n, err := Run(ctx, Evaluate[int](`1 + 2`)); err != nil || n != 3 {
-				t.Fatalf("want 3, got %d and %v", n, err)
-			}
-		})
+	// The same connection must still work after a large message.
+	if n, err := Run(ctx, Evaluate[int](`1 + 2`)); err != nil || n != 3 {
+		t.Fatalf("want 3, got %d and %v", n, err)
 	}
 }
 

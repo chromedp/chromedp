@@ -120,9 +120,9 @@ func (c *PipeConn) Write(_ context.Context, msg *cdproto.Message) error {
 	return nil
 }
 
-// setDebugf sets the protocol logger. NewBrowserTransport calls it with the
+// SetDebugf sets the protocol logger. NewBrowserTransport calls it with the
 // logger of the browser.
-func (c *PipeConn) setDebugf(f func(string, ...any)) {
+func (c *PipeConn) SetDebugf(f func(string, ...any)) {
 	c.debugf = f
 }
 

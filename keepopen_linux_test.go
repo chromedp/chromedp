@@ -10,15 +10,6 @@ import (
 	"time"
 )
 
-// killProfileProcesses kills the browser processes that still use dir. A test
-// calls it to make sure that a kept browser leaves nothing behind.
-func killProfileProcesses(dir string) {
-	for range 3 {
-		killProcessesUsing(dir)
-		time.Sleep(10 * time.Millisecond)
-	}
-}
-
 // startMarked starts a process that has --user-data-dir=dir in its command
 // line, as a Chrome process has. The channel closes when the process ends.
 func startMarked(t *testing.T, dir string) (*os.Process, <-chan struct{}) {

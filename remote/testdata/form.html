@@ -1,0 +1,37 @@
+<!doctype html>
+<html>
+<head>
+  <title>this is form title</title>
+  <style>
+    input, textarea {
+      margin-top: 5px
+    }
+  </style>
+</head>
+<body>
+  <form id="form" action="image.html" name="form">
+    <span id="foo">insert</span> <span>keyword</span><br>
+    <input id="keyword" type="text" name="q" value="chromedp"/><br>
+    <input id="foo" type="text" name="foo" value="foo"/><br>
+    <textarea id="bar" rows="4" cols="50">bar</textarea><br>
+    <input id="btn1" name="reset" type="reset" value="Reset">
+    <input id="btn2" name="submit" type="submit" value="Submit">
+    <select id="select">
+      <option value="">First</option>
+      <option value="FOOBAR">Second</option>
+    </select>
+    <p id="inner-hidden">this is <span style="display: none;">hidden</span></p>
+    <p id="hidden" style="display: none;">hidden</p>
+  </form>
+  <span id="event-input" style="display: none">input event fired</span>
+  <span id="event-change" style="display: none">change event fired</span>
+<script>
+  document.addEventListener('input', ()=>{
+    document.getElementById('event-input').style.display = 'block';
+  })
+  document.addEventListener('change', ()=>{
+    document.getElementById('event-change').style.display = 'block';
+  })
+</script>
+</body>
+</html>

@@ -99,9 +99,13 @@ type Context struct {
 	// some of its pages.
 	first bool
 
-	// keepOpen is set by WithKeepOpen. NewContext uses it in the same way as
-	// visibleWindow.
-	keepOpen bool
+	// allocatorOptions is set by WithAllocatorOptions. NewContext adds them to
+	// the default allocator in the same way as visibleWindow.
+	allocatorOptions []ExecAllocatorOption
+
+	// attachReleased is true after initContextBrowser closed allocated for an
+	// allocator that attaches to a running browser.
+	attachReleased bool
 
 	// visibleWindow is set by WithVisibleWindow. NewContext uses it to build
 	// the default allocator. It has no effect on an allocator that the caller
@@ -149,8 +153,7 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 
 		c.first = c.Browser == nil
 
-		// TODO: make this more generic somehow.
-		if _, ok := c.Allocator.(*RemoteAllocator); ok {
+		if isAttacher(c.Allocator) {
 			c.first = false
 		}
 	}
@@ -182,7 +185,7 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 
 	if c.Allocator == nil {
 		c.Allocator = setupExecAllocator(defaultExecAllocatorOptions(
-			c.visibleWindow || visibleWindowFromEnv(), c.keepOpen)...)
+			c.visibleWindow || visibleWindowFromEnv(), c.allocatorOptions)...)
 	}
 
 	ctx = context.WithValue(ctx, contextKey{}, c)
@@ -286,7 +289,7 @@ func FromContext(ctx context.Context) *Context {
 func Cancel(ctx context.Context) error {
 	c := FromContext(ctx)
 	// c.cancel is nil when the caller passes to Cancel a context from
-	// NewExecAllocator or NewRemoteAllocator.
+	// NewExecAllocator or by an allocator of another module.
 	if c == nil || c.cancel == nil {
 		return ErrInvalidContext
 	}
@@ -338,13 +341,40 @@ func initContextBrowser(ctx context.Context) (*Context, error) {
 		return nil, ErrInvalidContext
 	}
 	if c.Browser == nil {
+		attach := isAttacher(c.Allocator)
+		if attach && !c.attachReleased {
+			// The allocator starts no process, so nothing waits for the
+			// context to stop a browser. See Cancel.
+			c.attachReleased = true
+			close(c.allocated)
+		}
 		b, err := c.Allocator.Allocate(ctx, c.browserOpts...)
 		if err != nil {
 			return nil, err
 		}
 		c.Browser = b
+		if attach {
+			go func() {
+				// If the browser loses the connection, stop the context at
+				// once. Do not stop it in the middle of a graceful close.
+				<-b.LostConnection
+				select {
+				case <-b.closingGracefully:
+				default:
+					b.noteLost(ctx)
+					c.cancel()
+				}
+			}()
+		}
 	}
 	return c, nil
+}
+
+// isAttacher reports whether a attaches to a browser that runs already. See
+// [Attacher].
+func isAttacher(a Allocator) bool {
+	at, ok := a.(Attacher)
+	return ok && at.Attaches()
 }
 
 // initContextTarget is like initContextBrowser, and also attaches the target
@@ -532,8 +562,8 @@ type ContextOption = func(*Context)
 
 // WithVisibleWindow makes NewContext build the default allocator with
 // [VisibleWindow] and without Headless, so that the browser opens a visible
-// window. The window stays open until the context ends. See also
-// [WithKeepOpen] and [WaitClosed].
+// window. The window stays open until the context ends. See also [KeepOpen]
+// and [WaitClosed].
 //
 // The environment variable CHROMEDP_VISIBLEWINDOW has the same effect with no
 // change in the code. Any value other than the empty string, "false" and "0"
@@ -541,14 +571,27 @@ type ContextOption = func(*Context)
 //
 // The option only applies when the parent context has no allocator, because
 // then NewContext builds the allocator. It has no effect on an allocator that
-// the caller made with NewExecAllocator or NewRemoteAllocator, and it has no
-// effect on a context that inherits a browser. For an allocator that you make,
+// the caller made, and it has no effect on a context that inherits a browser. For an allocator that you make,
 // add [VisibleWindow] to the options of NewExecAllocator instead.
 //
 // On Linux, the first Run returns [ErrNoDisplay] when the environment has no
 // display.
 func WithVisibleWindow() ContextOption {
 	return func(c *Context) { c.visibleWindow = true }
+}
+
+// WithAllocatorOptions makes NewContext add opts to the options of the default
+// allocator, after [DefaultExecAllocatorOptions] and after [VisibleWindow]. The
+// module github.com/chromedp/chromedp/remote uses it for its own WithKeepOpen.
+//
+// The option only applies when the parent context has no allocator. It has no
+// effect on an allocator that the caller made, and it has no effect on a
+// context that inherits a browser. For an allocator that you make, add the
+// options to NewExecAllocator instead.
+func WithAllocatorOptions(opts ...ExecAllocatorOption) ContextOption {
+	return func(c *Context) {
+		c.allocatorOptions = append(c.allocatorOptions, opts...)
+	}
 }
 
 // WithNewWindow chooses where a new tab opens. By default, the first Run of a

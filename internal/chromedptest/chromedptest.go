@@ -30,9 +30,9 @@ var (
 	// directory of the test. Main sets it.
 	TestdataDir string
 
-	// ExecPath is the browser binary of the tests. It is empty when the tests
-	// found no browser, and the allocator then searches for one itself. Main
-	// sets it.
+	// ExecPath is the browser binary of the tests. When the tests found no
+	// browser, it is "google-chrome", and the allocator searches for one itself.
+	// Main sets it.
 	ExecPath string
 
 	// AllocOpts are the options of the exec allocator of the tests. Main sets
@@ -92,6 +92,10 @@ func run(m *testing.M) int {
 	ExecPath = testenv.ExecPath()
 	if ExecPath != "" {
 		AllocOpts = append(AllocOpts, chromedp.ExecPath(ExecPath))
+	} else {
+		// The allocator searches for a browser itself. A test that starts the
+		// browser without the allocator needs a name.
+		ExecPath = "google-chrome"
 	}
 	// Not explicitly needed to be set, as this speeds up the tests.
 	if testenv.NoSandbox() {

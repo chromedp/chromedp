@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -144,9 +143,6 @@ func ExampleExecAllocator() {
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
 		chromedp.DisableGPU,
 		chromedp.UserDataDir(dir),
-		// Chrome writes the DevToolsActivePort file only when it opens
-		// a debugging port, so this example uses the websocket mode.
-		chromedp.WebSocket,
 	)
 
 	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
@@ -156,21 +152,14 @@ func ExampleExecAllocator() {
 	taskCtx, cancel := chromedp.NewContext(allocCtx, chromedp.WithLogf(log.Printf))
 	defer cancel()
 
-	// make sure that the browser process is started
-	if err := chromedp.Do(taskCtx); err != nil {
-		log.Fatal(err)
-	}
-
-	path := filepath.Join(dir, "DevToolsActivePort")
-	bs, err := os.ReadFile(path)
+	sum, err := chromedp.Run(taskCtx, chromedp.Evaluate[int](`1 + 2`))
 	if err != nil {
 		log.Fatal(err)
 	}
-	lines := bytes.Split(bs, []byte("\n"))
-	fmt.Printf("DevToolsActivePort has %d lines\n", len(lines))
+	fmt.Println(sum)
 
 	// Output:
-	// DevToolsActivePort has 2 lines
+	// 3
 }
 
 func ExampleNewContext_reuseBrowser() {
@@ -1022,38 +1011,6 @@ func ExampleWithVisibleWindow() {
 	chromedp.WaitClosed(ctx)
 }
 
-// This example leaves the browser open when the program ends. The program prints
-// the address, so that another program can attach with NewRemoteAllocator. The
-// profile directory stays on disk, and the user must delete it.
-func ExampleWithKeepOpen() {
-	ctx, cancel := chromedp.NewContext(context.Background(),
-		chromedp.WithVisibleWindow(), chromedp.WithKeepOpen())
-	defer cancel()
-
-	if err := chromedp.Do(ctx, chromedp.Navigate("https://example.com")); err != nil {
-		log.Fatal(err)
-	}
-	wsURL, profile := chromedp.KeptOpen(ctx)
-	fmt.Println("attach to", wsURL)
-	fmt.Println("profile directory", profile)
-}
-
-// This example attaches to a browser that an earlier program left open.
-func ExampleKeptOpen() {
-	wsURL := os.Args[1] // the address that the earlier program printed
-
-	allocCtx, cancel := chromedp.NewRemoteAllocator(context.Background(), wsURL)
-	defer cancel()
-	ctx, cancel := chromedp.NewContext(allocCtx)
-	defer cancel()
-
-	title, err := chromedp.Run(ctx, chromedp.Title())
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(title)
-}
-
 // This example shows the allocator options. They work with NewExecAllocator,
 // when the program makes its own allocator.
 func ExampleVisibleWindow() {
@@ -1070,25 +1027,4 @@ func ExampleVisibleWindow() {
 		log.Fatal(err)
 	}
 	chromedp.WaitClosed(ctx)
-}
-
-// This example connects to a hosted browser service that needs an
-// Authorization header on the websocket request.
-func ExampleWithRemoteDialHTTPHeader() {
-	const wsURL = "wss://browser.example.com/devtools/browser/id"
-	header := http.Header{"Authorization": {"Bearer " + os.Getenv("BROWSER_TOKEN")}}
-
-	allocCtx, cancel := chromedp.NewRemoteAllocator(context.Background(), wsURL,
-		chromedp.NoModifyURL,
-		chromedp.WithRemoteDialHTTPHeader(header),
-	)
-	defer cancel()
-	ctx, cancel := chromedp.NewContext(allocCtx)
-	defer cancel()
-
-	title, err := chromedp.Run(ctx, chromedp.Title())
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println(title)
 }

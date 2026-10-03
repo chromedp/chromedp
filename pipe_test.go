@@ -126,7 +126,7 @@ func TestPipeConnWrite(t *testing.T) {
 	var out bytes.Buffer
 	var debug []string
 	c := fakePipeConn(strings.NewReader(""), &out)
-	c.setDebugf(func(format string, args ...any) { debug = append(debug, fmt.Sprintf(format, args...)) })
+	c.SetDebugf(func(format string, args ...any) { debug = append(debug, fmt.Sprintf(format, args...)) })
 
 	msg := &cdproto.Message{ID: 7, Method: "Browser.getVersion"}
 	if err := c.Write(context.Background(), msg); err != nil {
@@ -419,16 +419,18 @@ func TestExecAllocatorPipeStartFailure(t *testing.T) {
 	})
 }
 
-// TestExecAllocatorWebSocket checks that the websocket mode still works, and
-// that the flags for a debugging port or address select it.
-func TestExecAllocatorWebSocket(t *testing.T) {
+// TestExecAllocatorNeedsDialer checks that the allocator returns ErrNoDialer
+// when it needs a websocket and has no dialer. The option KeepOpen and the
+// flags for a debugging port or address select the websocket. The module remote
+// tests the websocket mode with a real dialer.
+func TestExecAllocatorNeedsDialer(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
 		name string
 		opts []ExecAllocatorOption
 	}{
-		{name: "WebSocket option", opts: []ExecAllocatorOption{WebSocket}},
+		{name: "KeepOpen", opts: []ExecAllocatorOption{KeepOpen}},
 		{name: "remote-debugging-port flag", opts: []ExecAllocatorOption{Flag("remote-debugging-port", "0")}},
 		{name: "remote-debugging-address flag", opts: []ExecAllocatorOption{Flag("remote-debugging-address", "127.0.0.1")}},
 	}
@@ -437,30 +439,44 @@ func TestExecAllocatorWebSocket(t *testing.T) {
 			t.Parallel()
 
 			allocCtx, cancel := NewExecAllocator(context.Background(),
-				append(append([]ExecAllocatorOption{}, test.opts...), allocOpts...)...)
+				append(append([]ExecAllocatorOption{}, allocOpts...), test.opts...)...)
 			defer cancel()
-			ctx, _ := NewContext(allocCtx)
+			ctx, cancel := NewContext(allocCtx)
+			defer cancel()
 
-			var got string
-			if err := Do(ctx,
-				Navigate(testdataDir+"/form.html"),
-				into(&got, Text(ID("foo"))),
-			); err != nil {
-				t.Fatal(err)
+			err := Do(ctx)
+			if !errors.Is(err, ErrNoDialer) {
+				t.Fatalf("got %v, want ErrNoDialer", err)
 			}
-			if want := "insert"; got != want {
-				t.Fatalf("got %q, want %q", got, want)
-			}
-			b := FromContext(ctx).Browser
-			if _, ok := b.conn.(*Conn); !ok {
-				t.Fatalf("got transport %T, want *Conn", b.conn)
-			}
-			if err := Cancel(ctx); err != nil {
-				t.Fatal(err)
-			}
-			if _, err := os.Lstat(b.userDataDir); !os.IsNotExist(err) {
-				t.Fatalf("temporary user data dir %q not deleted", b.userDataDir)
+			if !strings.Contains(err.Error(), "remote.WebSocket") {
+				t.Fatalf("the message must name remote.WebSocket: %q", err)
 			}
 		})
+	}
+}
+
+// TestExecAllocatorDialer checks that the allocator calls the dialer with the
+// websocket address of the browser, and that it returns the error of the
+// dialer.
+func TestExecAllocatorDialer(t *testing.T) {
+	t.Parallel()
+
+	var got string
+	dialer := func(_ context.Context, wsURL string) (Transport, error) {
+		got = wsURL
+		return nil, errStubDialer
+	}
+	allocCtx, cancel := NewExecAllocator(context.Background(),
+		append(append([]ExecAllocatorOption{}, allocOpts...), WithDialer(dialer))...)
+	defer cancel()
+	ctx, cancel := NewContext(allocCtx)
+	defer cancel()
+
+	err := Do(ctx)
+	if !errors.Is(err, errStubDialer) {
+		t.Fatalf("got %v, want the error of the dialer", err)
+	}
+	if !strings.HasPrefix(got, "ws://127.0.0.1:") || !strings.Contains(got, "/devtools/browser/") {
+		t.Fatalf("the dialer got %q, want the websocket address of the browser", got)
 	}
 }

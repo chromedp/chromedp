@@ -5,19 +5,27 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"slices"
 	"strings"
 	"syscall"
 	"testing"
 	"time"
 )
+
+// errStubDialer is the error of stubDialer.
+var errStubDialer = errors.New("i/o timeout: the test has no websocket")
+
+// stubDialer is a Dialer for the tests of the websocket mode that never need a
+// connection. The core module has no websocket code, so the tests that need a
+// real connection are in the module remote. The dialer fails, so that a test
+// that reaches it fails with an error that names it.
+func stubDialer(context.Context, string) (Transport, error) {
+	return nil, errStubDialer
+}
 
 func TestExecAllocator(t *testing.T) {
 	t.Parallel()
@@ -80,7 +88,7 @@ func TestExecAllocatorCombinedOutputPanic(t *testing.T) {
 	buf := new(bytes.Buffer)
 	allocCtx, cancel := NewExecAllocator(context.Background(),
 		append([]ExecAllocatorOption{
-			WebSocket, // the timeout only applies to the websocket mode
+			WithDialer(stubDialer), // the timeout only applies to the websocket mode
 			CombinedOutput(buf),
 			Flag("enable-logging", "stderr"),
 			WSURLReadTimeout(1), // trigger err
@@ -89,7 +97,7 @@ func TestExecAllocatorCombinedOutputPanic(t *testing.T) {
 
 	ctx, _ := NewContext(allocCtx, browserOpts...)
 
-	if _, err := FromContext(ctx).Allocator.Allocate(ctx, WithDialTimeout(1)); err != nil &&
+	if _, err := FromContext(ctx).Allocator.Allocate(ctx); err != nil &&
 		!strings.HasPrefix(err.Error(), "websocket url timeout reached") &&
 		!strings.Contains(err.Error(), "i/o timeout") {
 		t.Fatal(err)
@@ -167,46 +175,37 @@ func TestDefaultFeatureNames(t *testing.T) {
 func TestExitErrorAfterKill(t *testing.T) {
 	t.Parallel()
 
-	for _, name := range []string{"pipe", "websocket"} {
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
+	// The module remote tests the websocket.
+	allocCtx, cancel := NewExecAllocator(context.Background(), allocOpts...)
+	defer cancel()
+	ctx, cancel := NewContext(allocCtx)
+	defer cancel()
+	if err := Do(ctx); err != nil {
+		t.Fatal(err)
+	}
+	b := FromContext(ctx).Browser
+	if err := b.process.Signal(os.Kill); err != nil {
+		t.Fatal(err)
+	}
 
-			opts := allocOpts
-			if name == "websocket" {
-				opts = append(slices.Clone(allocOpts), WebSocket)
-			}
-			allocCtx, cancel := NewExecAllocator(context.Background(), opts...)
-			defer cancel()
-			ctx, cancel := NewContext(allocCtx)
-			defer cancel()
-			if err := Do(ctx); err != nil {
-				t.Fatal(err)
-			}
-			b := FromContext(ctx).Browser
-			if err := b.process.Signal(os.Kill); err != nil {
-				t.Fatal(err)
-			}
-
-			// The first call can race with the loss of the connection, so
-			// ask until the call fails. Every later call must fail in the
-			// same way.
-			for i := range 3 {
-				_, err := Run(ctx, Evaluate[int](`1 + 2`))
-				if err == nil {
-					t.Fatalf("call %d: want an error from a dead browser", i)
-				}
-				var exit *exec.ExitError
-				if !errors.As(err, &exit) {
-					t.Fatalf("call %d: want an *exec.ExitError in %q", i, err)
-				}
-				if !strings.Contains(err.Error(), "signal: killed") {
-					t.Fatalf("call %d: want the signal in %q", i, err)
-				}
-				if !errors.Is(err, context.Canceled) {
-					t.Fatalf("call %d: want context.Canceled in %q", i, err)
-				}
-			}
-		})
+	// The first call can race with the loss of the connection, so
+	// ask until the call fails. Every later call must fail in the
+	// same way.
+	for i := range 3 {
+		_, err := Run(ctx, Evaluate[int](`1 + 2`))
+		if err == nil {
+			t.Fatalf("call %d: want an error from a dead browser", i)
+		}
+		var exit *exec.ExitError
+		if !errors.As(err, &exit) {
+			t.Fatalf("call %d: want an *exec.ExitError in %q", i, err)
+		}
+		if !strings.Contains(err.Error(), "signal: killed") {
+			t.Fatalf("call %d: want the signal in %q", i, err)
+		}
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("call %d: want context.Canceled in %q", i, err)
+		}
 	}
 }
 
@@ -308,196 +307,6 @@ func TestSkipNewContext(t *testing.T) {
 	}
 }
 
-func TestRemoteAllocator(t *testing.T) {
-	t.Parallel()
-
-	tests := []struct {
-		name      string
-		modifyURL func(wsURL string) string
-		opts      []RemoteAllocatorOption
-		wantErr   string
-	}{
-		{
-			name:      "original wsURL",
-			modifyURL: func(wsURL string) string { return wsURL },
-		},
-		{
-			name: "detect from ws",
-			modifyURL: func(wsURL string) string {
-				return wsURL[0:strings.Index(wsURL, "devtools")]
-			},
-		},
-		{
-			name: "detect from http",
-			modifyURL: func(wsURL string) string {
-				return "http" + wsURL[2:strings.Index(wsURL, "devtools")]
-			},
-		},
-		{
-			name: "hostname",
-			modifyURL: func(wsURL string) string {
-				// Chrome ignores "remote-debugging-address" and
-				// listens on the loopback interface only, so the
-				// machine hostname is not reachable.
-				h := "localhost"
-				u, err := url.Parse(wsURL)
-				if err != nil {
-					t.Fatal(err)
-				}
-				_, port, err := net.SplitHostPort(u.Host)
-				if err != nil {
-					t.Fatal(err)
-				}
-				u.Host = net.JoinHostPort(h, port)
-				u.Path = "/"
-				return u.String()
-			},
-		},
-		{
-			name: "NoModifyURL",
-			modifyURL: func(wsURL string) string {
-				return wsURL[0:strings.Index(wsURL, "devtools")]
-			},
-			opts:    []RemoteAllocatorOption{NoModifyURL},
-			wantErr: "could not dial",
-		},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			testRemoteAllocator(t, test.modifyURL, test.wantErr, test.opts)
-		})
-	}
-}
-
-func testRemoteAllocator(t *testing.T, modifyURL func(wsURL string) string, wantErr string, opts []RemoteAllocatorOption) {
-	tempDir := t.TempDir()
-
-	procCtx, procCancel := context.WithCancel(context.Background())
-	defer procCancel()
-	cmd := exec.CommandContext(procCtx, execPath,
-		// TODO: deduplicate these with allocOpts in chromedp_test.go
-		"--no-first-run",
-		"--no-default-browser-check",
-		"--headless",
-		"--disable-gpu",
-		"--no-sandbox",
-
-		// TODO: perhaps deduplicate this code with ExecAllocator
-		"--user-data-dir="+tempDir,
-		"--remote-debugging-address=0.0.0.0",
-		"--remote-debugging-port=0",
-		"about:blank",
-	)
-
-	// Kill is too abrupt: the child processes of Chrome can still write to
-	// the temporary directory after the test, and then the cleanup fails.
-	// Ask Chrome to exit, and kill it only if it does not.
-	cmd.Cancel = func() error { return cmd.Process.Signal(os.Interrupt) }
-	cmd.WaitDelay = 10 * time.Second
-
-	stderr, err := cmd.StderrPipe()
-	if err != nil {
-		t.Fatal(err)
-	}
-	defer stderr.Close()
-	if err := cmd.Start(); err != nil {
-		t.Fatal(err)
-	}
-	wsURL, _, err := readOutput(stderr, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-	allocCtx, allocCancel := NewRemoteAllocator(context.Background(), modifyURL(wsURL), opts...)
-	defer allocCancel()
-
-	taskCtx, taskCancel := NewContext(allocCtx,
-		// This used to crash when used with RemoteAllocator.
-		WithLogf(func(format string, args ...any) {}),
-	)
-
-	{
-		infos, err := Targets(taskCtx)
-		if len(wantErr) > 0 {
-			if err == nil || !strings.Contains(err.Error(), wantErr) {
-				t.Fatalf("\ngot error:\n\t%v\nwant error contains:\n\t%s", err, wantErr)
-			}
-
-			procCancel()
-			cmd.Wait()
-			return
-		}
-		if err != nil {
-			t.Fatal(err)
-		}
-		// Current Chrome also lists targets that are not pages, such as
-		// "browser_ui", "service_worker" and "background_page".
-		var pages int
-		for _, info := range infos {
-			if info.Type == "page" {
-				pages++
-			}
-		}
-		if pages > 1 {
-			t.Fatalf("expected Targets on a new RemoteAllocator context to return at most one page, got: %d", pages)
-		}
-	}
-
-	defer taskCancel()
-	want := "insert"
-	var got string
-	if err := Do(taskCtx,
-		Navigate(testdataDir+"/form.html"),
-		into(&got, Text(ID("foo"))),
-	); err != nil {
-		t.Fatal(err)
-	}
-	if got != want {
-		t.Fatalf("want %q, got %q", want, got)
-	}
-	targetID := FromContext(taskCtx).Target.TargetID
-	if err := Cancel(taskCtx); err != nil {
-		t.Fatal(err)
-	}
-
-	// Make sure that cancel closed the tabs. Do not just count the
-	// number of targets, as perhaps the initial blank tab has not
-	// come up yet.
-	targetsCtx, targetsCancel := NewContext(allocCtx)
-	defer targetsCancel()
-	infos, err := Targets(targetsCtx)
-	if err != nil {
-		t.Fatal(err)
-	}
-	for _, info := range infos {
-		if info.TargetID == targetID {
-			t.Fatalf("target from previous iteration wasn't closed: %v", targetID)
-		}
-	}
-	targetsCancel()
-
-	// Finally, if we kill the browser and the websocket connection drops,
-	// Run must return an error well before the 5s timeout.
-	// TODO: a "defer cancel()" here adds a 1s timeout, because we try to
-	// close the target twice. Fix that.
-	ctx, _ := NewContext(allocCtx)
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-
-	// Connect to the browser, then kill it.
-	if err := Do(ctx); err != nil {
-		t.Fatal(err)
-	}
-	procCancel()
-	switch err := Do(ctx, Navigate(testdataDir+"/form.html")); err {
-	case nil:
-		// TODO: figure out why this happens sometimes on Travis
-		// t.Fatal("did not expect a nil error")
-	case context.DeadlineExceeded:
-		t.Fatalf("did not expect a standard context error: %v", err)
-	}
-	cmd.Wait()
-}
-
 func TestExecAllocatorMissingWebsocketAddr(t *testing.T) {
 	t.Parallel()
 
@@ -505,7 +314,7 @@ func TestExecAllocatorMissingWebsocketAddr(t *testing.T) {
 		// Ask for a debugging pipe that is not open, so Chrome exits
 		// straight away. Chrome ignores a bad "remote-debugging-address".
 		// This needs the websocket mode, as the pipe mode opens the pipe.
-		append([]ExecAllocatorOption{WebSocket, Flag("remote-debugging-pipe", true)},
+		append([]ExecAllocatorOption{WithDialer(stubDialer), Flag("remote-debugging-pipe", true)},
 			allocOpts...)...)
 	defer cancel()
 
@@ -525,43 +334,30 @@ func TestExecAllocatorMissingWebsocketAddr(t *testing.T) {
 func TestCombinedOutput(t *testing.T) {
 	t.Parallel()
 
-	for _, test := range []struct {
-		name string
-		opts []ExecAllocatorOption
-		// wantListening is true when the output must have the websocket
-		// address line, which only the websocket mode prints.
-		wantListening bool
-	}{
-		{name: "Pipe"},
-		{name: "WebSocket", opts: []ExecAllocatorOption{WebSocket}, wantListening: true},
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			t.Parallel()
+	// The pipe mode prints no websocket address. The module remote tests the
+	// websocket mode.
+	buf := new(syncBuffer)
+	allocCtx, cancel := NewExecAllocator(context.Background(),
+		append([]ExecAllocatorOption{
+			CombinedOutput(buf),
+			Flag("enable-logging", "stderr"),
+		}, allocOpts...)...)
+	defer cancel()
 
-			buf := new(syncBuffer)
-			allocCtx, cancel := NewExecAllocator(context.Background(),
-				append(append([]ExecAllocatorOption{
-					CombinedOutput(buf),
-					Flag("enable-logging", "stderr"),
-				}, test.opts...), allocOpts...)...)
-			defer cancel()
-
-			taskCtx, _ := NewContext(allocCtx)
-			if err := Do(taskCtx,
-				Navigate(testdataDir+"/consolespam.html"),
-			); err != nil {
-				t.Fatal(err)
-			}
-			cancel()
-			if got := strings.Contains(buf.String(), "DevTools listening on"); got != test.wantListening {
-				t.Fatalf("output has the websocket string: %v, want %v", got, test.wantListening)
-			}
-			// Recent chrome versions replace many "spam" messages with "spam 1",
-			// "spam 2", and so on. Search for the prefix only.
-			if want, got := 2000, strings.Count(buf.String(), `"spam`); want != got {
-				t.Fatalf("want %d spam console logs, got %d", want, got)
-			}
-		})
+	taskCtx, _ := NewContext(allocCtx)
+	if err := Do(taskCtx,
+		Navigate(testdataDir+"/consolespam.html"),
+	); err != nil {
+		t.Fatal(err)
+	}
+	cancel()
+	if strings.Contains(buf.String(), "DevTools listening on") {
+		t.Fatal("the output has the websocket string")
+	}
+	// Recent chrome versions replace many "spam" messages with "spam 1",
+	// "spam 2", and so on. Search for the prefix only.
+	if want, got := 2000, strings.Count(buf.String(), `"spam`); want != got {
+		t.Fatalf("want %d spam console logs, got %d", want, got)
 	}
 }
 
@@ -576,7 +372,7 @@ func TestCombinedOutputError(t *testing.T) {
 		// Ask for a debugging pipe that is not open, so Chrome exits
 		// straight away. Chrome ignores a bad "remote-debugging-address".
 		append([]ExecAllocatorOption{
-			WebSocket,
+			WithDialer(stubDialer),
 			Flag("remote-debugging-pipe", true),
 			CombinedOutput(buf),
 		}, allocOpts...)...)

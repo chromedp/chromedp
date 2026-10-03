@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -32,6 +31,22 @@ type Allocator interface {
 	// need to call Wait.
 	Wait()
 }
+
+// An Attacher is an optional interface of an Allocator. An allocator that
+// implements it connects to a browser that already runs, and it does not start
+// the browser itself. NewContext then treats the context of such an allocator
+// as a new tab of that browser, and not as the owner of a browser process. The
+// allocator of the module github.com/chromedp/chromedp/remote implements it.
+type Attacher interface {
+	// Attaches reports whether the allocator attaches to a browser that
+	// runs already.
+	Attaches() bool
+}
+
+// A Dialer connects to the websocket address of a browser and returns the
+// connection as a Transport. The module github.com/chromedp/chromedp/remote
+// has a Dialer. See [WithDialer].
+type Dialer = func(ctx context.Context, wsURL string) (Transport, error)
 
 // setupExecAllocator is like NewExecAllocator, but NewContext uses it to
 // create the allocator without an extra context layer.
@@ -92,15 +107,12 @@ var DefaultExecAllocatorOptions = [...]ExecAllocatorOption{
 // the default allocator. It is the only place that builds that list from
 // DefaultExecAllocatorOptions, so that the options of NewContext and the options
 // that a caller of NewExecAllocator builds from the same list cannot drift.
-func defaultExecAllocatorOptions(visibleWindow, keepOpen bool) []ExecAllocatorOption {
+func defaultExecAllocatorOptions(visibleWindow bool, extra []ExecAllocatorOption) []ExecAllocatorOption {
 	opts := slices.Clone(DefaultExecAllocatorOptions[:])
 	if visibleWindow {
 		opts = append(opts, VisibleWindow)
 	}
-	if keepOpen {
-		opts = append(opts, KeepOpen)
-	}
-	return opts
+	return append(opts, extra...)
 }
 
 // NewExecAllocator creates a new context with an ExecAllocator. Use it with
@@ -117,6 +129,17 @@ func NewExecAllocator(parent context.Context, opts ...ExecAllocatorOption) (cont
 	return ctx, cancelWait
 }
 
+// NewAllocatorContext creates a new context that holds the allocator a. Use it
+// with NewContext, as with the context of NewExecAllocator. It is for an
+// Allocator that another module implements, such as the allocator of the module
+// github.com/chromedp/chromedp/remote.
+//
+// The cancel func cancels the context. It does not call the Wait method of a.
+func NewAllocatorContext(parent context.Context, a Allocator) (context.Context, context.CancelFunc) {
+	ctx, cancel := context.WithCancel(parent)
+	return context.WithValue(ctx, contextKey{}, &Context{Allocator: a}), cancel
+}
+
 // ExecAllocatorOption is an exec allocator option.
 type ExecAllocatorOption = func(*ExecAllocator)
 
@@ -127,9 +150,9 @@ type ExecAllocator struct {
 	initFlags map[string]any
 	initEnv   []string
 
-	// webSocket makes the allocator connect to the browser with a websocket
-	// instead of a pipe. See WebSocket.
-	webSocket bool
+	// dialer is set by WithDialer. The allocator then connects to the browser
+	// with a websocket instead of a pipe.
+	dialer Dialer
 
 	// Chrome sometimes does not print the websocket address, or runs for a
 	// long time without exit. Give up after a timeout, so that we do not block
@@ -155,7 +178,8 @@ type ExecAllocator struct {
 // default temporary directory of the system.
 var allocTempDir string
 
-// Allocate satisfies the Allocator interface.
+// Allocate satisfies the Allocator interface. It returns [ErrNoDialer] when the
+// allocator needs a websocket and has no dialer.
 func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*Browser, error) {
 	c := FromContext(ctx)
 	if c == nil {
@@ -166,6 +190,10 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		if err := checkDisplay(); err != nil {
 			return nil, err
 		}
+	}
+
+	if !a.usesPipe() && a.dialer == nil {
+		return nil, ErrNoDialer
 	}
 
 	if a.keepOpen {
@@ -435,15 +463,25 @@ func (a *ExecAllocator) connectWebSocket(ctx context.Context, stdout io.ReadClos
 		})
 	}
 
-	return NewBrowser(ctx, wsURL, opts...)
+	return a.dial(ctx, wsURL, opts)
+}
+
+// dial connects to the websocket address wsURL with the dialer of the
+// allocator, and returns a browser that uses the connection.
+func (a *ExecAllocator) dial(ctx context.Context, wsURL string, opts []BrowserOption) (*Browser, error) {
+	tr, err := a.dialer(ctx, wsURL)
+	if err != nil {
+		return nil, fmt.Errorf("could not dial %q: %w", wsURL, err)
+	}
+	return NewBrowserTransport(ctx, tr, opts...)
 }
 
 // usesPipe reports whether Allocate connects to the browser with a pipe. It
-// does not when the WebSocket option or the KeepOpen option is set, when the
-// platform cannot pass the pipe to the process, or when the flags ask for a
+// does not when the allocator has a dialer or the KeepOpen option is set, when
+// the platform cannot pass the pipe to the process, or when the flags ask for a
 // debugging port or address.
 func (a *ExecAllocator) usesPipe() bool {
-	if a.webSocket || a.keepOpen || !usePipe() {
+	if a.dialer != nil || a.keepOpen || !usePipe() {
 		return false
 	}
 	for _, name := range []string{"remote-debugging-port", "remote-debugging-address"} {
@@ -771,148 +809,30 @@ func CombinedOutput(w io.Writer) ExecAllocatorOption {
 	}
 }
 
-// WebSocket is an ExecAllocatorOption that makes the allocator connect to the
-// browser with a websocket, as chromedp did before. The default is a pipe: the
-// allocator starts the browser with --remote-debugging-pipe, and the browser
-// reads the commands from the file descriptor 3 and writes the responses and
-// the events to the file descriptor 4. A pipe needs no port.
+// WithDialer is an ExecAllocatorOption that makes the allocator connect to the
+// browser with a websocket, as chromedp did before the pipe became the default.
+// The allocator starts the browser with a debugging port, reads the websocket
+// address, and calls d to connect to it.
 //
-// Use WebSocket when the browser must open a debugging port, for example to
-// let a second program connect to it. The Flag options "remote-debugging-port"
-// and "remote-debugging-address" also select the websocket. On Windows the
-// allocator always uses the websocket, because os/exec cannot pass extra file
-// descriptors there.
-func WebSocket(a *ExecAllocator) {
-	a.webSocket = true
+// The core module has no websocket code, so it needs a dialer. The function
+// WebSocket of the module github.com/chromedp/chromedp/remote makes the
+// ExecAllocatorOption that sets one. Use a dialer when the browser must open a
+// debugging port, for example to let a second program connect to it. The Flag
+// options "remote-debugging-port" and "remote-debugging-address" also need a
+// dialer. On Windows the allocator always uses the websocket, because os/exec
+// cannot pass extra file descriptors there, so the allocator needs a dialer on
+// Windows.
+func WithDialer(d Dialer) ExecAllocatorOption {
+	return func(a *ExecAllocator) {
+		a.dialer = d
+	}
 }
 
 // WSURLReadTimeout sets how long ExecAllocator waits to read the WebSocket
 // URL. The default is 20 seconds. It only applies to the websocket mode, see
-// [WebSocket].
+// [WithDialer].
 func WSURLReadTimeout(t time.Duration) ExecAllocatorOption {
 	return func(a *ExecAllocator) {
 		a.wsURLReadTimeout = t
 	}
-}
-
-// NewRemoteAllocator creates a new context with a RemoteAllocator. Use it with
-// NewContext. The url must point to the websocket address of the browser, such
-// as "ws://127.0.0.1:$PORT/devtools/browser/...".
-//
-// If the url does not contain "/devtools/browser/", NewRemoteAllocator tries
-// to find the correct url. It sends a request to
-// "http://$HOST:$PORT/json/version".
-//
-// NewRemoteAllocator accepts urls of these formats:
-//   - ws://127.0.0.1:9222/
-//   - http://127.0.0.1:9222/
-//
-// It does not accept "ws://127.0.0.1:9222/devtools/browser/", because the
-// allocator does not try to modify it and it is invalid.
-//
-// Use NoModifyURL to stop NewRemoteAllocator from changing the url.
-func NewRemoteAllocator(parent context.Context, url string, opts ...RemoteAllocatorOption) (context.Context, context.CancelFunc) {
-	a := &RemoteAllocator{
-		wsURL:         url,
-		modifyURLFunc: modifyURL,
-	}
-	for _, o := range opts {
-		o(a)
-	}
-	c := &Context{Allocator: a}
-
-	ctx, cancel := context.WithCancel(parent)
-	ctx = context.WithValue(ctx, contextKey{}, c)
-	return ctx, cancel
-}
-
-// RemoteAllocatorOption is a remote allocator option.
-type RemoteAllocatorOption = func(*RemoteAllocator)
-
-// RemoteAllocator is an Allocator which connects to an already running Chrome
-// process through a websocket URL.
-type RemoteAllocator struct {
-	wsURL         string
-	modifyURLFunc func(ctx context.Context, wsURL string) (string, error)
-
-	// dialHTTPHeader is set by WithRemoteDialHTTPHeader. Allocate sends it
-	// with the websocket handshake.
-	dialHTTPHeader http.Header
-
-	wg sync.WaitGroup
-}
-
-// Allocate satisfies the Allocator interface.
-func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*Browser, error) {
-	c := FromContext(ctx)
-	if c == nil {
-		return nil, ErrInvalidContext
-	}
-
-	wsURL := a.wsURL
-	var err error
-	if a.modifyURLFunc != nil {
-		wsURL, err = a.modifyURLFunc(ctx, wsURL)
-		if err != nil {
-			return nil, fmt.Errorf("failed to modify wsURL: %w", err)
-		}
-	}
-
-	// Use a different context for the websocket, so that we can close the
-	// relevant pages before we close the websocket connection.
-	wctx, cancel := context.WithCancel(context.Background())
-
-	close(c.allocated)
-	// for the entire allocator
-	a.wg.Go(func() {
-		<-ctx.Done()
-		Cancel(ctx) // block until all pages are closed
-		cancel()    // close the websocket connection
-	})
-
-	// The options of the caller come last, so that they win.
-	browserOpts := opts
-	if len(a.dialHTTPHeader) > 0 {
-		browserOpts = append([]BrowserOption{WithDialHTTPHeader(a.dialHTTPHeader)}, opts...)
-	}
-	browser, err := NewBrowser(wctx, wsURL, browserOpts...)
-	if err != nil {
-		return nil, err
-	}
-	go func() {
-		// If the browser loses connection, kill the entire process and
-		// handler at once.
-		<-browser.LostConnection
-		select {
-		case <-browser.closingGracefully:
-		default:
-			Cancel(ctx)
-		}
-	}()
-	return browser, nil
-}
-
-// Wait satisfies the Allocator interface.
-func (a *RemoteAllocator) Wait() {
-	a.wg.Wait()
-}
-
-// WithRemoteDialHTTPHeader is a RemoteAllocatorOption that sets HTTP headers on
-// the websocket handshake request to the remote browser. A hosted browser
-// service can need an Authorization header.
-//
-// The headers go with the websocket request only. The request to
-// "/json/version", which NewRemoteAllocator sends to find the websocket
-// address, has no headers. When the service needs headers, give it the full
-// websocket address and use [NoModifyURL].
-func WithRemoteDialHTTPHeader(h http.Header) RemoteAllocatorOption {
-	return func(a *RemoteAllocator) {
-		a.dialHTTPHeader = h.Clone()
-	}
-}
-
-// NoModifyURL is a RemoteAllocatorOption that prevents the remote allocator
-// from modifying the websocket debugger URL passed to it.
-func NoModifyURL(a *RemoteAllocator) {
-	a.modifyURLFunc = nil
 }

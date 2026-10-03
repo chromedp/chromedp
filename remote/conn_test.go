@@ -1,4 +1,4 @@
-package chromedp
+package remote
 
 import (
 	"context"
@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/chromedp/cdproto"
+	"github.com/chromedp/chromedp"
 	"github.com/gobwas/ws"
 )
 
@@ -255,36 +256,21 @@ func TestDialHTTPHeaderAbsent(t *testing.T) {
 	}
 }
 
-func TestBrowserDialHTTPHeader(t *testing.T) {
+func TestAllocatorDialHTTPHeader(t *testing.T) {
 	t.Parallel()
 
 	url, headers := headerServer(t)
-	ctx, cancel := context.WithCancel(context.Background())
+	allocCtx, cancel := NewAllocator(context.Background(), url, NoModifyURL,
+		WithDialHTTPHeader(http.Header{"Authorization": {"Bearer remote"}}))
 	defer cancel()
-	// The browser stays open until the context ends.
-	if _, err := NewBrowser(ctx, url, WithDialHTTPHeader(http.Header{"Authorization": {"Bearer browser"}})); err != nil {
-		t.Fatal(err)
-	}
-	if got := receiveHeader(t, headers).Get("Authorization"); got != "Bearer browser" {
-		t.Fatalf("want the header of the browser option, got %q", got)
-	}
-}
-
-func TestRemoteAllocatorDialHTTPHeader(t *testing.T) {
-	t.Parallel()
-
-	url, headers := headerServer(t)
-	allocCtx, cancel := NewRemoteAllocator(context.Background(), url, NoModifyURL,
-		WithRemoteDialHTTPHeader(http.Header{"Authorization": {"Bearer remote"}}))
-	defer cancel()
-	ctx, cancel := NewContext(allocCtx)
+	ctx, cancel := chromedp.NewContext(allocCtx)
 	defer cancel()
 
 	// The server does not speak the protocol, so the run ends with an error
 	// after the allocator dialed.
 	tctx, tcancel := context.WithTimeout(ctx, 500*time.Millisecond)
 	defer tcancel()
-	_ = Do(tctx)
+	_ = chromedp.Do(tctx)
 	if got := receiveHeader(t, headers).Get("Authorization"); got != "Bearer remote" {
 		t.Fatalf("want the header of the allocator option, got %q", got)
 	}
