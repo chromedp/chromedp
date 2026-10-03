@@ -5,6 +5,24 @@ crashes can resume. Update it when a piece of work starts or ends. Work that
 is known and not done goes in [`BACKLOG.md`](BACKLOG.md), and a decision goes
 in [`decisions/`](decisions/README.md).
 
+## Changes since v0.17.1
+
+These commits are on `main` and are not released. Each one has its own test.
+
+- Fixed: the data race on `Context.Target` between the cancellation watcher and `attachTarget` (issue 1638).
+- Fixed: the kernel killed Chrome when the OS thread that started it ended. Chrome now starts from a goroutine that stays on its thread (issue 1566).
+- Fixed: the default options passed the name `site-per-process` as a feature. It did nothing and is removed (issue 1605). The decision is proposed in `decisions/2026-10-04-keep-site-isolation-on.md`.
+- Fixed: the target logged `unhandled node event` for four DOM events, and `DOM.scrollableFlagUpdated` changed nothing. A test fails when a new event of the `dom` or `page` package is neither handled nor ignored (issue 1530).
+- Fixed: the websocket did not answer ping frames, and `DialContext` panicked when the server sent frames with the handshake (pull request 1611).
+- Fixed: a key with Ctrl, Alt or Meta typed its character (issue 1384).
+- Added: `WithDialHTTPHeader`, `WithRemoteDialHTTPHeader` and `WithConnHTTPHeader` (pull request 1631).
+- Added: the exit error of a browser process that died is in the error of `Run`, `Do`, `Call` and `CallBrowser` (issue 408).
+- Added: `LoadError` and `ErrPageLoad` for a page that did not load (issue 793).
+- Not reproduced: `WaitReady` after a fresh navigation (issue 1593). A test covers it.
+- Not reproduced: the remote allocator error `no browser is open` (issue 1601). It works with Chrome 154 in the new headless mode, and with headless-shell 131.
+- Already fixed: the race in the removal of the user data directory (issue 1544). A test covers the retry, and the example test no longer leaves a directory.
+- Checked: a result of 30 MB works on the pipe and on the websocket (issue 401).
+
 ## Where the work stands
 
 On 2026-10-03 `main` was ported to the tagged `cdproto` `v0.157.1`, and the

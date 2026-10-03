@@ -29,6 +29,27 @@ kept browser on Windows are not tested. Run the tests on Windows and fix what
 fails. See `decisions/2026-10-03-use-a-pipe-to-the-browser-by-default.md` and
 `decisions/2026-10-03-a-visible-window-is-an-opt-in.md`.
 
+### Return the exit error of a dead browser from Cancel
+
+`Run`, `Do`, `Call` and `CallBrowser` return the exit error of a browser that
+died on its own. `Cancel` still returns only the errors of its own work. Make
+`Cancel` return the exit error too. The error is known only after the process
+is reaped, so the code must wait for it with a bound.
+
+### Send the headers of a remote allocator to the version request
+
+`WithRemoteDialHTTPHeader` sets the headers of the websocket request only. The
+request to `/json/version`, which `NewRemoteAllocator` sends when the address
+has no `/devtools/browser/` part, has none. A service that needs a header on
+both requests needs `NoModifyURL` today. Ask the maintainer whether the option
+must cover the version request too.
+
+### Keep the URL of a frame after a navigation in the same document
+
+The target ignores `Page.navigatedWithinDocument`, so `Frame.URL` keeps the
+address of the last full navigation. No code of the package reads it. Update
+it from the event if a program needs it.
+
 ## Documentation
 
 ### Move the long examples out of the package

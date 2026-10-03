@@ -109,7 +109,9 @@ that overrides the default options.
 
 When the connection to the browser is lost, `chromedp` cancels the context. This
 can cause the error. It happens, for example, when someone closes the browser by
-hand, or when something kills the browser process.
+hand, or when something kills the browser process. When the browser process
+dies on its own, the error also holds the exit error of the process. Use
+`errors.As` with an `*exec.ExitError` to read the signal or the exit status.
 
 > How does chromedp talk to the browser it starts?
 
