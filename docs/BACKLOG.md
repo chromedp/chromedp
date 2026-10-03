@@ -35,13 +35,13 @@ and `conn.go`.
 
 ## API
 
-### Change to the new API
+### Review and merge the new API
 
-Replace the `chromedp.Action` interface with the typed API in
-`decisions/2026-10-03-generic-iterator-api-instead-of-action.md`. The design is
-in `docs/API.md` of the `pdlgen` repository. The status of the decision changes
-from Proposed to Decided when this work starts. Provide an adapter so that an
-existing `Action` still runs, and move the examples one at a time.
+The new API is built on the local branch `typed-api`, and nobody has approved it.
+See `decisions/2026-10-03-generic-iterator-api-instead-of-action.md` and
+[`API.md`](API.md). After the review, the branch is pushed. The branch needs the
+`pdlgen` branch `typed-api` merged first, because the typed `cdproto` comes from it.
+The decision changes from Proposed to Decided when the maintainer approves it.
 
 ## Documentation
 

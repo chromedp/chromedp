@@ -20,7 +20,46 @@ Install in the usual Go way:
 go get -u github.com/chromedp/chromedp
 ```
 
-## Examples
+## Usage
+
+An action is a func that runs against a browser tab and returns a value.
+`chromedp.Do` runs actions that return nothing, and `chromedp.Run` runs one
+action and returns its value:
+
+```go
+ctx, cancel := chromedp.NewContext(context.Background())
+defer cancel()
+
+if err := chromedp.Do(ctx, chromedp.Navigate(`https://pkg.go.dev/`)); err != nil {
+	log.Fatal(err)
+}
+title, err := chromedp.Run(ctx, chromedp.Title())
+if err != nil {
+	log.Fatal(err)
+}
+fmt.Println(title)
+```
+
+A page event is an iterator. `chromedp.Events` subscribes when it returns, so
+a program can subscribe, trigger the event, and then read it:
+
+```go
+loaded := chromedp.Events(ctx, page.LoadEventFired)
+if err := chromedp.Do(ctx, chromedp.Navigate(`https://pkg.go.dev/`)); err != nil {
+	log.Fatal(err)
+}
+for ev, err := range loaded {
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(ev.Timestamp)
+	break
+}
+```
+
+[`docs/API.md`](docs/API.md) describes the API with more than ten examples that
+show the old code and the new code side by side. [`docs/MIGRATION.md`](docs/MIGRATION.md)
+lists every renamed and removed name.
 
 Refer to the [Go reference][goref-chromedp] for the documentation and examples.
 Additionally, the [examples][chromedp-examples] repository contains more
@@ -46,24 +85,31 @@ On Linux, `chromedp` is configured to avoid leaking resources by force-killing
 any started Chrome child processes. If you need to launch a long-running Chrome
 instance, manually start Chrome and connect using `RemoteAllocator`.
 
-> Executing an action without `Run` results in "invalid context"
+> Calling an action or a command results in "invalid context"
 
-By default, a `chromedp` context does not have an executor, however one can be
-specified manually if necessary; see [issue #326][github-326]
-for an example.
+`chromedp.Do`, `chromedp.Run` and `chromedp.Call` need a context that came from
+`chromedp.NewContext`, because the context holds the browser and the tab.
+A context that did not come from `chromedp.NewContext` gives `ErrInvalidContext`.
 
-> I can't use an `Action` with `Run` because it returns many values
+> How do I send a protocol command that has no action?
 
-Wrap it with an `ActionFunc`:
+Call it with `chromedp.Call`, which runs the command on the tab of the context:
 
 ```go
 ctx, cancel := chromedp.NewContext(context.Background())
 defer cancel()
-chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
-	_, err := domain.SomeAction().Do(ctx)
-	return err
-}))
+
+res, err := chromedp.Call(ctx, page.GetFrameTree, cdp.Empty{})
 ```
+
+Inside an action, call `cdp.Call(ctx, t, command, params)` with the tab `t` that
+the action receives. The commands and their parameter structs are in
+`github.com/chromedp/cdproto`.
+
+> I have an action of the old kind
+
+Wrap it with `chromedp.Legacy`. The old kind is a value with a `Do(context.Context) error`
+method.
 
 > I want to use chromedp on a headless environment
 
@@ -104,7 +150,6 @@ tracker is for bugs. You can also chat on [Discord][discord].
 [discord-status]: https://img.shields.io/discord/829150509658013727.svg?label=Discord&logo=Discord&colorB=7289da&style=flat-square "Discord Discussion"
 [devtools-protocol]: https://chromedevtools.github.io/devtools-protocol/
 [docker-headless-shell]: https://hub.docker.com/r/chromedp/headless-shell/
-[github-326]: https://github.com/chromedp/chromedp/issues/326
 [gophercon-2017-presentation]: https://www.youtube.com/watch?v=_7pWCg94sKw
 [goref-cdproto]: https://pkg.go.dev/github.com/chromedp/cdproto
 [goref-chromedp-exec-allocator]: https://pkg.go.dev/github.com/chromedp/chromedp#example-ExecAllocator
