@@ -93,7 +93,45 @@ type Browser struct {
 
 // NewBrowser creates a new browser. Typically you do not call it directly,
 // because the Allocator interface does it.
+//
+// It dials the websocket address urlstr. To use a connection that is already
+// open, see [NewBrowserTransport].
 func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Browser, error) {
+	// Apply the options once here, as the dial needs the timeout and the
+	// debug logger.
+	b := newBrowser(opts)
+
+	dialCtx := ctx
+	if b.dialTimeout > 0 {
+		var cancel context.CancelFunc
+		dialCtx, cancel = context.WithTimeout(ctx, b.dialTimeout)
+		defer cancel()
+	}
+
+	conn, err := DialContext(dialCtx, urlstr, WithConnDebugf(b.dbgf))
+	if err != nil {
+		return nil, fmt.Errorf("could not dial %q: %w", urlstr, err)
+	}
+	return NewBrowserTransport(ctx, conn, opts...)
+}
+
+// NewBrowserTransport creates a new browser that uses tr, a connection to a
+// browser that is already open, such as a [*PipeConn]. The browser closes tr
+// when it stops.
+func NewBrowserTransport(ctx context.Context, tr Transport, opts ...BrowserOption) (*Browser, error) {
+	b := newBrowser(opts)
+	if s, ok := tr.(interface{ setDebugf(func(string, ...any)) }); ok {
+		s.setDebugf(b.dbgf)
+	}
+	b.conn = tr
+
+	go b.run(ctx)
+	return b, nil
+}
+
+// newBrowser returns a browser with the options applied, and without a
+// connection.
+func newBrowser(opts []BrowserOption) *Browser {
 	b := &Browser{
 		LostConnection:    make(chan struct{}),
 		closingGracefully: make(chan struct{}),
@@ -115,22 +153,7 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 	if b.errf == nil {
 		b.errf = func(s string, v ...any) { b.logf("ERROR: "+s, v...) }
 	}
-
-	dialCtx := ctx
-	if b.dialTimeout > 0 {
-		var cancel context.CancelFunc
-		dialCtx, cancel = context.WithTimeout(ctx, b.dialTimeout)
-		defer cancel()
-	}
-
-	var err error
-	b.conn, err = DialContext(dialCtx, urlstr, WithConnDebugf(b.dbgf))
-	if err != nil {
-		return nil, fmt.Errorf("could not dial %q: %w", urlstr, err)
-	}
-
-	go b.run(ctx)
-	return b, nil
+	return b
 }
 
 // Process returns the process object of the browser.

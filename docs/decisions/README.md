@@ -26,3 +26,4 @@ add.
 | 2026-10-03 | [Stop relying on helpers that cdproto no longer generates](2026-10-03-stop-relying-on-removed-cdproto-helpers.md) | Decided |
 | 2026-10-03 | [The minimum Go version is 1.27](2026-10-03-the-minimum-go-version-is-1-27.md) | Decided |
 | 2026-10-03 | [chromedp projects use dated decision files](2026-10-03-use-dated-decision-files.md) | Decided |
+| 2026-10-03 | [Use a pipe to the browser by default](2026-10-03-use-a-pipe-to-the-browser-by-default.md) | Proposed |

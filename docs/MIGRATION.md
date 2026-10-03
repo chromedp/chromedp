@@ -184,3 +184,18 @@ A query action takes a value of the constraint `Selectable`. A `Selectable` is a
 - The action `NodeIDs(sel, opts...)` becomes `QueryNodeIDs(sel, opts...)`, because `NodeIDs` is now a selector type.
 - The query actions are generic in the selector type: `Click[S Selectable](sel S, opts ...QueryOption)`. The compiler infers `S` from the argument. `QueryAfter[T, S]` and `JavascriptAttribute[T, S]` take the result type `T` first. Write `JavascriptAttribute[int](sel, "scrollTop")` and the compiler infers `S`.
 - `FromNode` works with `CSS` and `CSSAll`. A `Search` and a `JSPath` selector ignore it, as before.
+
+## Migrate to the pipe transport
+
+The `ExecAllocator` now talks to the browser that it starts through a pipe, and
+not through a websocket. This changes how the program and Chrome connect. It
+does not change the actions or the events.
+
+- The allocator starts Chrome with `--remote-debugging-pipe` and passes two extra file descriptors, 3 and 4. It does not add `--remote-debugging-port=0`. Chrome opens no port and writes no `DevTools listening on` line.
+- `WSURLReadTimeout` only applies to the websocket mode.
+- The file `DevToolsActivePort` in the user data directory does not exist in the pipe mode, because Chrome opens no port.
+- Add `chromedp.WebSocket` to the options of `NewExecAllocator` to get the old behavior. The flags `remote-debugging-port` and `remote-debugging-address` also select the websocket mode.
+- On Windows the allocator always uses the websocket, because `os/exec` cannot pass extra file descriptors there.
+- `RemoteAllocator` is not changed. It connects to a browser that `chromedp` did not start, so it uses the websocket.
+- `NewBrowserTransport` creates a `Browser` from a `Transport` that is already open. `NewPipeConn` makes a `Transport` for the two pipes of a browser. `NewBrowser` dials a websocket and then calls `NewBrowserTransport`.
+- A start that fails now gives an error that starts with `chrome failed to start:` and has the output of Chrome, in the pipe mode and in the websocket mode.

@@ -80,6 +80,14 @@ When the connection to the browser is lost, `chromedp` cancels the context. This
 can cause the error. It happens, for example, when someone closes the browser by
 hand, or when something kills the browser process.
 
+> How does chromedp talk to the browser it starts?
+
+By default, through a pipe. `chromedp` starts Chrome with `--remote-debugging-pipe`
+and uses two extra file descriptors, so Chrome opens no debugging port. To use a
+websocket and a debugging port instead, add the `chromedp.WebSocket` option to the
+exec allocator. A `remote-debugging-port` or `remote-debugging-address` flag also
+selects the websocket. On Windows `chromedp` always uses the websocket.
+
 > Chrome exits as soon as my Go program finishes
 
 On Linux, `chromedp` kills the Chrome child processes that it started, so that no

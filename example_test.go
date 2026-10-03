@@ -134,6 +134,9 @@ func ExampleExecAllocator() {
 	opts := append(chromedp.DefaultExecAllocatorOptions[:],
 		chromedp.DisableGPU,
 		chromedp.UserDataDir(dir),
+		// Chrome writes the DevToolsActivePort file only when it opens
+		// a debugging port, so this example uses the websocket mode.
+		chromedp.WebSocket,
 	)
 
 	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)

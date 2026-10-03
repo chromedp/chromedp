@@ -553,6 +553,7 @@ func Run[T any](ctx context.Context, a Action[T]) (T, error)
 func RunResponse(ctx context.Context, steps ...Action[Void]) (*network.Response, error)
 func Targets(ctx context.Context) ([]*target.Info, error)
 func WaitNewTarget(ctx context.Context, fn func(*target.Info) bool) <-chan target.ID
+func WebSocket(a *ExecAllocator)
 ```
 
 ## Types, with their constructors and methods
@@ -639,6 +640,7 @@ type AttributeResult struct { ... }
 
 type Browser struct { ... }
 func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Browser, error)
+func NewBrowserTransport(ctx context.Context, tr Transport, opts ...BrowserOption) (*Browser, error)
 func (b *Browser) Call(ctx context.Context, method string, params, res any) error
 func (b *Browser) Process() *os.Process
 func (b *Browser) Subscribe(method string) (<-chan jsontext.Value, func())
@@ -749,6 +751,15 @@ type NodeType int64
 func (t NodeType) String() string
 
 type OldAction interface { ... }
+
+type PipeConn struct { ... }
+func NewPipeConn(r io.ReadCloser, w io.WriteCloser, opts ...PipeOption) *PipeConn
+func (c *PipeConn) Close() error
+func (c *PipeConn) Read(_ context.Context, msg *cdproto.Message) error
+func (c *PipeConn) Write(_ context.Context, msg *cdproto.Message) error
+
+type PipeOption = func(*PipeConn)
+func WithPipeDebugf(f func(string, ...any)) PipeOption
 
 type PollOption = func(task *pollTask)
 func WithPollingArgs(args ...any) PollOption
