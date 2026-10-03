@@ -10,6 +10,7 @@ Package `chromedp` is a faster, simpler way to drive browsers supporting the
 [![Unit Tests][chromedp-ci-status]][chromedp-ci]
 [![Go Reference][goref-chromedp-status]][goref-chromedp]
 [![Releases][release-status]][releases]
+[![Discord Discussion][discord-status]][discord]
 
 ## Installing
 
@@ -86,6 +87,8 @@ to find out of the box.
 [chromedp-examples]: https://github.com/chromedp/examples
 [chromedp-pdlgen]: https://github.com/chromedp/pdlgen
 [chromedp-proxy]: https://github.com/chromedp/chromedp-proxy
+[discord]: https://discord.gg/WDWAgXwJqN "Discord Discussion"
+[discord-status]: https://img.shields.io/discord/829150509658013727.svg?label=Discord&logo=Discord&colorB=7289da&style=flat-square "Discord Discussion"
 [devtools-protocol]: https://chromedevtools.github.io/devtools-protocol/
 [docker-headless-shell]: https://hub.docker.com/r/chromedp/headless-shell/
 [github-326]: https://github.com/chromedp/chromedp/issues/326
