@@ -223,5 +223,11 @@ func connectPipe(ctx context.Context, pf *pipeFiles, cmd *exec.Cmd, out *browser
 		}
 		<-exited
 	}
+	// A canceled or expired context kills the process. The error of the
+	// context is the cause then, and the output only shows the processes
+	// that notice the death of their parent.
+	if err := ctx.Err(); err != nil {
+		return nil, fmt.Errorf("starting the browser: %w", err)
+	}
 	return nil, fmt.Errorf("chrome failed to start:\n%s", out.String())
 }

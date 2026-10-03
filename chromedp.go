@@ -32,6 +32,10 @@ import (
 	"github.com/chromedp/cdproto/target"
 )
 
+// closeTargetTimeout is how long the cancellation of a tab waits for the
+// browser to detach from the tab and to close it.
+const closeTargetTimeout = 5 * time.Second
+
 // Context is the data that NewContext stores in a context.Context. Run needs
 // it.
 type Context struct {
@@ -209,19 +213,21 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 		}
 
 		// This is not the original browser tab. Detach and close it.
-		// The context ctx is canceled, so make a new context with a 1s timeout.
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		// The context ctx is canceled, so make a new context with a timeout.
+		// A busy machine, such as a CI runner, can need more than a second
+		// to answer.
+		ctx, cancel := context.WithTimeout(context.Background(), closeTargetTimeout)
 		defer cancel()
 		if id := tgt.SessionID; id != "" {
 			_, err := cdp.Call(ctx, c.Browser, target.DetachFromTarget, target.DetachFromTargetParams{SessionID: id})
 			if c.cancelErr == nil && err != nil {
-				c.cancelErr = err
+				c.cancelErr = fmt.Errorf("detaching from the target %s: %w", tgt.TargetID, err)
 			}
 		}
 		if id := tgt.TargetID; id != "" {
 			if _, err := cdp.Call(ctx, c.Browser, target.CloseTarget, target.CloseTargetParams{TargetID: id}); err != nil {
 				if c.cancelErr == nil {
-					c.cancelErr = err
+					c.cancelErr = fmt.Errorf("closing the target %s: %w", id, err)
 				}
 			} else {
 				// Current Chrome answers CloseTarget before the
@@ -241,7 +247,7 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 		if c.browserContextOwner {
 			_, err := cdp.Call(ctx, c.Browser, target.DisposeBrowserContext, target.DisposeBrowserContextParams{BrowserContextID: c.BrowserContextID})
 			if c.cancelErr == nil && err != nil {
-				c.cancelErr = err
+				c.cancelErr = fmt.Errorf("disposing of the browser context %s: %w", c.BrowserContextID, err)
 			}
 		}
 	}()
