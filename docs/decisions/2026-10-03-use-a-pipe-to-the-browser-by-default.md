@@ -25,7 +25,7 @@ files in `Cmd.ExtraFiles`. Index 0 becomes file descriptor 3 and index 1 becomes
 
 - `pipe.go` has `PipeConn`, a `Transport` for the two pipe ends. It reads up to the zero byte, so a message can arrive in several reads, and it can be large. A write is one call under a lock.
 - `NewBrowserTransport` makes a `Browser` from an open `Transport`. `NewBrowser` dials and then calls it.
-- The pipe is the default of `ExecAllocator`. The new option `WebSocket` restores the websocket. A `remote-debugging-port` or `remote-debugging-address` flag also selects it, and so does the option `KeepOpen`. On Windows the allocator always uses the websocket, because `os/exec` does not support `ExtraFiles` there.
+- The pipe is the default of `ExecAllocator`. The new option `WebSocket` restores the websocket. A `remote-debugging-port` or `remote-debugging-address` flag also selects it, and so does the option `KeepOpen`. On Windows the allocator first used the websocket, because `os/exec` does not support `ExtraFiles` there. The decision `2026-10-04-the-pipe-works-on-windows.md` replaced that part.
 - The allocator keeps the output of Chrome in a buffer of 64 KiB and in the combined output writer. It sends `Browser.getVersion` as the first command. If the pipe closes before the answer, the allocator waits for Chrome to exit and returns `chrome failed to start:` with the output.
 - A killed Chrome closes the pipe, and `Browser.LostConnection` closes. A graceful close sends `Browser.close`, and Chrome exits and closes the pipe.
 - `RemoteAllocator` still uses the websocket.
@@ -38,8 +38,9 @@ files in `Cmd.ExtraFiles`. Index 0 becomes file descriptor 3 and index 1 becomes
 
 ## What remains
 
-The maintainer decided that the pipe is the default. The Windows behavior is not
-tested, because no Windows machine ran the tests.
+The maintainer decided that the pipe is the default. The decision
+`2026-10-04-the-pipe-works-on-windows.md` made the pipe work on Windows, and the
+tests ran there.
 
 ## Later change
 

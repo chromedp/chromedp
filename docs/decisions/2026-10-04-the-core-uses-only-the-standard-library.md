@@ -84,7 +84,7 @@ the message names `remote.WebSocket`. The flags `remote-debugging-port` and
 
 - A program that uses the default allocator needs no change.
 - Run `go get github.com/chromedp/chromedp/remote` only for a remote browser, for a websocket exec allocator, or for keep-open.
-- On Windows the exec allocator always used the websocket, because `os/exec` cannot pass the file descriptors 3 and 4. It now needs `remote.WebSocket`. Without it, the first `Run` returns `ErrNoDialer`. The backlog has an item for a pipe on Windows.
+- On Windows the exec allocator used the websocket, because `os/exec` cannot pass the file descriptors 3 and 4. For a short time it needed `remote.WebSocket` there. The decision `2026-10-04-the-pipe-works-on-windows.md` replaced that. The pipe works on Windows, and a program for Windows needs no `remote` module.
 - The tests of `remote` use a browser started through a debugging port. The two subtests of `TestBrowserContext` that attach to the browser of the tests were skipped before, because the browser of the tests used the pipe. They now run in `remote` as `TestAllocatorBrowserContext`.
 
 ## Development setup
@@ -114,5 +114,5 @@ and the workflow of CI uses the replace directives. Each module runs
 ## Consequences
 
 - The core has one dependency, and `go mod tidy` leaves `go.sum` with the lines of `cdproto` only.
-- CI runs three modules. A Dependabot configuration, if the repository gets one, must list `/`, `/remote` and `/test`.
+- CI runs the three modules on Linux, Windows and macOS. The headless-shell container step runs on Linux only. A Dependabot configuration, if the repository gets one, must list `/`, `/remote` and `/test`.
 - The maintainer must remember the version and the directive step before the release. `docs/BACKLOG.md` has an item for it.

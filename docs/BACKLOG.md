@@ -33,23 +33,6 @@ list the directories `/`, `/remote` and `/test`.
 
 ## API
 
-### Test the Windows behavior
-
-No Windows machine ran the tests. The pipe transport does not apply on
-Windows, and the allocator uses the websocket there. The flags that detach a
-kept browser on Windows are not tested. Run the tests on Windows and fix what
-fails. See `decisions/2026-10-03-use-a-pipe-to-the-browser-by-default.md` and
-`decisions/2026-10-03-a-visible-window-is-an-opt-in.md`.
-
-### Use a pipe on Windows
-
-The core has no websocket code, so on Windows the exec allocator needs
-`remote.WebSocket`, because `os/exec` cannot pass the file descriptors 3 and 4.
-Chrome on Windows can take the handles of the pipes with the flag
-`--remote-debugging-io-pipes`, and `syscall.SysProcAttr` can pass handles. If
-that works, the default allocator needs no `remote` module on Windows. Nobody
-tested it. Ask the maintainer first.
-
 ### Return the exit error of a dead browser from Cancel
 
 `Run`, `Do`, `Call` and `CallBrowser` return the exit error of a browser that

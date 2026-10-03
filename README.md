@@ -143,13 +143,13 @@ dies on its own, the error also holds the exit error of the process. Use
 > How does chromedp talk to the browser it starts?
 
 By default, through a pipe. `chromedp` starts Chrome with `--remote-debugging-pipe`
-and uses two extra file descriptors, so Chrome opens no debugging port. To use a
+and two pipes, so Chrome opens no debugging port. On Windows the pipes are
+handles that the switch `--remote-debugging-io-pipes` names. To use a
 websocket and a debugging port instead, add the `remote.WebSocket` option of the
 module `github.com/chromedp/chromedp/remote` to the exec allocator. A
 `remote-debugging-port` or `remote-debugging-address` flag also selects the
-websocket, and so does `KeepOpen`, and they all need `remote.WebSocket`. On
-Windows `chromedp` always uses the websocket, so a program for Windows must add
-`remote.WebSocket`.
+websocket, and so does `KeepOpen`, and they all need `remote.WebSocket`. A
+program for Windows needs no `remote` module for the default pipe.
 
 > Chrome exits as soon as my Go program finishes
 

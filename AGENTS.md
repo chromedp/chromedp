@@ -78,8 +78,9 @@ you trust it, because a later decision can amend or replace it.
    prepare.
 5. Wrap every error with `%w`. See the decision
    `docs/decisions/2021-04-29-wrap-errors-with-w.md`.
-6. Keep the tests compatible with `headless-shell`. CI runs them against both
-   Chrome and the `chromedp/headless-shell` image. A test that fails on one
+6. Keep the tests compatible with `headless-shell`. CI runs them against Chrome on
+   Linux, Windows and macOS, and against the `chromedp/headless-shell` image on
+   Linux. A test that fails on one
    of them must skip with a comment that says why. `input_test.go` shows how.
 7. Embed JavaScript from the `js/` folder with `go:embed`. Do not write
    JavaScript inside a Go string.
@@ -95,7 +96,7 @@ The root package `chromedp` holds the API. The files group by topic.
 | Path | Holds |
 | --- | --- |
 | `allocate.go`, `allocate_linux.go`, `allocate_other.go`, `allocate_pipe.go`, `allocate_detach_unix.go`, `allocate_detach_windows.go`, `keepopen.go` | `Allocator`, `ExecAllocator`, `Dialer` and `Attacher`, which start or reach a browser, and the options that keep a browser open |
-| `browser.go`, `pipe.go`, `pipe_unix.go`, `pipe_windows.go` | `Browser`, the `Transport` interface and the pipe connection |
+| `browser.go`, `pipe.go`, `pipe_unix.go`, `pipe_windows.go` | `Browser`, the `Transport` interface, the pipe connection and the way each platform passes the pipes to the browser |
 | `remote/` | the module `remote`: the WebSocket connection `Conn`, the remote `Allocator`, `WebSocket` and `WithKeepOpen` |
 | `test/` | the module `test`: the screenshot tests and the PDF text test, with their `testdata/` |
 | `internal/testenv/`, `internal/chromedptest/` | the variables and the helpers that the tests of the three modules share |
@@ -224,9 +225,9 @@ installed:
 ./contrib/docker-test.sh
 ```
 
-The `IMAGE` variable chooses another image. CI runs both commands on every
-push and pull request, with the newest stable Go release. It runs the three
-modules in turn, each one in its own directory. See `.github/workflows/test.yml`.
+The `IMAGE` variable chooses another image. CI runs the first command on Linux, Windows and macOS, and the container
+script on Linux only, on every push and pull request, with the newest stable Go
+release. It runs the three modules in turn, each one in its own directory. See `.github/workflows/test.yml`.
 If the repository gets a Dependabot configuration, it must list the three
 directories `/`, `/remote` and `/test`.
 

@@ -825,9 +825,7 @@ func CombinedOutput(w io.Writer) ExecAllocatorOption {
 // ExecAllocatorOption that sets one. Use a dialer when the browser must open a
 // debugging port, for example to let a second program connect to it. The Flag
 // options "remote-debugging-port" and "remote-debugging-address" also need a
-// dialer. On Windows the allocator always uses the websocket, because os/exec
-// cannot pass extra file descriptors there, so the allocator needs a dialer on
-// Windows.
+// dialer.
 func WithDialer(d Dialer) ExecAllocatorOption {
 	return func(a *ExecAllocator) {
 		a.dialer = d

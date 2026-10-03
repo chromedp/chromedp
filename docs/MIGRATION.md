@@ -195,11 +195,11 @@ The `ExecAllocator` now talks to the browser that it starts through a pipe, and
 not through a websocket. This changes how the program and Chrome connect. It
 does not change the actions or the events.
 
-- The allocator starts Chrome with `--remote-debugging-pipe` and passes two extra file descriptors, 3 and 4. It does not add `--remote-debugging-port=0`. Chrome opens no port and writes no `DevTools listening on` line.
+- The allocator starts Chrome with `--remote-debugging-pipe` and passes two pipes. On Unix they are the file descriptors 3 and 4. On Windows they are two handles that the switch `--remote-debugging-io-pipes` names. It does not add `--remote-debugging-port=0`. Chrome opens no port and writes no `DevTools listening on` line.
 - `WSURLReadTimeout` only applies to the websocket mode.
 - The file `DevToolsActivePort` in the user data directory does not exist in the pipe mode, because Chrome opens no port.
 - Add `remote.WebSocket` to the options of `NewExecAllocator` to get the old behavior. The flags `remote-debugging-port` and `remote-debugging-address` also select the websocket mode, and they need `remote.WebSocket` too. The old name was `chromedp.WebSocket`. See the part "Move the websocket code to the remote module".
-- On Windows the allocator always uses the websocket, because `os/exec` cannot pass extra file descriptors there. A program for Windows must add `remote.WebSocket`, or the first `Run` returns `ErrNoDialer`.
+- On Windows the allocator uses the pipe too, with handles. A program for Windows needs no `remote.WebSocket`. See `docs/decisions/2026-10-04-the-pipe-works-on-windows.md`.
 - The remote allocator connects to a browser that `chromedp` did not start, so it uses the websocket. It moved to the module `remote`.
 - `NewBrowserTransport` creates a `Browser` from a `Transport` that is already open. `NewPipeConn` makes a `Transport` for the two pipes of a browser. Use `remote.DialContext` and then `NewBrowserTransport` for a websocket.
 - A start that fails now gives an error that starts with `chrome failed to start:` and has the output of Chrome, in the pipe mode and in the websocket mode.
@@ -229,7 +229,7 @@ These changes need no change in old code, unless a bullet says so.
 
 ## Move the websocket code to the remote module
 
-The core module `github.com/chromedp/chromedp` now uses only the standard library and `cdproto`. The code that needs a websocket moved to the module `github.com/chromedp/chromedp/remote`, which has the package `remote`. A program that attaches to a remote browser, uses a websocket exec allocator, or keeps the browser open runs `go get github.com/chromedp/chromedp/remote` and imports `github.com/chromedp/chromedp/remote`. A program that uses only the default allocator needs no change, except on Windows. See `docs/decisions/2026-10-04-the-core-uses-only-the-standard-library.md`.
+The core module `github.com/chromedp/chromedp` now uses only the standard library and `cdproto`. The code that needs a websocket moved to the module `github.com/chromedp/chromedp/remote`, which has the package `remote`. A program that attaches to a remote browser, uses a websocket exec allocator, or keeps the browser open runs `go get github.com/chromedp/chromedp/remote` and imports `github.com/chromedp/chromedp/remote`. A program that uses only the default allocator needs no change, on Windows too. See `docs/decisions/2026-10-04-the-core-uses-only-the-standard-library.md`.
 
 The first column has the old name and the second column has the new name.
 
@@ -270,4 +270,4 @@ How to change old code:
 - A program that gave `chromedp.KeepOpen` to `NewExecAllocator` adds `remote.WebSocket` to the same options. Without it, the first `Run` returns `ErrNoDialer`.
 - A program that gave the flag `remote-debugging-port` or `remote-debugging-address` adds `remote.WebSocket`.
 - A program that used `chromedp.WithDialHTTPHeader` or `chromedp.WithDialTimeout` as a `BrowserOption` gives `remote.WithDialHTTPHeader` or `remote.WithDialTimeout` to `remote.NewAllocator`.
-- A program for Windows adds `remote.WebSocket`, because Windows has no pipe transport yet.
+- A program for Windows needs no change, because the pipe transport works on Windows.

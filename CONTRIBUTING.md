@@ -24,7 +24,7 @@ go test -v ./...
 
 `gofmt -l .` must print nothing. The tests need Chrome. If Chrome is not on
 your machine, run `./contrib/docker-test.sh`. It runs the tests inside the
-`chromedp/headless-shell` image. CI runs both ways on every push.
+`chromedp/headless-shell` image. CI runs the tests with Chrome on Linux, Windows and macOS, and with the image on Linux only, on every push.
 
 If you do not have a browser, run `go test ./docs/`. It needs none and tests
 the documents and the Go comments.

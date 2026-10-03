@@ -9,16 +9,15 @@ import (
 // WebSocket is a chromedp.ExecAllocatorOption that makes the exec allocator
 // connect to the browser with a websocket, as chromedp did before the pipe
 // became the default. The default is a pipe: the allocator starts the browser
-// with --remote-debugging-pipe, and the browser reads the commands from the file
-// descriptor 3 and writes the responses and the events to the file descriptor
-// 4. A pipe needs no port.
+// with --remote-debugging-pipe, and the browser reads the commands from a pipe
+// and writes the responses and the events to another pipe. On Unix they are the
+// file descriptors 3 and 4, and on Windows they are two handles. A pipe needs
+// no port.
 //
 // Use WebSocket when the browser must open a debugging port, for example to let
 // a second program connect to it. The Flag options "remote-debugging-port" and
 // "remote-debugging-address" also select the websocket, and they need this
-// option. The option is also required for chromedp.KeepOpen. On Windows the
-// allocator always uses the websocket, because os/exec cannot pass extra file
-// descriptors there, so a program for Windows must add this option.
+// option. The option is also required for chromedp.KeepOpen.
 //
 // For example:
 //

@@ -27,8 +27,8 @@ See `decisions/2026-10-04-the-core-uses-only-the-standard-library.md`.
 The core package has five layers.
 
 An `Allocator` gets a browser. `ExecAllocator` starts a browser process and
-talks to it through a pipe. The pipe is the default. With a `Dialer`, which the
-option `WithDialer` sets, or on Windows, it reads the WebSocket address from the
+talks to it through a pipe. The pipe is the default, on Windows too. On Windows the pipes are handles that the switch `--remote-debugging-io-pipes` names. With a `Dialer`, which the
+option `WithDialer` sets, it reads the WebSocket address from the
 output of the browser and connects through the dialer instead. The core has no
 dialer, and `remote.WebSocket` supplies one. The allocator of `remote` connects
 to a browser that already runs, through a WebSocket. It implements `Attacher`,
@@ -77,8 +77,9 @@ The tests drive a real browser, so they need Chrome or `headless-shell`.
 temporary directory leaks. HTML pages and golden images are in `testdata/`.
 
 CI, in `.github/workflows/test.yml`, runs `go test -v ./...` against Chrome in
-the root, in `remote/` and in `test/`. Then it runs `./contrib/docker-test.sh`,
-which tests the three modules, against the `chromedp/headless-shell` image. The
+the root, in `remote/` and in `test/`, on Linux, Windows and macOS. On Linux only,
+it then runs `./contrib/docker-test.sh`, which tests the three modules against
+the `chromedp/headless-shell` image. The
 tests of `remote/` and of `test/` use the exported API of the core and the
 helpers in `internal/chromedptest/`. It uses the newest stable Go release, which is Go 1.27 now.
 

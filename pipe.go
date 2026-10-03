@@ -17,9 +17,9 @@ import (
 // PipeConn implements Transport with the two pipes of a browser that was
 // started with the --remote-debugging-pipe flag.
 //
-// The browser reads the commands from its file descriptor 3 and writes the
-// responses and the events to its file descriptor 4. Each JSON message ends
-// with one zero byte, in both directions.
+// On Unix, the browser reads the commands from its file descriptor 3 and writes
+// the responses and the events to its file descriptor 4. On Windows, it uses two
+// handles. Each JSON message ends with one zero byte, in both directions.
 type PipeConn struct {
 	// r is the end of the pipe that the browser writes to.
 	r io.ReadCloser
