@@ -23,6 +23,16 @@ The earlier versions of `cdproto`, v0.157.0, v0.157.1 and v0.157.2, have the old
 go get -u github.com/chromedp/chromedp
 ```
 
+The core module uses only the Go standard library and `cdproto`. It starts a
+browser and talks to it through a pipe. Code that needs a websocket is in a
+second module, `github.com/chromedp/chromedp/remote`. Install it only when you
+connect to a browser that runs already, when you want the exec allocator to use a
+websocket, or when you keep the browser open after the program ends:
+
+```sh
+go get -u github.com/chromedp/chromedp/remote
+```
+
 ## Usage
 
 An action is a func that runs against a browser tab and returns a value.
@@ -83,18 +93,35 @@ chromedp.Do(ctx, chromedp.Navigate("https://example.com"))
 chromedp.WaitClosed(ctx) // block until the user closes the window
 ```
 
-To leave the browser open after the program ends, add `WithKeepOpen`. The
-program can print the address, and another program can attach to it with
-`NewRemoteAllocator`. The profile directory stays on disk, and you must delete
-it yourself.
+To leave the browser open after the program ends, add `remote.WithKeepOpen` from
+the module `github.com/chromedp/chromedp/remote`. The program can print the
+address, and another program can attach to it with `remote.NewAllocator`. The
+profile directory stays on disk, and you must delete it yourself.
 
 ```go
-ctx, _ := chromedp.NewContext(context.Background(), chromedp.WithVisibleWindow(), chromedp.WithKeepOpen())
+ctx, _ := chromedp.NewContext(context.Background(), chromedp.WithVisibleWindow(), remote.WithKeepOpen())
 chromedp.Do(ctx, chromedp.Navigate("https://example.com"))
 wsURL, profile := chromedp.KeptOpen(ctx)
 fmt.Println("attach to", wsURL, "profile", profile)
 // The program ends here. The browser stays open.
 ```
+
+## Remote browser
+
+To connect to a browser that runs already, such as a container or a hosted
+service, use `remote.NewAllocator` with the websocket address of the browser:
+
+```go
+allocCtx, cancel := remote.NewAllocator(context.Background(), "ws://127.0.0.1:9222/")
+defer cancel()
+ctx, cancel := chromedp.NewContext(allocCtx)
+defer cancel()
+title, err := chromedp.Run(ctx, chromedp.Title())
+```
+
+A hosted service can need a header on the websocket request. Give the full
+address of the browser and the options `remote.NoModifyURL` and
+`remote.WithDialHTTPHeader`.
 
 ## Frequently Asked Questions
 
@@ -117,17 +144,19 @@ dies on its own, the error also holds the exit error of the process. Use
 
 By default, through a pipe. `chromedp` starts Chrome with `--remote-debugging-pipe`
 and uses two extra file descriptors, so Chrome opens no debugging port. To use a
-websocket and a debugging port instead, add the `chromedp.WebSocket` option to the
-exec allocator. A `remote-debugging-port` or `remote-debugging-address` flag also
-selects the websocket, and so does `WithKeepOpen`. On Windows `chromedp` always
-uses the websocket.
+websocket and a debugging port instead, add the `remote.WebSocket` option of the
+module `github.com/chromedp/chromedp/remote` to the exec allocator. A
+`remote-debugging-port` or `remote-debugging-address` flag also selects the
+websocket, and so does `KeepOpen`, and they all need `remote.WebSocket`. On
+Windows `chromedp` always uses the websocket, so a program for Windows must add
+`remote.WebSocket`.
 
 > Chrome exits as soon as my Go program finishes
 
 On Linux, `chromedp` kills the Chrome child processes that it started, so that no
-resources leak. To leave Chrome open, add `chromedp.WithKeepOpen`. See
+resources leak. To leave Chrome open, add `remote.WithKeepOpen`. See
 [Visible browser](#visible-browser). You can also start Chrome yourself and
-connect with `RemoteAllocator`.
+connect with `remote.NewAllocator`.
 
 > Calling an action or a command results in "invalid context"
 
@@ -166,7 +195,8 @@ default.
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) before you send a change.
 [AGENTS.md](AGENTS.md) holds the rules for people and coding agents. The tests
-need Chrome or the `headless-shell` image.
+need Chrome or the `headless-shell` image. The repository holds three modules, and
+[AGENTS.md](AGENTS.md) tells how to test each one.
 
 These documents are in `docs/`:
 

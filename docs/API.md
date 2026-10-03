@@ -516,17 +516,17 @@ if err := chromedp.Do(ctx, chromedp.Navigate("https://example.com")); err != nil
 chromedp.WaitClosed(ctx)
 ```
 
-`WithKeepOpen` leaves the browser open when the program ends. It uses the websocket and starts Chrome detached. `KeptOpen` returns the address and the profile directory, and `NewRemoteAllocator` attaches to the address later. The program must not delete the profile directory.
+`WithKeepOpen` of the module `github.com/chromedp/chromedp/remote` leaves the browser open when the program ends. It uses the websocket and starts Chrome detached. `KeptOpen` returns the address and the profile directory, and `remote.NewAllocator` attaches to the address later. The program must not delete the profile directory. The core module has no websocket code, so a program that uses `WithKeepOpen` runs `go get github.com/chromedp/chromedp/remote` first.
 
 ### 15. Connect to a remote browser that needs headers
 
-A hosted browser service can need a header, such as `Authorization`, on the websocket request. `WithRemoteDialHTTPHeader` sets the headers of a remote allocator. `WithDialHTTPHeader` is the same option for a `Browser`, and `WithConnHTTPHeader` is the same option for `DialContext`. The headers go with the websocket request only. The request to `/json/version` has none, so give the allocator the full websocket address and use `NoModifyURL`.
+A hosted browser service can need a header, such as `Authorization`, on the websocket request. `remote.WithDialHTTPHeader` sets the headers of a remote allocator, and `remote.WithConnHTTPHeader` is the same option for `remote.DialContext`. The headers go with the websocket request only. The request to `/json/version` has none, so give the allocator the full websocket address and use `remote.NoModifyURL`. The remote allocator is in the module `github.com/chromedp/chromedp/remote`.
 
 ```go
 header := http.Header{"Authorization": {"Bearer " + token}}
-allocCtx, cancel := chromedp.NewRemoteAllocator(context.Background(), wsURL,
-	chromedp.NoModifyURL,
-	chromedp.WithRemoteDialHTTPHeader(header),
+allocCtx, cancel := remote.NewAllocator(context.Background(), wsURL,
+	remote.NoModifyURL,
+	remote.WithDialHTTPHeader(header),
 )
 defer cancel()
 ctx, cancel := chromedp.NewContext(allocCtx)
@@ -535,7 +535,7 @@ defer cancel()
 
 ```go
 ctx, cancel := chromedp.NewContext(context.Background(),
-	chromedp.WithVisibleWindow(), chromedp.WithKeepOpen())
+	chromedp.WithVisibleWindow(), remote.WithKeepOpen())
 defer cancel()
 if err := chromedp.Do(ctx, chromedp.Navigate("https://example.com")); err != nil {
 	log.Fatal(err)
@@ -544,7 +544,7 @@ wsURL, dir := chromedp.KeptOpen(ctx)
 fmt.Println("attach to", wsURL, "profile", dir)
 ```
 
-Both options only apply when `NewContext` builds the default allocator. For an allocator that you make, add the allocator options `VisibleWindow` and `KeepOpen` to `NewExecAllocator`. `docs/decisions/2026-10-03-a-visible-window-is-an-opt-in.md` explains the choices.
+Both options only apply when `NewContext` builds the default allocator. For an allocator that you make, add the allocator options `VisibleWindow` and `KeepOpen` to `NewExecAllocator`. `KeepOpen` also needs the allocator option `remote.WebSocket`, or `NewExecAllocator` returns `ErrNoDialer` at the first `Run`. `docs/decisions/2026-10-03-a-visible-window-is-an-opt-in.md` explains the choices.
 
 ## What the new API removes
 
@@ -552,7 +552,7 @@ The new API removes the interface `Action`, the type `ActionFunc`, the type `Tas
 
 ## The exported funcs and types
 
-This part lists the signatures that `go doc -all` prints for the package. Run `go doc` on a name for its documentation.
+This part lists the signatures that `go doc -all` prints for the packages of the three modules. Run `go doc` on a name for its documentation. The first part is the core package `github.com/chromedp/chromedp`. The part "The module remote" follows it. The module `test` has no exported names.
 
 ## Functions
 
@@ -581,12 +581,11 @@ func Headless(a *ExecAllocator)
 func IgnoreCertErrors(a *ExecAllocator)
 func KeepOpen(a *ExecAllocator)
 func KeptOpen(ctx context.Context) (wsURL, userDataDir string)
+func NewAllocatorContext(parent context.Context, a Allocator) (context.Context, context.CancelFunc)
 func NewContext(parent context.Context, opts ...ContextOption) (context.Context, context.CancelFunc)
 func NewExecAllocator(parent context.Context, opts ...ExecAllocatorOption) (context.Context, context.CancelFunc)
-func NewRemoteAllocator(parent context.Context, url string, opts ...RemoteAllocatorOption) (context.Context, context.CancelFunc)
 func NoDefaultBrowserCheck(a *ExecAllocator)
 func NoFirstRun(a *ExecAllocator)
-func NoModifyURL(a *RemoteAllocator)
 func NoSandbox(a *ExecAllocator)
 func NodeEnabled(s *Selector)
 func NodeNotPresent(s *Selector)
@@ -600,7 +599,6 @@ func Targets(ctx context.Context) ([]*target.Info, error)
 func VisibleWindow(a *ExecAllocator)
 func WaitClosed(ctx context.Context) error
 func WaitNewTarget(ctx context.Context, fn func(*target.Info) bool) <-chan target.ID
-func WebSocket(a *ExecAllocator)
 ```
 
 ## Types, with their constructors and methods
@@ -683,10 +681,11 @@ func WaitVisible[S Selectable](sel S, opts ...QueryOption) Action[Void]
 
 type Allocator interface { ... }
 
+type Attacher interface { ... }
+
 type AttributeResult struct { ... }
 
 type Browser struct { ... }
-func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Browser, error)
 func NewBrowserTransport(ctx context.Context, tr Transport, opts ...BrowserOption) (*Browser, error)
 func (b *Browser) Call(ctx context.Context, method string, params, res any) error
 func (b *Browser) Process() *os.Process
@@ -697,8 +696,6 @@ func WithBrowserDebugf(f func(string, ...any)) BrowserOption
 func WithBrowserErrorf(f func(string, ...any)) BrowserOption
 func WithBrowserLogf(f func(string, ...any)) BrowserOption
 func WithConsolef(f func(string, ...any)) BrowserOption
-func WithDialHTTPHeader(h http.Header) BrowserOption
-func WithDialTimeout(d time.Duration) BrowserOption
 
 type CSS string
 
@@ -706,21 +703,15 @@ type CSSAll string
 
 type CallOption = func(params *runtime.CallFunctionOnParams)
 
-type Conn struct { ... }
-func DialContext(ctx context.Context, urlstr string, opts ...DialOption) (*Conn, error)
-func (c *Conn) Close() error
-func (c *Conn) Read(_ context.Context, msg *cdproto.Message) error
-func (c *Conn) Write(_ context.Context, msg *cdproto.Message) error
-
 type Context struct { ... }
 func FromContext(ctx context.Context) *Context
 
 type ContextOption = func(*Context)
 func WithBrowserOption(opts ...BrowserOption) ContextOption
+func WithAllocatorOptions(opts ...ExecAllocatorOption) ContextOption
 func WithDebugf(f func(string, ...any)) ContextOption
 func WithErrorf(f func(string, ...any)) ContextOption
 func WithExistingBrowserContext(id cdp.BrowserContextID) ContextOption
-func WithKeepOpen() ContextOption
 func WithLogf(f func(string, ...any)) ContextOption
 func WithNewBrowserContext(options ...CreateBrowserContextOption) ContextOption
 func WithNewWindow(newWindow bool) ContextOption
@@ -731,9 +722,7 @@ type CreateBrowserContextOption = func(*target.CreateBrowserContextParams)
 
 type Device interface { ... }
 
-type DialOption = func(*Conn)
-func WithConnDebugf(f func(string, ...any)) DialOption
-func WithConnHTTPHeader(h http.Header) DialOption
+type Dialer = func(ctx context.Context, wsURL string) (Transport, error)
 
 type EmulateViewportOption = func(*emulation.SetDeviceMetricsOverrideParams, *emulation.SetTouchEmulationEnabledParams)
 func EmulateOrientation(orientation emulation.ScreenOrientationType, angle int64) EmulateViewportOption
@@ -762,6 +751,7 @@ func ProxyServer(proxy string) ExecAllocatorOption
 func UserAgent(userAgent string) ExecAllocatorOption
 func UserDataDir(dir string) ExecAllocatorOption
 func WSURLReadTimeout(t time.Duration) ExecAllocatorOption
+func WithDialer(d Dialer) ExecAllocatorOption
 func WindowSize(width, height int) ExecAllocatorOption
 
 type Frame struct { ... }
@@ -812,6 +802,7 @@ type PipeConn struct { ... }
 func NewPipeConn(r io.ReadCloser, w io.WriteCloser, opts ...PipeOption) *PipeConn
 func (c *PipeConn) Close() error
 func (c *PipeConn) Read(_ context.Context, msg *cdproto.Message) error
+func (c *PipeConn) SetDebugf(f func(string, ...any))
 func (c *PipeConn) Write(_ context.Context, msg *cdproto.Message) error
 
 type PipeOption = func(*PipeConn)
@@ -835,13 +826,6 @@ func FromNode(node *Node) QueryOption
 func Populate(depth int64, pierce bool, opts ...PopulateOption) QueryOption
 func RetryInterval(interval time.Duration) QueryOption
 func WaitFunc(wait func(context.Context, *Target, *Frame, runtime.ExecutionContextID, ...cdp.NodeID) ([]*Node, error)) QueryOption
-
-type RemoteAllocator struct { ... }
-func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*Browser, error)
-func (a *RemoteAllocator) Wait()
-
-type RemoteAllocatorOption = func(*RemoteAllocator)
-func WithRemoteDialHTTPHeader(h http.Header) RemoteAllocatorOption
 
 type Search string
 
@@ -887,8 +871,8 @@ NodeTypeDocumentFragment
 NodeTypeNotation
 EmptyFrameID
 EmptyNodeID
-ErrInvalidWebsocketMessage
 ErrInvalidDimensions
+ErrNoDialer
 ErrNoResults
 ErrHasResults
 ErrNotVisible
@@ -921,4 +905,50 @@ It has these variables:
 DefaultUnmarshalOptions
 DefaultMarshalOptions
 DefaultExecAllocatorOptions
+```
+
+## The module remote
+
+The package `github.com/chromedp/chromedp/remote` holds the code that needs a websocket. The core module does not import it. Run `go get github.com/chromedp/chromedp/remote` to use it. `docs/decisions/2026-10-04-the-core-uses-only-the-standard-library.md` explains the split, and `docs/MIGRATION.md` lists the old and the new names.
+
+```go
+var ErrInvalidMessage = errors.New("invalid websocket message")
+func NewAllocator(parent context.Context, url string, opts ...Option) (context.Context, context.CancelFunc)
+func NoModifyURL(a *Allocator)
+func WebSocket(a *chromedp.ExecAllocator)
+func WithKeepOpen() chromedp.ContextOption
+
+type Allocator struct { ... }
+func (a *Allocator) Allocate(ctx context.Context, opts ...chromedp.BrowserOption) (*chromedp.Browser, error)
+func (a *Allocator) Attaches() bool
+func (a *Allocator) Wait()
+
+type Conn struct { ... }
+func DialContext(ctx context.Context, urlstr string, opts ...DialOption) (*Conn, error)
+func (c *Conn) Close() error
+func (c *Conn) Read(_ context.Context, msg *cdproto.Message) error
+func (c *Conn) SetDebugf(f func(string, ...any))
+func (c *Conn) Write(_ context.Context, msg *cdproto.Message) error
+
+type DialOption = func(*Conn)
+func WithConnDebugf(f func(string, ...any)) DialOption
+func WithConnHTTPHeader(h http.Header) DialOption
+
+type Option = func(*Allocator)
+func WithDialHTTPHeader(h http.Header) Option
+func WithDialTimeout(d time.Duration) Option
+```
+
+`NewAllocator` attaches to a browser that runs already. `WebSocket` makes the exec allocator of the core use a websocket, and `WithKeepOpen` builds the default allocator of `NewContext` so that it keeps the browser open. The core hooks that `remote` uses are `Dialer`, `WithDialer`, `WithAllocatorOptions`, `Attacher` and `NewAllocatorContext`.
+
+### Use a websocket with the exec allocator
+
+The pipe is the default. A program that needs a debugging port adds `remote.WebSocket` to the options of the allocator.
+
+```go
+opts := append(chromedp.DefaultExecAllocatorOptions[:], remote.WebSocket)
+allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+defer cancel()
+ctx, cancel := chromedp.NewContext(allocCtx)
+defer cancel()
 ```

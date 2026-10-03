@@ -40,3 +40,10 @@ files in `Cmd.ExtraFiles`. Index 0 becomes file descriptor 3 and index 1 becomes
 
 The maintainer decided that the pipe is the default. The Windows behavior is not
 tested, because no Windows machine ran the tests.
+
+## Later change
+
+The decision `2026-10-04-the-core-uses-only-the-standard-library.md` moved the
+websocket code to the module `remote`. The option `WebSocket` is now
+`remote.WebSocket`, the allocator needs a dialer for the websocket mode,
+`NewBrowser` is gone, and `RemoteAllocator` is `remote.Allocator`.

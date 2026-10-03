@@ -29,3 +29,4 @@ add.
 | 2026-10-03 | [chromedp projects use dated decision files](2026-10-03-use-dated-decision-files.md) | Decided |
 | 2026-10-03 | [Use a pipe to the browser by default](2026-10-03-use-a-pipe-to-the-browser-by-default.md) | Decided |
 | 2026-10-04 | [Keep site isolation on](2026-10-04-keep-site-isolation-on.md) | Proposed |
+| 2026-10-04 | [The core uses only the standard library](2026-10-04-the-core-uses-only-the-standard-library.md) | Decided |

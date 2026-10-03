@@ -3,10 +3,10 @@
 This document lists the public API changes from `chromedp` v0.16.0 to v0.17.0.
 Version v0.17.0 uses `cdproto` v0.157.3, which is the first release of the typed
 API. The versions v0.157.0, v0.157.1 and v0.157.2 of `cdproto` have the old API. The
-document has six parts, in the order of the changes: the move to `cdproto`
+document has seven parts, in the order of the changes: the move to `cdproto`
 v0.157.1, the move to the typed `cdproto`, the move to the generic action API,
-the move to typed selectors, the pipe transport, and the options for a visible
-window. Apply the parts in this order. A later part can replace a rule of an
+the move to typed selectors, the pipe transport, the options for a visible
+window, and the move of the websocket code to the module `remote`. Apply the parts in this order. A later part can replace a rule of an
 earlier part.
 
 ## Migrate to cdproto v0.157.1
@@ -198,10 +198,10 @@ does not change the actions or the events.
 - The allocator starts Chrome with `--remote-debugging-pipe` and passes two extra file descriptors, 3 and 4. It does not add `--remote-debugging-port=0`. Chrome opens no port and writes no `DevTools listening on` line.
 - `WSURLReadTimeout` only applies to the websocket mode.
 - The file `DevToolsActivePort` in the user data directory does not exist in the pipe mode, because Chrome opens no port.
-- Add `chromedp.WebSocket` to the options of `NewExecAllocator` to get the old behavior. The flags `remote-debugging-port` and `remote-debugging-address` also select the websocket mode.
-- On Windows the allocator always uses the websocket, because `os/exec` cannot pass extra file descriptors there.
-- `RemoteAllocator` is not changed. It connects to a browser that `chromedp` did not start, so it uses the websocket.
-- `NewBrowserTransport` creates a `Browser` from a `Transport` that is already open. `NewPipeConn` makes a `Transport` for the two pipes of a browser. `NewBrowser` dials a websocket and then calls `NewBrowserTransport`.
+- Add `remote.WebSocket` to the options of `NewExecAllocator` to get the old behavior. The flags `remote-debugging-port` and `remote-debugging-address` also select the websocket mode, and they need `remote.WebSocket` too. The old name was `chromedp.WebSocket`. See the part "Move the websocket code to the remote module".
+- On Windows the allocator always uses the websocket, because `os/exec` cannot pass extra file descriptors there. A program for Windows must add `remote.WebSocket`, or the first `Run` returns `ErrNoDialer`.
+- The remote allocator connects to a browser that `chromedp` did not start, so it uses the websocket. It moved to the module `remote`.
+- `NewBrowserTransport` creates a `Browser` from a `Transport` that is already open. `NewPipeConn` makes a `Transport` for the two pipes of a browser. Use `remote.DialContext` and then `NewBrowserTransport` for a websocket.
 - A start that fails now gives an error that starts with `chrome failed to start:` and has the output of Chrome, in the pipe mode and in the websocket mode.
 
 ## New options for a visible window
@@ -211,7 +211,7 @@ These names are new, and no old code needs a change. Headless mode is still the 
 - `WithVisibleWindow` and the allocator option `VisibleWindow` open a visible, maximized window. They replace `Flag("headless", false)`, which left the flags `--hide-scrollbars`, `--mute-audio`, `--enable-automation` and `--disable-extensions` in place.
 - The variable `CHROMEDP_VISIBLEWINDOW` does the same with no change in the code. The tests also read the old variable `CHROMEDP_NO_HEADLESS`.
 - `ErrNoDisplay` is the error on Linux when a visible window has no display.
-- `WithKeepOpen` and the allocator option `KeepOpen` leave the browser open. `KeptOpen` returns its address and profile directory. `WaitClosed` waits until the browser exits.
+- `remote.WithKeepOpen` and the allocator option `KeepOpen` leave the browser open. `KeepOpen` also needs `remote.WebSocket`. `KeptOpen` returns its address and profile directory. `WaitClosed` waits until the browser exits.
 
 ## Changes since v0.17.1
 
@@ -222,7 +222,52 @@ These changes need no change in old code, unless a bullet says so.
 - The target now handles the events `DOM.adRelatedStateUpdated`, `DOM.adoptedStyleSheetsModified`, `DOM.affectedByStartingStylesFlagUpdated` and `DOM.scrollableFlagUpdated`, and the nodes of a frame keep `AdProvenance`, `AdoptedStyleSheets`, `AffectedByStartingStyles` and `IsScrollable` up to date. Before, the first three events made the target log `unhandled node event`, and the last one changed nothing. `DOM.topLayerElementsUpdated` is ignored.
 - The websocket connection answers a ping frame of the server with a pong frame, and it reads frames that arrive in the same packet as the handshake. Before, a ping broke the connection, and `DialContext` panicked in the second case.
 - On Linux, the allocator starts Chrome from a goroutine that stays on its operating system thread until Chrome exits. Before, Chrome died in some programs when the thread that started it ended.
-- `WithRemoteDialHTTPHeader`, `WithDialHTTPHeader` and `WithConnHTTPHeader` set HTTP headers on the websocket request to a remote browser. See example 15 in `docs/API.md`.
+- `remote.WithDialHTTPHeader` and `remote.WithConnHTTPHeader` set HTTP headers on the websocket request to a remote browser. See example 15 in `docs/API.md`.
 - `Run`, `Do`, `Call` and `CallBrowser` now return the exit error of the browser process when the process dies while nobody asked it to stop. The error wraps the error of the context, so `errors.Is(err, context.Canceled)` still works. It also wraps an `*exec.ExitError`, so `errors.As` gives the signal or the exit status. A program that compared the error with `==` to `context.Canceled` must use `errors.Is`. A browser that the program stops with `Cancel` or with a canceled context gives no exit error.
 - `WithNewWindow` is new. A context that creates a tab opens it in a new window by default, because a hidden tab gets no animation frames and `Poll` waits for ever on it. `WithNewWindow(false)` opens a real tab in the window of the browser. Make a tab active with `target.ActivateTarget` before you run an action that waits for a frame on it. A child context inherits the choice.
 - `LoadError` and `ErrPageLoad` are new. `Navigate`, `NavigateResponse` and `RunResponse` return a `*LoadError` when the page does not load. Its text is the same as before, `page load error` and the text of the browser. Use `errors.Is(err, chromedp.ErrPageLoad)` or `errors.As` with a `*LoadError` and read `ErrorText`. Code that searched the text of the error still works.
+
+## Move the websocket code to the remote module
+
+The core module `github.com/chromedp/chromedp` now uses only the standard library and `cdproto`. The code that needs a websocket moved to the module `github.com/chromedp/chromedp/remote`, which has the package `remote`. A program that attaches to a remote browser, uses a websocket exec allocator, or keeps the browser open runs `go get github.com/chromedp/chromedp/remote` and imports `github.com/chromedp/chromedp/remote`. A program that uses only the default allocator needs no change, except on Windows. See `docs/decisions/2026-10-04-the-core-uses-only-the-standard-library.md`.
+
+The first column has the old name and the second column has the new name.
+
+| Old name | New name |
+| --- | --- |
+| `chromedp.NewRemoteAllocator(parent, url, opts...)` | `remote.NewAllocator(parent, url, opts...)` |
+| `chromedp.RemoteAllocator` | `remote.Allocator` |
+| `chromedp.RemoteAllocatorOption` | `remote.Option` |
+| `chromedp.WithRemoteDialHTTPHeader(h)` | `remote.WithDialHTTPHeader(h)` |
+| `chromedp.NoModifyURL` | `remote.NoModifyURL` |
+| `chromedp.WebSocket` | `remote.WebSocket` |
+| `chromedp.WithKeepOpen()` | `remote.WithKeepOpen()` |
+| `chromedp.Conn` | `remote.Conn` |
+| `chromedp.DialContext(ctx, url, opts...)` | `remote.DialContext(ctx, url, opts...)` |
+| `chromedp.DialOption` | `remote.DialOption` |
+| `chromedp.WithConnHTTPHeader(h)` | `remote.WithConnHTTPHeader(h)` |
+| `chromedp.WithConnDebugf(f)` | `remote.WithConnDebugf(f)` |
+| `chromedp.ErrInvalidWebsocketMessage` | `remote.ErrInvalidMessage`, a variable made with `errors.New` |
+| `chromedp.WithDialHTTPHeader(h)`, a `BrowserOption` | `remote.WithDialHTTPHeader(h)`, an option of the remote allocator |
+| `chromedp.WithDialTimeout(d)`, a `BrowserOption` | `remote.WithDialTimeout(d)`, an option of the remote allocator |
+| `chromedp.NewBrowser(ctx, url, opts...)` | `remote.DialContext` and then `chromedp.NewBrowserTransport` |
+| `(*PipeConn).setDebugf` | `(*PipeConn).SetDebugf`, and `(*remote.Conn).SetDebugf` |
+
+These names stay in the core: `KeepOpen`, `KeptOpen`, `WaitClosed`, `WithVisibleWindow`, `WithNewWindow`, `VisibleWindow`, `WSURLReadTimeout`, `Transport`, `NewBrowserTransport`, `PipeConn` and `NewPipeConn`.
+
+The core has these new names, which the module `remote` uses:
+
+- `Dialer` is the type of a func that connects to a websocket address and returns a `Transport`.
+- `WithDialer(d)` is an allocator option. It makes the exec allocator start the browser with a debugging port and connect through `d`.
+- `WithAllocatorOptions(opts...)` is a context option. It adds allocator options to the default allocator that `NewContext` builds.
+- `Attacher` is an interface that an allocator implements when it attaches to a browser that runs already.
+- `NewAllocatorContext(parent, a)` makes the context of an allocator that another module implements.
+- `ErrNoDialer` is the error of an exec allocator that needs a websocket and has no dialer.
+
+How to change old code:
+
+- A program that used `chromedp.WithKeepOpen()` writes `remote.WithKeepOpen()`.
+- A program that gave `chromedp.KeepOpen` to `NewExecAllocator` adds `remote.WebSocket` to the same options. Without it, the first `Run` returns `ErrNoDialer`.
+- A program that gave the flag `remote-debugging-port` or `remote-debugging-address` adds `remote.WebSocket`.
+- A program that used `chromedp.WithDialHTTPHeader` or `chromedp.WithDialTimeout` as a `BrowserOption` gives `remote.WithDialHTTPHeader` or `remote.WithDialTimeout` to `remote.NewAllocator`.
+- A program for Windows adds `remote.WebSocket`, because Windows has no pipe transport yet.

@@ -70,3 +70,10 @@ The traps, and what the code does about each one:
 
 No Windows machine ran the tests, so the Windows detach flags are not tested. A test for the visible
 window needs a display, and it skips on Linux without one.
+
+## Later change
+
+The decision `2026-10-04-the-core-uses-only-the-standard-library.md` moved
+`WithKeepOpen` and `NewRemoteAllocator` to the module `remote`. They are now
+`remote.WithKeepOpen` and `remote.NewAllocator`. `KeepOpen` needs
+`remote.WebSocket`.

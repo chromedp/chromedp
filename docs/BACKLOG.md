@@ -19,6 +19,18 @@ configuration and a CI step, then describe both in the Linting section of
 problems. The workflow runs `go test -v ./...` with no `-race`. Ask the
 maintainer whether CI must add it.
 
+## Release
+
+### Remove the replace directives before the release
+
+The `go.mod` of `remote` and of `test` hold `replace github.com/chromedp/chromedp => ../`
+and require `github.com/chromedp/chromedp v0.18.0`, a version that does not
+exist yet. When the maintainer tags the core, set the real version and remove
+the directive in both files, and run `go mod tidy` in both directories. Do this
+before the tag `remote/v0.1.0`. Nothing in the repository fails the release when
+a directive stays. A Dependabot configuration, if the repository gets one, must
+list the directories `/`, `/remote` and `/test`.
+
 ## API
 
 ### Test the Windows behavior
@@ -29,6 +41,15 @@ kept browser on Windows are not tested. Run the tests on Windows and fix what
 fails. See `decisions/2026-10-03-use-a-pipe-to-the-browser-by-default.md` and
 `decisions/2026-10-03-a-visible-window-is-an-opt-in.md`.
 
+### Use a pipe on Windows
+
+The core has no websocket code, so on Windows the exec allocator needs
+`remote.WebSocket`, because `os/exec` cannot pass the file descriptors 3 and 4.
+Chrome on Windows can take the handles of the pipes with the flag
+`--remote-debugging-io-pipes`, and `syscall.SysProcAttr` can pass handles. If
+that works, the default allocator needs no `remote` module on Windows. Nobody
+tested it. Ask the maintainer first.
+
 ### Return the exit error of a dead browser from Cancel
 
 `Run`, `Do`, `Call` and `CallBrowser` return the exit error of a browser that
@@ -38,10 +59,10 @@ is reaped, so the code must wait for it with a bound.
 
 ### Send the headers of a remote allocator to the version request
 
-`WithRemoteDialHTTPHeader` sets the headers of the websocket request only. The
-request to `/json/version`, which `NewRemoteAllocator` sends when the address
+`remote.WithDialHTTPHeader` sets the headers of the websocket request only. The
+request to `/json/version`, which `remote.NewAllocator` sends when the address
 has no `/devtools/browser/` part, has none. A service that needs a header on
-both requests needs `NoModifyURL` today. Ask the maintainer whether the option
+both requests needs `remote.NoModifyURL` today. Ask the maintainer whether the option
 must cover the version request too.
 
 ### Keep the URL of a frame after a navigation in the same document

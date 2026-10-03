@@ -18,16 +18,24 @@ definition files of Chromium.
 
 ## Architecture
 
-The package has five layers.
+The repository has three modules. The core, in the root, uses only the standard
+library and `cdproto`. The module `remote` holds the code that needs a
+WebSocket and owns the library `gobwas/ws`. The module `test` holds the tests
+that need the libraries `pdf` and `pixelmatch`. The core never imports `remote`.
+See `decisions/2026-10-04-the-core-uses-only-the-standard-library.md`.
+
+The core package has five layers.
 
 An `Allocator` gets a browser. `ExecAllocator` starts a browser process and
-talks to it through a pipe. The pipe is the default. With the `WebSocket`
-option, or on Windows, it reads the WebSocket address from the output of the
-browser instead. `RemoteAllocator` connects to a browser that already runs,
-through a WebSocket.
+talks to it through a pipe. The pipe is the default. With a `Dialer`, which the
+option `WithDialer` sets, or on Windows, it reads the WebSocket address from the
+output of the browser and connects through the dialer instead. The core has no
+dialer, and `remote.WebSocket` supplies one. The allocator of `remote` connects
+to a browser that already runs, through a WebSocket. It implements `Attacher`,
+so that `NewContext` knows that no process belongs to the context.
 
 A `Browser` holds a `Transport`, which is the pipe or the WebSocket
-connection. It reads every message, sends commands, and passes events to the
+connection. The WebSocket connection is `remote.Conn`. It reads every message, sends commands, and passes events to the
 target that owns them. Messages use the `encoding/json/v2` package of the
 standard library.
 
@@ -68,9 +76,11 @@ The tests drive a real browser, so they need Chrome or `headless-shell`.
 `TestMain` makes one exec allocator for the whole run and fails the run if a
 temporary directory leaks. HTML pages and golden images are in `testdata/`.
 
-CI, in `.github/workflows/test.yml`, runs `go test -v ./...` against Chrome
-and then `./contrib/docker-test.sh` against the `chromedp/headless-shell`
-image. It uses the newest stable Go release, which is Go 1.27 now.
+CI, in `.github/workflows/test.yml`, runs `go test -v ./...` against Chrome in
+the root, in `remote/` and in `test/`. Then it runs `./contrib/docker-test.sh`,
+which tests the three modules, against the `chromedp/headless-shell` image. The
+tests of `remote/` and of `test/` use the exported API of the core and the
+helpers in `internal/chromedptest/`. It uses the newest stable Go release, which is Go 1.27 now.
 
 The only test that needs no browser is `go test ./docs/`. It tests the
 documents and the Go comments.
@@ -85,7 +95,8 @@ without the maintainer.
    it.
 2. Does the maintainer want a linter? No configuration exists. See
    `BACKLOG.md`.
-3. Can a new module go in `go.mod`? Four modules are direct dependencies
-   today. Nothing here states a policy.
+3. Can a new module go in `go.mod` of `remote` or `test`? The core takes none,
+   see `decisions/2026-10-04-the-core-uses-only-the-standard-library.md`. The
+   policy for the other two modules is not stated.
 4. Does the maintainer want `go fix` and `modernize` runs recorded as a rule?
    The history shows them on 2025-04-18 and 2026-07-15.

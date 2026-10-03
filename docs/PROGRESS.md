@@ -15,7 +15,7 @@ These commits are on `main` and are not released. Each one has its own test.
 - Fixed: the target logged `unhandled node event` for four DOM events, and `DOM.scrollableFlagUpdated` changed nothing. A test fails when a new event of the `dom` or `page` package is neither handled nor ignored (issue 1530).
 - Fixed: the websocket did not answer ping frames, and `DialContext` panicked when the server sent frames with the handshake (pull request 1611).
 - Fixed: a key with Ctrl, Alt or Meta typed its character (issue 1384).
-- Added: `WithDialHTTPHeader`, `WithRemoteDialHTTPHeader` and `WithConnHTTPHeader` (pull request 1631).
+- Added: `remote.WithDialHTTPHeader` and `remote.WithConnHTTPHeader` (pull request 1631). The commit named them `WithRemoteDialHTTPHeader` and `WithConnHTTPHeader` in the core, and the split below moved and renamed them.
 - Added: `WithNewWindow(bool)`. By default, each new tab opens in a new window, as before in this version. `WithNewWindow(false)` opens it as a tab in the window of the browser. Switch tabs with `target.ActivateTarget`.
 - Fixed: a tab in a browser context that has no window, with `WithNewWindow(false)`, failed with `Failed to open new tab - no browser is open`. The first tab of a new browser context now opens in a new window, and a tab for an existing browser context retries in a new window (the error of issue 1601).
 - Added: the exit error of a browser process that died is in the error of `Run`, `Do`, `Call` and `CallBrowser` (issue 408).
@@ -24,6 +24,7 @@ These commits are on `main` and are not released. Each one has its own test.
 - Not reproduced: the remote allocator error `no browser is open` (issue 1601). It works with Chrome 154 in the new headless mode, and with headless-shell 131.
 - Already fixed: the race in the removal of the user data directory (issue 1544). A test covers the retry, and the example test no longer leaves a directory.
 - Checked: a result of 30 MB works on the pipe and on the websocket (issue 401).
+- Changed: the core module uses only the standard library and `cdproto`. The websocket code, the remote allocator and the websocket mode of the exec allocator moved to the new module `github.com/chromedp/chromedp/remote`. The tests that need `pdf` or `pixelmatch` moved to the new module `github.com/chromedp/chromedp/test`. The core has the new names `Dialer`, `WithDialer`, `WithAllocatorOptions`, `Attacher`, `NewAllocatorContext` and `ErrNoDialer`. `KeepOpen` and the flags for a debugging port need `remote.WebSocket`, and so does Windows. `docs/MIGRATION.md` lists the old and new names, and the decision is in `decisions/2026-10-04-the-core-uses-only-the-standard-library.md`. The tag `remote/v0.1.0` does not exist yet, and the `go.mod` of `remote` and `test` still have a `replace` directive for the core.
 
 ## Where the work stands
 
