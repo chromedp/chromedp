@@ -225,7 +225,9 @@ installed:
 
 The `IMAGE` variable chooses another image. CI runs the first command on Linux, Windows and macOS, and the container
 script on Linux only, on every push and pull request, with the newest stable Go
-release. It runs the three modules in turn, each one in its own directory. See `.github/workflows/test.yml`.
+release. It runs the three modules in turn, each one in its own directory. The
+steps of `remote`, `test` and the container run even when an earlier step
+failed, so that one run shows every failure. See `.github/workflows/test.yml`.
 If the repository gets a Dependabot configuration, it must list the three
 directories `/`, `/remote` and `/test`.
 
@@ -241,6 +243,9 @@ These variables change the tests:
 - `CHROMEDP_NO_SANDBOX`, set to `false`, turns the sandbox on.
 - `CHROMEDP_DEBUG` logs every message.
 - `CI` and `HEADLESS_SHELL` make the test `TestKillLeftoversSkipsKeepOpen` skip itself. It is not stable on a CI runner, and the headless-shell image has no `sh`.
+- `HEADLESS_SHELL` also makes `TestWithNewWindow/SharedWindow` and `/Inherited` skip, because headless-shell gives each target its own window.
+
+A CI runner is slow when many tests run at once. Give a limit in a test enough time for a slow start, because a limit only matters when the test fails.
 
 ## Writing documentation
 

@@ -29,6 +29,20 @@ These commits are in the release v0.18.0. Each one has its own test.
 - Added: the pipe transport works on Windows. The allocator passes two inheritable handles to the browser and names them in the switch `--remote-debugging-io-pipes`, so a program for Windows needs no `remote.WebSocket`. The tests ran on Windows 11 with Chrome 154 and Edge 154. The decision is in `decisions/2026-10-04-the-pipe-works-on-windows.md`.
 - Fixed: a canceled context gave an `exec` error on Windows when the browser program did not exist, and the exit error of a dead browser sometimes arrived too late on Windows. The middle button test skips on Windows, because autoscroll swallows `auxclick`.
 
+## The first runs on three systems
+
+The workflow `test.yml` runs the core, `remote` and `test` on Ubuntu, Windows and macOS with the Chrome of the runner, and the container script on Ubuntu. The first runs failed on all three systems, and the tests pass on Linux and on Windows 11 with Chrome 154 and Edge 154. The runner images list Google Chrome, version 154 on Windows and 152 on macOS. The steps of the three modules and of the container now run even when an earlier step failed, so one run shows every failure.
+
+What the logs showed, and what changed:
+
+- Container: `TestTargetHandlesEveryEvent` needs the `go` command, which the image does not have. It skips. `TestWithNewWindow/SharedWindow` and `/Inherited` skip when `HEADLESS_SHELL` is set, because headless-shell gives each target its own window id. The failure message now prints the window ids.
+- All systems, probable cause: the runners are slow when many tests run at once. Several limits were too short: one second to close a tab, two seconds to start a browser in `TestStartsWithNonBlankTab`, five seconds in `TestRunResponse`, and one second per step in `ExampleNewContext_reuseBrowser`. On Windows that example ended the whole test run with `log.Fatal`. The limits are 5 to 30 seconds now. A failure to close a tab names the call that failed.
+- Windows, probable cause: `TestExecAllocatorKillBrowser` and `TestExecAllocatorPipeStartFailure/pipe_not_open` also fit a slow machine. The browser needed more than two seconds to print its reason, so the allocator killed it and the error had no output. The wait is 10 seconds now. Both tests pass in under a second on the Windows 11 VM, also with `CI=true`.
+- macOS: Ctrl+A is not select all there. `TestKeyEventModifier/ctrl+a` still checks the keydown event, and it skips the check of the selection on macOS.
+- macOS: a start that the context ended gave `chrome failed to start` with the messages of the helper processes that lost their parent. It returns the error of the context now.
+- Not explained: the macOS run left one empty temporary directory, `chromedp-runner...`, once. The allocator does not kill leftover processes on macOS. The directory did not leave in the second run.
+- Not decided: nobody ran the tests on a real Mac. The next run on `macos-latest` must show whether the longer limits are enough.
+
 ## Where the work stands
 
 On 2026-10-03 `main` was ported to the tagged `cdproto` `v0.157.1`, and the
