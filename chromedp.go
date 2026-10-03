@@ -47,6 +47,13 @@ type Context struct {
 	// separate browser tab (page).
 	Target *Target
 
+	// targetMu protects the write of Target in attachTarget and the read of
+	// Target in the cancellation watcher of NewContext. The watcher runs on
+	// its own goroutine, and the context can end while attachTarget runs. The
+	// goroutine that runs the actions needs no lock to read Target, because it
+	// is the only one that writes it.
+	targetMu sync.Mutex
+
 	// targetID is set by WithTargetID. If it is nil, Run uses the only unused
 	// page target, or creates a new one.
 	targetID target.ID
@@ -182,7 +189,10 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 			return
 		}
 
-		if c.Target == nil {
+		c.targetMu.Lock()
+		tgt := c.Target
+		c.targetMu.Unlock()
+		if tgt == nil {
 			// This is a new tab, but we did not create it and attach
 			// to it yet. Nothing to do.
 			return
@@ -192,13 +202,13 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 		// The context ctx is canceled, so make a new context with a 1s timeout.
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
-		if id := c.Target.SessionID; id != "" {
+		if id := tgt.SessionID; id != "" {
 			_, err := cdp.Call(ctx, c.Browser, target.DetachFromTarget, target.DetachFromTargetParams{SessionID: id})
 			if c.cancelErr == nil && err != nil {
 				c.cancelErr = err
 			}
 		}
-		if id := c.Target.TargetID; id != "" {
+		if id := tgt.TargetID; id != "" {
 			if _, err := cdp.Call(ctx, c.Browser, target.CloseTarget, target.CloseTargetParams{TargetID: id}); err != nil {
 				if c.cancelErr == nil {
 					c.cancelErr = err
@@ -435,10 +445,13 @@ func (c *Context) attachTarget(ctx context.Context, targetID target.ID) error {
 		return err
 	}
 
-	c.Target, err = c.Browser.newTarget(ctx, targetID, res.SessionID)
+	t, err := c.Browser.newTarget(ctx, targetID, res.SessionID)
 	if err != nil {
 		return err
 	}
+	c.targetMu.Lock()
+	c.Target = t
+	c.targetMu.Unlock()
 
 	go c.Target.run(ctx)
 

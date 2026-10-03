@@ -361,6 +361,41 @@ func TestConcurrentCancel(t *testing.T) {
 	wg.Wait()
 }
 
+// TestCancelTabDuringAttach cancels a tab context while its first Do attaches
+// the target. The cancellation watcher reads Context.Target at that moment,
+// and attachTarget writes it. The race detector must find no data race.
+func TestCancelTabDuringAttach(t *testing.T) {
+	t.Parallel()
+
+	ctx1, cancel := testAllocate(t, "")
+	defer cancel()
+	if err := Do(ctx1); err != nil {
+		t.Fatal(err)
+	}
+	b := FromContext(ctx1).Browser
+
+	var wg sync.WaitGroup
+	for i := range 150 {
+		// Attach to a target that exists, so that the attach is short and
+		// the cancellation can fall into it.
+		res, err := cdp.Call(ctx1, b, target.CreateTarget, target.CreateTargetParams{URL: "about:blank"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		ctx2, cancel := NewContext(ctx1, WithTargetID(res.TargetID))
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			// The error is not the point of the test. The run can finish
+			// before or after the cancellation.
+			_ = Do(ctx2)
+		}()
+		time.Sleep(time.Duration(i) * 50 * time.Microsecond)
+		cancel()
+	}
+	wg.Wait()
+}
+
 func TestBrowserEvents(t *testing.T) {
 	t.Parallel()
 
