@@ -13,6 +13,7 @@ package chromedp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -208,7 +209,12 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 				// target is gone. Wait until it is not listed.
 				// A destroyed event is not enough, because a
 				// browser connection may not receive it.
-				if err := waitTargetGone(ctx, browserExecutor, id); c.cancelErr == nil && err != nil {
+				// A tab with a request that never ends can stay
+				// for long, so give up after a short time.
+				wctx, wcancel := context.WithTimeout(ctx, 500*time.Millisecond)
+				err := waitTargetGone(wctx, browserExecutor, id)
+				wcancel()
+				if err != nil && !errors.Is(err, context.DeadlineExceeded) && c.cancelErr == nil {
 					c.cancelErr = err
 				}
 			}
