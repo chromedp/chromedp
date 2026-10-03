@@ -250,22 +250,22 @@ func TestQueryIframe(t *testing.T) {
 	defer cancel()
 
 	var iframes, forms []*Node
-	if err := Do(ctx, into(&iframes, Nodes(`iframe`, ByQuery))); err != nil {
+	if err := Do(ctx, into(&iframes, Nodes(CSS(`iframe`)))); err != nil {
 		t.Fatal(err)
 	}
 	iframe := iframes[0]
-	if err := Do(ctx, into(&forms, Nodes(`#form`, ByQuery, FromNode(iframe)))); err != nil {
+	if err := Do(ctx, into(&forms, Nodes(CSS(`#form`), FromNode(iframe)))); err != nil {
 		t.Fatal(err)
 	}
 	form := forms[0]
 
 	var gotFoo string
 	if err := Do(ctx,
-		WaitVisible(`#form`, ByQuery, FromNode(iframe)),
-		into(&gotFoo, Text("#foo", ByQuery, FromNode(form))),
+		WaitVisible(CSS(`#form`), FromNode(iframe)),
+		into(&gotFoo, Text(CSS("#foo"), FromNode(form))),
 
-		Click("#btn1", ByQuery, FromNode(iframe)),
-		Click("#btn2", ByQuery, FromNode(form)),
+		Click(CSS("#btn1"), FromNode(iframe)),
+		Click(CSS("#btn2"), FromNode(form)),
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -388,7 +388,7 @@ func TestNavigateWithoutWaitingForLoad(t *testing.T) {
 			_, err := cdp.Call(ctx, t, page.Navigate, page.NavigateParams{URL: testdataDir + "/form.html"})
 			return err
 		}),
-		WaitVisible(`#form`, ByID), // for form.html
+		WaitVisible(ID(`form`)), // for form.html
 	); err != nil {
 		t.Fatal(err)
 	}

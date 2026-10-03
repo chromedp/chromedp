@@ -29,7 +29,7 @@ func TestWaitReady(t *testing.T) {
 	defer cancel()
 
 	var nodeIDs []cdp.NodeID
-	if err := Do(ctx, into(&nodeIDs, NodeIDs("#input2", ByID))); err != nil {
+	if err := Do(ctx, into(&nodeIDs, QueryNodeIDs(ID("input2")))); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
 	if len(nodeIDs) != 1 {
@@ -37,8 +37,8 @@ func TestWaitReady(t *testing.T) {
 	}
 	var value string
 	if err := Do(ctx,
-		WaitReady("#input2", ByID),
-		into(&value, Value(nodeIDs, ByNodeID)),
+		WaitReady(ID("input2")),
+		into(&value, Value(NodeIDs(nodeIDs))),
 	); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
@@ -51,7 +51,7 @@ func TestWaitVisible(t *testing.T) {
 	defer cancel()
 
 	var nodeIDs []cdp.NodeID
-	if err := Do(ctx, into(&nodeIDs, NodeIDs("#input2", ByID))); err != nil {
+	if err := Do(ctx, into(&nodeIDs, QueryNodeIDs(ID("input2")))); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
 	if len(nodeIDs) != 1 {
@@ -59,8 +59,8 @@ func TestWaitVisible(t *testing.T) {
 	}
 	var value string
 	if err := Do(ctx,
-		WaitVisible("#input2", ByID),
-		into(&value, Value(nodeIDs, ByNodeID)),
+		WaitVisible(ID("input2")),
+		into(&value, Value(NodeIDs(nodeIDs))),
 	); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
@@ -73,7 +73,7 @@ func TestWaitNotVisible(t *testing.T) {
 	defer cancel()
 
 	var nodeIDs []cdp.NodeID
-	if err := Do(ctx, into(&nodeIDs, NodeIDs("#input2", ByID))); err != nil {
+	if err := Do(ctx, into(&nodeIDs, QueryNodeIDs(ID("input2")))); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
 	if len(nodeIDs) != 1 {
@@ -81,9 +81,9 @@ func TestWaitNotVisible(t *testing.T) {
 	}
 	var value string
 	if err := Do(ctx,
-		Click("#button2", ByID),
-		WaitNotVisible("#input2", ByID),
-		into(&value, Value(nodeIDs, ByNodeID)),
+		Click(ID("button2")),
+		WaitNotVisible(ID("input2")),
+		into(&value, Value(NodeIDs(nodeIDs))),
 	); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
@@ -95,7 +95,7 @@ func TestWaitEnabled(t *testing.T) {
 	ctx, cancel := testAllocate(t, "js.html")
 	defer cancel()
 
-	attr, err := Run(ctx, AttributeValue("#select1", "disabled", ByID))
+	attr, err := Run(ctx, AttributeValue(ID("select1"), "disabled"))
 	if err != nil {
 		t.Fatalf("got error: %v", err)
 	}
@@ -103,12 +103,12 @@ func TestWaitEnabled(t *testing.T) {
 		t.Fatal("expected element to be disabled")
 	}
 	if err := Do(ctx,
-		Click("#button3", ByID),
-		WaitEnabled("#select1", ByID),
+		Click(ID("button3")),
+		WaitEnabled(ID("select1")),
 	); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
-	attr, err = Run(ctx, AttributeValue("#select1", "disabled", ByID))
+	attr, err = Run(ctx, AttributeValue(ID("select1"), "disabled"))
 	if err != nil {
 		t.Fatalf("got error: %v", err)
 	}
@@ -118,7 +118,7 @@ func TestWaitEnabled(t *testing.T) {
 	var value string
 	if err := Do(ctx,
 		SetAttributeValue(`//*[@id="select1"]/option[1]`, "selected", "true"),
-		into(&value, Value("#select1", ByID)),
+		into(&value, Value(ID("select1"))),
 	); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
@@ -135,8 +135,8 @@ func TestWaitSelected(t *testing.T) {
 	defer cancel()
 
 	if err := Do(ctx,
-		Click("#button3", ByID),
-		WaitEnabled("#select1", ByID),
+		Click(ID("button3")),
+		WaitEnabled(ID("select1")),
 	); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
@@ -171,9 +171,9 @@ func TestWaitNotPresent(t *testing.T) {
 	defer cancel()
 
 	if err := Do(ctx,
-		WaitVisible("#input3", ByID),
-		Click("#button4", ByID),
-		WaitNotPresent("#input3", ByID),
+		WaitVisible(ID("input3")),
+		Click(ID("button4")),
+		WaitNotPresent(ID("input3")),
 	); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
@@ -268,18 +268,17 @@ func TestNoRetryForInvalidSelector(t *testing.T) {
 	tests := []struct {
 		name    string
 		sel     string
-		by      QueryOption
 		wantErr string
 	}{
-		{`pseudo class`, `#a:b`, ByQuery, "DOM Error while querying (-32000)"},
-		{`leading number`, `#3`, ByQuery, "DOM Error while querying (-32000)"},
-		{`empty selector`, ``, ByQuery, "DOM Error while querying (-32000)"},
+		{`pseudo class`, `#a:b`, "DOM Error while querying (-32000)"},
+		{`leading number`, `#3`, "DOM Error while querying (-32000)"},
+		{`empty selector`, ``, "DOM Error while querying (-32000)"},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			var nodes []*Node
-			if err := Do(ctx, into(&nodes, Nodes(test.sel, test.by))); err.Error() != test.wantErr {
+			if err := Do(ctx, into(&nodes, Nodes(CSS(test.sel)))); err.Error() != test.wantErr {
 				t.Fatalf("want error %v, got error: %v", test.wantErr, err)
 			}
 		})
@@ -295,7 +294,7 @@ func TestByJSPath(t *testing.T) {
 	// make sure that nodes == 1
 	var nodes []*Node
 	if err := Do(ctx,
-		into(&nodes, Nodes(`document.querySelector('#imagething').shadowRoot.querySelector('.container')`, ByJSPath)),
+		into(&nodes, Nodes(JSPath(`document.querySelector('#imagething').shadowRoot.querySelector('.container')`))),
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -316,26 +315,29 @@ func TestNodes(t *testing.T) {
 	ctx, cancel := testAllocate(t, "table.html")
 	defer cancel()
 
-	tests := []struct {
-		sel string
-		by  QueryOption
-		n   int
-	}{
-		{`/html/body/table/tbody[1]/tr[2]/td`, BySearch, 3},
-		{`body > table > tbody:nth-child(2) > tr:nth-child(2) > td:not(:last-child)`, ByQueryAll, 2},
-		{`body > table > tbody:nth-child(2) > tr:nth-child(2) > td`, ByQuery, 1},
-		{`#footer`, ByID, 1},
-		{`document.querySelector("body > table > tbody:nth-child(2) > tr:nth-child(2) > td:nth-child(1)")`, ByJSPath, 1},
+	tests := []func(t *testing.T){
+		nodesTest(ctx, Search(`/html/body/table/tbody[1]/tr[2]/td`), 3),
+		nodesTest(ctx, CSSAll(`body > table > tbody:nth-child(2) > tr:nth-child(2) > td:not(:last-child)`), 2),
+		nodesTest(ctx, CSS(`body > table > tbody:nth-child(2) > tr:nth-child(2) > td`), 1),
+		nodesTest(ctx, ID(`#footer`), 1),
+		nodesTest(ctx, JSPath(`document.querySelector("body > table > tbody:nth-child(2) > tr:nth-child(2) > td:nth-child(1)")`), 1),
 	}
 
 	for i, test := range tests {
+		t.Run(fmt.Sprintf("%02d", i), test)
+	}
+}
+
+// nodesTest returns a test for TestNodes that selects the element with sel.
+func nodesTest[S Selectable](ctx context.Context, sel S, n int) func(t *testing.T) {
+	return func(t *testing.T) {
 		var nodes []*Node
-		if err := Do(ctx, into(&nodes, Nodes(test.sel, test.by))); err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
+		if err := Do(ctx, into(&nodes, Nodes(sel))); err != nil {
+			t.Fatalf("got error: %v", err)
 		}
 
-		if len(nodes) != test.n {
-			t.Errorf("test %d expected to have %d nodes: got %d", i, test.n, len(nodes))
+		if len(nodes) != n {
+			t.Errorf("expected to have %d nodes: got %d", n, len(nodes))
 		}
 	}
 }
@@ -346,26 +348,29 @@ func TestNodeIDs(t *testing.T) {
 	ctx, cancel := testAllocate(t, "table.html")
 	defer cancel()
 
-	tests := []struct {
-		sel string
-		by  QueryOption
-		n   int
-	}{
-		{`/html/body/table/tbody[1]/tr[2]/td`, BySearch, 3},
-		{`body > table > tbody:nth-child(2) > tr:nth-child(2) > td:not(:last-child)`, ByQueryAll, 2},
-		{`body > table > tbody:nth-child(2) > tr:nth-child(2) > td`, ByQuery, 1},
-		{`#footer`, ByID, 1},
-		{`document.querySelector("body > table > tbody:nth-child(2) > tr:nth-child(2) > td:nth-child(1)")`, ByJSPath, 1},
+	tests := []func(t *testing.T){
+		nodeIDsTest(ctx, Search(`/html/body/table/tbody[1]/tr[2]/td`), 3),
+		nodeIDsTest(ctx, CSSAll(`body > table > tbody:nth-child(2) > tr:nth-child(2) > td:not(:last-child)`), 2),
+		nodeIDsTest(ctx, CSS(`body > table > tbody:nth-child(2) > tr:nth-child(2) > td`), 1),
+		nodeIDsTest(ctx, ID(`#footer`), 1),
+		nodeIDsTest(ctx, JSPath(`document.querySelector("body > table > tbody:nth-child(2) > tr:nth-child(2) > td:nth-child(1)")`), 1),
 	}
 
 	for i, test := range tests {
+		t.Run(fmt.Sprintf("%02d", i), test)
+	}
+}
+
+// nodeIDsTest returns a test for TestNodeIDs that selects the element with sel.
+func nodeIDsTest[S Selectable](ctx context.Context, sel S, n int) func(t *testing.T) {
+	return func(t *testing.T) {
 		var ids []cdp.NodeID
-		if err := Do(ctx, into(&ids, NodeIDs(test.sel, test.by))); err != nil {
+		if err := Do(ctx, into(&ids, QueryNodeIDs(sel))); err != nil {
 			t.Fatal(err)
 		}
 
-		if len(ids) != test.n {
-			t.Errorf("test %d expected to have %d node id's: got %d", i, test.n, len(ids))
+		if len(ids) != n {
+			t.Errorf("expected to have %d node id's: got %d", n, len(ids))
 		}
 	}
 }
@@ -376,42 +381,46 @@ func TestFocusBlur(t *testing.T) {
 	ctx, cancel := testAllocate(t, "js.html")
 	defer cancel()
 
-	tests := []struct {
-		sel string
-		by  QueryOption
-	}{
-		{`//*[@id="input1"]`, BySearch},
-		{`body > input[type="number"]:nth-child(1)`, ByQueryAll},
-		{`body > input[type="number"]:nth-child(1)`, ByQuery},
-		{`#input1`, ByID},
-		{`document.querySelector("#input1")`, ByJSPath},
+	tests := []func(t *testing.T){
+		focusBlurTest(ctx, Search(`//*[@id="input1"]`)),
+		focusBlurTest(ctx, CSSAll(`body > input[type="number"]:nth-child(1)`)),
+		focusBlurTest(ctx, CSS(`body > input[type="number"]:nth-child(1)`)),
+		focusBlurTest(ctx, ID(`#input1`)),
+		focusBlurTest(ctx, JSPath(`document.querySelector("#input1")`)),
 	}
 
-	if err := Do(ctx, Click("#input1", ByID)); err != nil {
+	if err := Do(ctx, Click(ID("input1"))); err != nil {
 		t.Fatal(err)
 	}
 
 	for i, test := range tests {
+		t.Run(fmt.Sprintf("%02d", i), test)
+	}
+}
+
+// focusBlurTest returns a test for TestFocusBlur that selects the element with sel.
+func focusBlurTest[S Selectable](ctx context.Context, sel S) func(t *testing.T) {
+	return func(t *testing.T) {
 		var value string
 		if err := Do(ctx,
-			Focus(test.sel, test.by),
-			into(&value, Value(test.sel, test.by)),
+			Focus(sel),
+			into(&value, Value(sel)),
 		); err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
+			t.Fatalf("got error: %v", err)
 		}
 
 		if value != "9999" {
-			t.Errorf("test %d expected value is '9999', got: %q", i, value)
+			t.Errorf("expected value is '9999', got: %q", value)
 		}
 		if err := Do(ctx,
-			Blur(test.sel, test.by),
-			into(&value, Value(test.sel, test.by)),
+			Blur(sel),
+			into(&value, Value(sel)),
 		); err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
+			t.Fatalf("got error: %v", err)
 		}
 
 		if value != "0" {
-			t.Errorf("test %d expected value is '0', got: %q", i, value)
+			t.Errorf("expected value is '0', got: %q", value)
 		}
 	}
 }
@@ -422,27 +431,29 @@ func TestDimensions(t *testing.T) {
 	ctx, cancel := testAllocate(t, "image.html")
 	defer cancel()
 
-	tests := []struct {
-		sel    string
-		by     QueryOption
-		width  int64
-		height int64
-	}{
-		{`/html/body/img`, BySearch, 239, 239},
-		{`img`, ByQueryAll, 239, 239},
-		{`img`, ByQuery, 239, 239},
-		{`#icon-github`, ByID, 120, 120},
-		{`document.querySelector("#icon-github")`, ByJSPath, 120, 120},
+	tests := []func(t *testing.T){
+		dimensionsTest(ctx, Search(`/html/body/img`), 239, 239),
+		dimensionsTest(ctx, CSSAll(`img`), 239, 239),
+		dimensionsTest(ctx, CSS(`img`), 239, 239),
+		dimensionsTest(ctx, ID(`#icon-github`), 120, 120),
+		dimensionsTest(ctx, JSPath(`document.querySelector("#icon-github")`), 120, 120),
 	}
 
 	for i, test := range tests {
+		t.Run(fmt.Sprintf("%02d", i), test)
+	}
+}
+
+// dimensionsTest returns a test for TestDimensions that selects the element with sel.
+func dimensionsTest[S Selectable](ctx context.Context, sel S, width int64, height int64) func(t *testing.T) {
+	return func(t *testing.T) {
 		var model *dom.BoxModel
-		if err := Do(ctx, into(&model, Dimensions(test.sel, test.by))); err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
+		if err := Do(ctx, into(&model, Dimensions(sel))); err != nil {
+			t.Fatalf("got error: %v", err)
 		}
 
-		if model.Height != test.height || model.Width != test.width {
-			t.Errorf("test %d expected %dx%d, got: %dx%d", i, test.width, test.height, model.Height, model.Width)
+		if model.Height != height || model.Width != width {
+			t.Errorf("expected %dx%d, got: %dx%d", width, height, model.Height, model.Width)
 		}
 	}
 }
@@ -453,28 +464,31 @@ func TestText(t *testing.T) {
 	ctx, cancel := testAllocate(t, "form.html")
 	defer cancel()
 
-	tests := []struct {
-		sel string
-		by  QueryOption
-		exp string
-	}{
-		{"#foo", ByID, "insert"},
-		{"body > form > span", ByQueryAll, "insert"},
-		{"body > form > span:nth-child(2)", ByQuery, "keyword"},
-		{"/html/body/form/span[2]", BySearch, "keyword"},
-		{`document.querySelector("#form > span:nth-child(2)")`, ByJSPath, "keyword"},
-		{"#inner-hidden", ByID, "this is"},
-		{"#hidden", ByID, ""},
+	tests := []func(t *testing.T){
+		textTest(ctx, ID("#foo"), "insert"),
+		textTest(ctx, CSSAll("body > form > span"), "insert"),
+		textTest(ctx, CSS("body > form > span:nth-child(2)"), "keyword"),
+		textTest(ctx, Search("/html/body/form/span[2]"), "keyword"),
+		textTest(ctx, JSPath(`document.querySelector("#form > span:nth-child(2)")`), "keyword"),
+		textTest(ctx, ID("#inner-hidden"), "this is"),
+		textTest(ctx, ID("#hidden"), ""),
 	}
 
 	for i, test := range tests {
+		t.Run(fmt.Sprintf("%02d", i), test)
+	}
+}
+
+// textTest returns a test for TestText that selects the element with sel.
+func textTest[S Selectable](ctx context.Context, sel S, exp string) func(t *testing.T) {
+	return func(t *testing.T) {
 		var text string
-		if err := Do(ctx, into(&text, Text(test.sel, test.by))); err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
+		if err := Do(ctx, into(&text, Text(sel))); err != nil {
+			t.Fatalf("got error: %v", err)
 		}
 
-		if text != test.exp {
-			t.Errorf("test %d expected %q, got: %s", i, test.exp, text)
+		if text != exp {
+			t.Errorf("expected %q, got: %s", exp, text)
 		}
 	}
 }
@@ -485,23 +499,26 @@ func TestTextContent(t *testing.T) {
 	ctx, cancel := testAllocate(t, "form.html")
 	defer cancel()
 
-	tests := []struct {
-		sel string
-		by  QueryOption
-		exp string
-	}{
-		{"#inner-hidden", ByID, "this is hidden"},
-		{"#hidden", ByID, "hidden"},
+	tests := []func(t *testing.T){
+		textContentTest(ctx, ID("#inner-hidden"), "this is hidden"),
+		textContentTest(ctx, ID("#hidden"), "hidden"),
 	}
 
 	for i, test := range tests {
+		t.Run(fmt.Sprintf("%02d", i), test)
+	}
+}
+
+// textContentTest returns a test for TestTextContent that selects the element with sel.
+func textContentTest[S Selectable](ctx context.Context, sel S, exp string) func(t *testing.T) {
+	return func(t *testing.T) {
 		var text string
-		if err := Do(ctx, into(&text, TextContent(test.sel, test.by))); err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
+		if err := Do(ctx, into(&text, TextContent(sel))); err != nil {
+			t.Fatalf("got error: %v", err)
 		}
 
-		if text != test.exp {
-			t.Errorf("test %d expected %q, got: %s", i, test.exp, text)
+		if text != exp {
+			t.Errorf("expected %q, got: %s", exp, text)
 		}
 	}
 }
@@ -509,91 +526,93 @@ func TestTextContent(t *testing.T) {
 func TestClear(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		sel string
-		by  QueryOption
-	}{
+	tests := []func(t *testing.T){
 		// input fields
-		{`//*[@id="form"]/input[1]`, BySearch},
-		{`#form > input[type="text"]:nth-child(4)`, ByQuery},
-		{`#form > input[type="text"]`, ByQueryAll},
-		{`#keyword`, ByID},
-		{`document.querySelector("#keyword")`, ByJSPath},
+		clearTest(Search(`//*[@id="form"]/input[1]`)),
+		clearTest(CSS(`#form > input[type="text"]:nth-child(4)`)),
+		clearTest(CSSAll(`#form > input[type="text"]`)),
+		clearTest(ID(`#keyword`)),
+		clearTest(JSPath(`document.querySelector("#keyword")`)),
 
 		// textarea fields
-		{`//*[@id="bar"]`, BySearch},
-		{`#form > textarea`, ByQuery},
-		{`#form > textarea`, ByQueryAll},
-		{`#bar`, ByID},
+		clearTest(Search(`//*[@id="bar"]`)),
+		clearTest(CSS(`#form > textarea`)),
+		clearTest(CSSAll(`#form > textarea`)),
+		clearTest(ID(`#bar`)),
 
 		// input + textarea fields
-		{`//*[@id="form"]/input`, BySearch},
-		{`#form > input[type="text"]`, ByQueryAll},
+		clearTest(Search(`//*[@id="form"]/input`)),
+		clearTest(CSSAll(`#form > input[type="text"]`)),
 	}
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			t.Parallel()
+		t.Run(fmt.Sprintf("%02d", i), test)
+	}
+}
 
-			ctx, cancel := testAllocate(t, "form.html")
-			defer cancel()
+// clearTest returns a test for TestClear that selects the element with sel.
+func clearTest[S Selectable](sel S) func(t *testing.T) {
+	return func(t *testing.T) {
+		t.Parallel()
 
-			var val string
-			if err := Do(ctx, into(&val, Value(test.sel, test.by))); err != nil {
-				t.Fatalf("got error: %v", err)
-			}
-			if val == "" {
-				t.Errorf("expected %q to have non empty value", test.sel)
-			}
-			if err := Do(ctx,
-				Clear(test.sel, test.by),
-				into(&val, Value(test.sel, test.by)),
-			); err != nil {
-				t.Fatalf("got error: %v", err)
-			}
-			if val != "" {
-				t.Errorf("expected empty value for %q, got: %s", test.sel, val)
-			}
-		})
+		ctx, cancel := testAllocate(t, "form.html")
+		defer cancel()
+
+		var val string
+		if err := Do(ctx, into(&val, Value(sel))); err != nil {
+			t.Fatalf("got error: %v", err)
+		}
+		if val == "" {
+			t.Errorf("expected %v to have non empty value", sel)
+		}
+		if err := Do(ctx,
+			Clear(sel),
+			into(&val, Value(sel)),
+		); err != nil {
+			t.Fatalf("got error: %v", err)
+		}
+		if val != "" {
+			t.Errorf("expected empty value for %v, got: %s", sel, val)
+		}
 	}
 }
 
 func TestReset(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		sel   string
-		by    QueryOption
-		value string
-		exp   string
-	}{
-		{`//*[@id="keyword"]`, BySearch, "foobar", "chromedp"},
-		{`#form > input[type="text"]:nth-child(6)`, ByQuery, "foobar", "foo"},
-		{`#form > input[type="text"]`, ByQueryAll, "foobar", "chromedp"},
-		{"#bar", ByID, "foobar", "bar"},
-		{`document.querySelector("#bar")`, ByJSPath, "foobar", "bar"},
+	tests := []func(t *testing.T){
+		resetTest(Search(`//*[@id="keyword"]`), "foobar", "chromedp"),
+		resetTest(CSS(`#form > input[type="text"]:nth-child(6)`), "foobar", "foo"),
+		resetTest(CSSAll(`#form > input[type="text"]`), "foobar", "chromedp"),
+		resetTest(ID("#bar"), "foobar", "bar"),
+		resetTest(JSPath(`document.querySelector("#bar")`), "foobar", "bar"),
 	}
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			t.Parallel()
+		t.Run(fmt.Sprintf("%02d", i), test)
+	}
+}
 
-			ctx, cancel := testAllocate(t, "form.html")
-			defer cancel()
+// resetTest returns a test for TestReset that selects the element with sel.
+func resetTest[S Selectable](sel S, set string, exp string) func(t *testing.T) {
+	return func(t *testing.T) {
+		t.Parallel()
 
-			var value string
-			if err := Do(ctx,
-				SetValue(test.sel, test.value, test.by),
-				Reset(test.sel, test.by),
-				into(&value, Value(test.sel, test.by)),
-			); err != nil {
-				t.Fatalf("got error: %v", err)
-			}
+		ctx, cancel := testAllocate(t, "form.html")
+		defer cancel()
 
-			if value != test.exp {
-				t.Errorf("expected value after reset is %s, got: %q", test.exp, value)
-			}
-		})
+		var value string
+		if err := Do(ctx,
+			SetValue(sel, set),
+			Reset(sel),
+			into(&value, Value(sel)),
+		); err != nil {
+			t.Fatalf("got error: %v", err)
+		}
+
+		if value != exp {
+			t.Errorf("expected value after reset is %s, got: %q", exp, value)
+		}
 	}
 }
 
@@ -603,25 +622,29 @@ func TestValue(t *testing.T) {
 	ctx, cancel := testAllocate(t, "form.html")
 	defer cancel()
 
-	tests := []struct {
-		sel string
-		by  QueryOption
-	}{
-		{`//*[@id="form"]/input[1]`, BySearch},
-		{`#form > input[type="text"]:nth-child(4)`, ByQuery},
-		{`#form > input[type="text"]`, ByQueryAll},
-		{`#keyword`, ByID},
-		{`document.querySelector("#keyword")`, ByJSPath},
+	tests := []func(t *testing.T){
+		valueTest(ctx, Search(`//*[@id="form"]/input[1]`)),
+		valueTest(ctx, CSS(`#form > input[type="text"]:nth-child(4)`)),
+		valueTest(ctx, CSSAll(`#form > input[type="text"]`)),
+		valueTest(ctx, ID(`#keyword`)),
+		valueTest(ctx, JSPath(`document.querySelector("#keyword")`)),
 	}
 
 	for i, test := range tests {
+		t.Run(fmt.Sprintf("%02d", i), test)
+	}
+}
+
+// valueTest returns a test for TestValue that selects the element with sel.
+func valueTest[S Selectable](ctx context.Context, sel S) func(t *testing.T) {
+	return func(t *testing.T) {
 		var value string
-		if err := Do(ctx, into(&value, Value(test.sel, test.by))); err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
+		if err := Do(ctx, into(&value, Value(sel))); err != nil {
+			t.Fatalf("got error: %v", err)
 		}
 
 		if value != "chromedp" {
-			t.Errorf("test %d expected `chromedp`, got: %s", i, value)
+			t.Errorf("expected `chromedp`, got: %s", value)
 		}
 	}
 }
@@ -633,7 +656,7 @@ func TestValueUndefined(t *testing.T) {
 	defer cancel()
 
 	var value string
-	err := Do(ctx, into(&value, Value("foo", ByID)))
+	err := Do(ctx, into(&value, Value(ID("foo"))))
 	want := `could not retrieve attribute "value": encountered an undefined value`
 	got := fmt.Sprint(err)
 	if !strings.Contains(got, want) {
@@ -644,50 +667,52 @@ func TestValueUndefined(t *testing.T) {
 func TestSetValue(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		sel string
-		by  QueryOption
-	}{
-		{`//*[@id="form"]/input[1]`, BySearch},
-		{`#form > input[type="text"]:nth-child(4)`, ByQuery},
-		{`#form > input[type="text"]`, ByQueryAll},
-		{`#bar`, ByID},
-		{`document.querySelector("#bar")`, ByJSPath},
-		{`#select`, ByQuery},
+	tests := []func(t *testing.T){
+		setValueTest(Search(`//*[@id="form"]/input[1]`)),
+		setValueTest(CSS(`#form > input[type="text"]:nth-child(4)`)),
+		setValueTest(CSSAll(`#form > input[type="text"]`)),
+		setValueTest(ID(`#bar`)),
+		setValueTest(JSPath(`document.querySelector("#bar")`)),
+		setValueTest(CSS(`#select`)),
 	}
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			t.Parallel()
+		t.Run(fmt.Sprintf("%02d", i), test)
+	}
+}
 
-			ctx, cancel := testAllocate(t, "form.html")
-			defer cancel()
+// setValueTest returns a test for TestSetValue that selects the element with sel.
+func setValueTest[S Selectable](sel S) func(t *testing.T) {
+	return func(t *testing.T) {
+		t.Parallel()
 
-			var value string
-			if err := Do(ctx,
-				SetValue(test.sel, "FOOBAR", test.by),
-				into(&value, Value(test.sel, test.by)),
-			); err != nil {
+		ctx, cancel := testAllocate(t, "form.html")
+		defer cancel()
+
+		var value string
+		if err := Do(ctx,
+			SetValue(sel, "FOOBAR"),
+			into(&value, Value(sel)),
+		); err != nil {
+			t.Fatalf("got error: %v", err)
+		}
+
+		if value != "FOOBAR" {
+			t.Errorf("expected `FOOBAR`, got: %s", value)
+		}
+
+		ctx, cancel = context.WithTimeout(ctx, 2*time.Second)
+		defer cancel()
+		if err := Do(ctx,
+			WaitVisible(CSS("#event-input")),
+			WaitVisible(CSS("#event-change")),
+		); err != nil {
+			if errors.Is(err, context.DeadlineExceeded) {
+				t.Fatal("input and/or change events not fired")
+			} else {
 				t.Fatalf("got error: %v", err)
 			}
-
-			if value != "FOOBAR" {
-				t.Errorf("expected `FOOBAR`, got: %s", value)
-			}
-
-			ctx, cancel = context.WithTimeout(ctx, 2*time.Second)
-			defer cancel()
-			if err := Do(ctx,
-				WaitVisible("#event-input", ByQuery),
-				WaitVisible("#event-change", ByQuery),
-			); err != nil {
-				if errors.Is(err, context.DeadlineExceeded) {
-					t.Fatal("input and/or change events not fired")
-				} else {
-					t.Fatalf("got error: %v", err)
-				}
-			}
-		})
+		}
 	}
 }
 
@@ -697,61 +722,54 @@ func TestAttributes(t *testing.T) {
 	ctx, cancel := testAllocate(t, "image.html")
 	defer cancel()
 
-	tests := []struct {
-		sel string
-		by  QueryOption
-		exp map[string]string
-	}{
-		{
-			`//*[@id="icon-brankas"]`, BySearch,
-			map[string]string{
-				"alt": "Brankas - Easy Money Management",
-				"id":  "icon-brankas",
-				"src": "images/brankas.png",
-			},
+	tests := []func(t *testing.T){
+		attributesTest(ctx, Search(`//*[@id="icon-brankas"]`), map[string]string{
+			"alt": "Brankas - Easy Money Management",
+			"id":  "icon-brankas",
+			"src": "images/brankas.png",
 		},
-		{
-			`body > img:first-child`, ByQuery,
-			map[string]string{
-				"alt": "Brankas - Easy Money Management",
-				"id":  "icon-brankas",
-				"src": "images/brankas.png",
-			},
+		),
+		attributesTest(ctx, CSS(`body > img:first-child`), map[string]string{
+			"alt": "Brankas - Easy Money Management",
+			"id":  "icon-brankas",
+			"src": "images/brankas.png",
 		},
-		{
-			`body > img:nth-child(2)`, ByQueryAll,
-			map[string]string{
-				"alt": `How people build software`,
-				"id":  "icon-github",
-				"src": "images/github.png",
-			},
+		),
+		attributesTest(ctx, CSSAll(`body > img:nth-child(2)`), map[string]string{
+			"alt": `How people build software`,
+			"id":  "icon-github",
+			"src": "images/github.png",
 		},
-		{
-			`#icon-github`, ByID,
-			map[string]string{
-				"alt": "How people build software",
-				"id":  "icon-github",
-				"src": "images/github.png",
-			},
+		),
+		attributesTest(ctx, ID(`#icon-github`), map[string]string{
+			"alt": "How people build software",
+			"id":  "icon-github",
+			"src": "images/github.png",
 		},
-		{
-			`document.querySelector("#icon-github")`, ByJSPath,
-			map[string]string{
-				"alt": "How people build software",
-				"id":  "icon-github",
-				"src": "images/github.png",
-			},
+		),
+		attributesTest(ctx, JSPath(`document.querySelector("#icon-github")`), map[string]string{
+			"alt": "How people build software",
+			"id":  "icon-github",
+			"src": "images/github.png",
 		},
+		),
 	}
 
 	for i, test := range tests {
+		t.Run(fmt.Sprintf("%02d", i), test)
+	}
+}
+
+// attributesTest returns a test for TestAttributes that selects the element with sel.
+func attributesTest[S Selectable](ctx context.Context, sel S, exp map[string]string) func(t *testing.T) {
+	return func(t *testing.T) {
 		var attrs map[string]string
-		if err := Do(ctx, into(&attrs, Attributes(test.sel, test.by))); err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
+		if err := Do(ctx, into(&attrs, Attributes(sel))); err != nil {
+			t.Fatalf("got error: %v", err)
 		}
 
-		if !reflect.DeepEqual(test.exp, attrs) {
-			t.Errorf("test %d expected %v, got: %v", i, test.exp, attrs)
+		if !reflect.DeepEqual(exp, attrs) {
+			t.Errorf("expected %v, got: %v", exp, attrs)
 		}
 	}
 }
@@ -762,36 +780,37 @@ func TestAttributesAll(t *testing.T) {
 	ctx, cancel := testAllocate(t, "image.html")
 	defer cancel()
 
-	tests := []struct {
-		sel string
-		by  QueryOption
-		exp []map[string]string
-	}{
-		{
-			"img", ByQueryAll,
-			[]map[string]string{
-				{
-					"alt": "Brankas - Easy Money Management",
-					"id":  "icon-brankas",
-					"src": "images/brankas.png",
-				},
-				{
-					"alt": "How people build software",
-					"id":  "icon-github",
-					"src": "images/github.png",
-				},
+	tests := []func(t *testing.T){
+		attributesAllTest(ctx, CSSAll("img"), []map[string]string{
+			{
+				"alt": "Brankas - Easy Money Management",
+				"id":  "icon-brankas",
+				"src": "images/brankas.png",
+			},
+			{
+				"alt": "How people build software",
+				"id":  "icon-github",
+				"src": "images/github.png",
 			},
 		},
+		),
 	}
 
 	for i, test := range tests {
+		t.Run(fmt.Sprintf("%02d", i), test)
+	}
+}
+
+// attributesAllTest returns a test for TestAttributesAll that selects the element with sel.
+func attributesAllTest[S Selectable](ctx context.Context, sel S, exp []map[string]string) func(t *testing.T) {
+	return func(t *testing.T) {
 		var attrs []map[string]string
-		if err := Do(ctx, into(&attrs, AttributesAll(test.sel, test.by))); err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
+		if err := Do(ctx, into(&attrs, AttributesAll(sel))); err != nil {
+			t.Fatalf("got error: %v", err)
 		}
 
-		if !reflect.DeepEqual(test.exp, attrs) {
-			t.Errorf("test %d expected %v, got: %v", i, test.exp, attrs)
+		if !reflect.DeepEqual(exp, attrs) {
+			t.Errorf("expected %v, got: %v", exp, attrs)
 		}
 	}
 }
@@ -799,35 +818,24 @@ func TestAttributesAll(t *testing.T) {
 func TestSetAttributes(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		sel   string
-		by    QueryOption
-		attrs map[string]string
-		exp   map[string]string
-	}{
-		{
-			`//*[@id="icon-brankas"]`, BySearch,
-			map[string]string{"data-url": "brankas"},
+	tests := []func(t *testing.T){
+		setAttributesTest(Search(`//*[@id="icon-brankas"]`), map[string]string{"data-url": "brankas"},
 			map[string]string{
 				"alt":      "Brankas - Easy Money Management",
 				"id":       "icon-brankas",
 				"src":      "images/brankas.png",
 				"data-url": "brankas",
 			},
-		},
-		{
-			`body > img:first-child`, ByQuery,
-			map[string]string{"data-url": "brankas"},
+		),
+		setAttributesTest(CSS(`body > img:first-child`), map[string]string{"data-url": "brankas"},
 			map[string]string{
 				"alt":      "Brankas - Easy Money Management",
 				"id":       "icon-brankas",
 				"src":      "images/brankas.png",
 				"data-url": "brankas",
 			},
-		},
-		{
-			`body > img:nth-child(2)`, ByQueryAll,
-			map[string]string{"width": "100", "height": "200"},
+		),
+		setAttributesTest(CSSAll(`body > img:nth-child(2)`), map[string]string{"width": "100", "height": "200"},
 			map[string]string{
 				"alt":    `How people build software`,
 				"id":     "icon-github",
@@ -835,10 +843,8 @@ func TestSetAttributes(t *testing.T) {
 				"width":  "100",
 				"height": "200",
 			},
-		},
-		{
-			`#icon-github`, ByID,
-			map[string]string{"width": "100", "height": "200"},
+		),
+		setAttributesTest(ID(`#icon-github`), map[string]string{"width": "100", "height": "200"},
 			map[string]string{
 				"alt":    "How people build software",
 				"id":     "icon-github",
@@ -846,10 +852,8 @@ func TestSetAttributes(t *testing.T) {
 				"width":  "100",
 				"height": "200",
 			},
-		},
-		{
-			`document.querySelector("#icon-github")`, ByJSPath,
-			map[string]string{"width": "100", "height": "200"},
+		),
+		setAttributesTest(JSPath(`document.querySelector("#icon-github")`), map[string]string{"width": "100", "height": "200"},
 			map[string]string{
 				"alt":    "How people build software",
 				"id":     "icon-github",
@@ -857,32 +861,37 @@ func TestSetAttributes(t *testing.T) {
 				"width":  "100",
 				"height": "200",
 			},
-		},
+		),
 	}
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			t.Parallel()
+		t.Run(fmt.Sprintf("%02d", i), test)
+	}
+}
 
-			ctx, cancel := testAllocate(t, "image.html")
-			defer cancel()
+// setAttributesTest returns a test for TestSetAttributes that selects the element with sel.
+func setAttributesTest[S Selectable](sel S, attrs map[string]string, exp map[string]string) func(t *testing.T) {
+	return func(t *testing.T) {
+		t.Parallel()
 
-			if err := Do(ctx, SetAttributes(test.sel, test.attrs, test.by)); err != nil {
-				t.Fatalf("got error: %v", err)
-			}
+		ctx, cancel := testAllocate(t, "image.html")
+		defer cancel()
 
-			// TODO: find out why this test is flaky without this
-			time.Sleep(10 * time.Millisecond)
+		if err := Do(ctx, SetAttributes(sel, attrs)); err != nil {
+			t.Fatalf("got error: %v", err)
+		}
 
-			var attrs map[string]string
-			if err := Do(ctx, into(&attrs, Attributes(test.sel, test.by))); err != nil {
-				t.Fatalf("got error: %v", err)
-			}
+		// TODO: find out why this test is flaky without this
+		time.Sleep(10 * time.Millisecond)
 
-			if !reflect.DeepEqual(test.exp, attrs) {
-				t.Errorf("expected %v, got: %v", test.exp, attrs)
-			}
-		})
+		var attrs map[string]string
+		if err := Do(ctx, into(&attrs, Attributes(sel))); err != nil {
+			t.Fatalf("got error: %v", err)
+		}
+
+		if !reflect.DeepEqual(exp, attrs) {
+			t.Errorf("expected %v, got: %v", exp, attrs)
+		}
 	}
 }
 
@@ -892,29 +901,31 @@ func TestAttributeValue(t *testing.T) {
 	ctx, cancel := testAllocate(t, "image.html")
 	defer cancel()
 
-	tests := []struct {
-		sel  string
-		by   QueryOption
-		attr string
-		exp  string
-	}{
-		{`//*[@id="icon-brankas"]`, BySearch, "alt", "Brankas - Easy Money Management"},
-		{`body > img:first-child`, ByQuery, "alt", "Brankas - Easy Money Management"},
-		{`body > img:nth-child(2)`, ByQueryAll, "alt", "How people build software"},
-		{`#icon-github`, ByID, "alt", "How people build software"},
-		{`document.querySelector('#icon-github')`, ByJSPath, "alt", "How people build software"},
+	tests := []func(t *testing.T){
+		attributeValueTest(ctx, Search(`//*[@id="icon-brankas"]`), "alt", "Brankas - Easy Money Management"),
+		attributeValueTest(ctx, CSS(`body > img:first-child`), "alt", "Brankas - Easy Money Management"),
+		attributeValueTest(ctx, CSSAll(`body > img:nth-child(2)`), "alt", "How people build software"),
+		attributeValueTest(ctx, ID(`#icon-github`), "alt", "How people build software"),
+		attributeValueTest(ctx, JSPath(`document.querySelector('#icon-github')`), "alt", "How people build software"),
 	}
 
 	for i, test := range tests {
-		attr, err := Run(ctx, AttributeValue(test.sel, test.attr, test.by))
+		t.Run(fmt.Sprintf("%02d", i), test)
+	}
+}
+
+// attributeValueTest returns a test for TestAttributeValue that selects the element with sel.
+func attributeValueTest[S Selectable](ctx context.Context, sel S, name string, exp string) func(t *testing.T) {
+	return func(t *testing.T) {
+		attr, err := Run(ctx, AttributeValue(sel, name))
 		if err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
+			t.Fatalf("got error: %v", err)
 		}
 		if !attr.Exists {
-			t.Fatalf("test %d failed to get attribute %s on %s", i, test.attr, test.sel)
+			t.Fatalf("failed to get attribute %s on %v", name, sel)
 		}
-		if attr.Value != test.exp {
-			t.Errorf("test %d expected %s to be %s, got: %s", i, test.attr, test.exp, attr.Value)
+		if attr.Value != exp {
+			t.Errorf("expected %s to be %s, got: %s", name, exp, attr.Value)
 		}
 	}
 }
@@ -922,176 +933,176 @@ func TestAttributeValue(t *testing.T) {
 func TestSetAttributeValue(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		sel  string
-		by   QueryOption
-		attr string
-		exp  string
-	}{
-		{`//*[@id="keyword"]`, BySearch, "foo", "bar"},
-		{`#form > input[type="text"]:nth-child(6)`, ByQuery, "foo", "bar"},
-		{`#form > input[type="text"]`, ByQueryAll, "foo", "bar"},
-		{`#bar`, ByID, "foo", "bar"},
-		{`document.querySelector('#bar')`, ByJSPath, "foo", "bar"},
+	tests := []func(t *testing.T){
+		setAttributeValueTest(Search(`//*[@id="keyword"]`), "foo", "bar"),
+		setAttributeValueTest(CSS(`#form > input[type="text"]:nth-child(6)`), "foo", "bar"),
+		setAttributeValueTest(CSSAll(`#form > input[type="text"]`), "foo", "bar"),
+		setAttributeValueTest(ID(`#bar`), "foo", "bar"),
+		setAttributeValueTest(JSPath(`document.querySelector('#bar')`), "foo", "bar"),
 	}
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			t.Parallel()
+		t.Run(fmt.Sprintf("%02d", i), test)
+	}
+}
 
-			ctx, cancel := testAllocate(t, "form.html")
-			defer cancel()
+// setAttributeValueTest returns a test for TestSetAttributeValue that selects the element with sel.
+func setAttributeValueTest[S Selectable](sel S, name string, exp string) func(t *testing.T) {
+	return func(t *testing.T) {
+		t.Parallel()
 
-			if err := Do(ctx, SetAttributeValue(test.sel, test.attr, test.exp, test.by)); err != nil {
-				t.Fatalf("got error: %v", err)
-			}
+		ctx, cancel := testAllocate(t, "form.html")
+		defer cancel()
 
-			// TODO: find out why this test is flaky without this
-			time.Sleep(10 * time.Millisecond)
+		if err := Do(ctx, SetAttributeValue(sel, name, exp)); err != nil {
+			t.Fatalf("got error: %v", err)
+		}
 
-			attr, err := Run(ctx, AttributeValue(test.sel, test.attr, test.by))
-			if err != nil {
-				t.Fatalf("got error: %v", err)
-			}
-			if !attr.Exists {
-				t.Fatalf("failed to get attribute %s on %s", test.attr, test.sel)
-			}
-			if attr.Value != test.exp {
-				t.Errorf("expected %s to be %s, got: %s", test.attr, test.exp, attr.Value)
-			}
-		})
+		// TODO: find out why this test is flaky without this
+		time.Sleep(10 * time.Millisecond)
+
+		attr, err := Run(ctx, AttributeValue(sel, name))
+		if err != nil {
+			t.Fatalf("got error: %v", err)
+		}
+		if !attr.Exists {
+			t.Fatalf("failed to get attribute %s on %v", name, sel)
+		}
+		if attr.Value != exp {
+			t.Errorf("expected %s to be %s, got: %s", name, exp, attr.Value)
+		}
 	}
 }
 
 func TestRemoveAttribute(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		sel  string
-		by   QueryOption
-		attr string
-	}{
-		{`/html/body/img`, BySearch, "alt"},
-		{`img`, ByQueryAll, "alt"},
-		{`img`, ByQuery, "alt"},
-		{`#icon-github`, ByID, "alt"},
-		{`document.querySelector('#icon-github')`, ByJSPath, "alt"},
+	tests := []func(t *testing.T){
+		removeAttributeTest(Search(`/html/body/img`), "alt"),
+		removeAttributeTest(CSSAll(`img`), "alt"),
+		removeAttributeTest(CSS(`img`), "alt"),
+		removeAttributeTest(ID(`#icon-github`), "alt"),
+		removeAttributeTest(JSPath(`document.querySelector('#icon-github')`), "alt"),
 	}
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			t.Parallel()
+		t.Run(fmt.Sprintf("%02d", i), test)
+	}
+}
 
-			ctx, cancel := testAllocate(t, "image.html")
-			defer cancel()
+// removeAttributeTest returns a test for TestRemoveAttribute that selects the element with sel.
+func removeAttributeTest[S Selectable](sel S, name string) func(t *testing.T) {
+	return func(t *testing.T) {
+		t.Parallel()
 
-			if err := Do(ctx, RemoveAttribute(test.sel, test.attr, test.by)); err != nil {
-				t.Fatalf("got error: %v", err)
-			}
+		ctx, cancel := testAllocate(t, "image.html")
+		defer cancel()
 
-			// TODO: find out why this test is flaky without this
-			time.Sleep(10 * time.Millisecond)
+		if err := Do(ctx, RemoveAttribute(sel, name)); err != nil {
+			t.Fatalf("got error: %v", err)
+		}
 
-			attr, err := Run(ctx, AttributeValue(test.sel, test.attr, test.by))
-			if err != nil {
-				t.Fatalf("got error: %v", err)
-			}
-			if attr.Exists || attr.Value != "" {
-				t.Fatalf("expected attribute %s removed from element %s", test.attr, test.sel)
-			}
-		})
+		// TODO: find out why this test is flaky without this
+		time.Sleep(10 * time.Millisecond)
+
+		attr, err := Run(ctx, AttributeValue(sel, name))
+		if err != nil {
+			t.Fatalf("got error: %v", err)
+		}
+		if attr.Exists || attr.Value != "" {
+			t.Fatalf("expected attribute %s removed from element %v", name, sel)
+		}
 	}
 }
 
 func TestClick(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		sel string
-		by  QueryOption
-	}{
-		{`//*[@id="form"]/input[4]`, BySearch},
-		{`#form > input[type="submit"]:nth-child(11)`, ByQuery},
-		{`#form > input[type="submit"]:nth-child(11)`, ByQueryAll},
-		{`#btn2`, ByID},
-		{`document.querySelector('#btn2')`, ByJSPath},
+	tests := []func(t *testing.T){
+		clickTest(Search(`//*[@id="form"]/input[4]`)),
+		clickTest(CSS(`#form > input[type="submit"]:nth-child(11)`)),
+		clickTest(CSSAll(`#form > input[type="submit"]:nth-child(11)`)),
+		clickTest(ID(`#btn2`)),
+		clickTest(JSPath(`document.querySelector('#btn2')`)),
 	}
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			t.Parallel()
+		t.Run(fmt.Sprintf("%02d", i), test)
+	}
+}
 
-			ctx, cancel := testAllocate(t, "form.html")
-			defer cancel()
+// clickTest returns a test for TestClick that selects the element with sel.
+func clickTest[S Selectable](sel S) func(t *testing.T) {
+	return func(t *testing.T) {
+		t.Parallel()
 
-			var title string
-			if err := Do(ctx,
-				Click(test.sel, test.by),
-				WaitVisible("#icon-brankas", ByID),
-				into(&title, Title()),
-			); err != nil {
-				t.Fatalf("got error: %v", err)
-			}
+		ctx, cancel := testAllocate(t, "form.html")
+		defer cancel()
 
-			if title != "this is title" {
-				t.Errorf("expected title to be 'chromedp - Google Search', got: %q", title)
-			}
-		})
+		var title string
+		if err := Do(ctx,
+			Click(sel),
+			WaitVisible(ID("icon-brankas")),
+			into(&title, Title()),
+		); err != nil {
+			t.Fatalf("got error: %v", err)
+		}
+
+		if title != "this is title" {
+			t.Errorf("expected title to be 'chromedp - Google Search', got: %q", title)
+		}
 	}
 }
 
 func TestDoubleClick(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		sel string
-		by  QueryOption
-	}{
-		{`/html/body/input[2]`, BySearch},
-		{`body > input[type="button"]:nth-child(2)`, ByQueryAll},
-		{`body > input[type="button"]:nth-child(2)`, ByQuery},
-		{`#button1`, ByID},
-		{`document.querySelector('#button1')`, ByJSPath},
+	tests := []func(t *testing.T){
+		doubleClickTest(Search(`/html/body/input[2]`)),
+		doubleClickTest(CSSAll(`body > input[type="button"]:nth-child(2)`)),
+		doubleClickTest(CSS(`body > input[type="button"]:nth-child(2)`)),
+		doubleClickTest(ID(`#button1`)),
+		doubleClickTest(JSPath(`document.querySelector('#button1')`)),
 	}
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			t.Parallel()
+		t.Run(fmt.Sprintf("%02d", i), test)
+	}
+}
 
-			ctx, cancel := testAllocate(t, "js.html")
-			defer cancel()
+// doubleClickTest returns a test for TestDoubleClick that selects the element with sel.
+func doubleClickTest[S Selectable](sel S) func(t *testing.T) {
+	return func(t *testing.T) {
+		t.Parallel()
 
-			var value string
-			if err := Do(ctx,
-				DoubleClick(test.sel, test.by),
-				into(&value, Value("#input1", ByID)),
-			); err != nil {
-				t.Fatalf("got error: %v", err)
-			}
+		ctx, cancel := testAllocate(t, "js.html")
+		defer cancel()
 
-			if value != "1" {
-				t.Errorf("expected value to be '1', got: %q", value)
-			}
-		})
+		var value string
+		if err := Do(ctx,
+			DoubleClick(sel),
+			into(&value, Value(ID("input1"))),
+		); err != nil {
+			t.Fatalf("got error: %v", err)
+		}
+
+		if value != "1" {
+			t.Errorf("expected value to be '1', got: %q", value)
+		}
 	}
 }
 
 func TestSendKeys(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		sel  string
-		by   QueryOption
-		keys string
-		exp  string
-	}{
-		{`//*[@id="input1"]`, BySearch, "INSERT ", "INSERT some value"}, // 0
-		{`#box4 > input:nth-child(1)`, ByQuery, "insert ", "insert some value"},
-		{`#box4 > textarea`, ByQueryAll, "prefix " + kb.End + "\b\b SUFFIX\n", "prefix textar SUFFIX\n"},
-		{`#textarea1`, ByID, "insert ", "insert textarea"},
-		{`#textarea1`, ByID, kb.End + "\b\b\n\naoeu\n\nfoo\n\nbar\n\n", "textar\n\naoeu\n\nfoo\n\nbar\n\n"},
-		{`#select1`, ByID, kb.ArrowDown + kb.ArrowDown, "three"}, // 5
-		{`document.querySelector('#textarea1')`, ByJSPath, "insert ", "insert textarea"},
+	tests := []func(t *testing.T){
+		sendKeysTest(Search(`//*[@id="input1"]`), "INSERT ", "INSERT some value"), // 0
+		sendKeysTest(CSS(`#box4 > input:nth-child(1)`), "insert ", "insert some value"),
+		sendKeysTest(CSSAll(`#box4 > textarea`), "prefix "+kb.End+"\b\b SUFFIX\n", "prefix textar SUFFIX\n"),
+		sendKeysTest(ID(`#textarea1`), "insert ", "insert textarea"),
+		sendKeysTest(ID(`#textarea1`), kb.End+"\b\b\n\naoeu\n\nfoo\n\nbar\n\n", "textar\n\naoeu\n\nfoo\n\nbar\n\n"),
+		sendKeysTest(ID(`#select1`), kb.ArrowDown+kb.ArrowDown, "three"), // 5
+		sendKeysTest(JSPath(`document.querySelector('#textarea1')`), "insert ", "insert textarea"),
 	}
 
 	for i, test := range tests {
@@ -1099,143 +1110,155 @@ func TestSendKeys(t *testing.T) {
 			if runtime.GOOS == "darwin" && i == 5 {
 				t.Skipf("skipping test %d on darwin -- FIXME!", i)
 			}
-
-			t.Parallel()
-
-			ctx, cancel := testAllocate(t, "visible.html")
-			defer cancel()
-
-			var val string
-			if err := Do(ctx,
-				SendKeys(test.sel, test.keys, test.by),
-				into(&val, Value(test.sel, test.by)),
-			); err != nil {
-				t.Fatalf("got error: %v", err)
-			}
-
-			if val != test.exp {
-				t.Errorf("expected value %s, got: %s", test.exp, val)
-			}
+			test(t)
 		})
+	}
+}
+
+// sendKeysTest returns a test for TestSendKeys that selects the element with sel.
+func sendKeysTest[S Selectable](sel S, keys string, exp string) func(t *testing.T) {
+	return func(t *testing.T) {
+		t.Parallel()
+
+		ctx, cancel := testAllocate(t, "visible.html")
+		defer cancel()
+
+		var val string
+		if err := Do(ctx,
+			SendKeys(sel, keys),
+			into(&val, Value(sel)),
+		); err != nil {
+			t.Fatalf("got error: %v", err)
+		}
+
+		if val != exp {
+			t.Errorf("expected value %s, got: %s", exp, val)
+		}
 	}
 }
 
 func TestSubmit(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		sel string
-		by  QueryOption
-	}{
-		{`//*[@id="keyword"]`, BySearch},
-		{`#form > input[type="text"]:nth-child(4)`, ByQuery},
-		{`#form > input[type="text"]`, ByQueryAll},
-		{`#form`, ByID},
-		{`document.querySelector('#form')`, ByJSPath},
+	tests := []func(t *testing.T){
+		submitTest(Search(`//*[@id="keyword"]`)),
+		submitTest(CSS(`#form > input[type="text"]:nth-child(4)`)),
+		submitTest(CSSAll(`#form > input[type="text"]`)),
+		submitTest(ID(`#form`)),
+		submitTest(JSPath(`document.querySelector('#form')`)),
 	}
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			t.Parallel()
+		t.Run(fmt.Sprintf("%02d", i), test)
+	}
+}
 
-			ctx, cancel := testAllocate(t, "form.html")
-			defer cancel()
+// submitTest returns a test for TestSubmit that selects the element with sel.
+func submitTest[S Selectable](sel S) func(t *testing.T) {
+	return func(t *testing.T) {
+		t.Parallel()
 
-			var title string
-			if err := Do(ctx,
-				Submit(test.sel, test.by),
-				WaitVisible("#icon-brankas", ByID),
-				into(&title, Title()),
-			); err != nil {
-				t.Fatalf("got error: %v", err)
-			}
+		ctx, cancel := testAllocate(t, "form.html")
+		defer cancel()
 
-			if title != "this is title" {
-				t.Errorf("expected title to be 'this is title', got: %q", title)
-			}
-		})
+		var title string
+		if err := Do(ctx,
+			Submit(sel),
+			WaitVisible(ID("icon-brankas")),
+			into(&title, Title()),
+		); err != nil {
+			t.Fatalf("got error: %v", err)
+		}
+
+		if title != "this is title" {
+			t.Errorf("expected title to be 'this is title', got: %q", title)
+		}
 	}
 }
 
 func TestComputedStyle(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		sel string
-		by  QueryOption
-	}{
-		{`//*[@id="input1"]`, BySearch},
-		{`body > input[type="number"]:nth-child(1)`, ByQueryAll},
-		{`body > input[type="number"]:nth-child(1)`, ByQuery},
-		{`#input1`, ByID},
-		{`document.querySelector('#input1')`, ByJSPath},
+	tests := []func(t *testing.T){
+		computedStyleTest(Search(`//*[@id="input1"]`)),
+		computedStyleTest(CSSAll(`body > input[type="number"]:nth-child(1)`)),
+		computedStyleTest(CSS(`body > input[type="number"]:nth-child(1)`)),
+		computedStyleTest(ID(`#input1`)),
+		computedStyleTest(JSPath(`document.querySelector('#input1')`)),
 	}
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			t.Parallel()
+		t.Run(fmt.Sprintf("%02d", i), test)
+	}
+}
 
-			ctx, cancel := testAllocate(t, "js.html")
-			defer cancel()
+// computedStyleTest returns a test for TestComputedStyle that selects the element with sel.
+func computedStyleTest[S Selectable](sel S) func(t *testing.T) {
+	return func(t *testing.T) {
+		t.Parallel()
 
-			var styles []*css.ComputedStyleProperty
-			if err := Do(ctx, into(&styles, ComputedStyle(test.sel, test.by))); err != nil {
-				t.Fatalf("got error: %v", err)
-			}
+		ctx, cancel := testAllocate(t, "js.html")
+		defer cancel()
 
-			for _, style := range styles {
-				if style.Name == "background-color" {
-					if style.Value != "rgb(255, 0, 0)" {
-						t.Logf("expected style 'rgb(255, 0, 0)' got: %s", style.Value)
-					}
+		var styles []*css.ComputedStyleProperty
+		if err := Do(ctx, into(&styles, ComputedStyle(sel))); err != nil {
+			t.Fatalf("got error: %v", err)
+		}
+
+		for _, style := range styles {
+			if style.Name == "background-color" {
+				if style.Value != "rgb(255, 0, 0)" {
+					t.Logf("expected style 'rgb(255, 0, 0)' got: %s", style.Value)
 				}
 			}
-			if err := Do(ctx,
-				Click("#input1", ByID),
-				into(&styles, ComputedStyle(test.sel, test.by)),
-			); err != nil {
-				t.Fatalf("got error: %v", err)
-			}
+		}
+		if err := Do(ctx,
+			Click(ID("input1")),
+			into(&styles, ComputedStyle(sel)),
+		); err != nil {
+			t.Fatalf("got error: %v", err)
+		}
 
-			for _, style := range styles {
-				if style.Name == "background-color" {
-					if style.Value != "rgb(255, 255, 0)" {
-						t.Fatalf("expected style 'rgb(255, 255, 0)' got: %s", style.Value)
-					}
+		for _, style := range styles {
+			if style.Name == "background-color" {
+				if style.Value != "rgb(255, 255, 0)" {
+					t.Fatalf("expected style 'rgb(255, 255, 0)' got: %s", style.Value)
 				}
 			}
-		})
+		}
 	}
 }
 
 func TestMatchedStyle(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		sel string
-		by  QueryOption
-	}{
-		{`//*[@id="input1"]`, BySearch},
-		{`body > input[type="number"]:nth-child(1)`, ByQueryAll},
-		{`body > input[type="number"]:nth-child(1)`, ByQuery},
-		{`#input1`, ByID},
-		{`document.querySelector('#input1')`, ByJSPath},
+	tests := []func(t *testing.T){
+		matchedStyleTest(Search(`//*[@id="input1"]`)),
+		matchedStyleTest(CSSAll(`body > input[type="number"]:nth-child(1)`)),
+		matchedStyleTest(CSS(`body > input[type="number"]:nth-child(1)`)),
+		matchedStyleTest(ID(`#input1`)),
+		matchedStyleTest(JSPath(`document.querySelector('#input1')`)),
 	}
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			t.Parallel()
+		t.Run(fmt.Sprintf("%02d", i), test)
+	}
+}
 
-			ctx, cancel := testAllocate(t, "js.html")
-			defer cancel()
+// matchedStyleTest returns a test for TestMatchedStyle that selects the element with sel.
+func matchedStyleTest[S Selectable](sel S) func(t *testing.T) {
+	return func(t *testing.T) {
+		t.Parallel()
 
-			var styles *css.GetMatchedStylesForNodeResult
-			if err := Do(ctx, into(&styles, MatchedStyle(test.sel, test.by))); err != nil {
-				t.Fatalf("got error: %v", err)
-			}
+		ctx, cancel := testAllocate(t, "js.html")
+		defer cancel()
 
-			// TODO: Add logic to make sure that the returned style is true and valid.
-		})
+		var styles *css.GetMatchedStylesForNodeResult
+		if err := Do(ctx, into(&styles, MatchedStyle(sel))); err != nil {
+			t.Fatalf("got error: %v", err)
+		}
+
+		// TODO: Add logic to make sure that the returned style is true and valid.
 	}
 }
 
@@ -1292,7 +1315,7 @@ func TestFileUpload(t *testing.T) {
 				Navigate(s.URL),
 				test.a,
 				Click(`input[name="submit"]`),
-				into(&result, Text(`#result`, ByID, NodeVisible)),
+				into(&result, Text(ID(`result`), NodeVisible)),
 			); err != nil {
 				t.Fatalf("test %d expected no error, got: %v", i, err)
 			}
@@ -1310,23 +1333,27 @@ func TestInnerHTML(t *testing.T) {
 	ctx, cancel := testAllocate(t, "table.html")
 	defer cancel()
 
-	tests := []struct {
-		sel string
-		by  QueryOption
-	}{
-		{`/html/body/table/thead`, BySearch},
-		{`thead`, ByQueryAll},
-		{`thead`, ByQuery},
-		{`document.querySelector("#footer > td:nth-child(2)")`, ByJSPath},
+	tests := []func(t *testing.T){
+		innerHTMLTest(ctx, Search(`/html/body/table/thead`)),
+		innerHTMLTest(ctx, CSSAll(`thead`)),
+		innerHTMLTest(ctx, CSS(`thead`)),
+		innerHTMLTest(ctx, JSPath(`document.querySelector("#footer > td:nth-child(2)")`)),
 	}
 	for i, test := range tests {
+		t.Run(fmt.Sprintf("%02d", i), test)
+	}
+}
+
+// innerHTMLTest returns a test for TestInnerHTML that selects the element with sel.
+func innerHTMLTest[S Selectable](ctx context.Context, sel S) func(t *testing.T) {
+	return func(t *testing.T) {
 		var html string
-		if err := Do(ctx, into(&html, InnerHTML(test.sel, test.by))); err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
+		if err := Do(ctx, into(&html, InnerHTML(sel))); err != nil {
+			t.Fatalf("got error: %v", err)
 		}
 
 		if html == "" {
-			t.Fatalf("test %d: InnerHTML is empty", i)
+			t.Fatal("InnerHTML is empty")
 		}
 	}
 }
@@ -1337,23 +1364,27 @@ func TestOuterHTML(t *testing.T) {
 	ctx, cancel := testAllocate(t, "table.html")
 	defer cancel()
 
-	tests := []struct {
-		sel string
-		by  QueryOption
-	}{
-		{`/html/body/table/thead/tr`, BySearch},
-		{`thead tr`, ByQueryAll},
-		{`thead tr`, ByQuery},
-		{`document.querySelector("#footer > td:nth-child(2)")`, ByJSPath},
+	tests := []func(t *testing.T){
+		outerHTMLTest(ctx, Search(`/html/body/table/thead/tr`)),
+		outerHTMLTest(ctx, CSSAll(`thead tr`)),
+		outerHTMLTest(ctx, CSS(`thead tr`)),
+		outerHTMLTest(ctx, JSPath(`document.querySelector("#footer > td:nth-child(2)")`)),
 	}
 	for i, test := range tests {
+		t.Run(fmt.Sprintf("%02d", i), test)
+	}
+}
+
+// outerHTMLTest returns a test for TestOuterHTML that selects the element with sel.
+func outerHTMLTest[S Selectable](ctx context.Context, sel S) func(t *testing.T) {
+	return func(t *testing.T) {
 		var html string
-		if err := Do(ctx, into(&html, OuterHTML(test.sel, test.by))); err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
+		if err := Do(ctx, into(&html, OuterHTML(sel))); err != nil {
+			t.Fatalf("got error: %v", err)
 		}
 
 		if html == "" {
-			t.Fatalf("test %d: OuterHTML is empty", i)
+			t.Fatal("OuterHTML is empty")
 		}
 	}
 }
@@ -1364,19 +1395,23 @@ func TestScrollIntoView(t *testing.T) {
 	ctx, cancel := testAllocate(t, "image.html")
 	defer cancel()
 
-	tests := []struct {
-		sel string
-		by  QueryOption
-	}{
-		{`/html/body/img`, BySearch},
-		{`img`, ByQueryAll},
-		{`img`, ByQuery},
-		{`#icon-github`, ByID},
-		{`document.querySelector('#icon-github')`, ByJSPath},
+	tests := []func(t *testing.T){
+		scrollIntoViewTest(ctx, Search(`/html/body/img`)),
+		scrollIntoViewTest(ctx, CSSAll(`img`)),
+		scrollIntoViewTest(ctx, CSS(`img`)),
+		scrollIntoViewTest(ctx, ID(`#icon-github`)),
+		scrollIntoViewTest(ctx, JSPath(`document.querySelector('#icon-github')`)),
 	}
 	for i, test := range tests {
-		if err := Do(ctx, ScrollIntoView(test.sel, test.by)); err != nil {
-			t.Fatalf("test %d got error: %v", i, err)
+		t.Run(fmt.Sprintf("%02d", i), test)
+	}
+}
+
+// scrollIntoViewTest returns a test for TestScrollIntoView that selects the element with sel.
+func scrollIntoViewTest[S Selectable](ctx context.Context, sel S) func(t *testing.T) {
+	return func(t *testing.T) {
+		if err := Do(ctx, ScrollIntoView(sel)); err != nil {
+			t.Fatalf("got error: %v", err)
 		}
 
 		// TODO test scroll event
@@ -1386,53 +1421,55 @@ func TestScrollIntoView(t *testing.T) {
 func TestSVGFullXPath(t *testing.T) {
 	t.Parallel()
 
-	tests := []struct {
-		sel string
-		by  QueryOption
-	}{
-		{`#brankas`, ByQuery},
-		{`text`, ByQueryAll},
-		{`brankas`, ByID},
-		{`//*[local-name()='text']`, BySearch},
-		{`document.querySelector('#brankas')`, ByJSPath},
+	tests := []func(t *testing.T){
+		sVGFullXPathTest(CSS(`#brankas`)),
+		sVGFullXPathTest(CSSAll(`text`)),
+		sVGFullXPathTest(ID(`brankas`)),
+		sVGFullXPathTest(Search(`//*[local-name()='text']`)),
+		sVGFullXPathTest(JSPath(`document.querySelector('#brankas')`)),
 	}
 
 	for i, test := range tests {
-		t.Run(fmt.Sprintf("%02d", i), func(t *testing.T) {
-			t.Parallel()
+		t.Run(fmt.Sprintf("%02d", i), test)
+	}
+}
 
-			ctx, cancel := testAllocate(t, "svg.html")
-			defer cancel()
+// sVGFullXPathTest returns a test for TestSVGFullXPath that selects the element with sel.
+func sVGFullXPathTest[S Selectable](sel S) func(t *testing.T) {
+	return func(t *testing.T) {
+		t.Parallel()
 
-			var nodes []*Node
-			if err := Do(ctx, into(&nodes, Nodes(test.sel, test.by))); err != nil {
-				t.Fatal(err)
-			}
+		ctx, cancel := testAllocate(t, "svg.html")
+		defer cancel()
 
-			if len(nodes) < 1 {
-				t.Fatalf("expected at least 1 node, got: %d", len(nodes))
-			}
+		var nodes []*Node
+		if err := Do(ctx, into(&nodes, Nodes(sel))); err != nil {
+			t.Fatal(err)
+		}
 
-			const exp = `/html[1]/body[1]/*[local-name()='svg'][1]/*[local-name()='text'][1]`
-			xpath := nodes[0].FullXPath()
-			if exp != xpath {
-				t.Errorf("expected %q, got: %q", exp, xpath)
-			}
+		if len(nodes) < 1 {
+			t.Fatalf("expected at least 1 node, got: %d", len(nodes))
+		}
 
-			var text1, text2 string
-			if err := Do(ctx, into(&text1, TextContent(test.sel, test.by))); err != nil {
-				t.Fatal(err)
-			}
-			if strings.TrimSpace(text1) != "Brankas" {
-				t.Errorf("expected %q, got: %q", "Brankas", text1)
-			}
-			if err := Do(ctx, into(&text2, TextContent(xpath))); err != nil {
-				t.Fatal(err)
-			}
-			if strings.TrimSpace(text2) != "Brankas" {
-				t.Errorf("expected %q, got: %q", "Brankas", text2)
-			}
-		})
+		const exp = `/html[1]/body[1]/*[local-name()='svg'][1]/*[local-name()='text'][1]`
+		xpath := nodes[0].FullXPath()
+		if exp != xpath {
+			t.Errorf("expected %q, got: %q", exp, xpath)
+		}
+
+		var text1, text2 string
+		if err := Do(ctx, into(&text1, TextContent(sel))); err != nil {
+			t.Fatal(err)
+		}
+		if strings.TrimSpace(text1) != "Brankas" {
+			t.Errorf("expected %q, got: %q", "Brankas", text1)
+		}
+		if err := Do(ctx, into(&text2, TextContent(xpath))); err != nil {
+			t.Fatal(err)
+		}
+		if strings.TrimSpace(text2) != "Brankas" {
+			t.Errorf("expected %q, got: %q", "Brankas", text2)
+		}
 	}
 }
 
@@ -1462,7 +1499,7 @@ func TestWaitReadyReuseAction(t *testing.T) {
 	defer cancel()
 
 	// Reusing a single WaitReady action used to panic.
-	action := WaitReady("#input2", ByID)
+	action := WaitReady(ID("input2"))
 	for range 3 {
 		if err := Do(ctx, action); err != nil {
 			t.Fatalf("got error: %v", err)
@@ -1495,7 +1532,7 @@ func TestFromNode(t *testing.T) {
 			if test.fromQuery != "" {
 				var nodes []*Node
 				if err := Do(ctx,
-					into(&nodes, Nodes(test.fromQuery, ByQuery, AtLeast(0))),
+					into(&nodes, Nodes(CSS(test.fromQuery), AtLeast(0))),
 				); err != nil {
 					t.Fatal(err)
 				}
@@ -1506,12 +1543,254 @@ func TestFromNode(t *testing.T) {
 			}
 			var nodes []*Node
 			if err := Do(ctx,
-				into(&nodes, Nodes(test.nodesQuery, ByQueryAll, AtLeast(0), FromNode(from))),
+				into(&nodes, Nodes(CSSAll(test.nodesQuery), AtLeast(0), FromNode(from))),
 			); err != nil {
 				t.Fatal(err)
 			}
 			if len(nodes) != test.nodesCount {
 				t.Fatalf("expected to have %d node, got %d", test.nodesCount, len(nodes))
+			}
+		})
+	}
+}
+
+// selectedIDs runs Nodes with the selector and returns the id attribute of each
+// node that it selects.
+func selectedIDs[S Selectable](ctx context.Context, tb testing.TB, sel S, opts ...QueryOption) []string {
+	tb.Helper()
+
+	nodes, err := Run(ctx, Nodes(sel, opts...))
+	if err != nil {
+		tb.Fatalf("got error: %v", err)
+	}
+	ids := make([]string, len(nodes))
+	for i, n := range nodes {
+		ids[i] = n.AttributeValue("id")
+	}
+	return ids
+}
+
+// A string myString is a string type that the package does not define. It
+// counts as a Search.
+type myString string
+
+// myNodeIDs is a slice type that the package does not define. It counts as
+// NodeIDs.
+type myNodeIDs []cdp.NodeID
+
+func TestSelectorSearch(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "selectors.html")
+	defer cancel()
+
+	// Search matches an XPath query, a CSS selector and plain text, as the
+	// old option BySearch did. A CSS selector gives every match, not the first.
+	if got, want := selectedIDs(ctx, t, Search(`//p`)), []string{"one", "two", "three"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("XPath: want %v, got %v", want, got)
+	}
+	if got, want := selectedIDs(ctx, t, Search(`.item`)), []string{"one", "two"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("CSS selector: want %v, got %v", want, got)
+	}
+	nodes, err := Run(ctx, Nodes(Search(`second`)))
+	if err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	if len(nodes) != 1 {
+		t.Fatalf("plain text: want 1 node, got %d", len(nodes))
+	}
+	if nodes[0].NodeType != NodeTypeText || nodes[0].NodeValue != "second" {
+		t.Errorf("plain text: want the text node %q, got %q", "second", nodes[0].NodeValue)
+	}
+}
+
+func TestSelectorPlainString(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "selectors.html")
+	defer cancel()
+
+	// A string constant, a string variable and a named string type are all a
+	// Search.
+	want := []string{"one", "two", "three"}
+	variable := `//p`
+	if got := selectedIDs(ctx, t, `//p`); !reflect.DeepEqual(got, want) {
+		t.Errorf("constant: want %v, got %v", want, got)
+	}
+	if got := selectedIDs(ctx, t, variable); !reflect.DeepEqual(got, want) {
+		t.Errorf("variable: want %v, got %v", want, got)
+	}
+	if got := selectedIDs(ctx, t, myString(variable)); !reflect.DeepEqual(got, want) {
+		t.Errorf("named string type: want %v, got %v", want, got)
+	}
+
+	var text string
+	if err := Do(ctx, into(&text, Text("#three"))); err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	if text != "third" {
+		t.Errorf("want text %q, got %q", "third", text)
+	}
+}
+
+func TestSelectorCSS(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "selectors.html")
+	defer cancel()
+
+	// CSS gives only the first match, as the old option ByQuery did.
+	if got, want := selectedIDs(ctx, t, CSS(`.item`)), []string{"one"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("want %v, got %v", want, got)
+	}
+
+	// CSS does not take an XPath query. DOM.querySelector fails.
+	ctx, cancel = context.WithTimeout(ctx, time.Second)
+	defer cancel()
+	err := Do(ctx, Query(CSS(`//p`)))
+	if err == nil || !strings.Contains(err.Error(), "DOM Error while querying") {
+		t.Errorf("want a DOM error for an XPath query, got: %v", err)
+	}
+}
+
+func TestSelectorCSSAll(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "selectors.html")
+	defer cancel()
+
+	// CSSAll gives every match, as the old option ByQueryAll did.
+	if got, want := selectedIDs(ctx, t, CSSAll(`.item`)), []string{"one", "two"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("want %v, got %v", want, got)
+	}
+	if got, want := selectedIDs(ctx, t, CSSAll(`p`)), []string{"one", "two", "three"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("want %v, got %v", want, got)
+	}
+}
+
+func TestSelectorID(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "selectors.html")
+	defer cancel()
+
+	// ID selects the element with this id, with or without a leading "#", as
+	// the old option ByID did.
+	for _, id := range []ID{"two", "#two"} {
+		if got, want := selectedIDs(ctx, t, id), []string{"two"}; !reflect.DeepEqual(got, want) {
+			t.Errorf("%q: want %v, got %v", id, want, got)
+		}
+	}
+
+	// A class name is not an id.
+	if got := selectedIDs(ctx, t, ID(`item`), AtLeast(0)); len(got) != 0 {
+		t.Errorf("want no node for a class name, got %v", got)
+	}
+}
+
+func TestSelectorJSPath(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "selectors.html")
+	defer cancel()
+
+	// JSPath runs the expression and selects the node that it gives, as the
+	// old option ByJSPath did. Here the node is in a shadow tree.
+	const path = `document.getElementById('host').shadowRoot.querySelector('.inner')`
+	nodes, err := Run(ctx, Nodes(JSPath(path)))
+	if err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	if len(nodes) != 1 || nodes[0].AttributeValue("class") != "inner" {
+		t.Errorf("want the one node with the class inner, got %d nodes", len(nodes))
+	}
+
+	// CSSAll does not reach into the shadow tree.
+	if got := selectedIDs(ctx, t, CSSAll(`.inner`), AtLeast(0)); len(got) != 0 {
+		t.Errorf("want no node outside of JSPath, got %v", got)
+	}
+}
+
+func TestSelectorNodeIDs(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "selectors.html")
+	defer cancel()
+
+	// NodeIDs selects the nodes with these ids, as the old option ByNodeID
+	// did.
+	ids, err := Run(ctx, QueryNodeIDs(CSSAll(`.item`)))
+	if err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	if len(ids) != 2 {
+		t.Fatalf("want 2 node ids, got %d", len(ids))
+	}
+	want := []string{"one", "two"}
+	if got := selectedIDs(ctx, t, NodeIDs(ids)); !reflect.DeepEqual(got, want) {
+		t.Errorf("NodeIDs: want %v, got %v", want, got)
+	}
+	if got := selectedIDs(ctx, t, ids); !reflect.DeepEqual(got, want) {
+		t.Errorf("[]cdp.NodeID: want %v, got %v", want, got)
+	}
+	if got := selectedIDs(ctx, t, myNodeIDs(ids)); !reflect.DeepEqual(got, want) {
+		t.Errorf("named slice type: want %v, got %v", want, got)
+	}
+
+	// An action reads from the node of the first id.
+	text, err := Run(ctx, Text(NodeIDs(ids[:1])))
+	if err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	if text != "first" {
+		t.Errorf("want text %q, got %q", "first", text)
+	}
+}
+
+func TestSelectorByFunc(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "selectors.html")
+	defer cancel()
+
+	// ByFunc replaces the lookup of the selector. The selector is only a
+	// label for error messages.
+	ids, err := Run(ctx, QueryNodeIDs(CSS(`#three`)))
+	if err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	text, err := Run(ctx, Text("label", ByFunc(func(ctx context.Context, t *Target, n *Node) ([]cdp.NodeID, error) {
+		return ids, nil
+	})))
+	if err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	if text != "third" {
+		t.Errorf("want text %q, got %q", "third", text)
+	}
+}
+
+func TestSelectorNoMatchError(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "selectors.html")
+	defer cancel()
+
+	// The error text names the selector, whatever its type.
+	tests := []struct {
+		name string
+		act  Action[string]
+		want string
+	}{
+		{"CSS", Text(CSS(`#missing`), AtLeast(0)), `selector "#missing" did not return any nodes`},
+		{"Search", Text(`//missing`, AtLeast(0)), `selector "//missing" did not return any nodes`},
+		{"ID", Text(ID(`missing`), AtLeast(0)), `selector "missing" did not return any nodes`},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			_, err := Run(ctx, test.act)
+			if err == nil || !strings.Contains(err.Error(), test.want) {
+				t.Fatalf("want error %q, got: %v", test.want, err)
 			}
 		})
 	}

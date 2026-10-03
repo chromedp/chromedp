@@ -190,7 +190,7 @@ func BenchmarkTabNavigate(b *testing.B) {
 			ctx, _ := NewContext(bctx)
 			if err := Do(ctx,
 				Navigate(testdataDir+"/form.html"),
-				WaitVisible(`#form`, ByID),
+				WaitVisible(ID(`form`)),
 			); err != nil {
 				b.Fatal(err)
 			}
@@ -487,7 +487,7 @@ func TestLargeEventCount(t *testing.T) {
 
 	if err := Do(ctx,
 		Navigate(testdataDir+"/consolespam.html"),
-		WaitVisible("#done", ByID), // wait for the JS to finish
+		WaitVisible(ID("done")), // wait for the JS to finish
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -510,14 +510,14 @@ func TestLargeQuery(t *testing.T) {
 	}))
 	defer s.Close()
 
-	// ByQueryAll queries thousands of events, which triggers thousands of
+	// CSSAll queries thousands of events, which triggers thousands of
 	// DOM events. The target handler used to deadlock, because the event
 	// queues filled up and prevented the wait function from receiving any
 	// result.
 	var nodes []*Node
 	if err := Do(ctx,
 		Navigate(s.URL),
-		into(&nodes, Nodes("a", ByQueryAll)),
+		into(&nodes, Nodes(CSSAll("a"))),
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -1084,7 +1084,7 @@ func TestDownloadIntoDir(t *testing.T) {
 			})
 			return err
 		}),
-		Click("#download", ByQuery),
+		Click(CSS("#download")),
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -1443,7 +1443,7 @@ func TestRunResponse(t *testing.T) {
 			if !strings.Contains(test.url, "/") {
 				query = "#url_" + test.url
 			}
-			resp, err := RunResponse(ctx, Click(query, ByQuery))
+			resp, err := RunResponse(ctx, Click(CSS(query)))
 			checkResults(t, resp, err)
 		})
 	}
@@ -1478,9 +1478,9 @@ func TestRunResponse_noResponse(t *testing.T) {
 		{"RepeatedNavigation", Navigate(ts.URL + "/200"), true},
 		{"FragmentNavigation", Navigate(ts.URL + "/200#foo"), false},
 
-		{"FirstClick", Click("#same", ByQuery), true},
-		{"RepeatedClick", Click("#same", ByQuery), true},
-		{"FragmentClick", Click("#fragment", ByQuery), false},
+		{"FirstClick", Click(CSS("#same")), true},
+		{"RepeatedClick", Click(CSS("#same")), true},
+		{"FragmentClick", Click(CSS("#fragment")), false},
 
 		{"Blank", Navigate("about:blank"), false},
 	}
@@ -1511,7 +1511,7 @@ func TestWebGL(t *testing.T) {
 	var buf []byte
 	if err := Do(ctx,
 		Poll[Void]("rendered", WithPollingTimeout(2*time.Second)),
-		into(&buf, Screenshot(`#c`, ByQuery)),
+		into(&buf, Screenshot(CSS(`#c`))),
 	); err != nil {
 		if errors.Is(err, ErrPollingTimeout) {
 			t.Fatal("The cube is not rendered in 2s.")

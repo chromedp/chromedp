@@ -145,7 +145,7 @@ func TestNodeOp(t *testing.T) {
 	if err := Do(ctx,
 		Navigate(s.URL),
 		into(&nodes, Nodes(`//*`)),
-		into(&nodes, Nodes(`document`, ByJSPath)),
+		into(&nodes, Nodes(JSPath(`document`))),
 	); err != nil {
 		t.Fatal(err)
 	}

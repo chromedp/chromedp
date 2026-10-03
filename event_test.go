@@ -158,7 +158,7 @@ func TestCloseDialog(t *testing.T) {
 
 			if err := Do(ctx,
 				Navigate(testdataDir+"/dialog.html"),
-				Click(test.sel, ByID, NodeVisible),
+				Click(ID(test.sel), NodeVisible),
 			); err != nil {
 				t.Fatal(err)
 			}
@@ -188,7 +188,7 @@ func TestWaitNewTarget(t *testing.T) {
 	ch := WaitNewTarget(ctx, func(info *target.Info) bool {
 		return info.URL != ""
 	})
-	if err := Do(ctx, Click("#new-tab", ByID)); err != nil {
+	if err := Do(ctx, Click(ID("new-tab"))); err != nil {
 		t.Fatal(err)
 	}
 	blankCtx, cancel := NewContext(ctx, WithTargetID(<-ch))
@@ -197,7 +197,7 @@ func TestWaitNewTarget(t *testing.T) {
 	var urlstr string
 	if err := Do(blankCtx,
 		into(&urlstr, Location()),
-		WaitVisible(`#form`, ByID),
+		WaitVisible(ID(`form`)),
 	); err != nil {
 		t.Fatal(err)
 	}

@@ -87,7 +87,7 @@ func ExampleRunResponse() {
 	// However, actions like Click do not always trigger a page navigation,
 	// so they do not wait for a page load directly. Wrapping them with
 	// RunResponse does that waiting, and also obtains the HTTP response.
-	resp, err := chromedp.RunResponse(ctx, chromedp.Click("#foo", chromedp.ByID))
+	resp, err := chromedp.RunResponse(ctx, chromedp.Click(chromedp.ID("foo")))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -318,7 +318,7 @@ func ExampleWaitNewTarget() {
 	})
 	if err := chromedp.Do(ctx,
 		chromedp.Navigate(ts.URL+"/first"),
-		chromedp.Click("#newtab", chromedp.ByID),
+		chromedp.Click(chromedp.ID("newtab")),
 	); err != nil {
 		log.Fatal(err)
 	}
@@ -362,7 +362,7 @@ func ExampleEvents_acceptAlert() {
 
 	if err := chromedp.Do(ctx,
 		chromedp.Navigate(ts.URL),
-		chromedp.Click("#alert", chromedp.ByID),
+		chromedp.Click(chromedp.ID("alert")),
 	); err != nil {
 		log.Fatal(err)
 	}
@@ -390,14 +390,14 @@ function changeText() {
 	if err := chromedp.Do(ctx, chromedp.Navigate(ts.URL)); err != nil {
 		log.Fatal(err)
 	}
-	outerBefore, err := chromedp.Run(ctx, chromedp.OuterHTML("#content", chromedp.ByQuery))
+	outerBefore, err := chromedp.Run(ctx, chromedp.OuterHTML(chromedp.CSS("#content")))
 	if err != nil {
 		log.Fatal(err)
 	}
-	if err := chromedp.Do(ctx, chromedp.Click("#content", chromedp.ByQuery)); err != nil {
+	if err := chromedp.Do(ctx, chromedp.Click(chromedp.CSS("#content"))); err != nil {
 		log.Fatal(err)
 	}
-	outerAfter, err := chromedp.Run(ctx, chromedp.OuterHTML("#content", chromedp.ByQuery))
+	outerAfter, err := chromedp.Run(ctx, chromedp.OuterHTML(chromedp.CSS("#content")))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -421,7 +421,7 @@ func ExampleEmulate() {
 		chromedp.Emulate(device.IPhone7),
 		chromedp.Navigate(`https://duckduckgo.com/`),
 		chromedp.SendKeys(`textarea[name=q]`, "what's my user agent?\n"),
-		chromedp.WaitVisible(`#zci-answer`, chromedp.ByID),
+		chromedp.WaitVisible(chromedp.ID(`zci-answer`)),
 	); err != nil {
 		log.Fatal(err)
 	}
@@ -470,7 +470,7 @@ func ExamplePrintToPDF() {
 	// can change or be slow, and the example made the tests fail on CI.
 }
 
-func ExampleByJSPath() {
+func ExampleJSPath() {
 	ctx, cancel := chromedp.NewContext(context.Background())
 	defer cancel()
 
@@ -484,7 +484,7 @@ func ExampleByJSPath() {
 	if err := chromedp.Do(ctx, chromedp.Navigate(ts.URL)); err != nil {
 		log.Fatal(err)
 	}
-	ids, err := chromedp.Run(ctx, chromedp.NodeIDs(`document`, chromedp.ByJSPath))
+	ids, err := chromedp.Run(ctx, chromedp.QueryNodeIDs(chromedp.JSPath(`document`)))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -518,7 +518,7 @@ func ExampleFromNode() {
 	if err := chromedp.Do(ctx, chromedp.Navigate(ts.URL)); err != nil {
 		log.Fatal(err)
 	}
-	nodes, err := chromedp.Run(ctx, chromedp.Nodes("#section", chromedp.ByQuery))
+	nodes, err := chromedp.Run(ctx, chromedp.Nodes(chromedp.CSS("#section")))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -526,14 +526,14 @@ func ExampleFromNode() {
 
 	// Queries run from the document root by default, so Text picks the
 	// first node that it finds.
-	queryRoot, err := chromedp.Run(ctx, chromedp.Text(".content", chromedp.ByQuery))
+	queryRoot, err := chromedp.Run(ctx, chromedp.Text(chromedp.CSS(".content")))
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	// We can choose a different node to run the query from. In this case,
 	// we can narrow the search to #section.
-	queryFromNode, err := chromedp.Run(ctx, chromedp.Text(".content", chromedp.ByQuery, chromedp.FromNode(sectionNode)))
+	queryFromNode, err := chromedp.Run(ctx, chromedp.Text(chromedp.CSS(".content"), chromedp.FromNode(sectionNode)))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -541,7 +541,7 @@ func ExampleFromNode() {
 	// A CSS selector like "#section > .content" achieves the same here. But
 	// FromNode accepts a node from an entirely separate step, so it allows
 	// custom logic.
-	queryNestedSelector, err := chromedp.Run(ctx, chromedp.Text("#section > .content", chromedp.ByQuery))
+	queryNestedSelector, err := chromedp.Run(ctx, chromedp.Text(chromedp.CSS("#section > .content")))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -583,7 +583,7 @@ func Example_dump() {
 		chromedp.WaitVisible(`#content`),
 		chromedp.Evaluate[chromedp.Void](s),
 		chromedp.WaitVisible(`#thing`),
-		chromedp.Dump(`document`, &buf, chromedp.ByJSPath),
+		chromedp.Dump(chromedp.JSPath(`document`), &buf),
 	); err != nil {
 		log.Fatal(err)
 	}
@@ -629,8 +629,8 @@ func Example_documentDump() {
 	if err := chromedp.Do(ctx, chromedp.Navigate(ts.URL)); err != nil {
 		log.Fatal(err)
 	}
-	nodes, err := chromedp.Run(ctx, chromedp.Nodes(`document`,
-		chromedp.ByJSPath, chromedp.Populate(-1, true)))
+	nodes, err := chromedp.Run(ctx, chromedp.Nodes(chromedp.JSPath(`document`),
+		chromedp.Populate(-1, true)))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -769,6 +769,65 @@ func ExampleEvaluate() {
 	// objectId is present
 }
 
+func ExampleSelectable() {
+	ctx, cancel := chromedp.NewContext(context.Background())
+	defer cancel()
+
+	ts := httptest.NewServer(writeHTML(`
+<body>
+	<p id="a" class="item">first</p>
+	<p id="b" class="item">second</p>
+</body>
+	`))
+	defer ts.Close()
+
+	if err := chromedp.Do(ctx, chromedp.Navigate(ts.URL)); err != nil {
+		log.Fatal(err)
+	}
+
+	// The type of the selector chooses the lookup. A plain string is a
+	// Search, which takes a CSS selector, an XPath query or text.
+	plain, err := chromedp.Run(ctx, chromedp.Text("#a"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	// CSS selects the first match of a CSS selector.
+	css, err := chromedp.Run(ctx, chromedp.Text(chromedp.CSS(".item")))
+	if err != nil {
+		log.Fatal(err)
+	}
+	// CSSAll selects every match of a CSS selector.
+	all, err := chromedp.Run(ctx, chromedp.Nodes(chromedp.CSSAll(".item")))
+	if err != nil {
+		log.Fatal(err)
+	}
+	// ID selects the element with an id.
+	id, err := chromedp.Run(ctx, chromedp.Text(chromedp.ID("b")))
+	if err != nil {
+		log.Fatal(err)
+	}
+	// NodeIDs selects the nodes with these ids.
+	ids, err := chromedp.Run(ctx, chromedp.QueryNodeIDs(chromedp.CSSAll(".item")))
+	if err != nil {
+		log.Fatal(err)
+	}
+	byNodeIDs, err := chromedp.Run(ctx, chromedp.Text(chromedp.NodeIDs(ids[1:])))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(plain, css, len(all), id, byNodeIDs)
+
+	// A type outside of the Selectable set does not compile. Both calls
+	// below are errors at build time, not at run time:
+	//
+	//	chromedp.Click(42)
+	//	chromedp.Click(node)
+
+	// Output:
+	// first first 2 second second
+}
+
 func ExampleClick() {
 	ctx, cancel := chromedp.NewContext(context.Background())
 	defer cancel()
@@ -786,7 +845,7 @@ func ExampleClick() {
 		log.Fatal(err)
 	}
 	_, err := chromedp.Run(ctx, chromedp.WaitEvent(page.LoadEventFired, nil,
-		chromedp.Click("#next", chromedp.ByID)))
+		chromedp.Click(chromedp.ID("next"))))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -813,16 +872,16 @@ func ExampleSendKeys() {
 
 	if err := chromedp.Do(ctx,
 		chromedp.Navigate(ts.URL),
-		chromedp.SendKeys("#name", "Ada", chromedp.ByID),
-		chromedp.SetValue("#color", "green", chromedp.ByID),
+		chromedp.SendKeys(chromedp.ID("name"), "Ada"),
+		chromedp.SetValue(chromedp.ID("color"), "green"),
 	); err != nil {
 		log.Fatal(err)
 	}
-	name, err := chromedp.Run(ctx, chromedp.Value("#name", chromedp.ByID))
+	name, err := chromedp.Run(ctx, chromedp.Value(chromedp.ID("name")))
 	if err != nil {
 		log.Fatal(err)
 	}
-	color, err := chromedp.Run(ctx, chromedp.Value("#color", chromedp.ByID))
+	color, err := chromedp.Run(ctx, chromedp.Value(chromedp.ID("color")))
 	if err != nil {
 		log.Fatal(err)
 	}

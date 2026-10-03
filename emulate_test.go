@@ -17,7 +17,7 @@ func TestEmulate(t *testing.T) {
 	var buf []byte
 	if err := Do(ctx,
 		Emulate(device.IPhone7),
-		into(&buf, Screenshot(`#half-color`, ByID)),
+		into(&buf, Screenshot(ID(`half-color`))),
 	); err != nil {
 		t.Fatal(err)
 	}

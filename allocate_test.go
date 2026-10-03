@@ -32,7 +32,7 @@ func TestExecAllocator(t *testing.T) {
 	var got string
 	if err := Do(taskCtx,
 		Navigate(testdataDir+"/form.html"),
-		into(&got, Text("#foo", ByID)),
+		into(&got, Text(ID("foo"))),
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -291,7 +291,7 @@ func testRemoteAllocator(t *testing.T, modifyURL func(wsURL string) string, want
 	var got string
 	if err := Do(taskCtx,
 		Navigate(testdataDir+"/form.html"),
-		into(&got, Text("#foo", ByID)),
+		into(&got, Text(ID("foo"))),
 	); err != nil {
 		t.Fatal(err)
 	}

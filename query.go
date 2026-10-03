@@ -860,7 +860,7 @@ func Clear[S Selectable](sel S, opts ...QueryOption) Action[Void] {
 
 		for _, n := range nodes {
 			if n.NodeType != NodeTypeElement || (n.NodeName != "INPUT" && n.NodeName != "TEXTAREA") {
-				return fmt.Errorf("selector %q matched node %d with name %s", sel, n.NodeID, strings.ToLower(n.NodeName))
+				return fmt.Errorf("selector %q matched node %d with name %s", describe(sel), n.NodeID, strings.ToLower(n.NodeName))
 			}
 		}
 

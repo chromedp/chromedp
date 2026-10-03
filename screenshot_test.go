@@ -63,7 +63,7 @@ func TestScreenshot(t *testing.T) {
 			if err := Do(ctx,
 				EmulateViewport(500, 500),
 				EvaluateAsDevTools[Void]("document.documentElement.scrollTo(20,  30)"),
-				into(&buf, Screenshot(test.sel, ByQuery)),
+				into(&buf, Screenshot(CSS(test.sel))),
 			); err != nil {
 				t.Fatal(err)
 			}
@@ -109,7 +109,7 @@ func TestScreenshotScale(t *testing.T) {
 
 			var buf []byte
 			if err := Do(ctx,
-				into(&buf, ScreenshotScale(test.sel, test.scale, ByQuery)),
+				into(&buf, ScreenshotScale(CSS(test.sel), test.scale)),
 			); err != nil {
 				t.Fatal(err)
 			}
@@ -139,7 +139,7 @@ func TestScreenshotHighDPI(t *testing.T) {
 	}
 
 	var buf []byte
-	if err := Do(ctx, into(&buf, Screenshot("#half-color", ByID))); err != nil {
+	if err := Do(ctx, into(&buf, Screenshot(ID("half-color")))); err != nil {
 		t.Fatal(err)
 	}
 

@@ -182,7 +182,7 @@ func TestPollFrame(t *testing.T) {
 	ctx, cancel := testAllocate(t, "frameset.html")
 	defer cancel()
 
-	frames, err := Run(ctx, Nodes(`frame[src="child1.html"]`, ByQuery))
+	frames, err := Run(ctx, Nodes(CSS(`frame[src="child1.html"]`)))
 	if err != nil {
 		t.Fatalf("got error: %v", err)
 	}
