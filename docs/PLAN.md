@@ -70,7 +70,7 @@ temporary directory leaks. HTML pages and golden images are in `testdata/`.
 
 CI, in `.github/workflows/test.yml`, runs `go test -v ./...` against Chrome
 and then `./contrib/docker-test.sh` against the `chromedp/headless-shell`
-image. It does both with Go 1.27 and with the newest stable Go release.
+image. It uses the newest stable Go release, which is Go 1.27 now.
 
 The only test that needs no browser is `go test ./docs/`. It tests the
 documents and the Go comments.

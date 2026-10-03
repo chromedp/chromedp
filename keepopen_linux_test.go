@@ -40,6 +40,11 @@ func startMarked(t *testing.T, dir string) (*os.Process, <-chan struct{}) {
 }
 
 func TestKillLeftoversSkipsKeepOpen(t *testing.T) {
+	// The test starts processes with sh and reads their command lines. It is
+	// not stable on a CI runner, and the headless-shell image has no sh.
+	if os.Getenv("CI") != "" || os.Getenv("HEADLESS_SHELL") != "" {
+		t.Skip("not stable on a CI runner, and the headless-shell image has no sh")
+	}
 	cache := t.TempDir()
 	t.Setenv("XDG_CACHE_HOME", cache)
 	keptDir := filepath.Join(cache, "chromedp", keepOpenPrefix+"12345")

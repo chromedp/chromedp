@@ -125,7 +125,7 @@ These words have one meaning in every document and in every Go comment.
 
 The module needs Go 1.27 or newer, as `go.mod` says. The generated `cdproto`
 uses `encoding/json/v2`, which is in the standard library from Go 1.27. CI runs
-Go 1.27 and the newest stable release. See
+the newest stable release, which is Go 1.27 now. See
 `docs/decisions/2026-10-03-the-minimum-go-version-is-1-27.md`.
 
 Wrap every error with `%w`, never `%s` or `%v`:
@@ -190,8 +190,8 @@ or `podman` when it is installed:
 ```
 
 The `IMAGE` variable chooses another image. CI runs both commands on every
-push and pull request. It runs them once with Go 1.27 and once with the newest
-stable Go release. See `.github/workflows/test.yml`.
+push and pull request, with the newest stable Go release. See
+`.github/workflows/test.yml`.
 
 These variables change the tests:
 
@@ -199,6 +199,7 @@ These variables change the tests:
 - `CHROMEDP_VISIBLEWINDOW` shows the window. The old name `CHROMEDP_NO_HEADLESS` works in the tests too.
 - `CHROMEDP_NO_SANDBOX`, set to `false`, turns the sandbox on.
 - `CHROMEDP_DEBUG` logs every message.
+- `CI` and `HEADLESS_SHELL` make the test `TestKillLeftoversSkipsKeepOpen` skip itself. It is not stable on a CI runner, and the headless-shell image has no `sh`.
 
 ## Writing documentation
 
