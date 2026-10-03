@@ -1067,6 +1067,13 @@ func TestGracefulBrowserShutdown(t *testing.T) {
 	}
 	{
 		ctx, _ := NewContext(actx)
+		// Close Chrome gracefully. If it is killed, its child processes
+		// can write to dir after the test, and the cleanup of dir fails.
+		defer func() {
+			if err := Cancel(ctx); err != nil {
+				t.Error(err)
+			}
+		}()
 		var got string
 		if err := Run(ctx,
 			Navigate(ts.URL),
