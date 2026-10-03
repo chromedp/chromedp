@@ -1,5 +1,5 @@
-github.com/chromedp/cdproto v0.157.1 h1:5zJ+65K2WAmO46dNvgVD2N6Ur4qpDKQj2CDANn1zvNY=
-github.com/chromedp/cdproto v0.157.1/go.mod h1:scNPhJ/A4T8BVkyR5k2Uocvoju3iBRZS4cg3uMlxuMk=
+github.com/chromedp/cdproto v0.157.3 h1:GEMGBiP23qiQ+OusBkMfSFFawvKvXPK7onkvIRpnshY=
+github.com/chromedp/cdproto v0.157.3/go.mod h1:scNPhJ/A4T8BVkyR5k2Uocvoju3iBRZS4cg3uMlxuMk=
 github.com/gobwas/httphead v0.1.0 h1:exrUm0f4YX0L7EBwZHuCF4GDp8aJfVeBrlLQrs6NqWU=
 github.com/gobwas/httphead v0.1.0/go.mod h1:O/RXo79gxV8G+RqlR/otEwx4Q36zl9rqC5u12GKvMCM=
 github.com/gobwas/pool v0.2.1 h1:xfeeEhW7pwmX8nuLVlqbzVc7udMDrwetjEv+TZIz1og=

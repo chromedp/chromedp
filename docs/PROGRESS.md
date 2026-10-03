@@ -23,7 +23,7 @@ approved these parts:
   variable `CHROMEDP_VISIBLEWINDOW`
 - the port of the `examples` repository
 
-`cdproto` v0.157.2 is the first release of the typed API. `chromedp` v0.17.0
+`cdproto` v0.157.3 is the first release of the typed API. `chromedp` v0.17.0
 uses it. The full test suite passes. The comments of the Go files and the
 documents follow the `simple-english` skill, and `go test ./docs/` tests them.
 

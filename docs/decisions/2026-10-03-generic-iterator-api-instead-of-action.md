@@ -61,5 +61,5 @@ The full suite passed with the same tests, ported to the new API.
 ## What happened next
 
 The `pdlgen` work was merged first, because the typed `cdproto` comes from it.
-`cdproto` v0.157.2 is the first release of the typed API. `chromedp` v0.17.0
+`cdproto` v0.157.3 is the first release of the typed API. `chromedp` v0.17.0
 uses it.

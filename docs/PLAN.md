@@ -57,7 +57,7 @@ and events. It also has the options for a visible window and for a browser that
 stays open. The Go files in the root hold about 15,000 lines, tests included.
 The README links the examples repository for larger tasks.
 
-Release v0.17.0 uses the typed `cdproto` v0.157.2. It has the generic action
+Release v0.17.0 uses the typed `cdproto` v0.157.3. It has the generic action
 API, the iterator events, the typed selectors, the pipe transport and the
 visible window options. `API.md` describes the API and `MIGRATION.md` lists
 every change. The decisions in `decisions/` record the choices.
