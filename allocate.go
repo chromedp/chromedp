@@ -394,8 +394,9 @@ func (a *ExecAllocator) connectWebSocket(ctx context.Context, stdout io.ReadClos
 }
 
 // usesPipe reports whether Allocate connects to the browser with a pipe. It
-// does not when the WebSocket option or the KeepOpen option is set, when the platform cannot pass the
-// pipe to the process, or when the flags ask for a debugging port or address.
+// does not when the WebSocket option or the KeepOpen option is set, when the
+// platform cannot pass the pipe to the process, or when the flags ask for a
+// debugging port or address.
 func (a *ExecAllocator) usesPipe() bool {
 	if a.webSocket || a.keepOpen || !usePipe() {
 		return false

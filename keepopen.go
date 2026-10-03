@@ -35,7 +35,7 @@ const keepOpenPrefix = "keepopen-"
 //     connect to that address later.
 //   - The process starts detached: in a new session on Unix, and detached from
 //     the console and in a new process group on Windows. A func from
-//     [ModifyCmdFunc] runs first, and it replaces the default func.
+//     [ModifyCmdFunc] runs first, and the detach settings come after it.
 //   - The allocator does not kill the process when the context ends. It waits
 //     for the process in a goroutine, so that no zombie process stays while the
 //     program runs.

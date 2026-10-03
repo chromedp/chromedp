@@ -33,15 +33,16 @@ var (
 )
 
 // Browser manages a browser through the Chrome DevTools Protocol. It handles
-// the browser process runner, the WebSocket clients, the targets, and the
-// network, page, and DOM events.
+// the browser process runner, the connection to the browser, the targets, and
+// the network, page, and DOM events. The connection is a pipe or a websocket.
 type Browser struct {
 	// next is the next message id.
 	// NOTE: it must be 64-bit aligned on 32-bit targets too, so be careful when you move this field.
 	// The compiler will do this when https://github.com/golang/go/issues/599 is fixed.
 	next int64
 
-	// LostConnection is closed when the websocket connection to Chrome drops.
+	// LostConnection is closed when the connection to Chrome drops. The
+	// connection is a pipe or a websocket.
 	// Use it to make sure that the context of the Browser is canceled (and the
 	// handler stopped) after the connection fails.
 	LostConnection chan struct{}
@@ -405,7 +406,7 @@ func WithBrowserErrorf(f func(string, ...any)) BrowserOption {
 }
 
 // WithBrowserDebugf is a browser option that sets the func that receives the
-// websocket messages.
+// protocol messages.
 func WithBrowserDebugf(f func(string, ...any)) BrowserOption {
 	return func(b *Browser) { b.dbgf = f }
 }

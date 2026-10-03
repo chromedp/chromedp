@@ -13,10 +13,9 @@ import (
 	"github.com/gobwas/ws/wsutil"
 )
 
-// Transport is the common interface to send and receive messages for a target.
-//
-// Browser uses this interface internally. It is exported because it can be
-// useful in the public API later.
+// Transport is the common interface to send and receive the protocol messages
+// of a browser. Conn and PipeConn implement it. Browser reads and writes its
+// messages through it, and NewBrowserTransport accepts any Transport.
 type Transport interface {
 	Read(context.Context, *cdproto.Message) error
 	Write(context.Context, *cdproto.Message) error
