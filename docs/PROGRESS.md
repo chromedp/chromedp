@@ -7,15 +7,20 @@ in [`decisions/`](decisions/README.md).
 
 ## Where the work stands
 
-On 2026-10-03 `main` was ported to the tagged `cdproto` `v0.157.1`, and the tests
-were fixed for current Chrome. See the commits of that day. The `Test` workflow on
-GitHub is not stable: the first browser start sometimes does not print its DevTools
-address, and Chrome only prints DBus errors. The tests pass on the local Chrome.
+On 2026-10-03 `main` was ported to the tagged `cdproto` `v0.157.1`, and the
+tests were fixed for current Chrome. See the commits of that day. The `Test`
+workflow on GitHub is not stable. The first browser start sometimes does not
+print its DevTools address, and Chrome only prints DBus errors. The tests pass
+on the local Chrome.
 
 The new API is built on the local branch `typed-api`, which is not pushed. It uses
 the typed `cdproto` that the `pdlgen` branch `typed-api` writes. The branch holds
 the generic actions, the iterator events, `docs/API.md` and `docs/MIGRATION.md`.
-The full suite passes on it. It waits for the review of the maintainer.
+It builds only with a `go.work` file that uses a local copy of the typed
+`cdproto`, because `go.mod` does not name that module yet. The full suite passes
+on it. The comments of the Go files and the documents
+follow the `simple-english` skill, and `go test ./docs/` tests them. The
+branch waits for the review of the maintainer.
 
 ## Waiting
 
