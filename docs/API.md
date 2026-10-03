@@ -23,7 +23,7 @@ title, err := chromedp.Run(ctx, chromedp.Title())
 
 ## Before and after
 
-Each example has the old code first and the new code second. The new code comes from `example_test.go`. The examples 9 and 11 use a live website and have no `Output` comment, so `go test` builds them and does not run them. In every example, `ctx` is a chromedp context made with `chromedp.NewContext`, and `ts` is a test server. The old code of some examples chose a lookup with an option. The Before blocks leave it out, because the default lookup finds the same elements. `docs/MIGRATION.md` lists the old options and the selector types that replace them.
+Each example has the old code first and the new code second. The new code comes from `example_test.go`. The examples 9, 11 and 14 use a live website and have no `Output` comment, so `go test` builds them and does not run them. In every example, `ctx` is a chromedp context made with `chromedp.NewContext`, and `ts` is a test server. The old code of some examples chose a lookup with an option. The Before blocks leave it out, because the default lookup finds the same elements. `docs/MIGRATION.md` lists the old options and the selector types that replace them.
 
 ### 1. Navigate and read a value
 
@@ -503,6 +503,34 @@ if err != nil {
 }
 ```
 
+### 14. Show a visible window, or leave the browser open
+
+The default allocator runs Chrome in headless mode. `WithVisibleWindow` builds it with a visible, maximized window. The variable `CHROMEDP_VISIBLEWINDOW` does the same with no change in the code. `WaitClosed` keeps the program alive until the user closes the window. On Linux the first `Run` returns `ErrNoDisplay` when `DISPLAY` and `WAYLAND_DISPLAY` are both empty.
+
+```go
+ctx, cancel := chromedp.NewContext(context.Background(), chromedp.WithVisibleWindow())
+defer cancel()
+if err := chromedp.Do(ctx, chromedp.Navigate("https://example.com")); err != nil {
+	log.Fatal(err)
+}
+chromedp.WaitClosed(ctx)
+```
+
+`WithKeepOpen` leaves the browser open when the program ends. It uses the websocket and starts Chrome detached. `KeptOpen` returns the address and the profile directory, and `NewRemoteAllocator` attaches to the address later. The program must not delete the profile directory.
+
+```go
+ctx, cancel := chromedp.NewContext(context.Background(),
+	chromedp.WithVisibleWindow(), chromedp.WithKeepOpen())
+defer cancel()
+if err := chromedp.Do(ctx, chromedp.Navigate("https://example.com")); err != nil {
+	log.Fatal(err)
+}
+wsURL, dir := chromedp.KeptOpen(ctx)
+fmt.Println("attach to", wsURL, "profile", dir)
+```
+
+Both options only apply when `NewContext` builds the default allocator. For an allocator that you make, add the allocator options `VisibleWindow` and `KeepOpen` to `NewExecAllocator`. `docs/decisions/2026-10-03-a-visible-window-is-an-opt-in.md` explains the choices.
+
 ## What the new API removes
 
 The new API removes the interface `Action`, the type `ActionFunc`, the type `Tasks`, and the funcs `ListenTarget` and `ListenBrowser`. It also removes the types `QueryAction`, `NavigateAction`, `EvaluateAction`, `CallAction`, `PollAction`, `MouseAction`, `KeyAction` and `EmulateAction`. Each type is now `Action[T]`. It also removes the six lookup options that start with `By`, except `ByFunc`. A selector type replaces each of them. `docs/MIGRATION.md` lists every change, with the old name and the new name.
@@ -536,6 +564,8 @@ func EvalWithCommandLineAPI(p *runtime.EvaluateParams)
 func Events[E any](ctx context.Context, ev cdp.Event[E]) iter.Seq2[E, error]
 func Headless(a *ExecAllocator)
 func IgnoreCertErrors(a *ExecAllocator)
+func KeepOpen(a *ExecAllocator)
+func KeptOpen(ctx context.Context) (wsURL, userDataDir string)
 func NewContext(parent context.Context, opts ...ContextOption) (context.Context, context.CancelFunc)
 func NewExecAllocator(parent context.Context, opts ...ExecAllocatorOption) (context.Context, context.CancelFunc)
 func NewRemoteAllocator(parent context.Context, url string, opts ...RemoteAllocatorOption) (context.Context, context.CancelFunc)
@@ -552,6 +582,8 @@ func NodeVisible(s *Selector)
 func Run[T any](ctx context.Context, a Action[T]) (T, error)
 func RunResponse(ctx context.Context, steps ...Action[Void]) (*network.Response, error)
 func Targets(ctx context.Context) ([]*target.Info, error)
+func VisibleWindow(a *ExecAllocator)
+func WaitClosed(ctx context.Context) error
 func WaitNewTarget(ctx context.Context, fn func(*target.Info) bool) <-chan target.ID
 func WebSocket(a *ExecAllocator)
 ```
@@ -674,7 +706,9 @@ func WithErrorf(f func(string, ...any)) ContextOption
 func WithExistingBrowserContext(id cdp.BrowserContextID) ContextOption
 func WithLogf(f func(string, ...any)) ContextOption
 func WithNewBrowserContext(options ...CreateBrowserContextOption) ContextOption
+func WithKeepOpen() ContextOption
 func WithTargetID(id target.ID) ContextOption
+func WithVisibleWindow() ContextOption
 
 type CreateBrowserContextOption = func(*target.CreateBrowserContextParams)
 
@@ -841,6 +875,7 @@ ErrNotSelected
 ErrInvalidBoxModel
 ErrChannelClosed
 ErrInvalidTarget
+ErrNoDisplay
 ErrInvalidContext
 ErrPollingTimeout
 ErrJSUndefined

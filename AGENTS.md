@@ -84,7 +84,7 @@ The root package `chromedp` holds the API. The files group by topic.
 
 | Path | Holds |
 | --- | --- |
-| `allocate.go`, `allocate_linux.go`, `allocate_other.go` | `Allocator`, `ExecAllocator` and `RemoteAllocator`, which start or reach a browser |
+| `allocate.go`, `allocate_linux.go`, `allocate_other.go`, `allocate_detach_unix.go`, `allocate_detach_windows.go`, `keepopen.go` | `Allocator`, `ExecAllocator` and `RemoteAllocator`, which start or reach a browser, and the options that keep a browser open |
 | `browser.go`, `conn.go` | `Browser` and the WebSocket connection |
 | `chromedp.go`, `action.go` | `Context`, `NewContext`, `RunResponse`, `Action[T]`, `Run`, `Do` and the events |
 | `target.go`, `util.go` | `Target`, which tracks frames and the DOM tree from events |
@@ -195,7 +195,7 @@ stable Go release. See `.github/workflows/test.yml`.
 These variables change the tests:
 
 - `CHROMEDP_TEST_RUNNER` names the browser binary.
-- `CHROMEDP_NO_HEADLESS` shows the window.
+- `CHROMEDP_VISIBLEWINDOW` shows the window. The old name `CHROMEDP_NO_HEADLESS` works in the tests too.
 - `CHROMEDP_NO_SANDBOX`, set to `false`, turns the sandbox on.
 - `CHROMEDP_DEBUG` logs every message.
 

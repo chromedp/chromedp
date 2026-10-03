@@ -998,3 +998,66 @@ func ExampleLegacy() {
 	// Output:
 	// old action
 }
+
+// This example opens a visible window and waits until the user closes it. The
+// variable CHROMEDP_VISIBLEWINDOW=1 has the same effect as the option.
+func ExampleWithVisibleWindow() {
+	ctx, cancel := chromedp.NewContext(context.Background(), chromedp.WithVisibleWindow())
+	defer cancel()
+
+	if err := chromedp.Do(ctx, chromedp.Navigate("https://example.com")); err != nil {
+		log.Fatal(err)
+	}
+	// Block until the user closes the window.
+	chromedp.WaitClosed(ctx)
+}
+
+// This example leaves the browser open when the program ends. The program prints
+// the address, so that another program can attach with NewRemoteAllocator. The
+// profile directory stays on disk, and the user must delete it.
+func ExampleWithKeepOpen() {
+	ctx, cancel := chromedp.NewContext(context.Background(),
+		chromedp.WithVisibleWindow(), chromedp.WithKeepOpen())
+	defer cancel()
+
+	if err := chromedp.Do(ctx, chromedp.Navigate("https://example.com")); err != nil {
+		log.Fatal(err)
+	}
+	wsURL, profile := chromedp.KeptOpen(ctx)
+	fmt.Println("attach to", wsURL)
+	fmt.Println("profile directory", profile)
+}
+
+// This example attaches to a browser that an earlier program left open.
+func ExampleKeptOpen() {
+	wsURL := os.Args[1] // the address that the earlier program printed
+
+	allocCtx, cancel := chromedp.NewRemoteAllocator(context.Background(), wsURL)
+	defer cancel()
+	ctx, cancel := chromedp.NewContext(allocCtx)
+	defer cancel()
+
+	title, err := chromedp.Run(ctx, chromedp.Title())
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(title)
+}
+
+// This example shows the allocator options. They work with NewExecAllocator,
+// when the program makes its own allocator.
+func ExampleVisibleWindow() {
+	opts := append(chromedp.DefaultExecAllocatorOptions[:],
+		chromedp.VisibleWindow,
+		chromedp.Flag("auto-open-devtools-for-tabs", true),
+	)
+	allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+	defer cancel()
+	ctx, cancel := chromedp.NewContext(allocCtx)
+	defer cancel()
+
+	if err := chromedp.Do(ctx, chromedp.Navigate("https://example.com")); err != nil {
+		log.Fatal(err)
+	}
+	chromedp.WaitClosed(ctx)
+}

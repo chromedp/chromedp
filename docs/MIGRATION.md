@@ -199,3 +199,12 @@ does not change the actions or the events.
 - `RemoteAllocator` is not changed. It connects to a browser that `chromedp` did not start, so it uses the websocket.
 - `NewBrowserTransport` creates a `Browser` from a `Transport` that is already open. `NewPipeConn` makes a `Transport` for the two pipes of a browser. `NewBrowser` dials a websocket and then calls `NewBrowserTransport`.
 - A start that fails now gives an error that starts with `chrome failed to start:` and has the output of Chrome, in the pipe mode and in the websocket mode.
+
+## New options for a visible window
+
+These names are new, and no old code needs a change. Headless mode is still the default. See `docs/decisions/2026-10-03-a-visible-window-is-an-opt-in.md`.
+
+- `WithVisibleWindow` and the allocator option `VisibleWindow` open a visible, maximized window. They replace `Flag("headless", false)`, which left the flags `--hide-scrollbars`, `--mute-audio`, `--enable-automation` and `--disable-extensions` in place.
+- The variable `CHROMEDP_VISIBLEWINDOW` does the same with no change in the code. The tests also read the old variable `CHROMEDP_NO_HEADLESS`.
+- `ErrNoDisplay` is the error on Linux when a visible window has no display.
+- `WithKeepOpen` and the allocator option `KeepOpen` leave the browser open. `KeptOpen` returns its address and profile directory. `WaitClosed` waits until the browser exits.

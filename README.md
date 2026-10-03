@@ -58,7 +58,7 @@ for ev, err := range loaded {
 }
 ```
 
-[`docs/API.md`](docs/API.md) describes the API. It has 13 examples that show the
+[`docs/API.md`](docs/API.md) describes the API. It has 14 examples that show the
 old code and the new code side by side. [`docs/MIGRATION.md`](docs/MIGRATION.md)
 lists every renamed and removed name.
 
@@ -66,11 +66,40 @@ See the [Go reference][goref-chromedp] for the documentation and examples. The
 [examples][chromedp-examples] repository has more examples of complex actions
 and of other common tasks, such as full page screenshots.
 
+## Visible browser
+
+By default, `chromedp` runs Chrome in headless mode, so no window opens. To see
+the browser, add `WithVisibleWindow`. Set the variable `CHROMEDP_VISIBLEWINDOW=1`
+to get the same result with no change in the code. On Linux, a visible window
+needs `DISPLAY` or `WAYLAND_DISPLAY`. Without them, the first `Run` returns
+`chromedp.ErrNoDisplay`.
+
+```go
+ctx, cancel := chromedp.NewContext(context.Background(), chromedp.WithVisibleWindow())
+defer cancel()
+chromedp.Do(ctx, chromedp.Navigate("https://example.com"))
+chromedp.WaitClosed(ctx) // block until the user closes the window
+```
+
+To leave the browser open after the program ends, add `WithKeepOpen`. The
+program can print the address, and another program can attach to it with
+`NewRemoteAllocator`. The profile directory stays on disk, and you must delete
+it yourself.
+
+```go
+ctx, _ := chromedp.NewContext(context.Background(), chromedp.WithVisibleWindow(), chromedp.WithKeepOpen())
+chromedp.Do(ctx, chromedp.Navigate("https://example.com"))
+wsURL, profile := chromedp.KeptOpen(ctx)
+fmt.Println("attach to", wsURL, "profile", profile)
+// The program ends here. The browser stays open.
+```
+
 ## Frequently Asked Questions
 
 > I cannot see any Chrome browser window
 
 By default, `chromedp` runs Chrome in headless mode. See
+[Visible browser](#visible-browser). See also
 `DefaultExecAllocatorOptions`, and see [an example][goref-chromedp-exec-allocator]
 that overrides the default options.
 
@@ -91,8 +120,9 @@ selects the websocket. On Windows `chromedp` always uses the websocket.
 > Chrome exits as soon as my Go program finishes
 
 On Linux, `chromedp` kills the Chrome child processes that it started, so that no
-resources leak. To run a Chrome instance for a long time, start Chrome yourself
-and connect with `RemoteAllocator`.
+resources leak. To leave Chrome open, add `chromedp.WithKeepOpen`. See
+[Visible browser](#visible-browser). You can also start Chrome yourself and
+connect with `RemoteAllocator`.
 
 > Calling an action or a command results in "invalid context"
 

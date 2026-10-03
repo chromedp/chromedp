@@ -20,6 +20,7 @@ add.
 | 2019-04-30 | [Run the tests under headless-shell as well as Chrome](2019-04-30-test-under-headless-shell.md) | Decided |
 | 2021-04-29 | [Wrap errors with %w](2021-04-29-wrap-errors-with-w.md) | Decided |
 | 2025-02-22 | [Use the experimental JSON v2 package](2025-02-22-use-json-v2.md) | Decided |
+| 2026-10-03 | [A visible window is an opt-in](2026-10-03-a-visible-window-is-an-opt-in.md) | Proposed |
 | 2026-10-03 | [Replace the Action interface with a generic and iterator API](2026-10-03-generic-iterator-api-instead-of-action.md) | Proposed |
 | 2026-10-03 | [Questions and ideas go to Discussions, and issues are for bugs](2026-10-03-questions-and-ideas-go-to-discussions.md) | Decided |
 | 2026-10-03 | [The README shows the gear logo and the Discord badge](2026-10-03-readme-shows-the-gear-logo-and-discord-badge.md) | Decided |
