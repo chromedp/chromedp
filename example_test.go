@@ -394,7 +394,7 @@ func ExampleEmulate() {
 	if err := chromedp.Run(ctx,
 		chromedp.Emulate(device.IPhone7),
 		chromedp.Navigate(`https://duckduckgo.com/`),
-		chromedp.SendKeys(`input[name=q]`, "what's my user agent?\n"),
+		chromedp.SendKeys(`textarea[name=q]`, "what's my user agent?\n"),
 		chromedp.WaitVisible(`#zci-answer`, chromedp.ByID),
 		chromedp.CaptureScreenshot(&buf),
 	); err != nil {
