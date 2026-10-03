@@ -1061,3 +1061,24 @@ func ExampleVisibleWindow() {
 	}
 	chromedp.WaitClosed(ctx)
 }
+
+// This example connects to a hosted browser service that needs an
+// Authorization header on the websocket request.
+func ExampleWithRemoteDialHTTPHeader() {
+	const wsURL = "wss://browser.example.com/devtools/browser/id"
+	header := http.Header{"Authorization": {"Bearer " + os.Getenv("BROWSER_TOKEN")}}
+
+	allocCtx, cancel := chromedp.NewRemoteAllocator(context.Background(), wsURL,
+		chromedp.NoModifyURL,
+		chromedp.WithRemoteDialHTTPHeader(header),
+	)
+	defer cancel()
+	ctx, cancel := chromedp.NewContext(allocCtx)
+	defer cancel()
+
+	title, err := chromedp.Run(ctx, chromedp.Title())
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(title)
+}

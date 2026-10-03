@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -823,6 +824,10 @@ type RemoteAllocator struct {
 	wsURL         string
 	modifyURLFunc func(ctx context.Context, wsURL string) (string, error)
 
+	// dialHTTPHeader is set by WithRemoteDialHTTPHeader. Allocate sends it
+	// with the websocket handshake.
+	dialHTTPHeader http.Header
+
 	wg sync.WaitGroup
 }
 
@@ -854,7 +859,12 @@ func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (
 		cancel()    // close the websocket connection
 	})
 
-	browser, err := NewBrowser(wctx, wsURL, opts...)
+	// The options of the caller come last, so that they win.
+	browserOpts := opts
+	if len(a.dialHTTPHeader) > 0 {
+		browserOpts = append([]BrowserOption{WithDialHTTPHeader(a.dialHTTPHeader)}, opts...)
+	}
+	browser, err := NewBrowser(wctx, wsURL, browserOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -874,6 +884,20 @@ func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (
 // Wait satisfies the Allocator interface.
 func (a *RemoteAllocator) Wait() {
 	a.wg.Wait()
+}
+
+// WithRemoteDialHTTPHeader is a RemoteAllocatorOption that sets HTTP headers on
+// the websocket handshake request to the remote browser. A hosted browser
+// service can need an Authorization header.
+//
+// The headers go with the websocket request only. The request to
+// "/json/version", which NewRemoteAllocator sends to find the websocket
+// address, has no headers. When the service needs headers, give it the full
+// websocket address and use [NoModifyURL].
+func WithRemoteDialHTTPHeader(h http.Header) RemoteAllocatorOption {
+	return func(a *RemoteAllocator) {
+		a.dialHTTPHeader = h.Clone()
+	}
 }
 
 // NoModifyURL is a RemoteAllocatorOption that prevents the remote allocator

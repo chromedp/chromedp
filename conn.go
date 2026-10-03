@@ -6,6 +6,7 @@ import (
 	"context"
 	"io"
 	"net"
+	"net/http"
 	"sync"
 
 	"encoding/json/jsontext"
@@ -41,13 +42,27 @@ type Conn struct {
 	decoder jsontext.Decoder
 	encoder jsontext.Encoder
 
+	// header is the set of HTTP headers that the dial sends with the
+	// handshake request.
+	header http.Header
+
 	debugf func(string, ...any)
 }
 
 // DialContext dials the websocket URL with gobwas/ws.
 func DialContext(ctx context.Context, urlstr string, opts ...DialOption) (*Conn, error) {
+	// apply opts, as the dial needs the header
+	c := &Conn{}
+	for _, o := range opts {
+		o(c)
+	}
+
 	// connect
-	conn, br, _, err := ws.Dial(ctx, urlstr)
+	dialer := ws.Dialer{}
+	if len(c.header) > 0 {
+		dialer.Header = ws.HandshakeHeaderHTTP(c.header)
+	}
+	conn, br, _, err := dialer.Dial(ctx, urlstr)
 	if err != nil {
 		return nil, err
 	}
@@ -56,18 +71,10 @@ func DialContext(ctx context.Context, urlstr string, opts ...DialOption) (*Conn,
 		// read them with the handshake. Read them first.
 		conn = &bufferedConn{Conn: conn, r: br}
 	}
-
-	// apply opts
-	c := &Conn{
-		conn: conn,
-		// pass 0 to use the default initial buffer size (4KiB).
-		// github.com/gobwas/ws will grow the buffer size if needed.
-		writer: *wsutil.NewWriterBufferSize(conn, ws.StateClientSide, ws.OpText, 0),
-	}
-	for _, o := range opts {
-		o(c)
-	}
-
+	c.conn = conn
+	// pass 0 to use the default initial buffer size (4KiB).
+	// github.com/gobwas/ws will grow the buffer size if needed.
+	c.writer = *wsutil.NewWriterBufferSize(conn, ws.StateClientSide, ws.OpText, 0)
 	return c, nil
 }
 
@@ -200,6 +207,16 @@ func (c *Conn) Write(_ context.Context, msg *cdproto.Message) error {
 
 // DialOption is a dial option.
 type DialOption = func(*Conn)
+
+// WithConnHTTPHeader is a dial option that sets HTTP headers on the websocket
+// handshake request. For example, a hosted browser service can need an
+// Authorization header. The option copies the header, so a later change of h
+// has no effect.
+func WithConnHTTPHeader(h http.Header) DialOption {
+	return func(c *Conn) {
+		c.header = h.Clone()
+	}
+}
 
 // WithConnDebugf is a dial option to set a protocol logger.
 func WithConnDebugf(f func(string, ...any)) DialOption {

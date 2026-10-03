@@ -187,3 +187,105 @@ func TestConnPingWhileWriting(t *testing.T) {
 		t.Fatal("the server did not get all messages")
 	}
 }
+
+// headerServer starts a websocket server that sends the headers of each
+// handshake request to the returned channel. It holds each connection open
+// until the test ends.
+func headerServer(t *testing.T) (string, <-chan http.Header) {
+	t.Helper()
+	headers := make(chan http.Header, 4)
+	done := make(chan struct{})
+	t.Cleanup(func() { close(done) })
+	url := newWebsocketServer(t, func(r *http.Request, _ *serverConn) {
+		headers <- r.Header.Clone()
+		<-done
+	})
+	return url, headers
+}
+
+func receiveHeader(t *testing.T, headers <-chan http.Header) http.Header {
+	t.Helper()
+	select {
+	case h := <-headers:
+		return h
+	case <-time.After(5 * time.Second):
+		t.Fatal("the server got no handshake request")
+		return nil
+	}
+}
+
+func TestDialHTTPHeader(t *testing.T) {
+	t.Parallel()
+
+	const want = "Bearer secret-token"
+	url, headers := headerServer(t)
+	h := http.Header{"Authorization": {want}, "X-Test": {"one", "two"}}
+	conn, err := DialContext(context.Background(), url, WithConnHTTPHeader(h))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+	// A later change of the caller header has no effect.
+	h.Set("Authorization", "changed")
+
+	got := receiveHeader(t, headers)
+	if got.Get("Authorization") != want {
+		t.Errorf("want the Authorization %q, got %q", want, got.Get("Authorization"))
+	}
+	if v := got.Values("X-Test"); len(v) != 2 || v[0] != "one" || v[1] != "two" {
+		t.Errorf("want the X-Test values one and two, got %q", v)
+	}
+	// The handshake keeps its own headers.
+	if got.Get("Upgrade") != "websocket" {
+		t.Errorf("the handshake lost its Upgrade header: %v", got)
+	}
+}
+
+func TestDialHTTPHeaderAbsent(t *testing.T) {
+	t.Parallel()
+
+	url, headers := headerServer(t)
+	conn, err := DialContext(context.Background(), url)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+	if got := receiveHeader(t, headers).Get("Authorization"); got != "" {
+		t.Fatalf("want no Authorization header, got %q", got)
+	}
+}
+
+func TestBrowserDialHTTPHeader(t *testing.T) {
+	t.Parallel()
+
+	url, headers := headerServer(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	// The browser stays open until the context ends.
+	if _, err := NewBrowser(ctx, url, WithDialHTTPHeader(http.Header{"Authorization": {"Bearer browser"}})); err != nil {
+		t.Fatal(err)
+	}
+	if got := receiveHeader(t, headers).Get("Authorization"); got != "Bearer browser" {
+		t.Fatalf("want the header of the browser option, got %q", got)
+	}
+}
+
+func TestRemoteAllocatorDialHTTPHeader(t *testing.T) {
+	t.Parallel()
+
+	url, headers := headerServer(t)
+	allocCtx, cancel := NewRemoteAllocator(context.Background(), url, NoModifyURL,
+		WithRemoteDialHTTPHeader(http.Header{"Authorization": {"Bearer remote"}}))
+	defer cancel()
+	ctx, cancel := NewContext(allocCtx)
+	defer cancel()
+
+	// The server does not speak the protocol, so the run ends with an error
+	// after the allocator dialed.
+	tctx, tcancel := context.WithTimeout(ctx, 500*time.Millisecond)
+	defer tcancel()
+	_ = Do(tctx)
+	if got := receiveHeader(t, headers).Get("Authorization"); got != "Bearer remote" {
+		t.Fatalf("want the header of the allocator option, got %q", got)
+	}
+}

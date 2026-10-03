@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -55,6 +56,10 @@ type Browser struct {
 	closingGracefully chan struct{}
 
 	dialTimeout time.Duration
+
+	// dialHTTPHeader is set by WithDialHTTPHeader. NewBrowser sends it with
+	// the websocket handshake.
+	dialHTTPHeader http.Header
 
 	// pages tracks the attached targets by session ID. It is a field only so
 	// that the tests can read the map after a browser closes.
@@ -118,7 +123,11 @@ func NewBrowser(ctx context.Context, urlstr string, opts ...BrowserOption) (*Bro
 		defer cancel()
 	}
 
-	conn, err := DialContext(dialCtx, urlstr, WithConnDebugf(b.dbgf))
+	dialOpts := []DialOption{WithConnDebugf(b.dbgf)}
+	if len(b.dialHTTPHeader) > 0 {
+		dialOpts = append(dialOpts, WithConnHTTPHeader(b.dialHTTPHeader))
+	}
+	conn, err := DialContext(dialCtx, urlstr, dialOpts...)
 	if err != nil {
 		return nil, fmt.Errorf("could not dial %q: %w", urlstr, err)
 	}
@@ -417,6 +426,22 @@ func WithBrowserDebugf(f func(string, ...any)) BrowserOption {
 // Note: it is not implemented yet.
 func WithConsolef(f func(string, ...any)) BrowserOption {
 	return func(b *Browser) {}
+}
+
+// WithDialHTTPHeader is a browser option that sets HTTP headers on the websocket
+// handshake request. NewBrowser sends them when it dials the address of the
+// browser. For example, a hosted browser service can need an Authorization
+// header:
+//
+//	chromedp.NewRemoteAllocator(ctx, wsURL, chromedp.NoModifyURL,
+//		chromedp.WithRemoteDialHTTPHeader(http.Header{
+//			"Authorization": {"Bearer " + token},
+//		}))
+//
+// The option has no effect when the Browser uses a pipe or another transport
+// that [NewBrowserTransport] received.
+func WithDialHTTPHeader(h http.Header) BrowserOption {
+	return func(b *Browser) { b.dialHTTPHeader = h.Clone() }
 }
 
 // WithDialTimeout is a browser option that sets the timeout for dialing the

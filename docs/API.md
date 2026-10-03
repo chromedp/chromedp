@@ -23,7 +23,7 @@ title, err := chromedp.Run(ctx, chromedp.Title())
 
 ## Before and after
 
-Each example has the old code first and the new code second. The new code comes from `example_test.go`. The examples 9, 11 and 14 use a live website and have no `Output` comment, so `go test` builds them and does not run them. Example 7 also uses a live website, but it has an `Output` comment, so `go test` runs it. In every example, `ctx` is a chromedp context made with `chromedp.NewContext`, and `ts` is a test server. The old code of some examples chose a lookup with an option. The Before blocks leave it out, because the default lookup finds the same elements. `docs/MIGRATION.md` lists the old options and the selector types that replace them.
+Each example has the old code first and the new code second. The new code comes from `example_test.go`. The examples 9, 11 and 14 use a live website and have no `Output` comment, so `go test` builds them and does not run them. Example 15 is new, so it has no Before block, and it has no `Output` comment. Example 7 also uses a live website, but it has an `Output` comment, so `go test` runs it. In every example, `ctx` is a chromedp context made with `chromedp.NewContext`, and `ts` is a test server. The old code of some examples chose a lookup with an option. The Before blocks leave it out, because the default lookup finds the same elements. `docs/MIGRATION.md` lists the old options and the selector types that replace them.
 
 ### 1. Navigate and read a value
 
@@ -518,6 +518,21 @@ chromedp.WaitClosed(ctx)
 
 `WithKeepOpen` leaves the browser open when the program ends. It uses the websocket and starts Chrome detached. `KeptOpen` returns the address and the profile directory, and `NewRemoteAllocator` attaches to the address later. The program must not delete the profile directory.
 
+### 15. Connect to a remote browser that needs headers
+
+A hosted browser service can need a header, such as `Authorization`, on the websocket request. `WithRemoteDialHTTPHeader` sets the headers of a remote allocator. `WithDialHTTPHeader` is the same option for a `Browser`, and `WithConnHTTPHeader` is the same option for `DialContext`. The headers go with the websocket request only. The request to `/json/version` has none, so give the allocator the full websocket address and use `NoModifyURL`.
+
+```go
+header := http.Header{"Authorization": {"Bearer " + token}}
+allocCtx, cancel := chromedp.NewRemoteAllocator(context.Background(), wsURL,
+	chromedp.NoModifyURL,
+	chromedp.WithRemoteDialHTTPHeader(header),
+)
+defer cancel()
+ctx, cancel := chromedp.NewContext(allocCtx)
+defer cancel()
+```
+
 ```go
 ctx, cancel := chromedp.NewContext(context.Background(),
 	chromedp.WithVisibleWindow(), chromedp.WithKeepOpen())
@@ -682,6 +697,7 @@ func WithBrowserDebugf(f func(string, ...any)) BrowserOption
 func WithBrowserErrorf(f func(string, ...any)) BrowserOption
 func WithBrowserLogf(f func(string, ...any)) BrowserOption
 func WithConsolef(f func(string, ...any)) BrowserOption
+func WithDialHTTPHeader(h http.Header) BrowserOption
 func WithDialTimeout(d time.Duration) BrowserOption
 
 type CSS string
@@ -716,6 +732,7 @@ type Device interface { ... }
 
 type DialOption = func(*Conn)
 func WithConnDebugf(f func(string, ...any)) DialOption
+func WithConnHTTPHeader(h http.Header) DialOption
 
 type EmulateViewportOption = func(*emulation.SetDeviceMetricsOverrideParams, *emulation.SetTouchEmulationEnabledParams)
 func EmulateOrientation(orientation emulation.ScreenOrientationType, angle int64) EmulateViewportOption
@@ -819,6 +836,7 @@ func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (
 func (a *RemoteAllocator) Wait()
 
 type RemoteAllocatorOption = func(*RemoteAllocator)
+func WithRemoteDialHTTPHeader(h http.Header) RemoteAllocatorOption
 
 type Search string
 

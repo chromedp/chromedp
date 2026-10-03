@@ -212,3 +212,9 @@ These names are new, and no old code needs a change. Headless mode is still the 
 - The variable `CHROMEDP_VISIBLEWINDOW` does the same with no change in the code. The tests also read the old variable `CHROMEDP_NO_HEADLESS`.
 - `ErrNoDisplay` is the error on Linux when a visible window has no display.
 - `WithKeepOpen` and the allocator option `KeepOpen` leave the browser open. `KeptOpen` returns its address and profile directory. `WaitClosed` waits until the browser exits.
+
+## Changes since v0.17.1
+
+These changes need no change in old code, unless a bullet says so.
+
+- `WithRemoteDialHTTPHeader`, `WithDialHTTPHeader` and `WithConnHTTPHeader` set HTTP headers on the websocket request to a remote browser. See example 15 in `docs/API.md`.
