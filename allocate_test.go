@@ -30,9 +30,9 @@ func TestExecAllocator(t *testing.T) {
 
 	want := "insert"
 	var got string
-	if err := Run(taskCtx,
+	if err := Do(taskCtx,
 		Navigate(testdataDir+"/form.html"),
-		Text("#foo", &got, ByID),
+		into(&got, Text("#foo", ByID)),
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -58,7 +58,7 @@ func TestExecAllocatorCancelParent(t *testing.T) {
 	// processes and browsers.
 
 	taskCtx, _ := NewContext(allocCtx)
-	if err := Run(taskCtx); err != nil {
+	if err := Do(taskCtx); err != nil {
 		t.Fatal(err)
 	}
 
@@ -127,7 +127,7 @@ func TestExecAllocatorKillBrowser(t *testing.T) {
 
 	// Run should error with something other than "deadline exceeded" in
 	// much less than 3s.
-	switch err := Run(ctx, Navigate(s.URL)); err {
+	switch err := Do(ctx, Navigate(s.URL)); err {
 	case nil:
 		// TODO: figure out why this happens sometimes on Travis
 		// t.Fatal("did not expect a nil error")
@@ -144,7 +144,7 @@ func TestSkipNewContext(t *testing.T) {
 
 	// Using the allocator context directly (without calling NewContext)
 	// should be an immediate error.
-	err := Run(ctx, Navigate(testdataDir+"/form.html"))
+	err := Do(ctx, Navigate(testdataDir+"/form.html"))
 
 	want := ErrInvalidContext
 	if err != want {
@@ -289,9 +289,9 @@ func testRemoteAllocator(t *testing.T, modifyURL func(wsURL string) string, want
 	defer taskCancel()
 	want := "insert"
 	var got string
-	if err := Run(taskCtx,
+	if err := Do(taskCtx,
 		Navigate(testdataDir+"/form.html"),
-		Text("#foo", &got, ByID),
+		into(&got, Text("#foo", ByID)),
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -328,11 +328,11 @@ func testRemoteAllocator(t *testing.T, modifyURL func(wsURL string) string, want
 	defer cancel()
 
 	// Connect to the browser, then kill it.
-	if err := Run(ctx); err != nil {
+	if err := Do(ctx); err != nil {
 		t.Fatal(err)
 	}
 	procCancel()
-	switch err := Run(ctx, Navigate(testdataDir+"/form.html")); err {
+	switch err := Do(ctx, Navigate(testdataDir+"/form.html")); err {
 	case nil:
 		// TODO: figure out why this happens sometimes on Travis
 		// t.Fatal("did not expect a nil error")
@@ -359,7 +359,7 @@ func TestExecAllocatorMissingWebsocketAddr(t *testing.T) {
 	// in GitHub Actions, the error text could be:
 	// "chrome failed to start:\n/bin/bash: /etc/profile.d/env_vars.sh: Permission denied\nmkdir: cannot create directory ‘/run/user/1001’: Permission denied\n[0321/081807.491906:ERROR:chrome_main_delegate.cc(1164)] Remote debugging pipe file descriptors are not open.\n"
 	want := `failed to start`
-	got := fmt.Sprintf("%v", Run(ctx))
+	got := fmt.Sprintf("%v", Do(ctx))
 	if !strings.Contains(got, want) {
 		t.Fatalf("want error to match %q, got %q", want, got)
 	}
@@ -377,7 +377,7 @@ func TestCombinedOutput(t *testing.T) {
 	defer cancel()
 
 	taskCtx, _ := NewContext(allocCtx)
-	if err := Run(taskCtx,
+	if err := Do(taskCtx,
 		Navigate(testdataDir+"/consolespam.html"),
 	); err != nil {
 		t.Fatal(err)
@@ -411,7 +411,7 @@ func TestCombinedOutputError(t *testing.T) {
 
 	ctx, cancel := NewContext(allocCtx)
 	defer cancel()
-	got := fmt.Sprint(Run(ctx))
+	got := fmt.Sprint(Do(ctx))
 	want := "failed to start"
 	if !strings.Contains(got, want) {
 		t.Fatalf("got %q, want %q", got, want)
@@ -432,8 +432,8 @@ func TestEnv(t *testing.T) {
 	defer cancel()
 
 	var ret string
-	if err := Run(ctx,
-		Evaluate(`Intl.DateTimeFormat().resolvedOptions().timeZone`, &ret),
+	if err := Do(ctx,
+		into(&ret, Evaluate[string](`Intl.DateTimeFormat().resolvedOptions().timeZone`)),
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -478,8 +478,8 @@ func TestModifyCmdFunc(t *testing.T) {
 	defer cancel()
 
 	var ret string
-	if err := Run(ctx,
-		Evaluate(`Intl.DateTimeFormat().resolvedOptions().timeZone`, &ret),
+	if err := Do(ctx,
+		into(&ret, Evaluate[string](`Intl.DateTimeFormat().resolvedOptions().timeZone`)),
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -517,7 +517,7 @@ func TestStartsWithNonBlankTab(t *testing.T) {
 	ctx, cancel = context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 
-	if err := Run(ctx,
+	if err := Do(ctx,
 		Navigate(testdataDir+"/form.html"),
 	); err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {

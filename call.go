@@ -12,7 +12,9 @@ import (
 // context, and returns its result. As [Run] does, it starts the browser and
 // opens the target when the context has none yet.
 //
-// For example, inside an [ActionFunc]:
+// Use it where only the context is at hand, for example in code that runs
+// under [Legacy]. An [Action] receives its target, and calls [cdp.Call] with
+// it:
 //
 //	res, err := chromedp.Call(ctx, page.Navigate, page.NavigateParams{URL: urlstr})
 //
@@ -41,37 +43,34 @@ func CallBrowser[P, R any](ctx context.Context, cmd cdp.Command[P, R], params P)
 	return cdp.Call(ctx, c.Browser, cmd, params)
 }
 
-// CallAction are actions that calls a JavaScript function using
-// runtime.CallFunctionOn.
-type CallAction Action
-
-// CallFunctionOn is an action to call a JavaScript function, unmarshaling
-// the result of the function to res.
+// CallFunctionOn is an action to call a JavaScript function, and decode the
+// result of the function into the type T.
 //
-// The handling of res is the same as that of Evaluate.
+// The handling of T is the same as that of [Evaluate].
 //
 // Do not set the following fields of runtime.CallFunctionOnParams:
-// - ReturnByValue: it will be set depending on the type of res;
+// - ReturnByValue: it will be set depending on the type T;
 // - Arguments: pass the arguments with args instead.
 //
 // Note: any exception encountered will be returned as an error.
-func CallFunctionOn(functionDeclaration string, res any, opt CallOption, args ...any) CallAction {
-	return ActionFunc(func(ctx context.Context) error {
-		_, err := callFunctionOn(ctx, functionDeclaration, res, opt, args...)
-		return err
-	})
+func CallFunctionOn[T any](functionDeclaration string, opt CallOption, args ...any) Action[T] {
+	return func(ctx context.Context, t *Target) (T, error) {
+		res, _, err := callFunctionOn[T](ctx, t, functionDeclaration, opt, args...)
+		return res, err
+	}
 }
 
-func callFunctionOn(ctx context.Context, functionDeclaration string, res any, opt CallOption, args ...any) (*runtime.RemoteObject, error) {
+// callFunctionOn calls the function, and returns the decoded result and the
+// remote object of the result.
+func callFunctionOn[T any](ctx context.Context, t *Target, functionDeclaration string, opt CallOption, args ...any) (T, *runtime.RemoteObject, error) {
+	var zero T
+
 	// set up parameters
 	p := &runtime.CallFunctionOnParams{
 		FunctionDeclaration: functionDeclaration,
 		Silent:              new(true),
 	}
-
-	switch res.(type) {
-	case **runtime.RemoteObject:
-	default:
+	if !wantsRemoteObject[T]() {
 		p.ReturnByValue = new(true)
 	}
 
@@ -87,21 +86,22 @@ func callFunctionOn(ctx context.Context, functionDeclaration string, res any, op
 			ea.append(arg)
 		}
 		if ea.err != nil {
-			return nil, ea.err
+			return zero, nil, ea.err
 		}
 		p.Arguments = ea.args
 	}
 
 	// call
-	r, err := Call(ctx, runtime.CallFunctionOn, *p)
+	r, err := cdp.Call(ctx, t, runtime.CallFunctionOn, *p)
 	if err != nil {
-		return nil, err
+		return zero, nil, err
 	}
 	if r.ExceptionDetails != nil {
-		return nil, &ExceptionError{r.ExceptionDetails}
+		return zero, nil, &ExceptionError{r.ExceptionDetails}
 	}
 
-	return r.Result, parseRemoteObject(r.Result, res)
+	res, err := parseRemoteObject[T](r.Result)
+	return res, r.Result, err
 }
 
 // CallOption is a function to modify the runtime.CallFunctionOnParams to

@@ -56,14 +56,16 @@ func (s *subscribers) publish(method string, params jsontext.Value) {
 	}
 }
 
-// close stops all subscriptions, and makes later subscriptions end at once.
+// close ends all subscriptions, and makes later subscriptions end at once. A
+// subscription first delivers the events that it already holds, so that a
+// reader sees every event up to the end of the session.
 func (s *subscribers) close() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.closed = true
 	for _, m := range s.subs {
 		for sub := range m {
-			sub.stop()
+			sub.finish()
 		}
 	}
 	s.subs = nil
@@ -79,6 +81,7 @@ type subscription struct {
 
 	mu       sync.Mutex
 	queue    []jsontext.Value
+	finished bool
 	stopOnce sync.Once
 }
 
@@ -92,7 +95,19 @@ func (s *subscription) push(v jsontext.Value) {
 	}
 }
 
-// stop ends the subscription. It is safe to call more than once.
+// finish ends the subscription after it delivered the queued events.
+func (s *subscription) finish() {
+	s.mu.Lock()
+	s.finished = true
+	s.mu.Unlock()
+	select {
+	case s.wake <- struct{}{}:
+	default:
+	}
+}
+
+// stop ends the subscription at once, and drops the queued events. It is safe
+// to call more than once.
 func (s *subscription) stop() {
 	s.stopOnce.Do(func() { close(s.done) })
 }
@@ -102,7 +117,7 @@ func (s *subscription) pump() {
 	defer close(s.out)
 	for {
 		s.mu.Lock()
-		queue := s.queue
+		queue, finished := s.queue, s.finished
 		s.queue = nil
 		s.mu.Unlock()
 
@@ -115,6 +130,9 @@ func (s *subscription) pump() {
 		}
 		if len(queue) > 0 {
 			continue
+		}
+		if finished {
+			return
 		}
 		select {
 		case <-s.wake:

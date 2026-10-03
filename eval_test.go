@@ -13,7 +13,6 @@ func TestEvaluateNumber(t *testing.T) {
 	tests := []struct {
 		name       string
 		expression string
-		res        int
 		want       int
 		wantErr    string
 	}{
@@ -33,16 +32,14 @@ func TestEvaluateNumber(t *testing.T) {
 			ctx, cancel := testAllocate(t, "")
 			defer cancel()
 
-			err := Run(ctx,
-				Evaluate(test.expression, &test.res),
-			)
+			res, err := Run(ctx, Evaluate[int](test.expression))
 			if test.wantErr == "" && err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 			if test.wantErr != "" && (err == nil || test.wantErr != err.Error()) {
 				t.Fatalf("wanted error: %q, got: %q", test.wantErr, err)
-			} else if test.res != test.want {
-				t.Fatalf("want: %v, got: %v", test.want, test.res)
+			} else if res != test.want {
+				t.Fatalf("want: %v, got: %v", test.want, res)
 			}
 		})
 	}
@@ -54,7 +51,6 @@ func TestEvaluateString(t *testing.T) {
 	tests := []struct {
 		name       string
 		expression string
-		res        string
 		want       string
 		wantErr    string
 	}{
@@ -74,16 +70,14 @@ func TestEvaluateString(t *testing.T) {
 			ctx, cancel := testAllocate(t, "")
 			defer cancel()
 
-			err := Run(ctx,
-				Evaluate(test.expression, &test.res),
-			)
+			res, err := Run(ctx, Evaluate[string](test.expression))
 			if test.wantErr == "" && err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 			if test.wantErr != "" && (err == nil || test.wantErr != err.Error()) {
 				t.Fatalf("wanted error: %q, got: %q", test.wantErr, err)
-			} else if test.res != test.want {
-				t.Fatalf("want: %v, got: %v", test.want, test.res)
+			} else if res != test.want {
+				t.Fatalf("want: %v, got: %v", test.want, res)
 			}
 		})
 	}
@@ -95,7 +89,6 @@ func TestEvaluateBytes(t *testing.T) {
 	tests := []struct {
 		name       string
 		expression string
-		res        []byte
 		want       []byte
 	}{
 		{
@@ -114,14 +107,12 @@ func TestEvaluateBytes(t *testing.T) {
 			ctx, cancel := testAllocate(t, "")
 			defer cancel()
 
-			err := Run(ctx,
-				Evaluate(test.expression, &test.res),
-			)
+			res, err := Run(ctx, Evaluate[[]byte](test.expression))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
-			if !reflect.DeepEqual(test.res, test.want) {
-				t.Fatalf("want: %v, got: %v", test.want, test.res)
+			if !reflect.DeepEqual(res, test.want) {
+				t.Fatalf("want: %v, got: %v", test.want, res)
 			}
 		})
 	}
@@ -133,7 +124,6 @@ func TestEvaluateRemoteObject(t *testing.T) {
 	tests := []struct {
 		name       string
 		expression string
-		res        *runtime.RemoteObject
 		wantType   string
 	}{
 		{
@@ -157,14 +147,12 @@ func TestEvaluateRemoteObject(t *testing.T) {
 			ctx, cancel := testAllocate(t, "")
 			defer cancel()
 
-			err := Run(ctx,
-				Evaluate(test.expression, &test.res),
-			)
+			res, err := Run(ctx, Evaluate[*runtime.RemoteObject](test.expression))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}
-			if string(test.res.Type) != test.wantType {
-				t.Fatalf("want type: %v, got type: %v", test.wantType, test.res.Type)
+			if string(res.Type) != test.wantType {
+				t.Fatalf("want type: %v, got type: %v", test.wantType, res.Type)
 			}
 		})
 	}
@@ -195,9 +183,7 @@ func TestEvaluateNil(t *testing.T) {
 			ctx, cancel := testAllocate(t, "")
 			defer cancel()
 
-			err := Run(ctx,
-				Evaluate(test.expression, nil),
-			)
+			_, err := Run(ctx, Evaluate[Void](test.expression))
 			if err != nil {
 				t.Fatalf("got error: %v", err)
 			}

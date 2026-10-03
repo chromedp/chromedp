@@ -6,57 +6,58 @@ import (
 	"fmt"
 
 	"github.com/chromedp/cdproto/cdp"
+	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/cdproto/page"
 )
 
-// NavigateAction are actions which always trigger a page navigation, waiting
-// for the page to load.
+// Navigate is an action that navigates the current frame, and waits for the
+// page to load.
 //
-// Note that these actions don't collect HTTP response information; for that,
-// see [RunResponse].
-type NavigateAction Action
+// Note that this action does not collect HTTP response information. For that,
+// see [NavigateResponse] and [RunResponse].
+func Navigate(urlstr string) Action[Void] {
+	return waitLoad(navigate(urlstr))
+}
 
-// Navigate is an action that navigates the current frame.
-func Navigate(urlstr string) NavigateAction {
-	return responseAction(nil, ActionFunc(func(ctx context.Context) error {
-		switch res, err := Call(ctx, page.Navigate, page.NavigateParams{URL: urlstr}); {
+// NavigateResponse is like [Navigate], and returns the HTTP response of the
+// HTML document.
+func NavigateResponse(urlstr string) Action[*network.Response] {
+	return responseAction(navigate(urlstr))
+}
+
+// navigate is the action that sends Page.navigate, without waiting for the
+// page to load.
+func navigate(urlstr string) Action[Void] {
+	return Func(func(ctx context.Context, t *Target) error {
+		switch res, err := cdp.Call(ctx, t, page.Navigate, page.NavigateParams{URL: urlstr}); {
 		case err != nil:
 			return err
 		case res.ErrorText != "":
 			return fmt.Errorf("page load error %s", res.ErrorText)
 		}
 		return nil
-	}))
-}
-
-// NavigationEntries is an action that retrieves the page's navigation history
-// entries.
-func NavigationEntries(currentIndex *int64, entries *[]*page.NavigationEntry) Action {
-	if currentIndex == nil || entries == nil {
-		panic("currentIndex and entries cannot be nil")
-	}
-
-	return ActionFunc(func(ctx context.Context) error {
-		res, err := Call(ctx, page.GetNavigationHistory, cdp.Empty{})
-		if err != nil {
-			return err
-		}
-		*currentIndex, *entries = res.CurrentIndex, res.Entries
-		return nil
 	})
 }
 
+// NavigationEntries is an action that retrieves the page's navigation history
+// entries. The result holds the index of the current entry and the entries.
+func NavigationEntries() Action[page.GetNavigationHistoryResult] {
+	return func(ctx context.Context, t *Target) (page.GetNavigationHistoryResult, error) {
+		return cdp.Call(ctx, t, page.GetNavigationHistory, cdp.Empty{})
+	}
+}
+
 // NavigateToHistoryEntry is an action to navigate to the specified navigation
-// entry.
-func NavigateToHistoryEntry(entryID int64) NavigateAction {
-	return responseAction(nil, navigateToHistoryEntry(entryID))
+// entry, and wait for the page to load.
+func NavigateToHistoryEntry(entryID int64) Action[Void] {
+	return waitLoad(navigateToHistoryEntry(entryID))
 }
 
 // NavigateBack is an action that navigates the current frame backwards in its
-// history.
-func NavigateBack() NavigateAction {
-	return responseAction(nil, ActionFunc(func(ctx context.Context) error {
-		res, err := Call(ctx, page.GetNavigationHistory, cdp.Empty{})
+// history, and waits for the page to load.
+func NavigateBack() Action[Void] {
+	return waitLoad(Func(func(ctx context.Context, t *Target) error {
+		res, err := cdp.Call(ctx, t, page.GetNavigationHistory, cdp.Empty{})
 		if err != nil {
 			return err
 		}
@@ -66,15 +67,16 @@ func NavigateBack() NavigateAction {
 			return errors.New("invalid navigation entry")
 		}
 
-		return navigateToHistoryEntry(entries[cur-1].ID).Do(ctx)
+		_, err = navigateToHistoryEntry(entries[cur-1].ID)(ctx, t)
+		return err
 	}))
 }
 
 // NavigateForward is an action that navigates the current frame forwards in
-// its history.
-func NavigateForward() NavigateAction {
-	return responseAction(nil, ActionFunc(func(ctx context.Context) error {
-		res, err := Call(ctx, page.GetNavigationHistory, cdp.Empty{})
+// its history, and waits for the page to load.
+func NavigateForward() Action[Void] {
+	return waitLoad(Func(func(ctx context.Context, t *Target) error {
+		res, err := cdp.Call(ctx, t, page.GetNavigationHistory, cdp.Empty{})
 		if err != nil {
 			return err
 		}
@@ -84,46 +86,42 @@ func NavigateForward() NavigateAction {
 			return errors.New("invalid navigation entry")
 		}
 
-		return navigateToHistoryEntry(entries[cur+1].ID).Do(ctx)
+		_, err = navigateToHistoryEntry(entries[cur+1].ID)(ctx, t)
+		return err
 	}))
 }
 
-// Reload is an action that reloads the current page.
-func Reload() NavigateAction {
-	return responseAction(nil, ActionFunc(func(ctx context.Context) error {
-		_, err := Call(ctx, page.Reload, page.ReloadParams{})
+// Reload is an action that reloads the current page, and waits for the page to
+// load.
+func Reload() Action[Void] {
+	return waitLoad(Func(func(ctx context.Context, t *Target) error {
+		_, err := cdp.Call(ctx, t, page.Reload, page.ReloadParams{})
 		return err
 	}))
 }
 
 // Stop is an action that stops all navigation and pending resource retrieval.
-func Stop() Action {
-	return ActionFunc(func(ctx context.Context) error {
-		_, err := Call(ctx, page.StopLoading, cdp.Empty{})
+func Stop() Action[Void] {
+	return Func(func(ctx context.Context, t *Target) error {
+		_, err := cdp.Call(ctx, t, page.StopLoading, cdp.Empty{})
 		return err
 	})
 }
 
 // navigateToHistoryEntry is an action that sends Page.navigateToHistoryEntry.
-func navigateToHistoryEntry(entryID int64) Action {
-	return ActionFunc(func(ctx context.Context) error {
-		_, err := Call(ctx, page.NavigateToHistoryEntry, page.NavigateToHistoryEntryParams{EntryID: entryID})
+func navigateToHistoryEntry(entryID int64) Action[Void] {
+	return Func(func(ctx context.Context, t *Target) error {
+		_, err := cdp.Call(ctx, t, page.NavigateToHistoryEntry, page.NavigateToHistoryEntryParams{EntryID: entryID})
 		return err
 	})
 }
 
 // Location is an action that retrieves the document location.
-func Location(urlstr *string) Action {
-	if urlstr == nil {
-		panic("urlstr cannot be nil")
-	}
-	return EvaluateAsDevTools(`document.location.toString()`, urlstr)
+func Location() Action[string] {
+	return EvaluateAsDevTools[string](`document.location.toString()`)
 }
 
 // Title is an action that retrieves the document title.
-func Title(title *string) Action {
-	if title == nil {
-		panic("title cannot be nil")
-	}
-	return EvaluateAsDevTools(`document.title`, title)
+func Title() Action[string] {
+	return EvaluateAsDevTools[string](`document.title`)
 }

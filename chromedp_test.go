@@ -9,6 +9,7 @@ import (
 	"image/png"
 	"io"
 	"io/fs"
+	"iter"
 	"log"
 	"net"
 	"net/http"
@@ -19,7 +20,6 @@ import (
 	"slices"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"testing"
 	"text/template"
 	"time"
@@ -108,6 +108,19 @@ func TestMain(m *testing.M) {
 	os.Exit(code)
 }
 
+// into makes an action that runs a and stores its value in dst. The tests use
+// it to run several actions in one call of Do and still read their values.
+func into[T any](dst *T, a Action[T]) Action[Void] {
+	return func(ctx context.Context, t *Target) (Void, error) {
+		v, err := a(ctx, t)
+		if err != nil {
+			return Void{}, err
+		}
+		*dst = v
+		return Void{}, nil
+	}
+}
+
 var allocateOnce sync.Once
 
 func testAllocate(tb testing.TB, name string) (context.Context, context.CancelFunc) {
@@ -125,7 +138,7 @@ func testAllocate(tb testing.TB, name string) (context.Context, context.CancelFu
 
 	// Only navigate if we want an HTML file name, otherwise leave the blank page.
 	if name != "" {
-		if err := Run(ctx, Navigate(testdataDir+"/"+name)); err != nil {
+		if err := Do(ctx, Navigate(testdataDir+"/"+name)); err != nil {
 			tb.Fatal(err)
 		}
 	}
@@ -141,14 +154,17 @@ func testAllocate(tb testing.TB, name string) (context.Context, context.CancelFu
 func testAllocateSeparate(tb testing.TB) (context.Context, context.CancelFunc) {
 	// Entirely new browser, unlike testAllocate.
 	ctx, _ := NewContext(allocCtx, browserOpts...)
-	if err := Run(ctx); err != nil {
+	if err := Do(ctx); err != nil {
 		tb.Fatal(err)
 	}
-	ListenBrowser(ctx, func(ev any) {
-		if ev, ok := ev.(*runtime.EventExceptionThrown); ok {
+	go func() {
+		for ev, err := range Events(ctx, runtime.ExceptionThrown) {
+			if err != nil {
+				return
+			}
 			tb.Errorf("%+v\n", ev.ExceptionDetails)
 		}
-	})
+	}()
 	cancel := func() {
 		if err := Cancel(ctx); err != nil {
 			tb.Error(err)
@@ -165,14 +181,14 @@ func BenchmarkTabNavigate(b *testing.B) {
 
 	// start the browser
 	bctx, _ := NewContext(allocCtx)
-	if err := Run(bctx); err != nil {
+	if err := Do(bctx); err != nil {
 		b.Fatal(err)
 	}
 
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			ctx, _ := NewContext(bctx)
-			if err := Run(ctx,
+			if err := Do(ctx,
 				Navigate(testdataDir+"/form.html"),
 				WaitVisible(`#form`, ByID),
 			); err != nil {
@@ -221,7 +237,7 @@ func TestTargets(t *testing.T) {
 	// Start a second tab on the same browser.
 	ctx2, cancel2 := NewContext(ctx1)
 	defer cancel2()
-	if err := Run(ctx2); err != nil {
+	if err := Do(ctx2); err != nil {
 		t.Fatal(err)
 	}
 	checkTargets(t, ctx2, 2)
@@ -235,7 +251,7 @@ func TestTargets(t *testing.T) {
 
 	// We used to have a bug where Run would reset the first context as if
 	// it weren't the first, breaking its cancellation.
-	if err := Run(ctx1); err != nil {
+	if err := Do(ctx1); err != nil {
 		t.Fatal(err)
 	}
 
@@ -253,14 +269,14 @@ func TestCancelError(t *testing.T) {
 
 	ctx1, cancel1 := testAllocate(t, "")
 	defer cancel1()
-	if err := Run(ctx1); err != nil {
+	if err := Do(ctx1); err != nil {
 		t.Fatal(err)
 	}
 
 	// Open and close a target normally; no error.
 	ctx2, cancel2 := NewContext(ctx1)
 	defer cancel2()
-	if err := Run(ctx2); err != nil {
+	if err := Do(ctx2); err != nil {
 		t.Fatal(err)
 	}
 	if err := Cancel(ctx2); err != nil {
@@ -278,7 +294,7 @@ func TestCancelError(t *testing.T) {
 		// Make "cancel" close the wrong target; error.
 		ctx3, cancel3 := NewContext(ctx1)
 		defer cancel3()
-		if err := Run(ctx3); err != nil {
+		if err := Do(ctx3); err != nil {
 			t.Fatal(err)
 		}
 		FromContext(ctx3).Target.TargetID = "wrong"
@@ -296,7 +312,7 @@ func TestPrematureCancel(t *testing.T) {
 	if err := Cancel(ctx); err != nil {
 		t.Fatal(err)
 	}
-	if err := Run(ctx); err != context.Canceled {
+	if err := Do(ctx); err != context.Canceled {
 		t.Fatalf("wanted canceled context error, got %v", err)
 	}
 }
@@ -306,7 +322,7 @@ func TestPrematureCancelTab(t *testing.T) {
 
 	ctx1, cancel := testAllocate(t, "")
 	defer cancel()
-	if err := Run(ctx1); err != nil {
+	if err := Do(ctx1); err != nil {
 		t.Fatal(err)
 	}
 
@@ -314,7 +330,7 @@ func TestPrematureCancelTab(t *testing.T) {
 	// Cancel after the browser is allocated, but before we've created a new
 	// tab.
 	cancel()
-	if err := Run(ctx2); err != context.Canceled {
+	if err := Do(ctx2); err != context.Canceled {
 		t.Fatalf("wanted canceled context error, got %v", err)
 	}
 }
@@ -330,7 +346,7 @@ func TestPrematureCancelAllocator(t *testing.T) {
 
 	ctx, cancel := NewContext(allocCtx)
 	defer cancel()
-	if err := Run(ctx); err != context.Canceled {
+	if err := Do(ctx); err != context.Canceled {
 		t.Fatalf("wanted canceled context error, got %v", err)
 	}
 }
@@ -353,77 +369,105 @@ func TestConcurrentCancel(t *testing.T) {
 			wg.Done()
 		}()
 		go func() {
-			_ = Run(ctx)
+			_ = Do(ctx)
 			wg.Done()
 		}()
 	}
 	wg.Wait()
 }
 
-func TestListenBrowser(t *testing.T) {
+func TestBrowserEvents(t *testing.T) {
 	t.Parallel()
 
 	ctx, cancel := testAllocate(t, "")
 	defer cancel()
-
-	// Check that many ListenBrowser callbacks work, including adding
-	// callbacks after the browser has been allocated.
-	var totalCount atomic.Int32
-	ListenBrowser(ctx, func(ev any) {
-		// using sync/atomic, as the browser is shared.
-		totalCount.Add(1)
-	})
-	if err := Run(ctx); err != nil {
+	if err := Do(ctx); err != nil {
 		t.Fatal(err)
 	}
-	seenSessions := make(map[target.SessionID]bool)
-	ListenBrowser(ctx, func(ev any) {
-		if ev, ok := ev.(*target.EventAttachedToTarget); ok {
-			seenSessions[ev.SessionID] = true
-		}
-	})
+
+	// Check that many subscriptions work, including a subscription that
+	// starts after the browser has been allocated. The subscriptions give up
+	// when the test takes too long.
+	sctx, scancel := context.WithTimeout(ctx, time.Minute)
+	defer scancel()
+	created := BrowserEvents(sctx, target.TargetCreated)
+	attached := BrowserEvents(sctx, target.AttachedToTarget)
 
 	newTabCtx, cancel := NewContext(ctx)
 	defer cancel()
-	if err := Run(newTabCtx, Navigate(testdataDir+"/form.html")); err != nil {
+	if err := Do(newTabCtx, Navigate(testdataDir+"/form.html")); err != nil {
 		t.Fatal(err)
 	}
 	cancel()
-	if id := FromContext(newTabCtx).Target.SessionID; !seenSessions[id] {
+	id := FromContext(newTabCtx).Target.SessionID
+
+	seenSession := false
+	for ev, err := range attached {
+		if err != nil {
+			t.Fatalf("did not see Target.attachedToTarget for %q: %v", id, err)
+		}
+		if ev.SessionID == id {
+			seenSession = true
+			break
+		}
+	}
+	if !seenSession {
 		t.Fatalf("did not see Target.attachedToTarget for %q", id)
 	}
-	if want, got := int32(1), totalCount.Load(); got < want {
+	totalCount := 0
+	for range created {
+		totalCount++
+		break
+	}
+	if want, got := 1, totalCount; got < want {
 		t.Fatalf("want at least %d browser events; got %d", want, got)
 	}
 }
 
-func TestListenTarget(t *testing.T) {
+func TestEvents(t *testing.T) {
 	t.Parallel()
 
 	ctx, cancel := testAllocate(t, "")
 	defer cancel()
 
-	// Check that many listen callbacks work, including adding callbacks
-	// after the target has been attached to.
+	// Check that many subscriptions work, including a subscription that
+	// starts after the target has been attached to. The first one starts
+	// before the target exists, and so it opens the target. The second one
+	// outlives the context, so that it delivers all events up to the end of
+	// the target.
 	var navigatedCount, updatedCount int
-	ListenTarget(ctx, func(ev any) {
-		if _, ok := ev.(*page.EventFrameNavigated); ok {
+	var wg sync.WaitGroup
+	navigated := Events(ctx, page.FrameNavigated)
+	wg.Go(func() {
+		for _, err := range navigated {
+			if err != nil {
+				if !errors.Is(err, context.Canceled) {
+					t.Error(err)
+				}
+				return
+			}
 			navigatedCount++
 		}
 	})
-	if err := Run(ctx); err != nil {
+	if err := Do(ctx); err != nil {
 		t.Fatal(err)
 	}
-	ListenTarget(ctx, func(ev any) {
-		if _, ok := ev.(*dom.EventDocumentUpdated); ok {
+	updated := Events(context.WithoutCancel(ctx), dom.DocumentUpdated)
+	wg.Go(func() {
+		for _, err := range updated {
+			if err != nil {
+				t.Error(err)
+				return
+			}
 			updatedCount++
 		}
 	})
 
-	if err := Run(ctx, Navigate(testdataDir+"/form.html")); err != nil {
+	if err := Do(ctx, Navigate(testdataDir+"/form.html")); err != nil {
 		t.Fatal(err)
 	}
 	cancel()
+	wg.Wait()
 	if want := 1; navigatedCount != want {
 		t.Fatalf("want %d Page.frameNavigated events; got %d", want, navigatedCount)
 	}
@@ -443,15 +487,21 @@ func TestLargeEventCount(t *testing.T) {
 	// would crash as we would fill eventQueue and panic. 50ms is enough to
 	// make the test fail somewhat reliably on old chromedp versions,
 	// without making the test too slow.
-	first := true
-	ListenTarget(ctx, func(ev any) {
-		if _, ok := ev.(*runtime.EventConsoleAPICalled); ok && first {
-			time.Sleep(50 * time.Millisecond)
-			first = false
+	events := Events(ctx, runtime.ConsoleAPICalled)
+	go func() {
+		first := true
+		for _, err := range events {
+			if err != nil {
+				return
+			}
+			if first {
+				time.Sleep(50 * time.Millisecond)
+				first = false
+			}
 		}
-	})
+	}()
 
-	if err := Run(ctx,
+	if err := Do(ctx,
 		Navigate(testdataDir+"/consolespam.html"),
 		WaitVisible("#done", ByID), // wait for the JS to finish
 	); err != nil {
@@ -481,9 +531,9 @@ func TestLargeQuery(t *testing.T) {
 	// event queues would fill up and prevent the wait function from
 	// receiving any result.
 	var nodes []*Node
-	if err := Run(ctx,
+	if err := Do(ctx,
 		Navigate(s.URL),
-		Nodes("a", &nodes, ByQueryAll),
+		into(&nodes, Nodes("a", ByQueryAll)),
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -532,35 +582,66 @@ func TestDialTimeout(t *testing.T) {
 	})
 }
 
-func TestListenCancel(t *testing.T) {
+// cancelAfterFirst ranges over seq in a new goroutine. It calls cancel at the
+// first event. The returned channel receives the error that ends the
+// iteration, or nil when the iteration ends without an error.
+func cancelAfterFirst[E any](seq iter.Seq2[E, error], cancel context.CancelFunc) <-chan error {
+	done := make(chan error, 1)
+	go func() {
+		first := true
+		for _, err := range seq {
+			if err != nil {
+				done <- err
+				return
+			}
+			if first {
+				first = false
+				cancel()
+			}
+		}
+		done <- nil
+	}()
+	return done
+}
+
+func TestEventsCancel(t *testing.T) {
 	t.Parallel()
 
 	ctx, cancel := testAllocateSeparate(t)
 	defer cancel()
 
-	// Check that cancelling a listen context stops the listener.
-	var browserCount, targetCount int
+	// Check that cancelling the context of an iterator ends the iteration
+	// and removes the subscription.
+	browserCtx, browserCancel := context.WithCancel(ctx)
+	defer browserCancel()
+	targetCtx, targetCancel := context.WithCancel(ctx)
+	defer targetCancel()
+	browserDone := cancelAfterFirst(BrowserEvents(browserCtx, target.TargetInfoChanged), browserCancel)
+	targetDone := cancelAfterFirst(Events(targetCtx, page.FrameNavigated), targetCancel)
 
-	ctx1, cancel1 := context.WithCancel(ctx)
-	ListenBrowser(ctx1, func(ev any) {
-		browserCount++
-		cancel1()
-	})
-
-	ctx2, cancel2 := context.WithCancel(ctx)
-	ListenTarget(ctx2, func(ev any) {
-		targetCount++
-		cancel2()
-	})
-
-	if err := Run(ctx, Navigate(testdataDir+"/form.html")); err != nil {
+	if err := Do(ctx, Navigate(testdataDir+"/form.html")); err != nil {
 		t.Fatal(err)
 	}
-	if want := 1; browserCount != 1 {
-		t.Fatalf("want %d browser events; got %d", want, browserCount)
+	for name, done := range map[string]<-chan error{"browser": browserDone, "target": targetDone} {
+		select {
+		case err := <-done:
+			if !errors.Is(err, context.Canceled) {
+				t.Fatalf("want a canceled %s iteration, got %v", name, err)
+			}
+		case <-time.After(10 * time.Second):
+			t.Fatalf("the %s iteration did not end after its context was cancelled", name)
+		}
 	}
-	if want := 1; targetCount != 1 {
-		t.Fatalf("want %d target events; got %d", want, targetCount)
+
+	b, tg := FromContext(ctx).Browser, FromContext(ctx).Target
+	b.events.mu.Lock()
+	browserSubs := len(b.events.subs[target.TargetInfoChanged.Method])
+	b.events.mu.Unlock()
+	tg.events.mu.Lock()
+	targetSubs := len(tg.events.subs[page.FrameNavigated.Method])
+	tg.events.mu.Unlock()
+	if browserSubs != 0 || targetSubs != 0 {
+		t.Fatalf("want no subscriptions left, got %d browser and %d target", browserSubs, targetSubs)
 	}
 }
 
@@ -582,7 +663,7 @@ func TestLogOptions(t *testing.T) {
 		WithDebugf(fn),
 	)
 	defer cancel()
-	if err := Run(ctx, Navigate(testdataDir+"/form.html")); err != nil {
+	if err := Do(ctx, Navigate(testdataDir+"/form.html")); err != nil {
 		t.Fatal(err)
 	}
 	cancel()
@@ -611,14 +692,14 @@ func TestBrowserContext(t *testing.T) {
 	// Prepare 2 browser contexts to be used later.
 	rootCtx1, cancel := NewContext(browserCtx, WithNewBrowserContext())
 	defer cancel()
-	if err := Run(rootCtx1); err != nil {
+	if err := Do(rootCtx1); err != nil {
 		t.Fatal(err)
 	}
 	rootBrowserContextID1 := FromContext(rootCtx1).BrowserContextID
 
 	rootCtx2, cancel := NewContext(browserCtx, WithNewBrowserContext())
 	defer cancel()
-	if err := Run(rootCtx2); err != nil {
+	if err := Do(rootCtx2); err != nil {
 		t.Fatal(err)
 	}
 	rootBrowserContextID2 := FromContext(rootCtx2).BrowserContextID
@@ -633,7 +714,7 @@ func TestBrowserContext(t *testing.T) {
 			name: "default",
 			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
 				ctx, cancel := NewContext(browserCtx)
-				if err := Run(ctx); err != nil {
+				if err := Do(ctx); err != nil {
 					t.Fatal(err)
 				}
 				return ctx, cancel, defaultBrowserContextID
@@ -645,7 +726,7 @@ func TestBrowserContext(t *testing.T) {
 			name: "new",
 			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
 				ctx, cancel := NewContext(browserCtx, WithNewBrowserContext())
-				if err := Run(ctx); err != nil {
+				if err := Do(ctx); err != nil {
 					t.Fatal(err)
 				}
 				c := FromContext(ctx)
@@ -658,7 +739,7 @@ func TestBrowserContext(t *testing.T) {
 			name: "existing",
 			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
 				ctx, cancel := NewContext(browserCtx, WithExistingBrowserContext(rootBrowserContextID1))
-				if err := Run(ctx); err != nil {
+				if err := Do(ctx); err != nil {
 					t.Fatal(err)
 				}
 				return ctx, cancel, rootBrowserContextID1
@@ -670,7 +751,7 @@ func TestBrowserContext(t *testing.T) {
 			name: "inherited 1",
 			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
 				ctx, cancel := NewContext(rootCtx1)
-				if err := Run(ctx); err != nil {
+				if err := Do(ctx); err != nil {
 					t.Fatal(err)
 				}
 				return ctx, cancel, rootBrowserContextID1
@@ -682,11 +763,11 @@ func TestBrowserContext(t *testing.T) {
 			name: "inherited 2",
 			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
 				ctx1, _ := NewContext(rootCtx1)
-				if err := Run(ctx1); err != nil {
+				if err := Do(ctx1); err != nil {
 					t.Fatal(err)
 				}
 				ctx, cancel := NewContext(ctx1)
-				if err := Run(ctx); err != nil {
+				if err := Do(ctx); err != nil {
 					t.Fatal(err)
 				}
 				return ctx, cancel, rootBrowserContextID1
@@ -698,11 +779,11 @@ func TestBrowserContext(t *testing.T) {
 			name: "inherited 3",
 			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
 				ctx1, _ := NewContext(browserCtx, WithExistingBrowserContext(rootBrowserContextID1))
-				if err := Run(ctx1); err != nil {
+				if err := Do(ctx1); err != nil {
 					t.Fatal(err)
 				}
 				ctx, cancel := NewContext(ctx1)
-				if err := Run(ctx); err != nil {
+				if err := Do(ctx); err != nil {
 					t.Fatal(err)
 				}
 				return ctx, cancel, rootBrowserContextID1
@@ -714,7 +795,7 @@ func TestBrowserContext(t *testing.T) {
 			name: "break inheritance 1",
 			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
 				ctx, cancel := NewContext(rootCtx1, WithExistingBrowserContext(rootBrowserContextID2))
-				if err := Run(ctx); err != nil {
+				if err := Do(ctx); err != nil {
 					t.Fatal(err)
 				}
 				// The target should be added to the second browser context.
@@ -727,7 +808,7 @@ func TestBrowserContext(t *testing.T) {
 			name: "break inheritance 2",
 			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
 				ctx, cancel := NewContext(rootCtx1, WithNewBrowserContext())
-				if err := Run(ctx); err != nil {
+				if err := Do(ctx); err != nil {
 					t.Fatal(err)
 				}
 				c := FromContext(ctx)
@@ -743,7 +824,7 @@ func TestBrowserContext(t *testing.T) {
 			name: "break inheritance 3",
 			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
 				ctx, cancel := NewContext(rootCtx1, WithTargetID(FromContext(rootCtx2).Target.TargetID))
-				if err := Run(ctx); err != nil {
+				if err := Do(ctx); err != nil {
 					t.Fatal(err)
 				}
 
@@ -761,11 +842,11 @@ func TestBrowserContext(t *testing.T) {
 			name: "WithNewBrowserContext when WithTargetID is specified",
 			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
 				ctx, _ := NewContext(rootCtx1)
-				if err := Run(ctx); err != nil {
+				if err := Do(ctx); err != nil {
 					t.Fatal(err)
 				}
 				ctx, cancel := NewContext(browserCtx, WithTargetID(FromContext(ctx).Target.TargetID), WithNewBrowserContext())
-				if err := Run(ctx); err != nil {
+				if err := Do(ctx); err != nil {
 					t.Fatal(err)
 				}
 
@@ -778,11 +859,11 @@ func TestBrowserContext(t *testing.T) {
 			name: "WithExistingBrowserContext when WithTargetID is specified",
 			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
 				ctx, _ := NewContext(rootCtx1)
-				if err := Run(ctx); err != nil {
+				if err := Do(ctx); err != nil {
 					t.Fatal(err)
 				}
 				ctx, cancel := NewContext(browserCtx, WithTargetID(FromContext(ctx).Target.TargetID), WithExistingBrowserContext(rootBrowserContextID2))
-				if err := Run(ctx); err != nil {
+				if err := Do(ctx); err != nil {
 					t.Fatal(err)
 				}
 
@@ -795,7 +876,7 @@ func TestBrowserContext(t *testing.T) {
 			name: "WithNewBrowserContext before Browser is initialized",
 			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
 				ctx, cancel := NewContext(context.Background(), WithNewBrowserContext())
-				if err := Run(ctx); err != nil {
+				if err := Do(ctx); err != nil {
 					t.Fatal(err)
 				}
 
@@ -808,7 +889,7 @@ func TestBrowserContext(t *testing.T) {
 			name: "WithExistingBrowserContext before Browser is initialized",
 			arrange: func(t *testing.T) (context.Context, context.CancelFunc, cdp.BrowserContextID) {
 				ctx, cancel := NewContext(context.Background(), WithExistingBrowserContext(rootBrowserContextID1))
-				if err := Run(ctx); err != nil {
+				if err := Do(ctx); err != nil {
 					t.Fatal(err)
 				}
 
@@ -830,7 +911,7 @@ func TestBrowserContext(t *testing.T) {
 				}
 				actx, _ := NewRemoteAllocator(context.Background(), "ws://"+conn.RemoteAddr().String())
 				ctx, cancel := NewContext(actx, WithExistingBrowserContext(rootBrowserContextID1))
-				if err := Run(ctx); err != nil {
+				if err := Do(ctx); err != nil {
 					t.Fatal(err)
 				}
 
@@ -852,7 +933,7 @@ func TestBrowserContext(t *testing.T) {
 				}
 				actx, _ := NewRemoteAllocator(context.Background(), "ws://"+conn.RemoteAddr().String())
 				ctx, cancel := NewContext(actx, WithNewBrowserContext())
-				if err := Run(ctx); err != nil {
+				if err := Do(ctx); err != nil {
 					t.Fatal(err)
 				}
 
@@ -898,8 +979,8 @@ func TestBrowserContext(t *testing.T) {
 			cancel()
 
 			var ids []cdp.BrowserContextID
-			if err := Run(browserCtx,
-				ActionFunc(func(ctx context.Context) error {
+			if err := Do(browserCtx,
+				Func(func(ctx context.Context, t *Target) error {
 					res, err := CallBrowser(ctx, target.GetBrowserContexts, cdp.Empty{})
 					ids = res.BrowserContextIDs
 					return err
@@ -919,8 +1000,8 @@ func TestBrowserContext(t *testing.T) {
 
 func getBrowserContext(tb testing.TB, ctx context.Context) cdp.BrowserContextID {
 	var id cdp.BrowserContextID
-	if err := Run(ctx,
-		ActionFunc(func(ctx context.Context) error {
+	if err := Do(ctx,
+		Func(func(ctx context.Context, t *Target) error {
 			res, err := Call(ctx, target.GetTargetInfo, target.GetTargetInfoParams{})
 			if err != nil {
 				return err
@@ -942,8 +1023,7 @@ func TestLargeOutboundMessages(t *testing.T) {
 
 	// ~5MiB of JS to test the grow feature of github.com/gobwas/ws.
 	expr := fmt.Sprintf("//%s\n", strings.Repeat("x", 5<<20))
-	res := new([]byte)
-	if err := Run(ctx, Evaluate(expr, res)); err != nil {
+	if _, err := Run(ctx, Evaluate[[]byte](expr)); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -959,7 +1039,7 @@ func TestDirectCloseTarget(t *testing.T) {
 
 	// Check that nothing is closed by running the action twice.
 	for range 2 {
-		err := Run(ctx, ActionFunc(func(ctx context.Context) error {
+		err := Do(ctx, Func(func(ctx context.Context, t *Target) error {
 			_, err := Call(ctx, target.CloseTarget, target.CloseTargetParams{TargetID: c.Target.TargetID})
 			return err
 		}))
@@ -1008,19 +1088,11 @@ func TestDownloadIntoDir(t *testing.T) {
 	}))
 	defer s.Close()
 
-	done := make(chan string, 1)
-	ListenTarget(ctx, func(v any) {
-		if ev, ok := v.(*browser.EventDownloadProgress); ok {
-			if ev.State == browser.DownloadProgressStateCompleted {
-				done <- ev.GUID
-				close(done)
-			}
-		}
-	})
+	progress := Events(ctx, browser.DownloadProgress)
 
-	if err := Run(ctx,
+	if err := Do(ctx,
 		Navigate(s.URL),
-		ActionFunc(func(ctx context.Context) error {
+		Func(func(ctx context.Context, t *Target) error {
 			_, err := Call(ctx, browser.SetDownloadBehavior, browser.SetDownloadBehaviorParams{
 				Behavior:      browser.SetDownloadBehaviorBehaviorAllowAndName,
 				DownloadPath:  dir,
@@ -1033,13 +1105,17 @@ func TestDownloadIntoDir(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	select {
-	case <-ctx.Done():
-		t.Fatalf("unexpected error: %v", ctx.Err())
-	case guid := <-done:
-		if _, err := os.Stat(filepath.Join(dir, guid)); err != nil {
+	for ev, err := range progress {
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if ev.State != browser.DownloadProgressStateCompleted {
+			continue
+		}
+		if _, err := os.Stat(filepath.Join(dir, ev.GUID)); err != nil {
 			t.Fatalf("want error nil, got: %v", err)
 		}
+		break
 	}
 }
 
@@ -1071,7 +1147,7 @@ func TestGracefulBrowserShutdown(t *testing.T) {
 
 	{
 		ctx, _ := NewContext(actx)
-		if err := Run(ctx, Navigate(ts.URL+"/set")); err != nil {
+		if err := Do(ctx, Navigate(ts.URL+"/set")); err != nil {
 			t.Fatal(err)
 		}
 
@@ -1090,9 +1166,9 @@ func TestGracefulBrowserShutdown(t *testing.T) {
 			}
 		}()
 		var got string
-		if err := Run(ctx,
+		if err := Do(ctx,
 			Navigate(ts.URL),
-			EvaluateAsDevTools("document.cookie", &got),
+			into(&got, EvaluateAsDevTools[string]("document.cookie")),
 		); err != nil {
 			t.Fatal(err)
 		}
@@ -1134,26 +1210,28 @@ func TestAttachingToWorkers(t *testing.T) {
 			ctx, cancel := NewContext(context.Background())
 			defer cancel()
 
-			ch := make(chan target.ID, 1)
+			sctx, scancel := context.WithTimeout(ctx, time.Minute)
+			defer scancel()
+			attached := Events(sctx, target.AttachedToTarget)
 
-			ListenTarget(ctx, func(ev any) {
-				if ev, ok := ev.(*target.EventAttachedToTarget); ok {
-					if !strings.Contains(ev.TargetInfo.Type, "worker") {
-						return
-					}
-					ch <- ev.TargetInfo.TargetID
-				}
-			})
-
-			if err := Run(ctx, Navigate(ts.URL)); err != nil {
+			if err := Do(ctx, Navigate(ts.URL)); err != nil {
 				t.Fatalf("Failed to navigate to the test page: %q", err)
 			}
 
-			targetID := <-ch
+			var targetID target.ID
+			for ev, err := range attached {
+				if err != nil {
+					t.Fatalf("Failed to wait for the worker target: %q", err)
+				}
+				if strings.Contains(ev.TargetInfo.Type, "worker") {
+					targetID = ev.TargetInfo.TargetID
+					break
+				}
+			}
 			ctx, cancel = NewContext(ctx, WithTargetID(targetID))
 			defer cancel()
 
-			if err := Run(ctx, ActionFunc(func(ctx context.Context) error {
+			if err := Do(ctx, Func(func(ctx context.Context, t *Target) error {
 				if r, err := Call(ctx, runtime.Evaluate, runtime.EvaluateParams{Expression: "self"}); err != nil {
 					return err
 				} else if r.Result.ClassName != tc.wantSelf {
@@ -1318,7 +1396,7 @@ func TestRunResponse(t *testing.T) {
 			ctx, cancel = context.WithTimeout(ctx, 5*time.Second)
 			t.Cleanup(cancel)
 
-			if err := Run(ctx, Navigate(ts.URL+"/index")); err != nil {
+			if err := Do(ctx, Navigate(ts.URL+"/index")); err != nil {
 				t.Fatalf("Failed to navigate to the test page: %q", err)
 			}
 			return ctx
@@ -1409,7 +1487,7 @@ func TestRunResponse_noResponse(t *testing.T) {
 
 	steps := []struct {
 		name     string
-		action   Action
+		action   Action[Void]
 		wantResp bool
 	}{
 		{"FirstNavigation", Navigate(ts.URL + "/200"), true},
@@ -1447,9 +1525,9 @@ func TestWebGL(t *testing.T) {
 	defer cancel()
 
 	var buf []byte
-	if err := Run(ctx,
-		Poll("rendered", nil, WithPollingTimeout(2*time.Second)),
-		Screenshot(`#c`, &buf, ByQuery),
+	if err := Do(ctx,
+		Poll[Void]("rendered", WithPollingTimeout(2*time.Second)),
+		into(&buf, Screenshot(`#c`, ByQuery)),
 	); err != nil {
 		if errors.Is(err, ErrPollingTimeout) {
 			t.Fatal("The cube is not rendered in 2s.")
@@ -1494,9 +1572,9 @@ func TestPDFTemplate(t *testing.T) {
 	defer cancel()
 
 	var buf []byte
-	if err := Run(ctx,
+	if err := Do(ctx,
 		Navigate("about:blank"),
-		ActionFunc(func(ctx context.Context) error {
+		Func(func(ctx context.Context, t *Target) error {
 			frameTree, err := Call(ctx, page.GetFrameTree, cdp.Empty{})
 			if err != nil {
 				return err
@@ -1517,7 +1595,7 @@ func TestPDFTemplate(t *testing.T) {
 			})
 			return err
 		}),
-		ActionFunc(func(ctx context.Context) error {
+		Func(func(ctx context.Context, t *Target) error {
 			res, err := Call(ctx, page.PrintToPDF, page.PrintToPDFParams{
 				MarginTop:           0.5,
 				MarginBottom:        0.5,
@@ -1568,9 +1646,9 @@ func TestPDFBackground(t *testing.T) {
 	defer cancel()
 
 	var buf []byte
-	if err := Run(ctx,
+	if err := Do(ctx,
 		Navigate("about:blank"),
-		ActionFunc(func(ctx context.Context) error {
+		Func(func(ctx context.Context, t *Target) error {
 			frameTree, err := Call(ctx, page.GetFrameTree, cdp.Empty{})
 			if err != nil {
 				return err
@@ -1588,7 +1666,7 @@ func TestPDFBackground(t *testing.T) {
 			})
 			return err
 		}),
-		ActionFunc(func(ctx context.Context) error {
+		Func(func(ctx context.Context, t *Target) error {
 			res, err := Call(ctx, page.PrintToPDF, page.PrintToPDFParams{})
 			buf = res.Data
 			return err

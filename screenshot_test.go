@@ -60,10 +60,10 @@ func TestScreenshot(t *testing.T) {
 			defer cancel()
 
 			var buf []byte
-			if err := Run(ctx,
+			if err := Do(ctx,
 				EmulateViewport(500, 500),
-				EvaluateAsDevTools("document.documentElement.scrollTo(20,  30)", nil),
-				Screenshot(test.sel, &buf, ByQuery),
+				EvaluateAsDevTools[Void]("document.documentElement.scrollTo(20,  30)"),
+				into(&buf, Screenshot(test.sel, ByQuery)),
 			); err != nil {
 				t.Fatal(err)
 			}
@@ -108,8 +108,8 @@ func TestScreenshotScale(t *testing.T) {
 			defer cancel()
 
 			var buf []byte
-			if err := Run(ctx,
-				ScreenshotScale(test.sel, test.scale, &buf, ByQuery),
+			if err := Do(ctx,
+				into(&buf, ScreenshotScale(test.sel, test.scale, ByQuery)),
 			); err != nil {
 				t.Fatal(err)
 			}
@@ -135,12 +135,12 @@ func TestScreenshotHighDPI(t *testing.T) {
 	// and keep the high DPI in mind.
 	// We also want the dimensions to be large enough to see the element we
 	// want, since we're not scrolling to ensure it's in view.
-	if err := Run(ctx, EmulateViewport(905, 705, EmulateScale(1.5))); err != nil {
+	if err := Do(ctx, EmulateViewport(905, 705, EmulateScale(1.5))); err != nil {
 		t.Fatal(err)
 	}
 
 	var buf []byte
-	if err := Run(ctx, Screenshot("#half-color", &buf, ByID)); err != nil {
+	if err := Do(ctx, into(&buf, Screenshot("#half-color", ByID))); err != nil {
 		t.Fatal(err)
 	}
 
@@ -160,9 +160,9 @@ func TestCaptureScreenshot(t *testing.T) {
 	defer cancel()
 
 	var buf []byte
-	if err := Run(ctx,
+	if err := Do(ctx,
 		EmulateViewport(500, 500),
-		CaptureScreenshot(&buf),
+		into(&buf, CaptureScreenshot()),
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -203,10 +203,10 @@ func TestFullScreenshot(t *testing.T) {
 			defer cancel()
 
 			var buf []byte
-			if err := Run(ctx,
+			if err := Do(ctx,
 				EmulateViewport(500, 500),
-				EvaluateAsDevTools("document.documentElement.scrollTo(20,  30)", nil),
-				FullScreenshot(&buf, test.quality),
+				EvaluateAsDevTools[Void]("document.documentElement.scrollTo(20,  30)"),
+				into(&buf, FullScreenshot(test.quality)),
 			); err != nil {
 				t.Fatal(err)
 			}

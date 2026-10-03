@@ -73,9 +73,6 @@ type Context struct {
 	// BrowserContextID is copied from the parent context.
 	BrowserContextID cdp.BrowserContextID
 
-	browserListeners []cancelableListener
-	targetListeners  []cancelableListener
-
 	// browserOpts holds the browser options passed to NewContext via
 	// WithBrowserOption, so that they can later be used when allocating a
 	// browser in Run.
@@ -317,30 +314,8 @@ func initContextBrowser(ctx context.Context) (*Context, error) {
 			return nil, err
 		}
 		c.Browser = b
-		c.Browser.listeners = append(c.Browser.listeners, c.browserListeners...)
 	}
 	return c, nil
-}
-
-// Run runs an action against context. The provided context must be a valid
-// chromedp context, typically created via NewContext.
-//
-// Note that the first time Run is called on a context, a browser will be
-// allocated via Allocator. Thus, it's generally a bad idea to use a context
-// timeout on the first Run call, as it will stop the entire browser.
-//
-// Also note that the commands that an action sends with [Call] go to the
-// Target. To send a command to the Browser, use [CallBrowser]:
-//
-//	err := chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
-//		_, err := chromedp.CallBrowser(ctx, target.CreateBrowserContext, target.CreateBrowserContextParams{})
-//		return err
-//	}))
-func Run(ctx context.Context, actions ...Action) error {
-	if _, err := initContextTarget(ctx); err != nil {
-		return err
-	}
-	return Tasks(actions).Do(ctx)
 }
 
 // initContextTarget is like initContextBrowser, and also attaches the target
@@ -412,7 +387,7 @@ func (c *Context) newTarget(ctx context.Context) error {
 	// This is like WaitNewTarget, but for the entire browser.
 	ch := make(chan target.ID, 1)
 	lctx, cancel := context.WithCancel(ctx)
-	ListenBrowser(lctx, func(ev any) {
+	c.Browser.listen(lctx, func(ev any) {
 		var info *target.Info
 		switch ev := ev.(type) {
 		case *target.EventTargetCreated:
@@ -465,7 +440,6 @@ func (c *Context) attachTarget(ctx context.Context, targetID target.ID) error {
 		return err
 	}
 
-	c.Target.listeners = append(c.Target.listeners, c.targetListeners...)
 	go c.Target.run(ctx)
 
 	// Check if this is a worker target. We cannot use Target.getTargetInfo or
@@ -578,8 +552,8 @@ func WithBrowserOption(opts ...BrowserOption) ContextOption {
 	}
 }
 
-// RunResponse is an alternative to Run which can be used with a list of actions
-// that trigger a page navigation, such as clicking on a link or button.
+// RunResponse is an alternative to [Do] which can be used with a list of
+// actions that trigger a page navigation, such as clicking on a link or button.
 //
 // RunResponse will run the actions and block until a page loads, returning the
 // HTTP response information for its HTML document. This can be useful to wait
@@ -588,16 +562,15 @@ func WithBrowserOption(opts ...BrowserOption) ContextOption {
 // Note that if the actions trigger multiple navigations, only the first is
 // used. And if the actions trigger no navigations at all, RunResponse will
 // block until the context is cancelled.
-func RunResponse(ctx context.Context, actions ...Action) (*network.Response, error) {
-	var resp *network.Response
-	if err := Run(ctx, responseAction(&resp, actions...)); err != nil {
-		return nil, err
-	}
-	return resp, nil
+func RunResponse(ctx context.Context, steps ...Action[Void]) (*network.Response, error) {
+	return Run(ctx, responseAction(steps...))
 }
 
-func responseAction(resp **network.Response, actions ...Action) Action {
-	return ActionFunc(func(ctx context.Context) error {
+// responseAction makes an action that runs the steps, waits until the page
+// loads, and returns the response of the HTML document.
+func responseAction(steps ...Action[Void]) Action[*network.Response] {
+	return func(ctx context.Context, t *Target) (*network.Response, error) {
+		var resp *network.Response
 		// loaderID lets us filter the requests from the currently
 		// loading navigation.
 		var loaderID cdp.LoaderID
@@ -617,6 +590,10 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 		// We are listening for lifecycle events, so we will use those to
 		// make sure we grab the response for a request initiated by the
 		// loaderID that we want.
+		//
+		// The events of several methods must arrive in order, so this
+		// uses the internal listener and not one subscription for each
+		// method.
 
 		lctx, lcancel := context.WithCancel(ctx)
 		defer lcancel()
@@ -637,8 +614,8 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 					}
 				}
 			case *network.EventResponseReceived:
-				if ev.RequestID == reqID && resp != nil {
-					*resp = ev.Response
+				if ev.RequestID == reqID {
+					resp = ev.Response
 				}
 			case *page.EventLifecycleEvent:
 				if ev.FrameID == frameID && ev.Name == "init" {
@@ -663,12 +640,11 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 		var earlyEvents []any
 
 		// Obtain frameID from the target.
-		c := FromContext(ctx)
-		c.Target.frameMu.RLock()
-		frameID = c.Target.cur
-		c.Target.frameMu.RUnlock()
+		t.frameMu.RLock()
+		frameID = t.cur
+		t.frameMu.RUnlock()
 
-		ListenTarget(lctx, func(ev any) {
+		t.listen(lctx, func(ev any) {
 			if loaderID != "" {
 				handleEvent(ev)
 				return
@@ -707,15 +683,15 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 		})
 
 		// Second, run the actions.
-		if err := Run(ctx, actions...); err != nil {
-			return err
+		if _, err := Steps(steps...)(ctx, t); err != nil {
+			return nil, err
 		}
 
 		// Third, block until we have finished loading.
 		select {
 		case <-lctx.Done():
 			if loadErr != nil {
-				return loadErr
+				return nil, loadErr
 			}
 
 			// If the ctx parameter was cancelled by the caller (or
@@ -725,13 +701,23 @@ func responseAction(resp **network.Response, actions ...Action) Action {
 			// that race would mean that we would drop 50% of the
 			// parent context cancellation errors.
 			if !finished {
-				return ctx.Err()
+				return nil, ctx.Err()
 			}
-			return nil
+			return resp, nil
 		case <-ctx.Done():
-			return ctx.Err()
+			return nil, ctx.Err()
 		}
-	})
+	}
+}
+
+// waitLoad makes an action that runs the steps and waits until the page loads.
+// It does not return the response.
+func waitLoad(steps ...Action[Void]) Action[Void] {
+	r := responseAction(steps...)
+	return func(ctx context.Context, t *Target) (Void, error) {
+		_, err := r(ctx, t)
+		return Void{}, err
+	}
 }
 
 // Targets lists all the targets in the browser attached to the given context.
@@ -748,46 +734,6 @@ func Targets(ctx context.Context) ([]*target.Info, error) {
 		return nil, err
 	}
 	return res.TargetInfos, nil
-}
-
-// Action is the common interface for an action that will be executed against a
-// context and frame handler.
-type Action interface {
-	// Do executes the action using the provided context and frame handler.
-	Do(context.Context) error
-}
-
-// ActionFunc is an adapter to allow the use of ordinary func's as an Action.
-type ActionFunc func(context.Context) error
-
-// Do executes the func f using the provided context and frame handler.
-func (f ActionFunc) Do(ctx context.Context) error {
-	return f(ctx)
-}
-
-// Tasks is a sequential list of Actions that can be used as a single Action.
-type Tasks []Action
-
-// Do executes the list of Actions sequentially, using the provided context and
-// frame handler.
-func (t Tasks) Do(ctx context.Context) error {
-	for _, a := range t {
-		if err := a.Do(ctx); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// Sleep is an empty action that calls time.Sleep with the specified duration.
-//
-// Note: this is a temporary action definition for convenience, and will likely
-// be marked for deprecation in the future, after the remaining Actions have
-// been able to be written/tested.
-func Sleep(d time.Duration) Action {
-	return ActionFunc(func(ctx context.Context) error {
-		return sleepContext(ctx, d)
-	})
 }
 
 // sleepContext sleeps for the specified duration. It returns ctx.Err() immediately
@@ -825,60 +771,38 @@ type cancelableListener struct {
 	fn  func(ev any)
 }
 
-// ListenBrowser adds a function which will be called whenever a browser event
-// is received on the chromedp context. Note that this only includes browser
-// events; command responses and target events are not included. Cancelling ctx
-// stops the listener from receiving any more events.
+// listen adds a func that is called whenever a target event is received.
+// Cancelling ctx stops the listener from receiving any more events.
 //
-// Note that the function is called synchronously when handling events. The
-// function should avoid blocking at all costs. For example, any Actions must be
-// run via a separate goroutine (otherwise, it could result in a deadlock if the
-// action sends CDP messages).
-func ListenBrowser(ctx context.Context, fn func(ev any)) {
-	c := FromContext(ctx)
-	if c == nil {
-		panic(ErrInvalidContext)
-	}
-	cl := cancelableListener{ctx, fn}
-	if c.Browser != nil {
-		c.Browser.listenersMu.Lock()
-		c.Browser.listeners = append(c.Browser.listeners, cl)
-		c.Browser.listenersMu.Unlock()
-	} else {
-		c.browserListeners = append(c.browserListeners, cl)
-	}
+// The func is called synchronously when the target handles events, so it must
+// not block. Unlike the subscriptions of [Events], it sees the events of all
+// methods in the order in which they arrive.
+func (t *Target) listen(ctx context.Context, fn func(ev any)) {
+	t.listenersMu.Lock()
+	t.listeners = append(t.listeners, cancelableListener{ctx, fn})
+	t.listenersMu.Unlock()
 }
 
-// ListenTarget adds a function which will be called whenever a target event is
-// received on the chromedp context. Cancelling ctx stops the listener from
-// receiving any more events.
-//
-// Note that the function is called synchronously when handling events. The
-// function should avoid blocking at all costs. For example, any Actions must be
-// run via a separate goroutine (otherwise, it could result in a deadlock if the
-// action sends CDP messages).
-func ListenTarget(ctx context.Context, fn func(ev any)) {
-	c := FromContext(ctx)
-	if c == nil {
-		panic(ErrInvalidContext)
-	}
-	cl := cancelableListener{ctx, fn}
-	if c.Target != nil {
-		c.Target.listenersMu.Lock()
-		c.Target.listeners = append(c.Target.listeners, cl)
-		c.Target.listenersMu.Unlock()
-	} else {
-		c.targetListeners = append(c.targetListeners, cl)
-	}
+// listen is like [Target.listen] for the events of the browser.
+func (b *Browser) listen(ctx context.Context, fn func(ev any)) {
+	b.listenersMu.Lock()
+	b.listeners = append(b.listeners, cancelableListener{ctx, fn})
+	b.listenersMu.Unlock()
 }
 
 // WaitNewTarget can be used to wait for the current target to open a new
 // target. Once fn matches a new unattached target, its target ID is sent via
-// the returned channel.
+// the returned channel. The channel closes without a value when the context
+// has no valid target.
 func WaitNewTarget(ctx context.Context, fn func(*target.Info) bool) <-chan target.ID {
 	ch := make(chan target.ID, 1)
+	c, err := initContextTarget(ctx)
+	if err != nil {
+		close(ch)
+		return ch
+	}
 	lctx, cancel := context.WithCancel(ctx)
-	ListenTarget(lctx, func(ev any) {
+	c.Target.listen(lctx, func(ev any) {
 		var info *target.Info
 		switch ev := ev.(type) {
 		case *target.EventTargetCreated:

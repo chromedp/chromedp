@@ -24,7 +24,7 @@ func TestMouseClickXY(t *testing.T) {
 	ctx, cancel := testAllocate(t, "input.html")
 	defer cancel()
 
-	if err := Run(ctx, WaitVisible(`#input1`, ByID)); err != nil {
+	if err := Do(ctx, WaitVisible(`#input1`, ByID)); err != nil {
 		t.Fatal(err)
 	}
 	tests := []struct {
@@ -38,9 +38,9 @@ func TestMouseClickXY(t *testing.T) {
 
 	for i, test := range tests {
 		var xstr, ystr string
-		if err := Run(ctx,
+		if err := Do(ctx,
 			MouseClickXY(test.x, test.y),
-			Value("#input1", &xstr, ByID),
+			into(&xstr, Value("#input1", ByID)),
 		); err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
@@ -52,7 +52,7 @@ func TestMouseClickXY(t *testing.T) {
 		if x != test.x {
 			t.Fatalf("test %d expected x to be: %f, got: %f", i, test.x, x)
 		}
-		if err := Run(ctx, Value("#input2", &ystr, ByID)); err != nil {
+		if err := Do(ctx, into(&ystr, Value("#input2", ByID))); err != nil {
 			t.Fatalf("test %d got error: %v", i, err)
 		}
 
@@ -92,16 +92,16 @@ func TestMouseClickNode(t *testing.T) {
 			defer cancel()
 
 			var nodes []*Node
-			if err := Run(ctx, Nodes(test.sel, &nodes, test.by)); err != nil {
+			if err := Do(ctx, into(&nodes, Nodes(test.sel, test.by))); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 			if len(nodes) != 1 {
 				t.Fatalf("expected nodes to have exactly 1 element, got: %d", len(nodes))
 			}
 			var value string
-			if err := Run(ctx,
+			if err := Do(ctx,
 				MouseClickNode(nodes[0], test.opt),
-				Value("#input3", &value, ByID),
+				into(&value, Value("#input3", ByID)),
 			); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
@@ -135,7 +135,7 @@ func TestMouseClickOffscreenNode(t *testing.T) {
 			defer cancel()
 
 			var nodes []*Node
-			if err := Run(ctx, Nodes(test.sel, &nodes, test.by)); err != nil {
+			if err := Do(ctx, into(&nodes, Nodes(test.sel, test.by))); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
@@ -144,7 +144,7 @@ func TestMouseClickOffscreenNode(t *testing.T) {
 			}
 
 			var ok bool
-			if err := Run(ctx, EvaluateAsDevTools(fmt.Sprintf(inViewportJS, nodes[0].FullXPath()), &ok)); err != nil {
+			if err := Do(ctx, into(&ok, EvaluateAsDevTools[bool](fmt.Sprintf(inViewportJS, nodes[0].FullXPath())))); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
@@ -153,13 +153,13 @@ func TestMouseClickOffscreenNode(t *testing.T) {
 			}
 
 			for i := test.exp; i > 0; i-- {
-				if err := Run(ctx, MouseClickNode(nodes[0])); err != nil {
+				if err := Do(ctx, MouseClickNode(nodes[0])); err != nil {
 					t.Fatalf("got error: %v", err)
 				}
 			}
 
 			var value int
-			if err := Run(ctx, Evaluate("window.document.test_i", &value)); err != nil {
+			if err := Do(ctx, into(&value, Evaluate[int]("window.document.test_i"))); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
@@ -198,14 +198,14 @@ func TestKeyEvent(t *testing.T) {
 			defer cancel()
 
 			var nodes []*Node
-			if err := Run(ctx, Nodes(test.sel, &nodes, test.by)); err != nil {
+			if err := Do(ctx, into(&nodes, Nodes(test.sel, test.by))); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
 			if len(nodes) != 1 {
 				t.Fatalf("expected nodes to have exactly 1 element, got: %d", len(nodes))
 			}
-			if err := Run(ctx,
+			if err := Do(ctx,
 				Focus(test.sel, test.by),
 				KeyEvent(kb.Home),
 				// "KeyEvent(kb.End, KeyModifiers(ModifierShift))" crash headless-shell with this error:
@@ -217,7 +217,7 @@ func TestKeyEvent(t *testing.T) {
 			}
 
 			var value string
-			if err := Run(ctx, Value(test.sel, &value, test.by)); err != nil {
+			if err := Do(ctx, into(&value, Value(test.sel, test.by))); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
@@ -256,7 +256,7 @@ func TestKeyEventNode(t *testing.T) {
 			defer cancel()
 
 			var nodes []*Node
-			if err := Run(ctx, Nodes(test.sel, &nodes, test.by)); err != nil {
+			if err := Do(ctx, into(&nodes, Nodes(test.sel, test.by))); err != nil {
 				t.Fatalf("got error: %v", err)
 			}
 
@@ -264,13 +264,13 @@ func TestKeyEventNode(t *testing.T) {
 				t.Fatalf("expected nodes to have exactly 1 element, got: %d", len(nodes))
 			}
 			var value string
-			if err := Run(ctx,
+			if err := Do(ctx,
 				KeyEventNode(nodes[0], kb.Home),
 				// "KeyEventNode(nodes[0], kb.End, KeyModifiers(ModifierShift))" crash headless-shell with this error:
 				// [...:FATAL:headless_clipboard.cc(296)] Check failed: IsSupportedClipboardBuffer(buffer)
 				KeyEventNode(nodes[0], kb.End, KeyModifiers(ModifierShift)),
 				KeyEventNode(nodes[0], test.exp),
-				Value(test.sel, &value, test.by),
+				into(&value, Value(test.sel, test.by)),
 			); err != nil {
 				t.Fatalf("got error: %v", err)
 			}

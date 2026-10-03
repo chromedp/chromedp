@@ -1,7 +1,6 @@
 package chromedp
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -141,15 +140,15 @@ func TestPoll(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			tabCtx, tabCancel := NewContext(ctx)
 			defer tabCancel()
-			var action PollAction
+			var action Action[Void]
 			var res bool
 			if test.isFunc {
-				action = PollFunction(test.js, &res, test.opts...)
+				action = into(&res, PollFunction[bool](test.js, test.opts...))
 			} else {
-				action = Poll(test.js, &res, test.opts...)
+				action = into(&res, Poll[bool](test.js, test.opts...))
 			}
 			startTime := time.Now()
-			err := Run(tabCtx,
+			err := Do(tabCtx,
 				Navigate(testdataDir+"/poll.html"+test.hash),
 				action,
 			)
@@ -183,14 +182,12 @@ func TestPollFrame(t *testing.T) {
 	ctx, cancel := testAllocate(t, "frameset.html")
 	defer cancel()
 
-	var res string
-	var frames []*Node
-	if err := Run(ctx,
-		Nodes(`frame[src="child1.html"]`, &frames, ByQuery),
-		ActionFunc(func(ctx context.Context) error {
-			return Poll(`document.querySelector("#child1>p").textContent`, &res, WithPollingInFrame(frames[0])).Do(ctx)
-		}),
-	); err != nil {
+	frames, err := Run(ctx, Nodes(`frame[src="child1.html"]`, ByQuery))
+	if err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	res, err := Run(ctx, Poll[string](`document.querySelector("#child1>p").textContent`, WithPollingInFrame(frames[0])))
+	if err != nil {
 		t.Fatalf("got error: %v", err)
 	}
 
@@ -209,7 +206,7 @@ func TestPollRemoteObject(t *testing.T) {
 	expression := `window`
 
 	var res *runtime.RemoteObject
-	if err := Run(ctx, Poll(expression, &res, WithPollingTimeout(10*time.Millisecond))); err != nil {
+	if err := Do(ctx, into(&res, Poll[*runtime.RemoteObject](expression, WithPollingTimeout(10*time.Millisecond)))); err != nil {
 		t.Fatalf("got error: %v", err)
 	}
 
@@ -225,17 +222,17 @@ func TestPollTimeout(t *testing.T) {
 	ctx, cancel := testAllocate(t, "poll.html")
 	defer cancel()
 
-	if err := Run(ctx, Poll("false", nil, WithPollingTimeout(10*time.Millisecond))); err != ErrPollingTimeout {
+	if err := Do(ctx, Poll[Void]("false", WithPollingTimeout(10*time.Millisecond))); err != ErrPollingTimeout {
 		t.Errorf("got error: %v, want error: %v", err, ErrPollingTimeout)
 	}
 
 	var res1 *runtime.RemoteObject
-	if err := Run(ctx, Poll("false", &res1, WithPollingTimeout(10*time.Millisecond))); err != ErrPollingTimeout {
+	if err := Do(ctx, into(&res1, Poll[*runtime.RemoteObject]("false", WithPollingTimeout(10*time.Millisecond)))); err != ErrPollingTimeout {
 		t.Errorf("got error: %v, want error: %v", err, ErrPollingTimeout)
 	}
 
 	var res2 []byte
-	if err := Run(ctx, Poll("false", &res2, WithPollingTimeout(10*time.Millisecond))); err != ErrPollingTimeout {
+	if err := Do(ctx, into(&res2, Poll[[]byte]("false", WithPollingTimeout(10*time.Millisecond)))); err != ErrPollingTimeout {
 		t.Errorf("got error: %v, want error: %v", err, ErrPollingTimeout)
 	}
 }

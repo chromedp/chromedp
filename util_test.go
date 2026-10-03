@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/runtime"
 )
 
@@ -141,10 +142,10 @@ func TestNodeOp(t *testing.T) {
 
 	// get document root
 	var nodes []*Node
-	if err := Run(ctx,
+	if err := Do(ctx,
 		Navigate(s.URL),
-		Nodes(`//*`, &nodes),
-		Nodes(`document`, &nodes, ByJSPath),
+		into(&nodes, Nodes(`//*`)),
+		into(&nodes, Nodes(`document`, ByJSPath)),
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -167,11 +168,11 @@ func TestNodeOp(t *testing.T) {
 	prev := nodes[0].Dump("", "  ", false)
 	for i, test := range tests {
 		// modify tree
-		if err := Run(ctx,
-			ActionFunc(func(ctx context.Context) error {
+		if err := Do(ctx,
+			Func(func(ctx context.Context, t *Target) error {
 				id := strconv.Itoa(i + 2)
 				expr := fmt.Sprintf(insertJS, test.expr, test.q, `div`, `div`+id, `div`+id+` content`)
-				res, err := Call(ctx, runtime.Evaluate, runtime.EvaluateParams{Expression: expr})
+				res, err := cdp.Call(ctx, t, runtime.Evaluate, runtime.EvaluateParams{Expression: expr})
 				if err != nil {
 					return err
 				}
@@ -190,8 +191,8 @@ func TestNodeOp(t *testing.T) {
 		var tree, exp string
 		for deadline := time.Now().Add(5 * time.Second); ; time.Sleep(5 * time.Millisecond) {
 			tree = nodes[0].Dump("", "  ", false)
-			if err := Run(ctx,
-				EvaluateAsDevTools(fmt.Sprintf(dumpJS, `document`, "", "  ", false), &exp),
+			if err := Do(ctx,
+				into(&exp, EvaluateAsDevTools[string](fmt.Sprintf(dumpJS, `document`, "", "  ", false))),
 			); err != nil {
 				t.Fatal(err)
 			}

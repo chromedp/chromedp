@@ -9,10 +9,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
-	"sync"
 	"testing"
 	"time"
 
+	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/page"
 )
 
@@ -23,9 +23,9 @@ func TestNavigate(t *testing.T) {
 	defer cancel()
 
 	var urlstr, title string
-	if err := Run(ctx,
-		Location(&urlstr),
-		Title(&title),
+	if err := Do(ctx,
+		into(&urlstr, Location()),
+		into(&title, Title()),
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -51,32 +51,32 @@ func TestNavigationEntries(t *testing.T) {
 		{"image.html", "#icon-brankas"},
 	}
 
-	var entries []*page.NavigationEntry
-	var index int64
-	if err := Run(ctx, NavigationEntries(&index, &entries)); err != nil {
+	history, err := Run(ctx, NavigationEntries())
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	if len(entries) != 1 {
-		t.Errorf("expected to have 1 navigation entry: got %d", len(entries))
+	if len(history.Entries) != 1 {
+		t.Errorf("expected to have 1 navigation entry: got %d", len(history.Entries))
 	}
-	if index != 0 {
-		t.Errorf("expected navigation index is 0, got: %d", index)
+	if history.CurrentIndex != 0 {
+		t.Errorf("expected navigation index is 0, got: %d", history.CurrentIndex)
 	}
 
 	expIdx, expEntries := 1, 2
 	for i, test := range tests {
-		if err := Run(ctx,
-			Navigate(testdataDir+"/"+test.file),
-			NavigationEntries(&index, &entries),
-		); err != nil {
+		if err := Do(ctx, Navigate(testdataDir+"/"+test.file)); err != nil {
 			t.Fatal(err)
 		}
-		if len(entries) != expEntries {
-			t.Errorf("test %d expected to have %d navigation entry: got %d", i, expEntries, len(entries))
+		history, err := Run(ctx, NavigationEntries())
+		if err != nil {
+			t.Fatal(err)
 		}
-		if want := int64(i + 1); index != want {
-			t.Errorf("test %d expected navigation index is %d, got: %d", i, want, index)
+		if len(history.Entries) != expEntries {
+			t.Errorf("test %d expected to have %d navigation entry: got %d", i, expEntries, len(history.Entries))
+		}
+		if want := int64(i + 1); history.CurrentIndex != want {
+			t.Errorf("test %d expected navigation index is %d, got: %d", i, want, history.CurrentIndex)
 		}
 
 		expIdx++
@@ -90,24 +90,24 @@ func TestNavigateToHistoryEntry(t *testing.T) {
 	ctx, cancel := testAllocate(t, "image.html")
 	defer cancel()
 
-	var entries []*page.NavigationEntry
-	var index int64
-	if err := Run(ctx,
-		NavigationEntries(&index, &entries),
-		Navigate(testdataDir+"/form.html"),
-	); err != nil {
+	history, err := Run(ctx, NavigationEntries())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := Do(ctx, Navigate(testdataDir+"/form.html")); err != nil {
 		t.Fatal(err)
 	}
 
+	entry := history.Entries[history.CurrentIndex]
 	var title string
-	if err := Run(ctx,
-		NavigateToHistoryEntry(entries[index].ID),
-		Title(&title),
+	if err := Do(ctx,
+		NavigateToHistoryEntry(entry.ID),
+		into(&title, Title()),
 	); err != nil {
 		t.Fatal(err)
 	}
-	if title != entries[index].Title {
-		t.Errorf("expected title to be %q, instead title is %q", entries[index].Title, title)
+	if title != entry.Title {
+		t.Errorf("expected title to be %q, instead title is %q", entry.Title, title)
 	}
 }
 
@@ -118,13 +118,13 @@ func TestNavigateBack(t *testing.T) {
 	defer cancel()
 
 	var title, exptitle string
-	if err := Run(ctx,
-		Title(&exptitle),
+	if err := Do(ctx,
+		into(&exptitle, Title()),
 
 		Navigate(testdataDir+"/image.html"),
 
 		NavigateBack(),
-		Title(&title),
+		into(&title, Title()),
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -141,14 +141,14 @@ func TestNavigateForward(t *testing.T) {
 	defer cancel()
 
 	var title, exptitle string
-	if err := Run(ctx,
+	if err := Do(ctx,
 		Navigate(testdataDir+"/image.html"),
-		Title(&exptitle),
+		into(&exptitle, Title()),
 
 		NavigateBack(),
 		NavigateForward(),
 
-		Title(&title),
+		into(&title, Title()),
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -163,7 +163,7 @@ func TestStop(t *testing.T) {
 
 	ctx, cancel := testAllocate(t, "form.html")
 	defer cancel()
-	if err := Run(ctx, Stop()); err != nil {
+	if err := Do(ctx, Stop()); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -194,11 +194,11 @@ func TestReload(t *testing.T) {
 	defer cancel()
 
 	var firstTitle, secondTitle string
-	if err := Run(ctx,
+	if err := Do(ctx,
 		Navigate(s.URL),
-		Title(&firstTitle),
+		into(&firstTitle, Title()),
 		Reload(),
-		Title(&secondTitle),
+		into(&secondTitle, Title()),
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -217,7 +217,7 @@ func TestLocation(t *testing.T) {
 	defer cancel()
 
 	var urlstr string
-	if err := Run(ctx, Location(&urlstr)); err != nil {
+	if err := Do(ctx, into(&urlstr, Location())); err != nil {
 		t.Fatal(err)
 	}
 
@@ -233,7 +233,7 @@ func TestTitle(t *testing.T) {
 	defer cancel()
 
 	var title string
-	if err := Run(ctx, Title(&title)); err != nil {
+	if err := Do(ctx, into(&title, Title())); err != nil {
 		t.Fatal(err)
 	}
 
@@ -250,19 +250,19 @@ func TestQueryIframe(t *testing.T) {
 	defer cancel()
 
 	var iframes, forms []*Node
-	if err := Run(ctx, Nodes(`iframe`, &iframes, ByQuery)); err != nil {
+	if err := Do(ctx, into(&iframes, Nodes(`iframe`, ByQuery))); err != nil {
 		t.Fatal(err)
 	}
 	iframe := iframes[0]
-	if err := Run(ctx, Nodes(`#form`, &forms, ByQuery, FromNode(iframe))); err != nil {
+	if err := Do(ctx, into(&forms, Nodes(`#form`, ByQuery, FromNode(iframe)))); err != nil {
 		t.Fatal(err)
 	}
 	form := forms[0]
 
 	var gotFoo string
-	if err := Run(ctx,
+	if err := Do(ctx,
 		WaitVisible(`#form`, ByQuery, FromNode(iframe)),
-		Text("#foo", &gotFoo, ByQuery, FromNode(form)),
+		into(&gotFoo, Text("#foo", ByQuery, FromNode(form))),
 
 		Click("#btn1", ByQuery, FromNode(iframe)),
 		Click("#btn2", ByQuery, FromNode(form)),
@@ -288,7 +288,7 @@ func TestNavigateContextTimeout(t *testing.T) {
 	}))
 	defer s.Close()
 
-	if err := Run(ctx, Navigate(s.URL)); err != nil && err != context.Canceled {
+	if err := Do(ctx, Navigate(s.URL)); err != nil && err != context.Canceled {
 		t.Fatal(err)
 	}
 }
@@ -328,21 +328,16 @@ func TestNavigateWhileLoading(t *testing.T) {
 	// navigate used to get confused, either blocking forever or not waiting
 	// for the right load event (the second).
 	var title string
-	if err := Run(ctx,
-		ActionFunc(func(ctx context.Context) error {
-			var wg sync.WaitGroup
-			wg.Add(1)
+	if err := Do(ctx,
+		Func(func(ctx context.Context, t *Target) error {
 			lctx, cancel := context.WithCancel(ctx)
-			ListenTarget(lctx, func(ev any) {
-				if ev, ok := ev.(*page.EventLifecycleEvent); ok {
-					if ev.Name == "init" {
-						cancel()
-						wg.Done()
-					}
-				}
-			})
+			defer cancel()
+			events := Events(lctx, page.LifecycleEvent)
 
-			_, err := Call(ctx, page.Navigate, page.NavigateParams{URL: s.URL})
+			_, err := cdp.Call(ctx, t, page.Navigate, page.NavigateParams{URL: s.URL})
+			if err != nil {
+				return err
+			}
 
 			// Make sure the Page.lifecycleEvent with the name "init" is emitted
 			// before starting the second navigate.
@@ -359,12 +354,19 @@ func TestNavigateWhileLoading(t *testing.T) {
 			// navigate won't see this event from the first navigate.
 			//
 			// The issue can be reproduced by commenting out the next line.
-			wg.Wait()
+			for ev, err := range events {
+				if err != nil {
+					return err
+				}
+				if ev.Name == "init" {
+					break
+				}
+			}
 			ch <- struct{}{}
-			return err
+			return nil
 		}),
 		Navigate(testdataDir+"/image.html"),
-		Title(&title),
+		into(&title, Title()),
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -382,9 +384,9 @@ func TestNavigateWithoutWaitingForLoad(t *testing.T) {
 
 	// If we run a query without waiting for the page to load, chromedp used
 	// to panic.
-	if err := Run(ctx,
-		ActionFunc(func(ctx context.Context) error {
-			_, err := Call(ctx, page.Navigate, page.NavigateParams{URL: testdataDir + "/form.html"})
+	if err := Do(ctx,
+		Func(func(ctx context.Context, t *Target) error {
+			_, err := cdp.Call(ctx, t, page.Navigate, page.NavigateParams{URL: testdataDir + "/form.html"})
 			return err
 		}),
 		WaitVisible(`#form`, ByID), // for form.html
@@ -413,8 +415,8 @@ func TestNavigateCancelled(t *testing.T) {
 	// Navigate to a page that will navigate, but never finish loading. Once
 	// it has the HTML and starts loading an image, cancel the Run context.
 	// This should result in us seeing a context error.
-	action := ActionFunc(func(ctx context.Context) error {
-		_, err := Call(ctx, page.Navigate, page.NavigateParams{URL: s.URL})
+	action := Func(func(ctx context.Context, t *Target) error {
+		_, err := cdp.Call(ctx, t, page.Navigate, page.NavigateParams{URL: s.URL})
 		loadStarted <- struct{}{}
 		return err
 	})

@@ -123,9 +123,16 @@ func TestCloseDialog(t *testing.T) {
 			ctx, cancel := testAllocate(t, "")
 			defer cancel()
 
-			ListenTarget(ctx, func(ev any) {
-				switch e := ev.(type) {
-				case *page.EventJavascriptDialogOpening:
+			tctx, tcancel := context.WithTimeout(ctx, 30*time.Second)
+			defer tcancel()
+			opening := Events(tctx, page.JavascriptDialogOpening)
+			closed := Events(tctx, page.JavascriptDialogClosed)
+
+			go func() {
+				for e, err := range opening {
+					if err != nil {
+						return
+					}
 					if e.Type != test.dialogType {
 						t.Errorf("expected dialog type to be %q, got: %q", test.dialogType, e.Type)
 					}
@@ -133,33 +140,40 @@ func TestCloseDialog(t *testing.T) {
 						t.Errorf("expected dialog message to be %q, got: %q", test.want, e.Message)
 					}
 
-					task := ActionFunc(func(ctx context.Context) error {
-						_, err := Call(ctx, page.HandleJavaScriptDialog, page.HandleJavaScriptDialogParams{
-							Accept:     test.accept,
-							PromptText: test.promptText,
-						})
-						return err
-					})
+					// Handle the dialog from another goroutine than the one
+					// that receives the events.
 					go func() {
-						if err := Run(ctx, task); err != nil {
+						if err := Do(ctx, Func(func(ctx context.Context, t *Target) error {
+							_, err := cdp.Call(ctx, t, page.HandleJavaScriptDialog, page.HandleJavaScriptDialogParams{
+								Accept:     test.accept,
+								PromptText: test.promptText,
+							})
+							return err
+						})); err != nil && tctx.Err() == nil {
 							t.Error(err)
 						}
 					}()
-				case *page.EventJavascriptDialogClosed:
-					if e.Result != test.accept {
-						t.Errorf("expected result to be %t, got %t", test.accept, e.Result)
-					}
-					if e.UserInput != test.promptText {
-						t.Errorf("expected user input to be %q, got %q", test.promptText, e.UserInput)
-					}
 				}
-			})
+			}()
 
-			if err := Run(ctx,
+			if err := Do(ctx,
 				Navigate(testdataDir+"/dialog.html"),
 				Click(test.sel, ByID, NodeVisible),
 			); err != nil {
 				t.Fatal(err)
+			}
+
+			for e, err := range closed {
+				if err != nil {
+					t.Fatal(err)
+				}
+				if e.Result != test.accept {
+					t.Errorf("expected result to be %t, got %t", test.accept, e.Result)
+				}
+				if e.UserInput != test.promptText {
+					t.Errorf("expected user input to be %q, got %q", test.promptText, e.UserInput)
+				}
+				break
 			}
 		})
 	}
@@ -174,15 +188,15 @@ func TestWaitNewTarget(t *testing.T) {
 	ch := WaitNewTarget(ctx, func(info *target.Info) bool {
 		return info.URL != ""
 	})
-	if err := Run(ctx, Click("#new-tab", ByID)); err != nil {
+	if err := Do(ctx, Click("#new-tab", ByID)); err != nil {
 		t.Fatal(err)
 	}
 	blankCtx, cancel := NewContext(ctx, WithTargetID(<-ch))
 	defer cancel()
 
 	var urlstr string
-	if err := Run(blankCtx,
-		Location(&urlstr),
+	if err := Do(blankCtx,
+		into(&urlstr, Location()),
 		WaitVisible(`#form`, ByID),
 	); err != nil {
 		t.Fatal(err)
@@ -197,7 +211,7 @@ func TestSubscribe(t *testing.T) {
 
 	ctx, cancel := testAllocate(t, "")
 	defer cancel()
-	if err := Run(ctx); err != nil {
+	if err := Do(ctx); err != nil {
 		t.Fatal(err)
 	}
 
@@ -207,8 +221,8 @@ func TestSubscribe(t *testing.T) {
 	// The subscription starts when Events returns, so the event of the
 	// navigation below is not lost before the loop starts.
 	events := cdp.Events(tctx, FromContext(ctx).Target, page.LoadEventFired)
-	if err := Run(ctx, ActionFunc(func(ctx context.Context) error {
-		_, err := Call(ctx, page.Navigate, page.NavigateParams{URL: testdataDir + "/form.html"})
+	if err := Do(ctx, Func(func(ctx context.Context, t *Target) error {
+		_, err := cdp.Call(ctx, t, page.Navigate, page.NavigateParams{URL: testdataDir + "/form.html"})
 		return err
 	})); err != nil {
 		t.Fatal(err)

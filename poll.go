@@ -8,11 +8,6 @@ import (
 	"github.com/chromedp/cdproto/runtime"
 )
 
-// PollAction are actions that will wait for a general JavaScript predicate.
-//
-// See [Poll] for details on building poll tasks.
-type PollAction Action
-
 // pollTask holds information pertaining to a poll task.
 //
 // See Poll for details on building poll tasks.
@@ -23,18 +18,13 @@ type pollTask struct {
 	interval  time.Duration // the interval when the poll is triggered by a timer
 	timeout   time.Duration // the poll timeout, defaults to 30 seconds
 	args      []any
-	res       any
 }
 
-// Do executes the poll task in the browser,
+// run executes the poll task in the browser,
 // until the predicate either returns truthy value or the timeout happens.
-func (p *pollTask) Do(ctx context.Context) error {
-	c := FromContext(ctx)
-	if c == nil || c.Target == nil {
-		return ErrInvalidTarget
-	}
-	t := c.Target
+func runPoll[T any](ctx context.Context, t *Target, p *pollTask) (T, error) {
 	var (
+		zero    T
 		execCtx runtime.ExecutionContextID
 		ok      bool
 	)
@@ -45,7 +35,7 @@ func (p *pollTask) Do(ctx context.Context) error {
 			break
 		}
 		if err := sleepContext(ctx, 5*time.Millisecond); err != nil {
-			return err
+			return zero, err
 		}
 	}
 
@@ -66,7 +56,7 @@ func (p *pollTask) Do(ctx context.Context) error {
 	args = append(args, p.timeout.Milliseconds())
 	args = append(args, p.args...)
 
-	r, err := callFunctionOn(ctx, waitForPredicatePageFunction, p.res,
+	res, r, err := callFunctionOn[T](ctx, t, waitForPredicatePageFunction,
 		func(p *runtime.CallFunctionOnParams) {
 			p.ExecutionContextID = execCtx
 			p.AwaitPromise = new(true)
@@ -76,10 +66,10 @@ func (p *pollTask) Do(ctx context.Context) error {
 	)
 
 	if r != nil && r.Type == "undefined" {
-		return ErrPollingTimeout
+		return zero, ErrPollingTimeout
 	}
 
-	return err
+	return res, err
 }
 
 // Poll is a poll action that will wait for a general JavaScript predicate.
@@ -108,35 +98,40 @@ func (p *pollTask) Do(ctx context.Context) error {
 // Only apply this option when the predicate is built from a function.
 // See [PollFunction].
 //
+// The action returns the truthy value of the predicate, decoded into the type
+// T. The handling of T is the same as that of [Evaluate]. Use [Void] when the
+// value does not matter.
+//
 // [page.waitForFunction]: https://github.com/puppeteer/puppeteer/blob/v8.0.0/docs/api.md#pagewaitforfunctionpagefunction-options-args
-func Poll(expression string, res any, opts ...PollOption) PollAction {
+func Poll[T any](expression string, opts ...PollOption) Action[T] {
 	predicate := fmt.Sprintf(`return (%s);`, expression)
-	return poll(predicate, res, opts...)
+	return poll[T](predicate, opts...)
 }
 
 // PollFunction is a poll action that will wait for a general JavaScript predicate.
 // It builds the predicate from a JavaScript function.
 //
 // See [Poll] for details on building poll tasks.
-func PollFunction(pageFunction string, res any, opts ...PollOption) PollAction {
+func PollFunction[T any](pageFunction string, opts ...PollOption) Action[T] {
 	predicate := fmt.Sprintf(`return (%s)(...args);`, pageFunction)
 
-	return poll(predicate, res, opts...)
+	return poll[T](predicate, opts...)
 }
 
-func poll(predicate string, res any, opts ...PollOption) PollAction {
+func poll[T any](predicate string, opts ...PollOption) Action[T] {
 	p := &pollTask{
 		predicate: predicate,
 		polling:   "raf",
 		timeout:   30 * time.Second,
-		res:       res,
 	}
 
 	// apply options
 	for _, o := range opts {
 		o(p)
 	}
-	return p
+	return func(ctx context.Context, t *Target) (T, error) {
+		return runPoll[T](ctx, t, p)
+	}
 }
 
 // PollOption is a poll task option.

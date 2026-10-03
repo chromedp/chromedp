@@ -3,13 +3,10 @@ package chromedp
 import (
 	"context"
 
+	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/emulation"
 	"github.com/chromedp/chromedp/device"
 )
-
-// EmulateAction are actions that change the emulation settings for the
-// browser.
-type EmulateAction Action
 
 // EmulateViewport is an action to change the browser viewport.
 //
@@ -20,17 +17,17 @@ type EmulateAction Action
 // is not the desired behavior, use the emulate viewport options
 // EmulateOrientation (or EmulateLandscape/EmulatePortrait), EmulateMobile, and
 // EmulateTouch, respectively.
-func EmulateViewport(width, height int64, opts ...EmulateViewportOption) EmulateAction {
+func EmulateViewport(width, height int64, opts ...EmulateViewportOption) Action[Void] {
 	p1 := &emulation.SetDeviceMetricsOverrideParams{Width: width, Height: height, DeviceScaleFactor: 1.0}
 	p2 := &emulation.SetTouchEmulationEnabledParams{}
 	for _, o := range opts {
 		o(p1, p2)
 	}
-	return ActionFunc(func(ctx context.Context) error {
-		if _, err := Call(ctx, emulation.SetDeviceMetricsOverride, *p1); err != nil {
+	return Func(func(ctx context.Context, t *Target) error {
+		if _, err := cdp.Call(ctx, t, emulation.SetDeviceMetricsOverride, *p1); err != nil {
 			return err
 		}
-		_, err := Call(ctx, emulation.SetTouchEmulationEnabled, *p2)
+		_, err := cdp.Call(ctx, t, emulation.SetTouchEmulationEnabled, *p2)
 		return err
 	})
 }
@@ -84,7 +81,7 @@ func EmulateTouch(p1 *emulation.SetDeviceMetricsOverrideParams, p2 *emulation.Se
 // values the browser was started with.
 //
 // Note: does not modify / change the browser's emulated User-Agent, if any.
-func ResetViewport() EmulateAction {
+func ResetViewport() Action[Void] {
 	return EmulateViewport(0, 0, EmulatePortrait)
 }
 
@@ -99,7 +96,7 @@ type Device interface {
 // Emulate is an action to emulate a specific device.
 //
 // See [device] for a set of off-the-shelf devices and modes.
-func Emulate(device Device) EmulateAction {
+func Emulate(device Device) Action[Void] {
 	d := device.Device()
 
 	var angle int64
@@ -108,11 +105,11 @@ func Emulate(device Device) EmulateAction {
 		orientation, angle = emulation.ScreenOrientationTypeLandscapePrimary, 90
 	}
 
-	return ActionFunc(func(ctx context.Context) error {
-		if _, err := Call(ctx, emulation.SetUserAgentOverride, emulation.SetUserAgentOverrideParams{UserAgent: d.UserAgent}); err != nil {
+	return Func(func(ctx context.Context, t *Target) error {
+		if _, err := cdp.Call(ctx, t, emulation.SetUserAgentOverride, emulation.SetUserAgentOverrideParams{UserAgent: d.UserAgent}); err != nil {
 			return err
 		}
-		if _, err := Call(ctx, emulation.SetDeviceMetricsOverride, emulation.SetDeviceMetricsOverrideParams{
+		if _, err := cdp.Call(ctx, t, emulation.SetDeviceMetricsOverride, emulation.SetDeviceMetricsOverrideParams{
 			Width:             d.Width,
 			Height:            d.Height,
 			DeviceScaleFactor: d.Scale,
@@ -124,7 +121,7 @@ func Emulate(device Device) EmulateAction {
 		}); err != nil {
 			return err
 		}
-		_, err := Call(ctx, emulation.SetTouchEmulationEnabled, emulation.SetTouchEmulationEnabledParams{Enabled: d.Touch})
+		_, err := cdp.Call(ctx, t, emulation.SetTouchEmulationEnabled, emulation.SetTouchEmulationEnabledParams{Enabled: d.Touch})
 		return err
 	})
 }
@@ -134,6 +131,6 @@ func Emulate(device Device) EmulateAction {
 // Resets the browser's viewport, screen orientation, user-agent, and
 // mobile/touch emulation settings to the original values the browser was
 // started with.
-func EmulateReset() EmulateAction {
+func EmulateReset() Action[Void] {
 	return Emulate(device.Reset)
 }

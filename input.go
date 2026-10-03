@@ -3,6 +3,7 @@ package chromedp
 import (
 	"context"
 
+	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/cdproto/input"
 	"github.com/chromedp/chromedp/kb"
@@ -29,27 +30,24 @@ const (
 	ModifierCommand = kb.ModifierCommand
 )
 
-// MouseAction are mouse input event actions
-type MouseAction Action
-
 // MouseEvent is a mouse event action to dispatch the specified mouse event
 // type at coordinates x, y.
-func MouseEvent(typ input.DispatchMouseEventType, x, y float64, opts ...MouseOption) MouseAction {
-	return ActionFunc(func(ctx context.Context) error {
+func MouseEvent(typ input.DispatchMouseEventType, x, y float64, opts ...MouseOption) Action[Void] {
+	return Func(func(ctx context.Context, t *Target) error {
 		p := &input.DispatchMouseEventParams{Type: typ, X: x, Y: y}
 		// apply opts
 		for _, o := range opts {
 			o(p)
 		}
-		_, err := Call(ctx, input.DispatchMouseEvent, *p)
+		_, err := cdp.Call(ctx, t, input.DispatchMouseEvent, *p)
 		return err
 	})
 }
 
 // MouseClickXY is an action that sends a left mouse button click (i.e.,
 // mousePressed and mouseReleased event) to the X, Y location.
-func MouseClickXY(x, y float64, opts ...MouseOption) MouseAction {
-	return ActionFunc(func(ctx context.Context) error {
+func MouseClickXY(x, y float64, opts ...MouseOption) Action[Void] {
+	return Func(func(ctx context.Context, t *Target) error {
 		p := &input.DispatchMouseEventParams{
 			Type:       MousePressed,
 			X:          x,
@@ -63,12 +61,12 @@ func MouseClickXY(x, y float64, opts ...MouseOption) MouseAction {
 			o(p)
 		}
 
-		if _, err := Call(ctx, input.DispatchMouseEvent, *p); err != nil {
+		if _, err := cdp.Call(ctx, t, input.DispatchMouseEvent, *p); err != nil {
 			return err
 		}
 
 		p.Type = MouseReleased
-		_, err := Call(ctx, input.DispatchMouseEvent, *p)
+		_, err := cdp.Call(ctx, t, input.DispatchMouseEvent, *p)
 		return err
 	})
 }
@@ -78,17 +76,13 @@ func MouseClickXY(x, y float64, opts ...MouseOption) MouseAction {
 //
 // Note that the window will be scrolled if the node is not within the window's
 // viewport.
-func MouseClickNode(n *Node, opts ...MouseOption) MouseAction {
-	return ActionFunc(func(ctx context.Context) error {
-		if c := FromContext(ctx); c == nil || c.Target == nil {
-			return ErrInvalidTarget
-		}
-
-		if _, err := Call(ctx, dom.ScrollIntoViewIfNeeded, dom.ScrollIntoViewIfNeededParams{NodeID: n.NodeID}); err != nil {
+func MouseClickNode(n *Node, opts ...MouseOption) Action[Void] {
+	return Func(func(ctx context.Context, t *Target) error {
+		if _, err := cdp.Call(ctx, t, dom.ScrollIntoViewIfNeeded, dom.ScrollIntoViewIfNeededParams{NodeID: n.NodeID}); err != nil {
 			return err
 		}
 
-		res, err := Call(ctx, dom.GetContentQuads, dom.GetContentQuadsParams{NodeID: n.NodeID})
+		res, err := cdp.Call(ctx, t, dom.GetContentQuads, dom.GetContentQuadsParams{NodeID: n.NodeID})
 		if err != nil {
 			return err
 		}
@@ -112,7 +106,8 @@ func MouseClickNode(n *Node, opts ...MouseOption) MouseAction {
 		x /= float64(c / 2)
 		y /= float64(c / 2)
 
-		return MouseClickXY(x, y, opts...).Do(ctx)
+		_, err = MouseClickXY(x, y, opts...)(ctx, t)
+		return err
 	})
 }
 
@@ -172,9 +167,6 @@ func ClickCount(n int) MouseOption {
 	}
 }
 
-// KeyAction are keyboard (key) input event actions.
-type KeyAction Action
-
 // KeyEvent is a key action that synthesizes a keyDown, char, and keyUp event
 // for each rune contained in keys along with any supplied key options.
 //
@@ -185,14 +177,14 @@ type KeyAction Action
 //
 // See the [kb] package for implementation details and list of
 // well-known keys.
-func KeyEvent(keys string, opts ...KeyOption) KeyAction {
-	return ActionFunc(func(ctx context.Context) error {
+func KeyEvent(keys string, opts ...KeyOption) Action[Void] {
+	return Func(func(ctx context.Context, t *Target) error {
 		for _, r := range keys {
 			for _, k := range kb.Encode(r) {
 				for _, o := range opts {
 					o(k)
 				}
-				if _, err := Call(ctx, input.DispatchKeyEvent, *k); err != nil {
+				if _, err := cdp.Call(ctx, t, input.DispatchKeyEvent, *k); err != nil {
 					return err
 				}
 			}
@@ -203,13 +195,14 @@ func KeyEvent(keys string, opts ...KeyOption) KeyAction {
 }
 
 // KeyEventNode is a key action that dispatches a key event on an element node.
-func KeyEventNode(n *Node, keys string, opts ...KeyOption) KeyAction {
-	return ActionFunc(func(ctx context.Context) error {
-		if _, err := Call(ctx, dom.Focus, dom.FocusParams{NodeID: n.NodeID}); err != nil {
+func KeyEventNode(n *Node, keys string, opts ...KeyOption) Action[Void] {
+	return Func(func(ctx context.Context, t *Target) error {
+		if _, err := cdp.Call(ctx, t, dom.Focus, dom.FocusParams{NodeID: n.NodeID}); err != nil {
 			return err
 		}
 
-		return KeyEvent(keys, opts...).Do(ctx)
+		_, err := KeyEvent(keys, opts...)(ctx, t)
+		return err
 	})
 }
 
