@@ -21,12 +21,15 @@ definition files of Chromium.
 The package has five layers.
 
 An `Allocator` gets a browser. `ExecAllocator` starts a browser process and
-reads its WebSocket address from the output. `RemoteAllocator` connects to a
-browser that already runs.
+talks to it through a pipe. The pipe is the default. With the `WebSocket`
+option, or on Windows, it reads the WebSocket address from the output of the
+browser instead. `RemoteAllocator` connects to a browser that already runs,
+through a WebSocket.
 
-A `Browser` holds the WebSocket connection. It reads every message, sends
-commands, and passes events to the target that owns them. Messages use the
-`encoding/json/v2` package of the standard library.
+A `Browser` holds a `Transport`, which is the pipe or the WebSocket
+connection. It reads every message, sends commands, and passes events to the
+target that owns them. Messages use the `encoding/json/v2` package of the
+standard library.
 
 A `Target` is one page or tab. It tracks the frame tree and the DOM tree of
 that page from events. A query can then read nodes without a round trip.
@@ -50,8 +53,14 @@ the device descriptors. JavaScript snippets in `js/` are embedded with
 
 The package covers browser allocation, contexts, targets, navigation, element
 queries, input, device emulation, screenshots, JavaScript evaluation, polling
-and events. The Go files in the root hold about 13,000 lines, tests included.
+and events. It also has the options for a visible window and for a browser that
+stays open. The Go files in the root hold about 15,000 lines, tests included.
 The README links the examples repository for larger tasks.
+
+Release v0.17.0 uses the typed `cdproto` v0.157.2. It has the generic action
+API, the iterator events, the typed selectors, the pipe transport and the
+visible window options. `API.md` describes the API and `MIGRATION.md` lists
+every change. The decisions in `decisions/` record the choices.
 
 ## Testing
 
@@ -71,15 +80,12 @@ documents and the Go comments.
 These are things that this repository does not settle. Do not decide them
 without the maintainer.
 
-1. Does the maintainer want the generics and iterator API in
-   `decisions/2026-10-03-generic-iterator-api-instead-of-action.md`? It
-   replaces the `Action` interface, so it is a major change. The code is on the
-   local branch `typed-api`, and `API.md` describes it.
-2. How does the maintainer release and tag `chromedp`? The history holds no
-   release process. The nearest tag of this branch is `v0.16.0`.
-3. Does the maintainer want a linter? No configuration exists. See
+1. Where does the release process live? The maintainer has a release script
+   that changes `go.mod` and `go.sum`. No file in this repository describes
+   it.
+2. Does the maintainer want a linter? No configuration exists. See
    `BACKLOG.md`.
-4. Can a new module go in `go.mod`? Four modules are direct dependencies
+3. Can a new module go in `go.mod`? Four modules are direct dependencies
    today. Nothing here states a policy.
-5. Does the maintainer want `go fix` and `modernize` runs recorded as a rule?
+4. Does the maintainer want `go fix` and `modernize` runs recorded as a rule?
    The history shows them on 2025-04-18 and 2026-07-15.

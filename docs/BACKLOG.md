@@ -21,21 +21,21 @@ maintainer whether CI must add it.
 
 ## API
 
-### Review and merge the new API
+### Test the Windows behavior
 
-The new API is built on the local branch `typed-api`, and nobody has approved
-it. See `decisions/2026-10-03-generic-iterator-api-instead-of-action.md` and
-[`API.md`](API.md). The maintainer pushes the branch after the review. Merge
-the `pdlgen` branch `typed-api` first, because the typed `cdproto` comes from
-it. The decision changes from Proposed to Decided when the maintainer approves
-it.
+No Windows machine ran the tests. The pipe transport does not apply on
+Windows, and the allocator uses the websocket there. The flags that detach a
+kept browser on Windows are not tested. Run the tests on Windows and fix what
+fails. See `decisions/2026-10-03-use-a-pipe-to-the-browser-by-default.md` and
+`decisions/2026-10-03-a-visible-window-is-an-opt-in.md`.
 
 ## Documentation
 
 ### Move the long examples out of the package
 
-After the transport and the API change, move the long examples into the
-`examples` repository or into tests. Remove code and files that nothing uses.
+Move the long examples of `example_test.go` into the `examples` repository or
+into tests. Remove code and files that nothing uses. `ExampleFullScreenshot`
+also uses a live website, `https://google.com`, and `go test` runs it.
 
 ### Stop the tests from writing files in the root
 

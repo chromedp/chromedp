@@ -13,17 +13,21 @@ workflow on GitHub is not stable. The first browser start sometimes does not
 print its DevTools address, and Chrome only prints DBus errors. The tests pass
 on the local Chrome.
 
-The new API is built on the local branch `typed-api`, which is not pushed. It uses
-the typed `cdproto` that the `pdlgen` branch `typed-api` writes. The branch holds
-the generic actions, the iterator events, `docs/API.md` and `docs/MIGRATION.md`.
-It builds only with a `go.work` file that uses a local copy of the typed
-`cdproto`, because `go.mod` does not name that module yet. The full suite passes
-on it. The comments of the Go files and the documents
-follow the `simple-english` skill, and `go test ./docs/` tests them. The
-branch waits for the review of the maintainer.
+On 2026-10-04 the typed API work was merged into `main`. The maintainer
+approved these parts:
+
+- the typed `cdproto` of `pdlgen`, with generics and iterators
+- the generic action API and the iterator events of `chromedp`
+- the pipe transport as the default
+- the visible window options `WithVisibleWindow` and `WithKeepOpen`, and the
+  variable `CHROMEDP_VISIBLEWINDOW`
+- the port of the `examples` repository
+
+`cdproto` v0.157.2 is the first release of the typed API. `chromedp` v0.17.0
+uses it. The full test suite passes. The comments of the Go files and the
+documents follow the `simple-english` skill, and `go test ./docs/` tests them.
 
 ## Waiting
 
-- The maintainer must review the branch `typed-api`, and then approve or reject
-  the decision `2026-10-03-generic-iterator-api-instead-of-action.md`.
 - The maintainer must answer the open questions at the end of [`PLAN.md`](PLAN.md).
+- Known work that is not done is in [`BACKLOG.md`](BACKLOG.md).
