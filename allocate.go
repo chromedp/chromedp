@@ -106,9 +106,14 @@ type ExecAllocator struct {
 	initFlags map[string]any
 	initEnv   []string
 
+	// webSocket makes the allocator connect to the browser with a websocket
+	// instead of a pipe. See WebSocket.
+	webSocket bool
+
 	// Chrome will sometimes fail to print the websocket, or run for a long
 	// time, without properly exiting. To avoid blocking forever in those
-	// cases, give up after a specified timeout.
+	// cases, give up after a specified timeout. It only applies to the
+	// websocket mode.
 	wsURLReadTimeout time.Duration
 
 	modifyCmdFunc func(cmd *exec.Cmd)
@@ -161,7 +166,12 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		// default, unless the user set Flag("no-sandbox", false).
 		args = append(args, "--no-sandbox")
 	}
-	if _, ok := a.initFlags["remote-debugging-port"]; !ok {
+	pipe := a.usesPipe()
+	if pipe {
+		if v, _ := a.initFlags["remote-debugging-pipe"].(bool); !v {
+			args = append(args, "--remote-debugging-pipe")
+		}
+	} else if _, ok := a.initFlags["remote-debugging-port"]; !ok {
 		args = append(args, "--remote-debugging-port=0")
 	}
 
@@ -179,17 +189,38 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		}
 	}()
 
+	// In the pipe mode, the pipes are set up before ModifyCmdFunc runs, so
+	// that the function can see them.
+	var pf *pipeFiles
+	connected := false
+	if pipe {
+		var err error
+		if pf, err = newPipeFiles(cmd); err != nil {
+			return nil, err
+		}
+		// The browser process has its own copies after it starts.
+		defer pf.closeChild()
+		defer func() {
+			if !connected {
+				pf.closeParent()
+			}
+		}()
+	}
+
 	if a.modifyCmdFunc != nil {
 		a.modifyCmdFunc(cmd)
 	} else {
 		allocateCmdOptions(cmd)
 	}
 
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return nil, err
+	var stdout io.ReadCloser
+	if !pipe {
+		var err error
+		if stdout, err = cmd.StdoutPipe(); err != nil {
+			return nil, err
+		}
+		cmd.Stderr = cmd.Stdout
 	}
-	cmd.Stderr = cmd.Stdout
 
 	// Preserve environment variables set in the (lowest priority) existing
 	// environment, OverrideCmdFunc(), and Env (highest priority)
@@ -216,6 +247,13 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		return nil, ctx.Err()
 	case <-c.allocated: // for this browser's root context
 	}
+	var out *browserOutput
+	if pipe {
+		// The browser has its own copy of the child ends now.
+		pf.closeChild()
+		out = startBrowserOutput(&a.wg, pf.outR, a.combinedOutputWriter)
+	}
+	exited := make(chan struct{})
 	a.wg.Add(1) // for the entire allocator
 	go func() {
 		// First wait for the process to be finished.
@@ -223,6 +261,10 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		// user cancelled the context and killed chrome, this will most
 		// likely just be "signal: killed", which isn't interesting.
 		cmd.Wait()
+		if out != nil {
+			out.finish()
+		}
+		close(exited)
 
 		// Then delete the temporary user data directory, if needed.
 		if removeDir {
@@ -242,10 +284,47 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		close(c.allocated)
 	}()
 
+	var browser *Browser
+	if pipe {
+		var err error
+		browser, err = connectPipe(ctx, pf, cmd, out, exited, opts)
+		if err != nil {
+			return nil, err
+		}
+		connected = true
+	} else {
+		var err error
+		if browser, err = a.connectWebSocket(ctx, stdout, opts); err != nil {
+			return nil, err
+		}
+	}
+	go func() {
+		// If the browser loses connection, kill the entire process and
+		// handler at once. Don't use Cancel, as that will attempt to
+		// gracefully close the browser, which will hang.
+		// Don't cancel if we're in the middle of a graceful Close,
+		// since we want to let Chrome shut itself when it is fully
+		// finished.
+		<-browser.LostConnection
+		select {
+		case <-browser.closingGracefully:
+		default:
+			c.cancel()
+		}
+	}()
+	browser.process = cmd.Process
+	browser.userDataDir = dataDir
+	return browser, nil
+}
+
+// connectWebSocket waits for the websocket address in the output of the
+// browser, and connects to it.
+func (a *ExecAllocator) connectWebSocket(ctx context.Context, stdout io.ReadCloser, opts []BrowserOption) (*Browser, error) {
 	var wsURL string
 	wsURLChan := make(chan struct{})
 	var copy func()
 	var output syncBuffer
+	var err error
 	go func() {
 		wsURL, copy, err = readOutputTo(stdout, a.combinedOutputWriter, &output)
 		close(wsURLChan)
@@ -266,27 +345,22 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		})
 	}
 
-	browser, err := NewBrowser(ctx, wsURL, opts...)
-	if err != nil {
-		return nil, err
+	return NewBrowser(ctx, wsURL, opts...)
+}
+
+// usesPipe reports whether Allocate connects to the browser with a pipe. It
+// does not when the WebSocket option is set, when the platform cannot pass the
+// pipe to the process, or when the flags ask for a debugging port or address.
+func (a *ExecAllocator) usesPipe() bool {
+	if a.webSocket || !usePipe() {
+		return false
 	}
-	go func() {
-		// If the browser loses connection, kill the entire process and
-		// handler at once. Don't use Cancel, as that will attempt to
-		// gracefully close the browser, which will hang.
-		// Don't cancel if we're in the middle of a graceful Close,
-		// since we want to let Chrome shut itself when it is fully
-		// finished.
-		<-browser.LostConnection
-		select {
-		case <-browser.closingGracefully:
-		default:
-			c.cancel()
+	for _, name := range []string{"remote-debugging-port", "remote-debugging-address"} {
+		if _, ok := a.initFlags[name]; ok {
+			return false
 		}
-	}()
-	browser.process = cmd.Process
-	browser.userDataDir = dataDir
-	return browser, nil
+	}
+	return true
 }
 
 // removeAllRetry removes dir like os.RemoveAll. Chrome child processes, such as
@@ -558,8 +632,24 @@ func CombinedOutput(w io.Writer) ExecAllocatorOption {
 	}
 }
 
+// WebSocket is an ExecAllocatorOption that makes the allocator connect to the
+// browser with a websocket, as chromedp did before. The default is a pipe: the
+// allocator starts the browser with --remote-debugging-pipe, and the browser
+// reads the commands from the file descriptor 3 and writes the responses and
+// the events to the file descriptor 4. A pipe needs no port.
+//
+// Use WebSocket when the browser must open a debugging port, for example to
+// let a second program connect to it. The Flag options "remote-debugging-port"
+// and "remote-debugging-address" also select the websocket. On Windows the
+// allocator always uses the websocket, because os/exec cannot pass extra file
+// descriptors there.
+func WebSocket(a *ExecAllocator) {
+	a.webSocket = true
+}
+
 // WSURLReadTimeout sets the waiting time for reading the WebSocket URL.
-// The default value is 20 seconds.
+// The default value is 20 seconds. It only applies to the websocket mode, see
+// [WebSocket].
 func WSURLReadTimeout(t time.Duration) ExecAllocatorOption {
 	return func(a *ExecAllocator) {
 		a.wsURLReadTimeout = t
