@@ -39,8 +39,8 @@ An `Action[T]` is the unit of work. It is a func that runs against a `Target`
 and returns a value of the type `T`. An action that returns no value has the
 type `Action[Void]`. The query, navigation, input, emulation, screenshot and
 evaluation functions each return an action. A selector finds nodes by a query
-string and an option such as `ByID` or `BySearch`. Then it waits for them to be
-ready.
+string. The type of the selector, such as `ID` or `CSS`, chooses the lookup. A
+plain string is a `Search`. Then the query waits for the nodes to be ready.
 
 Two folders hold generated data. `kb/` has the keyboard keys and `device/` has
 the device descriptors. JavaScript snippets in `js/` are embedded with

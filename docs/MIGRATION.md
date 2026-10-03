@@ -1,9 +1,9 @@
 # Migrate to the new API
 
 This document lists the public API changes of the branch `typed-api`. It has
-three parts, in the order of the changes: the move to `cdproto` v0.157.1, the
-move to the typed `cdproto`, and the move to the generic action API. Apply the
-parts in this order. A later part can replace a rule of an earlier part.
+four parts, in the order of the changes: the move to `cdproto` v0.157.1, the
+move to the typed `cdproto`, the move to the generic action API, and the move
+to typed selectors. Apply the parts in this order. A later part can replace a rule of an earlier part.
 
 ## Migrate to cdproto v0.157.1
 
@@ -118,7 +118,7 @@ This part lists the public API changes of the generic action API. An action now 
 The old action took a pointer to receive the value. The new action returns the value, and the pointer argument is gone.
 
 - `Text(sel, &s, opts...)` becomes `Text(sel, opts...)`, which is an `Action[string]`. `TextContent`, `Value`, `InnerHTML` and `OuterHTML` change in the same way.
-- `Nodes(sel, &nodes, opts...)` becomes `Nodes(sel, opts...)`, an `Action[[]*Node]`. `NodeIDs` returns `[]cdp.NodeID`.
+- `Nodes(sel, &nodes, opts...)` becomes `Nodes(sel, opts...)`, an `Action[[]*Node]`. `NodeIDs` is now a selector type. The action that returns `[]cdp.NodeID` is `QueryNodeIDs`.
 - `Attributes(sel, &m, opts...)` becomes `Attributes(sel, opts...)`, an `Action[map[string]string]`. `AttributesAll` returns `[]map[string]string`.
 - `AttributeValue(sel, name, &value, &ok, opts...)` becomes `AttributeValue(sel, name, opts...)`, an `Action[AttributeResult]`. The struct `AttributeResult` has the fields `Value` and `Exists`.
 - `JavascriptAttribute(sel, name, &res, opts...)` becomes `JavascriptAttribute[T](sel, name, opts...)`.
@@ -138,7 +138,7 @@ These actions keep their arguments and now have the type `Action[Void]`: `Naviga
 
 ### Selectors and query options
 
-The selector options `ByQuery`, `ByID`, `NodeVisible`, `AtLeast`, `RetryInterval`, `FromNode` and the others keep their names and their use. Four option types receive the target, because the options send commands.
+The query options `NodeVisible`, `AtLeast`, `RetryInterval`, `FromNode` and the others keep their names and their use. The lookup options `ByQuery`, `ByID` and the others change in the next part. Four option types receive the target, because the options send commands.
 
 - `ByFunc` takes `func(context.Context, *Target, *Node) ([]cdp.NodeID, error)`.
 - `WaitFunc` takes `func(context.Context, *Target, *Frame, runtime.ExecutionContextID, ...cdp.NodeID) ([]*Node, error)`.
@@ -160,3 +160,27 @@ The selector options `ByQuery`, `ByID`, `NodeVisible`, `AtLeast`, `RetryInterval
 - `Call` and `CallBrowser` stay. Use them where only a context is at hand, for example in code that runs under `Legacy`. An action calls `cdp.Call(ctx, t, ...)` with its target.
 - `Poll` and `PollFunction` keep the polling options. A poll still runs in the page and does not use an iterator.
 - When the session closes, the subscriptions of `Browser` and `Target` deliver the events that they already hold. A reader then sees every event up to the end.
+
+## Migrate to typed selectors
+
+This part lists the changes to the selector of a query action. The type of the selector now chooses the lookup, so the `By...` lookup options are gone. The old name comes first, then the new name.
+
+### Selector types
+
+A query action takes a value of the constraint `Selectable`. A `Selectable` is a string type or a `[]cdp.NodeID` type. The first argument of every query action changed from `any` to `Selectable`.
+
+- `ByQuery` becomes the type `CSS`. It selects the first match of `DOM.querySelector`. `Click("#a", ByQuery)` becomes `Click(CSS("#a"))`.
+- `ByQueryAll` becomes the type `CSSAll`. It selects every match of `DOM.querySelectorAll`. `Nodes("a", ByQueryAll)` becomes `Nodes(CSSAll("a"))`.
+- `ByID` becomes the type `ID`. It selects the element with this id, and a leading `#` is optional. `Click("#a", ByID)` becomes `Click(ID("a"))`.
+- `BySearch` becomes the type `Search`. It uses `DOM.performSearch` and takes a CSS selector, an XPath query or text. It was the default, so a plain string is still a `Search`. `Click("//a", BySearch)` becomes `Click("//a")` or `Click(Search("//a"))`.
+- `ByJSPath` becomes the type `JSPath`. It selects the node that a JavaScript expression gives. `Nodes("document", ByJSPath)` becomes `Nodes(JSPath("document"))`.
+- `ByNodeID` becomes the type `NodeIDs`, which is `[]cdp.NodeID`. `Value(ids, ByNodeID)` becomes `Value(NodeIDs(ids))`. A plain `[]cdp.NodeID` also selects by node ids.
+
+### Other changes
+
+- A string constant or a string variable is a `Search`. A string type that you define, such as `type MySel string`, is also a `Search`. A slice type that you define with the elements `cdp.NodeID` counts as `NodeIDs`.
+- A type outside the `Selectable` set, for example an int, a `*Node` or a `[]string`, does not compile. The panic of `ByNodeID` for a wrong type is gone.
+- `ByFunc` stays. It replaces the lookup of the selector. The selector is then only a label in error messages, so pass `""` or any string.
+- The action `NodeIDs(sel, opts...)` becomes `QueryNodeIDs(sel, opts...)`, because `NodeIDs` is now a selector type.
+- The query actions are generic in the selector type: `Click[S Selectable](sel S, opts ...QueryOption)`. The compiler infers `S` from the argument. `QueryAfter[T, S]` and `JavascriptAttribute[T, S]` take the result type `T` first. Write `JavascriptAttribute[int](sel, "scrollTop")` and the compiler infers `S`.
+- `FromNode` works with `CSS` and `CSSAll`. A `Search` and a `JSPath` selector ignore it, as before.

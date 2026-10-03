@@ -9,7 +9,7 @@ This document describes the generic action API of `chromedp`. It shows the new c
 3. The target is a session. The `Target` and the `Browser` implement `cdp.Session`. An action sends a protocol command with `cdp.Call(ctx, t, command, params)`. The target is an argument, so it cannot be missing. The old API hid an executor in the context, and a call without it failed at run time.
 4. A protocol command is a value. A command has the type `cdp.Command[P, R]`, where `P` is the struct of the parameters and `R` is the struct of the result. A new field in the protocol adds a field to a struct. It does not change a function signature.
 5. An event is a value, and an event stream is an iterator. `Events(ctx, page.LoadEventFired)` returns an `iter.Seq2[E, error]` of typed payloads. The subscription starts when `Events` returns. A program can subscribe, trigger the event and then range over the events, so no event is lost.
-6. A selector keeps its form. The query options, such as `ByQuery`, `NodeVisible` and `FromNode`, keep their names and their use. The action returns the value that it read.
+6. The type of a selector chooses the lookup. A query action takes a `Selectable` value, which is a string or a `[]cdp.NodeID`. A plain string is a `Search`, as before. `CSS`, `CSSAll`, `ID`, `JSPath` and `NodeIDs` select by CSS, by CSS for every match, by id, by JavaScript and by node ids. The `By...` lookup options are gone. An int or a `*Node` does not compile. The options `NodeVisible`, `FromNode`, `ByFunc` and the others keep their names and their use.
 7. Old code still runs. `Legacy` wraps an action of the old interface, so a program can move to the new API one step at a time.
 
 Two funcs run actions. `Run` runs one action and returns its value. `Do` runs several actions that return no value, in order, and stops at the first error. Both start the browser and open the tab when the context has none yet.
@@ -23,7 +23,7 @@ title, err := chromedp.Run(ctx, chromedp.Title())
 
 ## Before and after
 
-Each example has the old code first and the new code second. The new code comes from `example_test.go`. The examples 9 and 11 use a live website and have no `Output` comment, so `go test` builds them and does not run them. In every example, `ctx` is a chromedp context made with `chromedp.NewContext`, and `ts` is a test server.
+Each example has the old code first and the new code second. The new code comes from `example_test.go`. The examples 9 and 11 use a live website and have no `Output` comment, so `go test` builds them and does not run them. In every example, `ctx` is a chromedp context made with `chromedp.NewContext`, and `ts` is a test server. The old code of some examples chose a lookup with an option. The Before blocks leave it out, because the default lookup finds the same elements. `docs/MIGRATION.md` lists the old options and the selector types that replace them.
 
 ### 1. Navigate and read a value
 
@@ -65,9 +65,9 @@ Before:
 var outerBefore, outerAfter string
 if err := chromedp.Run(ctx,
 	chromedp.Navigate(ts.URL),
-	chromedp.OuterHTML("#content", &outerBefore, chromedp.ByQuery),
-	chromedp.Click("#content", chromedp.ByQuery),
-	chromedp.OuterHTML("#content", &outerAfter, chromedp.ByQuery),
+	chromedp.OuterHTML("#content", &outerBefore),
+	chromedp.Click("#content"),
+	chromedp.OuterHTML("#content", &outerAfter),
 ); err != nil {
 	log.Fatal(err)
 }
@@ -79,14 +79,14 @@ After:
 if err := chromedp.Do(ctx, chromedp.Navigate(ts.URL)); err != nil {
 	log.Fatal(err)
 }
-outerBefore, err := chromedp.Run(ctx, chromedp.OuterHTML("#content", chromedp.ByQuery))
+outerBefore, err := chromedp.Run(ctx, chromedp.OuterHTML(chromedp.CSS("#content")))
 if err != nil {
 	log.Fatal(err)
 }
-if err := chromedp.Do(ctx, chromedp.Click("#content", chromedp.ByQuery)); err != nil {
+if err := chromedp.Do(ctx, chromedp.Click(chromedp.CSS("#content"))); err != nil {
 	log.Fatal(err)
 }
-outerAfter, err := chromedp.Run(ctx, chromedp.OuterHTML("#content", chromedp.ByQuery))
+outerAfter, err := chromedp.Run(ctx, chromedp.OuterHTML(chromedp.CSS("#content")))
 if err != nil {
 	log.Fatal(err)
 }
@@ -99,7 +99,7 @@ A click does not always cause a navigation, so the old `Run` did not wait for a 
 Before:
 
 ```go
-resp, err := chromedp.RunResponse(ctx, chromedp.Click("#foo", chromedp.ByID))
+resp, err := chromedp.RunResponse(ctx, chromedp.Click("#foo"))
 if err != nil {
 	log.Fatal(err)
 }
@@ -109,7 +109,7 @@ fmt.Println("status code:", resp.Status)
 After:
 
 ```go
-resp, err := chromedp.RunResponse(ctx, chromedp.Click("#foo", chromedp.ByID))
+resp, err := chromedp.RunResponse(ctx, chromedp.Click(chromedp.ID("foo")))
 if err != nil {
 	log.Fatal(err)
 }
@@ -117,7 +117,7 @@ fmt.Println("status code:", resp.Status)
 
 // Or wait for the load event, with no response.
 _, err = chromedp.Run(ctx, chromedp.WaitEvent(page.LoadEventFired, nil,
-	chromedp.Click("#next", chromedp.ByID)))
+	chromedp.Click(chromedp.ID("next"))))
 ```
 
 `NavigateResponse(url)` is new. It is an `Action[*network.Response]`:
@@ -136,10 +136,10 @@ Before:
 var name, color string
 if err := chromedp.Run(ctx,
 	chromedp.Navigate(ts.URL),
-	chromedp.SendKeys("#name", "Ada", chromedp.ByID),
-	chromedp.SetValue("#color", "green", chromedp.ByID),
-	chromedp.Value("#name", &name, chromedp.ByID),
-	chromedp.Value("#color", &color, chromedp.ByID),
+	chromedp.SendKeys("#name", "Ada"),
+	chromedp.SetValue("#color", "green"),
+	chromedp.Value("#name", &name),
+	chromedp.Value("#color", &color),
 ); err != nil {
 	log.Fatal(err)
 }
@@ -150,16 +150,16 @@ After:
 ```go
 if err := chromedp.Do(ctx,
 	chromedp.Navigate(ts.URL),
-	chromedp.SendKeys("#name", "Ada", chromedp.ByID),
-	chromedp.SetValue("#color", "green", chromedp.ByID),
+	chromedp.SendKeys(chromedp.ID("name"), "Ada"),
+	chromedp.SetValue(chromedp.ID("color"), "green"),
 ); err != nil {
 	log.Fatal(err)
 }
-name, err := chromedp.Run(ctx, chromedp.Value("#name", chromedp.ByID))
+name, err := chromedp.Run(ctx, chromedp.Value(chromedp.ID("name")))
 if err != nil {
 	log.Fatal(err)
 }
-color, err := chromedp.Run(ctx, chromedp.Value("#color", chromedp.ByID))
+color, err := chromedp.Run(ctx, chromedp.Value(chromedp.ID("color")))
 if err != nil {
 	log.Fatal(err)
 }
@@ -348,7 +348,7 @@ if err := chromedp.Run(ctx,
 	chromedp.Emulate(device.IPhone7),
 	chromedp.Navigate(`https://duckduckgo.com/`),
 	chromedp.SendKeys(`textarea[name=q]`, "what's my user agent?\n"),
-	chromedp.WaitVisible(`#zci-answer`, chromedp.ByID),
+	chromedp.WaitVisible(`#zci-answer`),
 	chromedp.CaptureScreenshot(&buf),
 ); err != nil {
 	log.Fatal(err)
@@ -362,7 +362,7 @@ if err := chromedp.Do(ctx,
 	chromedp.Emulate(device.IPhone7),
 	chromedp.Navigate(`https://duckduckgo.com/`),
 	chromedp.SendKeys(`textarea[name=q]`, "what's my user agent?\n"),
-	chromedp.WaitVisible(`#zci-answer`, chromedp.ByID),
+	chromedp.WaitVisible(chromedp.ID(`zci-answer`)),
 ); err != nil {
 	log.Fatal(err)
 }
@@ -489,29 +489,15 @@ The type `oldTitle` is the same in both. It has the method `Do(ctx context.Conte
 
 ### 13. Run a query from another node
 
-`FromNode` and the `By` options keep their names. Each `Text` returns its value.
-
-Before:
+`FromNode` keeps its name. It works with a `CSS` or a `CSSAll` selector. A `Search` or a `JSPath` selector ignores it. The old code chose the CSS lookup with an option, and `docs/MIGRATION.md` lists it. Each `Text` returns its value.
 
 ```go
-var queryRoot, queryFromNode string
-if err := chromedp.Run(ctx,
-	chromedp.Text(".content", &queryRoot, chromedp.ByQuery),
-	chromedp.Text(".content", &queryFromNode, chromedp.ByQuery, chromedp.FromNode(sectionNode)),
-); err != nil {
-	log.Fatal(err)
-}
-```
-
-After:
-
-```go
-queryRoot, err := chromedp.Run(ctx, chromedp.Text(".content", chromedp.ByQuery))
+queryRoot, err := chromedp.Run(ctx, chromedp.Text(chromedp.CSS(".content")))
 if err != nil {
 	log.Fatal(err)
 }
 queryFromNode, err := chromedp.Run(ctx,
-	chromedp.Text(".content", chromedp.ByQuery, chromedp.FromNode(sectionNode)))
+	chromedp.Text(chromedp.CSS(".content"), chromedp.FromNode(sectionNode)))
 if err != nil {
 	log.Fatal(err)
 }
@@ -519,7 +505,7 @@ if err != nil {
 
 ## What the new API removes
 
-The new API removes the interface `Action`, the type `ActionFunc`, the type `Tasks`, and the funcs `ListenTarget` and `ListenBrowser`. It also removes the types `QueryAction`, `NavigateAction`, `EvaluateAction`, `CallAction`, `PollAction`, `MouseAction`, `KeyAction` and `EmulateAction`. Each type is now `Action[T]`. `docs/MIGRATION.md` lists every change, with the old name and the new name.
+The new API removes the interface `Action`, the type `ActionFunc`, the type `Tasks`, and the funcs `ListenTarget` and `ListenBrowser`. It also removes the types `QueryAction`, `NavigateAction`, `EvaluateAction`, `CallAction`, `PollAction`, `MouseAction`, `KeyAction` and `EmulateAction`. Each type is now `Action[T]`. It also removes the six lookup options that start with `By`, except `ByFunc`. A selector type replaces each of them. `docs/MIGRATION.md` lists every change, with the old name and the new name.
 
 ## The exported funcs and types
 
@@ -535,12 +521,6 @@ func ButtonLeft(p *input.DispatchMouseEventParams)
 func ButtonMiddle(p *input.DispatchMouseEventParams)
 func ButtonNone(p *input.DispatchMouseEventParams)
 func ButtonRight(p *input.DispatchMouseEventParams)
-func ByID(s *Selector)
-func ByJSPath(s *Selector)
-func ByNodeID(s *Selector)
-func ByQuery(s *Selector)
-func ByQueryAll(s *Selector)
-func BySearch(s *Selector)
 func Call[P, R any](ctx context.Context, cmd cdp.Command[P, R], params P) (R, error)
 func CallBrowser[P, R any](ctx context.Context, cmd cdp.Command[P, R], params P) (R, error)
 func Cancel(ctx context.Context) error
@@ -579,34 +559,34 @@ func WaitNewTarget(ctx context.Context, fn func(*target.Info) bool) <-chan targe
 
 ```go
 type Action[T any] func(ctx context.Context, t *Target) (T, error)
-func AttributeValue(sel any, name string, opts ...QueryOption) Action[AttributeResult]
-func Attributes(sel any, opts ...QueryOption) Action[map[string]string]
-func AttributesAll(sel any, opts ...QueryOption) Action[[]map[string]string]
-func Blur(sel any, opts ...QueryOption) Action[Void]
+func AttributeValue[S Selectable](sel S, name string, opts ...QueryOption) Action[AttributeResult]
+func Attributes[S Selectable](sel S, opts ...QueryOption) Action[map[string]string]
+func AttributesAll[S Selectable](sel S, opts ...QueryOption) Action[[]map[string]string]
+func Blur[S Selectable](sel S, opts ...QueryOption) Action[Void]
 func CallFunctionOn[T any](functionDeclaration string, opt CallOption, args ...any) Action[T]
 func CaptureScreenshot() Action[[]byte]
-func Clear(sel any, opts ...QueryOption) Action[Void]
-func Click(sel any, opts ...QueryOption) Action[Void]
-func ComputedStyle(sel any, opts ...QueryOption) Action[[]*css.ComputedStyleProperty]
-func Dimensions(sel any, opts ...QueryOption) Action[*dom.BoxModel]
-func DoubleClick(sel any, opts ...QueryOption) Action[Void]
-func Dump(sel any, w io.Writer, opts ...QueryOption) Action[Void]
-func DumpTo(sel any, w io.Writer, prefix, indent string, nodeIDs bool, depth int64, pierce bool, wait time.Duration, opts ...QueryOption) Action[Void]
+func Clear[S Selectable](sel S, opts ...QueryOption) Action[Void]
+func Click[S Selectable](sel S, opts ...QueryOption) Action[Void]
+func ComputedStyle[S Selectable](sel S, opts ...QueryOption) Action[[]*css.ComputedStyleProperty]
+func Dimensions[S Selectable](sel S, opts ...QueryOption) Action[*dom.BoxModel]
+func DoubleClick[S Selectable](sel S, opts ...QueryOption) Action[Void]
+func Dump[S Selectable](sel S, w io.Writer, opts ...QueryOption) Action[Void]
+func DumpTo[S Selectable](sel S, w io.Writer, prefix, indent string, nodeIDs bool, depth int64, pierce bool, wait time.Duration, opts ...QueryOption) Action[Void]
 func Emulate(device Device) Action[Void]
 func EmulateReset() Action[Void]
 func EmulateViewport(width, height int64, opts ...EmulateViewportOption) Action[Void]
 func Evaluate[T any](expression string, opts ...EvaluateOption) Action[T]
 func EvaluateAsDevTools[T any](expression string, opts ...EvaluateOption) Action[T]
-func Focus(sel any, opts ...QueryOption) Action[Void]
+func Focus[S Selectable](sel S, opts ...QueryOption) Action[Void]
 func FullScreenshot(quality int) Action[[]byte]
 func Func(f func(ctx context.Context, t *Target) error) Action[Void]
-func InnerHTML(sel any, opts ...QueryOption) Action[string]
-func JavascriptAttribute[T any](sel any, name string, opts ...QueryOption) Action[T]
+func InnerHTML[S Selectable](sel S, opts ...QueryOption) Action[string]
+func JavascriptAttribute[T any, S Selectable](sel S, name string, opts ...QueryOption) Action[T]
 func KeyEvent(keys string, opts ...KeyOption) Action[Void]
 func KeyEventNode(n *Node, keys string, opts ...KeyOption) Action[Void]
 func Legacy(a OldAction) Action[Void]
 func Location() Action[string]
-func MatchedStyle(sel any, opts ...QueryOption) Action[*css.GetMatchedStylesForNodeResult]
+func MatchedStyle[S Selectable](sel S, opts ...QueryOption) Action[*css.GetMatchedStylesForNodeResult]
 func MouseClickNode(n *Node, opts ...MouseOption) Action[Void]
 func MouseClickXY(x, y float64, opts ...MouseOption) Action[Void]
 func MouseEvent(typ input.DispatchMouseEventType, x, y float64, opts ...MouseOption) Action[Void]
@@ -616,42 +596,42 @@ func NavigateForward() Action[Void]
 func NavigateResponse(urlstr string) Action[*network.Response]
 func NavigateToHistoryEntry(entryID int64) Action[Void]
 func NavigationEntries() Action[page.GetNavigationHistoryResult]
-func NodeIDs(sel any, opts ...QueryOption) Action[[]cdp.NodeID]
-func Nodes(sel any, opts ...QueryOption) Action[[]*Node]
-func OuterHTML(sel any, opts ...QueryOption) Action[string]
+func Nodes[S Selectable](sel S, opts ...QueryOption) Action[[]*Node]
+func OuterHTML[S Selectable](sel S, opts ...QueryOption) Action[string]
 func Poll[T any](expression string, opts ...PollOption) Action[T]
 func PollFunction[T any](pageFunction string, opts ...PollOption) Action[T]
-func Query(sel any, opts ...QueryOption) Action[Void]
-func QueryAfter[T any](sel any, f func(ctx context.Context, t *Target, nodes []*Node) (T, error), opts ...QueryOption) Action[T]
+func Query[S Selectable](sel S, opts ...QueryOption) Action[Void]
+func QueryAfter[T any, S Selectable](sel S, f func(ctx context.Context, t *Target, nodes []*Node) (T, error), opts ...QueryOption) Action[T]
+func QueryNodeIDs[S Selectable](sel S, opts ...QueryOption) Action[[]cdp.NodeID]
 func Reload() Action[Void]
-func RemoveAttribute(sel any, name string, opts ...QueryOption) Action[Void]
-func Reset(sel any, opts ...QueryOption) Action[Void]
+func RemoveAttribute[S Selectable](sel S, name string, opts ...QueryOption) Action[Void]
+func Reset[S Selectable](sel S, opts ...QueryOption) Action[Void]
 func ResetViewport() Action[Void]
-func Screenshot(sel any, opts ...QueryOption) Action[[]byte]
+func Screenshot[S Selectable](sel S, opts ...QueryOption) Action[[]byte]
 func ScreenshotNodes(nodes []*Node, scale float64) Action[[]byte]
-func ScreenshotScale(sel any, scale float64, opts ...QueryOption) Action[[]byte]
-func ScrollIntoView(sel any, opts ...QueryOption) Action[Void]
-func SendKeys(sel any, v string, opts ...QueryOption) Action[Void]
-func SetAttributeValue(sel any, name, value string, opts ...QueryOption) Action[Void]
-func SetAttributes(sel any, attributes map[string]string, opts ...QueryOption) Action[Void]
-func SetJavascriptAttribute(sel any, name, value string, opts ...QueryOption) Action[Void]
-func SetUploadFiles(sel any, files []string, opts ...QueryOption) Action[Void]
-func SetValue(sel any, value string, opts ...QueryOption) Action[Void]
+func ScreenshotScale[S Selectable](sel S, scale float64, opts ...QueryOption) Action[[]byte]
+func ScrollIntoView[S Selectable](sel S, opts ...QueryOption) Action[Void]
+func SendKeys[S Selectable](sel S, v string, opts ...QueryOption) Action[Void]
+func SetAttributeValue[S Selectable](sel S, name, value string, opts ...QueryOption) Action[Void]
+func SetAttributes[S Selectable](sel S, attributes map[string]string, opts ...QueryOption) Action[Void]
+func SetJavascriptAttribute[S Selectable](sel S, name, value string, opts ...QueryOption) Action[Void]
+func SetUploadFiles[S Selectable](sel S, files []string, opts ...QueryOption) Action[Void]
+func SetValue[S Selectable](sel S, value string, opts ...QueryOption) Action[Void]
 func Sleep(d time.Duration) Action[Void]
 func Steps(steps ...Action[Void]) Action[Void]
 func Stop() Action[Void]
-func Submit(sel any, opts ...QueryOption) Action[Void]
-func Text(sel any, opts ...QueryOption) Action[string]
-func TextContent(sel any, opts ...QueryOption) Action[string]
+func Submit[S Selectable](sel S, opts ...QueryOption) Action[Void]
+func Text[S Selectable](sel S, opts ...QueryOption) Action[string]
+func TextContent[S Selectable](sel S, opts ...QueryOption) Action[string]
 func Title() Action[string]
-func Value(sel any, opts ...QueryOption) Action[string]
-func WaitEnabled(sel any, opts ...QueryOption) Action[Void]
+func Value[S Selectable](sel S, opts ...QueryOption) Action[string]
+func WaitEnabled[S Selectable](sel S, opts ...QueryOption) Action[Void]
 func WaitEvent[E, T any](ev cdp.Event[E], match func(E) bool, trigger Action[T]) Action[E]
-func WaitNotPresent(sel any, opts ...QueryOption) Action[Void]
-func WaitNotVisible(sel any, opts ...QueryOption) Action[Void]
-func WaitReady(sel any, opts ...QueryOption) Action[Void]
-func WaitSelected(sel any, opts ...QueryOption) Action[Void]
-func WaitVisible(sel any, opts ...QueryOption) Action[Void]
+func WaitNotPresent[S Selectable](sel S, opts ...QueryOption) Action[Void]
+func WaitNotVisible[S Selectable](sel S, opts ...QueryOption) Action[Void]
+func WaitReady[S Selectable](sel S, opts ...QueryOption) Action[Void]
+func WaitSelected[S Selectable](sel S, opts ...QueryOption) Action[Void]
+func WaitVisible[S Selectable](sel S, opts ...QueryOption) Action[Void]
 
 type Allocator interface { ... }
 
@@ -669,6 +649,10 @@ func WithBrowserErrorf(f func(string, ...any)) BrowserOption
 func WithBrowserLogf(f func(string, ...any)) BrowserOption
 func WithConsolef(f func(string, ...any)) BrowserOption
 func WithDialTimeout(d time.Duration) BrowserOption
+
+type CSS string
+
+type CSSAll string
 
 type CallOption = func(params *runtime.CallFunctionOnParams)
 
@@ -731,6 +715,10 @@ type Frame struct { ... }
 type FrameState uint16
 func (fs FrameState) String() string
 
+type ID string
+
+type JSPath string
+
 type KeyOption = func(*input.DispatchKeyEventParams)
 func KeyModifiers(modifiers ...Modifier) KeyOption
 
@@ -751,6 +739,8 @@ func (n *Node) FullXPathByID() string
 func (n *Node) PartialXPath() string
 func (n *Node) PartialXPathByID() string
 func (n *Node) WriteTo(w io.Writer, prefix, indent string, nodeIDs bool) (int, error)
+
+type NodeIDs []cdp.NodeID
 
 type NodeState uint8
 func (ns NodeState) String() string
@@ -784,6 +774,10 @@ func (a *RemoteAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (
 func (a *RemoteAllocator) Wait()
 
 type RemoteAllocatorOption = func(*RemoteAllocator)
+
+type Search string
+
+type Selectable interface { ... }
 
 type Selector struct { ... }
 

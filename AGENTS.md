@@ -117,6 +117,9 @@ These words have one meaning in every document and in every Go comment.
   `cdp.Session` is the interface. `Browser` and `Target` implement it.
 - Action: a func of the type `Action[T]` that runs against a target and returns
   a value of the type `T`.
+- Selector: the value that picks the elements of a query action. It is a
+  `Selectable`, a string type or a `[]cdp.NodeID` type. The type chooses the
+  lookup. A plain string is a `Search`.
 
 ## Go conventions
 
