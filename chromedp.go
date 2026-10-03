@@ -397,6 +397,10 @@ func (c *Context) newTarget(ctx context.Context) error {
 		res, err := cdp.Call(ctx, c.Browser, target.CreateTarget, target.CreateTargetParams{
 			URL:              "about:blank",
 			BrowserContextID: c.BrowserContextID,
+			// A tab in a shared window is hidden when another tab is
+			// active, and a hidden page gets no animation frames, so
+			// Poll never returns. Each target gets its own window.
+			NewWindow: new(true),
 		})
 		if err != nil {
 			return err
