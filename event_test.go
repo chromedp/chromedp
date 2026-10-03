@@ -1,6 +1,7 @@
 package chromedp
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -128,10 +129,13 @@ func TestCloseDialog(t *testing.T) {
 						t.Errorf("expected dialog message to be %q, got: %q", test.want, e.Message)
 					}
 
-					task := page.HandleJavaScriptDialog(test.accept)
-					if test.promptText != "" {
-						task = task.WithPromptText(test.promptText)
-					}
+					task := ActionFunc(func(ctx context.Context) error {
+						_, err := Call(ctx, page.HandleJavaScriptDialog, page.HandleJavaScriptDialogParams{
+							Accept:     test.accept,
+							PromptText: test.promptText,
+						})
+						return err
+					})
 					go func() {
 						if err := Run(ctx, task); err != nil {
 							t.Error(err)

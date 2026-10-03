@@ -329,9 +329,10 @@ func ExampleListenTarget_acceptAlert() {
 		if ev, ok := ev.(*page.EventJavascriptDialogOpening); ok {
 			fmt.Println("closing alert:", ev.Message)
 			go func() {
-				if err := chromedp.Run(ctx,
-					page.HandleJavaScriptDialog(true),
-				); err != nil {
+				if err := chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
+					_, err := chromedp.Call(ctx, page.HandleJavaScriptDialog, page.HandleJavaScriptDialogParams{Accept: true})
+					return err
+				})); err != nil {
 					log.Fatal(err)
 				}
 			}()
@@ -418,11 +419,11 @@ func ExamplePrintToPDF() {
 	if err := chromedp.Run(ctx,
 		chromedp.Navigate(`https://pkg.go.dev/github.com/chromedp/chromedp`),
 		chromedp.ActionFunc(func(ctx context.Context) error {
-			var err error
-			buf, _, err = page.PrintToPDF().
-				WithDisplayHeaderFooter(false).
-				WithLandscape(true).
-				Do(ctx)
+			res, err := chromedp.Call(ctx, page.PrintToPDF, page.PrintToPDFParams{
+				DisplayHeaderFooter: new(false),
+				Landscape:           new(true),
+			})
+			buf = res.Data
 			return err
 		}),
 	); err != nil {
@@ -455,8 +456,8 @@ func ExampleByJSPath() {
 		chromedp.Navigate(ts.URL),
 		chromedp.NodeIDs(`document`, &ids, chromedp.ByJSPath),
 		chromedp.ActionFunc(func(ctx context.Context) error {
-			var err error
-			html, err = dom.GetOuterHTML().WithNodeID(ids[0]).Do(ctx)
+			res, err := chromedp.Call(ctx, dom.GetOuterHTML, dom.GetOuterHTMLParams{NodeID: ids[0]})
+			html = res.OuterHTML
 			return err
 		}),
 	); err != nil {

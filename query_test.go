@@ -1228,7 +1228,7 @@ func TestMatchedStyle(t *testing.T) {
 			ctx, cancel := testAllocate(t, "js.html")
 			defer cancel()
 
-			var styles *css.GetMatchedStylesForNodeReturns
+			var styles *css.GetMatchedStylesForNodeResult
 			if err := Run(ctx, MatchedStyle(test.sel, &styles, test.by)); err != nil {
 				t.Fatalf("got error: %v", err)
 			}

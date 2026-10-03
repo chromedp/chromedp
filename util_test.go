@@ -171,12 +171,12 @@ func TestNodeOp(t *testing.T) {
 			ActionFunc(func(ctx context.Context) error {
 				id := strconv.Itoa(i + 2)
 				expr := fmt.Sprintf(insertJS, test.expr, test.q, `div`, `div`+id, `div`+id+` content`)
-				_, exp, err := runtime.Evaluate(expr).Do(ctx)
+				res, err := Call(ctx, runtime.Evaluate, runtime.EvaluateParams{Expression: expr})
 				if err != nil {
 					return err
 				}
-				if exp != nil {
-					return &ExceptionError{exp}
+				if res.ExceptionDetails != nil {
+					return &ExceptionError{res.ExceptionDetails}
 				}
 				return nil
 			}),

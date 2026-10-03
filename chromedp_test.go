@@ -900,9 +900,8 @@ func TestBrowserContext(t *testing.T) {
 			var ids []cdp.BrowserContextID
 			if err := Run(browserCtx,
 				ActionFunc(func(ctx context.Context) error {
-					c := FromContext(ctx)
-					var err error
-					ids, _, err = target.GetBrowserContexts().Do(cdp.WithExecutor(ctx, c.Browser))
+					res, err := CallBrowser(ctx, target.GetBrowserContexts, cdp.Empty{})
+					ids = res.BrowserContextIDs
 					return err
 				}),
 			); err != nil {
@@ -922,9 +921,12 @@ func getBrowserContext(tb testing.TB, ctx context.Context) cdp.BrowserContextID 
 	var id cdp.BrowserContextID
 	if err := Run(ctx,
 		ActionFunc(func(ctx context.Context) error {
-			info, err := target.GetTargetInfo().Do(ctx)
-			id = info.BrowserContextID
-			return err
+			res, err := Call(ctx, target.GetTargetInfo, target.GetTargetInfoParams{})
+			if err != nil {
+				return err
+			}
+			id = res.TargetInfo.BrowserContextID
+			return nil
 		}),
 	); err != nil {
 		tb.Fatal(err)
@@ -958,7 +960,8 @@ func TestDirectCloseTarget(t *testing.T) {
 	// Check that nothing is closed by running the action twice.
 	for range 2 {
 		err := Run(ctx, ActionFunc(func(ctx context.Context) error {
-			return target.CloseTarget(c.Target.TargetID).Do(ctx)
+			_, err := Call(ctx, target.CloseTarget, target.CloseTargetParams{TargetID: c.Target.TargetID})
+			return err
 		}))
 		got := fmt.Sprint(err)
 		if !strings.Contains(got, want) {
@@ -973,12 +976,11 @@ func TestDirectCloseBrowser(t *testing.T) {
 	ctx, cancel := testAllocateSeparate(t)
 	defer cancel()
 
-	c := FromContext(ctx)
 	want := "use chromedp.Cancel"
 
 	// Check that nothing is closed by running the action twice.
 	for range 2 {
-		err := browser.Close().Do(cdp.WithExecutor(ctx, c.Browser))
+		_, err := CallBrowser(ctx, browser.Close, cdp.Empty{})
 		got := fmt.Sprint(err)
 		if !strings.Contains(got, want) {
 			t.Fatalf("want %q, got %q", want, got)
@@ -1018,7 +1020,14 @@ func TestDownloadIntoDir(t *testing.T) {
 
 	if err := Run(ctx,
 		Navigate(s.URL),
-		browser.SetDownloadBehavior(browser.SetDownloadBehaviorBehaviorAllowAndName).WithDownloadPath(dir).WithEventsEnabled(true),
+		ActionFunc(func(ctx context.Context) error {
+			_, err := Call(ctx, browser.SetDownloadBehavior, browser.SetDownloadBehaviorParams{
+				Behavior:      browser.SetDownloadBehaviorBehaviorAllowAndName,
+				DownloadPath:  dir,
+				EventsEnabled: new(true),
+			})
+			return err
+		}),
 		Click("#download", ByQuery),
 	); err != nil {
 		t.Fatal(err)
@@ -1145,10 +1154,10 @@ func TestAttachingToWorkers(t *testing.T) {
 			defer cancel()
 
 			if err := Run(ctx, ActionFunc(func(ctx context.Context) error {
-				if r, _, err := runtime.Evaluate("self").Do(ctx); err != nil {
+				if r, err := Call(ctx, runtime.Evaluate, runtime.EvaluateParams{Expression: "self"}); err != nil {
 					return err
-				} else if r.ClassName != tc.wantSelf {
-					return fmt.Errorf("Global scope type mismatch: got %q want: %q", r.ClassName, tc.wantSelf)
+				} else if r.Result.ClassName != tc.wantSelf {
+					return fmt.Errorf("Global scope type mismatch: got %q want: %q", r.Result.ClassName, tc.wantSelf)
 				}
 				return nil
 			})); err != nil {
@@ -1488,12 +1497,14 @@ func TestPDFTemplate(t *testing.T) {
 	if err := Run(ctx,
 		Navigate("about:blank"),
 		ActionFunc(func(ctx context.Context) error {
-			frameTree, err := page.GetFrameTree().Do(ctx)
+			frameTree, err := Call(ctx, page.GetFrameTree, cdp.Empty{})
 			if err != nil {
 				return err
 			}
 
-			return page.SetDocumentContent(frameTree.Frame.ID, `
+			_, err = Call(ctx, page.SetDocumentContent, page.SetDocumentContentParams{
+				FrameID: frameTree.FrameTree.Frame.ID,
+				HTML: `
 				<html>
 					<head>
 						<title>PDF Template</title>
@@ -1502,18 +1513,19 @@ func TestPDFTemplate(t *testing.T) {
 						Hello World!
 					</body>
 				</html>
-			`).Do(ctx)
+			`,
+			})
+			return err
 		}),
 		ActionFunc(func(ctx context.Context) error {
-			var err error
-			buf, _, err = page.PrintToPDF().
-				WithMarginTop(0.5).
-				WithMarginBottom(0.5).
-				WithDisplayHeaderFooter(true).
-				WithHeaderTemplate(`<div style="font-size:8px;width:100%;text-align:center;"><span class="title"></span> -- <span class="url"></span></div>`).
-				WithFooterTemplate(`<div style="font-size:8px;width:100%;text-align:center;">(<span class="pageNumber"></span> / <span class="totalPages"></span>)</div>`).
-				Do(ctx)
-
+			res, err := Call(ctx, page.PrintToPDF, page.PrintToPDFParams{
+				MarginTop:           0.5,
+				MarginBottom:        0.5,
+				DisplayHeaderFooter: new(true),
+				HeaderTemplate:      `<div style="font-size:8px;width:100%;text-align:center;"><span class="title"></span> -- <span class="url"></span></div>`,
+				FooterTemplate:      `<div style="font-size:8px;width:100%;text-align:center;">(<span class="pageNumber"></span> / <span class="totalPages"></span>)</div>`,
+			})
+			buf = res.Data
 			return err
 		}),
 	); err != nil {
@@ -1559,22 +1571,26 @@ func TestPDFBackground(t *testing.T) {
 	if err := Run(ctx,
 		Navigate("about:blank"),
 		ActionFunc(func(ctx context.Context) error {
-			frameTree, err := page.GetFrameTree().Do(ctx)
+			frameTree, err := Call(ctx, page.GetFrameTree, cdp.Empty{})
 			if err != nil {
 				return err
 			}
-			return page.SetDocumentContent(frameTree.Frame.ID, `
+			_, err = Call(ctx, page.SetDocumentContent, page.SetDocumentContentParams{
+				FrameID: frameTree.FrameTree.Frame.ID,
+				HTML: `
 				<html lang="en">
 					<head></head>
 					<body style="background-color:green">
 						<p>Lorem ipsum</p>
 					</body>
 				</html>
-			`).Do(ctx)
+			`,
+			})
+			return err
 		}),
 		ActionFunc(func(ctx context.Context) error {
-			var err error
-			buf, _, err = page.PrintToPDF().Do(ctx)
+			res, err := Call(ctx, page.PrintToPDF, page.PrintToPDFParams{})
+			buf = res.Data
 			return err
 		}),
 	); err != nil {
