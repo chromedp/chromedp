@@ -74,9 +74,74 @@ for ev, err := range loaded {
 old code and the new code side by side. [`docs/MIGRATION.md`](docs/MIGRATION.md)
 lists every renamed and removed name.
 
-See the [Go reference][goref-chromedp] for the documentation and examples. The
-[examples][chromedp-examples] repository has more examples of complex actions
-and of other common tasks, such as full page screenshots.
+See the [Go reference][goref-chromedp] for the documentation and examples.
+
+## More examples
+
+The [examples][chromedp-examples] repository has 41 programs for larger tasks.
+Each program is one `main.go` file. Run one with `go run`, for example
+`go run github.com/chromedp/examples/tabs@latest`. Every program takes the flag `-v`
+to print the protocol messages. Every program except `remote` takes the flag
+`-visible` to show the browser window. The programs that name no site run
+against a local server, and need no internet.
+
+Read pages and fill forms:
+
+- [click](https://github.com/chromedp/examples/tree/main/click) clicks an element that a selector finds.
+- [text](https://github.com/chromedp/examples/tree/main/text) reads the text of an element.
+- [eval](https://github.com/chromedp/examples/tree/main/eval) runs JavaScript in the page and decodes the result.
+- [structeval](https://github.com/chromedp/examples/tree/main/structeval) decodes JavaScript results into Go structs, slices and maps, and shows the errors.
+- [logic](https://github.com/chromedp/examples/tree/main/logic) mixes actions and Go code to read a list.
+- [subtree](https://github.com/chromedp/examples/tree/main/subtree) walks a subtree of the DOM.
+- [selectors](https://github.com/chromedp/examples/tree/main/selectors) shows the typed selectors side by side.
+- [frames](https://github.com/chromedp/examples/tree/main/frames) reaches elements inside an iframe and a shadow root.
+- [submit](https://github.com/chromedp/examples/tree/main/submit) fills out and submits a form.
+- [keys](https://github.com/chromedp/examples/tree/main/keys) sends key events to an element.
+- [upload](https://github.com/chromedp/examples/tree/main/upload) uploads a file on a form.
+- [visible](https://github.com/chromedp/examples/tree/main/visible) waits until an element is visible.
+- [dragdrop](https://github.com/chromedp/examples/tree/main/dragdrop) drags and drops with the mouse and with HTML5 drag and drop.
+
+Network, sessions and files:
+
+- [cookie](https://github.com/chromedp/examples/tree/main/cookie) sets cookies on requests.
+- [headers](https://github.com/chromedp/examples/tree/main/headers) adds extra HTTP headers.
+- [proxy](https://github.com/chromedp/examples/tree/main/proxy) signs in to a proxy server that needs a password.
+- [intercept](https://github.com/chromedp/examples/tree/main/intercept) blocks, mocks and changes requests with the Fetch domain.
+- [session](https://github.com/chromedp/examples/tree/main/session) saves a login session and restores it in another browser.
+- [har](https://github.com/chromedp/examples/tree/main/har) writes a HAR file from the network events of a page.
+- [download_file](https://github.com/chromedp/examples/tree/main/download_file) downloads a file with a headless browser.
+- [download_image](https://github.com/chromedp/examples/tree/main/download_image) downloads an image from the network response.
+
+Events and the protocol:
+
+- [eventsiter](https://github.com/chromedp/examples/tree/main/eventsiter) reads the events of a page with iterators, and waits for the network to be idle.
+- [console](https://github.com/chromedp/examples/tree/main/console) reads the console and the uncaught exceptions of a page.
+- [dialogs](https://github.com/chromedp/examples/tree/main/dialogs) answers alert, confirm, prompt and beforeunload dialogs.
+- [popups](https://github.com/chromedp/examples/tree/main/popups) works with popups and several targets, and with browser contexts.
+- [exposefunc](https://github.com/chromedp/examples/tree/main/exposefunc) calls Go functions from the page.
+- [rawcall](https://github.com/chromedp/examples/tree/main/rawcall) sends protocol commands that have no action, such as timezone, locale, geolocation and throttling.
+
+Screens and devices:
+
+- [screenshot](https://github.com/chromedp/examples/tree/main/screenshot) takes a screenshot of an element and of the whole page.
+- [pdf](https://github.com/chromedp/examples/tree/main/pdf) prints a page to a PDF file.
+- [pdfoptions](https://github.com/chromedp/examples/tree/main/pdfoptions) prints a page to PDF files with different options.
+- [pdfstream](https://github.com/chromedp/examples/tree/main/pdfstream) reads a printed PDF as a stream.
+- [emulate](https://github.com/chromedp/examples/tree/main/emulate) emulates a device, such as an iPhone.
+- [screencast](https://github.com/chromedp/examples/tree/main/screencast) saves the frames of a page as JPEG files.
+
+Several tabs and browsers:
+
+- [tabs](https://github.com/chromedp/examples/tree/main/tabs) uses several tabs of one browser, with or without a window for each tab, and switches between them.
+- [workers](https://github.com/chromedp/examples/tree/main/workers) runs many jobs at the same time in one browser with a pool of goroutines.
+- [multi](https://github.com/chromedp/examples/tree/main/multi) uses the headless-shell image in a container.
+- [remote](https://github.com/chromedp/examples/tree/main/remote) connects to a browser that is already running, with the module `remote`.
+
+Four programs read live sites, and three of them draw an image in the terminal: [fast](https://github.com/chromedp/examples/tree/main/fast), [forecast](https://github.com/chromedp/examples/tree/main/forecast), [geoip](https://github.com/chromedp/examples/tree/main/geoip) and [latlon](https://github.com/chromedp/examples/tree/main/latlon).
+
+Some programs read a live website, so a program can fail when its site
+changes. These programs need no internet: [console](https://github.com/chromedp/examples/tree/main/console), [cookie](https://github.com/chromedp/examples/tree/main/cookie), [dialogs](https://github.com/chromedp/examples/tree/main/dialogs), [dragdrop](https://github.com/chromedp/examples/tree/main/dragdrop), [eventsiter](https://github.com/chromedp/examples/tree/main/eventsiter), [exposefunc](https://github.com/chromedp/examples/tree/main/exposefunc), [frames](https://github.com/chromedp/examples/tree/main/frames), [har](https://github.com/chromedp/examples/tree/main/har), [headers](https://github.com/chromedp/examples/tree/main/headers), [intercept](https://github.com/chromedp/examples/tree/main/intercept), [keys](https://github.com/chromedp/examples/tree/main/keys), [multi](https://github.com/chromedp/examples/tree/main/multi), [pdfoptions](https://github.com/chromedp/examples/tree/main/pdfoptions), [pdfstream](https://github.com/chromedp/examples/tree/main/pdfstream), [popups](https://github.com/chromedp/examples/tree/main/popups), [proxy](https://github.com/chromedp/examples/tree/main/proxy), [rawcall](https://github.com/chromedp/examples/tree/main/rawcall), [screencast](https://github.com/chromedp/examples/tree/main/screencast), [selectors](https://github.com/chromedp/examples/tree/main/selectors), [session](https://github.com/chromedp/examples/tree/main/session), [structeval](https://github.com/chromedp/examples/tree/main/structeval), [subtree](https://github.com/chromedp/examples/tree/main/subtree), [tabs](https://github.com/chromedp/examples/tree/main/tabs), [upload](https://github.com/chromedp/examples/tree/main/upload), [visible](https://github.com/chromedp/examples/tree/main/visible) and [workers](https://github.com/chromedp/examples/tree/main/workers).
+The tags of the examples repository follow the tags of `chromedp`.
 
 ## Visible browser
 
