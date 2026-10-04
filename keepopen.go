@@ -178,10 +178,7 @@ func (a *ExecAllocator) allocateKeepOpen(ctx context.Context, c *Context, opts [
 		a.modifyCmdFunc(cmd)
 	}
 	detachCmd(cmd)
-	if len(a.initEnv) > 0 || len(cmd.Env) > 0 {
-		cmd.Env = append(os.Environ(), cmd.Env...)
-		cmd.Env = append(cmd.Env, a.initEnv...)
-	}
+	a.setCmdEnv(cmd)
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}

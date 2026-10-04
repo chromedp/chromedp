@@ -150,6 +150,9 @@ type ExecAllocator struct {
 	initFlags map[string]any
 	initEnv   []string
 
+	// noInheritEnv is set by NoInheritEnv.
+	noInheritEnv bool
+
 	// flagOrder holds the names of initFlags in the order of their first
 	// set. Chrome needs some flags in order, such as --flag-switches-begin
 	// and --flag-switches-end around the switches of chrome://flags, and a
@@ -284,12 +287,7 @@ func (a *ExecAllocator) Allocate(ctx context.Context, opts ...BrowserOption) (*B
 		cmd.Stderr = cmd.Stdout
 	}
 
-	// Preserve environment variables set in the (lowest priority) existing
-	// environment, OverrideCmdFunc(), and Env (highest priority)
-	if len(a.initEnv) > 0 || len(cmd.Env) > 0 {
-		cmd.Env = append(os.Environ(), cmd.Env...)
-		cmd.Env = append(cmd.Env, a.initEnv...)
-	}
+	a.setCmdEnv(cmd)
 
 	// A canceled context must give its own error. On Windows, os/exec
 	// reports a program that it cannot find before it looks at the context.
@@ -714,10 +712,40 @@ func (a *ExecAllocator) deleteFlag(name string) {
 
 // Env sets environment variables, in the form NAME=value, for the new Chrome
 // process. They add to the environment of the Go process, which os.Environ
-// returns.
+// returns. To start the browser with only these variables, add [NoInheritEnv].
 func Env(vars ...string) ExecAllocatorOption {
 	return func(a *ExecAllocator) {
 		a.initEnv = append(a.initEnv, vars...)
+	}
+}
+
+// NoInheritEnv is an allocator option that starts the browser with only the
+// variables that [Env] gives, and the variables that a func of [ModifyCmdFunc]
+// sets in cmd.Env. The browser does not get the environment of the Go process.
+// Use it to keep the secrets of the program away from the browser.
+//
+// Chrome can need a variable such as HOME, PATH, DISPLAY or XDG_RUNTIME_DIR,
+// depending on the system and the options. Give each one that the browser needs
+// to [Env]. Without the option, the browser gets the whole environment of the Go
+// process, as before.
+func NoInheritEnv(a *ExecAllocator) {
+	a.noInheritEnv = true
+}
+
+// setCmdEnv sets the environment of the command of the browser. The lowest
+// priority is the environment of the Go process, unless NoInheritEnv is set.
+// Then come the variables that ModifyCmdFunc set, and then those of Env.
+func (a *ExecAllocator) setCmdEnv(cmd *exec.Cmd) {
+	switch {
+	case a.noInheritEnv:
+		// A nil Env makes the process inherit the environment, so the slice
+		// must not be nil.
+		env := make([]string, 0, len(cmd.Env)+len(a.initEnv))
+		env = append(env, cmd.Env...)
+		cmd.Env = append(env, a.initEnv...)
+	case len(a.initEnv) > 0 || len(cmd.Env) > 0:
+		cmd.Env = append(os.Environ(), cmd.Env...)
+		cmd.Env = append(cmd.Env, a.initEnv...)
 	}
 }
 

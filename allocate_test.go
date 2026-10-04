@@ -636,3 +636,95 @@ func TestFlagOrderAfterVisibleWindow(t *testing.T) {
 		t.Fatalf("the order has %d names and the map has %d flags", len(a.flagOrder), len(a.initFlags))
 	}
 }
+
+// TestNoInheritEnv starts a fake browser that writes its environment to a file.
+// The browser has only the variables that Env and ModifyCmdFunc give when
+// NoInheritEnv is set. See the issue 1584.
+func TestNoInheritEnv(t *testing.T) {
+	t.Parallel()
+	if runtime.GOOS == "windows" {
+		t.Skip("the fake browser is a shell script")
+	}
+	// HOME is a variable that every test environment has, and that the shell
+	// does not set by itself.
+	if os.Getenv("HOME") == "" {
+		t.Skip("the test needs the variable HOME")
+	}
+
+	// environment starts the fake browser with the options and returns the
+	// list of variables that it saw.
+	environment := func(t *testing.T, opts ...ExecAllocatorOption) string {
+		t.Helper()
+		dir := t.TempDir()
+		out := filepath.Join(dir, "env.txt")
+		script := filepath.Join(dir, "fake-chrome")
+		if err := os.WriteFile(script, []byte("#!/bin/sh\nexport -p > \"$ENV_OUT\"\nexit 3\n"), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		opts = append(opts, ExecPath(script), Env("ENV_OUT="+out),
+			ModifyCmdFunc(func(cmd *exec.Cmd) { cmd.Env = append(cmd.Env, "FROM_MODIFY=1") }))
+		// Another test can fork while this test writes the script, and then
+		// the start fails with "text file busy". Try again in that case.
+		var err error
+		var b []byte
+		for range 5 {
+			func() {
+				allocCtx, cancel := NewExecAllocator(context.Background(), opts...)
+				defer cancel()
+				ctx, cancel := NewContext(allocCtx)
+				defer cancel()
+				err = Do(ctx)
+			}()
+			if err == nil {
+				t.Fatal("expected an error from the fake browser")
+			}
+			var rerr error
+			if b, rerr = os.ReadFile(out); rerr == nil {
+				break
+			}
+			if !strings.Contains(err.Error(), "text file busy") {
+				t.Fatalf("the fake browser wrote no file, and Do returned: %v", err)
+			}
+			time.Sleep(50 * time.Millisecond)
+		}
+		if b == nil {
+			t.Fatalf("the fake browser wrote no file, and Do returned: %v", err)
+		}
+		return string(b)
+	}
+
+	t.Run("default", func(t *testing.T) {
+		t.Parallel()
+		got := environment(t, Env("FROM_ENV=1"))
+		for _, name := range []string{"HOME", "FROM_ENV", "FROM_MODIFY"} {
+			if !strings.Contains(got, name+"=") {
+				t.Errorf("the browser has no %s in %q", name, got)
+			}
+		}
+	})
+	t.Run("NoInheritEnv", func(t *testing.T) {
+		t.Parallel()
+		got := environment(t, NoInheritEnv, Env("FROM_ENV=1"))
+		if strings.Contains(got, "HOME=") {
+			t.Errorf("the browser inherited HOME: %q", got)
+		}
+		for _, name := range []string{"ENV_OUT", "FROM_ENV", "FROM_MODIFY"} {
+			if !strings.Contains(got, name+"=") {
+				t.Errorf("the browser has no %s in %q", name, got)
+			}
+		}
+	})
+}
+
+func TestNoInheritEnvEmpty(t *testing.T) {
+	t.Parallel()
+
+	// A nil Env makes the process inherit the environment, so the allocator
+	// must set an empty list.
+	a := setupExecAllocator(NoInheritEnv)
+	cmd := exec.Command("unused")
+	a.setCmdEnv(cmd)
+	if cmd.Env == nil || len(cmd.Env) != 0 {
+		t.Fatalf("want an empty list that is not nil, got %#v", cmd.Env)
+	}
+}

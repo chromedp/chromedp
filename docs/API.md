@@ -600,6 +600,7 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 func NewExecAllocator(parent context.Context, opts ...ExecAllocatorOption) (context.Context, context.CancelFunc)
 func NoDefaultBrowserCheck(a *ExecAllocator)
 func NoFirstRun(a *ExecAllocator)
+func NoInheritEnv(a *ExecAllocator)
 func NoSandbox(a *ExecAllocator)
 func NodeEnabled(s *Selector)
 func NodeNotPresent(s *Selector)
