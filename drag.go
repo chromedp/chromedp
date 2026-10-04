@@ -11,6 +11,7 @@ import (
 	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/cdproto/input"
 	"github.com/chromedp/cdproto/page"
+	"github.com/chromedp/cdproto/runtime"
 )
 
 const (
@@ -22,6 +23,12 @@ const (
 	// the browser to report a native drag. The report can arrive after the
 	// answer to the mouse move.
 	dragInterceptWait = 100 * time.Millisecond
+
+	// dragDraggableWait is how long a drag waits for the report of a native drag
+	// when the element at the start point can start one, such as an element
+	// with draggable="true". A slow machine needs more than dragInterceptWait.
+	// The wait ends as soon as the report arrives.
+	dragDraggableWait = 2 * time.Second
 )
 
 // DragAndDrop is an element query action that drags the first element node that
@@ -102,6 +109,21 @@ func queryScrolled[S Selectable](sel S, opts []QueryOption) Action[*Node] {
 		}
 		return n, nil
 	}, withOpts(opts, NodeVisible)...)
+}
+
+// draggableAt reports whether the element at the point can start a native
+// drag: an element inside a node with draggable="true", a link or an image. It
+// returns false when it cannot tell.
+func draggableAt(ctx context.Context, t *Target, x, y float64) bool {
+	expr := fmt.Sprintf(`(function(x, y) {
+		var e = document.elementFromPoint(x, y);
+		return !!(e && e.closest('[draggable="true"], a[href], img'));
+	})(%v, %v)`, x, y)
+	res, err := cdp.Call(ctx, t, runtime.Evaluate, runtime.EvaluateParams{Expression: expr, ReturnByValue: new(true)})
+	if err != nil || res.ExceptionDetails != nil || res.Result == nil {
+		return false
+	}
+	return string(res.Result.Value) == "true"
 }
 
 // DragAndDropXY is an action that drags from the point fromX, fromY and drops
@@ -218,6 +240,13 @@ func DragAndDropXY(fromX, fromY, toX, toY float64, steps ...int) Action[Void] {
 			return ev.Data, nil
 		}
 
+		// An element that can start a native drag gets a longer wait for the
+		// report of the drag. Other elements keep the short wait.
+		lastWait := dragInterceptWait
+		if draggableAt(ctx, t, fromX, fromY) {
+			lastWait = dragDraggableWait
+		}
+
 		if err := mouse(MousePressed, fromX, fromY); err != nil {
 			return err
 		}
@@ -229,7 +258,7 @@ func DragAndDropXY(fromX, fromY, toX, toY float64, steps ...int) Action[Void] {
 			}
 			wait := time.Duration(0)
 			if i == n {
-				wait = dragInterceptWait
+				wait = lastWait
 			}
 			data, err := intercept(wait)
 			if err != nil {

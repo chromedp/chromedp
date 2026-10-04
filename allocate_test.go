@@ -547,7 +547,11 @@ func commandArgs(t *testing.T, opts ...ExecAllocatorOption) []string {
 	if args == nil {
 		t.Fatal("ModifyCmdFunc did not run")
 	}
-	return args
+	// On Windows, the allocator puts the handles of the pipe first, as a
+	// switch. They are not a flag of the test.
+	return slices.DeleteFunc(args, func(a string) bool {
+		return strings.HasPrefix(a, "--remote-debugging-io-pipes=")
+	})
 }
 
 // TestFlagOrder checks that the arguments of the command keep the order of the
