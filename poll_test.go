@@ -240,3 +240,18 @@ func TestPollTimeout(t *testing.T) {
 		t.Errorf("got error: %v, want error: %v", err, ErrPollingTimeout)
 	}
 }
+
+// TestPollNull makes sure that a predicate that returns null is not truthy, so
+// Poll times out and does not return ErrJSNull.
+func TestPollNull(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "poll.html")
+	defer cancel()
+	ctx, cancel = context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	if _, err := Run(ctx, Poll[string]("null", WithPollingTimeout(10*time.Millisecond))); err != ErrPollingTimeout {
+		t.Errorf("got error: %v, want error: %v", err, ErrPollingTimeout)
+	}
+}

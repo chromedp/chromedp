@@ -1972,3 +1972,24 @@ func TestJSPathWrongValue(t *testing.T) {
 		}
 	}
 }
+
+// TestJavascriptAttributeNull makes sure that a null attribute gives the zero
+// value and no error, and that an attribute that does not exist gives
+// ErrJSUndefined.
+func TestJavascriptAttributeNull(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "form.html")
+	defer cancel()
+
+	// The property onclick is null when the element has no handler.
+	if s, err := Run(ctx, JavascriptAttribute[string](ID("foo"), "onclick")); err != nil || s != "" {
+		t.Errorf("onclick as string: got %q, %v, want an empty string and no error", s, err)
+	}
+	if n, err := Run(ctx, JavascriptAttribute[int](ID("foo"), "onclick")); err != nil || n != 0 {
+		t.Errorf("onclick as int: got %d, %v, want 0 and no error", n, err)
+	}
+	if _, err := Run(ctx, JavascriptAttribute[string](ID("foo"), "doesNotExist")); !errors.Is(err, ErrJSUndefined) {
+		t.Errorf("missing attribute: got error %v, want %v", err, ErrJSUndefined)
+	}
+}

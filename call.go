@@ -48,7 +48,8 @@ func CallBrowser[P, R any](ctx context.Context, cmd cdp.Command[P, R], params P)
 // CallFunctionOn is an action that calls a JavaScript function and decodes the
 // result of the function into the type T.
 //
-// T is handled as in [Evaluate].
+// T is handled as in [Evaluate]. A function that returns null gives
+// [ErrJSNull] when T cannot be nil.
 //
 // Do not set these fields of runtime.CallFunctionOnParams:
 //   - ReturnByValue: CallFunctionOn sets it from the type T.

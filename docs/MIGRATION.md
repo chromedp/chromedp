@@ -301,7 +301,7 @@ a variable, to set one.
 
 These names are new, and no old code needs a change, unless a bullet says so.
 
-- `Evaluate[T]` returns `ErrJSNull` for a JavaScript `null` when `T` cannot be nil, for example an `int` or a `string`. Before, it returned the zero value and no error, which the documentation did not say. Use a pointer type, such as `*int`, to get nil for `null`.
+- `Evaluate[T]` returns `ErrJSNull` for a JavaScript `null` when `T` cannot be nil, for example an `int` or a `string`. Before, it returned the zero value and no error, which the documentation did not say. Use a pointer type, such as `*int`, to get nil for `null`. `CallFunctionOn[T]` follows the same rule. `Poll` never returns `ErrJSNull`, because `null` is not truthy and the poll continues. `JavascriptAttribute[T]` and `Value` are the exception: they keep the old behavior and return the zero value and no error for an attribute that is `null`, for example `onclick` with no handler. An attribute that the element does not have is `undefined`, and it gives `ErrJSUndefined` for a type that cannot be nil, as before.
 - `EvalAwaitPromise` is new. Pass it to `Evaluate` to wait for a promise that the expression returns.
 - `Text` works on a text node, which a search for plain text finds.
 - `DragAndDrop` returns `ErrDragOutsideViewport` when the two nodes do not fit in the viewport at the same time. Before, the drag did nothing and returned no error.

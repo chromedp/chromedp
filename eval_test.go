@@ -274,3 +274,25 @@ func TestEvaluateNil(t *testing.T) {
 		})
 	}
 }
+
+// TestCallFunctionOnNull makes sure that CallFunctionOn follows the rule of
+// Evaluate for a function that returns null.
+func TestCallFunctionOnNull(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+
+	obj, err := Run(ctx, Evaluate[*runtime.RemoteObject]("({})"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	opt := func(p *runtime.CallFunctionOnParams) { p.ObjectID = obj.ObjectID }
+
+	if _, err := Run(ctx, CallFunctionOn[string](`function() { return null; }`, opt)); !errors.Is(err, ErrJSNull) {
+		t.Errorf("CallFunctionOn[string]: got error %v, want %v", err, ErrJSNull)
+	}
+	if p, err := Run(ctx, CallFunctionOn[*string](`function() { return null; }`, opt)); err != nil || p != nil {
+		t.Errorf("CallFunctionOn[*string]: got %v, %v, want nil, nil", p, err)
+	}
+}

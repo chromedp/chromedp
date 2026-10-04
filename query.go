@@ -616,15 +616,15 @@ func callFunctionOnNode[T any](ctx context.Context, t *Target, node *Node, funct
 		},
 		args...,
 	)
-	if err != nil {
-		return zero, err
-	}
 
-	// Try to release the remote object.
+	// Try to release the remote object, also when the call failed.
 	// It fails if the page navigated or closed,
 	// and we can ignore the error in this case.
 	_, _ = cdp.Call(ctx, t, runtime.ReleaseObject, runtime.ReleaseObjectParams{ObjectID: r.Object.ObjectID})
 
+	if err != nil {
+		return zero, err
+	}
 	return res, nil
 }
 
@@ -993,6 +993,9 @@ func Clear[S Selectable](sel S, opts ...QueryOption) Action[Void] {
 //
 // Use it to read the JavaScript value of a form, input, textarea, select, or
 // other element with a '.value' field.
+//
+// Value follows [JavascriptAttribute]. An element without a '.value' field
+// gives an error that wraps [ErrJSUndefined].
 func Value[S Selectable](sel S, opts ...QueryOption) Action[string] {
 	return JavascriptAttribute[string](sel, "value", opts...)
 }
@@ -1133,7 +1136,11 @@ func RemoveAttribute[S Selectable](sel S, name string, opts ...QueryOption) Acti
 
 // JavascriptAttribute is an element query action that retrieves the JavaScript
 // attribute for the first element node matching the selector. It decodes the
-// attribute into the type T, as [Evaluate] does.
+// attribute into the type T, as [Evaluate] does, with one difference. When the
+// attribute is null, for example "onclick" with no handler, JavascriptAttribute
+// returns the zero value of T and no error, and it does not return [ErrJSNull].
+// An attribute that the element does not have is undefined, and the action
+// returns an error that wraps [ErrJSUndefined] for a type that cannot be nil.
 func JavascriptAttribute[T any, S Selectable](sel S, name string, opts ...QueryOption) Action[T] {
 	return QueryAfter(sel, func(ctx context.Context, t *Target, nodes []*Node) (T, error) {
 		var zero T
@@ -1143,6 +1150,9 @@ func JavascriptAttribute[T any, S Selectable](sel S, name string, opts ...QueryO
 		}
 
 		res, err := callFunctionOnNode[T](ctx, t, n, attributeJS, name)
+		if errors.Is(err, ErrJSNull) {
+			return zero, nil
+		}
 		if err != nil {
 			return zero, fmt.Errorf("could not retrieve attribute %q: %w", name, err)
 		}
