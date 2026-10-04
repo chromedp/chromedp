@@ -1,6 +1,7 @@
 package chromedp
 
 import (
+	"context"
 	"testing"
 	"time"
 
@@ -220,6 +221,9 @@ func TestPollTimeout(t *testing.T) {
 	t.Parallel()
 
 	ctx, cancel := testAllocate(t, "poll.html")
+	defer cancel()
+	// Make the test fail in time, and not hang, when the polling does not stop.
+	ctx, cancel = context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
 	if err := Do(ctx, Poll[Void]("false", WithPollingTimeout(10*time.Millisecond))); err != ErrPollingTimeout {
