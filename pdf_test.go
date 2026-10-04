@@ -2,11 +2,15 @@ package chromedp
 
 import (
 	"bytes"
+	"context"
+	"errors"
 	"math"
 	"regexp"
 	"strconv"
 	"testing"
 
+	"github.com/chromedp/cdproto/cdp"
+	cdpio "github.com/chromedp/cdproto/io"
 	"github.com/chromedp/cdproto/page"
 )
 
@@ -74,6 +78,9 @@ func TestPrintToPDF(t *testing.T) {
 		{"A4 landscape", "pdf.html", []PDFOption{PDFPaper(PaperA4), PDFLandscape()}, pdfPage{11.69 * 72, 8.27 * 72}},
 		{"legal", "pdf.html", []PDFOption{PDFPaper(PaperLegal)}, pdfPage{8.5 * 72, 14 * 72}},
 		{"own size", "pdf.html", []PDFOption{PDFPaper(PaperSize{4, 6})}, pdfPage{4 * 72, 6 * 72}},
+		{"width only", "pdf.html", []PDFOption{PDFPaper(PaperSize{Width: 5})}, pdfPage{5 * 72, 11 * 72}},
+		{"empty paper size", "pdf.html", []PDFOption{PDFPaper(PaperSize{})}, letter},
+		{"scale zero", "pdf.html", []PDFOption{PDFScale(0)}, letter},
 		{"CSS page size is ignored", "pdf_css.html", nil, letter},
 		{"prefer CSS page size", "pdf_css.html", []PDFOption{PDFPreferCSSPageSize()}, pdfPage{5 * 72, 7 * 72}},
 		{"stream", "pdf.html", []PDFOption{PDFStream()}, letter},
@@ -212,4 +219,37 @@ func pdfParamsEqual(a, b page.PrintToPDFParams) bool {
 		a.Scale == b.Scale && a.PaperWidth == b.PaperWidth && a.PaperHeight == b.PaperHeight &&
 		a.PageRanges == b.PageRanges && a.HeaderTemplate == b.HeaderTemplate &&
 		a.FooterTemplate == b.FooterTemplate && a.TransferMode == b.TransferMode
+}
+
+// TestPrintToPDFStreamClosedAfterError makes sure that readStream closes the
+// stream when the read fails, here because the context of the read ended.
+func TestPrintToPDFStreamClosedAfterError(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "pdf.html")
+	defer cancel()
+
+	var target *Target
+	if _, err := Run(ctx, func(ctx context.Context, t *Target) (Void, error) {
+		target = t
+		return Void{}, nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	res, err := cdp.Call(ctx, target, page.PrintToPDF, page.PrintToPDFParams{
+		TransferMode: page.PrintToPDFTransferModeReturnAsStream,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	dead, deadCancel := context.WithCancel(ctx)
+	deadCancel()
+	if _, err := readStream(dead, target, res.Stream); !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected a canceled context, got: %v", err)
+	}
+	// The stream is closed, so a read of its handle fails.
+	if _, err := cdp.Call(ctx, target, cdpio.Read, cdpio.ReadParams{Handle: res.Stream}); err == nil {
+		t.Fatal("expected an error for a closed stream")
+	}
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/chromedp/cdproto/cdp"
 	cdpio "github.com/chromedp/cdproto/io"
@@ -11,6 +12,9 @@ import (
 )
 
 // PaperSize is the size of a sheet of paper in inches. Use it with [PDFPaper].
+// A field that is 0 gives the default of the browser for that field, so
+// PaperSize{Width: 5} is 5 inches wide and 11 inches high, and the zero value
+// is Letter paper.
 type PaperSize struct {
 	Width, Height float64
 }
@@ -71,8 +75,17 @@ func PrintToPDF(opts ...PDFOption) Action[[]byte] {
 	}
 }
 
-// readStream reads a whole stream of the browser, and closes it.
-func readStream(ctx context.Context, t *Target, h cdpio.StreamHandle) ([]byte, error) {
+// readStream reads a whole stream of the browser, and closes it. It closes the
+// stream also when the read fails or the context ended, with a new context that
+// has a limit of 5 seconds, because the browser keeps the stream until then.
+func readStream(ctx context.Context, t *Target, h cdpio.StreamHandle) (data []byte, err error) {
+	defer func() {
+		cctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+		defer cancel()
+		if _, cerr := cdp.Call(cctx, t, cdpio.Close, cdpio.CloseParams{Handle: h}); cerr != nil && err == nil {
+			data, err = nil, fmt.Errorf("closing the stream of the PDF: %w", cerr)
+		}
+	}()
 	var buf bytes.Buffer
 	for {
 		res, err := cdp.Call(ctx, t, cdpio.Read, cdpio.ReadParams{Handle: h})
@@ -81,13 +94,9 @@ func readStream(ctx context.Context, t *Target, h cdpio.StreamHandle) ([]byte, e
 		}
 		buf.Write(res.Data)
 		if res.EOF {
-			break
+			return buf.Bytes(), nil
 		}
 	}
-	if _, err := cdp.Call(ctx, t, cdpio.Close, cdpio.CloseParams{Handle: h}); err != nil {
-		return nil, fmt.Errorf("closing the stream of the PDF: %w", err)
-	}
-	return buf.Bytes(), nil
 }
 
 // PDFLandscape is an option of [PrintToPDF] that prints in landscape. The
@@ -98,8 +107,9 @@ func PDFLandscape() PDFOption {
 
 // PDFPaper is an option of [PrintToPDF] that sets the size of the paper. Give
 // one of the sizes of the package, such as [PaperA4], or a [PaperSize] of your
-// own. The default is [PaperLetter]. The size is for portrait, and
-// [PDFLandscape] swaps it.
+// own. The default is [PaperLetter]. A zero width or height gives the default
+// for that side, so PDFPaper(PaperSize{}) changes nothing. The size is for
+// portrait, and [PDFLandscape] swaps it.
 func PDFPaper(size PaperSize) PDFOption {
 	return func(p *page.PrintToPDFParams) {
 		p.PaperWidth, p.PaperHeight = size.Width, size.Height
@@ -122,7 +132,8 @@ func PDFMargins(top, right, bottom, left float64) PDFOption {
 }
 
 // PDFScale is an option of [PrintToPDF] that sets the scale of the page. The
-// default is 1. The browser accepts 0.1 to 2.
+// default is 1, and 0 gives the default, so PDFScale(0) changes nothing. The
+// browser accepts 0.1 to 2.
 func PDFScale(scale float64) PDFOption {
 	return func(p *page.PrintToPDFParams) { p.Scale = scale }
 }
