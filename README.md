@@ -285,6 +285,32 @@ err := chromedp.Do(ctx,
 )
 ```
 
+> The browser closes when the timeout of my context ends
+
+The first `Run` on a context starts the browser, and it binds the life of the
+browser to the context that you pass to that call. When that context ends, the
+browser stops. So a context from `context.WithTimeout` that you use for the
+first `Run` closes the browser when the timeout ends, and every later call on the
+parent context fails with `context canceled`.
+
+To limit one action, start the browser first with a context that has no timeout.
+Then run the action with a context that you derive from it. When the timeout
+ends, `Run` returns an error that wraps `context.DeadlineExceeded`. The tab and
+the browser stay open, and `ctx` still works. `Run` has no option for the timeout
+of one action.
+
+```go
+ctx, cancel := chromedp.NewContext(context.Background())
+defer cancel()
+if err := chromedp.Do(ctx); err != nil { // starts the browser, with no timeout
+	log.Fatal(err)
+}
+
+tctx, tcancel := context.WithTimeout(ctx, 5*time.Second)
+defer tcancel()
+err := chromedp.Do(tctx, chromedp.Navigate(url)) // only this call has the timeout
+```
+
 > I want to use chromedp on a headless environment
 
 Run the Go program that uses `chromedp` inside the

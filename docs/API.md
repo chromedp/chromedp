@@ -657,6 +657,22 @@ err := chromedp.Do(ctx,
 )
 ```
 
+### 21. Set a timeout for one action
+
+The first `Run` on a context starts the browser, and it binds the life of the browser to the context that you pass to that call. A context from `context.WithTimeout` that you use for the first `Run` closes the browser when the timeout ends. To limit one action, start the browser first with a context that has no timeout. Then run the action with a context that you derive from it. When the timeout ends, `Run` returns an error that wraps `context.DeadlineExceeded`, and the tab and the browser stay open. `Run` has no option for the timeout of one action. The old API had the same behavior, so this example has no Before block.
+
+```go
+ctx, cancel := chromedp.NewContext(context.Background())
+defer cancel()
+if err := chromedp.Do(ctx); err != nil { // starts the browser, with no timeout
+	log.Fatal(err)
+}
+
+tctx, tcancel := context.WithTimeout(ctx, 5*time.Second)
+defer tcancel()
+err := chromedp.Do(tctx, chromedp.Navigate(url)) // only this call has the timeout
+```
+
 ## What the new API removes
 
 The new API removes the interface `Action`, the type `ActionFunc`, the type `Tasks`, and the funcs `ListenTarget` and `ListenBrowser`. It also removes the types `QueryAction`, `NavigateAction`, `EvaluateAction`, `CallAction`, `PollAction`, `MouseAction`, `KeyAction` and `EmulateAction`. Each type is now `Action[T]`. It also removes the six lookup options that start with `By`, except `ByFunc`. A selector type replaces each of them. `docs/MIGRATION.md` lists every change, with the old name and the new name.

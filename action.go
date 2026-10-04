@@ -34,8 +34,11 @@ type Action[T any] func(ctx context.Context, t *Target) (T, error)
 // [NewContext].
 //
 // The first time that you call Run on a context, Run allocates a browser with
-// the Allocator. Do not set a timeout on the context of that first call,
-// because the timeout stops the whole browser.
+// the Allocator, and the browser lives as long as the context of that call. Do
+// not set a timeout on the context of that first call, because the timeout
+// stops the whole browser. To limit one action, run it with a context that you
+// derive with [context.WithTimeout] from a context that has run once. See
+// [NewContext].
 //
 // For example:
 //

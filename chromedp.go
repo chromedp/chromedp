@@ -147,6 +147,28 @@ type Context struct {
 // NewContext does not allocate or start a browser. That happens the first time
 // that you call Run on the context.
 //
+// # The lifetime of the browser
+//
+// The first call of [Run] on a context starts the browser, and it binds the life
+// of the browser to the context that you pass to that call. When that context
+// ends, the browser stops. So a context from [context.WithTimeout] that you
+// use for the first Run closes the browser when the timeout ends, and every
+// later call on the parent context fails with context.Canceled.
+//
+// To limit one action, start the browser first with a context that has no
+// timeout. Then run the action with a context that you derive from it:
+//
+//	if err := chromedp.Do(ctx); err != nil { // starts the browser
+//		return err
+//	}
+//	tctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+//	defer cancel()
+//	err := chromedp.Do(tctx, chromedp.Navigate(url))
+//
+// When the timeout ends, Run returns an error that wraps
+// context.DeadlineExceeded. The tab and the browser stay open, and ctx still
+// works. Run has no option for the timeout of one action.
+//
 // # Use from several goroutines
 //
 // Contexts that share one browser run in separate tabs, and they are safe to
