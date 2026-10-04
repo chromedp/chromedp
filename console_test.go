@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"iter"
+	goruntime "runtime"
 	"slices"
 	"strings"
 	"testing"
@@ -243,4 +244,62 @@ func TestConsoleText(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestConsoleNeverRanged makes sure that canceling the context ends the
+// subscription of an iterator that the program never ranged over. Before, the
+// goroutine of each subscription stayed to deliver a queued message, for ever.
+func TestConsoleNeverRanged(t *testing.T) {
+	// No t.Parallel: the test counts the goroutines of the process.
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+	browserCtx, _ := NewContext(ctx)
+	if err := Do(browserCtx); err != nil {
+		t.Fatal(err)
+	}
+
+	open := func(kind string) {
+		tabCtx, tabCancel := NewContext(browserCtx)
+		if err := Do(tabCtx); err != nil {
+			t.Fatal(err)
+		}
+		switch kind {
+		case "console":
+			_ = Console(tabCtx)
+		case "events":
+			_ = Events(tabCtx, runtime.ConsoleAPICalled)
+		}
+		if _, err := Run(tabCtx, Evaluate[Void](`console.log("x")`)); err != nil {
+			t.Fatal(err)
+		}
+		tabCancel()
+	}
+
+	for _, kind := range []string{"console", "events"} {
+		open(kind) // warm up
+		want := waitGoroutines(t, 0, 2*time.Second) + 2
+		for range 20 {
+			open(kind)
+		}
+		if got := waitGoroutines(t, want, 10*time.Second); got > want {
+			t.Errorf("%s: want at most %d goroutines after the contexts ended, got %d", kind, want, got)
+		}
+	}
+}
+
+// waitGoroutines waits until the number of goroutines is at most max, or the
+// time limit ends, and returns the number. With max 0 it waits for the limit
+// to see how the number settles.
+func waitGoroutines(t *testing.T, max int, limit time.Duration) int {
+	t.Helper()
+	deadline := time.Now().Add(limit)
+	n := goruntime.NumGoroutine()
+	for time.Now().Before(deadline) {
+		n = goruntime.NumGoroutine()
+		if max > 0 && n <= max {
+			return n
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	return goruntime.NumGoroutine()
 }

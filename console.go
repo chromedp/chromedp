@@ -117,21 +117,33 @@ func (m ConsoleMessage) String() string {
 // A browser sends the messages only from the moment that the target exists, so
 // a message that the page wrote before the first call of Console or of [Run]
 // is lost. If the browser cannot start, the iterator yields the error. See
-// [cdp.Events] for the rules about ending the iteration. A caller must range
-// over the iterator or cancel the context, because an iterator that nobody
-// reads holds its subscription and its queue.
+// [cdp.Events] for the rules about ending the iteration.
+//
+// To stop, cancel the context or break out of the loop. Both end the
+// subscription and free its queue, also when the program never ranged over the
+// iterator.
+//
+// The queue of the messages has no limit, so that a slow reader never blocks
+// the page. The page keeps working when the program does not read the messages,
+// but the queue grows with each message until the subscription ends. A program
+// that reads slowly or stops to read must cancel the context or break out of
+// the loop.
 func Console(ctx context.Context) iter.Seq2[ConsoleMessage, error] {
 	c, err := initContextTarget(ctx)
 	if err != nil {
 		return failed[ConsoleMessage](err)
 	}
-	events, cancel := c.Target.events.subscribeMany(
+	events, unsubscribe := c.Target.events.subscribeMany(
 		runtime.ConsoleAPICalled.Method,
 		runtime.ExceptionThrown.Method,
 		log.EntryAdded.Method,
 	)
+	// End the subscription when the context ends, also when nobody ranges
+	// over the iterator.
+	stop := context.AfterFunc(ctx, unsubscribe)
 	return func(yield func(ConsoleMessage, error) bool) {
-		defer cancel()
+		defer unsubscribe()
+		defer stop()
 		for {
 			select {
 			case <-ctx.Done():

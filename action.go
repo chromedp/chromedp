@@ -5,6 +5,7 @@ import (
 	"iter"
 	"time"
 
+	"encoding/json/jsontext"
 	"github.com/chromedp/cdproto/cdp"
 )
 
@@ -133,15 +134,16 @@ func Legacy(a OldAction) Action[Void] {
 //
 // As [Run] does, Events starts the browser and opens the target when the
 // context has none yet. If that fails, the iterator yields the error. See
-// [cdp.Events] for the rules about ending the iteration. A caller must range
-// over the iterator or cancel the context, because an iterator that nobody
-// reads holds its subscription.
+// [cdp.Events] for the rules about ending the iteration. To stop, cancel the
+// context or break out of the loop. Both end the subscription, also when the
+// program never ranged over the iterator. The queue of the events has no limit,
+// so a reader that does not read makes it grow until the subscription ends.
 func Events[E any](ctx context.Context, ev cdp.Event[E]) iter.Seq2[E, error] {
 	c, err := initContextTarget(ctx)
 	if err != nil {
 		return failed[E](err)
 	}
-	return cdp.Events(ctx, c.Target, ev)
+	return cdp.Events(ctx, endWith(ctx, c.Target), ev)
 }
 
 // BrowserEvents is like [Events] for the events of the browser, such as the
@@ -151,7 +153,32 @@ func BrowserEvents[E any](ctx context.Context, ev cdp.Event[E]) iter.Seq2[E, err
 	if err != nil {
 		return failed[E](err)
 	}
-	return cdp.Events(ctx, c.Browser, ev)
+	return cdp.Events(ctx, endWith(ctx, c.Browser), ev)
+}
+
+// endingSession is a [cdp.Session] that ends each subscription when a context
+// ends, also when nobody ranges over the iterator.
+type endingSession struct {
+	cdp.Session
+	ctx context.Context
+}
+
+// endWith returns the session s with subscriptions that end when ctx ends.
+// Without it, an iterator that nobody reads keeps its subscription, and a
+// goroutine that waits to deliver a queued event, for ever.
+func endWith(ctx context.Context, s cdp.Session) cdp.Session {
+	return endingSession{Session: s, ctx: ctx}
+}
+
+// Subscribe subscribes on the session, and ends the subscription when the
+// context ends.
+func (e endingSession) Subscribe(method string) (<-chan jsontext.Value, func()) {
+	events, cancel := e.Session.Subscribe(method)
+	stop := context.AfterFunc(e.ctx, cancel)
+	return events, func() {
+		stop()
+		cancel()
+	}
 }
 
 // failed returns an iterator that yields the error and ends.
