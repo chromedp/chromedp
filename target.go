@@ -306,7 +306,7 @@ func (t *Target) documentUpdated(ctx context.Context) {
 
 	f.Nodes = make(map[cdp.NodeID]*Node)
 	res, err := cdp.Call(ctx, t, dom.GetDocument, dom.GetDocumentParams{})
-	if err == context.Canceled {
+	if errors.Is(err, context.Canceled) {
 		return // TODO: perhaps not necessary, but useful to keep the tests less noisy
 	}
 	if err != nil {

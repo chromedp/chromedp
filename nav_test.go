@@ -336,7 +336,7 @@ func TestNavigateContextTimeout(t *testing.T) {
 	}))
 	defer s.Close()
 
-	if err := Do(ctx, Navigate(s.URL)); err != nil && err != context.Canceled {
+	if err := Do(ctx, Navigate(s.URL)); err != nil && !errors.Is(err, context.Canceled) {
 		t.Fatal(err)
 	}
 }

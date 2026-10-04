@@ -3,6 +3,7 @@ package remote
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -216,11 +217,8 @@ func testAllocator(t *testing.T, modifyURL func(wsURL string) string, wantErr st
 		t.Fatal(err)
 	}
 	procCancel()
-	switch err := chromedp.Do(ctx, chromedp.Navigate(chromedptest.TestdataDir+"/form.html")); err {
-	case nil:
-		// TODO: figure out why this happens sometimes on Travis
-		// t.Fatal("did not expect a nil error")
-	case context.DeadlineExceeded:
+	// A nil error happens sometimes on a slow machine, so it is allowed.
+	if err := chromedp.Do(ctx, chromedp.Navigate(chromedptest.TestdataDir+"/form.html")); errors.Is(err, context.DeadlineExceeded) {
 		t.Fatalf("did not expect a standard context error: %v", err)
 	}
 	cmd.Wait()

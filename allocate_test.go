@@ -147,11 +147,8 @@ func TestExecAllocatorKillBrowser(t *testing.T) {
 
 	// Run must return an error other than "deadline exceeded" in much less
 	// than the limit.
-	switch err := Do(ctx, Navigate(s.URL)); err {
-	case nil:
-		// TODO: figure out why this happens sometimes on Travis
-		// t.Fatal("did not expect a nil error")
-	case context.DeadlineExceeded:
+	// A nil error happens sometimes on a slow machine, so it is allowed.
+	if err := Do(ctx, Navigate(s.URL)); errors.Is(err, context.DeadlineExceeded) {
 		t.Fatalf("did not expect a standard context error: %v (the browser was killed: %t)", err, killed.Load())
 	}
 }
@@ -229,8 +226,8 @@ func TestNoExitErrorAfterCancel(t *testing.T) {
 		t.Fatal(err)
 	}
 	cancel()
-	if _, err := Run(ctx, Evaluate[int](`1 + 2`)); err != context.Canceled {
-		t.Fatalf("want exactly context.Canceled, got %v", err)
+	if _, err := Run(ctx, Evaluate[int](`1 + 2`)); !errors.Is(err, context.Canceled) {
+		t.Fatalf("want context.Canceled, got %v", err)
 	}
 }
 

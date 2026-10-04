@@ -329,7 +329,7 @@ func TestPrematureCancel(t *testing.T) {
 	if err := Cancel(ctx); err != nil {
 		t.Fatal(err)
 	}
-	if err := Do(ctx); err != context.Canceled {
+	if err := Do(ctx); !errors.Is(err, context.Canceled) {
 		t.Fatalf("wanted canceled context error, got %v", err)
 	}
 }
@@ -347,7 +347,7 @@ func TestPrematureCancelTab(t *testing.T) {
 	// Cancel after the browser is allocated, but before we have created a new
 	// tab.
 	cancel()
-	if err := Do(ctx2); err != context.Canceled {
+	if err := Do(ctx2); !errors.Is(err, context.Canceled) {
 		t.Fatalf("wanted canceled context error, got %v", err)
 	}
 }
@@ -363,7 +363,7 @@ func TestPrematureCancelAllocator(t *testing.T) {
 
 	ctx, cancel := NewContext(allocCtx)
 	defer cancel()
-	if err := Do(ctx); err != context.Canceled {
+	if err := Do(ctx); !errors.Is(err, context.Canceled) {
 		t.Fatalf("wanted canceled context error, got %v", err)
 	}
 }
@@ -1585,4 +1585,36 @@ func describeLeak(dir string) string {
 		return nil
 	})
 	return fmt.Sprintf("%s: %d entries: %s", dir, len(files), strings.Join(files, " "))
+}
+
+// TestGracefulCancelLogsNoError makes sure that the graceful close of a
+// browser after a navigation does not log an error. The handler of the event
+// DOM.documentUpdated runs while the browser shuts down, and the error of its
+// call wraps context.Canceled.
+func TestGracefulCancelLogsNoError(t *testing.T) {
+	t.Parallel()
+
+	var mu sync.Mutex
+	var logged []string
+	errf := func(format string, a ...any) {
+		mu.Lock()
+		logged = append(logged, fmt.Sprintf(format, a...))
+		mu.Unlock()
+	}
+
+	for i := range 8 {
+		ctx, _ := NewContext(allocCtx, WithErrorf(errf))
+		if err := Do(ctx, Navigate(testdataDir+"/form.html")); err != nil {
+			t.Fatalf("loop %d: %v", i, err)
+		}
+		if err := Cancel(ctx); err != nil {
+			t.Fatalf("loop %d: %v", i, err)
+		}
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+	if len(logged) != 0 {
+		t.Fatalf("want no logged error, got %d, the first is %q", len(logged), logged[0])
+	}
 }
