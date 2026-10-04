@@ -301,6 +301,9 @@ a variable, to set one.
 
 These names are new, and no old code needs a change, unless a bullet says so.
 
+- `Evaluate[T]` returns `ErrJSNull` for a JavaScript `null` when `T` cannot be nil, for example an `int` or a `string`. Before, it returned the zero value and no error, which the documentation did not say. Use a pointer type, such as `*int`, to get nil for `null`.
+- `EvalAwaitPromise` is new. Pass it to `Evaluate` to wait for a promise that the expression returns.
+- `Text` works on a text node, which a search for plain text finds.
 - `Tap` and `TapXY` are new. They send a touch tap, a `touchStart` event and then a `touchEnd` event, and not mouse events. `Tap` takes a selector and the query options, like `Click`. Turn on touch emulation with `EmulateTouch`, or the page gets no touch events. See example 16 in `docs/API.md`.
 - The exec allocator now passes the flags to the browser in the order of the `Flag` options, and not in a random order. A flag that you set again keeps its first place with the new value. The flags of `DefaultExecAllocatorOptions` come first in their listed order. Put `Flag("flag-switches-begin", true)` and `Flag("flag-switches-end", true)` around the switches that Chrome must take as the switches of `chrome://flags`. The names and the use of the options are the same.
 - `cdp.Call` on a `Target` or a `Browser` returns an error when the connection to the browser is lost, for example when the browser process is killed. Before, a call with a context that never ends, such as `context.Background()`, waited for ever. The error says `lost the connection to the browser`, and it wraps the error of the connection and `context.Canceled`, as the exit error of `Run` does. A call with a context that the program cancels still returns the error of that context.

@@ -10,6 +10,9 @@ in [`decisions/`](decisions/README.md).
 These commits come after the release v0.18.0. Each one has its own test, and a documentation change has none.
 
 - Added: `Tap` and `TapXY` send a touch tap (issue 1174).
+- Fixed: `Evaluate[T]` returned the zero value and no error for the expression `null` when `T` cannot be nil, for example `Evaluate[int]` with the expression `null`. It returns `ErrJSNull` now, as the documentation says. The example `ExampleEvaluate` had a case for it, and its output did not show the error.
+- Added: `EvalAwaitPromise`, an evaluate option that waits for a promise that the expression returns.
+- Fixed: `Text` on a text node, which a search for plain text finds, failed with a JavaScript error. It returns the text of the node now, when its parent element is visible.
 - Fixed: the exec allocator keeps the order of the flags, so `--flag-switches-begin` and `--flag-switches-end` can surround the switches that Chrome needs between them (issue 1483).
 - Fixed: a call on a `Target` or a `Browser` with a context that never ends hung for ever after the browser died. It returns an error now (issue 1529).
 - Added: the allocator option `NoInheritEnv` starts the browser with only the variables of `Env` (issue 1584).
