@@ -16,6 +16,7 @@ These commits are in the release v0.18.0. Each one has its own test.
 - Fixed: the websocket did not answer ping frames, and `DialContext` panicked when the server sent frames with the handshake (pull request 1611).
 - Fixed: a key with Ctrl, Alt or Meta typed its character (issue 1384).
 - Added: `remote.WithDialHTTPHeader` and `remote.WithConnHTTPHeader` (pull request 1631). The commit named them `WithRemoteDialHTTPHeader` and `WithConnHTTPHeader` in the core, and the split below moved and renamed them.
+- Fixed: on macOS, helper processes of a browser that was killed stayed alive and made the allocator leave its temporary user data directory. `killLeftovers` now works on macOS, with the list of processes from `ps`, as it works on Linux with `/proc`.
 - Added: each test binary starts a browser once before the tests and prints one line that starts with `browser:`. The line has the product and version, the revision, the executable path and the operating system, so the log of a CI run says which browser ran the tests.
 - Added: on Windows, the default browser lookup falls back to Microsoft Edge (`msedge`) when it finds no Chrome.
 - Added: `WithNewWindow(bool)`. By default, each new tab opens in a new window, as before in this version. `WithNewWindow(false)` opens it as a tab in the window of the browser. Switch tabs with `target.ActivateTarget`.
