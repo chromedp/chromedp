@@ -1,0 +1,42 @@
+<html>
+<head>
+<title>drag with mouse events</title>
+<style>
+body { margin: 0; font-family: sans-serif; }
+#track { position: absolute; left: 20px; top: 20px; width: 400px; height: 20px; background: #ddd; }
+#handle { position: absolute; left: 20px; top: 14px; width: 30px; height: 32px; background: #46c; cursor: grab; }
+#zone { position: absolute; left: 300px; top: 100px; width: 120px; height: 80px; background: #cdb; }
+</style>
+</head>
+<body>
+<div id="track"></div>
+<div id="handle">h</div>
+<div id="zone">zone</div>
+<script>
+var log = [];
+var handle = document.getElementById('handle');
+var dragging = false;
+var dx = 0, dy = 0;
+handle.addEventListener('mousedown', function (e) {
+  dragging = true;
+  handle.style.pointerEvents = 'none';
+  dx = e.clientX - handle.offsetLeft;
+  dy = e.clientY - handle.offsetTop;
+  log.push('mousedown');
+  e.preventDefault();
+});
+document.addEventListener('mousemove', function (e) {
+  if (!dragging) return;
+  handle.style.left = (e.clientX - dx) + 'px';
+  handle.style.top = (e.clientY - dy) + 'px';
+  if (log[log.length - 1] !== 'mousemove') log.push('mousemove');
+});
+document.addEventListener('mouseup', function (e) {
+  if (!dragging) return;
+  dragging = false;
+  handle.style.pointerEvents = '';
+  log.push('mouseup:' + (e.target.id || e.target.tagName) + ':' + e.clientX + ',' + e.clientY);
+});
+</script>
+</body>
+</html>

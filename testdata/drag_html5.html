@@ -1,0 +1,40 @@
+<html>
+<head>
+<title>html5 drag and drop</title>
+<style>
+body { margin: 0; font-family: sans-serif; }
+#item { position: absolute; left: 20px; top: 20px; width: 100px; height: 40px; background: #46c; color: white; }
+#zone { position: absolute; left: 300px; top: 100px; width: 120px; height: 80px; background: #cdb; }
+#other { position: absolute; left: 300px; top: 220px; width: 120px; height: 80px; background: #dbc; }
+</style>
+</head>
+<body>
+<div id="item" draggable="true">item</div>
+<div id="zone">zone</div>
+<div id="other">other</div>
+<script>
+var log = [];
+var item = document.getElementById('item');
+var zone = document.getElementById('zone');
+item.addEventListener('dragstart', function (e) {
+  e.dataTransfer.setData('text/plain', 'hello');
+  e.dataTransfer.effectAllowed = 'move';
+  log.push('dragstart');
+});
+zone.addEventListener('dragenter', function (e) {
+  e.preventDefault();
+  log.push('dragenter');
+});
+zone.addEventListener('dragover', function (e) {
+  e.preventDefault();
+  if (log[log.length - 1] !== 'dragover') log.push('dragover');
+});
+zone.addEventListener('drop', function (e) {
+  e.preventDefault();
+  log.push('drop:' + e.dataTransfer.getData('text/plain'));
+  zone.appendChild(item);
+});
+item.addEventListener('dragend', function () { log.push('dragend'); });
+</script>
+</body>
+</html>

@@ -703,6 +703,21 @@ func byTestID(id string) chromedp.QueryOption {
 err := chromedp.Do(ctx, chromedp.Click("", byTestID("submit")))
 ```
 
+### 24. Drag and drop
+
+`DragAndDrop` drags the first element that matches the first selector, and drops it on the first element that matches the second selector. It presses the left mouse button at the center of the first element, moves the mouse to the center of the second element in several steps, and releases the button. `DragAndDropXY` does the same for two points, and an optional last argument sets the number of steps. The default is 10.
+
+The same call works for two kinds of page. A page with a slider, a drag handle or a sortable list listens for mouse events, and it gets them. A page with HTML5 drag and drop has draggable elements and listens for `dragstart`, `dragover` and `drop`. The browser starts a native drag for such a page. `DragAndDropXY` turns on `input.SetInterceptDrags`, takes the data of the drag from the event `input.DragIntercepted`, and sends `dragEnter`, `dragOver` and `drop` with `input.DispatchDragEvent`. The page gets a `DataTransfer` with the data. The action turns the interception off when it returns. Both elements must be in the viewport at the same time.
+
+```go
+if err := chromedp.Do(ctx,
+	chromedp.Navigate(url),
+	chromedp.DragAndDrop(chromedp.CSS("#card"), chromedp.CSS("#done-column")),
+); err != nil {
+	log.Fatal(err)
+}
+```
+
 ## What the new API removes
 
 The new API removes the interface `Action`, the type `ActionFunc`, the type `Tasks`, and the funcs `ListenTarget` and `ListenBrowser`. It also removes the types `QueryAction`, `NavigateAction`, `EvaluateAction`, `CallAction`, `PollAction`, `MouseAction`, `KeyAction` and `EmulateAction`. Each type is now `Action[T]`. It also removes the six lookup options that start with `By`, except `ByFunc`. A selector type replaces each of them. `docs/MIGRATION.md` lists every change, with the old name and the new name.
@@ -774,6 +789,8 @@ func Click[S Selectable](sel S, opts ...QueryOption) Action[Void]
 func ComputedStyle[S Selectable](sel S, opts ...QueryOption) Action[[]*css.ComputedStyleProperty]
 func Dimensions[S Selectable](sel S, opts ...QueryOption) Action[*dom.BoxModel]
 func DoubleClick[S Selectable](sel S, opts ...QueryOption) Action[Void]
+func DragAndDrop[S, T Selectable](from S, to T, opts ...QueryOption) Action[Void]
+func DragAndDropXY(fromX, fromY, toX, toY float64, steps ...int) Action[Void]
 func Dump[S Selectable](sel S, w io.Writer, opts ...QueryOption) Action[Void]
 func DumpTo[S Selectable](sel S, w io.Writer, prefix, indent string, nodeIDs bool, depth int64, pierce bool, wait time.Duration, opts ...QueryOption) Action[Void]
 func Emulate(device Device) Action[Void]
