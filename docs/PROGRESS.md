@@ -10,7 +10,6 @@ in [`decisions/`](decisions/README.md).
 These commits come after the release v0.18.0. Each one has its own test, and a documentation change has none.
 
 - Added: `Tap` and `TapXY` send a touch tap (issue 1174).
-- Fixed: `DragAndDrop` read the center of the first node before it scrolled the second node into view, and the scroll can move the first node, so the drag did nothing. It reads both centers after both scrolls, and returns the new error `ErrDragOutsideViewport` when the two nodes do not fit in the viewport together.
 - Fixed: `Evaluate[T]` returned the zero value and no error for the expression `null` when `T` cannot be nil, for example `Evaluate[int]` with the expression `null`. It returns `ErrJSNull` now, as the documentation says. The example `ExampleEvaluate` had a case for it, and its output did not show the error.
   `CallFunctionOn[T]` follows the same rule. `Poll` never returns it, because `null` is not truthy. `JavascriptAttribute[T]` and `Value` keep the zero value and no error for a `null` attribute, and a test covers each function.
 - Added: `EvalAwaitPromise`, an evaluate option that waits for a promise that the expression returns.
@@ -26,7 +25,7 @@ These commits come after the release v0.18.0. Each one has its own test, and a d
 - Documented: the first `Run` binds the life of the browser to its context, so a timeout on that context closes the browser, and a derived context limits one action (issue 1539).
 - Documented: the default flag `disable-dev-shm-usage`, why it is on, its cost, and `Flag("disable-dev-shm-usage", false)` to turn it off (issue 1627).
 - Documented: the set of selector types is closed, and `ByFunc` is the extension point for a custom lookup (issue 1641).
-- Added: `DragAndDrop` and `DragAndDropXY` drag an element and drop it on another element or on a point. They work for a page with mouse events and for a page with HTML5 drag and drop. They are new in the next release.
+- Added: `DragAndDrop` and `DragAndDropXY` drag an element and drop it on another element or on a point. They work for a page with mouse events and for a page with HTML5 drag and drop. `DragAndDrop` returns the error `ErrDragOutsideViewport` when the two nodes do not fit in the viewport together, and `DragAndDropXY` releases the mouse button when an error ends the drag. They are new in the next release.
 - Added: `Console` turns the console API calls, the uncaught exceptions, the unhandled promise rejections and the browser log into one iterator of `ConsoleMessage` values, in order. It is new in the next release.
 - Added: `ExposeFunc` makes a Go func available to the page as `window.<name>`. A call from the page returns a promise that the result or the error of the func settles. It works after a navigation and in an iframe. It is new in the next release.
 - Added: `PrintToPDF` with the options `PDFLandscape`, `PDFPaper`, `PDFMargin`, `PDFMargins`, `PDFScale`, `PDFPageRanges`, `PDFPreferCSSPageSize`, `PDFPrintBackground`, `PDFHeaderTemplate`, `PDFFooterTemplate`, `PDFOutlineAndTagged` and `PDFStream`, so that a program does not build `page.PrintToPDFParams` by hand. It is new in the next release, and `cdp.Call` with `page.PrintToPDF` still works.
