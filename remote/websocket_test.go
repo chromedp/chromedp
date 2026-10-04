@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/chromedp/cdproto/cdp"
+	cdpruntime "github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
 	"github.com/chromedp/chromedp"
 	"github.com/chromedp/chromedp/internal/chromedptest"
@@ -308,6 +309,23 @@ func TestExecAllocatorDebugf(t *testing.T) {
 // address. The cleanup of the test stops the browser.
 func startChrome(t *testing.T) string {
 	t.Helper()
+	wsURL, _ := startChromeProcess(t)
+	return wsURL
+}
+
+// startChromeProcess is like startChrome, and it also returns the process of
+// the browser.
+//
+// The test can kill the process, and then its child processes can still write
+// to the profile directory. So the helper makes the directory itself and
+// removes it again until it succeeds.
+func startChromeProcess(t *testing.T) (string, *os.Process) {
+	t.Helper()
+	dataDir, err := os.MkdirTemp("", "chromedp-remote")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { removeAllRetry(dataDir) })
 	procCtx, procCancel := context.WithCancel(context.Background())
 	cmd := exec.CommandContext(procCtx, chromedptest.ExecPath,
 		"--no-first-run",
@@ -315,7 +333,7 @@ func startChrome(t *testing.T) string {
 		"--headless",
 		"--disable-gpu",
 		"--no-sandbox",
-		"--user-data-dir="+t.TempDir(),
+		"--user-data-dir="+dataDir,
 		"--remote-debugging-port=0",
 		"about:blank",
 	)
@@ -339,7 +357,7 @@ func startChrome(t *testing.T) string {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return wsURL
+	return wsURL, cmd.Process
 }
 
 // TestAllocatorBrowserContext checks the browser contexts of a context that the
@@ -435,3 +453,80 @@ var killedText = func() string {
 	}
 	return "signal: killed"
 }()
+
+// TestCallAfterBrowserKilled checks that a direct call with a context that
+// never ends returns an error after the browser dies, and does not hang. See
+// the issue 1529.
+func TestCallAfterBrowserKilled(t *testing.T) {
+	t.Parallel()
+
+	wsURL, proc := startChromeProcess(t)
+	allocCtx, allocCancel := NewAllocator(context.Background(), wsURL)
+	defer allocCancel()
+	ctx, cancel := chromedp.NewContext(allocCtx)
+	defer cancel()
+	if err := chromedp.Do(ctx, chromedp.Navigate("about:blank")); err != nil {
+		t.Fatal(err)
+	}
+	c := chromedp.FromContext(ctx)
+
+	if err := proc.Kill(); err != nil {
+		t.Fatal(err)
+	}
+
+	calls := map[string]func() error{
+		"Target": func() error {
+			_, err := cdp.Call(context.Background(), c.Target, cdpruntime.Evaluate, cdpruntime.EvaluateParams{Expression: "1 + 2"})
+			return err
+		},
+		"Browser": func() error {
+			_, err := cdp.Call(context.Background(), c.Browser, target.GetTargets, target.GetTargetsParams{})
+			return err
+		},
+	}
+	for name, call := range calls {
+		t.Run(name, func(t *testing.T) {
+			// The call with a context that never ends must return. Ask until
+			// it fails, because the first call can race with the loss of the
+			// connection.
+			for i := range 3 {
+				done := make(chan error, 1)
+				go func() { done <- call() }()
+				select {
+				case err := <-done:
+					if err == nil {
+						t.Fatalf("call %d: want an error from a dead browser", i)
+					}
+					if !strings.Contains(err.Error(), "lost the connection to the browser") {
+						t.Fatalf("call %d: want a lost connection error, got %q", i, err)
+					}
+				case <-time.After(30 * time.Second):
+					t.Fatalf("call %d: the call hangs after the browser died", i)
+				}
+			}
+		})
+	}
+}
+
+// TestCallCancelStillCanceled checks that a call with a canceled context
+// still returns context.Canceled.
+func TestCallCancelStillCanceled(t *testing.T) {
+	t.Parallel()
+
+	wsURL := startChrome(t)
+	allocCtx, allocCancel := NewAllocator(context.Background(), wsURL)
+	defer allocCancel()
+	ctx, cancel := chromedp.NewContext(allocCtx)
+	defer cancel()
+	if err := chromedp.Do(ctx, chromedp.Navigate("about:blank")); err != nil {
+		t.Fatal(err)
+	}
+	c := chromedp.FromContext(ctx)
+
+	callCtx, callCancel := context.WithCancel(context.Background())
+	callCancel()
+	_, err := cdp.Call(callCtx, c.Target, cdpruntime.Evaluate, cdpruntime.EvaluateParams{Expression: "1 + 2"})
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("want context.Canceled, got %v", err)
+	}
+}

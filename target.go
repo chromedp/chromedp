@@ -170,7 +170,9 @@ func (t *Target) run(ctx context.Context) {
 // Call sends the command to the target, waits for the response, and decodes
 // the result into res. It satisfies [cdp.Session].
 //
-// Call returns a browser error as a [*cdproto.Error].
+// Call returns a browser error as a [*cdproto.Error]. It returns an error when
+// the connection to the browser is lost, also when ctx never ends. The error
+// wraps the reason of the loss and [context.Canceled].
 func (t *Target) Call(ctx context.Context, method string, params, res any) error {
 	if method == target.CommandCloseTarget {
 		return errors.New("to close the target, cancel its context or use chromedp.Cancel")
@@ -209,6 +211,8 @@ func (t *Target) Call(ctx context.Context, method string, params, res any) error
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
+	case <-t.browser.LostConnection:
+		return t.browser.lostError()
 	case t.browser.cmdQueue <- cmd:
 	}
 
@@ -216,17 +220,19 @@ func (t *Target) Call(ctx context.Context, method string, params, res any) error
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
-	case msg := <-ch:
-		switch {
-		case msg == nil:
-			return ErrChannelClosed
-		case msg.Error != nil:
-			return msg.Error
-		case res != nil:
-			return jsonv2.Unmarshal(msg.Result, res, DefaultUnmarshalOptions)
+	case <-t.browser.LostConnection:
+		// The reply can arrive just before the loss is known.
+		select {
+		case msg := <-ch:
+			if msg != nil {
+				return decodeReply(msg, res)
+			}
+		default:
 		}
+		return t.browser.lostError()
+	case msg := <-ch:
+		return decodeReply(msg, res)
 	}
-	return nil
 }
 
 // Subscribe starts to buffer the target events with the method, and returns

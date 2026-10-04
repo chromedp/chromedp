@@ -11,6 +11,7 @@ These commits come after the release v0.18.0. Each one has its own test, and a d
 
 - Added: `Tap` and `TapXY` send a touch tap (issue 1174).
 - Fixed: the exec allocator keeps the order of the flags, so `--flag-switches-begin` and `--flag-switches-end` can surround the switches that Chrome needs between them (issue 1483).
+- Fixed: a call on a `Target` or a `Browser` with a context that never ends hung for ever after the browser died. It returns an error now (issue 1529).
 
 ## Changes in v0.18.0
 

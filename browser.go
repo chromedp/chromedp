@@ -68,6 +68,10 @@ type Browser struct {
 	// to disk.
 	closingGracefully chan struct{}
 
+	// lostReason is the error that ended the connection to the browser. It
+	// is valid after LostConnection closes.
+	lostReason error
+
 	// diedUnexpectedly is true when the connection to the browser process
 	// dropped while nobody had asked the browser to stop. The caller did not
 	// cancel the context, and did not close the browser. See noteLost.
@@ -222,7 +226,9 @@ func (b *Browser) newTarget(ctx context.Context, targetID target.ID, sessionID t
 // Call sends the command to the browser, waits for the response, and decodes
 // the result into res. It satisfies [cdp.Session].
 //
-// Call returns a browser error as a [*cdproto.Error].
+// Call returns a browser error as a [*cdproto.Error]. It returns an error when
+// the connection to the browser is lost, also when ctx never ends. The error
+// wraps the reason of the loss and [context.Canceled].
 func (b *Browser) Call(ctx context.Context, method string, params, res any) error {
 	// Certain methods are not available to the user directly.
 	if method == browser.CommandClose {
@@ -271,6 +277,8 @@ func (b *Browser) execute(ctx context.Context, method string, params, res any) e
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
+	case <-b.LostConnection:
+		return b.lostError()
 	case b.cmdQueue <- cmd:
 	}
 
@@ -278,17 +286,47 @@ func (b *Browser) execute(ctx context.Context, method string, params, res any) e
 	select {
 	case <-ctx.Done():
 		return ctx.Err()
-	case msg := <-ch:
-		switch {
-		case msg == nil:
-			return ErrChannelClosed
-		case msg.Error != nil:
-			return msg.Error
-		case res != nil:
-			return jsonv2.Unmarshal(msg.Result, res, DefaultUnmarshalOptions)
+	case <-b.LostConnection:
+		// The reply can arrive just before the loss is known.
+		select {
+		case msg := <-ch:
+			if msg != nil {
+				return decodeReply(msg, res)
+			}
+		default:
 		}
+		return b.lostError()
+	case msg := <-ch:
+		return decodeReply(msg, res)
+	}
+}
+
+// decodeReply returns the error of a reply to a command, or decodes its result
+// into res. A nil msg means that the channel of the reply closed.
+func decodeReply(msg *cdproto.Message, res any) error {
+	switch {
+	case msg == nil:
+		return ErrChannelClosed
+	case msg.Error != nil:
+		return msg.Error
+	case res != nil:
+		return jsonv2.Unmarshal(msg.Result, res, DefaultUnmarshalOptions)
 	}
 	return nil
+}
+
+// lostError returns the error of a call that cannot finish, because the
+// connection to the browser is lost. It wraps the reason that the connection
+// gave. It wraps [context.Canceled] too, because the allocator cancels the
+// context of the browser when the connection drops, and an earlier version
+// returned the error of that context. Call it only after LostConnection is
+// closed.
+func (b *Browser) lostError() error {
+	reason := b.lostReason
+	if reason == nil {
+		reason = io.EOF
+	}
+	return fmt.Errorf("lost the connection to the browser: %w: %w", reason, context.Canceled)
 }
 
 func (b *Browser) run(ctx context.Context) {
@@ -314,6 +352,7 @@ func (b *Browser) run(ctx context.Context) {
 				if _, ok := errors.AsType[*jsontext.SyntacticError](err); ok {
 					b.errf("%s", err)
 				}
+				b.noteReadError(ctx, err)
 				return
 			}
 
@@ -321,6 +360,7 @@ func (b *Browser) run(ctx context.Context) {
 			case msg.SessionID != "" && (msg.Method != "" || msg.ID != 0):
 				select {
 				case <-ctx.Done():
+					b.lostReason = ctx.Err()
 					return
 				case incomingQueue <- msg:
 				}
@@ -391,6 +431,18 @@ func (b *Browser) run(ctx context.Context) {
 		case <-b.LostConnection:
 			return // to avoid "write: broken pipe" errors
 		}
+	}
+}
+
+// noteReadError records why the connection to the browser is lost. The reader
+// goroutine calls it before it closes LostConnection, so that a call that sees
+// the loss can read the reason and the flag diedUnexpectedly. See noteLost.
+func (b *Browser) noteReadError(ctx context.Context, err error) {
+	b.lostReason = err
+	select {
+	case <-b.closingGracefully:
+	default:
+		b.noteLost(ctx)
 	}
 }
 
