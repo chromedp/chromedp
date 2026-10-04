@@ -631,6 +631,32 @@ opts := append(chromedp.DefaultExecAllocatorOptions[:],
 
 This turns off a security feature of Chrome, so use it only for pages that you trust. The default options keep site isolation on. See `docs/decisions/2026-10-04-keep-site-isolation-on.md`.
 
+### 20. Send a new line to an editor
+
+`SendKeys` sends the character `\n` as the Enter key, in the form `\r`, as `kb/kb.go` says. That is a keyDown event, a char event with the text `\r`, and a keyUp event. The key `kb.Enter` is the same as `\r`, so it sends the same events. An editor that handles Enter on keydown and cancels the default, such as Lexical, can insert two line breaks, because the char event inserts one more. To send the Enter key with no char event, send a rawKeyDown event and a keyUp event with `input.DispatchKeyEvent`. The page of a test with such an editor got one line break with this action, and two with `SendKeys` and `\n`. The old API had the same behavior, so this example has no Before block.
+
+```go
+enter := chromedp.Func(func(ctx context.Context, t *chromedp.Target) error {
+	for _, typ := range []input.DispatchKeyEventType{
+		input.DispatchKeyEventTypeRawKeyDown, input.DispatchKeyEventTypeKeyUp,
+	} {
+		_, err := cdp.Call(ctx, t, input.DispatchKeyEvent, input.DispatchKeyEventParams{
+			Type: typ, Key: "Enter", Code: "Enter",
+			WindowsVirtualKeyCode: 13, NativeVirtualKeyCode: 13,
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+})
+err := chromedp.Do(ctx,
+	chromedp.SendKeys(sel, "Hello"),
+	enter,
+	chromedp.SendKeys(sel, "World"),
+)
+```
+
 ## What the new API removes
 
 The new API removes the interface `Action`, the type `ActionFunc`, the type `Tasks`, and the funcs `ListenTarget` and `ListenBrowser`. It also removes the types `QueryAction`, `NavigateAction`, `EvaluateAction`, `CallAction`, `PollAction`, `MouseAction`, `KeyAction` and `EmulateAction`. Each type is now `Action[T]`. It also removes the six lookup options that start with `By`, except `ByFunc`. A selector type replaces each of them. `docs/MIGRATION.md` lists every change, with the old name and the new name.

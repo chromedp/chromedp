@@ -1223,6 +1223,33 @@ func DoubleClick[S Selectable](sel S, opts ...QueryOption) Action[Void] {
 // Note: when the element query matches an input[type="file"] node, SendKeys
 // uses dom.SetFileInputFiles to set the upload path of the input node to v.
 //
+// A "\n" in v is the Enter key. SendKeys sends it as "\r", which is the same as
+// [kb.Enter]: a keyDown event, a char event with the text "\r", and a keyUp
+// event. An editor that handles Enter on keydown and cancels the default, such
+// as Lexical, can then insert two line breaks, because the char event inserts
+// one more. To send the Enter key with no char event, send a rawKeyDown event
+// and a keyUp event with the command [input.DispatchKeyEvent]:
+//
+//	enter := chromedp.Func(func(ctx context.Context, t *chromedp.Target) error {
+//		for _, typ := range []input.DispatchKeyEventType{
+//			input.DispatchKeyEventTypeRawKeyDown, input.DispatchKeyEventTypeKeyUp,
+//		} {
+//			_, err := cdp.Call(ctx, t, input.DispatchKeyEvent, input.DispatchKeyEventParams{
+//				Type: typ, Key: "Enter", Code: "Enter",
+//				WindowsVirtualKeyCode: 13, NativeVirtualKeyCode: 13,
+//			})
+//			if err != nil {
+//				return err
+//			}
+//		}
+//		return nil
+//	})
+//	err := chromedp.Do(ctx,
+//		chromedp.SendKeys(sel, "Hello"),
+//		enter,
+//		chromedp.SendKeys(sel, "World"),
+//	)
+//
 // [keys]: https://github.com/chromedp/examples/tree/master/keys
 func SendKeys[S Selectable](sel S, v string, opts ...QueryOption) Action[Void] {
 	return queryDo(sel, func(ctx context.Context, t *Target, nodes []*Node) error {

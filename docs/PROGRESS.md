@@ -17,6 +17,7 @@ These commits come after the release v0.18.0. Each one has its own test, and a d
 - Added: `WithDetachOnCancel` leaves the tab open when the context ends (issue 1613).
 - Documented: contexts that share a browser run in separate tabs and are safe in parallel, and actions on one context can race (issue 541).
 - Documented: the limit for a cross-site iframe, and two ways around it: `WithTargetID` and the flags that turn off site isolation (issues 1398, 1467 and 1471).
+- Documented: `SendKeys` sends `\n` as Enter with a char event, an editor such as Lexical can insert two line breaks, and a rawKeyDown event avoids it. Sending `kb.Enter` does not help, because it is the same as `\n` (issue 1401).
 
 ## Changes in v0.18.0
 

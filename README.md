@@ -253,6 +253,38 @@ allocator. Then `FromNode` and the events of the page reach the iframe. This
 turns off a security feature of Chrome. Use it only for pages that you trust. See
 [`docs/decisions/2026-10-04-keep-site-isolation-on.md`](docs/decisions/2026-10-04-keep-site-isolation-on.md).
 
+> SendKeys with a new line inserts two line breaks
+
+`SendKeys` sends the character `\n` as the Enter key, in the form `\r`. That is a
+keyDown event, a char event with the text `\r`, and a keyUp event. The key
+`kb.Enter` is the same as `\r`, so it sends the same events and does not help. An
+editor that handles Enter on keydown and cancels the default, such as Lexical,
+can insert two line breaks, because the char event inserts one more. To send the
+Enter key with no char event, send a rawKeyDown event and a keyUp event with
+`input.DispatchKeyEvent`, and send the text before and after it with `SendKeys`:
+
+```go
+enter := chromedp.Func(func(ctx context.Context, t *chromedp.Target) error {
+	for _, typ := range []input.DispatchKeyEventType{
+		input.DispatchKeyEventTypeRawKeyDown, input.DispatchKeyEventTypeKeyUp,
+	} {
+		_, err := cdp.Call(ctx, t, input.DispatchKeyEvent, input.DispatchKeyEventParams{
+			Type: typ, Key: "Enter", Code: "Enter",
+			WindowsVirtualKeyCode: 13, NativeVirtualKeyCode: 13,
+		})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+})
+err := chromedp.Do(ctx,
+	chromedp.SendKeys(sel, "Hello"),
+	enter,
+	chromedp.SendKeys(sel, "World"),
+)
+```
+
 > I want to use chromedp on a headless environment
 
 Run the Go program that uses `chromedp` inside the
