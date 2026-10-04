@@ -599,6 +599,38 @@ for _, url := range urls {
 wg.Wait()
 ```
 
+### 19. Work in an iframe from another site
+
+Chrome runs an iframe from another site (a cross-site iframe) in its own process, as a separate target of the type `iframe`. The node of the `iframe` element has no `ContentDocument`, so `FromNode` finds nothing in it. `chromedp` does not attach to the iframe target by itself, because it ignores `Target.attachedToTarget` for it. The network events of the iframe do not reach the context of the page. An iframe from the same site is not affected. This example has no Before block, because the old API had the same limit.
+
+To work in the iframe, attach to its target with `WithTargetID`. The new context runs actions in the iframe and gets its events. The parent context must have run once, so that it has a browser.
+
+```go
+infos, err := chromedp.Targets(ctx)
+if err != nil {
+	log.Fatal(err)
+}
+for _, info := range infos {
+	if info.Type == "iframe" && strings.HasPrefix(info.URL, "https://other.example/") {
+		frameCtx, cancel := chromedp.NewContext(ctx, chromedp.WithTargetID(info.TargetID))
+		defer cancel()
+		text, err := chromedp.Run(frameCtx, chromedp.Text(chromedp.CSS("#inner")))
+		// ...
+	}
+}
+```
+
+The other way is to turn off site isolation, so that the iframe stays in the process of the page. Then `FromNode` and the events of the page reach it.
+
+```go
+opts := append(chromedp.DefaultExecAllocatorOptions[:],
+	chromedp.Flag("disable-features", "SitePerProcess,IsolateOrigins"),
+	chromedp.Flag("disable-site-isolation-trials", true),
+)
+```
+
+This turns off a security feature of Chrome, so use it only for pages that you trust. The default options keep site isolation on. See `docs/decisions/2026-10-04-keep-site-isolation-on.md`.
+
 ## What the new API removes
 
 The new API removes the interface `Action`, the type `ActionFunc`, the type `Tasks`, and the funcs `ListenTarget` and `ListenBrowser`. It also removes the types `QueryAction`, `NavigateAction`, `EvaluateAction`, `CallAction`, `PollAction`, `MouseAction`, `KeyAction` and `EmulateAction`. Each type is now `Action[T]`. It also removes the six lookup options that start with `By`, except `ByFunc`. A selector type replaces each of them. `docs/MIGRATION.md` lists every change, with the old name and the new name.

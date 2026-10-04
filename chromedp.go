@@ -671,6 +671,31 @@ func WithDetachOnCancel() ContextOption {
 
 // WithTargetID makes a context attach to an existing target, and not create a
 // new one.
+//
+// It also works for an iframe from another site (a cross-site iframe). Chrome
+// runs such an iframe in its own process, and lists it as a target of the type
+// "iframe" in [Targets]. [FromNode] and the DOM tree of the page do not reach
+// it, and the network events of the iframe do not arrive in the context of the
+// page, because chromedp does not attach to the iframe by itself. A context
+// that WithTargetID attaches to the iframe runs actions in the iframe and gets
+// its events. The parent context must have run already, so that it has a
+// browser. For example:
+//
+//	infos, _ := chromedp.Targets(ctx)
+//	for _, info := range infos {
+//		if info.Type == "iframe" && strings.HasPrefix(info.URL, "https://other.example/") {
+//			frameCtx, cancel := chromedp.NewContext(ctx, chromedp.WithTargetID(info.TargetID))
+//			defer cancel()
+//			text, err := chromedp.Run(frameCtx, chromedp.Text(chromedp.CSS("#inner")))
+//		}
+//	}
+//
+// The other way is to turn off site isolation in the browser. Give the exec
+// allocator Flag("disable-features", "SitePerProcess,IsolateOrigins") and
+// Flag("disable-site-isolation-trials", true). The iframe then stays in the page
+// process, and [FromNode] and the events of the page reach it. This turns off a
+// security feature of Chrome. See
+// docs/decisions/2026-10-04-keep-site-isolation-on.md.
 func WithTargetID(id target.ID) ContextOption {
 	return func(c *Context) { c.targetID = id }
 }

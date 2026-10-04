@@ -358,6 +358,12 @@ type QueryOption = func(*Selector)
 //
 // Note: [Search] and [JSPath] selectors do not support FromNode now. The
 // option is mainly useful for [CSS] selectors.
+//
+// FromNode does not reach into an iframe from another site. Chrome runs such an
+// iframe in its own process, as a separate target, and the node of the iframe
+// element has no ContentDocument. A query from that node finds nothing and
+// waits until its context ends. See [WithTargetID] for how to attach to the
+// iframe.
 func FromNode(node *Node) QueryOption {
 	return func(s *Selector) { s.fromNode = node }
 }

@@ -216,6 +216,43 @@ for _, url := range urls {
 wg.Wait()
 ```
 
+> I cannot reach an element or the network events of an iframe
+
+Chrome runs an iframe from another site (a cross-site iframe) in its own
+process, as a separate target of the type `iframe`. The DOM tree of the page does
+not hold its content. The node of the `iframe` element has no `ContentDocument`,
+so a query with `FromNode` finds nothing and waits until the context ends.
+`chromedp` does not attach to the iframe target by itself, so the network events
+of the iframe do not reach the context of the page. An iframe from the same site
+is not affected.
+
+To work in the iframe, find its target with `chromedp.Targets` and attach to it
+with `chromedp.WithTargetID`. The new context runs actions in the iframe and
+gets its events. The parent context must have run once, so that it has a
+browser.
+
+```go
+infos, err := chromedp.Targets(ctx)
+if err != nil {
+	log.Fatal(err)
+}
+for _, info := range infos {
+	if info.Type == "iframe" && strings.HasPrefix(info.URL, "https://other.example/") {
+		frameCtx, cancel := chromedp.NewContext(ctx, chromedp.WithTargetID(info.TargetID))
+		defer cancel()
+		text, err := chromedp.Run(frameCtx, chromedp.Text(chromedp.CSS("#inner")))
+		// ...
+	}
+}
+```
+
+The other way is to turn off site isolation, so that the iframe stays in the
+process of the page. Add `Flag("disable-features", "SitePerProcess,IsolateOrigins")`
+and `Flag("disable-site-isolation-trials", true)` to the options of the exec
+allocator. Then `FromNode` and the events of the page reach the iframe. This
+turns off a security feature of Chrome. Use it only for pages that you trust. See
+[`docs/decisions/2026-10-04-keep-site-isolation-on.md`](docs/decisions/2026-10-04-keep-site-isolation-on.md).
+
 > I want to use chromedp on a headless environment
 
 Run the Go program that uses `chromedp` inside the

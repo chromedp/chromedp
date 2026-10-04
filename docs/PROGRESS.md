@@ -16,6 +16,7 @@ These commits come after the release v0.18.0. Each one has its own test, and a d
 - Fixed: `WaitNotPresent` with a `JSPath` that gives null, undefined or an empty `NodeList` never succeeded. A `JSPath` can give a `NodeList` of nodes, and a value that is not a node is an error at once (issue 1600).
 - Added: `WithDetachOnCancel` leaves the tab open when the context ends (issue 1613).
 - Documented: contexts that share a browser run in separate tabs and are safe in parallel, and actions on one context can race (issue 541).
+- Documented: the limit for a cross-site iframe, and two ways around it: `WithTargetID` and the flags that turn off site isolation (issues 1398, 1467 and 1471).
 
 ## Changes in v0.18.0
 
