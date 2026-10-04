@@ -83,6 +83,10 @@ the `chromedp/headless-shell` image. The
 tests of `remote/` and of `test/` use the exported API of the core and the
 helpers in `internal/chromedptest/`. It uses the newest stable Go release, which is Go 1.27 now.
 
+A second workflow, `.github/workflows/nightly.yml`, runs the container script every
+night against the channels `stable`, `beta` and `dev` of the `chromedp/headless-shell`
+image, on Linux amd64.
+
 The only test that needs no browser is `go test ./docs/`. It tests the
 documents and the Go comments.
 

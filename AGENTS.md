@@ -228,6 +228,11 @@ script on Linux only, on every push and pull request, with the newest stable Go
 release. It runs the three modules in turn, each one in its own directory. The
 steps of `remote`, `test` and the container run even when an earlier step
 failed, so that one run shows every failure. See `.github/workflows/test.yml`.
+A second workflow, `.github/workflows/nightly.yml`, runs the container script every
+night at 04:17 UTC, and when you start it by hand, against the three channels of
+the image: `stable` (the same as `latest`), `beta` and `dev`. It runs on Linux
+amd64. The tests print a
+line that starts with `browser:` with the version of each channel.
 If the repository gets a Dependabot configuration, it must list the three
 directories `/`, `/remote` and `/test`.
 

@@ -1,0 +1,39 @@
+on:
+  schedule:
+    # Every night at 04:17 UTC.
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+name: Nightly
+jobs:
+  headless-shell:
+    # Test the three channels of the headless-shell image on Linux amd64: stable,
+    # which is the same as latest, beta and dev. The
+    # image is rebuilt when a new version of the browser is out, so this finds
+    # a change of the browser before a user finds it.
+    strategy:
+      fail-fast: false
+      matrix:
+        channel: [stable, beta, dev]
+    runs-on: ubuntu-latest
+    # Run every module with GOWORK=off, so that no workspace changes the result.
+    env:
+      GOWORK: "off"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Install Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: Use the core of this commit in remote and test
+        run: |
+          (cd remote && go mod edit -replace github.com/chromedp/chromedp=../)
+          (cd test && go mod edit -replace github.com/chromedp/chromedp=../)
+      - name: Pull the image
+        run: docker pull --platform linux/amd64 docker.io/chromedp/headless-shell:${{ matrix.channel }}
+      # The tests print a line that starts with "browser:". It has the version
+      # of the browser that this channel has today.
+      - name: Test headless-shell ${{ matrix.channel }}
+        run: ./contrib/docker-test.sh
+        env:
+          IMAGE: docker.io/chromedp/headless-shell:${{ matrix.channel }}
