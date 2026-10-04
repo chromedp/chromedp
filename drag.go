@@ -89,9 +89,6 @@ func checkInViewport(ctx context.Context, t *Target, points ...[2]float64) error
 	return nil
 }
 
-// center is a point in the viewport.
-type center struct{ x, y float64 }
-
 // queryScrolled is an element query action that scrolls the first element node
 // that matches the selector into view, and returns the node.
 func queryScrolled[S Selectable](sel S, opts []QueryOption) Action[*Node] {
@@ -127,7 +124,11 @@ func queryScrolled[S Selectable](sel S, opts []QueryOption) Action[*Node] {
 //     with [input.DispatchDragEvent]. The page sees them as the real events,
 //     with a DataTransfer that holds the data of the drag.
 //
-// The action turns the interception off when it returns. A drag that a page
+// The action turns the interception off when it returns. When an error ends the
+// drag after the mouse button went down, for example when the context ends, the
+// action still releases the button at the last point of the mouse. It uses a new
+// context with a limit of 5 seconds for the release, and ignores an error of the
+// release. A drag that a page
 // starts with a distance that is shorter than the drag threshold of the
 // browser, a few pixels, does not start. Use points that are at least 10
 // pixels apart.
@@ -153,7 +154,29 @@ func DragAndDropXY(fromX, fromY, toX, toY float64, steps ...int) Action[Void] {
 		intercepted, cancel := t.Subscribe(input.DragIntercepted.Method)
 		defer cancel()
 
+		// Track the button, so that an error between the press and the release
+		// does not leave the button down in the browser.
+		var pressed bool
+		var lastX, lastY float64
+		defer func() {
+			if !pressed {
+				return
+			}
+			ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+			defer cancel()
+			p := input.DispatchMouseEventParams{Type: MouseReleased, X: lastX, Y: lastY, Button: input.MouseButtonLeft, ClickCount: 1}
+			_, _ = cdp.Call(ctx, t, input.DispatchMouseEvent, p)
+		}()
+
 		mouse := func(typ input.DispatchMouseEventType, x, y float64) error {
+			switch typ {
+			case MousePressed:
+				pressed = true
+			case MouseReleased:
+				// Do not send a second release, also when this one fails.
+				pressed = false
+			}
+			lastX, lastY = x, y
 			p := input.DispatchMouseEventParams{Type: typ, X: x, Y: y, Button: input.MouseButtonLeft}
 			switch typ {
 			case MousePressed:

@@ -1,8 +1,10 @@
 package chromedp
 
 import (
+	"context"
 	"errors"
 	"slices"
+	"strings"
 	"testing"
 )
 
@@ -193,5 +195,40 @@ func TestDragAndDropOutsideViewport(t *testing.T) {
 	}
 	if len(got) != 0 {
 		t.Errorf("got events %q, want none", got)
+	}
+}
+
+// TestDragAndDropXYReleasesAfterError makes sure that the action releases the
+// mouse button when the context ends in the middle of a drag.
+func TestDragAndDropXYReleasesAfterError(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "drag_mouse.html")
+	defer cancel()
+
+	// The page cancels the context of the drag on the first mouse move.
+	dctx, dcancel := context.WithCancel(ctx)
+	defer dcancel()
+	if err := Do(ctx, ExposeFunc("stopDrag", func(context.Context, Void) (Void, error) {
+		dcancel()
+		return Void{}, nil
+	})); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Run(ctx, Evaluate[Void](`document.addEventListener('mousemove', () => stopDrag(), {once: true})`)); err != nil {
+		t.Fatal(err)
+	}
+
+	// With so many steps, the drag cannot end before the cancellation arrives.
+	err := Do(dctx, DragAndDropXY(35, 40, 360, 140, 2000))
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("expected a canceled context, got: %v", err)
+	}
+	got, err := Run(ctx, Evaluate[[]string]("log"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n := len(got); n == 0 || !strings.HasPrefix(got[n-1], "mouseup:") {
+		t.Fatalf("expected the last event to be a mouseup, got: %v", got)
 	}
 }
