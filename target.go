@@ -32,9 +32,10 @@ type Target struct {
 	events subscribers
 
 	// exposedMu protects exposed, the names of the funcs that ExposeFunc made
-	// available to the page.
-	exposedMu sync.Mutex
-	exposed   map[string]struct{}
+	// available to the page, and exposedSeq, the number of the last binding.
+	exposedMu  sync.Mutex
+	exposed    map[string]struct{}
+	exposedSeq int
 
 	// frameMu protects frames, execContexts, and cur.
 	frameMu sync.RWMutex

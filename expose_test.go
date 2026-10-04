@@ -9,6 +9,7 @@ import (
 	"sync/atomic"
 	"testing"
 
+	jsonv2 "encoding/json/v2"
 	"github.com/chromedp/cdproto/runtime"
 )
 
@@ -231,5 +232,94 @@ func TestExposeFuncErrors(t *testing.T) {
 	// The first func still works.
 	if got, err := Run(ctx, Evaluate[string](`once().then(v => "ok")`, awaitPromise)); err != nil || got != "ok" {
 		t.Fatalf("expected ok, got: %q (%v)", got, err)
+	}
+}
+
+// TestExposeFuncNames makes sure that unusual names work, and that two names
+// never share a binding. The name "a_reply" must not clash with the reply func
+// of the name "a".
+func TestExposeFuncNames(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "expose2.html")
+	defer cancel()
+
+	echo := func(prefix string) func(context.Context, Void) (string, error) {
+		return func(context.Context, Void) (string, error) { return prefix, nil }
+	}
+	names := []string{"a", "a_reply", "a\x07b", "a b", `a"b`, "a\\b", "__proto__", "é"}
+	for _, name := range names {
+		if err := Do(ctx, ExposeFunc(name, echo("from "+name))); err != nil {
+			t.Fatalf("name %q: %v", name, err)
+		}
+	}
+	for _, name := range names {
+		expr, err := jsonv2.Marshal(name)
+		if err != nil {
+			t.Fatal(err)
+		}
+		got, err := Run(ctx, Evaluate[string](`Object.getOwnPropertyDescriptor(window, `+string(expr)+`).value()`, awaitPromise))
+		if want := "from " + name; err != nil || got != want {
+			t.Errorf("name %q: got %q, %v, want %q", name, got, err, want)
+		}
+	}
+
+	for _, name := range []string{"__chromedp_1", "bad \xff"} {
+		if err := Do(ctx, ExposeFunc(name, echo(""))); err == nil {
+			t.Errorf("name %q: expected an error", name)
+		}
+	}
+}
+
+// TestExposeFuncBadUTF8 makes sure that the message of an error with bytes that
+// are not valid UTF-8 reaches the page, with U+FFFD for each such byte.
+func TestExposeFuncBadUTF8(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "expose2.html")
+	defer cancel()
+
+	if err := Do(ctx, ExposeFunc("bad", func(context.Context, Void) (Void, error) {
+		return Void{}, errors.New("bad \xff byte")
+	})); err != nil {
+		t.Fatal(err)
+	}
+	got, err := Run(ctx, Evaluate[string](`bad().then(() => "resolved", e => e.message)`, awaitPromise))
+	if want := "bad � byte"; err != nil || got != want {
+		t.Fatalf("got %q, %v, want %q", got, err, want)
+	}
+}
+
+// TestExposeFuncFailureCleanup makes sure that a failed ExposeFunc removes its
+// binding and its script. The name "location" fails in the browser, because
+// window.location cannot be redefined.
+func TestExposeFuncFailureCleanup(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "expose2.html")
+	defer cancel()
+
+	fn := func(context.Context, Void) (Void, error) { return Void{}, nil }
+	if err := Do(ctx, ExposeFunc("location", fn)); err == nil {
+		t.Fatal("expected an error for the name location")
+	}
+	// Documents that load after the failure must not get the script or the
+	// binding.
+	if err := Do(ctx, Navigate(testdataDir+"/expose2.html")); err != nil {
+		t.Fatal(err)
+	}
+	const find = `Object.getOwnPropertyNames(window).filter(n => n.startsWith("__chromedp_")).join(",")`
+	if got, err := Run(ctx, Evaluate[string](find)); err != nil || got != "" {
+		t.Fatalf("expected no private name in the page, got %q, %v", got, err)
+	}
+	// A retry with a good name works.
+	if err := Do(ctx, ExposeFunc("fine", fn)); err != nil {
+		t.Fatal(err)
+	}
+	if got, err := Run(ctx, Evaluate[string](`fine().then(() => "ok")`, awaitPromise)); err != nil || got != "ok" {
+		t.Fatalf("got %q, %v", got, err)
+	}
+	if got, err := Run(ctx, Evaluate[string](find)); err != nil || !strings.Contains(got, "__chromedp_2") || strings.Contains(got, "__chromedp_1") {
+		t.Fatalf("expected the names of the second binding only, got %q, %v", got, err)
 	}
 }
