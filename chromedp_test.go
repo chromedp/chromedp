@@ -117,6 +117,15 @@ func TestMain(m *testing.M) {
 	code := m.Run()
 	cancel()
 
+	// The allocator removes the user data directory of a browser in a goroutine,
+	// after the browser process exits. Give the goroutines of a slow machine
+	// time to finish before the check.
+	for deadline := time.Now().Add(15 * time.Second); time.Now().Before(deadline); time.Sleep(50 * time.Millisecond) {
+		if infos, _ := os.ReadDir(allocTempDir); len(infos) == 0 {
+			break
+		}
+	}
+
 	if infos, _ := os.ReadDir(allocTempDir); len(infos) > 0 {
 		var leaks []string
 		for _, info := range infos {

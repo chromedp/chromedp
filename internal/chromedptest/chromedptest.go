@@ -140,6 +140,11 @@ func run(m *testing.M) int {
 	code := m.Run()
 	cancel()
 
+	// The allocator removes the user data directory of a browser in a goroutine,
+	// after the browser process exits. Give the goroutines of a slow machine
+	// time to finish before the check.
+	waitNoRunnerDirs(tempDir, 15*time.Second)
+
 	var leaks []string
 	if entries, _ := os.ReadDir(tempDir); len(entries) > 0 {
 		for _, entry := range entries {
@@ -154,6 +159,25 @@ func run(m *testing.M) int {
 			len(leaks), tempDir, strings.Join(leaks, "\n")))
 	}
 	return code
+}
+
+// waitNoRunnerDirs waits until dir has no entry that the allocator made, or
+// until the timeout.
+func waitNoRunnerDirs(dir string, timeout time.Duration) {
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		found := false
+		entries, _ := os.ReadDir(dir)
+		for _, entry := range entries {
+			if strings.HasPrefix(entry.Name(), tempPrefix) {
+				found = true
+			}
+		}
+		if !found {
+			return
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
 }
 
 // describeLeak lists the files under dir, to help find who left it.
