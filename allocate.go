@@ -738,10 +738,12 @@ func Env(vars ...string) ExecAllocatorOption {
 // sets in cmd.Env. The browser does not get the environment of the Go process.
 // Use it to keep the secrets of the program away from the browser.
 //
-// Chrome can need a variable such as HOME, PATH, DISPLAY or XDG_RUNTIME_DIR,
-// depending on the system and the options. Give each one that the browser needs
-// to [Env]. Without the option, the browser gets the whole environment of the Go
-// process, as before.
+// On Linux, the browser then starts with an empty environment. A program can
+// want to pass HOME, PATH, DISPLAY (or WAYLAND_DISPLAY) for a headed browser,
+// and XDG_RUNTIME_DIR. On Windows, [os/exec] adds SYSTEMROOT by itself, and a
+// browser can also need TEMP, LOCALAPPDATA and USERPROFILE. Give each variable
+// that the browser needs to [Env]. Without the option, the browser gets the
+// whole environment of the Go process, as before.
 func NoInheritEnv(a *ExecAllocator) {
 	a.noInheritEnv = true
 }
