@@ -195,8 +195,11 @@ func TestAtLeast(t *testing.T) {
 }
 
 func TestRetryInterval(t *testing.T) {
-	// Do not run in parallel. The test counts the retries in 100 ms, so it
-	// fails when other tests keep Chrome busy (0 to 4 retries were seen).
+	// Do not run in parallel. The test counts the retries in a time window. The
+	// window is long and the lower limits are low, so that a slow machine, such
+	// as a CI runner that stalls for 100 ms, does not fail the test. The upper
+	// limits check that the interval is not shorter than it must be.
+	const window = 500 * time.Millisecond
 
 	tests := []struct {
 		name         string
@@ -207,16 +210,16 @@ func TestRetryInterval(t *testing.T) {
 		{
 			name: "default",
 			opts: []QueryOption{},
-			// in 100ms
+			// in 500ms
 			wantCountMin: 5,
-			wantCountMax: 20,
+			wantCountMax: 100,
 		},
 		{
 			name: "large interval",
 			opts: []QueryOption{RetryInterval(60 * time.Millisecond)},
-			// in 100ms
-			wantCountMin: 1,
-			wantCountMax: 2,
+			// in 500ms
+			wantCountMin: 2,
+			wantCountMax: 9,
 		},
 	}
 
@@ -237,7 +240,7 @@ func TestRetryInterval(t *testing.T) {
 				},
 			)
 
-			ctx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)
+			ctx, cancel := context.WithTimeout(ctx, window)
 			defer cancel()
 
 			opts := append(tc.opts, count)
