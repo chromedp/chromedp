@@ -22,6 +22,7 @@ These commits come after the release v0.18.0. Each one has its own test, and a d
 - Documented: the default flag `disable-dev-shm-usage`, why it is on, its cost, and `Flag("disable-dev-shm-usage", false)` to turn it off (issue 1627).
 - Documented: the set of selector types is closed, and `ByFunc` is the extension point for a custom lookup (issue 1641).
 - Added: `DragAndDrop` and `DragAndDropXY` drag an element and drop it on another element or on a point. They work for a page with mouse events and for a page with HTML5 drag and drop. They are new in the next release.
+- Added: `Console` turns the console API calls, the uncaught exceptions, the unhandled promise rejections and the browser log into one iterator of `ConsoleMessage` values, in order. It is new in the next release.
 
 ## Changes in v0.18.0
 

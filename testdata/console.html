@@ -1,0 +1,30 @@
+<html>
+<head>
+<title>console</title>
+</head>
+<body>
+<button id="run">run</button>
+<button id="missing">missing</button>
+<script>
+function run() {
+  console.log('hello', 42, true, null, undefined);
+  console.warn('careful');
+  console.info('%s has %d items', 'list', 3);
+  console.debug('debug text');
+  console.error('failed', {code: 7, name: 'x'}, [1, 2, 3]);
+  console.log(new Error('inner'));
+  setTimeout(function () { throw new Error('boom'); }, 0);
+  setTimeout(function () { Promise.reject(new Error('rejected')); }, 10);
+  setTimeout(function () { Promise.reject('plain'); }, 20);
+  setTimeout(function () { console.log('done'); }, 150);
+}
+function loadMissing() {
+  var img = new Image();
+  img.src = 'missing-image.png';
+  document.body.appendChild(img);
+}
+document.getElementById('run').addEventListener('click', run);
+document.getElementById('missing').addEventListener('click', loadMissing);
+</script>
+</body>
+</html>

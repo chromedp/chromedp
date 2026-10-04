@@ -718,6 +718,47 @@ if err := chromedp.Do(ctx,
 }
 ```
 
+### 25. Read the console and the uncaught exceptions
+
+`Console` returns an iterator of the messages that the page writes to the console. A message is a call of the console API such as `console.log`, an uncaught exception, an unhandled promise rejection, or an entry of the browser log, such as a failed image request. The iterator keeps the order of the messages. Each message is a `ConsoleMessage` with a `Type`, a `Text`, the raw `Args`, the `Time`, the place (`URL`, `Line` and `Column`) and the `Stack`. An exception has the type `ConsoleException`, and its protocol details are in `Exception`.
+
+The `Text` is what the DevTools console shows. A string argument stays as it is. An object shows its properties, for example `{code: 7, name: "x"}`. A format such as `%s` and `%d` in the first argument takes the arguments that follow it.
+
+Like `Events`, `Console` subscribes when it returns. A program can subscribe, run the actions, and then range over the messages, so no message is lost.
+
+Before:
+
+```go
+chromedp.ListenTarget(ctx, func(ev any) {
+	switch ev := ev.(type) {
+	case *runtime.EventConsoleAPICalled:
+		for _, arg := range ev.Args {
+			fmt.Printf("console.%s: %s\n", ev.Type, arg.Value)
+		}
+	case *runtime.EventExceptionThrown:
+		fmt.Println("exception:", ev.ExceptionDetails.Text)
+	}
+})
+```
+
+After:
+
+```go
+messages := chromedp.Console(ctx)
+if err := chromedp.Do(ctx, chromedp.Navigate(url)); err != nil {
+	log.Fatal(err)
+}
+for m, err := range messages {
+	if err != nil {
+		break
+	}
+	fmt.Printf("%s:%d %s\n", m.URL, m.Line+1, m)
+	if m.IsException() {
+		break
+	}
+}
+```
+
 ## What the new API removes
 
 The new API removes the interface `Action`, the type `ActionFunc`, the type `Tasks`, and the funcs `ListenTarget` and `ListenBrowser`. It also removes the types `QueryAction`, `NavigateAction`, `EvaluateAction`, `CallAction`, `PollAction`, `MouseAction`, `KeyAction` and `EmulateAction`. Each type is now `Action[T]`. It also removes the six lookup options that start with `By`, except `ByFunc`. A selector type replaces each of them. `docs/MIGRATION.md` lists every change, with the old name and the new name.
@@ -739,6 +780,7 @@ func ButtonRight(p *input.DispatchMouseEventParams)
 func Call[P, R any](ctx context.Context, cmd cdp.Command[P, R], params P) (R, error)
 func CallBrowser[P, R any](ctx context.Context, cmd cdp.Command[P, R], params P) (R, error)
 func Cancel(ctx context.Context) error
+func Console(ctx context.Context) iter.Seq2[ConsoleMessage, error]
 func DisableGPU(a *ExecAllocator)
 func Do(ctx context.Context, steps ...Action[Void]) error
 func EmulateLandscape(p1 *emulation.SetDeviceMetricsOverrideParams, p2 *emulation.SetTouchEmulationEnabledParams)
@@ -879,6 +921,12 @@ type CSS string
 type CSSAll string
 
 type CallOption = func(params *runtime.CallFunctionOnParams)
+
+type ConsoleMessage struct { ... }
+func (m ConsoleMessage) IsException() bool
+func (m ConsoleMessage) String() string
+
+type ConsoleType string
 
 type Context struct { ... }
 func FromContext(ctx context.Context) *Context
@@ -1035,6 +1083,12 @@ ModifierCtrl
 ModifierMeta
 ModifierShift
 ModifierCommand
+ConsoleLog
+ConsoleDebug
+ConsoleInfo
+ConsoleWarning
+ConsoleError
+ConsoleException
 NodeTypeElement
 NodeTypeAttribute
 NodeTypeText

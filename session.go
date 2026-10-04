@@ -1,6 +1,7 @@
 package chromedp
 
 import (
+	"strconv"
 	"sync"
 
 	"encoding/json/jsontext"
@@ -46,14 +47,67 @@ func (s *subscribers) subscribe(method string) (<-chan jsontext.Value, func()) {
 	}
 }
 
+// subscribeMany is like subscribe for several methods, with one queue. The
+// channel gets the events of all the methods in the order that they arrived.
+// Each value is a JSON object with the fields method and params, because a
+// reader cannot tell the method from the parameters alone.
+func (s *subscribers) subscribeMany(methods ...string) (<-chan jsontext.Value, func()) {
+	sub := &subscription{
+		out:    make(chan jsontext.Value),
+		wake:   make(chan struct{}, 1),
+		done:   make(chan struct{}),
+		tagged: true,
+	}
+	s.mu.Lock()
+	if s.closed {
+		sub.stop()
+	} else {
+		if s.subs == nil {
+			s.subs = make(map[string]map[*subscription]struct{})
+		}
+		for _, method := range methods {
+			if s.subs[method] == nil {
+				s.subs[method] = make(map[*subscription]struct{})
+			}
+			s.subs[method][sub] = struct{}{}
+		}
+	}
+	s.mu.Unlock()
+	go sub.pump()
+
+	return sub.out, func() {
+		s.mu.Lock()
+		for _, method := range methods {
+			delete(s.subs[method], sub)
+		}
+		s.mu.Unlock()
+		sub.stop()
+	}
+}
+
 // publish hands the raw parameters of an event to the subscriptions for the
 // method. It never blocks.
 func (s *subscribers) publish(method string, params jsontext.Value) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for sub := range s.subs[method] {
+		if sub.tagged {
+			sub.push(tagEvent(method, params))
+			continue
+		}
 		sub.push(params)
 	}
+}
+
+// tagEvent wraps the parameters of an event in a JSON object with the method.
+func tagEvent(method string, params jsontext.Value) jsontext.Value {
+	b := append([]byte(`{"method":`), strconv.Quote(method)...)
+	b = append(b, `,"params":`...)
+	if len(params) == 0 {
+		params = jsontext.Value("null")
+	}
+	b = append(b, params...)
+	return append(b, '}')
 }
 
 // close ends all subscriptions, and makes later subscriptions end at once. A
@@ -78,6 +132,9 @@ type subscription struct {
 	out  chan jsontext.Value
 	wake chan struct{}
 	done chan struct{}
+
+	// tagged makes publish wrap each event with its method.
+	tagged bool
 
 	mu       sync.Mutex
 	queue    []jsontext.Value
