@@ -72,6 +72,20 @@ func setupExecAllocator(opts ...ExecAllocatorOption) *ExecAllocator {
 // [VisibleWindow] to a copy of the list, or give [WithVisibleWindow] to
 // NewContext.
 //
+// The list sets disable-dev-shm-usage to true. Chrome then keeps the files of
+// its shared memory in the temporary directory, such as /tmp, and not in
+// /dev/shm. The flag is on because /dev/shm is small in many containers, for
+// example 64 MB in a default Docker container, and Chrome crashes when it fills
+// the space. The cost is that these files are file-backed memory in the
+// temporary directory, which can be slower, and which a program that runs for a
+// long time and opens many pages can see as growing memory. If /dev/shm is large
+// enough, turn the flag off with Flag("disable-dev-shm-usage", false) after the
+// default options:
+//
+//	opts := append(chromedp.DefaultExecAllocatorOptions[:],
+//		chromedp.Flag("disable-dev-shm-usage", false),
+//	)
+//
 // [ExampleExecAllocator]: https://pkg.go.dev/github.com/chromedp/chromedp#example-ExecAllocator
 var DefaultExecAllocatorOptions = [...]ExecAllocatorOption{
 	NoFirstRun,

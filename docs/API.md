@@ -673,6 +673,18 @@ defer tcancel()
 err := chromedp.Do(tctx, chromedp.Navigate(url)) // only this call has the timeout
 ```
 
+### 22. Turn off disable-dev-shm-usage
+
+`DefaultExecAllocatorOptions` sets `disable-dev-shm-usage` to true, so that Chrome keeps the files of its shared memory in the temporary directory and not in `/dev/shm`. The flag is on because `/dev/shm` is small in many containers, and Chrome crashes when it fills the space. The cost is file-backed memory in the temporary directory, which can be slower, and which a program that runs for a long time can see as growing memory. If `/dev/shm` is large enough, set the flag to false after the default options. The old API had the same default, so this example has no Before block.
+
+```go
+opts := append(chromedp.DefaultExecAllocatorOptions[:],
+	chromedp.Flag("disable-dev-shm-usage", false),
+)
+allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+defer cancel()
+```
+
 ## What the new API removes
 
 The new API removes the interface `Action`, the type `ActionFunc`, the type `Tasks`, and the funcs `ListenTarget` and `ListenBrowser`. It also removes the types `QueryAction`, `NavigateAction`, `EvaluateAction`, `CallAction`, `PollAction`, `MouseAction`, `KeyAction` and `EmulateAction`. Each type is now `Action[T]`. It also removes the six lookup options that start with `By`, except `ByFunc`. A selector type replaces each of them. `docs/MIGRATION.md` lists every change, with the old name and the new name.

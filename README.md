@@ -311,6 +311,28 @@ defer tcancel()
 err := chromedp.Do(tctx, chromedp.Navigate(url)) // only this call has the timeout
 ```
 
+> Why does chromedp pass disable-dev-shm-usage, and can I turn it off?
+
+`DefaultExecAllocatorOptions` sets `disable-dev-shm-usage` to true. Chrome then
+keeps the files of its shared memory in the temporary directory, such as `/tmp`,
+and not in `/dev/shm`. The flag is on because `/dev/shm` is small in many
+containers (64 MB in a default Docker container), and Chrome crashes when it
+fills the space.
+
+The cost is that the shared memory files are file-backed memory in the temporary
+directory. They can be slower, and a program that runs for a long time and opens
+many pages can see growing memory. If `/dev/shm` is large enough, for example a
+memory volume that you mount in a container, turn the flag off after the default
+options:
+
+```go
+opts := append(chromedp.DefaultExecAllocatorOptions[:],
+	chromedp.Flag("disable-dev-shm-usage", false),
+)
+allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
+defer cancel()
+```
+
 > I want to use chromedp on a headless environment
 
 Run the Go program that uses `chromedp` inside the
