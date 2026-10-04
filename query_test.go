@@ -475,6 +475,8 @@ func TestText(t *testing.T) {
 		textTest(ctx, JSPath(`document.querySelector("#form > span:nth-child(2)")`), "keyword"),
 		textTest(ctx, ID("#inner-hidden"), "this is"),
 		textTest(ctx, ID("#hidden"), ""),
+		// A search for plain text finds a text node, and not an element.
+		textTest(ctx, Search("keyword"), "keyword"),
 	}
 
 	for i, test := range tests {

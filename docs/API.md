@@ -829,6 +829,7 @@ func EmulateMobile(p1 *emulation.SetDeviceMetricsOverrideParams, p2 *emulation.S
 func EmulatePortrait(p1 *emulation.SetDeviceMetricsOverrideParams, p2 *emulation.SetTouchEmulationEnabledParams)
 func EmulateTouch(p1 *emulation.SetDeviceMetricsOverrideParams, p2 *emulation.SetTouchEmulationEnabledParams)
 func EvalAsValue(p *runtime.EvaluateParams)
+func EvalAwaitPromise(p *runtime.EvaluateParams)
 func EvalIgnoreExceptions(p *runtime.EvaluateParams)
 func EvalWithCommandLineAPI(p *runtime.EvaluateParams)
 func Events[E any](ctx context.Context, ev cdp.Event[E]) iter.Seq2[E, error]

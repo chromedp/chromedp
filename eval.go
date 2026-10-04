@@ -1,6 +1,7 @@
 package chromedp
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"reflect"
@@ -26,7 +27,9 @@ import (
 // JSON-encoded). Evaluate then decodes it into a value of type T. Only a chan,
 // func, interface, map, pointer, or slice type can be nil. When the script
 // result is "undefined" or "null" and T cannot be nil, the action returns
-// [ErrJSUndefined] or [ErrJSNull] respectively.
+// [ErrJSUndefined] or [ErrJSNull] respectively. The expression `null` gives
+// [ErrJSNull] for an int, and a nil pointer for a *int. The expression
+// `Promise.resolve(1)` needs the option [EvalAwaitPromise].
 //
 // For example:
 //
@@ -83,7 +86,7 @@ func parseRemoteObject[T any](v *runtime.RemoteObject) (T, error) {
 	}
 
 	value := v.Value
-	if value == nil {
+	if value == nil || isJSONNull(value) {
 		switch reflect.TypeFor[T]().Kind() {
 		// Common kinds that can be nil.
 		case reflect.Pointer, reflect.Map, reflect.Slice:
@@ -103,6 +106,11 @@ func parseRemoteObject[T any](v *runtime.RemoteObject) (T, error) {
 
 	err := json.Unmarshal(value, &res)
 	return res, err
+}
+
+// isJSONNull reports whether value is the JSON literal null.
+func isJSONNull(value []byte) bool {
+	return string(bytes.TrimSpace(value)) == "null"
 }
 
 // EvaluateAsDevTools is an action that evaluates a JavaScript expression as
@@ -140,6 +148,17 @@ func EvalWithCommandLineAPI(p *runtime.EvaluateParams) {
 // exceptions.
 func EvalIgnoreExceptions(p *runtime.EvaluateParams) {
 	p.Silent = new(true)
+}
+
+// EvalAwaitPromise is an evaluate option that makes the evaluation wait for a
+// promise that the expression returns, and use its result. A promise that is
+// rejected makes the action return an [*ExceptionError]. Without the option,
+// the result of an expression that returns a promise is the promise object, and
+// not its value.
+//
+//	v, err := chromedp.Run(ctx, chromedp.Evaluate[string](`fetch("/api").then(r => r.text())`, chromedp.EvalAwaitPromise))
+func EvalAwaitPromise(p *runtime.EvaluateParams) {
+	p.AwaitPromise = new(true)
 }
 
 // EvalAsValue is an evaluate option that makes the evaluation encode the
