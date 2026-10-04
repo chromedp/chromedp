@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"sync/atomic"
 	"syscall"
@@ -527,3 +528,111 @@ var killedText = func() string {
 	}
 	return "signal: killed"
 }()
+
+// commandArgs starts a browser with a program that does not exist and returns the
+// arguments that ModifyCmdFunc saw. Allocate fails after it, which the test
+// ignores.
+func commandArgs(t *testing.T, opts ...ExecAllocatorOption) []string {
+	t.Helper()
+
+	var args []string
+	opts = append(opts,
+		ExecPath("/do-not-run-chrome"),
+		ModifyCmdFunc(func(cmd *exec.Cmd) { args = slices.Clone(cmd.Args[1:]) }),
+	)
+	allocCtx, cancel := NewExecAllocator(context.Background(), opts...)
+	defer cancel()
+	ctx, cancel := NewContext(allocCtx)
+	defer cancel()
+	if err := Do(ctx); err == nil {
+		t.Fatal("expected an error for a program that does not exist")
+	}
+	if args == nil {
+		t.Fatal("ModifyCmdFunc did not run")
+	}
+	return args
+}
+
+// TestFlagOrder checks that the arguments of the command keep the order of the
+// flags. Chrome needs --flag-switches-begin and --flag-switches-end around the
+// switches of chrome://flags. See the issue 1483.
+func TestFlagOrder(t *testing.T) {
+	t.Parallel()
+
+	opts := append(slices.Clone(DefaultExecAllocatorOptions[:]),
+		Flag("flag-switches-begin", true),
+		Flag("disable-features", "IPH_DemoMode,UserEducationExperienceVersion2"),
+		Flag("flag-switches-end", true),
+	)
+	args := commandArgs(t, opts...)
+
+	// The default flags come first in their listed order. Setting
+	// disable-features again keeps its first place with the new value.
+	want := []string{
+		"--no-first-run",
+		"--no-default-browser-check",
+		"--headless",
+		"--hide-scrollbars",
+		"--mute-audio",
+		"--disable-background-networking",
+		"--enable-features=NetworkService,NetworkServiceInProcess",
+		"--disable-background-timer-throttling",
+		"--disable-backgrounding-occluded-windows",
+		"--disable-breakpad",
+		"--disable-client-side-phishing-detection",
+		"--disable-default-apps",
+		"--disable-dev-shm-usage",
+		"--disable-extensions",
+		"--disable-features=IPH_DemoMode,UserEducationExperienceVersion2",
+		"--disable-hang-monitor",
+		"--disable-ipc-flooding-protection",
+		"--disable-popup-blocking",
+		"--disable-prompt-on-repost",
+		"--disable-renderer-backgrounding",
+		"--disable-sync",
+		"--force-color-profile=srgb",
+		"--metrics-recording-only",
+		"--safebrowsing-disable-auto-update",
+		"--enable-automation",
+		"--password-store=basic",
+		"--use-mock-keychain",
+		"--flag-switches-begin",
+		"--flag-switches-end",
+	}
+	if len(args) < len(want) || !slices.Equal(args[:len(want)], want) {
+		t.Fatalf("the flags are not in order:\nwant %v\ngot  %v", want, args)
+	}
+}
+
+func TestFlagOrderNewFlags(t *testing.T) {
+	t.Parallel()
+
+	args := commandArgs(t,
+		Flag("a", true),
+		Flag("flag-switches-begin", true),
+		Flag("b", "1"),
+		Flag("c", true),
+		Flag("flag-switches-end", true),
+		Flag("d", true),
+		Flag("b", "2"),
+		Flag("c", false),
+	)
+	// A flag that is set again keeps its place. A false boolean flag leaves
+	// the command line.
+	want := []string{"--a", "--flag-switches-begin", "--b=2", "--flag-switches-end", "--d"}
+	if len(args) < len(want) || !slices.Equal(args[:len(want)], want) {
+		t.Fatalf("want the flags %v first, got %v", want, args)
+	}
+}
+
+func TestFlagOrderAfterVisibleWindow(t *testing.T) {
+	t.Parallel()
+
+	a := setupExecAllocator(Headless, Flag("x", true), VisibleWindow, Flag("y", true))
+	if want := []string{"x", "start-maximized", "y"}; !slices.Equal(a.flagOrder, want) {
+		t.Fatalf("want the order %v, got %v", want, a.flagOrder)
+	}
+	if len(a.flagOrder) != len(a.initFlags) {
+		t.Fatalf("the order has %d names and the map has %d flags", len(a.flagOrder), len(a.initFlags))
+	}
+}

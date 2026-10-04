@@ -10,6 +10,7 @@ in [`decisions/`](decisions/README.md).
 These commits come after the release v0.18.0. Each one has its own test, and a documentation change has none.
 
 - Added: `Tap` and `TapXY` send a touch tap (issue 1174).
+- Fixed: the exec allocator keeps the order of the flags, so `--flag-switches-begin` and `--flag-switches-end` can surround the switches that Chrome needs between them (issue 1483).
 
 ## Changes in v0.18.0
 

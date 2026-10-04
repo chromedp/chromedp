@@ -302,3 +302,4 @@ a variable, to set one.
 These names are new, and no old code needs a change, unless a bullet says so.
 
 - `Tap` and `TapXY` are new. They send a touch tap, a `touchStart` event and then a `touchEnd` event, and not mouse events. `Tap` takes a selector and the query options, like `Click`. Turn on touch emulation with `EmulateTouch`, or the page gets no touch events. See example 16 in `docs/API.md`.
+- The exec allocator now passes the flags to the browser in the order of the `Flag` options, and not in a random order. A flag that you set again keeps its first place with the new value. The flags of `DefaultExecAllocatorOptions` come first in their listed order. Put `Flag("flag-switches-begin", true)` and `Flag("flag-switches-end", true)` around the switches that Chrome must take as the switches of `chrome://flags`. The names and the use of the options are the same.

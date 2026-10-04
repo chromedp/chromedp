@@ -150,6 +150,12 @@ type ExecAllocator struct {
 	initFlags map[string]any
 	initEnv   []string
 
+	// flagOrder holds the names of initFlags in the order of their first
+	// set. Chrome needs some flags in order, such as --flag-switches-begin
+	// and --flag-switches-end around the switches of chrome://flags, and a
+	// map has no order.
+	flagOrder []string
+
 	// dialer is set by WithDialer. The allocator then connects to the browser
 	// with a websocket instead of a pipe.
 	dialer Dialer
@@ -427,8 +433,8 @@ func startCmd(cmd *exec.Cmd) *cmdRun {
 // flagArgs returns the command line arguments for the flags of the allocator.
 func (a *ExecAllocator) flagArgs() ([]string, error) {
 	var args []string
-	for name, value := range a.initFlags {
-		switch value := value.(type) {
+	for _, name := range a.flagOrder {
+		switch value := a.initFlags[name].(type) {
 		case string:
 			args = append(args, fmt.Sprintf("--%s=%s", name, value))
 		case bool:
@@ -677,10 +683,33 @@ func execLocations(goos string) []string {
 // Flag is a generic command line option that passes a flag to Chrome. If the
 // value is a string, Flag passes --name=value. If it is a boolean, Flag passes
 // --name when the value is true.
+//
+// The flags go to Chrome in the order of the options. Set a flag again, and it
+// keeps its first place with the new value. This order matters for the flags
+// --flag-switches-begin and --flag-switches-end, which must surround the
+// switches that Chrome takes as the switches of chrome://flags. When you add to
+// a copy of [DefaultExecAllocatorOptions], the default flags come first.
 func Flag(name string, value any) ExecAllocatorOption {
 	return func(a *ExecAllocator) {
-		a.initFlags[name] = value
+		a.setFlag(name, value)
 	}
+}
+
+// setFlag sets the flag name. A flag that is set again keeps its place.
+func (a *ExecAllocator) setFlag(name string, value any) {
+	if _, ok := a.initFlags[name]; !ok {
+		a.flagOrder = append(a.flagOrder, name)
+	}
+	a.initFlags[name] = value
+}
+
+// deleteFlag removes the flag name, if it is set.
+func (a *ExecAllocator) deleteFlag(name string) {
+	if _, ok := a.initFlags[name]; !ok {
+		return
+	}
+	delete(a.initFlags, name)
+	a.flagOrder = slices.DeleteFunc(a.flagOrder, func(n string) bool { return n == name })
 }
 
 // Env sets environment variables, in the form NAME=value, for the new Chrome
@@ -783,7 +812,7 @@ func VisibleWindow(a *ExecAllocator) {
 		"enable-automation",
 		"disable-extensions",
 	} {
-		delete(a.initFlags, name)
+		a.deleteFlag(name)
 	}
 	Flag("start-maximized", true)(a)
 	a.visibleWindow = true
