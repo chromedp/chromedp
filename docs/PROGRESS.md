@@ -5,6 +5,12 @@ crashes can resume. Update it when a piece of work starts or ends. Work that
 is known and not done goes in [`BACKLOG.md`](BACKLOG.md), and a decision goes
 in [`decisions/`](decisions/README.md).
 
+## Changes since v0.18.0
+
+These commits come after the release v0.18.0. Each one has its own test, and a documentation change has none.
+
+- Added: `Tap` and `TapXY` send a touch tap (issue 1174).
+
 ## Changes in v0.18.0
 
 These commits are in the release v0.18.0. Each one has its own test.

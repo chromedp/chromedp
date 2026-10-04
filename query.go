@@ -1116,6 +1116,29 @@ func Click[S Selectable](sel S, opts ...QueryOption) Action[Void] {
 	}, withOpts(opts, NodeVisible)...)
 }
 
+// Tap is an element query action that sends a touch tap to the center of the
+// first element node matching the selector. The action scrolls the node into
+// view, and then sends a touchStart event and a touchEnd event. See [TapXY].
+//
+// The browser sends the touch events and the click event to the page only when
+// touch emulation is on. Use [EmulateViewport] with [EmulateTouch] for it.
+func Tap[S Selectable](sel S, opts ...QueryOption) Action[Void] {
+	return queryDo(sel, func(ctx context.Context, t *Target, nodes []*Node) error {
+		n, err := first(sel, nodes)
+		if err != nil {
+			return err
+		}
+
+		x, y, err := nodeCenter(ctx, t, n)
+		if err != nil {
+			return err
+		}
+
+		_, err = TapXY(x, y)(ctx, t)
+		return err
+	}, withOpts(opts, NodeVisible)...)
+}
+
 // DoubleClick is an element query action that sends a mouse double click event to the
 // first element node matching the selector.
 func DoubleClick[S Selectable](sel S, opts ...QueryOption) Action[Void] {

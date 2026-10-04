@@ -296,3 +296,9 @@ a variable, to set one.
   the plain string that older versions of Chrome send.
 - `cdp.ErrInvalidContext` is removed from `cdproto`. `chromedp.ErrInvalidContext` is the
   error of this package.
+
+## Changes since v0.18.0
+
+These names are new, and no old code needs a change, unless a bullet says so.
+
+- `Tap` and `TapXY` are new. They send a touch tap, a `touchStart` event and then a `touchEnd` event, and not mouse events. `Tap` takes a selector and the query options, like `Click`. Turn on touch emulation with `EmulateTouch`, or the page gets no touch events. See example 16 in `docs/API.md`.

@@ -1,0 +1,21 @@
+<html>
+<head>
+<title>tap</title>
+<style>
+body { margin: 0; }
+#target { width: 100px; height: 40px; background: #cde; }
+#spacer { height: 3000px; }
+</style>
+</head>
+<body>
+<div id="spacer"></div>
+<button id="target">tap me</button>
+<script>
+var events = [];
+var target = document.getElementById('target');
+['touchstart', 'touchend', 'click'].forEach(function (name) {
+  target.addEventListener(name, function () { events.push(name); });
+});
+</script>
+</body>
+</html>

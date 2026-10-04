@@ -78,35 +78,71 @@ func MouseClickXY(x, y float64, opts ...MouseOption) Action[Void] {
 // of the window.
 func MouseClickNode(n *Node, opts ...MouseOption) Action[Void] {
 	return Func(func(ctx context.Context, t *Target) error {
-		if _, err := cdp.Call(ctx, t, dom.ScrollIntoViewIfNeeded, dom.ScrollIntoViewIfNeededParams{NodeID: n.NodeID}); err != nil {
-			return err
-		}
-
-		res, err := cdp.Call(ctx, t, dom.GetContentQuads, dom.GetContentQuadsParams{NodeID: n.NodeID})
+		x, y, err := nodeCenter(ctx, t, n)
 		if err != nil {
 			return err
 		}
 
-		if len(res.Quads) == 0 {
-			return ErrInvalidDimensions
-		}
-
-		content := res.Quads[0]
-
-		c := len(content)
-		if c%2 != 0 || c < 1 {
-			return ErrInvalidDimensions
-		}
-
-		var x, y float64
-		for i := 0; i < c; i += 2 {
-			x += content[i]
-			y += content[i+1]
-		}
-		x /= float64(c / 2)
-		y /= float64(c / 2)
-
 		_, err = MouseClickXY(x, y, opts...)(ctx, t)
+		return err
+	})
+}
+
+// nodeCenter scrolls the node into view and returns the center of its first
+// content quad.
+func nodeCenter(ctx context.Context, t *Target, n *Node) (x, y float64, err error) {
+	if _, err := cdp.Call(ctx, t, dom.ScrollIntoViewIfNeeded, dom.ScrollIntoViewIfNeededParams{NodeID: n.NodeID}); err != nil {
+		return 0, 0, err
+	}
+
+	res, err := cdp.Call(ctx, t, dom.GetContentQuads, dom.GetContentQuadsParams{NodeID: n.NodeID})
+	if err != nil {
+		return 0, 0, err
+	}
+
+	if len(res.Quads) == 0 {
+		return 0, 0, ErrInvalidDimensions
+	}
+
+	content := res.Quads[0]
+
+	c := len(content)
+	if c%2 != 0 || c < 1 {
+		return 0, 0, ErrInvalidDimensions
+	}
+
+	for i := 0; i < c; i += 2 {
+		x += content[i]
+		y += content[i+1]
+	}
+	return x / float64(c/2), y / float64(c/2), nil
+}
+
+// TapXY is an action that sends a touch tap to the X, Y location. It sends a
+// touchStart event and then a touchEnd event with one touch point. The browser
+// turns the touch into a click event, if the page runs with touch emulation.
+// See [EmulateTouch].
+func TapXY(x, y float64) Action[Void] {
+	return Func(func(ctx context.Context, t *Target) error {
+		p := input.DispatchTouchEventParams{
+			Type: input.DispatchTouchEventTypeTouchStart,
+			TouchPoints: []*input.TouchPoint{{
+				X:       x,
+				Y:       y,
+				RadiusX: new(1.0),
+				RadiusY: new(1.0),
+				Force:   new(1.0),
+				ID:      new(0.0),
+			}},
+		}
+		if _, err := cdp.Call(ctx, t, input.DispatchTouchEvent, p); err != nil {
+			return err
+		}
+
+		// A touchEnd event has no touch points.
+		p.Type = input.DispatchTouchEventTypeTouchEnd
+		p.TouchPoints = []*input.TouchPoint{}
+		_, err := cdp.Call(ctx, t, input.DispatchTouchEvent, p)
 		return err
 	})
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -409,5 +410,56 @@ func keyEventNodeTest[S Selectable](sel S, exp string) func(t *testing.T) {
 		if value != exp {
 			t.Fatalf("expected to have value %s, got: %s", exp, value)
 		}
+	}
+}
+
+func TestTap(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name string
+		tap  Action[Void]
+	}{
+		{"selector", Tap(ID("target"))},
+		{"xy", Func(func(ctx context.Context, t *Target) error {
+			// Scroll the button into view, and then tap the center that the
+			// page reports.
+			if err := Do(ctx, ScrollIntoView(ID("target"))); err != nil {
+				return err
+			}
+			xy, err := Run(ctx, Evaluate[[]float64](`(function() {
+				var r = target.getBoundingClientRect();
+				return [r.x + r.width / 2, r.y + r.height / 2];
+			})()`))
+			if err != nil {
+				return err
+			}
+			_, err = TapXY(xy[0], xy[1])(ctx, t)
+			return err
+		})},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			ctx, cancel := testAllocate(t, "tap.html")
+			defer cancel()
+
+			if err := Do(ctx, EmulateViewport(800, 600, EmulateMobile, EmulateTouch)); err != nil {
+				t.Fatalf("got error: %v", err)
+			}
+			if err := Do(ctx, test.tap); err != nil {
+				t.Fatalf("got error: %v", err)
+			}
+
+			got, err := Run(ctx, Evaluate[[]string]("events"))
+			if err != nil {
+				t.Fatalf("got error: %v", err)
+			}
+			want := []string{"touchstart", "touchend", "click"}
+			if !slices.Equal(got, want) {
+				t.Fatalf("expected events %v, got: %v", want, got)
+			}
+		})
 	}
 }

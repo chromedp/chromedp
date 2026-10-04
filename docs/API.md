@@ -546,6 +546,20 @@ fmt.Println("attach to", wsURL, "profile", dir)
 
 Both options only apply when `NewContext` builds the default allocator. For an allocator that you make, add the allocator options `VisibleWindow` and `KeepOpen` to `NewExecAllocator`. `KeepOpen` also needs the allocator option `remote.WebSocket`, or `NewExecAllocator` returns `ErrNoDialer` at the first `Run`. `docs/decisions/2026-10-03-a-visible-window-is-an-opt-in.md` explains the choices.
 
+### 16. Tap on a touch screen
+
+`Click` sends mouse events. A page that listens for `touchstart` and `touchend` needs a touch tap. `Tap` scrolls the first element that matches the selector into view, finds its center as `Click` does, and sends a `touchStart` event and a `touchEnd` event. `TapXY` does the same for a point. The browser sends the touch events and the click event that follows them only when touch emulation is on, so run `EmulateViewport` with `EmulateTouch` first. This example has no Before block, because the old API had no touch action.
+
+```go
+if err := chromedp.Do(ctx,
+	chromedp.EmulateViewport(375, 812, chromedp.EmulateMobile, chromedp.EmulateTouch),
+	chromedp.Navigate(url),
+	chromedp.Tap(chromedp.CSS("#menu")),
+); err != nil {
+	log.Fatal(err)
+}
+```
+
 ## What the new API removes
 
 The new API removes the interface `Action`, the type `ActionFunc`, the type `Tasks`, and the funcs `ListenTarget` and `ListenBrowser`. It also removes the types `QueryAction`, `NavigateAction`, `EvaluateAction`, `CallAction`, `PollAction`, `MouseAction`, `KeyAction` and `EmulateAction`. Each type is now `Action[T]`. It also removes the six lookup options that start with `By`, except `ByFunc`. A selector type replaces each of them. `docs/MIGRATION.md` lists every change, with the old name and the new name.
@@ -667,6 +681,8 @@ func Sleep(d time.Duration) Action[Void]
 func Steps(steps ...Action[Void]) Action[Void]
 func Stop() Action[Void]
 func Submit[S Selectable](sel S, opts ...QueryOption) Action[Void]
+func Tap[S Selectable](sel S, opts ...QueryOption) Action[Void]
+func TapXY(x, y float64) Action[Void]
 func Text[S Selectable](sel S, opts ...QueryOption) Action[string]
 func TextContent[S Selectable](sel S, opts ...QueryOption) Action[string]
 func Title() Action[string]
