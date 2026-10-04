@@ -1816,6 +1816,44 @@ func TestSelectorByFunc(t *testing.T) {
 	}
 }
 
+// byAttribute is a custom lookup like the example in the documentation of
+// Selectable. It finds the elements that have an attribute with a value.
+func byAttribute(name, value string) QueryOption {
+	return ByFunc(func(ctx context.Context, t *Target, n *Node) ([]cdp.NodeID, error) {
+		res, err := cdp.Call(ctx, t, dom.QuerySelectorAll, dom.QuerySelectorAllParams{
+			NodeID:   n.NodeID,
+			Selector: fmt.Sprintf("[%s=%q]", name, value),
+		})
+		return res.NodeIDs, err
+	})
+}
+
+func TestByFuncCustomLookup(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "selectors.html")
+	defer cancel()
+
+	// The selector is a label, and the func gives the nodes.
+	nodes, err := Run(ctx, Nodes("", byAttribute("class", "item")))
+	if err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	if len(nodes) != 2 {
+		t.Fatalf("want 2 nodes, got %d", len(nodes))
+	}
+	text, err := Run(ctx, Text("", byAttribute("id", "three")))
+	if err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	if text != "third" {
+		t.Errorf("want text %q, got %q", "third", text)
+	}
+	if err := Do(ctx, Click("", byAttribute("id", "three"))); err != nil {
+		t.Errorf("Click: %v", err)
+	}
+}
+
 func TestSelectorNoMatchError(t *testing.T) {
 	t.Parallel()
 

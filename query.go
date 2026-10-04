@@ -21,6 +21,27 @@ import (
 // Selectable is what an element query accepts as the selector. The type of the
 // selector chooses the lookup. A plain string is a [Search]. A named string
 // type that this package does not define also counts as a [Search].
+//
+// The set of selector types is closed. A type that you define cannot add a new
+// lookup. For a custom lookup, use the option [ByFunc]. It replaces the lookup
+// of the selector with a func that receives the [Target] of the tab and the
+// [Node] where the query starts, and returns the node IDs of the elements. The
+// target is a session for [cdp.Call]. The start node is the root of the
+// document, or the node of [FromNode]. The selector is then only a label in
+// error messages, so pass "" or any string. For example, this lookup finds the
+// elements with a data-testid attribute:
+//
+//	func byTestID(id string) chromedp.QueryOption {
+//		return chromedp.ByFunc(func(ctx context.Context, t *chromedp.Target, n *chromedp.Node) ([]cdp.NodeID, error) {
+//			res, err := cdp.Call(ctx, t, dom.QuerySelectorAll, dom.QuerySelectorAllParams{
+//				NodeID:   n.NodeID,
+//				Selector: fmt.Sprintf("[data-testid=%q]", id),
+//			})
+//			return res.NodeIDs, err
+//		})
+//	}
+//
+//	err := chromedp.Do(ctx, chromedp.Click("", byTestID("submit")))
 type Selectable interface {
 	~string | ~[]cdp.NodeID
 }

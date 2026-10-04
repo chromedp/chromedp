@@ -685,6 +685,24 @@ allocCtx, cancel := chromedp.NewExecAllocator(context.Background(), opts...)
 defer cancel()
 ```
 
+### 23. Look up elements in a custom way
+
+The set of selector types is closed. `Selectable` accepts a string type and a `[]cdp.NodeID` type, and a type that you define cannot add a lookup. `ByFunc` is the extension point. It replaces the lookup of the selector with a func. The func receives the `*Target` of the tab, which is a session for `cdp.Call`, and the `*Node` where the query starts. That node is the root of the document, or the node of `FromNode`. The func returns the node IDs of the elements. The selector is then only a label in error messages, so pass `""`. The rest of the query works as usual, so the wait options and the actions apply to the nodes that the func returns. `docs/MIGRATION.md` lists the `ByFunc` change.
+
+```go
+func byTestID(id string) chromedp.QueryOption {
+	return chromedp.ByFunc(func(ctx context.Context, t *chromedp.Target, n *chromedp.Node) ([]cdp.NodeID, error) {
+		res, err := cdp.Call(ctx, t, dom.QuerySelectorAll, dom.QuerySelectorAllParams{
+			NodeID:   n.NodeID,
+			Selector: fmt.Sprintf("[data-testid=%q]", id),
+		})
+		return res.NodeIDs, err
+	})
+}
+
+err := chromedp.Do(ctx, chromedp.Click("", byTestID("submit")))
+```
+
 ## What the new API removes
 
 The new API removes the interface `Action`, the type `ActionFunc`, the type `Tasks`, and the funcs `ListenTarget` and `ListenBrowser`. It also removes the types `QueryAction`, `NavigateAction`, `EvaluateAction`, `CallAction`, `PollAction`, `MouseAction`, `KeyAction` and `EmulateAction`. Each type is now `Action[T]`. It also removes the six lookup options that start with `By`, except `ByFunc`. A selector type replaces each of them. `docs/MIGRATION.md` lists every change, with the old name and the new name.
