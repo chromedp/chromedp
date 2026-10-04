@@ -13,6 +13,7 @@ These commits come after the release v0.18.0. Each one has its own test, and a d
 - Fixed: the exec allocator keeps the order of the flags, so `--flag-switches-begin` and `--flag-switches-end` can surround the switches that Chrome needs between them (issue 1483).
 - Fixed: a call on a `Target` or a `Browser` with a context that never ends hung for ever after the browser died. It returns an error now (issue 1529).
 - Added: the allocator option `NoInheritEnv` starts the browser with only the variables of `Env` (issue 1584).
+- Fixed: `WaitNotPresent` with a `JSPath` that gives null, undefined or an empty `NodeList` never succeeded. A `JSPath` can give a `NodeList` of nodes, and a value that is not a node is an error at once (issue 1600).
 
 ## Changes in v0.18.0
 

@@ -1841,3 +1841,94 @@ func TestSelectorNoMatchError(t *testing.T) {
 		})
 	}
 }
+
+// TestWaitNotPresentJSPath checks that WaitNotPresent succeeds when the JSPath
+// expression gives null, undefined or an empty NodeList. These did not select a
+// node, and the lookup retried until the timeout. See the issue 1600.
+func TestWaitNotPresentJSPath(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "shadow.html")
+	defer cancel()
+	// A failure must not hang the test.
+	ctx, cancel = context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	const (
+		one      = `document.getElementById('host').shadowRoot.querySelector('.mask')`
+		list     = `document.getElementById('host').shadowRoot.querySelectorAll('.item')`
+		optional = `document.querySelector('#none')?.shadowRoot?.querySelectorAll('.item')`
+		missing  = `window.nothingIsHere`
+	)
+
+	// The nodes are present.
+	if err := Do(ctx, WaitVisible(JSPath(one))); err != nil {
+		t.Fatalf("WaitVisible of one node: %v", err)
+	}
+	nodes, err := Run(ctx, Nodes(JSPath(list)))
+	if err != nil {
+		t.Fatalf("Nodes of a NodeList: %v", err)
+	}
+	if len(nodes) != 2 {
+		t.Fatalf("want 2 nodes from the NodeList, got %d", len(nodes))
+	}
+	// A wait for a node that is present must not return for NodeNotPresent
+	// while the node exists.
+	short, shortCancel := context.WithTimeout(ctx, 300*time.Millisecond)
+	err = Do(short, WaitNotPresent(JSPath(one)))
+	shortCancel()
+	if !errors.Is(err, context.DeadlineExceeded) {
+		t.Fatalf("want the deadline while the node is present, got %v", err)
+	}
+
+	// Remove the nodes. The expressions give null and an empty NodeList.
+	if _, err := Run(ctx, Evaluate[any](`removeMask(); removeItems();`)); err != nil {
+		t.Fatal(err)
+	}
+	for name, path := range map[string]string{
+		"null":      one,
+		"empty":     list,
+		"undefined": optional,
+		"missing":   missing,
+	} {
+		if err := Do(ctx, WaitNotPresent(JSPath(path))); err != nil {
+			t.Errorf("WaitNotPresent of %s: %v", name, err)
+		}
+	}
+
+	// The other waits keep waiting for a node. They end with the error of the
+	// context and not with an error of the lookup.
+	short, shortCancel = context.WithTimeout(ctx, 300*time.Millisecond)
+	defer shortCancel()
+	for name, path := range map[string]string{"null": one, "empty": list} {
+		err := Do(short, WaitVisible(JSPath(path)))
+		if !errors.Is(err, context.DeadlineExceeded) {
+			t.Errorf("WaitVisible of %s: want the deadline, got %v", name, err)
+		}
+	}
+}
+
+// TestJSPathWrongValue checks that a JSPath expression that gives a value that
+// is not a node returns an error at once, and does not retry until the timeout.
+func TestJSPathWrongValue(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "shadow.html")
+	defer cancel()
+	ctx, cancel = context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	for name, path := range map[string]string{
+		"number":     `1 + 2`,
+		"string":     `'text'`,
+		"object":     `({})`,
+		"list value": `[1, 2]`,
+	} {
+		for _, wait := range []Action[Void]{WaitVisible(JSPath(path)), WaitNotPresent(JSPath(path))} {
+			err := Do(ctx, wait)
+			if !errors.Is(err, errNotNode) {
+				t.Errorf("%s: want an error for a value that is not a node, got %v", name, err)
+			}
+		}
+	}
+}

@@ -1,0 +1,20 @@
+<html>
+<head>
+<title>shadow</title>
+</head>
+<body>
+<div id="host"></div>
+<script>
+// The host has a shadow tree with a loading mask and two items. The test removes
+// the mask and the items with removeMask and removeItems.
+var root = document.getElementById('host').attachShadow({mode: 'open'});
+root.innerHTML = '<div class="mask">loading</div><ul><li class="item">a</li><li class="item">b</li></ul>';
+function removeMask() {
+  root.querySelector('.mask').remove();
+}
+function removeItems() {
+  root.querySelectorAll('.item').forEach(function (e) { e.remove(); });
+}
+</script>
+</body>
+</html>

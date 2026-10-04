@@ -42,7 +42,7 @@ type CSSAll string
 // uses DOM.querySelector.
 type ID string
 
-// JSPath is a selector for the element that a JavaScript expression gives. It
+// JSPath is a selector for the elements that a JavaScript expression gives. It
 // uses Runtime.evaluate. Use it only with trusted values, because chromedp
 // passes the expression to the browser without a check.
 type JSPath string
@@ -118,7 +118,10 @@ type Selector struct {
 // element in the browser. Use it only with trusted element queries. chromedp
 // passes the query directly to Runtime.evaluate and does not sanitize it. The
 // type is useful for DOM elements that the other types cannot retrieve, such
-// as ShadowDOM elements.
+// as ShadowDOM elements. The expression can give a node, an array or a NodeList
+// of nodes, or null or undefined. Null, undefined and an empty list select no
+// element, so [WaitNotPresent] succeeds and the other waits keep waiting. Any
+// other value is an error, and the query returns it at once.
 //
 // The [NodeIDs] type selects the elements with the given node IDs. It uses
 // DOM.requestChildNodes to retrieve them.
@@ -273,6 +276,10 @@ func (s *Selector) run(ctx context.Context, t *Target, last func(context.Context
 			// response has nothing else that tells them apart. So we have to go
 			// with it.
 			if errors.As(err, &e) && e.Message == "DOM Error while querying" {
+				return true, err
+			}
+			// A JSPath value of the wrong type does not change by itself.
+			if errors.Is(err, errNotNode) {
 				return true, err
 			}
 			return false, nil
@@ -459,12 +466,13 @@ func search(query string) lookupFunc {
 	}
 }
 
-// evaluatePath selects the element that a JavaScript expression gives, by the
-// Runtime.evaluate command.
+// evaluatePath selects the elements that a JavaScript expression gives, by the
+// Runtime.evaluate command. The expression can give a node, an array or a
+// NodeList of nodes, or null or undefined. The last one and an empty list select
+// no element, so that [NodeNotPresent] succeeds and the other conditions wait.
+// Any other value is an error that [Selector.run] does not retry.
 func evaluatePath(expression string) lookupFunc {
 	return func(ctx context.Context, t *Target, n *Node) ([]cdp.NodeID, error) {
-		// set up eval command
-		// execute
 		v, err := cdp.Call(ctx, t, runtime.Evaluate, runtime.EvaluateParams{
 			Expression:            expression,
 			AwaitPromise:          new(true),
@@ -478,18 +486,65 @@ func evaluatePath(expression string) lookupFunc {
 			return nil, &ExceptionError{v.ExceptionDetails}
 		}
 
-		// use the ObjectID from the evaluation to get the nodeID
-		res, err := cdp.Call(ctx, t, dom.RequestNode, dom.RequestNodeParams{ObjectID: v.Result.ObjectID})
+		obj := v.Result
+		switch {
+		case obj.Type == runtime.RemoteObjectTypeUndefined, obj.Subtype == runtime.RemoteObjectSubtypeNull:
+			return []cdp.NodeID{}, nil
+		case obj.Subtype == runtime.RemoteObjectSubtypeNode && obj.ObjectID != "":
+			return requestNode(ctx, t, obj.ObjectID)
+		case obj.Subtype != runtime.RemoteObjectSubtypeArray || obj.ObjectID == "":
+			return nil, fmt.Errorf("JSPath %q gave a %s and not a node: %w", expression, valueKind(obj), errNotNode)
+		}
+
+		// An array or a NodeList: its indexes are its own properties.
+		props, err := cdp.Call(ctx, t, runtime.GetProperties, runtime.GetPropertiesParams{
+			ObjectID:      obj.ObjectID,
+			OwnProperties: new(true),
+		})
 		if err != nil {
 			return nil, err
 		}
-
-		if res.NodeID == EmptyNodeID {
-			return []cdp.NodeID{}, nil
+		ids := []cdp.NodeID{}
+		for _, p := range props.Result {
+			if _, err := strconv.ParseUint(p.Name, 10, 32); err != nil || p.Value == nil {
+				continue
+			}
+			if p.Value.Subtype != runtime.RemoteObjectSubtypeNode {
+				return nil, fmt.Errorf("JSPath %q gave a list with a value that is not a node: %w", expression, errNotNode)
+			}
+			nodeIDs, err := requestNode(ctx, t, p.Value.ObjectID)
+			if err != nil {
+				return nil, err
+			}
+			ids = append(ids, nodeIDs...)
 		}
-
-		return []cdp.NodeID{res.NodeID}, nil
+		return ids, nil
 	}
+}
+
+// valueKind names the kind of a value for an error message.
+func valueKind(obj *runtime.RemoteObject) string {
+	if obj.ClassName != "" {
+		return obj.ClassName
+	}
+	return string(obj.Type)
+}
+
+// errNotNode marks the error of a JSPath expression that gave a value that is
+// not a node, an array or NodeList of nodes, null or undefined. A retry gives
+// the same error, so [Selector.run] returns it at once.
+var errNotNode = errors.New("not a node")
+
+// requestNode returns the ID of the node that the object is.
+func requestNode(ctx context.Context, t *Target, id runtime.RemoteObjectID) ([]cdp.NodeID, error) {
+	res, err := cdp.Call(ctx, t, dom.RequestNode, dom.RequestNodeParams{ObjectID: id})
+	if err != nil {
+		return nil, err
+	}
+	if res.NodeID == EmptyNodeID {
+		return []cdp.NodeID{}, nil
+	}
+	return []cdp.NodeID{res.NodeID}, nil
 }
 
 // requestNodes selects the elements with the given node IDs. It uses the
