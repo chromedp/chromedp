@@ -559,6 +559,22 @@ func TestDetachOnCancel(t *testing.T) {
 		}
 		return false
 	}
+	// waitGone polls until the tab is not listed, for up to 10 seconds. The
+	// browser closes the tab a short time after the cancellation, so a slow
+	// machine needs a wait with a condition and not a fixed one.
+	waitGone := func(id target.ID) bool {
+		t.Helper()
+		deadline := time.Now().Add(10 * time.Second)
+		for {
+			if !listed(id) {
+				return true
+			}
+			if time.Now().After(deadline) {
+				return false
+			}
+			time.Sleep(20 * time.Millisecond)
+		}
+	}
 	// newTab makes a tab with the options and returns its ID and the cancel
 	// func of its context.
 	newTab := func(opts ...chromedp.ContextOption) (target.ID, context.CancelFunc) {
@@ -577,7 +593,7 @@ func TestDetachOnCancel(t *testing.T) {
 			t.Fatal("the new tab is not listed")
 		}
 		cancel()
-		if listed(id) {
+		if !waitGone(id) {
 			t.Fatal("the tab is still listed after the cancellation, want it closed")
 		}
 	})
@@ -597,7 +613,7 @@ func TestDetachOnCancel(t *testing.T) {
 		}
 		// This context closes the tab, because it has no option.
 		cancel()
-		if listed(id) {
+		if !waitGone(id) {
 			t.Fatal("the tab is still listed after the cancellation of the second context")
 		}
 	})

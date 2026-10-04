@@ -1938,10 +1938,12 @@ func TestWaitNotPresentJSPath(t *testing.T) {
 
 	// The other waits keep waiting for a node. They end with the error of the
 	// context and not with an error of the lookup.
-	short, shortCancel = context.WithTimeout(ctx, 300*time.Millisecond)
-	defer shortCancel()
+	// Each wait has its own context, so that one wait cannot run on a context
+	// that the other wait used up.
 	for name, path := range map[string]string{"null": one, "empty": list} {
+		short, shortCancel := context.WithTimeout(ctx, 300*time.Millisecond)
 		err := Do(short, WaitVisible(JSPath(path)))
+		shortCancel()
 		if !errors.Is(err, context.DeadlineExceeded) {
 			t.Errorf("WaitVisible of %s: want the deadline, got %v", name, err)
 		}

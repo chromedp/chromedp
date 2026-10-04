@@ -174,14 +174,33 @@ func TestConsoleEndsWithContext(t *testing.T) {
 
 	ctx, cancel := testAllocate(t, "console.html")
 	defer cancel()
-	cctx, ccancel := context.WithCancel(ctx)
+	// A failure must not hang the test.
+	tctx, tcancel := context.WithTimeout(ctx, 30*time.Second)
+	defer tcancel()
+	cctx, ccancel := context.WithCancel(tctx)
+	defer ccancel()
 
 	messages := Console(cctx)
-	time.AfterFunc(100*time.Millisecond, ccancel)
-	for _, err := range messages {
-		if !errors.Is(err, context.Canceled) {
-			t.Fatalf("expected the error of the context, got: %v", err)
+	if err := Do(ctx, Click(ID("run"))); err != nil {
+		t.Fatal(err)
+	}
+	var count int
+	var last error
+	for m, err := range messages {
+		last = err
+		if err != nil {
+			break
 		}
+		count++
+		if m.Text == "done" {
+			ccancel()
+		}
+	}
+	if count == 0 {
+		t.Fatal("expected at least one message before the end")
+	}
+	if !errors.Is(last, context.Canceled) {
+		t.Fatalf("expected the error of the context after %d messages, got: %v", count, last)
 	}
 }
 
