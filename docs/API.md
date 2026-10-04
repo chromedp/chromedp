@@ -786,6 +786,20 @@ err := chromedp.Do(ctx,
 // In the page: await greet({name: "Ann"}) gives "hello Ann", and await sum(1, 2, 3) gives 6.
 ```
 
+### 27. Print to PDF with options
+
+`PrintToPDF` prints the page to a PDF file and returns the bytes. The old code and example 11 built `page.PrintToPDFParams` by hand. The options set the common fields: `PDFLandscape`, `PDFPaper` with a size such as `PaperA4`, `PDFMargin` and `PDFMargins` in inches, `PDFScale`, `PDFPageRanges`, `PDFPreferCSSPageSize`, `PDFPrintBackground`, `PDFHeaderTemplate` and `PDFFooterTemplate`, `PDFOutlineAndTagged` and `PDFStream`. A header template or a footer template also turns on the header and the footer. When you give only one of them, the browser prints its own text for the other, so give `<span></span>` to print nothing. A `PDFOption` is a func that changes the `page.PrintToPDFParams`, so a program can write its own option for a field that has no function. `PDFStream` makes the browser send the file in pieces. The result is the same.
+
+```go
+buf, err := chromedp.Run(ctx, chromedp.PrintToPDF(
+	chromedp.PDFPaper(chromedp.PaperA4),
+	chromedp.PDFLandscape(),
+	chromedp.PDFMargin(0.5),
+	chromedp.PDFPrintBackground(),
+	chromedp.PDFFooterTemplate(`<div style="font-size:8px"><span class="pageNumber"></span> / <span class="totalPages"></span></div>`),
+))
+```
+
 ## What the new API removes
 
 The new API removes the interface `Action`, the type `ActionFunc`, the type `Tasks`, and the funcs `ListenTarget` and `ListenBrowser`. It also removes the types `QueryAction`, `NavigateAction`, `EvaluateAction`, `CallAction`, `PollAction`, `MouseAction`, `KeyAction` and `EmulateAction`. Each type is now `Action[T]`. It also removes the six lookup options that start with `By`, except `ByFunc`. A selector type replaces each of them. `docs/MIGRATION.md` lists every change, with the old name and the new name.
@@ -894,6 +908,7 @@ func PollFunction[T any](pageFunction string, opts ...PollOption) Action[T]
 func Query[S Selectable](sel S, opts ...QueryOption) Action[Void]
 func QueryAfter[T any, S Selectable](sel S, f func(ctx context.Context, t *Target, nodes []*Node) (T, error), opts ...QueryOption) Action[T]
 func QueryNodeIDs[S Selectable](sel S, opts ...QueryOption) Action[[]cdp.NodeID]
+func PrintToPDF(opts ...PDFOption) Action[[]byte]
 func Reload() Action[Void]
 func RemoveAttribute[S Selectable](sel S, name string, opts ...QueryOption) Action[Void]
 func Reset[S Selectable](sel S, opts ...QueryOption) Action[Void]
@@ -1052,6 +1067,22 @@ func (t NodeType) String() string
 
 type OldAction interface { ... }
 
+type PDFOption = func(*page.PrintToPDFParams)
+func PDFFooterTemplate(html string) PDFOption
+func PDFHeaderTemplate(html string) PDFOption
+func PDFLandscape() PDFOption
+func PDFMargin(inches float64) PDFOption
+func PDFMargins(top, right, bottom, left float64) PDFOption
+func PDFOutlineAndTagged() PDFOption
+func PDFPageRanges(ranges string) PDFOption
+func PDFPaper(size PaperSize) PDFOption
+func PDFPreferCSSPageSize() PDFOption
+func PDFPrintBackground() PDFOption
+func PDFScale(scale float64) PDFOption
+func PDFStream() PDFOption
+
+type PaperSize struct { ... }
+
 type PipeConn struct { ... }
 func NewPipeConn(r io.ReadCloser, w io.WriteCloser, opts ...PipeOption) *PipeConn
 func (c *PipeConn) Close() error
@@ -1165,6 +1196,12 @@ It has these variables:
 DefaultUnmarshalOptions
 DefaultMarshalOptions
 DefaultExecAllocatorOptions
+PaperLetter
+PaperLegal
+PaperTabloid
+PaperA3
+PaperA4
+PaperA5
 ```
 
 ## The module remote

@@ -24,6 +24,7 @@ These commits come after the release v0.18.0. Each one has its own test, and a d
 - Added: `DragAndDrop` and `DragAndDropXY` drag an element and drop it on another element or on a point. They work for a page with mouse events and for a page with HTML5 drag and drop. They are new in the next release.
 - Added: `Console` turns the console API calls, the uncaught exceptions, the unhandled promise rejections and the browser log into one iterator of `ConsoleMessage` values, in order. It is new in the next release.
 - Added: `ExposeFunc` makes a Go func available to the page as `window.<name>`. A call from the page returns a promise that the result or the error of the func settles. It works after a navigation and in an iframe. It is new in the next release.
+- Added: `PrintToPDF` with the options `PDFLandscape`, `PDFPaper`, `PDFMargin`, `PDFMargins`, `PDFScale`, `PDFPageRanges`, `PDFPreferCSSPageSize`, `PDFPrintBackground`, `PDFHeaderTemplate`, `PDFFooterTemplate`, `PDFOutlineAndTagged` and `PDFStream`, so that a program does not build `page.PrintToPDFParams` by hand. It is new in the next release, and `cdp.Call` with `page.PrintToPDF` still works.
 
 ## Changes in v0.18.0
 

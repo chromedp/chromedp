@@ -474,6 +474,33 @@ func ExamplePrintToPDF() {
 	// can change or be slow, and the example made the tests fail on CI.
 }
 
+func ExamplePrintToPDF_options() {
+	ctx, cancel := chromedp.NewContext(context.Background())
+	defer cancel()
+
+	if err := chromedp.Do(ctx, chromedp.Navigate(`https://pkg.go.dev/github.com/chromedp/chromedp`)); err != nil {
+		log.Fatal(err)
+	}
+	// The options replace the page.PrintToPDFParams of the example above.
+	buf, err := chromedp.Run(ctx, chromedp.PrintToPDF(
+		chromedp.PDFPaper(chromedp.PaperA4),
+		chromedp.PDFLandscape(),
+		chromedp.PDFMargin(0.5),
+		chromedp.PDFPrintBackground(),
+		chromedp.PDFFooterTemplate(`<div style="font-size:8px"><span class="pageNumber"></span> / <span class="totalPages"></span></div>`),
+	))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := os.WriteFile("page.pdf", buf, 0o644); err != nil {
+		log.Fatal(err)
+	}
+
+	// This example uses a live website and writes a file, so it has no
+	// Output comment.
+}
+
 func ExampleJSPath() {
 	ctx, cancel := chromedp.NewContext(context.Background())
 	defer cancel()
