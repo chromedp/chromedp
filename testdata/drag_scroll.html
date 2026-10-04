@@ -1,0 +1,22 @@
+<html>
+<head>
+<title>drag between nodes that need scrolling</title>
+<style>
+body { margin: 0; height: 3000px; font-family: sans-serif; }
+.box { position: absolute; left: 100px; width: 120px; height: 40px; background: #cdb; }
+#a { top: 320px; }
+#near { top: 520px; }
+#far { top: 2000px; }
+</style>
+</head>
+<body>
+<div class="box" id="a">a</div>
+<div class="box" id="near">near</div>
+<div class="box" id="far">far</div>
+<script>
+var log = [];
+document.addEventListener('mousedown', function (e) { log.push('mousedown:' + e.target.id); });
+document.addEventListener('mouseup', function (e) { log.push('mouseup:' + e.target.id); });
+</script>
+</body>
+</html>

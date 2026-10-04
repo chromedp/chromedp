@@ -2,13 +2,15 @@ package chromedp
 
 import (
 	"context"
+	"encoding/json/jsontext"
+	jsonv2 "encoding/json/v2"
 	"fmt"
 	"time"
 
-	"encoding/json/jsontext"
-	jsonv2 "encoding/json/v2"
 	"github.com/chromedp/cdproto/cdp"
+	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/cdproto/input"
+	"github.com/chromedp/cdproto/page"
 )
 
 const (
@@ -30,44 +32,79 @@ const (
 //
 // The two selectors can have different types. The query options apply to both
 // queries. Both nodes must be in the viewport at the same time, because the
-// action scrolls each node into view only once and does not scroll while it
-// drags.
+// action does not scroll while it drags. When they do not fit, the action
+// returns [ErrDragOutsideViewport] and does not drag.
 //
 // For example, to move a handle to the end of a slider:
 //
 //	err := chromedp.Do(ctx, chromedp.DragAndDrop(chromedp.CSS("#handle"), chromedp.CSS("#end")))
 func DragAndDrop[S, T Selectable](from S, to T, opts ...QueryOption) Action[Void] {
 	return func(ctx context.Context, t *Target) (Void, error) {
-		fx, fy, err := queryCenter(from, opts)(ctx, t)
+		// Scroll each node into view. Scrolling the second node can move the
+		// first node, so read the centers only after both scrolls.
+		fromNode, err := queryScrolled(from, opts)(ctx, t)
 		if err != nil {
 			return Void{}, err
 		}
-		tx, ty, err := queryCenter(to, opts)(ctx, t)
+		toNode, err := queryScrolled(to, opts)(ctx, t)
 		if err != nil {
+			return Void{}, err
+		}
+		fx, fy, err := quadCenter(ctx, t, fromNode)
+		if err != nil {
+			return Void{}, err
+		}
+		tx, ty, err := quadCenter(ctx, t, toNode)
+		if err != nil {
+			return Void{}, err
+		}
+		if err := checkInViewport(ctx, t, [2]float64{fx, fy}, [2]float64{tx, ty}); err != nil {
 			return Void{}, err
 		}
 		return DragAndDropXY(fx, fy, tx, ty)(ctx, t)
 	}
 }
 
+// ErrDragOutsideViewport is the error of [DragAndDrop] when the two nodes do
+// not fit in the viewport at the same time. The action does not scroll while
+// it drags, so a drag between two such nodes does nothing.
+const ErrDragOutsideViewport Error = "the nodes of the drag are not in the viewport at the same time"
+
+// checkInViewport returns ErrDragOutsideViewport when a point is outside the
+// visual viewport.
+func checkInViewport(ctx context.Context, t *Target, points ...[2]float64) error {
+	m, err := cdp.Call(ctx, t, page.GetLayoutMetrics, cdp.Empty{})
+	if err != nil {
+		return err
+	}
+	vp := m.CSSVisualViewport
+	if vp == nil {
+		return nil
+	}
+	for _, p := range points {
+		if p[0] < 0 || p[1] < 0 || p[0] > vp.ClientWidth || p[1] > vp.ClientHeight {
+			return ErrDragOutsideViewport
+		}
+	}
+	return nil
+}
+
 // center is a point in the viewport.
 type center struct{ x, y float64 }
 
-// queryCenter is an element query action that scrolls the first element node
-// that matches the selector into view, and returns its center.
-func queryCenter[S Selectable](sel S, opts []QueryOption) func(context.Context, *Target) (x, y float64, err error) {
-	a := QueryAfter(sel, func(ctx context.Context, t *Target, nodes []*Node) (center, error) {
+// queryScrolled is an element query action that scrolls the first element node
+// that matches the selector into view, and returns the node.
+func queryScrolled[S Selectable](sel S, opts []QueryOption) Action[*Node] {
+	return QueryAfter(sel, func(ctx context.Context, t *Target, nodes []*Node) (*Node, error) {
 		n, err := first(sel, nodes)
 		if err != nil {
-			return center{}, err
+			return nil, err
 		}
-		x, y, err := nodeCenter(ctx, t, n)
-		return center{x, y}, err
+		if _, err := cdp.Call(ctx, t, dom.ScrollIntoViewIfNeeded, dom.ScrollIntoViewIfNeededParams{NodeID: n.NodeID}); err != nil {
+			return nil, err
+		}
+		return n, nil
 	}, withOpts(opts, NodeVisible)...)
-	return func(ctx context.Context, t *Target) (float64, float64, error) {
-		c, err := a(ctx, t)
-		return c.x, c.y, err
-	}
 }
 
 // DragAndDropXY is an action that drags from the point fromX, fromY and drops

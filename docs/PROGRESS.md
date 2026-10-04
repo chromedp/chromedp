@@ -10,6 +10,7 @@ in [`decisions/`](decisions/README.md).
 These commits come after the release v0.18.0. Each one has its own test, and a documentation change has none.
 
 - Added: `Tap` and `TapXY` send a touch tap (issue 1174).
+- Fixed: `DragAndDrop` read the center of the first node before it scrolled the second node into view, and the scroll can move the first node, so the drag did nothing. It reads both centers after both scrolls, and returns the new error `ErrDragOutsideViewport` when the two nodes do not fit in the viewport together.
 - Fixed: `Evaluate[T]` returned the zero value and no error for the expression `null` when `T` cannot be nil, for example `Evaluate[int]` with the expression `null`. It returns `ErrJSNull` now, as the documentation says. The example `ExampleEvaluate` had a case for it, and its output did not show the error.
 - Added: `EvalAwaitPromise`, an evaluate option that waits for a promise that the expression returns.
 - Fixed: `Text` on a text node, which a search for plain text finds, failed with a JavaScript error. It returns the text of the node now, when its parent element is visible.

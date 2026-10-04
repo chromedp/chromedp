@@ -21,8 +21,10 @@ import (
 // Puppeteer.
 //
 // The function is there in the current document and in every document that the
-// target loads later, for the main frame and for every iframe, so it survives
-// a navigation. It stays until the target ends. The listener for the calls
+// target loads later, for the main frame and for every iframe of the same
+// site, so it survives a navigation. An iframe of another site runs in another
+// process and is another target, so the function is not there. It stays until
+// the target ends. The listener for the calls
 // stops when the context of the target ends. A second call of ExposeFunc with
 // the same name on the same target returns an error, and so does a name that
 // is empty.

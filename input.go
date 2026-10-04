@@ -94,7 +94,12 @@ func nodeCenter(ctx context.Context, t *Target, n *Node) (x, y float64, err erro
 	if _, err := cdp.Call(ctx, t, dom.ScrollIntoViewIfNeeded, dom.ScrollIntoViewIfNeededParams{NodeID: n.NodeID}); err != nil {
 		return 0, 0, err
 	}
+	return quadCenter(ctx, t, n)
+}
 
+// quadCenter returns the center of the node in the viewport, as it is now. It
+// does not scroll.
+func quadCenter(ctx context.Context, t *Target, n *Node) (x, y float64, err error) {
 	res, err := cdp.Call(ctx, t, dom.GetContentQuads, dom.GetContentQuadsParams{NodeID: n.NodeID})
 	if err != nil {
 		return 0, 0, err

@@ -173,7 +173,8 @@ func PDFFooterTemplate(html string) PDFOption {
 // PDFOutlineAndTagged is an option of [PrintToPDF] that adds the outline of
 // the document, which is a table of contents that a PDF viewer shows for the
 // headings, and that makes a tagged PDF, which holds the structure of the
-// document for a screen reader.
+// document for a screen reader. Chrome 154 and later make a tagged PDF by
+// default, so with them the option adds the outline.
 func PDFOutlineAndTagged() PDFOption {
 	return func(p *page.PrintToPDFParams) {
 		p.GenerateDocumentOutline = new(true)

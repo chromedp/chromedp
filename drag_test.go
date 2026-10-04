@@ -1,6 +1,7 @@
 package chromedp
 
 import (
+	"errors"
 	"slices"
 	"testing"
 )
@@ -148,5 +149,49 @@ func TestDragAndDropTwice(t *testing.T) {
 	}
 	if drags, drops := count("dragstart"), count("drop:hello"); drags != 3 || drops != 2 {
 		t.Fatalf("expected 3 drags and 2 drops, got %d and %d in: %v", drags, drops, got)
+	}
+}
+
+// TestDragAndDropScrolls makes sure that a drag between two nodes works when
+// scrolling the second node into view moves the first node, as long as both fit
+// in the viewport.
+func TestDragAndDropScrolls(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "drag_scroll.html")
+	defer cancel()
+
+	if err := Do(ctx, DragAndDrop(CSS("#a"), CSS("#near"))); err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	got, err := Run(ctx, Evaluate[[]string](`log`))
+	if err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	want := []string{"mousedown:a", "mouseup:near"}
+	if !slices.Equal(got, want) {
+		t.Errorf("got %q, want %q", got, want)
+	}
+}
+
+// TestDragAndDropOutsideViewport makes sure that a drag between two nodes that
+// do not fit in the viewport together returns an error and does not press the
+// mouse.
+func TestDragAndDropOutsideViewport(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "drag_scroll.html")
+	defer cancel()
+
+	err := Do(ctx, DragAndDrop(CSS("#a"), CSS("#far")))
+	if !errors.Is(err, ErrDragOutsideViewport) {
+		t.Fatalf("got error %v, want %v", err, ErrDragOutsideViewport)
+	}
+	got, err := Run(ctx, Evaluate[[]string](`log`))
+	if err != nil {
+		t.Fatalf("got error: %v", err)
+	}
+	if len(got) != 0 {
+		t.Errorf("got events %q, want none", got)
 	}
 }

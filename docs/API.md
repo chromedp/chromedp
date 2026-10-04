@@ -1180,6 +1180,7 @@ ErrInvalidContext
 ErrPollingTimeout
 ErrJSUndefined
 ErrJSNull
+ErrDragOutsideViewport
 FrameDOMContentEventFired
 FrameLoadEventFired
 FrameAttached
