@@ -560,6 +560,22 @@ if err := chromedp.Do(ctx,
 }
 ```
 
+### 17. Leave the tab open when the context ends
+
+The cancellation of a context closes its tab. A remote browser service can keep its tabs for a client that comes back. `WithDetachOnCancel` makes the cancellation only detach from the tab. A later context attaches to the tab with `WithTargetID`. A context that `WithNewBrowserContext` made keeps its browser context too, and the program must dispose of it with `target.DisposeBrowserContext`. This example has no Before block, because the old API had no such option.
+
+```go
+ctx, cancel := chromedp.NewContext(allocCtx, chromedp.WithDetachOnCancel())
+if err := chromedp.Do(ctx, chromedp.Navigate(url)); err != nil {
+	log.Fatal(err)
+}
+id := chromedp.FromContext(ctx).Target.TargetID
+cancel() // the tab stays open
+
+ctx, cancel = chromedp.NewContext(allocCtx, chromedp.WithTargetID(id))
+defer cancel()
+```
+
 ## What the new API removes
 
 The new API removes the interface `Action`, the type `ActionFunc`, the type `Tasks`, and the funcs `ListenTarget` and `ListenBrowser`. It also removes the types `QueryAction`, `NavigateAction`, `EvaluateAction`, `CallAction`, `PollAction`, `MouseAction`, `KeyAction` and `EmulateAction`. Each type is now `Action[T]`. It also removes the six lookup options that start with `By`, except `ByFunc`. A selector type replaces each of them. `docs/MIGRATION.md` lists every change, with the old name and the new name.
@@ -727,6 +743,7 @@ type ContextOption = func(*Context)
 func WithBrowserOption(opts ...BrowserOption) ContextOption
 func WithAllocatorOptions(opts ...ExecAllocatorOption) ContextOption
 func WithDebugf(f func(string, ...any)) ContextOption
+func WithDetachOnCancel() ContextOption
 func WithErrorf(f func(string, ...any)) ContextOption
 func WithExistingBrowserContext(id cdp.BrowserContextID) ContextOption
 func WithLogf(f func(string, ...any)) ContextOption

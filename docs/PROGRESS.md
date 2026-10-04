@@ -14,6 +14,7 @@ These commits come after the release v0.18.0. Each one has its own test, and a d
 - Fixed: a call on a `Target` or a `Browser` with a context that never ends hung for ever after the browser died. It returns an error now (issue 1529).
 - Added: the allocator option `NoInheritEnv` starts the browser with only the variables of `Env` (issue 1584).
 - Fixed: `WaitNotPresent` with a `JSPath` that gives null, undefined or an empty `NodeList` never succeeded. A `JSPath` can give a `NodeList` of nodes, and a value that is not a node is an error at once (issue 1600).
+- Added: `WithDetachOnCancel` leaves the tab open when the context ends (issue 1613).
 
 ## Changes in v0.18.0
 

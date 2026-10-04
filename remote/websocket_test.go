@@ -530,3 +530,93 @@ func TestCallCancelStillCanceled(t *testing.T) {
 		t.Fatalf("want context.Canceled, got %v", err)
 	}
 }
+
+// TestDetachOnCancel checks that the cancellation of a context closes its tab
+// by default, and leaves the tab open with WithDetachOnCancel. See the issue
+// 1613.
+func TestDetachOnCancel(t *testing.T) {
+	t.Parallel()
+
+	wsURL := startChrome(t)
+	allocCtx, allocCancel := NewAllocator(context.Background(), wsURL)
+	defer allocCancel()
+	// The observer asks the browser which tabs exist.
+	observer, cancel := chromedp.NewContext(allocCtx)
+	defer cancel()
+	if err := chromedp.Do(observer); err != nil {
+		t.Fatal(err)
+	}
+	listed := func(id target.ID) bool {
+		t.Helper()
+		infos, err := chromedp.Targets(observer)
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, info := range infos {
+			if info.TargetID == id {
+				return true
+			}
+		}
+		return false
+	}
+	// newTab makes a tab with the options and returns its ID and the cancel
+	// func of its context.
+	newTab := func(opts ...chromedp.ContextOption) (target.ID, context.CancelFunc) {
+		t.Helper()
+		ctx, cancel := chromedp.NewContext(allocCtx, opts...)
+		if err := chromedp.Do(ctx, chromedp.Navigate("about:blank")); err != nil {
+			cancel()
+			t.Fatal(err)
+		}
+		return chromedp.FromContext(ctx).Target.TargetID, cancel
+	}
+
+	t.Run("default", func(t *testing.T) {
+		id, cancel := newTab()
+		if !listed(id) {
+			t.Fatal("the new tab is not listed")
+		}
+		cancel()
+		if listed(id) {
+			t.Fatal("the tab is still listed after the cancellation, want it closed")
+		}
+	})
+
+	t.Run("WithDetachOnCancel", func(t *testing.T) {
+		id, cancel := newTab(chromedp.WithDetachOnCancel())
+		cancel()
+		if !listed(id) {
+			t.Fatal("the tab is gone after the cancellation, want it open")
+		}
+
+		// A new context can attach to the tab that stayed.
+		ctx, cancel := chromedp.NewContext(allocCtx, chromedp.WithTargetID(id))
+		defer cancel()
+		if err := chromedp.Do(ctx, chromedp.Navigate("about:blank")); err != nil {
+			t.Fatalf("attaching to the tab that stayed: %v", err)
+		}
+		// This context closes the tab, because it has no option.
+		cancel()
+		if listed(id) {
+			t.Fatal("the tab is still listed after the cancellation of the second context")
+		}
+	})
+
+	t.Run("WithNewBrowserContext", func(t *testing.T) {
+		id, cancel := newTab(chromedp.WithNewBrowserContext(), chromedp.WithDetachOnCancel())
+		res, err := chromedp.CallBrowser(observer, target.GetTargetInfo, target.GetTargetInfoParams{TargetID: id})
+		if err != nil {
+			t.Fatal(err)
+		}
+		contextID := res.TargetInfo.BrowserContextID
+		cancel()
+		if !listed(id) {
+			t.Fatal("the tab is gone after the cancellation, want it open")
+		}
+		// The context did not dispose of the BrowserContext, so the program
+		// must do it.
+		if _, err := chromedp.CallBrowser(observer, target.DisposeBrowserContext, target.DisposeBrowserContextParams{BrowserContextID: contextID}); err != nil {
+			t.Fatalf("the browser context is gone, want it kept: %v", err)
+		}
+	})
+}

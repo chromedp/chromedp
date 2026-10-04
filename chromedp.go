@@ -72,6 +72,10 @@ type Context struct {
 	// inherits it.
 	sharedWindow bool
 
+	// detachOnCancel is set by WithDetachOnCancel. The cancellation then
+	// detaches from the target and leaves the tab and its BrowserContext.
+	detachOnCancel bool
+
 	// browserContextOwner is true when this context owns its BrowserContext.
 	// The owner disposes the BrowserContext when the context is done.
 	browserContextOwner bool
@@ -223,6 +227,11 @@ func NewContext(parent context.Context, opts ...ContextOption) (context.Context,
 			if c.cancelErr == nil && err != nil {
 				c.cancelErr = fmt.Errorf("detaching from the target %s: %w", tgt.TargetID, err)
 			}
+		}
+		if c.detachOnCancel {
+			// Leave the tab open. A BrowserContext that this context owns
+			// stays too, because disposing of it closes its tabs.
+			return
 		}
 		if id := tgt.TargetID; id != "" {
 			if _, err := cdp.Call(ctx, c.Browser, target.CloseTarget, target.CloseTargetParams{TargetID: id}); err != nil {
@@ -425,7 +434,13 @@ func (c *Context) newTarget(ctx context.Context) error {
 	if !c.first {
 		newWindow := !c.sharedWindow
 		if c.createBrowserContextParams != nil {
-			res, err := cdp.Call(ctx, c.Browser, target.CreateBrowserContext, *c.createBrowserContextParams)
+			params := *c.createBrowserContextParams
+			if c.detachOnCancel {
+				// Chrome disposes of a browser context that disposeOnDetach
+				// marks when the context detaches, and that closes the tab.
+				params.DisposeOnDetach = nil
+			}
+			res, err := cdp.Call(ctx, c.Browser, target.CreateBrowserContext, params)
 			if err != nil {
 				return err
 			}
@@ -618,6 +633,26 @@ func WithNewWindow(newWindow bool) ContextOption {
 	return func(c *Context) {
 		c.sharedWindow = !newWindow
 	}
+}
+
+// WithDetachOnCancel makes the cancellation of the context detach from its tab
+// and leave the tab open. By default, the cancellation closes the tab that the
+// context created or attached to with [WithTargetID], and it disposes of a
+// BrowserContext that [WithNewBrowserContext] made.
+//
+// Use it with a remote browser that keeps its tabs when a client leaves, so
+// that a later client can attach to the tab again with [WithTargetID]. Read the
+// ID of the tab from the Target field of [FromContext] after the first Run.
+// With this option, the context also keeps a BrowserContext that it owns,
+// because disposing of it closes the tab. It creates that BrowserContext
+// without the setting disposeOnDetach. The program must dispose of it with the
+// command [target.DisposeBrowserContext] when it no longer needs it.
+//
+// The option has no effect on the first context of a browser that the exec
+// allocator starts, because the cancellation stops that browser. It is not
+// inherited by a child context.
+func WithDetachOnCancel() ContextOption {
+	return func(c *Context) { c.detachOnCancel = true }
 }
 
 // WithTargetID makes a context attach to an existing target, and not create a
