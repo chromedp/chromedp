@@ -212,7 +212,7 @@ func (t *Target) Call(ctx context.Context, method string, params, res any) error
 	case <-ctx.Done():
 		return ctx.Err()
 	case <-t.browser.LostConnection:
-		return t.browser.lostError()
+		return t.browser.lostError(ctx)
 	case t.browser.cmdQueue <- cmd:
 	}
 
@@ -229,7 +229,7 @@ func (t *Target) Call(ctx context.Context, method string, params, res any) error
 			}
 		default:
 		}
-		return t.browser.lostError()
+		return t.browser.lostError(ctx)
 	case msg := <-ch:
 		return decodeReply(msg, res)
 	}

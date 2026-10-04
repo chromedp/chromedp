@@ -278,7 +278,7 @@ func (b *Browser) execute(ctx context.Context, method string, params, res any) e
 	case <-ctx.Done():
 		return ctx.Err()
 	case <-b.LostConnection:
-		return b.lostError()
+		return b.lostError(ctx)
 	case b.cmdQueue <- cmd:
 	}
 
@@ -295,7 +295,7 @@ func (b *Browser) execute(ctx context.Context, method string, params, res any) e
 			}
 		default:
 		}
-		return b.lostError()
+		return b.lostError(ctx)
 	case msg := <-ch:
 		return decodeReply(msg, res)
 	}
@@ -321,7 +321,13 @@ func decodeReply(msg *cdproto.Message, res any) error {
 // context of the browser when the connection drops, and an earlier version
 // returned the error of that context. Call it only after LostConnection is
 // closed.
-func (b *Browser) lostError() error {
+//
+// A canceled ctx wins, so that a call with a context that the program canceled
+// returns the error of that context, as before.
+func (b *Browser) lostError(ctx context.Context) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	reason := b.lostReason
 	if reason == nil {
 		reason = io.EOF
