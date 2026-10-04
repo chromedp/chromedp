@@ -5,9 +5,11 @@
 // in Go.
 //
 // This package includes a number of simple examples. The module
-// [chromedp/examples] has more complex examples.
+// [chromedp/examples] has more complex examples. The module [chromedp/termcast]
+// draws the screen of a page in a terminal that shows images.
 //
 // [chromedp/examples]: https://github.com/chromedp/examples
+// [chromedp/termcast]: https://github.com/chromedp/termcast
 package chromedp
 
 import (

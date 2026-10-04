@@ -78,12 +78,15 @@ See the [Go reference][goref-chromedp] for the documentation and examples.
 
 ## More examples
 
-The [examples][chromedp-examples] repository has 41 programs for larger tasks.
+The [examples][chromedp-examples] repository has 43 programs for larger tasks.
 Each program is one `main.go` file. Run one with `go run`, for example
 `go run github.com/chromedp/examples/tabs@latest`. Every program takes the flag `-v`
 to print the protocol messages. Every program except `remote` takes the flag
-`-visible` to show the browser window. The programs that name no site run
-against a local server, and need no internet.
+`-visible` to show the browser window. Most programs take the flag
+`-visible-on-terminal` to draw the page in the terminal while they run, with
+[`termcast`](#show-the-browser-in-the-terminal). Every program except `fast`
+reads a local test site and needs no internet. Use the flag `-url` to read
+another site.
 
 Read pages and fill forms:
 
@@ -119,6 +122,7 @@ Events and the protocol:
 - [dialogs](https://github.com/chromedp/examples/tree/main/dialogs) answers alert, confirm, prompt and beforeunload dialogs.
 - [popups](https://github.com/chromedp/examples/tree/main/popups) works with popups and several targets, and with browser contexts.
 - [exposefunc](https://github.com/chromedp/examples/tree/main/exposefunc) calls Go functions from the page.
+- [extension](https://github.com/chromedp/examples/tree/main/extension) loads a browser extension, uBlock Origin Lite, from a folder on disk and shows that it blocks the ads of a page.
 - [rawcall](https://github.com/chromedp/examples/tree/main/rawcall) sends protocol commands that have no action, such as timezone, locale, geolocation and throttling.
 
 Screens and devices:
@@ -129,6 +133,7 @@ Screens and devices:
 - [pdfstream](https://github.com/chromedp/examples/tree/main/pdfstream) reads a printed PDF as a stream.
 - [emulate](https://github.com/chromedp/examples/tree/main/emulate) emulates a device, such as an iPhone.
 - [screencast](https://github.com/chromedp/examples/tree/main/screencast) saves the frames of a page as JPEG files.
+- [termcast](https://github.com/chromedp/examples/tree/main/termcast) plays an animated SVG and streams the screen of the browser to the terminal with `termcast`.
 
 Several tabs and browsers:
 
@@ -137,11 +142,31 @@ Several tabs and browsers:
 - [multi](https://github.com/chromedp/examples/tree/main/multi) uses the headless-shell image in a container.
 - [remote](https://github.com/chromedp/examples/tree/main/remote) connects to a browser that is already running, with the module `remote`.
 
-Four programs read live sites, and three of them draw an image in the terminal: [fast](https://github.com/chromedp/examples/tree/main/fast), [forecast](https://github.com/chromedp/examples/tree/main/forecast), [geoip](https://github.com/chromedp/examples/tree/main/geoip) and [latlon](https://github.com/chromedp/examples/tree/main/latlon).
-
-Some programs read a live website, so a program can fail when its site
-changes. These programs need no internet: [console](https://github.com/chromedp/examples/tree/main/console), [cookie](https://github.com/chromedp/examples/tree/main/cookie), [dialogs](https://github.com/chromedp/examples/tree/main/dialogs), [dragdrop](https://github.com/chromedp/examples/tree/main/dragdrop), [eventsiter](https://github.com/chromedp/examples/tree/main/eventsiter), [exposefunc](https://github.com/chromedp/examples/tree/main/exposefunc), [frames](https://github.com/chromedp/examples/tree/main/frames), [har](https://github.com/chromedp/examples/tree/main/har), [headers](https://github.com/chromedp/examples/tree/main/headers), [intercept](https://github.com/chromedp/examples/tree/main/intercept), [keys](https://github.com/chromedp/examples/tree/main/keys), [multi](https://github.com/chromedp/examples/tree/main/multi), [pdfoptions](https://github.com/chromedp/examples/tree/main/pdfoptions), [pdfstream](https://github.com/chromedp/examples/tree/main/pdfstream), [popups](https://github.com/chromedp/examples/tree/main/popups), [proxy](https://github.com/chromedp/examples/tree/main/proxy), [rawcall](https://github.com/chromedp/examples/tree/main/rawcall), [screencast](https://github.com/chromedp/examples/tree/main/screencast), [selectors](https://github.com/chromedp/examples/tree/main/selectors), [session](https://github.com/chromedp/examples/tree/main/session), [structeval](https://github.com/chromedp/examples/tree/main/structeval), [subtree](https://github.com/chromedp/examples/tree/main/subtree), [tabs](https://github.com/chromedp/examples/tree/main/tabs), [upload](https://github.com/chromedp/examples/tree/main/upload), [visible](https://github.com/chromedp/examples/tree/main/visible) and [workers](https://github.com/chromedp/examples/tree/main/workers).
+The program [fast](https://github.com/chromedp/examples/tree/main/fast) reads a live site, `fast.com`, and draws an image in the terminal. It can fail when the site changes. The programs [forecast](https://github.com/chromedp/examples/tree/main/forecast) and [geoip](https://github.com/chromedp/examples/tree/main/geoip) also draw an image in the terminal. Run these programs in a terminal that can show images.
 The tags of the examples repository follow the tags of `chromedp`.
+
+## Show the browser in the terminal
+
+[`termcast`][termcast] streams the screen of a `chromedp` page to a terminal
+that can show images (Kitty, iTerm2 or Sixel). It uses the screencast of the
+Chrome DevTools Protocol, so it works with a headless browser, also over `ssh`.
+Start the browser first, and then start the stream with the context.
+
+```go
+ctx, cancel := chromedp.NewContext(context.Background())
+defer cancel()
+chromedp.Do(ctx, chromedp.Navigate("https://example.com")) // starts the browser
+s, err := termcast.Start(ctx)                               // draws 4 frames each second
+if err != nil {
+	log.Fatal(err) // termcast.ErrNoGraphics when the terminal has no graphics
+}
+defer s.Stop()
+```
+
+The stream clears the terminal at each redraw. It holds the log lines while it
+runs, and prints them after the final frame. The type `termcast.Flags` adds the
+flags `-visible-on-terminal` and `-terminal-fps` to a program, as the programs
+in the [examples][chromedp-examples] repository have them.
 
 ## Visible browser
 
@@ -441,6 +466,7 @@ tracker is for bugs. You can also chat on [Discord][discord].
 [chromedp-ci]: https://github.com/chromedp/chromedp/actions/workflows/test.yml (Test CI)
 [chromedp-ci-status]: https://github.com/chromedp/chromedp/actions/workflows/test.yml/badge.svg (Test CI)
 [chromedp-examples]: https://github.com/chromedp/examples
+[termcast]: https://github.com/chromedp/termcast
 [chromedp-pdlgen]: https://github.com/chromedp/pdlgen
 [chromedp-proxy]: https://github.com/chromedp/chromedp-proxy
 [discussions]: https://github.com/chromedp/chromedp/discussions
