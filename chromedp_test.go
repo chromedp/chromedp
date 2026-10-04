@@ -1096,6 +1096,13 @@ func TestGracefulBrowserShutdown(t *testing.T) {
 		NoDefaultBrowserCheck,
 		Headless,
 		UserDataDir(dir),
+		// Chrome encrypts persistent cookies with a key from the system
+		// keychain. Without a usable keychain (a macOS session with no
+		// unlocked login keychain, such as an SSH login or a VM) it silently
+		// does not write the cookie to the user data dir. The mock keychain
+		// makes the test independent of the keychain state of the machine.
+		Flag("use-mock-keychain", true),
+		Flag("password-store", "basic"),
 	}
 	actx, cancel := NewExecAllocator(context.Background(), opts...)
 	defer cancel()
