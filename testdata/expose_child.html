@@ -1,0 +1,13 @@
+<html>
+<head>
+<title>expose child</title>
+</head>
+<body>
+<script>
+var result = null;
+window.addEventListener('load', function () {
+  square(5).then(function (v) { result = v; });
+});
+</script>
+</body>
+</html>

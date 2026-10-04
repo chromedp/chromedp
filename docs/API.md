@@ -759,6 +759,33 @@ for m, err := range messages {
 }
 ```
 
+### 26. Call a Go func from the page
+
+`ExposeFunc` makes a Go func available to the page as `window.<name>`. A page script calls it like an async function. The call returns a promise. The promise resolves with the result of the func, or it rejects with an `Error` when the func returns an error. The func is there in the current document and in every document that the tab loads later, in the main frame and in every iframe. It stays until the tab ends.
+
+The type `A` of the func decides how the arguments arrive. For a slice type such as `[]any`, the func gets all the arguments of the call. For every other type, the call must have one argument, and the action decodes it into `A`. Use a struct for an object. The result is sent back to the page as JSON.
+
+```go
+type user struct {
+	Name string `json:"name"`
+}
+
+err := chromedp.Do(ctx,
+	chromedp.ExposeFunc("greet", func(ctx context.Context, u user) (string, error) {
+		return "hello " + u.Name, nil
+	}),
+	chromedp.ExposeFunc("sum", func(ctx context.Context, args []float64) (float64, error) {
+		var sum float64
+		for _, a := range args {
+			sum += a
+		}
+		return sum, nil
+	}),
+	chromedp.Navigate(url),
+)
+// In the page: await greet({name: "Ann"}) gives "hello Ann", and await sum(1, 2, 3) gives 6.
+```
+
 ## What the new API removes
 
 The new API removes the interface `Action`, the type `ActionFunc`, the type `Tasks`, and the funcs `ListenTarget` and `ListenBrowser`. It also removes the types `QueryAction`, `NavigateAction`, `EvaluateAction`, `CallAction`, `PollAction`, `MouseAction`, `KeyAction` and `EmulateAction`. Each type is now `Action[T]`. It also removes the six lookup options that start with `By`, except `ByFunc`. A selector type replaces each of them. `docs/MIGRATION.md` lists every change, with the old name and the new name.
@@ -840,6 +867,7 @@ func EmulateReset() Action[Void]
 func EmulateViewport(width, height int64, opts ...EmulateViewportOption) Action[Void]
 func Evaluate[T any](expression string, opts ...EvaluateOption) Action[T]
 func EvaluateAsDevTools[T any](expression string, opts ...EvaluateOption) Action[T]
+func ExposeFunc[A, R any](name string, fn func(ctx context.Context, arg A) (R, error)) Action[Void]
 func Focus[S Selectable](sel S, opts ...QueryOption) Action[Void]
 func FullScreenshot(quality int) Action[[]byte]
 func Func(f func(ctx context.Context, t *Target) error) Action[Void]

@@ -106,7 +106,7 @@ The root package `chromedp` holds the API. The files group by topic.
 | `session.go` | the event subscriptions of a `Browser` and of a `Target` |
 | `errors.go` | the error values and `ExceptionError` |
 | `query.go` | selectors, query options and the element actions |
-| `nav.go`, `input.go`, `drag.go`, `console.go`, `emulate.go`, `screenshot.go`, `eval.go`, `call.go`, `poll.go` | actions by topic |
+| `nav.go`, `input.go`, `drag.go`, `console.go`, `expose.go`, `emulate.go`, `screenshot.go`, `eval.go`, `call.go`, `poll.go` | actions by topic |
 | `js.go`, `js/` | embedded JavaScript snippets |
 | `kb/` | keyboard key definitions, generated |
 | `device/` | device descriptors for emulation, generated |

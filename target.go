@@ -31,6 +31,11 @@ type Target struct {
 	// events holds the subscriptions made with Subscribe.
 	events subscribers
 
+	// exposedMu protects exposed, the names of the funcs that ExposeFunc made
+	// available to the page.
+	exposedMu sync.Mutex
+	exposed   map[string]struct{}
+
 	// frameMu protects frames, execContexts, and cur.
 	frameMu sync.RWMutex
 	// frames is the set of encountered frames.
