@@ -16,10 +16,14 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	goruntime "runtime"
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
+	"github.com/chromedp/cdproto/browser"
+	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
 	"github.com/chromedp/chromedp/internal/testenv"
@@ -65,6 +69,29 @@ func Main(m *testing.M) {
 	os.Exit(run(m))
 }
 
+// printBrowserVersion starts a browser, prints its version and closes it, so
+// that the log of a test run on any system says which browser runs the tests.
+func printBrowserVersion() {
+	ctx, cancel := chromedp.NewExecAllocator(context.Background(), AllocOpts...)
+	defer cancel()
+	ctx, cancel = chromedp.NewContext(ctx)
+	defer cancel()
+	ctx, cancel = context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+	// The first Do starts the browser. Call the browser directly.
+	if err := chromedp.Do(ctx); err != nil {
+		fmt.Printf("browser: could not start the browser: %v\n", err)
+		return
+	}
+	v, err := cdp.Call(ctx, chromedp.FromContext(ctx).Browser, browser.GetVersion, cdp.Empty{})
+	if err != nil {
+		fmt.Printf("browser: could not read the version: %v\n", err)
+		return
+	}
+	fmt.Printf("browser: %s, revision %s, protocol %s, user agent %q, %s/%s\n",
+		v.Product, v.Revision, v.ProtocolVersion, v.UserAgent, goruntime.GOOS, goruntime.GOARCH)
+}
+
 func run(m *testing.M) int {
 	wd, err := os.Getwd()
 	if err != nil {
@@ -107,6 +134,8 @@ func run(m *testing.M) int {
 
 	var cancel context.CancelFunc
 	AllocCtx, cancel = chromedp.NewExecAllocator(context.Background(), AllocOpts...)
+
+	printBrowserVersion()
 
 	code := m.Run()
 	cancel()

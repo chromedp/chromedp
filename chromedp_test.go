@@ -16,6 +16,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	goruntime "runtime"
 	"slices"
 	"strings"
 	"sync"
@@ -81,9 +82,33 @@ func init() {
 
 var browserOpts []ContextOption
 
+// printBrowserVersion starts a browser, prints its version and closes it, so
+// that the log of a test run on any system says which browser runs the tests.
+func printBrowserVersion() {
+	ctx, cancel := NewExecAllocator(context.Background(), allocOpts...)
+	defer cancel()
+	ctx, cancel = NewContext(ctx)
+	defer cancel()
+	ctx, cancel = context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+	// The first Run starts the browser. Call the browser directly.
+	if err := Do(ctx); err != nil {
+		fmt.Printf("browser: could not start %s: %v\n", execPath, err)
+		return
+	}
+	v, err := cdp.Call(ctx, FromContext(ctx).Browser, browser.GetVersion, cdp.Empty{})
+	if err != nil {
+		fmt.Printf("browser: could not read the version of %s: %v\n", execPath, err)
+		return
+	}
+	fmt.Printf("browser: %s, revision %s, protocol %s, path %s, user agent %q, %s/%s\n",
+		v.Product, v.Revision, v.ProtocolVersion, execPath, v.UserAgent, goruntime.GOOS, goruntime.GOARCH)
+}
+
 func TestMain(m *testing.M) {
 	var cancel context.CancelFunc
 	allocCtx, cancel = NewExecAllocator(context.Background(), allocOpts...)
+	printBrowserVersion()
 
 	if testenv.Debug() {
 		browserOpts = append(browserOpts, WithDebugf(log.Printf))
