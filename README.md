@@ -184,6 +184,38 @@ their parameter structs are in `github.com/chromedp/cdproto`.
 Wrap it with `chromedp.Legacy`. The old kind is a value with a `Do(context.Context) error`
 method.
 
+> Is it safe to use one context from several goroutines?
+
+Contexts that share one browser run in separate tabs, and they are safe to use
+in parallel. Call `chromedp.Run` once on a parent context so that it has a
+browser, and then make a child context for each goroutine with
+`chromedp.NewContext`. A child of a context that has no browser yet starts a
+browser of its own.
+
+Do not share one context between goroutines. The actions of one context run in
+one tab, so they can race. For example, two `Navigate` actions on the same tab
+can fail. The first `Run` on a context starts the browser, and it must
+not run at the same time as another `Run` on that context.
+
+```go
+ctx, cancel := chromedp.NewContext(context.Background())
+defer cancel()
+if err := chromedp.Do(ctx); err != nil { // starts the browser
+	log.Fatal(err)
+}
+var wg sync.WaitGroup
+for _, url := range urls {
+	wg.Go(func() {
+		tabCtx, cancel := chromedp.NewContext(ctx) // a new tab
+		defer cancel()
+		if err := chromedp.Do(tabCtx, chromedp.Navigate(url)); err != nil {
+			log.Println(url, err)
+		}
+	})
+}
+wg.Wait()
+```
+
 > I want to use chromedp on a headless environment
 
 Run the Go program that uses `chromedp` inside the

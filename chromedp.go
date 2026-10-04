@@ -146,6 +146,20 @@ type Context struct {
 //
 // NewContext does not allocate or start a browser. That happens the first time
 // that you call Run on the context.
+//
+// # Use from several goroutines
+//
+// Contexts that share one browser run in separate tabs, and they are safe to
+// use in parallel. To get them, call [Run] once on a parent context so that it
+// has a browser, and then make a child context for each goroutine with
+// NewContext. A child of a context that has no browser yet starts a browser of
+// its own.
+//
+// Do not share one context between goroutines. The actions of one context run
+// in one tab, so they can race. For example, two [Navigate] actions on the same
+// tab can fail. The first call of [Run] on a context starts the
+// browser, and it must not run at the same time as another call on that
+// context.
 func NewContext(parent context.Context, opts ...ContextOption) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithCancel(parent)
 

@@ -48,6 +48,10 @@ type Action[T any] func(ctx context.Context, t *Target) (T, error)
 // the signal or the status.
 //
 // Use [Do] to run several actions that return no value.
+//
+// Contexts that share a browser run in separate tabs, so goroutines can call
+// Run in parallel when each one has its own context. Actions on one context
+// share one tab, so they can race. See [NewContext].
 func Run[T any](ctx context.Context, a Action[T]) (T, error) {
 	c, err := initContextTarget(ctx)
 	if err != nil {

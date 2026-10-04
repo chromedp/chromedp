@@ -576,6 +576,29 @@ ctx, cancel = chromedp.NewContext(allocCtx, chromedp.WithTargetID(id))
 defer cancel()
 ```
 
+### 18. Run actions in parallel
+
+Contexts that share one browser run in separate tabs, and they are safe to use in parallel. Call `Run` once on a parent context so that it has a browser. Then make a child context with `NewContext` for each goroutine. A child of a context that has no browser yet starts a browser of its own. Do not share one context between goroutines, because the actions of one context share one tab and can race. The first `Run` on a context starts the browser, and it must not run at the same time as another `Run` on that context. The old API had the same rules, so this example has no Before block.
+
+```go
+ctx, cancel := chromedp.NewContext(context.Background())
+defer cancel()
+if err := chromedp.Do(ctx); err != nil { // starts the browser
+	log.Fatal(err)
+}
+var wg sync.WaitGroup
+for _, url := range urls {
+	wg.Go(func() {
+		tabCtx, cancel := chromedp.NewContext(ctx) // a new tab
+		defer cancel()
+		if err := chromedp.Do(tabCtx, chromedp.Navigate(url)); err != nil {
+			log.Println(url, err)
+		}
+	})
+}
+wg.Wait()
+```
+
 ## What the new API removes
 
 The new API removes the interface `Action`, the type `ActionFunc`, the type `Tasks`, and the funcs `ListenTarget` and `ListenBrowser`. It also removes the types `QueryAction`, `NavigateAction`, `EvaluateAction`, `CallAction`, `PollAction`, `MouseAction`, `KeyAction` and `EmulateAction`. Each type is now `Action[T]`. It also removes the six lookup options that start with `By`, except `ByFunc`. A selector type replaces each of them. `docs/MIGRATION.md` lists every change, with the old name and the new name.
