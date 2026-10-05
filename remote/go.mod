@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/chromedp/cdproto v0.157.8
-	github.com/chromedp/chromedp v0.19.1
+	github.com/chromedp/chromedp v0.20.0
 	github.com/gobwas/ws v1.4.0
 )
 
