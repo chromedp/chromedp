@@ -54,9 +54,9 @@ func TestPDFTemplate(t *testing.T) {
 		}),
 		chromedp.Func(func(ctx context.Context, t *chromedp.Target) error {
 			res, err := chromedp.Call(ctx, page.PrintToPDF, page.PrintToPDFParams{
-				MarginTop:           new(0.5),
-				MarginBottom:        new(0.5),
-				DisplayHeaderFooter: new(true),
+				MarginTop:           ptr(0.5),
+				MarginBottom:        ptr(0.5),
+				DisplayHeaderFooter: ptr(true),
 				HeaderTemplate:      `<div style="font-size:8px;width:100%;text-align:center;"><span class="title"></span> -- <span class="url"></span></div>`,
 				FooterTemplate:      `<div style="font-size:8px;width:100%;text-align:center;">(<span class="pageNumber"></span> / <span class="totalPages"></span>)</div>`,
 			})
@@ -174,4 +174,10 @@ func TestPrintToPDFHeaderAndFooter(t *testing.T) {
 			}
 		}
 	}
+}
+
+// ptr returns a pointer to a copy of v. It sets the optional fields of the
+// protocol types, which are pointers.
+func ptr[T any](v T) *T {
+	return &v
 }

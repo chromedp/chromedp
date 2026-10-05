@@ -4,8 +4,16 @@ jobs:
   test:
     strategy:
       fail-fast: false
+      # Ubuntu tests Go 1.25, Go 1.26 and the newest stable release. Windows
+      # and macOS test the newest stable release only.
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - {os: ubuntu-latest, go: "1.25", docker: false}
+          - {os: ubuntu-latest, go: "1.26", docker: false}
+          - {os: ubuntu-latest, go: stable, docker: true}
+          - {os: windows-latest, go: stable, docker: false}
+          - {os: macos-latest, go: stable, docker: false}
+    name: test (${{ matrix.os }}, ${{ matrix.go }})
     runs-on: ${{ matrix.os }}
     # The repository has three modules: the core in the root, remote and test.
     # The go.mod of remote and test require a released core. The first step
@@ -23,7 +31,7 @@ jobs:
       - name: Install Go
         uses: actions/setup-go@v7
         with:
-          go-version: stable
+          go-version: ${{ matrix.go }}
       - name: Install Packages
         if: runner.os == 'Linux'
         run: |
@@ -51,5 +59,64 @@ jobs:
         working-directory: test
       # The headless-shell image is a Linux container.
       - name: Test headless-shell
-        if: runner.os == 'Linux' && (success() || failure())
+        if: matrix.docker && (success() || failure())
         run: ./contrib/docker-test.sh
+
+  # These jobs test the two JSON layers of cdproto, in the package
+  # github.com/chromedp/cdproto/cdp/jsonv2. The default jobs above use the
+  # module go-json-experiment/json on Go 1.25 and 1.26, and the standard
+  # library on Go 1.27 and later.
+  json-layer:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The standard library JSON package on Go 1.25, through the
+          # experiment jsonv2.
+          - name: go 1.25 with GOEXPERIMENT=jsonv2
+            go: "1.25"
+            experiment: jsonv2
+            tags: ""
+          # The go-json-experiment/json module on the newest Go release. The
+          # tag cdproto_jsoncompat selects the module, and nojsonv2 turns the
+          # experiment off.
+          - name: stable with the tag cdproto_jsoncompat
+            go: stable
+            experiment: nojsonv2
+            tags: cdproto_jsoncompat
+    name: json (${{ matrix.name }})
+    runs-on: ubuntu-latest
+    env:
+      GOWORK: "off"
+      GOEXPERIMENT: ${{ matrix.experiment }}
+      # An empty value makes go test ignore the flag.
+      GOFLAGS: ${{ matrix.tags != '' && format('-tags={0}', matrix.tags) || '' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+      - name: Install Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: ${{ matrix.go }}
+      - name: Install Packages
+        run: |
+          sudo apt-get -qq update
+          sudo apt-get install -y build-essential
+      - name: Allow unprivileged user namespaces
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - name: Use the core of this commit in remote and test
+        run: |
+          (cd remote && go mod edit -replace github.com/chromedp/chromedp=../)
+          (cd test && go mod edit -replace github.com/chromedp/chromedp=../)
+      - name: Vet
+        run: go vet ./...
+      - name: Test Chrome, core
+        run: go test -v ./...
+      - name: Test Chrome, remote
+        if: success() || failure()
+        run: go test -v ./...
+        working-directory: remote
+      - name: Test Chrome, test
+        if: success() || failure()
+        run: go test -v ./...
+        working-directory: test

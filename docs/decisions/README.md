@@ -31,3 +31,4 @@ add.
 | 2026-10-04 | [Keep site isolation on](2026-10-04-keep-site-isolation-on.md) | Decided |
 | 2026-10-04 | [The core uses only the standard library](2026-10-04-the-core-uses-only-the-standard-library.md) | Decided |
 | 2026-10-04 | [The pipe works on Windows](2026-10-04-the-pipe-works-on-windows.md) | Amends 2026-10-03-use-a-pipe-to-the-browser-by-default.md and 2026-10-04-the-core-uses-only-the-standard-library.md |
+| 2026-10-06 | [Support Go 1.25 and later](2026-10-06-support-go-1-25-and-later.md) | Decided |

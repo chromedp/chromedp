@@ -11,11 +11,10 @@ import (
 	"sync/atomic"
 	"time"
 
-	"encoding/json/jsontext"
-	jsonv2 "encoding/json/v2"
 	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/browser"
 	"github.com/chromedp/cdproto/cdp"
+	jsonv2 "github.com/chromedp/cdproto/cdp/jsonv2"
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
 )
@@ -24,12 +23,12 @@ var (
 	// DefaultUnmarshalOptions are default unmarshal options.
 	DefaultUnmarshalOptions = jsonv2.JoinOptions(
 		jsonv2.DefaultOptionsV2(),
-		jsontext.AllowInvalidUTF8(true),
+		jsonv2.AllowInvalidUTF8(true),
 	)
 	// DefaultMarshalOptions are default marshal options.
 	DefaultMarshalOptions = jsonv2.JoinOptions(
 		jsonv2.DefaultOptionsV2(),
-		jsontext.AllowInvalidUTF8(true),
+		jsonv2.AllowInvalidUTF8(true),
 	)
 )
 
@@ -240,7 +239,7 @@ func (b *Browser) Call(ctx context.Context, method string, params, res any) erro
 // Subscribe starts to buffer the browser events with the method, and returns
 // the channel that the raw event parameters arrive on. It satisfies
 // [cdp.Session].
-func (b *Browser) Subscribe(method string) (<-chan jsontext.Value, func()) {
+func (b *Browser) Subscribe(method string) (<-chan jsonv2.Value, func()) {
 	return b.events.subscribe(method)
 }
 
@@ -355,7 +354,8 @@ func (b *Browser) run(ctx context.Context) {
 		for {
 			msg := new(cdproto.Message)
 			if err := b.conn.Read(ctx, msg); err != nil {
-				if _, ok := errors.AsType[*jsontext.SyntacticError](err); ok {
+				var syntaxErr *jsonv2.SyntacticError
+				if errors.As(err, &syntaxErr) {
 					b.errf("%s", err)
 				}
 				b.noteReadError(ctx, err)
@@ -497,7 +497,8 @@ func (b *Browser) withExitError(err error) error {
 	if err == nil || b == nil || !b.diedUnexpectedly.Load() || b.reaped == nil || b.exitErr == nil {
 		return err
 	}
-	if _, ok := errors.AsType[*browserExitError](err); ok {
+	var exitErr *browserExitError
+	if errors.As(err, &exitErr) {
 		return err
 	}
 	select {

@@ -258,7 +258,8 @@ func TestCallBrowserError(t *testing.T) {
 	defer cancel()
 
 	_, err := CallBrowser(ctx, target.CloseTarget, target.CloseTargetParams{TargetID: "no-such-target"})
-	if _, ok := errors.AsType[*cdproto.Error](err); !ok {
+	var cdpErr *cdproto.Error
+	if !errors.As(err, &cdpErr) {
 		t.Errorf("got error %v (%T), want a *cdproto.Error", err, err)
 	}
 }

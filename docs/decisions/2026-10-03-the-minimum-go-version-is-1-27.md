@@ -26,4 +26,5 @@ comes from. `2025-02-22-use-json-v2.md` records the first choice. See
 
 ## What remains
 
-Nothing remains.
+Nothing remains. The decision `2026-10-06-support-go-1-25-and-later.md` lowers the
+minimum version to Go 1.25.

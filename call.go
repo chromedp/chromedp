@@ -3,8 +3,8 @@ package chromedp
 import (
 	"context"
 
-	jsonv2 "encoding/json/v2"
 	"github.com/chromedp/cdproto/cdp"
+	jsonv2 "github.com/chromedp/cdproto/cdp/jsonv2"
 	"github.com/chromedp/cdproto/runtime"
 )
 
@@ -71,10 +71,10 @@ func callFunctionOn[T any](ctx context.Context, t *Target, functionDeclaration s
 	// set up parameters
 	p := &runtime.CallFunctionOnParams{
 		FunctionDeclaration: functionDeclaration,
-		Silent:              new(true),
+		Silent:              ptr(true),
 	}
 	if !wantsRemoteObject[T]() {
-		p.ReturnByValue = new(true)
+		p.ReturnByValue = ptr(true)
 	}
 
 	// apply opt

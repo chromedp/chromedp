@@ -137,10 +137,12 @@ These words have one meaning in every document and in every Go comment.
 
 ## Go conventions
 
-The module needs Go 1.27 or newer, as `go.mod` says. The generated `cdproto`
-uses `encoding/json/v2`, which is in the standard library from Go 1.27. CI runs
-the newest stable release, which is Go 1.27 now. See
-`docs/decisions/2026-10-03-the-minimum-go-version-is-1-27.md`.
+The module needs Go 1.25 or newer, as `go.mod` says. Do not use a feature of
+Go 1.26 or later, such as `new(true)` or `errors.AsType`. Use the helper `ptr`
+for a pointer to a value. Import the JSON types from
+`github.com/chromedp/cdproto/cdp/jsonv2` and never from `encoding/json/v2`.
+CI runs Go 1.25, 1.26 and the newest stable release. See
+`docs/decisions/2026-10-06-support-go-1-25-and-later.md`.
 
 Wrap every error with `%w`, never `%s` or `%v`:
 

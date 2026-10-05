@@ -1,7 +1,7 @@
-github.com/chromedp/cdproto v0.157.4 h1:UleIu3RHfaQmhE0ri9GpCbHrGpe0HgV55HVhzhPWglI=
-github.com/chromedp/cdproto v0.157.4/go.mod h1:scNPhJ/A4T8BVkyR5k2Uocvoju3iBRZS4cg3uMlxuMk=
-github.com/chromedp/chromedp v0.18.0 h1:JulKLW1m2WWM4Lm2rtWNPyasQzl/bZzMtHywPGsOj3c=
-github.com/chromedp/chromedp v0.18.0/go.mod h1:4Rs9XtapAMgXxg0s1PpixyQHf37kdnSdu2ov5G4FsZ0=
+github.com/chromedp/cdproto v0.157.8 h1:Tkq0AjsUlC3Z4sJfHBzV/uAAxnTF/AZyuSTjfV/1gvk=
+github.com/chromedp/cdproto v0.157.8/go.mod h1:h68JaIuFr9o3yiayxEYhBdvaxgYO3shDrPSYhNlyfu0=
+github.com/go-json-experiment/json v0.0.0-20260213210345-44df1a37e875 h1:XGPtjxqp0FS8jj1Z7QGcSOSgyq1fUPjNyJXvi3KfI4A=
+github.com/go-json-experiment/json v0.0.0-20260213210345-44df1a37e875/go.mod h1:uNVvRXArCGbZ508SxYYTC5v1JWoz2voff5pm25jU1Ok=
 github.com/ledongthuc/pdf v0.0.0-20220302134840-0c2507a12d80 h1:6Yzfa6GP0rIo/kULo2bwGEkFvCePZ3qHDDTC3/J9Swo=
 github.com/ledongthuc/pdf v0.0.0-20220302134840-0c2507a12d80/go.mod h1:imJHygn/1yfhB7XSJJKlFZKl/J+dCPAknuiaGOshXAs=
 github.com/orisano/pixelmatch v0.0.0-20220722002657-fb0b55479cde h1:x0TT0RDC7UhAVbbWWBzr41ElhJx5tXPWkIHA2HWPRuw=

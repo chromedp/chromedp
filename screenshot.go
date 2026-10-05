@@ -80,8 +80,8 @@ func ScreenshotNodes(nodes []*Node, scale float64) Action[[]byte] {
 		// take screenshot of the box
 		res, err := cdp.Call(ctx, t, page.CaptureScreenshot, page.CaptureScreenshotParams{
 			Format:                page.CaptureScreenshotFormatPng,
-			CaptureBeyondViewport: new(true),
-			FromSurface:           new(true),
+			CaptureBeyondViewport: ptr(true),
+			FromSurface:           ptr(true),
 			Clip:                  &clip,
 		})
 		if err != nil {
@@ -105,7 +105,7 @@ func ScreenshotNodes(nodes []*Node, scale float64) Action[[]byte] {
 // [screenshot]: https://github.com/chromedp/examples/tree/master/screenshot
 func CaptureScreenshot() Action[[]byte] {
 	return func(ctx context.Context, t *Target) ([]byte, error) {
-		r, err := cdp.Call(ctx, t, page.CaptureScreenshot, page.CaptureScreenshotParams{FromSurface: new(true)})
+		r, err := cdp.Call(ctx, t, page.CaptureScreenshot, page.CaptureScreenshotParams{FromSurface: ptr(true)})
 		if err != nil {
 			return nil, err
 		}
@@ -131,8 +131,8 @@ func FullScreenshot(quality int) Action[[]byte] {
 		// capture screenshot
 		q := int64(quality)
 		r, err := cdp.Call(ctx, t, page.CaptureScreenshot, page.CaptureScreenshotParams{
-			CaptureBeyondViewport: new(true),
-			FromSurface:           new(true),
+			CaptureBeyondViewport: ptr(true),
+			FromSurface:           ptr(true),
 			Format:                format,
 			Quality:               &q,
 		})

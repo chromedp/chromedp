@@ -9,9 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"encoding/json/jsontext"
-	jsonv2 "encoding/json/v2"
 	"github.com/chromedp/cdproto/cdp"
+	jsonv2 "github.com/chromedp/cdproto/cdp/jsonv2"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
 )
@@ -138,7 +137,7 @@ func ExposeFunc[A, R any](name string, fn func(ctx context.Context, arg A) (R, e
 			// iframe that is there already.
 			added, err := cdp.Call(ctx, t, page.AddScriptToEvaluateOnNewDocument, page.AddScriptToEvaluateOnNewDocumentParams{
 				Source:         script,
-				RunImmediately: new(true),
+				RunImmediately: ptr(true),
 			})
 			if err != nil {
 				return fmt.Errorf("exposing func %q: %w", name, err)
@@ -177,8 +176,8 @@ func ExposeFunc[A, R any](name string, fn func(ctx context.Context, arg A) (R, e
 // the context of the page that made the call.
 func exposedCall[A, R any](ctx context.Context, t *Target, binding string, ev *runtime.EventBindingCalled, fn func(context.Context, A) (R, error)) {
 	var call struct {
-		ID   int64            `json:"id"`
-		Args []jsontext.Value `json:"args"`
+		ID   int64          `json:"id"`
+		Args []jsonv2.Value `json:"args"`
 	}
 	if err := jsonv2.Unmarshal([]byte(ev.Payload), &call, DefaultUnmarshalOptions); err != nil {
 		// Without the id the promise cannot settle, and the payload did not come
@@ -225,12 +224,12 @@ func exposedCall[A, R any](ctx context.Context, t *Target, binding string, ev *r
 	_, _ = cdp.Call(ctx, t, runtime.Evaluate, runtime.EvaluateParams{
 		Expression: expr,
 		ContextID:  ev.ExecutionContextID,
-		Silent:     new(true),
+		Silent:     ptr(true),
 	})
 }
 
 // exposedArg decodes the arguments of a call into the type A.
-func exposedArg[A any](args []jsontext.Value) (A, error) {
+func exposedArg[A any](args []jsonv2.Value) (A, error) {
 	var arg A
 	if reflect.TypeFor[A]().Kind() == reflect.Slice {
 		b, err := jsonv2.Marshal(args)

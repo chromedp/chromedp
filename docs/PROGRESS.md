@@ -9,6 +9,7 @@ in [`decisions/`](decisions/README.md).
 
 These commits come after the release v0.18.0. Each one has its own test, and a documentation change has none.
 
+- Changed: the module needs Go 1.25 or newer, no longer Go 1.27. The JSON types come from `github.com/chromedp/cdproto/cdp/jsonv2`, which uses the standard library on Go 1.27 and later. The types of the public API are the same on Go 1.27. The code has no feature of Go 1.26 (issue 1536). The decision is in `decisions/2026-10-06-support-go-1-25-and-later.md`.
 - Added: `Tap` and `TapXY` send a touch tap (issue 1174).
 - Fixed: `Evaluate[T]` returned the zero value and no error for the expression `null` when `T` cannot be nil, for example `Evaluate[int]` with the expression `null`. It returns `ErrJSNull` now, as the documentation says. The example `ExampleEvaluate` had a case for it, and its output did not show the error.
   `CallFunctionOn[T]` follows the same rule. `Poll` never returns it, because `null` is not truthy. `JavascriptAttribute[T]` and `Value` keep the zero value and no error for a `null` attribute, and a test covers each function.

@@ -36,8 +36,10 @@ so that `NewContext` knows that no process belongs to the context.
 
 A `Browser` holds a `Transport`, which is the pipe or the WebSocket
 connection. The WebSocket connection is `remote.Conn`. It reads every message, sends commands, and passes events to the
-target that owns them. Messages use the `encoding/json/v2` package of the
-standard library.
+target that owns them. Messages use the JSON package of
+`github.com/chromedp/cdproto/cdp/jsonv2`. It is `encoding/json/v2` of the
+standard library on Go 1.27 and later, and a module with the same API on Go 1.25
+and 1.26.
 
 A `Target` is one page or tab. It tracks the frame tree and the DOM tree of
 that page from events. A query can then read nodes without a round trip.
@@ -81,7 +83,8 @@ the root, in `remote/` and in `test/`, on Linux, Windows and macOS. On Linux onl
 it then runs `./contrib/docker-test.sh`, which tests the three modules against
 the `chromedp/headless-shell` image. The
 tests of `remote/` and of `test/` use the exported API of the core and the
-helpers in `internal/chromedptest/`. It uses the newest stable Go release, which is Go 1.27 now.
+helpers in `internal/chromedptest/`. It tests Go 1.25, Go 1.26 and the newest stable Go release on Linux. Windows
+and macOS use the newest stable release only.
 
 A second workflow, `.github/workflows/nightly.yml`, runs the container script every
 night against the channels `stable`, `beta` and `dev` of the `chromedp/headless-shell`

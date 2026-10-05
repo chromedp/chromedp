@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	jsonv2 "encoding/json/v2"
+	jsonv2 "github.com/chromedp/cdproto/cdp/jsonv2"
 	"github.com/chromedp/cdproto/runtime"
 )
 

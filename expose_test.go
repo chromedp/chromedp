@@ -9,13 +9,13 @@ import (
 	"sync/atomic"
 	"testing"
 
-	jsonv2 "encoding/json/v2"
+	jsonv2 "github.com/chromedp/cdproto/cdp/jsonv2"
 	"github.com/chromedp/cdproto/runtime"
 )
 
 // awaitPromise makes Evaluate wait for the promise that the expression gives.
 func awaitPromise(p *runtime.EvaluateParams) {
-	p.AwaitPromise = new(true)
+	p.AwaitPromise = ptr(true)
 }
 
 func TestExposeFunc(t *testing.T) {

@@ -7,10 +7,9 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"encoding/json/jsontext"
-	jsonv2 "encoding/json/v2"
 	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/cdp"
+	jsonv2 "github.com/chromedp/cdproto/cdp/jsonv2"
 	"github.com/chromedp/cdproto/dom"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
@@ -244,7 +243,7 @@ func (t *Target) Call(ctx context.Context, method string, params, res any) error
 // Subscribe starts to buffer the target events with the method, and returns
 // the channel that the raw event parameters arrive on. It satisfies
 // [cdp.Session].
-func (t *Target) Subscribe(method string) (<-chan jsontext.Value, func()) {
+func (t *Target) Subscribe(method string) (<-chan jsonv2.Value, func()) {
 	return t.events.subscribe(method)
 }
 

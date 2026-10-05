@@ -41,7 +41,7 @@ func Evaluate[T any](expression string, opts ...EvaluateOption) Action[T] {
 		// set up parameters
 		p := &runtime.EvaluateParams{Expression: expression}
 		if !wantsRemoteObject[T]() {
-			p.ReturnByValue = new(true)
+			p.ReturnByValue = ptr(true)
 		}
 
 		// apply opts
@@ -141,13 +141,13 @@ func EvalObjectGroup(objectGroup string) EvaluateOption {
 //
 // Note: do not use this with untrusted JavaScript.
 func EvalWithCommandLineAPI(p *runtime.EvaluateParams) {
-	p.IncludeCommandLineAPI = new(true)
+	p.IncludeCommandLineAPI = ptr(true)
 }
 
 // EvalIgnoreExceptions is an evaluate option that makes the evaluation ignore
 // exceptions.
 func EvalIgnoreExceptions(p *runtime.EvaluateParams) {
-	p.Silent = new(true)
+	p.Silent = ptr(true)
 }
 
 // EvalAwaitPromise is an evaluate option that makes the evaluation wait for a
@@ -158,11 +158,11 @@ func EvalIgnoreExceptions(p *runtime.EvaluateParams) {
 //
 //	v, err := chromedp.Run(ctx, chromedp.Evaluate[string](`fetch("/api").then(r => r.text())`, chromedp.EvalAwaitPromise))
 func EvalAwaitPromise(p *runtime.EvaluateParams) {
-	p.AwaitPromise = new(true)
+	p.AwaitPromise = ptr(true)
 }
 
 // EvalAsValue is an evaluate option that makes the evaluation encode the
 // result of the expression as a JSON-encoded value.
 func EvalAsValue(p *runtime.EvaluateParams) {
-	p.ReturnByValue = new(true)
+	p.ReturnByValue = ptr(true)
 }

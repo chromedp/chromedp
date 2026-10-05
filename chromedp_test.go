@@ -1062,7 +1062,7 @@ func TestDownloadIntoDir(t *testing.T) {
 			_, err := Call(ctx, browser.SetDownloadBehavior, browser.SetDownloadBehaviorParams{
 				Behavior:      browser.SetDownloadBehaviorBehaviorAllowAndName,
 				DownloadPath:  dir,
-				EventsEnabled: new(true),
+				EventsEnabled: ptr(true),
 			})
 			return err
 		}),

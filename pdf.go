@@ -102,7 +102,7 @@ func readStream(ctx context.Context, t *Target, h cdpio.StreamHandle) (data []by
 // PDFLandscape is an option of [PrintToPDF] that prints in landscape. The
 // width and the height of the paper swap.
 func PDFLandscape() PDFOption {
-	return func(p *page.PrintToPDFParams) { p.Landscape = new(true) }
+	return func(p *page.PrintToPDFParams) { p.Landscape = ptr(true) }
 }
 
 // PDFPaper is an option of [PrintToPDF] that sets the size of the paper. Give
@@ -148,13 +148,13 @@ func PDFPageRanges(ranges string) PDFOption {
 // the CSS rule @page, when the page has one. Otherwise the browser scales the
 // content to fit the paper.
 func PDFPreferCSSPageSize() PDFOption {
-	return func(p *page.PrintToPDFParams) { p.PreferCSSPageSize = new(true) }
+	return func(p *page.PrintToPDFParams) { p.PreferCSSPageSize = ptr(true) }
 }
 
 // PDFPrintBackground is an option of [PrintToPDF] that prints the background
 // colors and images. By default, the browser leaves them out.
 func PDFPrintBackground() PDFOption {
-	return func(p *page.PrintToPDFParams) { p.PrintBackground = new(true) }
+	return func(p *page.PrintToPDFParams) { p.PrintBackground = ptr(true) }
 }
 
 // PDFHeaderTemplate is an option of [PrintToPDF] that sets the HTML of the
@@ -169,7 +169,7 @@ func PDFPrintBackground() PDFOption {
 func PDFHeaderTemplate(html string) PDFOption {
 	return func(p *page.PrintToPDFParams) {
 		p.HeaderTemplate = html
-		p.DisplayHeaderFooter = new(true)
+		p.DisplayHeaderFooter = ptr(true)
 	}
 }
 
@@ -177,7 +177,7 @@ func PDFHeaderTemplate(html string) PDFOption {
 func PDFFooterTemplate(html string) PDFOption {
 	return func(p *page.PrintToPDFParams) {
 		p.FooterTemplate = html
-		p.DisplayHeaderFooter = new(true)
+		p.DisplayHeaderFooter = ptr(true)
 	}
 }
 
@@ -188,8 +188,8 @@ func PDFFooterTemplate(html string) PDFOption {
 // default, so with them the option adds the outline.
 func PDFOutlineAndTagged() PDFOption {
 	return func(p *page.PrintToPDFParams) {
-		p.GenerateDocumentOutline = new(true)
-		p.GenerateTaggedPDF = new(true)
+		p.GenerateDocumentOutline = ptr(true)
+		p.GenerateTaggedPDF = ptr(true)
 	}
 }
 

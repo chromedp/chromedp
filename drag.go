@@ -2,9 +2,8 @@ package chromedp
 
 import (
 	"context"
-	"encoding/json/jsontext"
-	jsonv2 "encoding/json/v2"
 	"fmt"
+	jsonv2 "github.com/chromedp/cdproto/cdp/jsonv2"
 	"time"
 
 	"github.com/chromedp/cdproto/cdp"
@@ -119,7 +118,7 @@ func draggableAt(ctx context.Context, t *Target, x, y float64) bool {
 		var e = document.elementFromPoint(x, y);
 		return !!(e && e.closest('[draggable="true"], a[href], img'));
 	})(%v, %v)`, x, y)
-	res, err := cdp.Call(ctx, t, runtime.Evaluate, runtime.EvaluateParams{Expression: expr, ReturnByValue: new(true)})
+	res, err := cdp.Call(ctx, t, runtime.Evaluate, runtime.EvaluateParams{Expression: expr, ReturnByValue: ptr(true)})
 	if err != nil || res.ExceptionDetails != nil || res.Result == nil {
 		return false
 	}
@@ -215,7 +214,7 @@ func DragAndDropXY(fromX, fromY, toX, toY float64, steps ...int) Action[Void] {
 		// intercept returns the data of a native drag, when the browser
 		// reported one within the wait.
 		intercept := func(wait time.Duration) (*input.DragData, error) {
-			var raw jsontext.Value
+			var raw jsonv2.Value
 			if wait <= 0 {
 				select {
 				case raw = <-intercepted:

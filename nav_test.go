@@ -118,7 +118,8 @@ func TestNavigateLoadError(t *testing.T) {
 			if !errors.Is(err, ErrPageLoad) {
 				t.Errorf("errors.Is(%q, ErrPageLoad) is false", err)
 			}
-			loadErr, ok := errors.AsType[*LoadError](err)
+			var loadErr *LoadError
+			ok := errors.As(err, &loadErr)
 			if !ok {
 				t.Fatalf("want a *LoadError in %q", err)
 			}

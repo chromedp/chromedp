@@ -8,8 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"encoding/json/jsontext"
-	jsonv2 "encoding/json/v2"
+	jsonv2 "github.com/chromedp/cdproto/cdp/jsonv2"
 	"github.com/chromedp/cdproto/log"
 	"github.com/chromedp/cdproto/runtime"
 )
@@ -167,10 +166,10 @@ func Console(ctx context.Context) iter.Seq2[ConsoleMessage, error] {
 }
 
 // decodeConsole turns a tagged event into a message.
-func decodeConsole(raw jsontext.Value) (ConsoleMessage, error) {
+func decodeConsole(raw jsonv2.Value) (ConsoleMessage, error) {
 	var ev struct {
-		Method string         `json:"method"`
-		Params jsontext.Value `json:"params"`
+		Method string       `json:"method"`
+		Params jsonv2.Value `json:"params"`
 	}
 	if err := jsonv2.Unmarshal(raw, &ev, DefaultUnmarshalOptions); err != nil {
 		return ConsoleMessage{}, fmt.Errorf("decoding a console event: %w", err)

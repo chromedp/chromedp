@@ -431,7 +431,7 @@ if err := chromedp.Run(ctx,
 }
 ```
 
-After:
+After (`new(true)` needs Go 1.26 or later, and with Go 1.25 you write a helper `ptr`, as in `docs/MIGRATION.md`):
 
 ```go
 printToPDF := func(ctx context.Context, t *chromedp.Target) ([]byte, error) {
@@ -952,7 +952,7 @@ type Browser struct { ... }
 func NewBrowserTransport(ctx context.Context, tr Transport, opts ...BrowserOption) (*Browser, error)
 func (b *Browser) Call(ctx context.Context, method string, params, res any) error
 func (b *Browser) Process() *os.Process
-func (b *Browser) Subscribe(method string) (<-chan jsontext.Value, func())
+func (b *Browser) Subscribe(method string) (<-chan jsonv2.Value, func())
 
 type BrowserOption = func(*Browser)
 func WithBrowserDebugf(f func(string, ...any)) BrowserOption
@@ -1121,7 +1121,7 @@ type Selector struct { ... }
 
 type Target struct { ... }
 func (t *Target) Call(ctx context.Context, method string, params, res any) error
-func (t *Target) Subscribe(method string) (<-chan jsontext.Value, func())
+func (t *Target) Subscribe(method string) (<-chan jsonv2.Value, func())
 
 type Transport interface { ... }
 

@@ -134,10 +134,10 @@ func TapXY(x, y float64) Action[Void] {
 			TouchPoints: []*input.TouchPoint{{
 				X:       x,
 				Y:       y,
-				RadiusX: new(1.0),
-				RadiusY: new(1.0),
-				Force:   new(1.0),
-				ID:      new(0.0),
+				RadiusX: ptr(1.0),
+				RadiusY: ptr(1.0),
+				Force:   ptr(1.0),
+				ID:      ptr(0.0),
 			}},
 		}
 		if _, err := cdp.Call(ctx, t, input.DispatchTouchEvent, p); err != nil {

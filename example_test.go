@@ -451,8 +451,8 @@ func ExamplePrintToPDF() {
 	// the bytes of the PDF file.
 	printToPDF := func(ctx context.Context, t *chromedp.Target) ([]byte, error) {
 		res, err := cdp.Call(ctx, t, page.PrintToPDF, page.PrintToPDFParams{
-			DisplayHeaderFooter: new(false),
-			Landscape:           new(true),
+			DisplayHeaderFooter: ptr(false),
+			Landscape:           ptr(true),
 		})
 		return res.Data, err
 	}
@@ -1000,7 +1000,7 @@ type oldTitle struct{ res *string }
 func (a oldTitle) Do(ctx context.Context) error {
 	res, err := chromedp.Call(ctx, runtime.Evaluate, runtime.EvaluateParams{
 		Expression:    "document.title",
-		ReturnByValue: new(true),
+		ReturnByValue: ptr(true),
 	})
 	if err != nil {
 		return err
@@ -1057,4 +1057,10 @@ func ExampleVisibleWindow() {
 		log.Fatal(err)
 	}
 	chromedp.WaitClosed(ctx)
+}
+
+// ptr returns a pointer to a copy of v. It sets the optional fields of the
+// protocol types, which are pointers.
+func ptr[T any](v T) *T {
+	return &v
 }

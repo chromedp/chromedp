@@ -329,3 +329,9 @@ func isCouldNotComputeBoxModelError(err error) bool {
 	e, ok := err.(*cdproto.Error)
 	return ok && e.Code == -32000 && e.Message == "Could not compute box model."
 }
+
+// ptr returns a pointer to a copy of v. It sets the optional fields of the
+// protocol types, which are pointers.
+func ptr[T any](v T) *T {
+	return &v
+}

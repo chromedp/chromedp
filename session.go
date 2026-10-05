@@ -1,10 +1,9 @@
 package chromedp
 
 import (
+	jsonv2 "github.com/chromedp/cdproto/cdp/jsonv2"
 	"strconv"
 	"sync"
-
-	"encoding/json/jsontext"
 )
 
 // subscribers holds the event subscriptions of a session, indexed by the
@@ -18,9 +17,9 @@ type subscribers struct {
 // subscribe adds a subscription for the events with the method. It buffers
 // every event from the moment that it returns. The returned func stops the
 // subscription and closes the channel.
-func (s *subscribers) subscribe(method string) (<-chan jsontext.Value, func()) {
+func (s *subscribers) subscribe(method string) (<-chan jsonv2.Value, func()) {
 	sub := &subscription{
-		out:  make(chan jsontext.Value),
+		out:  make(chan jsonv2.Value),
 		wake: make(chan struct{}, 1),
 		done: make(chan struct{}),
 	}
@@ -51,9 +50,9 @@ func (s *subscribers) subscribe(method string) (<-chan jsontext.Value, func()) {
 // channel gets the events of all the methods in the order that they arrived.
 // Each value is a JSON object with the fields method and params, because a
 // reader cannot tell the method from the parameters alone.
-func (s *subscribers) subscribeMany(methods ...string) (<-chan jsontext.Value, func()) {
+func (s *subscribers) subscribeMany(methods ...string) (<-chan jsonv2.Value, func()) {
 	sub := &subscription{
-		out:    make(chan jsontext.Value),
+		out:    make(chan jsonv2.Value),
 		wake:   make(chan struct{}, 1),
 		done:   make(chan struct{}),
 		tagged: true,
@@ -87,7 +86,7 @@ func (s *subscribers) subscribeMany(methods ...string) (<-chan jsontext.Value, f
 
 // publish hands the raw parameters of an event to the subscriptions for the
 // method. It never blocks.
-func (s *subscribers) publish(method string, params jsontext.Value) {
+func (s *subscribers) publish(method string, params jsonv2.Value) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	for sub := range s.subs[method] {
@@ -100,11 +99,11 @@ func (s *subscribers) publish(method string, params jsontext.Value) {
 }
 
 // tagEvent wraps the parameters of an event in a JSON object with the method.
-func tagEvent(method string, params jsontext.Value) jsontext.Value {
+func tagEvent(method string, params jsonv2.Value) jsonv2.Value {
 	b := append([]byte(`{"method":`), strconv.Quote(method)...)
 	b = append(b, `,"params":`...)
 	if len(params) == 0 {
-		params = jsontext.Value("null")
+		params = jsonv2.Value("null")
 	}
 	b = append(b, params...)
 	return append(b, '}')
@@ -129,7 +128,7 @@ func (s *subscribers) close() {
 // limit, so that publishing never blocks the handling of the browser events.
 // A goroutine moves the events to the channel of the subscriber.
 type subscription struct {
-	out  chan jsontext.Value
+	out  chan jsonv2.Value
 	wake chan struct{}
 	done chan struct{}
 
@@ -137,12 +136,12 @@ type subscription struct {
 	tagged bool
 
 	mu       sync.Mutex
-	queue    []jsontext.Value
+	queue    []jsonv2.Value
 	finished bool
 	stopOnce sync.Once
 }
 
-func (s *subscription) push(v jsontext.Value) {
+func (s *subscription) push(v jsonv2.Value) {
 	s.mu.Lock()
 	s.queue = append(s.queue, v)
 	s.mu.Unlock()

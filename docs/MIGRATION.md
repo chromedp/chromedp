@@ -49,7 +49,7 @@ Every public function that took or returned `*cdp.Node` or `*cdp.Frame` now uses
 - `browser.DownloadProgressStateCompleted` and `browser.SetDownloadBehaviorBehaviorAllowAndName` keep their names and have the types `browser.DownloadProgressState` and `browser.SetDownloadBehaviorBehavior`.
 - `runtime.ExceptionDetails` has no `Error` method. The actions `Evaluate`, `CallFunctionOn` and the query actions return `*chromedp.ExceptionError`, which wraps the details and has an `Error` method.
 - The time types of `cdp` and `network` are plain `float64` values, so a method such as `ResponseTime.Time()` is gone. Convert the seconds yourself with `time.Unix`.
-- `cdproto` uses `encoding/json/v2` and `encoding/json/jsontext` from the standard library. Use them in place of `github.com/go-json-experiment/json` and its `jsontext` package. The module needs Go 1.27.
+- `cdproto` has the package `github.com/chromedp/cdproto/cdp/jsonv2` for JSON. Use it in place of `github.com/go-json-experiment/json` and its `jsontext` package. Its `Value`, `Options`, `Decoder`, `Encoder` and `SyntacticError` are aliases of the types of `encoding/json/v2` and `encoding/json/jsontext` on Go 1.27 and later. On Go 1.25 and 1.26 they are aliases of the types of `github.com/go-json-experiment/json`. The module needs Go 1.25 or newer.
 - `EventExecutionContextDestroyed` names a context by `ExecutionContextUniqueID`. `chromedp` tracks the unique identifier for you.
 
 ## Migrate to the typed cdproto
@@ -85,7 +85,7 @@ chromedp.Do(ctx, chromedp.Func(func(ctx context.Context, t *chromedp.Target) err
 
 ### Options
 
-The generated `With...` methods are gone, so the option types of `chromedp` change. An option now changes the parameter struct that it receives and returns nothing. A field for an optional boolean has the type `*bool`. Use `new(true)` and `new(false)`.
+The generated `With...` methods are gone, so the option types of `chromedp` change. An option now changes the parameter struct that it receives and returns nothing. A field for an optional boolean has the type `*bool`. Use `new(true)` and `new(false)` with Go 1.26 or later. With Go 1.25, use a helper such as `func ptr[T any](v T) *T { return &v }` and write `ptr(true)`.
 
 - `EvaluateOption` becomes `func(*runtime.EvaluateParams)`. The options `EvalObjectGroup`, `EvalWithCommandLineAPI`, `EvalIgnoreExceptions` and `EvalAsValue` keep their names.
 - `CallOption` becomes `func(*runtime.CallFunctionOnParams)`.
@@ -278,7 +278,7 @@ In `cdproto` v0.157.3, a number that is not set was left out of the request, and
 there was no way to send the value zero. In v0.157.4, 71 optional number fields
 in the parameters and types of commands are pointers, where zero is a different
 value from "not set". A nil pointer leaves the field out. A pointer to zero sends
-zero, the same as the optional boolean fields. Use `new(0.5)`, or the address of
+zero, the same as the optional boolean fields. Use `new(0.5)` with Go 1.26 or later, the helper `ptr(0.5)` as above, or the address of
 a variable, to set one.
 
 - The fields are, for example, `Depth` of `dom.RequestChildNodesParams`,

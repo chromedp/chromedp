@@ -558,7 +558,7 @@ func (c *Context) newTarget(ctx context.Context) error {
 func (c *Context) attachTarget(ctx context.Context, targetID target.ID) error {
 	res, err := cdp.Call(ctx, c.Browser, target.AttachToTarget, target.AttachToTargetParams{
 		TargetID: targetID,
-		Flatten:  new(true),
+		Flatten:  ptr(true),
 	})
 	if err != nil {
 		return err
@@ -603,7 +603,7 @@ func (c *Context) attachTarget(ctx context.Context, targetID target.ID) error {
 			step{dom.Enable.Method, dom.EnableParams{}},
 			step{css.Enable.Method, cdp.Empty{}},
 			step{target.SetDiscoverTargets.Method, target.SetDiscoverTargetsParams{Discover: true}},
-			step{target.SetAutoAttach.Method, target.SetAutoAttachParams{AutoAttach: true, Flatten: new(true)}},
+			step{target.SetAutoAttach.Method, target.SetAutoAttachParams{AutoAttach: true, Flatten: ptr(true)}},
 			step{page.SetLifecycleEventsEnabled.Method, page.SetLifecycleEventsEnabledParams{Enabled: true}},
 		)
 	}
@@ -737,7 +737,7 @@ func WithNewBrowserContext(options ...CreateBrowserContextOption) ContextOption 
 			panic("WithNewBrowserContext can not be used before Browser is initialized")
 		}
 
-		params := &target.CreateBrowserContextParams{DisposeOnDetach: new(true)}
+		params := &target.CreateBrowserContextParams{DisposeOnDetach: ptr(true)}
 		for _, o := range options {
 			o(params)
 		}

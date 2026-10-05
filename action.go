@@ -2,10 +2,10 @@ package chromedp
 
 import (
 	"context"
+	jsonv2 "github.com/chromedp/cdproto/cdp/jsonv2"
 	"iter"
 	"time"
 
-	"encoding/json/jsontext"
 	"github.com/chromedp/cdproto/cdp"
 )
 
@@ -21,7 +21,7 @@ type Void = struct{}
 //	title := func(ctx context.Context, t *chromedp.Target) (string, error) {
 //		res, err := cdp.Call(ctx, t, runtime.Evaluate, runtime.EvaluateParams{
 //			Expression:    "document.title",
-//			ReturnByValue: new(true),
+//			ReturnByValue: ptr(true),
 //		})
 //		...
 //	}
@@ -172,7 +172,7 @@ func endWith(ctx context.Context, s cdp.Session) cdp.Session {
 
 // Subscribe subscribes on the session, and ends the subscription when the
 // context ends.
-func (e endingSession) Subscribe(method string) (<-chan jsontext.Value, func()) {
+func (e endingSession) Subscribe(method string) (<-chan jsonv2.Value, func()) {
 	events, cancel := e.Session.Subscribe(method)
 	stop := context.AfterFunc(e.ctx, cancel)
 	return events, func() {

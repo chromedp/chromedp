@@ -2,9 +2,8 @@ package chromedp
 
 import (
 	"bytes"
-	"encoding/json/jsontext"
-	jsonv2 "encoding/json/v2"
 	"github.com/chromedp/cdproto"
+	jsonv2 "github.com/chromedp/cdproto/cdp/jsonv2"
 	"testing"
 )
 
@@ -32,7 +31,7 @@ func TestUnmarshalWithDefaultOptions(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
-			var decoder jsontext.Decoder
+			var decoder jsonv2.Decoder
 			var b bytes.Buffer
 			b.Write(test.Input)
 			var msg cdproto.Message
@@ -65,7 +64,7 @@ func TestMarshalWithDefaultOptions(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {
-			var encoder jsontext.Encoder
+			var encoder jsonv2.Encoder
 			var b bytes.Buffer
 			encoder.Reset(&b, DefaultMarshalOptions)
 			err := jsonv2.MarshalEncode(&encoder, &test.Input, DefaultMarshalOptions)

@@ -59,8 +59,8 @@ func runPoll[T any](ctx context.Context, t *Target, p *pollTask) (T, error) {
 	res, r, err := callFunctionOn[T](ctx, t, waitForPredicatePageFunction,
 		func(p *runtime.CallFunctionOnParams) {
 			p.ExecutionContextID = execCtx
-			p.AwaitPromise = new(true)
-			p.UserGesture = new(true)
+			p.AwaitPromise = ptr(true)
+			p.UserGesture = ptr(true)
 		},
 		args...,
 	)

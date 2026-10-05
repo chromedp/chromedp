@@ -20,9 +20,8 @@ import (
 	"net/http"
 	"sync"
 
-	"encoding/json/jsontext"
-	jsonv2 "encoding/json/v2"
 	"github.com/chromedp/cdproto"
+	jsonv2 "github.com/chromedp/cdproto/cdp/jsonv2"
 	"github.com/chromedp/chromedp"
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
@@ -46,8 +45,8 @@ type Conn struct {
 	writeMu sync.Mutex
 
 	// reuse the easyjson structs to avoid allocs per Read/Write.
-	decoder jsontext.Decoder
-	encoder jsontext.Encoder
+	decoder jsonv2.Decoder
+	encoder jsonv2.Encoder
 
 	// header is the set of HTTP headers that the dial sends with the
 	// handshake request.

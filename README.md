@@ -15,7 +15,9 @@ driver.
 
 ## Installing
 
-Install the package with `go get`. The module needs Go 1.27 or newer. Version
+Install the package with `go get`. The module needs Go 1.25 or newer. On Go 1.25 and 1.26, the JSON types come
+from `github.com/chromedp/cdproto/cdp/jsonv2`. On Go 1.27 they are the types of
+the standard library. Version
 v0.18.0 uses the typed `cdproto` v0.157.4 and has the generic and iterator API.
 The earlier versions of `cdproto`, v0.157.0, v0.157.1 and v0.157.2, have the old API.
 

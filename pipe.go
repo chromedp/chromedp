@@ -9,9 +9,8 @@ import (
 	"io"
 	"sync"
 
-	"encoding/json/jsontext"
-	jsonv2 "encoding/json/v2"
 	"github.com/chromedp/cdproto"
+	jsonv2 "github.com/chromedp/cdproto/cdp/jsonv2"
 )
 
 // PipeConn implements Transport with the two pipes of a browser that was
@@ -30,12 +29,12 @@ type PipeConn struct {
 	br *bufio.Reader
 
 	// decoder is reused by Read.
-	decoder jsontext.Decoder
+	decoder jsonv2.Decoder
 
 	// writeMu makes Write safe to call from more than one goroutine. It
 	// also protects encoder and wbuf.
 	writeMu sync.Mutex
-	encoder jsontext.Encoder
+	encoder jsonv2.Encoder
 	wbuf    bytes.Buffer
 
 	closeOnce sync.Once

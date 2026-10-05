@@ -181,17 +181,17 @@ func TestPDFOptions(t *testing.T) {
 		want page.PrintToPDFParams
 	}{
 		{"none", nil, page.PrintToPDFParams{}},
-		{"landscape", []PDFOption{PDFLandscape()}, page.PrintToPDFParams{Landscape: new(true)}},
+		{"landscape", []PDFOption{PDFLandscape()}, page.PrintToPDFParams{Landscape: ptr(true)}},
 		{"paper", []PDFOption{PDFPaper(PaperA4)}, page.PrintToPDFParams{PaperWidth: 8.27, PaperHeight: 11.69}},
-		{"margin zero", []PDFOption{PDFMargin(0)}, page.PrintToPDFParams{MarginTop: new(0.0), MarginRight: new(0.0), MarginBottom: new(0.0), MarginLeft: new(0.0)}},
-		{"margins", []PDFOption{PDFMargins(1, 2, 3, 4)}, page.PrintToPDFParams{MarginTop: new(1.0), MarginRight: new(2.0), MarginBottom: new(3.0), MarginLeft: new(4.0)}},
+		{"margin zero", []PDFOption{PDFMargin(0)}, page.PrintToPDFParams{MarginTop: ptr(0.0), MarginRight: ptr(0.0), MarginBottom: ptr(0.0), MarginLeft: ptr(0.0)}},
+		{"margins", []PDFOption{PDFMargins(1, 2, 3, 4)}, page.PrintToPDFParams{MarginTop: ptr(1.0), MarginRight: ptr(2.0), MarginBottom: ptr(3.0), MarginLeft: ptr(4.0)}},
 		{"scale", []PDFOption{PDFScale(1.5)}, page.PrintToPDFParams{Scale: 1.5}},
 		{"ranges", []PDFOption{PDFPageRanges("1-2")}, page.PrintToPDFParams{PageRanges: "1-2"}},
-		{"CSS size", []PDFOption{PDFPreferCSSPageSize()}, page.PrintToPDFParams{PreferCSSPageSize: new(true)}},
-		{"background", []PDFOption{PDFPrintBackground()}, page.PrintToPDFParams{PrintBackground: new(true)}},
-		{"header", []PDFOption{PDFHeaderTemplate("h")}, page.PrintToPDFParams{HeaderTemplate: "h", DisplayHeaderFooter: new(true)}},
-		{"footer", []PDFOption{PDFFooterTemplate("f")}, page.PrintToPDFParams{FooterTemplate: "f", DisplayHeaderFooter: new(true)}},
-		{"outline", []PDFOption{PDFOutlineAndTagged()}, page.PrintToPDFParams{GenerateDocumentOutline: new(true), GenerateTaggedPDF: new(true)}},
+		{"CSS size", []PDFOption{PDFPreferCSSPageSize()}, page.PrintToPDFParams{PreferCSSPageSize: ptr(true)}},
+		{"background", []PDFOption{PDFPrintBackground()}, page.PrintToPDFParams{PrintBackground: ptr(true)}},
+		{"header", []PDFOption{PDFHeaderTemplate("h")}, page.PrintToPDFParams{HeaderTemplate: "h", DisplayHeaderFooter: ptr(true)}},
+		{"footer", []PDFOption{PDFFooterTemplate("f")}, page.PrintToPDFParams{FooterTemplate: "f", DisplayHeaderFooter: ptr(true)}},
+		{"outline", []PDFOption{PDFOutlineAndTagged()}, page.PrintToPDFParams{GenerateDocumentOutline: ptr(true), GenerateTaggedPDF: ptr(true)}},
 		{"stream", []PDFOption{PDFStream()}, page.PrintToPDFParams{TransferMode: page.PrintToPDFTransferModeReturnAsStream}},
 	}
 	for _, test := range tests {
