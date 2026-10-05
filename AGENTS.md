@@ -198,7 +198,7 @@ any other. `.gitignore` lists them. The maintainer can try an unreleased
 `go.mod` of the core.
 
 The `go.mod` of `remote/` and of `test/` require a released version of the core,
-`github.com/chromedp/chromedp v0.18.0` at this time, and hold no `replace`
+`github.com/chromedp/chromedp v0.20.0` at this time, and hold no `replace`
 directive. To try a change of the core in `remote` or `test`, add
 `replace github.com/chromedp/chromedp => ../` to that `go.mod` while you work,
 and never commit it. CI adds the directive at run time, so that `remote` and
@@ -225,9 +225,13 @@ installed:
 ./contrib/docker-test.sh
 ```
 
-The `IMAGE` variable chooses another image. CI runs the first command on Linux, Windows and macOS, and the container
-script on Linux only, on every push and pull request, with the newest stable Go
-release. It runs the three modules in turn, each one in its own directory. The
+The `IMAGE` variable chooses another image. CI runs the first command on Linux,
+Windows and macOS, on every push and pull request. Linux runs Go 1.25, Go 1.26
+and the newest stable release, and Windows and macOS run the newest stable
+release. The container script runs on Linux with the newest stable release only.
+Two more Linux jobs test `cdproto/cdp/jsonv2`: one with Go 1.25 and
+`GOEXPERIMENT=jsonv2`, and one with the tag `cdproto_jsoncompat` and
+`GOEXPERIMENT=nojsonv2`. CI runs the three modules in turn, each one in its own directory. The
 steps of `remote`, `test` and the container run even when an earlier step
 failed, so that one run shows every failure. See `.github/workflows/test.yml`.
 A second workflow, `.github/workflows/nightly.yml`, runs the container script every

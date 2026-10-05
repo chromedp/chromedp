@@ -26,7 +26,7 @@ import (
 //
 // For an example that takes a screenshot of the entire page, see [screenshot].
 //
-// [screenshot]: https://github.com/chromedp/examples/tree/master/screenshot
+// [screenshot]: https://github.com/chromedp/examples/tree/main/screenshot
 func Screenshot[S Selectable](sel S, opts ...QueryOption) Action[[]byte] {
 	return ScreenshotScale(sel, 1, opts...)
 }
@@ -102,7 +102,7 @@ func ScreenshotNodes(nodes []*Node, scale float64) Action[[]byte] {
 //
 // For an example that takes a screenshot of the entire page, see [screenshot].
 //
-// [screenshot]: https://github.com/chromedp/examples/tree/master/screenshot
+// [screenshot]: https://github.com/chromedp/examples/tree/main/screenshot
 func CaptureScreenshot() Action[[]byte] {
 	return func(ctx context.Context, t *Target) ([]byte, error) {
 		r, err := cdp.Call(ctx, t, page.CaptureScreenshot, page.CaptureScreenshotParams{FromSurface: ptr(true)})

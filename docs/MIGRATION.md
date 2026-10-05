@@ -1,12 +1,14 @@
 # Migrate to the new API
 
-This document lists the public API changes from `chromedp` v0.16.0 to v0.18.0.
-Version v0.18.0 uses `cdproto` v0.157.4. The release v0.157.3 is the first one of
+This document lists the public API changes from `chromedp` v0.16.0 to v0.20.0.
+Version v0.20.0 uses `cdproto` v0.157.8. The release v0.157.3 is the first one of
 the typed API, and v0.157.4 makes some optional numbers pointers. The versions v0.157.0, v0.157.1 and v0.157.2 of `cdproto` have the old API. The
-document has eight parts, in the order of the changes: the move to `cdproto`
+document has ten parts, in the order of the changes: the move to `cdproto`
 v0.157.1, the move to the typed `cdproto`, the move to the generic action API,
 the move to typed selectors, the pipe transport, the options for a visible
-window, and the move of the websocket code to the module `remote`. Apply the parts in this order. A later part can replace a rule of an
+window, the changes in v0.18.0, the move of the websocket code to the module
+`remote`, the move to `cdproto` v0.157.4, and the changes in v0.19.0 and
+v0.20.0. Apply the parts in this order. A later part can replace a rule of an
 earlier part.
 
 ## Migrate to cdproto v0.157.1
@@ -92,7 +94,7 @@ The generated `With...` methods are gone, so the option types of `chromedp` chan
 - `MouseOption` becomes `func(*input.DispatchMouseEventParams)`. The options `Button`, `ButtonType`, `ButtonLeft`, `ButtonMiddle`, `ButtonRight`, `ButtonNone`, `ButtonModifiers` and `ClickCount` keep their names.
 - `KeyOption` becomes `func(*input.DispatchKeyEventParams)`. `KeyModifiers` keeps its name.
 - `CreateBrowserContextOption` becomes `func(*target.CreateBrowserContextParams)`.
-- A custom option such as `func(p *runtime.EvaluateParams) *runtime.EvaluateParams { return p.WithSilent(true) }` becomes `func(p *runtime.EvaluateParams) { p.Silent = new(true) }`.
+- A custom option such as `func(p *runtime.EvaluateParams) *runtime.EvaluateParams { return p.WithSilent(true) }` becomes `func(p *runtime.EvaluateParams) { p.Silent = new(true) }` with Go 1.26 or later, or `p.Silent = ptr(true)` with the helper `ptr`.
 
 ### Other changes
 
@@ -297,9 +299,9 @@ a variable, to set one.
 - `cdp.ErrInvalidContext` is removed from `cdproto`. `chromedp.ErrInvalidContext` is the
   error of this package.
 
-## Changes since v0.18.0
+## Changes in v0.19.0 and v0.20.0
 
-These names are new, and no old code needs a change, unless a bullet says so.
+The release v0.19.1 changed documents only. These names are new, and no old code needs a change, unless a bullet says so. The release v0.20.0 needs Go 1.25 or newer and uses `cdproto` v0.157.8. Its last bullet below describes that change.
 
 - `Evaluate[T]` returns `ErrJSNull` for a JavaScript `null` when `T` cannot be nil, for example an `int` or a `string`. Before, it returned the zero value and no error, which the documentation did not say. Use a pointer type, such as `*int`, to get nil for `null`. `CallFunctionOn[T]` follows the same rule. `Poll` never returns `ErrJSNull`, because `null` is not truthy and the poll continues. `JavascriptAttribute[T]` and `Value` are the exception: they keep the old behavior and return the zero value and no error for an attribute that is `null`, for example `onclick` with no handler. An attribute that the element does not have is `undefined`, and it gives `ErrJSUndefined` for a type that cannot be nil, as before.
 - `EvalAwaitPromise` is new. Pass it to `Evaluate` to wait for a promise that the expression returns.
@@ -314,3 +316,4 @@ These names are new, and no old code needs a change, unless a bullet says so.
 - `Console`, `ConsoleMessage` and `ConsoleType` are new, with the constants `ConsoleLog`, `ConsoleDebug`, `ConsoleInfo`, `ConsoleWarning`, `ConsoleError` and `ConsoleException`. `Console(ctx)` returns an `iter.Seq2[ConsoleMessage, error]` of the console API calls, the uncaught exceptions and the entries of the browser log, in the order that they arrive. It joins three events that the old code read with `ListenTarget`: `*runtime.EventConsoleAPICalled`, `*runtime.EventExceptionThrown` and `*log.EventEntryAdded`. `Events` gives one event type, as the protocol sends it, so use `Events` when you need the raw event, and use `Console` when you need the text. Like `Events`, `Console` subscribes when it returns, so a program can subscribe, run actions and then range. The old code needed a type switch in a func, and a mutex or a channel to hand the values to other code. The line and the column of a `ConsoleMessage` start at 0, as in the protocol. See example 25 in `docs/API.md`.
 - `ExposeFunc` is new. `ExposeFunc(name, fn)` makes the Go func `fn` available to the page as `window.<name>`, as exposeFunction does in Puppeteer. The page gets a promise for each call. The func is there in every document and in every iframe that the tab loads later. A slice type for the argument gives all the arguments of the call, and any other type gives the one argument. It uses `Runtime.addBinding`, `Page.addScriptToEvaluateOnNewDocument` and the event `runtime.BindingCalled`. The old API had no such action, and a program wired these three parts by hand with `ListenTarget`. See example 26 in `docs/API.md`.
 - `PrintToPDF` is new, with the type `PDFOption`, the type `PaperSize` and the options `PDFLandscape`, `PDFPaper`, `PDFMargin`, `PDFMargins`, `PDFScale`, `PDFPageRanges`, `PDFPreferCSSPageSize`, `PDFPrintBackground`, `PDFHeaderTemplate`, `PDFFooterTemplate`, `PDFOutlineAndTagged` and `PDFStream`. The paper sizes are the variables `PaperLetter`, `PaperLegal`, `PaperTabloid`, `PaperA3`, `PaperA4` and `PaperA5`, in inches. The old API had no such action, and it had `page.PrintToPDF().Do(ctx)` with the `With...` methods. Code that sends `page.PrintToPDF` with `cdp.Call` keeps working, and `PrintToPDF` is a shorter form of it. A header template or a footer template turns on `DisplayHeaderFooter`. See example 27 in `docs/API.md`.
+- The module needs Go 1.25 or newer, no longer Go 1.27. The JSON types in the signatures, such as the channel that `Subscribe` returns, come from `github.com/chromedp/cdproto/cdp/jsonv2`. They are the same types as before on Go 1.27 and later. A program that used `jsontext.Value` from `encoding/json/jsontext` for them keeps working on Go 1.27 and later, and must use `jsonv2.Value` to build on Go 1.25 and 1.26. The module `remote` v0.2.0 requires `chromedp` v0.20.0.

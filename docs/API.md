@@ -1,6 +1,6 @@
 # The chromedp API
 
-This document describes the generic action API of `chromedp`. It shows the new code next to the old code. The old code is the API of `chromedp` v0.16.0. The new code is the API of v0.17.0. See `docs/decisions/2026-10-03-generic-iterator-api-instead-of-action.md`.
+This document describes the generic action API of `chromedp`. It shows the new code next to the old code. The old code is the API of `chromedp` v0.16.0. The new code is the API of v0.20.0. See `docs/decisions/2026-10-03-generic-iterator-api-instead-of-action.md`.
 
 ## Principles
 

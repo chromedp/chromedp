@@ -38,8 +38,9 @@ A `Browser` holds a `Transport`, which is the pipe or the WebSocket
 connection. The WebSocket connection is `remote.Conn`. It reads every message, sends commands, and passes events to the
 target that owns them. Messages use the JSON package of
 `github.com/chromedp/cdproto/cdp/jsonv2`. It is `encoding/json/v2` of the
-standard library on Go 1.27 and later, and a module with the same API on Go 1.25
-and 1.26.
+standard library on Go 1.27 and later, and on Go 1.25 and 1.26 with
+`GOEXPERIMENT=jsonv2`. Otherwise it is the module
+`github.com/go-json-experiment/json`. The core needs Go 1.25 or newer.
 
 A `Target` is one page or tab. It tracks the frame tree and the DOM tree of
 that page from events. A query can then read nodes without a round trip.
@@ -64,12 +65,16 @@ the device descriptors. JavaScript snippets in `js/` are embedded with
 The package covers browser allocation, contexts, targets, navigation, element
 queries, input, device emulation, screenshots, JavaScript evaluation, polling
 and events. It also has the options for a visible window and for a browser that
-stays open. The Go files in the root hold about 15,000 lines, tests included.
+stays open. The Go files in the root hold about 19,000 lines, tests included.
 The README links the examples repository for larger tasks.
 
-Release v0.17.0 uses the typed `cdproto` v0.157.3. It has the generic action
+Release v0.20.0 uses the typed `cdproto` v0.157.8. It has the generic action
 API, the iterator events, the typed selectors, the pipe transport and the
-visible window options. `API.md` describes the API and `MIGRATION.md` lists
+visible window options. The module `remote` is at `remote/v0.2.0`, and it
+requires `chromedp` v0.20.0. The tags of `cdproto` have the form
+`v0.<Chromium major>.<patch>`. The daily `Update` workflow of `pdlgen` makes
+them, and a new Chromium or V8 version alone makes no tag. `pdlgen` has no tag
+and uses the current Go release. `API.md` describes the API and `MIGRATION.md` lists
 every change. The decisions in `decisions/` record the choices.
 
 ## Testing
@@ -79,12 +84,15 @@ The tests drive a real browser, so they need Chrome or `headless-shell`.
 temporary directory leaks. HTML pages and golden images are in `testdata/`.
 
 CI, in `.github/workflows/test.yml`, runs `go test -v ./...` against Chrome in
-the root, in `remote/` and in `test/`, on Linux, Windows and macOS. On Linux only,
-it then runs `./contrib/docker-test.sh`, which tests the three modules against
-the `chromedp/headless-shell` image. The
-tests of `remote/` and of `test/` use the exported API of the core and the
-helpers in `internal/chromedptest/`. It tests Go 1.25, Go 1.26 and the newest stable Go release on Linux. Windows
-and macOS use the newest stable release only.
+the root, in `remote/` and in `test/`. It tests Go 1.25, Go 1.26 and the newest
+stable Go release on Linux. Windows and macOS use the newest stable release
+only. On Linux with the newest stable release, it then runs
+`./contrib/docker-test.sh`, which tests the three modules against the
+`chromedp/headless-shell` image. Two more Linux jobs test the JSON layer of
+`cdproto`. One uses Go 1.25 with `GOEXPERIMENT=jsonv2`. The other uses the
+newest stable release with `GOEXPERIMENT=nojsonv2` and the build tag
+`cdproto_jsoncompat`. The tests of `remote/` and of `test/` use the exported API
+of the core and the helpers in `internal/chromedptest/`.
 
 A second workflow, `.github/workflows/nightly.yml`, runs the container script every
 night against the channels `stable`, `beta` and `dev` of the `chromedp/headless-shell`

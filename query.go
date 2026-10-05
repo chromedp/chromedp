@@ -1281,7 +1281,7 @@ func DoubleClick[S Selectable](sel S, opts ...QueryOption) Action[Void] {
 //		chromedp.SendKeys(sel, "World"),
 //	)
 //
-// [keys]: https://github.com/chromedp/examples/tree/master/keys
+// [keys]: https://github.com/chromedp/examples/tree/main/keys
 func SendKeys[S Selectable](sel S, v string, opts ...QueryOption) Action[Void] {
 	return queryDo(sel, func(ctx context.Context, t *Target, nodes []*Node) error {
 		n, err := first(sel, nodes)

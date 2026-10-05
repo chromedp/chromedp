@@ -5,12 +5,20 @@ crashes can resume. Update it when a piece of work starts or ends. Work that
 is known and not done goes in [`BACKLOG.md`](BACKLOG.md), and a decision goes
 in [`decisions/`](decisions/README.md).
 
-## Changes since v0.18.0
+## Changes in v0.20.0
 
-These commits come after the release v0.18.0. Each one has its own test, and a documentation change has none.
+These commits are in the release v0.20.0. The module `remote` has the tag `remote/v0.2.0`, and it requires `chromedp` v0.20.0. The `go.mod` of `test` requires it too.
 
-- Changed: the module needs Go 1.25 or newer, no longer Go 1.27. The JSON types come from `github.com/chromedp/cdproto/cdp/jsonv2`, which uses the standard library on Go 1.27 and later. The types of the public API are the same on Go 1.27. The code has no feature of Go 1.26 (issue 1536). The decision is in `decisions/2026-10-06-support-go-1-25-and-later.md`.
+- Changed: the module needs Go 1.25 or newer, no longer Go 1.27. The JSON types come from `github.com/chromedp/cdproto/cdp/jsonv2`, which uses the standard library on Go 1.27 and later. The types of the public API are the same on Go 1.27. The code has no feature of Go 1.26 (issue 1536). The release also uses `cdproto` v0.157.8. The decision is in `decisions/2026-10-06-support-go-1-25-and-later.md`.
+- Changed: the workflows use `actions/checkout` v7 and `actions/setup-go` v7. CI tests Go 1.25, Go 1.26 and the newest stable release on Linux, and has two more jobs for the JSON layer of `cdproto` with `GOEXPERIMENT=jsonv2` and with the tag `cdproto_jsoncompat`.
+
+## Changes in v0.19.0 and v0.19.1
+
+These commits are in the releases v0.19.0 and v0.19.1, which come after v0.18.0. The release v0.19.1 changed the documents only. Each other commit has its own test.
+
 - Added: `Tap` and `TapXY` send a touch tap (issue 1174).
+- Added: the nightly workflow `nightly.yml` tests the channels `stable`, `beta` and `dev` of the `chromedp/headless-shell` image.
+- Documented in v0.19.1: `termcast`, which streams a page to a terminal, and the examples repository, in the README and in the package documentation.
 - Fixed: `Evaluate[T]` returned the zero value and no error for the expression `null` when `T` cannot be nil, for example `Evaluate[int]` with the expression `null`. It returns `ErrJSNull` now, as the documentation says. The example `ExampleEvaluate` had a case for it, and its output did not show the error.
   `CallFunctionOn[T]` follows the same rule. `Poll` never returns it, because `null` is not truthy. `JavascriptAttribute[T]` and `Value` keep the zero value and no error for a `null` attribute, and a test covers each function.
 - Added: `EvalAwaitPromise`, an evaluate option that waits for a promise that the expression returns.
@@ -26,10 +34,10 @@ These commits come after the release v0.18.0. Each one has its own test, and a d
 - Documented: the first `Run` binds the life of the browser to its context, so a timeout on that context closes the browser, and a derived context limits one action (issue 1539).
 - Documented: the default flag `disable-dev-shm-usage`, why it is on, its cost, and `Flag("disable-dev-shm-usage", false)` to turn it off (issue 1627).
 - Documented: the set of selector types is closed, and `ByFunc` is the extension point for a custom lookup (issue 1641).
-- Added: `DragAndDrop` and `DragAndDropXY` drag an element and drop it on another element or on a point. They work for a page with mouse events and for a page with HTML5 drag and drop. `DragAndDrop` returns the error `ErrDragOutsideViewport` when the two nodes do not fit in the viewport together, and `DragAndDropXY` releases the mouse button when an error ends the drag. They are new in the next release.
-- Added: `Console` turns the console API calls, the uncaught exceptions, the unhandled promise rejections and the browser log into one iterator of `ConsoleMessage` values, in order. It is new in the next release.
-- Added: `ExposeFunc` makes a Go func available to the page as `window.<name>`. A call from the page returns a promise that the result or the error of the func settles. It works after a navigation and in an iframe. It is new in the next release.
-- Added: `PrintToPDF` with the options `PDFLandscape`, `PDFPaper`, `PDFMargin`, `PDFMargins`, `PDFScale`, `PDFPageRanges`, `PDFPreferCSSPageSize`, `PDFPrintBackground`, `PDFHeaderTemplate`, `PDFFooterTemplate`, `PDFOutlineAndTagged` and `PDFStream`, so that a program does not build `page.PrintToPDFParams` by hand. It is new in the next release, and `cdp.Call` with `page.PrintToPDF` still works.
+- Added: `DragAndDrop` and `DragAndDropXY` drag an element and drop it on another element or on a point. They work for a page with mouse events and for a page with HTML5 drag and drop. `DragAndDrop` returns the error `ErrDragOutsideViewport` when the two nodes do not fit in the viewport together, and `DragAndDropXY` releases the mouse button when an error ends the drag.
+- Added: `Console` turns the console API calls, the uncaught exceptions, the unhandled promise rejections and the browser log into one iterator of `ConsoleMessage` values, in order.
+- Added: `ExposeFunc` makes a Go func available to the page as `window.<name>`. A call from the page returns a promise that the result or the error of the func settles. It works after a navigation and in an iframe.
+- Added: `PrintToPDF` with the options `PDFLandscape`, `PDFPaper`, `PDFMargin`, `PDFMargins`, `PDFScale`, `PDFPageRanges`, `PDFPreferCSSPageSize`, `PDFPrintBackground`, `PDFHeaderTemplate`, `PDFFooterTemplate`, `PDFOutlineAndTagged` and `PDFStream`, so that a program does not build `page.PrintToPDFParams` by hand. It is new in v0.19.0, and `cdp.Call` with `page.PrintToPDF` still works.
 
 ## Changes in v0.18.0
 
@@ -53,7 +61,7 @@ These commits are in the release v0.18.0. Each one has its own test.
 - Not reproduced: the remote allocator error `no browser is open` (issue 1601). It works with Chrome 154 in the new headless mode, and with headless-shell 131.
 - Already fixed: the race in the removal of the user data directory (issue 1544). A test covers the retry, and the example test no longer leaves a directory.
 - Checked: a result of 30 MB works on the pipe and on the websocket (issue 401).
-- Changed: the core module uses only the standard library and `cdproto`. The websocket code, the remote allocator and the websocket mode of the exec allocator moved to the new module `github.com/chromedp/chromedp/remote`. The tests that need `pdf` or `pixelmatch` moved to the new module `github.com/chromedp/chromedp/test`. The core has the new names `Dialer`, `WithDialer`, `WithAllocatorOptions`, `Attacher`, `NewAllocatorContext` and `ErrNoDialer`. `KeepOpen` and the flags for a debugging port need `remote.WebSocket`. `docs/MIGRATION.md` lists the old and new names, and the decision is in `decisions/2026-10-04-the-core-uses-only-the-standard-library.md`. The tag `remote/v0.1.0` does not exist yet, and the `go.mod` of `remote` and `test` still have a `replace` directive for the core.
+- Changed: the core module uses only the standard library and `cdproto`. The websocket code, the remote allocator and the websocket mode of the exec allocator moved to the new module `github.com/chromedp/chromedp/remote`. The tests that need `pdf` or `pixelmatch` moved to the new module `github.com/chromedp/chromedp/test`. The core has the new names `Dialer`, `WithDialer`, `WithAllocatorOptions`, `Attacher`, `NewAllocatorContext` and `ErrNoDialer`. `KeepOpen` and the flags for a debugging port need `remote.WebSocket`. `docs/MIGRATION.md` lists the old and new names, and the decision is in `decisions/2026-10-04-the-core-uses-only-the-standard-library.md`. The tag `remote/v0.1.0` came later on the same day, after the `go.mod` of `remote` and `test` required the released core and lost the `replace` directive.
 - Added: the pipe transport works on Windows. The allocator passes two inheritable handles to the browser and names them in the switch `--remote-debugging-io-pipes`, so a program for Windows needs no `remote.WebSocket`. The tests ran on Windows 11 with Chrome 154 and Edge 154. The decision is in `decisions/2026-10-04-the-pipe-works-on-windows.md`.
 - Fixed: a canceled context gave an `exec` error on Windows when the browser program did not exist, and the exit error of a dead browser sometimes arrived too late on Windows. The middle button test skips on Windows, because autoscroll swallows `auxclick`.
 
@@ -69,7 +77,7 @@ What the logs showed, and what changed:
 - macOS: Ctrl+A is not select all there. `TestKeyEventModifier/ctrl+a` still checks the keydown event, and it skips the check of the selection on macOS.
 - macOS: a start that the context ended gave `chrome failed to start` with the messages of the helper processes that lost their parent. It returns the error of the context now.
 - Not explained: the macOS run left one empty temporary directory, `chromedp-runner...`, once. The allocator does not kill leftover processes on macOS. The directory did not leave in the second run.
-- Not decided: nobody ran the tests on a real Mac. The next run on `macos-latest` must show whether the longer limits are enough.
+- Decided: the runs on `macos-latest` pass with the longer limits, so the limits are enough. The tests ran on a real Mac only through that runner.
 
 ## Where the work stands
 
@@ -90,7 +98,7 @@ approved these parts:
 - the port of the `examples` repository
 
 `cdproto` v0.157.3 is the first release of the typed API. `chromedp` v0.17.0
-uses it. The full test suite passes. The comments of the Go files and the
+used it. Later releases of this series are v0.18.0, v0.19.0, v0.19.1 and v0.20.0. The full test suite passes. The comments of the Go files and the
 documents follow the `simple-english` skill, and `go test ./docs/` tests them.
 
 ## Waiting

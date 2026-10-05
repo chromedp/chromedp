@@ -1,6 +1,6 @@
 # The core uses only the standard library
 
-Status: Decided.
+Status: Amended by 2026-10-04-the-pipe-works-on-windows.md.
 
 The maintainer decided that the core module `github.com/chromedp/chromedp` uses
 no library other than the Go standard library and `github.com/chromedp/cdproto`.
@@ -28,7 +28,7 @@ The repository holds three Go modules.
 - `remote/`, `github.com/chromedp/chromedp/remote`, holds the websocket. It owns `gobwas/ws`.
 - `test/`, `github.com/chromedp/chromedp/test`, holds the tests that need `pdf` or `pixelmatch`. It has no exported names.
 
-The release tag of `remote` is `remote/v0.1.0`. The core never imports `remote`.
+The first release tag of `remote` is `remote/v0.1.0`. The newest is `remote/v0.2.0`, which requires `chromedp` v0.20.0. The core never imports `remote`.
 `remote` imports the core, and `test` uses the exported API of the core only.
 
 ## What moved

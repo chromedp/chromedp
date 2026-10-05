@@ -15,11 +15,13 @@ driver.
 
 ## Installing
 
-Install the package with `go get`. The module needs Go 1.25 or newer. On Go 1.25 and 1.26, the JSON types come
-from `github.com/chromedp/cdproto/cdp/jsonv2`. On Go 1.27 they are the types of
-the standard library. Version
-v0.18.0 uses the typed `cdproto` v0.157.4 and has the generic and iterator API.
-The earlier versions of `cdproto`, v0.157.0, v0.157.1 and v0.157.2, have the old API.
+Install the package with `go get`. The module needs Go 1.25 or newer. The JSON
+types come from `github.com/chromedp/cdproto/cdp/jsonv2`. They are aliases of
+the types of the standard library package `encoding/json/v2` on Go 1.27 and
+later, or on Go 1.25 and 1.26 with `GOEXPERIMENT=jsonv2`. Otherwise they are
+aliases of the types of `github.com/go-json-experiment/json`. Version v0.20.0
+uses the typed `cdproto` v0.157.8 and has the generic and iterator API. The
+earlier versions of `cdproto`, v0.157.0, v0.157.1 and v0.157.2, have the old API.
 
 ```sh
 go get -u github.com/chromedp/chromedp
@@ -72,7 +74,7 @@ for ev, err := range loaded {
 }
 ```
 
-[`docs/API.md`](docs/API.md) describes the API. It has 14 examples that show the
+[`docs/API.md`](docs/API.md) describes the API. It has 27 examples that show the
 old code and the new code side by side. [`docs/MIGRATION.md`](docs/MIGRATION.md)
 lists every renamed and removed name.
 
@@ -87,8 +89,9 @@ to print the protocol messages. Every program except `remote` takes the flag
 `-visible` to show the browser window. Most programs take the flag
 `-visible-on-terminal` to draw the page in the terminal while they run, with
 [`termcast`](#show-the-browser-in-the-terminal). Every program except `fast`
-reads a local test site and needs no internet. Use the flag `-url` to read
-another site.
+reads local content and needs no internet. Some programs take the flag `-url` to
+read another site. The program `termcast` takes the flag `-fps` instead of
+`-visible-on-terminal`.
 
 Read pages and fill forms:
 
@@ -125,6 +128,7 @@ Events and the protocol:
 - [popups](https://github.com/chromedp/examples/tree/main/popups) works with popups and several targets, and with browser contexts.
 - [exposefunc](https://github.com/chromedp/examples/tree/main/exposefunc) calls Go functions from the page.
 - [extension](https://github.com/chromedp/examples/tree/main/extension) loads a browser extension, uBlock Origin Lite, from a folder on disk and shows that it blocks the ads of a page.
+- [latlon](https://github.com/chromedp/examples/tree/main/latlon) drives a map and reads the latitude and the longitude from the URL of the page.
 - [rawcall](https://github.com/chromedp/examples/tree/main/rawcall) sends protocol commands that have no action, such as timezone, locale, geolocation and throttling.
 
 Screens and devices:
@@ -165,7 +169,10 @@ if err != nil {
 defer s.Stop()
 ```
 
-The stream clears the terminal at each redraw. It holds the log lines while it
+To draw one element and not the whole page, add
+`termcast.WithElement(chromedp.CSS("#chart"))` to the call of `termcast.Start`.
+The module `termcast` needs Go 1.25 or newer. The stream clears the terminal at
+each redraw. It holds the log lines while it
 runs, and prints them after the final frame. The type `termcast.Flags` adds the
 flags `-visible-on-terminal` and `-terminal-fps` to a program, as the programs
 in the [examples][chromedp-examples] repository have them.

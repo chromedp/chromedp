@@ -1,6 +1,6 @@
 # The minimum Go version is 1.27
 
-Status: Decided.
+Status: Superseded by 2026-10-06-support-go-1-25-and-later.md.
 
 The maintainer decided on 2026-10-03 that the minimum Go version of `chromedp`
 is 1.27. The `go` line of `go.mod` was 1.26 and is now 1.27.
@@ -26,5 +26,5 @@ comes from. `2025-02-22-use-json-v2.md` records the first choice. See
 
 ## What remains
 
-Nothing remains. The decision `2026-10-06-support-go-1-25-and-later.md` lowers the
-minimum version to Go 1.25.
+Nothing remains. The decision `2026-10-06-support-go-1-25-and-later.md` replaces this
+one and lowers the minimum version to Go 1.25.

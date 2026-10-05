@@ -1,6 +1,6 @@
 # Support Go 1.25 and later
 
-Status: Decided.
+Status: Amends 2026-10-03-the-minimum-go-version-is-1-27.md.
 
 The maintainer decided on 2026-10-06 that `chromedp` supports Go 1.25 and
 later. The `go` line of `go.mod` was 1.27 and is now 1.25. This replaces the
@@ -28,7 +28,7 @@ The code of `chromedp` imports `cdp/jsonv2` and no longer imports the standard
 packages for JSON version 2. The code has no feature of Go 1.26. The helper
 `ptr` replaces `new(true)` and similar calls, and `errors.As` replaces
 `errors.AsType`. The documents can still show `new(true)` and say that it needs
-Go 1.26 or later.
+Go 1.26 or later, and they name the helper `ptr` for Go 1.25.
 
 The `Test` workflow runs Go 1.25, Go 1.26 and the newest stable release on
 Linux. It runs the newest stable release on Windows and macOS. Two more Linux
@@ -38,7 +38,6 @@ jobs test the two JSON layers of `cdproto`. One uses Go 1.25 with
 
 ## What remains
 
-The `go.mod` files of `remote` and `test` require `chromedp` v0.19.1, which
-declares Go 1.27. The maintainer must tag a new release of the core module and
-update those requirements. Until then, a program that uses `remote` needs a
-`replace` directive or Go 1.27.
+Nothing remains. The maintainer tagged `chromedp` v0.20.0 and `remote/v0.2.0`.
+The `go.mod` files of `remote` and `test` require `chromedp` v0.20.0, which
+declares Go 1.25.

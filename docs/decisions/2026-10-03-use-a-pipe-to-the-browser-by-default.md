@@ -1,6 +1,6 @@
 # Use a pipe to the browser by default
 
-Status: Decided.
+Status: Amended by 2026-10-04-the-pipe-works-on-windows.md.
 
 The `ExecAllocator` starts Chrome with `--remote-debugging-pipe` and talks to it
 through two pipes, and not through a websocket. The maintainer approved the
