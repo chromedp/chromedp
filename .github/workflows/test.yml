@@ -43,9 +43,12 @@ jobs:
       - name: Use the core of this commit in test
         run: (cd test && go mod edit -replace github.com/chromedp/chromedp=../)
       # The runner images have Google Chrome installed. The core module
-      # includes the package remote, so this step tests it too.
+      # includes the package remote, so this step tests it too. The flag -p 1
+      # runs one package at a time, as the old separate steps did. The tests
+      # start many browsers, and two packages together make the timing tests
+      # fail on a slow runner.
       - name: Test Chrome, core and remote
-        run: go test -v ./...
+        run: go test -p 1 -v ./...
       # The next steps run even when an earlier step failed, so that one run
       # shows every failure.
       - name: Test Chrome, test
@@ -104,7 +107,7 @@ jobs:
       - name: Vet
         run: go vet ./...
       - name: Test Chrome, core and remote
-        run: go test -v ./...
+        run: go test -p 1 -v ./...
       - name: Test Chrome, test
         if: success() || failure()
         run: go test -v ./...
