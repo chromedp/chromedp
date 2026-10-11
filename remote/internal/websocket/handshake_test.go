@@ -182,19 +182,31 @@ func TestDialDefaultPort(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	_, err := new(Dialer).Dial(ctx, "ws://127.0.0.1")
-	if err == nil {
+	if err == nil || somethingListens(err) {
 		t.Skip("something listens on the port 80")
 	}
 	if !strings.Contains(err.Error(), "127.0.0.1:80") {
 		t.Fatalf("the error does not name the port 80: %v", err)
 	}
 	_, err = new(Dialer).Dial(ctx, "wss://127.0.0.1")
-	if err == nil {
+	if err == nil || somethingListens(err) {
 		t.Skip("something listens on the port 443")
 	}
 	if !strings.Contains(err.Error(), "127.0.0.1:443") {
 		t.Fatalf("the error does not name the port 443: %v", err)
 	}
+}
+
+// somethingListens reports whether the error comes from a server that answered
+// on the port, and not from the failed connection. A runner can have a web
+// server on the port 80 or the port 443, and its answer is not a websocket
+// handshake.
+func somethingListens(err error) bool {
+	var opErr *net.OpError
+	if errors.As(err, &opErr) && opErr.Op == "dial" {
+		return false
+	}
+	return !strings.Contains(err.Error(), "127.0.0.1:")
 }
 
 func TestDialErrors(t *testing.T) {
@@ -556,10 +568,17 @@ func TestDialServerClosesAtOnce(t *testing.T) {
 			c.Close()
 			t.Fatal("the dial succeeded")
 		}
-		if !errors.Is(err, io.EOF) && !errors.Is(err, syscall.ECONNRESET) {
+		if !errors.Is(err, io.EOF) && !errors.Is(err, syscall.ECONNRESET) && !isWindowsReset(err) {
 			t.Fatalf("got %v, want io.EOF or a reset", err)
 		}
 	}
+}
+
+// isWindowsReset reports whether the error is a connection reset or abort of
+// Windows. Its error numbers are not the ones of syscall.ECONNRESET.
+func isWindowsReset(err error) bool {
+	const wsaeconnaborted, wsaeconnreset = 10053, 10054
+	return errors.Is(err, syscall.Errno(wsaeconnaborted)) || errors.Is(err, syscall.Errno(wsaeconnreset))
 }
 
 // serverLog is what a recording server saw.
