@@ -1,14 +1,14 @@
 # Migrate to the new API
 
-This document lists the public API changes from `chromedp` v0.16.0 to v0.20.0.
+This document lists the public API changes from `chromedp` v0.16.0 to v0.21.0.
 Version v0.20.0 uses `cdproto` v0.157.8. The release v0.157.3 is the first one of
 the typed API, and v0.157.4 makes some optional numbers pointers. The versions v0.157.0, v0.157.1 and v0.157.2 of `cdproto` have the old API. The
-document has ten parts, in the order of the changes: the move to `cdproto`
+document has eleven parts, in the order of the changes: the move to `cdproto`
 v0.157.1, the move to the typed `cdproto`, the move to the generic action API,
 the move to typed selectors, the pipe transport, the options for a visible
-window, the changes in v0.18.0, the move of the websocket code to the module
-`remote`, the move to `cdproto` v0.157.4, and the changes in v0.19.0 and
-v0.20.0. Apply the parts in this order. A later part can replace a rule of an
+window, the changes in v0.18.0, the move of the websocket code to the package
+`remote`, the move to `cdproto` v0.157.4, the changes in v0.19.0 and
+v0.20.0, and the move of `remote` into the core module in v0.21.0. Apply the parts in this order. A later part can replace a rule of an
 earlier part.
 
 ## Migrate to cdproto v0.157.1
@@ -200,9 +200,9 @@ does not change the actions or the events.
 - The allocator starts Chrome with `--remote-debugging-pipe` and passes two pipes. On Unix they are the file descriptors 3 and 4. On Windows they are two handles that the switch `--remote-debugging-io-pipes` names. It does not add `--remote-debugging-port=0`. Chrome opens no port and writes no `DevTools listening on` line.
 - `WSURLReadTimeout` only applies to the websocket mode.
 - The file `DevToolsActivePort` in the user data directory does not exist in the pipe mode, because Chrome opens no port.
-- Add `remote.WebSocket` to the options of `NewExecAllocator` to get the old behavior. The flags `remote-debugging-port` and `remote-debugging-address` also select the websocket mode, and they need `remote.WebSocket` too. The old name was `chromedp.WebSocket`. See the part "Move the websocket code to the remote module".
+- Add `remote.WebSocket` to the options of `NewExecAllocator` to get the old behavior. The flags `remote-debugging-port` and `remote-debugging-address` also select the websocket mode, and they need `remote.WebSocket` too. The old name was `chromedp.WebSocket`. See the part "Move the websocket code to the remote package".
 - On Windows the allocator uses the pipe too, with handles. A program for Windows needs no `remote.WebSocket`. See `docs/decisions/2026-10-04-the-pipe-works-on-windows.md`.
-- The remote allocator connects to a browser that `chromedp` did not start, so it uses the websocket. It moved to the module `remote`.
+- The remote allocator connects to a browser that `chromedp` did not start, so it uses the websocket. It moved to the package `remote`.
 - `NewBrowserTransport` creates a `Browser` from a `Transport` that is already open. `NewPipeConn` makes a `Transport` for the two pipes of a browser. Use `remote.DialContext` and then `NewBrowserTransport` for a websocket.
 - A start that fails now gives an error that starts with `chrome failed to start:` and has the output of Chrome, in the pipe mode and in the websocket mode.
 
@@ -229,9 +229,9 @@ These changes need no change in old code, unless a bullet says so.
 - `WithNewWindow` is new. A context that creates a tab opens it in a new window by default, because a hidden tab gets no animation frames and `Poll` waits for ever on it. `WithNewWindow(false)` opens a real tab in the window of the browser. Make a tab active with `target.ActivateTarget` before you run an action that waits for a frame on it. A child context inherits the choice.
 - `LoadError` and `ErrPageLoad` are new. `Navigate`, `NavigateResponse` and `RunResponse` return a `*LoadError` when the page does not load. Its text is the same as before, `page load error` and the text of the browser. Use `errors.Is(err, chromedp.ErrPageLoad)` or `errors.As` with a `*LoadError` and read `ErrorText`. Code that searched the text of the error still works.
 
-## Move the websocket code to the remote module
+## Move the websocket code to the remote package
 
-The core module `github.com/chromedp/chromedp` now uses only the standard library and `cdproto`. The code that needs a websocket moved to the module `github.com/chromedp/chromedp/remote`, which has the package `remote`. A program that attaches to a remote browser, uses a websocket exec allocator, or keeps the browser open runs `go get github.com/chromedp/chromedp/remote` and imports `github.com/chromedp/chromedp/remote`. A program that uses only the default allocator needs no change, on Windows too. See `docs/decisions/2026-10-04-the-core-uses-only-the-standard-library.md`.
+The core module `github.com/chromedp/chromedp` now uses only the standard library and `cdproto`. The code that needs a websocket moved to the package `github.com/chromedp/chromedp/remote`. In v0.18.0 to v0.20.1 it was a separate module, and a program ran `go get github.com/chromedp/chromedp/remote`. Since v0.21.0 it is a package of the core module. See the last part of this document. A program that attaches to a remote browser, uses a websocket exec allocator, or keeps the browser open imports `github.com/chromedp/chromedp/remote`. A program that uses only the default allocator needs no change, on Windows too. See `docs/decisions/2026-10-04-the-core-uses-only-the-standard-library.md`.
 
 The first column has the old name and the second column has the new name.
 
@@ -257,7 +257,7 @@ The first column has the old name and the second column has the new name.
 
 These names stay in the core: `KeepOpen`, `KeptOpen`, `WaitClosed`, `WithVisibleWindow`, `WithNewWindow`, `VisibleWindow`, `WSURLReadTimeout`, `Transport`, `NewBrowserTransport`, `PipeConn` and `NewPipeConn`.
 
-The core has these new names, which the module `remote` uses:
+The core has these new names, which the package `remote` uses:
 
 - `Dialer` is the type of a func that connects to a websocket address and returns a `Transport`.
 - `WithDialer(d)` is an allocator option. It makes the exec allocator start the browser with a debugging port and connect through `d`.
@@ -316,4 +316,18 @@ The release v0.19.1 changed documents only. These names are new, and no old code
 - `Console`, `ConsoleMessage` and `ConsoleType` are new, with the constants `ConsoleLog`, `ConsoleDebug`, `ConsoleInfo`, `ConsoleWarning`, `ConsoleError` and `ConsoleException`. `Console(ctx)` returns an `iter.Seq2[ConsoleMessage, error]` of the console API calls, the uncaught exceptions and the entries of the browser log, in the order that they arrive. It joins three events that the old code read with `ListenTarget`: `*runtime.EventConsoleAPICalled`, `*runtime.EventExceptionThrown` and `*log.EventEntryAdded`. `Events` gives one event type, as the protocol sends it, so use `Events` when you need the raw event, and use `Console` when you need the text. Like `Events`, `Console` subscribes when it returns, so a program can subscribe, run actions and then range. The old code needed a type switch in a func, and a mutex or a channel to hand the values to other code. The line and the column of a `ConsoleMessage` start at 0, as in the protocol. See example 25 in `docs/API.md`.
 - `ExposeFunc` is new. `ExposeFunc(name, fn)` makes the Go func `fn` available to the page as `window.<name>`, as exposeFunction does in Puppeteer. The page gets a promise for each call. The func is there in every document and in every iframe that the tab loads later. A slice type for the argument gives all the arguments of the call, and any other type gives the one argument. It uses `Runtime.addBinding`, `Page.addScriptToEvaluateOnNewDocument` and the event `runtime.BindingCalled`. The old API had no such action, and a program wired these three parts by hand with `ListenTarget`. See example 26 in `docs/API.md`.
 - `PrintToPDF` is new, with the type `PDFOption`, the type `PaperSize` and the options `PDFLandscape`, `PDFPaper`, `PDFMargin`, `PDFMargins`, `PDFScale`, `PDFPageRanges`, `PDFPreferCSSPageSize`, `PDFPrintBackground`, `PDFHeaderTemplate`, `PDFFooterTemplate`, `PDFOutlineAndTagged` and `PDFStream`. The paper sizes are the variables `PaperLetter`, `PaperLegal`, `PaperTabloid`, `PaperA3`, `PaperA4` and `PaperA5`, in inches. The old API had no such action, and it had `page.PrintToPDF().Do(ctx)` with the `With...` methods. Code that sends `page.PrintToPDF` with `cdp.Call` keeps working, and `PrintToPDF` is a shorter form of it. A header template or a footer template turns on `DisplayHeaderFooter`. See example 27 in `docs/API.md`.
-- The module needs Go 1.25 or newer, no longer Go 1.27. The JSON types in the signatures, such as the channel that `Subscribe` returns, come from `github.com/chromedp/cdproto/cdp/jsonv2`. They are the same types as before on Go 1.27 and later. A program that used `jsontext.Value` from `encoding/json/jsontext` for them keeps working on Go 1.27 and later, and must use `jsonv2.Value` to build on Go 1.25 and 1.26. The module `remote` v0.2.0 requires `chromedp` v0.20.0.
+- The module needs Go 1.25 or newer, no longer Go 1.27. The JSON types in the signatures, such as the channel that `Subscribe` returns, come from `github.com/chromedp/cdproto/cdp/jsonv2`. They are the same types as before on Go 1.27 and later. A program that used `jsontext.Value` from `encoding/json/jsontext` for them keeps working on Go 1.27 and later, and must use `jsonv2.Value` to build on Go 1.25 and 1.26. The nested module `remote` v0.2.0 required `chromedp` v0.20.0.
+
+## The remote package is part of the core module
+
+The package `github.com/chromedp/chromedp/remote` was a separate Go module in v0.18.0 to v0.20.1, with its own tags such as `remote/v0.2.0`. It is a package of the core module `github.com/chromedp/chromedp` from v0.21.0. The import path, the names and the signatures do not change. The package no longer uses the library `gobwas/ws`. It has its own WebSocket client.
+
+A program that has this line in its `go.mod` must remove it:
+
+```
+require github.com/chromedp/chromedp/remote v0.2.0
+```
+
+While the file keeps the line, Go reports an ambiguous import, because the old module and the core module both have the package `github.com/chromedp/chromedp/remote`. Run `go mod tidy` to remove the line. Then run `go get github.com/chromedp/chromedp@v0.21.0`. The dependencies `gobwas/ws`, `gobwas/httphead`, `gobwas/pool` and `golang.org/x/sys` leave the build of the program, unless the program needs them for another reason. See `docs/decisions/2026-10-11-remote-is-a-package-of-the-core-module.md`.
+
+The error values of a normal close are the same as before. `Conn.Read` returns `io.EOF` when the browser closes the connection with the code 1000 or 1001. A close with another code now gives an error that has the code and the reason.

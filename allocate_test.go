@@ -24,7 +24,7 @@ var errStubDialer = errors.New("i/o timeout: the test has no websocket")
 
 // stubDialer is a Dialer for the tests of the websocket mode that never need a
 // connection. The core module has no websocket code, so the tests that need a
-// real connection are in the module remote. The dialer fails, so that a test
+// real connection are in the package remote. The dialer fails, so that a test
 // that reaches it fails with an error that names it.
 func stubDialer(context.Context, string) (Transport, error) {
 	return nil, errStubDialer
@@ -180,7 +180,7 @@ func TestDefaultFeatureNames(t *testing.T) {
 func TestExitErrorAfterKill(t *testing.T) {
 	t.Parallel()
 
-	// The module remote tests the websocket.
+	// The package remote tests the websocket.
 	allocCtx, cancel := NewExecAllocator(context.Background(), allocOpts...)
 	defer cancel()
 	ctx, cancel := NewContext(allocCtx)
@@ -339,7 +339,7 @@ func TestExecAllocatorMissingWebsocketAddr(t *testing.T) {
 func TestCombinedOutput(t *testing.T) {
 	t.Parallel()
 
-	// The pipe mode prints no websocket address. The module remote tests the
+	// The pipe mode prints no websocket address. The package remote tests the
 	// websocket mode.
 	buf := new(syncBuffer)
 	allocCtx, cancel := NewExecAllocator(context.Background(),

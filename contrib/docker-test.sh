@@ -6,8 +6,9 @@ pushd $SRC &> /dev/null
 
 IMAGE=${IMAGE:-docker.io/chromedp/headless-shell:latest}
 
-# The repository has three modules. Each one builds its own test binary, and
-# runs it from its own directory, where its testdata is.
+# The repository has two modules, and the core module has the package remote.
+# Each of these three directories builds its own test binary, and runs it from
+# its own directory, where its testdata is.
 MODULES=(. remote test)
 
 set -e

@@ -266,7 +266,7 @@ func TestLargeOutboundMessages(t *testing.T) {
 	ctx, cancel := chromedp.NewContext(allocCtx)
 	defer cancel()
 
-	// ~5MiB of JS to test the grow feature of github.com/gobwas/ws.
+	// ~5MiB of JS to test a large message in one frame.
 	expr := fmt.Sprintf("//%s\n", strings.Repeat("x", 5<<20))
 	if _, err := chromedp.Run(ctx, chromedp.Evaluate[[]byte](expr)); err != nil {
 		t.Fatal(err)

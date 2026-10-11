@@ -21,13 +21,13 @@ maintainer whether CI must add it.
 
 ## Release
 
-### Keep the replace directives out of the release
+### Keep the replace directive out of the release
 
-The `go.mod` of `remote` and of `test` require the released core and hold no
-`replace` directive. A change to the core that `remote` or `test` needs must be
-tagged first, and then the two files must require that tag. Nothing in the
-repository fails a release when a directive stays. A Dependabot configuration, if
-the repository gets one, must list the directories `/`, `/remote` and `/test`.
+The `go.mod` of `test` requires the released core and holds no `replace`
+directive. A change to the core that `test` needs must be tagged first, and then
+the file must require that tag. Nothing in the repository fails a release when a
+directive stays. A Dependabot configuration, if the repository gets one, must
+list the directories `/` and `/test`.
 
 ## API
 

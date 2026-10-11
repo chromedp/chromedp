@@ -36,7 +36,7 @@ type Allocator interface {
 // implements it connects to a browser that already runs, and it does not start
 // the browser itself. NewContext then treats the context of such an allocator
 // as a new tab of that browser, and not as the owner of a browser process. The
-// allocator of the module github.com/chromedp/chromedp/remote implements it.
+// allocator of the package github.com/chromedp/chromedp/remote implements it.
 type Attacher interface {
 	// Attaches reports whether the allocator attaches to a browser that
 	// runs already.
@@ -44,7 +44,7 @@ type Attacher interface {
 }
 
 // A Dialer connects to the websocket address of a browser and returns the
-// connection as a Transport. The module github.com/chromedp/chromedp/remote
+// connection as a Transport. The package github.com/chromedp/chromedp/remote
 // has a Dialer. See [WithDialer].
 type Dialer = func(ctx context.Context, wsURL string) (Transport, error)
 
@@ -145,7 +145,7 @@ func NewExecAllocator(parent context.Context, opts ...ExecAllocatorOption) (cont
 
 // NewAllocatorContext creates a new context that holds the allocator a. Use it
 // with NewContext, as with the context of NewExecAllocator. It is for an
-// Allocator that another module implements, such as the allocator of the module
+// Allocator that another package implements, such as the allocator of the package
 // github.com/chromedp/chromedp/remote.
 //
 // The cancel func cancels the context. It does not call the Wait method of a.
@@ -907,7 +907,7 @@ func CombinedOutput(w io.Writer) ExecAllocatorOption {
 // address, and calls d to connect to it.
 //
 // The core module has no websocket code, so it needs a dialer. The function
-// WebSocket of the module github.com/chromedp/chromedp/remote makes the
+// WebSocket of the package github.com/chromedp/chromedp/remote makes the
 // ExecAllocatorOption that sets one. Use a dialer when the browser must open a
 // debugging port, for example to let a second program connect to it. The Flag
 // options "remote-debugging-port" and "remote-debugging-address" also need a

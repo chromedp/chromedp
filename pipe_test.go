@@ -412,7 +412,7 @@ func TestExecAllocatorPipeStartFailure(t *testing.T) {
 
 // TestExecAllocatorNeedsDialer checks that the allocator returns ErrNoDialer
 // when it needs a websocket and has no dialer. The option KeepOpen and the
-// flags for a debugging port or address select the websocket. The module remote
+// flags for a debugging port or address select the websocket. The package remote
 // tests the websocket mode with a real dialer.
 func TestExecAllocatorNeedsDialer(t *testing.T) {
 	t.Parallel()

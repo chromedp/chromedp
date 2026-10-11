@@ -25,10 +25,8 @@ jobs:
         uses: actions/setup-go@v7
         with:
           go-version: stable
-      - name: Use the core of this commit in remote and test
-        run: |
-          (cd remote && go mod edit -replace github.com/chromedp/chromedp=../)
-          (cd test && go mod edit -replace github.com/chromedp/chromedp=../)
+      - name: Use the core of this commit in test
+        run: (cd test && go mod edit -replace github.com/chromedp/chromedp=../)
       - name: Pull the image
         run: docker pull --platform linux/amd64 docker.io/chromedp/headless-shell:${{ matrix.channel }}
       # The tests print a line that starts with "browser:". It has the version

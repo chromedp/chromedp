@@ -15,11 +15,11 @@ jobs:
           - {os: macos-latest, go: stable, docker: false}
     name: test (${{ matrix.os }}, ${{ matrix.go }})
     runs-on: ${{ matrix.os }}
-    # The repository has three modules: the core in the root, remote and test.
-    # The go.mod of remote and test require a released core. The first step
-    # adds a replace directive at run time, so that they test the core of this
-    # commit. Run every module with GOWORK=off, so that no workspace changes
-    # the result.
+    # The repository has two modules: the core in the root, with the package
+    # remote, and test. The go.mod of test requires a released core. The first
+    # step adds a replace directive at run time, so that test uses the core of
+    # this commit. Run every module with GOWORK=off, so that no workspace
+    # changes the result.
     env:
       GOWORK: "off"
     defaults:
@@ -40,19 +40,14 @@ jobs:
       - name: Allow unprivileged user namespaces
         if: runner.os == 'Linux'
         run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-      - name: Use the core of this commit in remote and test
-        run: |
-          (cd remote && go mod edit -replace github.com/chromedp/chromedp=../)
-          (cd test && go mod edit -replace github.com/chromedp/chromedp=../)
-      # The runner images have Google Chrome installed.
-      - name: Test Chrome, core
+      - name: Use the core of this commit in test
+        run: (cd test && go mod edit -replace github.com/chromedp/chromedp=../)
+      # The runner images have Google Chrome installed. The core module
+      # includes the package remote, so this step tests it too.
+      - name: Test Chrome, core and remote
         run: go test -v ./...
       # The next steps run even when an earlier step failed, so that one run
       # shows every failure.
-      - name: Test Chrome, remote
-        if: success() || failure()
-        run: go test -v ./...
-        working-directory: remote
       - name: Test Chrome, test
         if: success() || failure()
         run: go test -v ./...
@@ -104,18 +99,12 @@ jobs:
           sudo apt-get install -y build-essential
       - name: Allow unprivileged user namespaces
         run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-      - name: Use the core of this commit in remote and test
-        run: |
-          (cd remote && go mod edit -replace github.com/chromedp/chromedp=../)
-          (cd test && go mod edit -replace github.com/chromedp/chromedp=../)
+      - name: Use the core of this commit in test
+        run: (cd test && go mod edit -replace github.com/chromedp/chromedp=../)
       - name: Vet
         run: go vet ./...
-      - name: Test Chrome, core
+      - name: Test Chrome, core and remote
         run: go test -v ./...
-      - name: Test Chrome, remote
-        if: success() || failure()
-        run: go test -v ./...
-        working-directory: remote
       - name: Test Chrome, test
         if: success() || failure()
         run: go test -v ./...

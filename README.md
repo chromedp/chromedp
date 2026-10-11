@@ -27,15 +27,13 @@ earlier versions of `cdproto`, v0.157.0, v0.157.1 and v0.157.2, have the old API
 go get -u github.com/chromedp/chromedp
 ```
 
-The core module uses only the Go standard library and `cdproto`. It starts a
-browser and talks to it through a pipe. Code that needs a websocket is in a
-second module, `github.com/chromedp/chromedp/remote`. Install it only when you
-connect to a browser that runs already, when you want the exec allocator to use a
-websocket, or when you keep the browser open after the program ends:
-
-```sh
-go get -u github.com/chromedp/chromedp/remote
-```
+The module uses only the Go standard library and `cdproto`. It starts a
+browser and talks to it through a pipe. Code that needs a websocket is in the
+package `github.com/chromedp/chromedp/remote`, which has its own WebSocket
+client. It is part of the same module, so `go get` installs it with the rest.
+Import it only when you connect to a browser that runs already, when you want
+the exec allocator to use a websocket, or when you keep the browser open after
+the program ends.
 
 ## Usage
 
@@ -146,7 +144,7 @@ Several tabs and browsers:
 - [tabs](https://github.com/chromedp/examples/tree/main/tabs) uses several tabs of one browser, with or without a window for each tab, and switches between them.
 - [workers](https://github.com/chromedp/examples/tree/main/workers) runs many jobs at the same time in one browser with a pool of goroutines.
 - [multi](https://github.com/chromedp/examples/tree/main/multi) uses the headless-shell image in a container.
-- [remote](https://github.com/chromedp/examples/tree/main/remote) connects to a browser that is already running, with the module `remote`.
+- [remote](https://github.com/chromedp/examples/tree/main/remote) connects to a browser that is already running, with the package `remote`.
 
 The program [fast](https://github.com/chromedp/examples/tree/main/fast) reads a live site, `fast.com`, and draws an image in the terminal. It can fail when the site changes. The programs [forecast](https://github.com/chromedp/examples/tree/main/forecast) and [geoip](https://github.com/chromedp/examples/tree/main/geoip) also draw an image in the terminal. Run these programs in a terminal that can show images.
 The tags of the examples repository follow the tags of `chromedp`.
@@ -193,7 +191,7 @@ chromedp.WaitClosed(ctx) // block until the user closes the window
 ```
 
 To leave the browser open after the program ends, add `remote.WithKeepOpen` from
-the module `github.com/chromedp/chromedp/remote`. The program can print the
+the package `github.com/chromedp/chromedp/remote`. The program can print the
 address, and another program can attach to it with `remote.NewAllocator`. The
 profile directory stays on disk, and you must delete it yourself.
 
@@ -245,10 +243,10 @@ By default, through a pipe. `chromedp` starts Chrome with `--remote-debugging-pi
 and two pipes, so Chrome opens no debugging port. On Windows the pipes are
 handles that the switch `--remote-debugging-io-pipes` names. To use a
 websocket and a debugging port instead, add the `remote.WebSocket` option of the
-module `github.com/chromedp/chromedp/remote` to the exec allocator. A
+package `github.com/chromedp/chromedp/remote` to the exec allocator. A
 `remote-debugging-port` or `remote-debugging-address` flag also selects the
 websocket, and so does `KeepOpen`, and they all need `remote.WebSocket`. A
-program for Windows needs no `remote` module for the default pipe.
+program for Windows needs no `remote` package for the default pipe.
 
 > Chrome exits as soon as my Go program finishes
 
@@ -443,7 +441,7 @@ default.
 
 Read [CONTRIBUTING.md](CONTRIBUTING.md) before you send a change.
 [AGENTS.md](AGENTS.md) holds the rules for people and coding agents. The tests
-need Chrome or the `headless-shell` image. The repository holds three modules, and
+need Chrome or the `headless-shell` image. The repository holds two modules, and
 [AGENTS.md](AGENTS.md) tells how to test each one.
 
 These documents are in `docs/`:

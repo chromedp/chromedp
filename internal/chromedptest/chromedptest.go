@@ -1,5 +1,5 @@
 // Package chromedptest holds the helpers that the tests of the chromedp
-// modules share. The tests of the modules remote and test import it. It uses
+// packages share. The tests of the package remote and of the module test import it. It uses
 // the exported API of chromedp only. The tests of the core package cannot
 // import it, because it imports the core package. They import
 // [github.com/chromedp/chromedp/internal/testenv] instead.

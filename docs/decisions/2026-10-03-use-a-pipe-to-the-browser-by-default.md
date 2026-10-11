@@ -1,6 +1,6 @@
 # Use a pipe to the browser by default
 
-Status: Amended by 2026-10-04-the-pipe-works-on-windows.md.
+Status: Amended by 2026-10-04-the-pipe-works-on-windows.md and 2026-10-11-remote-is-a-package-of-the-core-module.md.
 
 The `ExecAllocator` starts Chrome with `--remote-debugging-pipe` and talks to it
 through two pipes, and not through a websocket. The maintainer approved the
@@ -45,6 +45,8 @@ tests ran there.
 ## Later change
 
 The decision `2026-10-04-the-core-uses-only-the-standard-library.md` moved the
-websocket code to the module `remote`. The option `WebSocket` is now
+websocket code to the module `remote`. The decision
+`2026-10-11-remote-is-a-package-of-the-core-module.md` made `remote` a package of
+the core module. The option `WebSocket` is now
 `remote.WebSocket`, the allocator needs a dialer for the websocket mode,
 `NewBrowser` is gone, and `RemoteAllocator` is `remote.Allocator`.

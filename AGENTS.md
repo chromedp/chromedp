@@ -12,13 +12,16 @@ top of it: allocators, contexts, actions, selectors, input and screenshots. The
 core uses only the Go standard library and `cdproto`. See
 `docs/decisions/2026-10-04-the-core-uses-only-the-standard-library.md`.
 
-The repository holds three modules:
+The repository holds two modules:
 
 | Directory | Module | Holds |
 | --- | --- | --- |
-| the root | `github.com/chromedp/chromedp` | the core, with the pipe transport |
-| `remote/` | `github.com/chromedp/chromedp/remote` | everything that needs a websocket, and the library `gobwas/ws` |
+| the root | `github.com/chromedp/chromedp` | the core, with the pipe transport, and the package `remote` in `remote/` |
 | `test/` | `github.com/chromedp/chromedp/test` | the tests that need `pdf` or `pixelmatch` |
+
+The package `remote` is not a module. It is a package of the core module, and it
+has its own WebSocket client, so it needs no library. See
+`docs/decisions/2026-10-11-remote-is-a-package-of-the-core-module.md`.
 
 ## Standing rules
 
@@ -97,9 +100,11 @@ The root package `chromedp` holds the API. The files group by topic.
 | --- | --- |
 | `allocate.go`, `allocate_linux.go`, `allocate_other.go`, `allocate_pipe.go`, `allocate_detach_unix.go`, `allocate_detach_windows.go`, `keepopen.go` | `Allocator`, `ExecAllocator`, `Dialer` and `Attacher`, which start or reach a browser, and the options that keep a browser open |
 | `browser.go`, `pipe.go`, `pipe_unix.go`, `pipe_windows.go` | `Browser`, the `Transport` interface, the pipe connection and the way each platform passes the pipes to the browser |
-| `remote/` | the module `remote`: the WebSocket connection `Conn`, the remote `Allocator`, `WebSocket` and `WithKeepOpen` |
+| `remote/` | the package `remote`: the WebSocket connection `Conn`, the remote `Allocator`, `WebSocket` and `WithKeepOpen` |
+| `remote/internal/websocket/` | the WebSocket client of RFC 6455, with its tests, its fuzz test and its benchmarks |
+| `remote/internal/wstest/` | the WebSocket server that the tests use. It shares no code with the client |
 | `test/` | the module `test`: the screenshot tests and the PDF text test, with their `testdata/` |
-| `internal/testenv/`, `internal/chromedptest/` | the variables and the helpers that the tests of the three modules share |
+| `internal/testenv/`, `internal/chromedptest/` | the variables and the helpers that the tests of the core, of `remote` and of `test` share |
 | `chromedp.go`, `action.go` | `Context`, `NewContext`, `RunResponse`, `Action[T]`, `Run`, `Do` and the events |
 | `target.go`, `util.go` | `Target`, which tracks frames and the DOM tree from events |
 | `frame.go`, `node.go` | `Frame` and `Node`, which add the tree state to the protocol types |
@@ -110,7 +115,7 @@ The root package `chromedp` holds the API. The files group by topic.
 | `js.go`, `js/` | embedded JavaScript snippets |
 | `kb/` | keyboard key definitions, generated |
 | `device/` | device descriptors for emulation, generated |
-| `testdata/` | HTML pages for the tests of the core. `remote/testdata/` and `test/testdata/` hold the files of the other modules |
+| `testdata/` | HTML pages for the tests of the core. `remote/testdata/` and `test/testdata/` hold the files of `remote` and of `test` |
 | `contrib/docker-test.sh` | runs the tests inside the `headless-shell` image |
 | `docs/` | plan, progress, backlog, API and migration guides, and decisions |
 
@@ -183,9 +188,8 @@ go build ./...
 go test ./docs/
 ```
 
-`gofmt -l .` must print nothing. Run `go vet ./...` in `remote/` and in `test/`
-too. Run `GOOS=windows go vet ./...` and `GOOS=darwin go vet ./...` in the root
-and in `remote/`.
+`gofmt -l .` must print nothing. Run `go vet ./...` in `test/` too. Run
+`GOOS=windows go vet ./...` and `GOOS=darwin go vet ./...` in the root.
 
 `go.mod` of the core requires the released typed `cdproto`, so these commands
 need no other setup. The core must import no library other than the standard
@@ -197,27 +201,31 @@ any other. `.gitignore` lists them. The maintainer can try an unreleased
 `cdproto` with a local `go.work` file. Do not add a `replace` directive to the
 `go.mod` of the core.
 
-The `go.mod` of `remote/` and of `test/` require a released version of the core,
-`github.com/chromedp/chromedp v0.20.0` at this time, and hold no `replace`
-directive. To try a change of the core in `remote` or `test`, add
+The `go.mod` of `test/` requires a released version of the core,
+`github.com/chromedp/chromedp v0.20.0` at this time, and holds no `replace`
+directive. To try a change of the core in `test`, add
 `replace github.com/chromedp/chromedp => ../` to that `go.mod` while you work,
-and never commit it. CI adds the directive at run time, so that `remote` and
-`test` run against the core of the commit under test. Before the maintainer tags
-`remote`, make sure that no `go.mod` holds a `replace` directive, and set the
-version of the core to the newest tag. Do not create a tag.
+and never commit it. CI adds the directive at run time, so that `test` runs
+against the core of the commit under test. Before the maintainer tags the core,
+make sure that no `go.mod` holds a `replace` directive, and set the version of
+the core in `test/go.mod` to the newest tag. Do not create a tag.
 
 The full test suite needs a browser, and it is the only way to test the
 package. Run it where Chrome is installed. Each module runs in its own
-directory, with `GOWORK=off` when a `go.work` file exists:
+directory, with `GOWORK=off` when a `go.work` file exists. The first command
+runs the package `remote` too, because it is part of the core module:
 
 ```bash
 go test -v ./...
-(cd remote && go test -v ./...)
 (cd test && go test -v ./...)
 ```
 
+The tests of the WebSocket client in `remote/internal/websocket/` need no
+browser. Run them with `go test -race ./remote/...`. The fuzz test runs with
+`go test -fuzz FuzzReadFrame -fuzztime 30s ./remote/internal/websocket/`.
+
 If Chrome is not on the machine, use the container. The script builds the test
-binary of each of the three modules and runs it inside the
+binary of the core, of `remote` and of `test`, and runs each inside the
 `chromedp/headless-shell` image. It uses `docker`, or `podman` when it is
 installed:
 
@@ -231,21 +239,20 @@ and the newest stable release, and Windows and macOS run the newest stable
 release. The container script runs on Linux with the newest stable release only.
 Two more Linux jobs test `cdproto/cdp/jsonv2`: one with Go 1.25 and
 `GOEXPERIMENT=jsonv2`, and one with the tag `cdproto_jsoncompat` and
-`GOEXPERIMENT=nojsonv2`. CI runs the three modules in turn, each one in its own directory. The
-steps of `remote`, `test` and the container run even when an earlier step
-failed, so that one run shows every failure. See `.github/workflows/test.yml`.
+`GOEXPERIMENT=nojsonv2`. CI runs the two modules in turn, each one in its own directory. The
+steps of `test` and the container run even when an earlier step failed, so that
+one run shows every failure. See `.github/workflows/test.yml`.
 A second workflow, `.github/workflows/nightly.yml`, runs the container script every
 night at 04:17 UTC, and when you start it by hand, against the three channels of
 the image: `stable` (the same as `latest`), `beta` and `dev`. It runs on Linux
 amd64. The tests print a
 line that starts with `browser:` with the version of each channel.
-If the repository gets a Dependabot configuration, it must list the three
-directories `/`, `/remote` and `/test`.
+If the repository gets a Dependabot configuration, it must list the two
+directories `/` and `/test`.
 
-The tests of `remote/` and of `test/` use the exported API of the core only. The
-helpers that the three modules share are in `internal/chromedptest/`, and the
-core tests, which cannot import that package, read the variables through
-`internal/testenv/`.
+The tests of `test/` use the exported API of the core only. The helpers that
+the tests share are in `internal/chromedptest/`, and the core tests, which
+cannot import that package, read the variables through `internal/testenv/`.
 
 These variables change the tests:
 

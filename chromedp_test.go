@@ -986,7 +986,7 @@ func TestLargeOutboundMessages(t *testing.T) {
 	ctx, cancel := testAllocate(t, "")
 	defer cancel()
 
-	// ~5MiB of JS to test a large outbound message. The module remote tests the
+	// ~5MiB of JS to test a large outbound message. The package remote tests the
 	// grow feature of its websocket.
 	expr := fmt.Sprintf("//%s\n", strings.Repeat("x", 5<<20))
 	if _, err := Run(ctx, Evaluate[[]byte](expr)); err != nil {

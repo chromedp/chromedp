@@ -163,7 +163,7 @@ func TestEvaluateRemoteObject(t *testing.T) {
 
 // TestEvaluateLargeResult makes the browser send one result of 30 MB on the
 // pipe. The pipe reads up to a zero byte, so a limit makes the test fail. The
-// module remote has the same test for the websocket. See the issue 401.
+// package remote has the same test for the websocket. See the issue 401.
 func TestEvaluateLargeResult(t *testing.T) {
 	t.Parallel()
 

@@ -516,11 +516,11 @@ if err := chromedp.Do(ctx, chromedp.Navigate("https://example.com")); err != nil
 chromedp.WaitClosed(ctx)
 ```
 
-`WithKeepOpen` of the module `github.com/chromedp/chromedp/remote` leaves the browser open when the program ends. It uses the websocket and starts Chrome detached. `KeptOpen` returns the address and the profile directory, and `remote.NewAllocator` attaches to the address later. The program must not delete the profile directory. The core module has no websocket code, so a program that uses `WithKeepOpen` runs `go get github.com/chromedp/chromedp/remote` first.
+`WithKeepOpen` of the package `github.com/chromedp/chromedp/remote` leaves the browser open when the program ends. It uses the websocket and starts Chrome detached. `KeptOpen` returns the address and the profile directory, and `remote.NewAllocator` attaches to the address later. The program must not delete the profile directory. The core packages have no websocket code, so a program that uses `WithKeepOpen` imports the package `github.com/chromedp/chromedp/remote`.
 
 ### 15. Connect to a remote browser that needs headers
 
-A hosted browser service can need a header, such as `Authorization`, on the websocket request. `remote.WithDialHTTPHeader` sets the headers of a remote allocator, and `remote.WithConnHTTPHeader` is the same option for `remote.DialContext`. The headers go with the websocket request only. The request to `/json/version` has none, so give the allocator the full websocket address and use `remote.NoModifyURL`. The remote allocator is in the module `github.com/chromedp/chromedp/remote`.
+A hosted browser service can need a header, such as `Authorization`, on the websocket request. `remote.WithDialHTTPHeader` sets the headers of a remote allocator, and `remote.WithConnHTTPHeader` is the same option for `remote.DialContext`. The headers go with the websocket request only. The request to `/json/version` has none, so give the allocator the full websocket address and use `remote.NoModifyURL`. The remote allocator is in the package `github.com/chromedp/chromedp/remote`.
 
 ```go
 header := http.Header{"Authorization": {"Bearer " + token}}
@@ -806,7 +806,7 @@ The new API removes the interface `Action`, the type `ActionFunc`, the type `Tas
 
 ## The exported funcs and types
 
-This part lists the signatures that `go doc -all` prints for the packages of the three modules. Run `go doc` on a name for its documentation. The first part is the core package `github.com/chromedp/chromedp`. The part "The module remote" follows it. The module `test` has no exported names.
+This part lists the signatures that `go doc -all` prints for the packages of the two modules. Run `go doc` on a name for its documentation. The first part is the core package `github.com/chromedp/chromedp`. The part "The package remote" follows it. It is in the core module. The module `test` has no exported names.
 
 ## Functions
 
@@ -1206,9 +1206,9 @@ PaperA4
 PaperA5
 ```
 
-## The module remote
+## The package remote
 
-The package `github.com/chromedp/chromedp/remote` holds the code that needs a websocket. The core module does not import it. Run `go get github.com/chromedp/chromedp/remote` to use it. `docs/decisions/2026-10-04-the-core-uses-only-the-standard-library.md` explains the split, and `docs/MIGRATION.md` lists the old and the new names.
+The package `github.com/chromedp/chromedp/remote` holds the code that needs a websocket. It is part of the core module, and the core packages do not import it. It has its own WebSocket client and needs no library. `docs/decisions/2026-10-04-the-core-uses-only-the-standard-library.md` explains the split, and `docs/MIGRATION.md` lists the old and the new names.
 
 ```go
 var ErrInvalidMessage = errors.New("invalid websocket message")

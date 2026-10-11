@@ -1,6 +1,6 @@
 # A visible window is an opt-in
 
-Status: Decided.
+Status: Amended by 2026-10-11-remote-is-a-package-of-the-core-module.md.
 
 Headless mode stays the default. A program that wants a visible window, or a
 window that stays open after the program ends, asks for it. The maintainer
@@ -76,4 +76,6 @@ window needs a display, and it skips on Linux without one.
 The decision `2026-10-04-the-core-uses-only-the-standard-library.md` moved
 `WithKeepOpen` and `NewRemoteAllocator` to the module `remote`. They are now
 `remote.WithKeepOpen` and `remote.NewAllocator`. `KeepOpen` needs
-`remote.WebSocket`.
+`remote.WebSocket`. The decision
+`2026-10-11-remote-is-a-package-of-the-core-module.md` made `remote` a package of
+the core module.

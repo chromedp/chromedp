@@ -1,6 +1,6 @@
 # Support Go 1.25 and later
 
-Status: Amends 2026-10-03-the-minimum-go-version-is-1-27.md.
+Status: Amends 2026-10-03-the-minimum-go-version-is-1-27.md. Amended by 2026-10-11-remote-is-a-package-of-the-core-module.md.
 
 The maintainer decided on 2026-10-06 that `chromedp` supports Go 1.25 and
 later. The `go` line of `go.mod` was 1.27 and is now 1.25. This replaces the
@@ -40,4 +40,5 @@ jobs test the two JSON layers of `cdproto`. One uses Go 1.25 with
 
 Nothing remains. The maintainer tagged `chromedp` v0.20.0 and `remote/v0.2.0`.
 The `go.mod` files of `remote` and `test` require `chromedp` v0.20.0, which
-declares Go 1.25.
+declares Go 1.25. The decision `2026-10-11-remote-is-a-package-of-the-core-module.md`
+removed the `go.mod` of `remote`.

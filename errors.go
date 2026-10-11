@@ -63,7 +63,7 @@ func (err Error) Error() string {
 const (
 	// ErrNoDialer is the error of an ExecAllocator that needs a websocket and
 	// has no dialer. See [WithDialer].
-	ErrNoDialer Error = "the allocator needs a websocket, so it needs a dialer: add remote.WebSocket from the module github.com/chromedp/chromedp/remote to its options"
+	ErrNoDialer Error = "the allocator needs a websocket, so it needs a dialer: add remote.WebSocket from the package github.com/chromedp/chromedp/remote to its options"
 
 	// ErrInvalidDimensions is the invalid dimensions error.
 	ErrInvalidDimensions Error = "invalid dimensions"

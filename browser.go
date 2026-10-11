@@ -34,7 +34,7 @@ var (
 
 // Transport is the common interface to send and receive the protocol messages
 // of a browser. [PipeConn] implements it, and so does the websocket connection
-// of the module github.com/chromedp/chromedp/remote. Browser reads and writes
+// of the package github.com/chromedp/chromedp/remote. Browser reads and writes
 // its messages through it, and NewBrowserTransport accepts any Transport.
 //
 // A Transport can also have the method SetDebugf(func(string, ...any)).
@@ -175,7 +175,7 @@ func newBrowser(opts []BrowserOption) *Browser {
 // Process returns the process object of the browser.
 //
 // It is nil when the browser was allocated by an allocator that attaches to a
-// browser that runs already, such as the allocator of the remote module. A monitoring
+// browser that runs already, such as the allocator of the remote package. A monitoring
 // system can use it to collect process metrics of the browser process (see
 // [prometheus.NewProcessCollector] for an example).
 //

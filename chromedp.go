@@ -342,7 +342,7 @@ func FromContext(ctx context.Context) *Context {
 func Cancel(ctx context.Context) error {
 	c := FromContext(ctx)
 	// c.cancel is nil when the caller passes to Cancel a context from
-	// NewExecAllocator or by an allocator of another module.
+	// NewExecAllocator or by an allocator of another package.
 	if c == nil || c.cancel == nil {
 		return ErrInvalidContext
 	}
@@ -641,7 +641,7 @@ func WithVisibleWindow() ContextOption {
 
 // WithAllocatorOptions makes NewContext add opts to the options of the default
 // allocator, after [DefaultExecAllocatorOptions] and after [VisibleWindow]. The
-// module github.com/chromedp/chromedp/remote uses it for its own WithKeepOpen.
+// package github.com/chromedp/chromedp/remote uses it for its own WithKeepOpen.
 //
 // The option only applies when the parent context has no allocator. It has no
 // effect on an allocator that the caller made, and it has no effect on a

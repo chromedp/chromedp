@@ -5,9 +5,17 @@ crashes can resume. Update it when a piece of work starts or ends. Work that
 is known and not done goes in [`BACKLOG.md`](BACKLOG.md), and a decision goes
 in [`decisions/`](decisions/README.md).
 
+## Changes after v0.20.1
+
+These changes are not in a release yet. The first release that has them is v0.21.0.
+
+- Changed: the package `github.com/chromedp/chromedp/remote` is part of the core module. The nested module `remote` is gone, with its `go.mod` and `go.sum`. The tag `remote/v0.2.0` is the last tag of that module. The import path does not change, and the public API of the package is the same. A program that has `require github.com/chromedp/chromedp/remote` in its `go.mod` must remove that line, because Go reports an ambiguous import while the old module and the core module both have the package. `go mod tidy` removes the line. The decision is in `decisions/2026-10-11-remote-is-a-package-of-the-core-module.md`.
+- Changed: `remote` has its own WebSocket client in `remote/internal/websocket`, and no longer uses `gobwas/ws`. The client follows RFC 6455. It supports fragmented messages, the control frames, close codes, a limit of 256 MiB for a message and the check that a text message is UTF-8. `Close` waits at most one second for the close frame of the server, and the dial has a connect timeout of 30 seconds and a TLS handshake timeout of 10 seconds. It does not support extensions, so it never negotiates `permessage-deflate`. The tests use a server that shares no code with the client, in `remote/internal/wstest`. The client has a fuzz test and benchmarks.
+- Changed: CI and `contrib/docker-test.sh` run `remote` with the core, and only `test` keeps a `replace` directive at run time.
+
 ## Changes in v0.20.0
 
-These commits are in the release v0.20.0. The module `remote` has the tag `remote/v0.2.0`, and it requires `chromedp` v0.20.0. The `go.mod` of `test` requires it too.
+These commits are in the release v0.20.0. The nested module `remote` had the tag `remote/v0.2.0`, and it required `chromedp` v0.20.0. The `go.mod` of `test` requires it too.
 
 - Changed: the module needs Go 1.25 or newer, no longer Go 1.27. The JSON types come from `github.com/chromedp/cdproto/cdp/jsonv2`, which uses the standard library on Go 1.27 and later. The types of the public API are the same on Go 1.27. The code has no feature of Go 1.26 (issue 1536). The release also uses `cdproto` v0.157.8. The decision is in `decisions/2026-10-06-support-go-1-25-and-later.md`.
 - Changed: the workflows use `actions/checkout` v7 and `actions/setup-go` v7. CI tests Go 1.25, Go 1.26 and the newest stable release on Linux, and has two more jobs for the JSON layer of `cdproto` with `GOEXPERIMENT=jsonv2` and with the tag `cdproto_jsoncompat`.

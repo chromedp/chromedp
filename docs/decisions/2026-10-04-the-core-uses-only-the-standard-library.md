@@ -1,6 +1,11 @@
 # The core uses only the standard library
 
-Status: Amended by 2026-10-04-the-pipe-works-on-windows.md.
+Status: Amended by 2026-10-04-the-pipe-works-on-windows.md and 2026-10-11-remote-is-a-package-of-the-core-module.md.
+
+The decision `2026-10-11-remote-is-a-package-of-the-core-module.md` replaced the
+module `remote` with a package of the core module and removed `gobwas/ws`. The
+parts of this file that name the module `remote`, its tags and `gobwas/ws` are
+history.
 
 The maintainer decided that the core module `github.com/chromedp/chromedp` uses
 no library other than the Go standard library and `github.com/chromedp/cdproto`.

@@ -2,55 +2,40 @@ package remote
 
 import (
 	"context"
+	"errors"
+	"fmt"
+	"io"
+	"net"
 	"net/http"
-	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/chromedp/cdproto"
 	"github.com/chromedp/chromedp"
-	"github.com/gobwas/ws"
+	"github.com/chromedp/chromedp/remote/internal/wstest"
 )
 
 // newWebsocketServer starts a server that upgrades each request to a
 // websocket and passes the connection to handle. It returns the ws address.
-func newWebsocketServer(t *testing.T, handle func(r *http.Request, c *serverConn)) string {
+func newWebsocketServer(t *testing.T, handle func(r *http.Request, c *wstest.Conn)) string {
 	t.Helper()
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		conn, _, _, err := ws.UpgradeHTTP(r, w)
-		if err != nil {
-			t.Errorf("upgrading the request: %v", err)
-			return
-		}
-		defer conn.Close()
-		handle(r, &serverConn{conn})
-	}))
-	t.Cleanup(srv.Close)
-	return "ws" + strings.TrimPrefix(srv.URL, "http")
+	return wstest.URL(wstest.NewServer(t, handle))
 }
 
-// serverConn is the server end of a websocket connection in a test.
-type serverConn struct {
-	conn interface {
-		Read([]byte) (int, error)
-		Write([]byte) (int, error)
-		SetDeadline(time.Time) error
-	}
-}
-
-func (s *serverConn) write(t *testing.T, f ws.Frame) {
+// mustWrite sends a frame from the server, and fails the test on an error.
+func mustWrite(t *testing.T, c *wstest.Conn, op byte, payload []byte) {
 	t.Helper()
-	if err := ws.WriteFrame(s.conn, f); err != nil {
+	if err := c.WriteFrame(op, payload); err != nil {
 		t.Errorf("writing a frame: %v", err)
 	}
 }
 
-// read reads one frame from the client. It gives up after a few seconds.
-func (s *serverConn) read(t *testing.T) (ws.Frame, bool) {
+// mustRead reads one frame from the client. It gives up after a few seconds.
+func mustRead(t *testing.T, c *wstest.Conn) (wstest.Frame, bool) {
 	t.Helper()
-	s.conn.SetDeadline(time.Now().Add(5 * time.Second))
-	f, err := ws.ReadFrame(s.conn)
+	f, err := c.ReadFrame()
 	if err != nil {
 		t.Errorf("reading a frame: %v", err)
 		return f, false
@@ -72,17 +57,17 @@ func TestConnAnswersPing(t *testing.T) {
 }
 
 func testConnAnswersPing(t *testing.T, delay time.Duration) {
-	pongs := make(chan ws.Frame, 2)
-	url := newWebsocketServer(t, func(_ *http.Request, c *serverConn) {
+	pongs := make(chan wstest.Frame, 2)
+	url := newWebsocketServer(t, func(_ *http.Request, c *wstest.Conn) {
 		time.Sleep(delay)
 		// The ping frames come before the message. A ping with a payload, an
 		// empty ping and a pong that nobody asked for must not stop the read.
-		c.write(t, ws.NewPingFrame([]byte("are you there")))
-		c.write(t, ws.NewPongFrame([]byte("unasked")))
-		c.write(t, ws.NewPingFrame(nil))
-		c.write(t, ws.NewTextFrame([]byte(`{"id":5,"result":{}}`)))
+		mustWrite(t, c, wstest.OpPing, []byte("are you there"))
+		mustWrite(t, c, wstest.OpPong, []byte("unasked"))
+		mustWrite(t, c, wstest.OpPing, nil)
+		mustWrite(t, c, wstest.OpText, []byte(`{"id":5,"result":{}}`))
 		for range 2 {
-			f, ok := c.read(t)
+			f, ok := mustRead(t, c)
 			if !ok {
 				return
 			}
@@ -108,14 +93,10 @@ func testConnAnswersPing(t *testing.T, delay time.Duration) {
 	for _, want := range []string{"are you there", ""} {
 		select {
 		case f := <-pongs:
-			if f.Header.OpCode != ws.OpPong {
-				t.Fatalf("want a pong frame, got %v", f.Header.OpCode)
+			// ReadFrame fails when the frame is not masked.
+			if f.Opcode != wstest.OpPong {
+				t.Fatalf("want a pong frame, got %v", f.Opcode)
 			}
-			if !f.Header.Masked {
-				t.Fatal("a client must mask the pong frame")
-			}
-			// The server reads the frame with the mask still applied.
-			ws.Cipher(f.Payload, f.Header.Mask, 0)
 			if got := string(f.Payload); got != want {
 				t.Fatalf("want the payload %q, got %q", want, got)
 			}
@@ -132,7 +113,7 @@ func TestConnPingWhileWriting(t *testing.T) {
 
 	const writes = 50
 	got := make(chan int, 1)
-	url := newWebsocketServer(t, func(_ *http.Request, c *serverConn) {
+	url := newWebsocketServer(t, func(_ *http.Request, c *wstest.Conn) {
 		stop := make(chan struct{})
 		defer close(stop)
 		go func() {
@@ -142,17 +123,17 @@ func TestConnPingWhileWriting(t *testing.T) {
 					return
 				case <-time.After(time.Millisecond):
 					// The connection can close while this runs, so ignore the error.
-					_ = ws.WriteFrame(c.conn, ws.NewPingFrame([]byte("ping")))
+					_ = c.WriteFrame(wstest.OpPing, []byte("ping"))
 				}
 			}
 		}()
 		n := 0
 		for n < writes {
-			f, ok := c.read(t)
+			f, ok := mustRead(t, c)
 			if !ok {
 				return
 			}
-			if f.Header.OpCode == ws.OpText {
+			if f.Opcode == wstest.OpText {
 				n++
 			}
 		}
@@ -197,7 +178,7 @@ func headerServer(t *testing.T) (string, <-chan http.Header) {
 	headers := make(chan http.Header, 4)
 	done := make(chan struct{})
 	t.Cleanup(func() { close(done) })
-	url := newWebsocketServer(t, func(r *http.Request, _ *serverConn) {
+	url := newWebsocketServer(t, func(r *http.Request, _ *wstest.Conn) {
 		headers <- r.Header.Clone()
 		<-done
 	})
@@ -273,5 +254,156 @@ func TestAllocatorDialHTTPHeader(t *testing.T) {
 	_ = chromedp.Do(tctx)
 	if got := receiveHeader(t, headers).Get("Authorization"); got != "Bearer remote" {
 		t.Fatalf("want the header of the allocator option, got %q", got)
+	}
+}
+
+// TestConnReadErrors checks the errors of Read for the frames that end a
+// session.
+func TestConnReadErrors(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name  string
+		send  func(c *wstest.Conn)
+		check func(t *testing.T, err error)
+	}{
+		{
+			name: "normal close",
+			send: func(c *wstest.Conn) { c.WriteFrame(wstest.OpClose, []byte{0x03, 0xe8}) },
+			check: func(t *testing.T, err error) {
+				if err != io.EOF {
+					t.Fatalf("got %v, want io.EOF", err)
+				}
+			},
+		},
+		{
+			name: "going away",
+			send: func(c *wstest.Conn) { c.WriteFrame(wstest.OpClose, []byte{0x03, 0xe9}) },
+			check: func(t *testing.T, err error) {
+				if err != io.EOF {
+					t.Fatalf("got %v, want io.EOF", err)
+				}
+			},
+		},
+		{
+			name: "binary frame",
+			send: func(c *wstest.Conn) { c.WriteFrame(wstest.OpBinary, []byte("x")) },
+			check: func(t *testing.T, err error) {
+				if !errors.Is(err, ErrInvalidMessage) {
+					t.Fatalf("got %v, want ErrInvalidMessage", err)
+				}
+			},
+		},
+		{
+			name: "connection dropped",
+			send: func(c *wstest.Conn) { c.Close() },
+			check: func(t *testing.T, err error) {
+				if err == nil {
+					t.Fatal("want an error")
+				}
+			},
+		},
+		{
+			name: "invalid JSON",
+			send: func(c *wstest.Conn) { c.WriteFrame(wstest.OpText, []byte("{not json")) },
+			check: func(t *testing.T, err error) {
+				if err == nil || errors.Is(err, io.EOF) {
+					t.Fatalf("got %v, want a JSON error", err)
+				}
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			url := newWebsocketServer(t, func(_ *http.Request, c *wstest.Conn) {
+				tt.send(c)
+				// Let the client read before the server closes.
+				c.ReadFrame()
+			})
+			conn, err := DialContext(context.Background(), url)
+			if err != nil {
+				t.Fatal(err)
+			}
+			defer conn.Close()
+			var msg cdproto.Message
+			tt.check(t, conn.Read(context.Background(), &msg))
+		})
+	}
+}
+
+// TestConnReadAfterClose checks that a read after Close, and a read that Close
+// ends, give an error that wraps net.ErrClosed.
+func TestConnReadAfterClose(t *testing.T) {
+	t.Parallel()
+
+	url := newWebsocketServer(t, func(_ *http.Request, c *wstest.Conn) {
+		c.ReadFrame()
+	})
+	conn, err := DialContext(context.Background(), url)
+	if err != nil {
+		t.Fatal(err)
+	}
+	done := make(chan error, 1)
+	go func() {
+		var msg cdproto.Message
+		done <- conn.Read(context.Background(), &msg)
+	}()
+	time.Sleep(50 * time.Millisecond)
+	if err := conn.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := conn.Close(); err != nil {
+		t.Fatalf("second Close: %v", err)
+	}
+	select {
+	case err := <-done:
+		if !errors.Is(err, net.ErrClosed) {
+			t.Fatalf("got %v, want net.ErrClosed", err)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("Close did not end the read")
+	}
+	var msg cdproto.Message
+	if err := conn.Read(context.Background(), &msg); !errors.Is(err, net.ErrClosed) {
+		t.Fatalf("read after Close: got %v", err)
+	}
+}
+
+// TestConnDebugf checks the lines for the protocol logger.
+func TestConnDebugf(t *testing.T) {
+	t.Parallel()
+
+	url := newWebsocketServer(t, func(_ *http.Request, c *wstest.Conn) {
+		mustWrite(t, c, wstest.OpPing, nil)
+		mustWrite(t, c, wstest.OpText, []byte(`{"id":1}`))
+		mustRead(t, c)
+		mustRead(t, c)
+	})
+	var mu sync.Mutex
+	var lines []string
+	conn, err := DialContext(context.Background(), url, WithConnDebugf(func(f string, a ...any) {
+		mu.Lock()
+		defer mu.Unlock()
+		lines = append(lines, fmt.Sprintf(f, a...))
+	}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+	var msg cdproto.Message
+	if err := conn.Read(context.Background(), &msg); err != nil {
+		t.Fatal(err)
+	}
+	if err := conn.Write(context.Background(), &cdproto.Message{ID: 2}); err != nil {
+		t.Fatal(err)
+	}
+	mu.Lock()
+	defer mu.Unlock()
+	got := strings.Join(lines, "\n")
+	for _, want := range []string{"received ping frame, sending pong", `<- {"id":1}`, "-> "} {
+		if !strings.Contains(got, want) {
+			t.Errorf("the log %q has no %q", got, want)
+		}
 	}
 }

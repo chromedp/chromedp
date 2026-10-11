@@ -1,6 +1,6 @@
 // Package testenv reads the environment variables that change the tests of
-// chromedp. The tests of the core module and the tests of the other modules of
-// the repository share it. It imports no chromedp package, so that the tests of
+// chromedp. The tests of the core package, of the package remote and of the module
+// test share it. It imports no chromedp package, so that the tests of
 // the core package can import it too.
 package testenv
 
