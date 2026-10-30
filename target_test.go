@@ -45,6 +45,31 @@ func newEventTarget(nodes ...*Node) (*Target, func() []string) {
 	}
 }
 
+// A failed DOM.getDocument must not leave the old root in place. Otherwise the
+// next DOM.documentUpdated event closes its channel again and panics.
+func TestDocumentUpdatedAfterFailedGetDocument(t *testing.T) {
+	t.Parallel()
+
+	tgt, _ := newEventTarget()
+	root := &Node{Node: &cdp.Node{NodeID: 1}, Invalidated: make(chan struct{})}
+	f := tgt.frames[tgt.cur]
+	f.Root = root
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	tgt.domEvent(ctx, &dom.EventDocumentUpdated{})
+	tgt.domEvent(ctx, &dom.EventDocumentUpdated{})
+
+	select {
+	case <-root.Invalidated:
+	default:
+		t.Fatal("the old root is not invalidated")
+	}
+	if f.Root != nil {
+		t.Fatalf("the frame keeps the invalidated root %v", f.Root)
+	}
+}
+
 func TestNodeStateEvents(t *testing.T) {
 	t.Parallel()
 
