@@ -302,6 +302,7 @@ func (t *Target) documentUpdated(ctx context.Context) {
 	// invalidate nodes
 	if f.Root != nil {
 		close(f.Root.Invalidated)
+		f.Root = nil
 	}
 
 	f.Nodes = make(map[cdp.NodeID]*Node)
