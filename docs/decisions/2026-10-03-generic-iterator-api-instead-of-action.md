@@ -1,6 +1,6 @@
 # Replace the Action interface with a generic and iterator API
 
-Status: Decided.
+Status: Amended by 2026-11-04-export-the-ordered-event-listener.md.
 
 The maintainer asked on 2026-10-03 whether an API built on generics and
 iterators must replace the `chromedp.Action` interface, which is old and not

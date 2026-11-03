@@ -6,6 +6,7 @@ import (
 	"iter"
 	"time"
 
+	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/cdp"
 )
 
@@ -118,7 +119,8 @@ func Legacy(a OldAction) Action[Void] {
 }
 
 // Events subscribes to the event on the target of the context, and returns an
-// iterator over its payloads. It replaces ListenTarget.
+// iterator over its payloads. It replaces ListenTarget. Use [Listen] when the
+// code needs the order of the events across event types.
 //
 // The subscription starts when Events returns, and not when the caller starts
 // to range. A caller can subscribe, trigger the event, and then range, so that
@@ -147,13 +149,76 @@ func Events[E any](ctx context.Context, ev cdp.Event[E]) iter.Seq2[E, error] {
 }
 
 // BrowserEvents is like [Events] for the events of the browser, such as the
-// events of the target domain. It replaces ListenBrowser.
+// events of the target domain. It replaces ListenBrowser. Use [ListenBrowser]
+// when the code needs the order of the events across event types.
 func BrowserEvents[E any](ctx context.Context, ev cdp.Event[E]) iter.Seq2[E, error] {
 	c, err := initContextBrowser(ctx)
 	if err != nil {
 		return failed[E](err)
 	}
 	return cdp.Events(ctx, endWith(ctx, c.Browser), ev)
+}
+
+// Listen calls fn for each event of the target of the context, in the order in
+// which the events arrive from the browser. As [Events] does, it starts the
+// browser and opens the target when the context has none yet, and it returns
+// the error if that fails. Canceling the context stops the calls. It returns
+// [ErrInvalidContext] when ctx is not a chromedp context.
+//
+// Use [Events] when you can. Use Listen when your code needs the order of the
+// events across event types, or must see an event before the command that
+// follows it returns. The iterators of Events have neither guarantee, because
+// they queue the events and deliver them from another goroutine. The target
+// calls fn on the goroutine that reads the messages of the browser, and it
+// calls fn before it reads the next message. So when an event arrives before
+// the reply to a command, fn sees the event before that command returns.
+//
+// fn gets the events and nothing else, as pointers to the event types of
+// cdproto, such as *page.EventLoadEventFired. It gets no reply to a command.
+// It sees the events that arrive after Listen returns, so call Listen before
+// the action that causes the events.
+//
+// fn runs inside the loop that reads the messages of the tab. For this reason:
+//
+//   - fn must return fast. A slow fn delays every command and every event of
+//     the tab.
+//   - fn must not run a command with [Run], [Do], [Call] or [cdp.Call], and it
+//     must not call Listen. The call waits for a message that only the blocked
+//     goroutine can read, so the program stops.
+//   - fn must not panic. A panic ends the program.
+//
+// To do slow work, put the event in a slice under a lock, or send it on a
+// channel that has room, and handle it in another goroutine.
+func Listen(ctx context.Context, fn func(ev any)) error {
+	c, err := initContextTarget(ctx)
+	if err != nil {
+		return err
+	}
+	c.Target.listen(ctx, eventsOnly(fn))
+	return nil
+}
+
+// ListenBrowser is like [Listen] for the events of the browser, such as the
+// events of the target domain. The same rules hold for fn. As [BrowserEvents]
+// does, it starts the browser when the context has none yet.
+func ListenBrowser(ctx context.Context, fn func(ev any)) error {
+	c, err := initContextBrowser(ctx)
+	if err != nil {
+		return err
+	}
+	c.Browser.listen(ctx, eventsOnly(fn))
+	return nil
+}
+
+// eventsOnly returns a func that calls fn for each event, and skips the replies
+// to commands that the internal listeners also get.
+func eventsOnly(fn func(ev any)) func(ev any) {
+	return func(ev any) {
+		if _, ok := ev.(*cdproto.Message); ok {
+			return
+		}
+		fn(ev)
+	}
 }
 
 // endingSession is a [cdp.Session] that ends each subscription when a context

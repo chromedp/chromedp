@@ -156,6 +156,7 @@ The query options `NodeVisible`, `AtLeast`, `RetryInterval`, `FromNode` and the 
 
 - `ListenTarget(ctx, fn)` becomes `Events(ctx, page.LoadEventFired)`. It returns an iterator `iter.Seq2[E, error]`. The payload has its own type, for example `page.EventLoadEventFired`, so the func does not switch on `any`.
 - `ListenBrowser(ctx, fn)` becomes `BrowserEvents(ctx, target.TargetCreated)`.
+- Use `Listen(ctx, fn)` and `ListenBrowser(ctx, fn)` when the code needs the order of the events across event types, or must see an event before the command that follows it returns. They return an error, and the func gets the events and no reply to a command. The func runs in the loop that reads the messages of the tab, as the old func did, so it must return fast and must not run a command. `ListenTarget` is now `Listen`, and `ListenBrowser` keeps its name. A call of either as a statement still compiles after the rename, but check the error that it returns.
 - The subscription starts when `Events` returns. A program subscribes, triggers the event and then ranges over the iterator, and no event is lost. The iterator ends when the context ends and yields the error of the context.
 - A listener ran inside the loop that handles the events of the browser, so it had to be fast. The iterator buffers the events without a limit, so the program reads them at its own speed.
 - `WaitEvent(event, match, trigger)` is new. It subscribes, runs the trigger action and returns the first payload for which `match` is true. It replaces the pattern of a listener that closes a channel.

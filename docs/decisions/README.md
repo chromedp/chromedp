@@ -22,7 +22,7 @@ add.
 | 2021-04-29 | [Wrap errors with %w](2021-04-29-wrap-errors-with-w.md) | Decided |
 | 2025-02-22 | [Use the experimental JSON v2 package](2025-02-22-use-json-v2.md) | Decided |
 | 2026-10-03 | [A visible window is an opt-in](2026-10-03-a-visible-window-is-an-opt-in.md) | Amended by 2026-10-11-remote-is-a-package-of-the-core-module.md |
-| 2026-10-03 | [Replace the Action interface with a generic and iterator API](2026-10-03-generic-iterator-api-instead-of-action.md) | Decided |
+| 2026-10-03 | [Replace the Action interface with a generic and iterator API](2026-10-03-generic-iterator-api-instead-of-action.md) | Amended by 2026-11-04-export-the-ordered-event-listener.md |
 | 2026-10-03 | [Questions and ideas go to Discussions, and issues are for bugs](2026-10-03-questions-and-ideas-go-to-discussions.md) | Decided |
 | 2026-10-03 | [The README shows the gear logo and the Discord badge](2026-10-03-readme-shows-the-gear-logo-and-discord-badge.md) | Decided |
 | 2026-10-03 | [Stop relying on helpers that cdproto no longer generates](2026-10-03-stop-relying-on-removed-cdproto-helpers.md) | Decided |
@@ -34,3 +34,4 @@ add.
 | 2026-10-04 | [The pipe works on Windows](2026-10-04-the-pipe-works-on-windows.md) | Amends 2026-10-03-use-a-pipe-to-the-browser-by-default.md and 2026-10-04-the-core-uses-only-the-standard-library.md |
 | 2026-10-06 | [Support Go 1.25 and later](2026-10-06-support-go-1-25-and-later.md) | Amends 2026-10-03-the-minimum-go-version-is-1-27.md. Amended by 2026-10-11-remote-is-a-package-of-the-core-module.md |
 | 2026-10-11 | [The remote package is part of the core module](2026-10-11-remote-is-a-package-of-the-core-module.md) | Amends 2026-10-04-the-core-uses-only-the-standard-library.md, 2026-10-03-use-a-pipe-to-the-browser-by-default.md, 2026-10-03-a-visible-window-is-an-opt-in.md and 2026-10-06-support-go-1-25-and-later.md |
+| 2026-11-04 | [Export the ordered event listener as Listen and ListenBrowser](2026-11-04-export-the-ordered-event-listener.md) | Amends 2026-10-03-generic-iterator-api-instead-of-action.md |

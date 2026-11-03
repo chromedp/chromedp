@@ -800,9 +800,42 @@ buf, err := chromedp.Run(ctx, chromedp.PrintToPDF(
 ))
 ```
 
+### 28. See the events of all types in order
+
+`Events` gives one iterator for each event type. The iterators queue the events and deliver them from another goroutine. So they give no order between event types, and a command can return before a subscriber has seen an event that arrived before its reply. Code that tracks the state of a page from many event types needs both. `Listen` gives both. The target calls the func in the loop that reads its messages, in the order of arrival, before it reads the next message.
+
+The old `ListenTarget(ctx, fn)` had the same behavior. `Listen` differs in two ways. It returns an error, for example when the context is not a chromedp context. The func gets the events only, and no reply to a command.
+
+```go
+var mu sync.Mutex
+var log []string
+// Listen before the action that causes the events.
+if err := chromedp.Listen(ctx, func(ev any) {
+	// This runs in the loop of the tab. Return fast, and run no command.
+	mu.Lock()
+	defer mu.Unlock()
+	switch ev := ev.(type) {
+	case *runtime.EventConsoleAPICalled:
+		log = append(log, "console "+string(ev.Type))
+	case *page.EventFrameNavigated:
+		log = append(log, "navigated "+ev.Frame.URL)
+	}
+}); err != nil {
+	panic(err)
+}
+
+if err := chromedp.Do(ctx, chromedp.Navigate(ts.URL)); err != nil {
+	panic(err)
+}
+// log has the events in the order in which Chrome sent them, and the events
+// that arrived before the reply to the navigation are in it.
+```
+
+Use `Events` unless you need the order. The func must return fast, must not run a command and must not call `Listen`, because the loop that reads the messages of the tab calls it. It must not panic. See the documentation of `Listen`. `ListenBrowser` is the same for the events of the browser, such as `target.TargetCreated`.
+
 ## What the new API removes
 
-The new API removes the interface `Action`, the type `ActionFunc`, the type `Tasks`, and the funcs `ListenTarget` and `ListenBrowser`. It also removes the types `QueryAction`, `NavigateAction`, `EvaluateAction`, `CallAction`, `PollAction`, `MouseAction`, `KeyAction` and `EmulateAction`. Each type is now `Action[T]`. It also removes the six lookup options that start with `By`, except `ByFunc`. A selector type replaces each of them. `docs/MIGRATION.md` lists every change, with the old name and the new name.
+The new API removes the interface `Action`, the type `ActionFunc`, the type `Tasks`, and the funcs `ListenTarget` and `ListenBrowser`. `Listen` and `ListenBrowser` bring back the ordered listener, with one more result, an error, and see example 28. It also removes the types `QueryAction`, `NavigateAction`, `EvaluateAction`, `CallAction`, `PollAction`, `MouseAction`, `KeyAction` and `EmulateAction`. Each type is now `Action[T]`. It also removes the six lookup options that start with `By`, except `ByFunc`. A selector type replaces each of them. `docs/MIGRATION.md` lists every change, with the old name and the new name.
 
 ## The exported funcs and types
 
@@ -837,6 +870,8 @@ func Headless(a *ExecAllocator)
 func IgnoreCertErrors(a *ExecAllocator)
 func KeepOpen(a *ExecAllocator)
 func KeptOpen(ctx context.Context) (wsURL, userDataDir string)
+func Listen(ctx context.Context, fn func(ev any)) error
+func ListenBrowser(ctx context.Context, fn func(ev any)) error
 func NewAllocatorContext(parent context.Context, a Allocator) (context.Context, context.CancelFunc)
 func NewContext(parent context.Context, opts ...ContextOption) (context.Context, context.CancelFunc)
 func NewExecAllocator(parent context.Context, opts ...ExecAllocatorOption) (context.Context, context.CancelFunc)
