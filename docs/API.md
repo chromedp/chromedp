@@ -1208,6 +1208,7 @@ ErrDisabled
 ErrNotSelected
 ErrInvalidBoxModel
 ErrChannelClosed
+ErrTargetDetached
 ErrInvalidTarget
 ErrPageLoad
 ErrNoDisplay

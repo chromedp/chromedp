@@ -2,6 +2,7 @@ package chromedp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -11,10 +12,13 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/dom"
+	"github.com/chromedp/cdproto/runtime"
+	"github.com/chromedp/cdproto/target"
 )
 
 // newEventTarget makes a target with one frame that holds the nodes. It needs
@@ -209,5 +213,42 @@ func TestTargetHandlesEveryEvent(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+func TestCallOnDetachedTarget(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+	// a tab of its own, that the browser closes
+	tabCtx, tabCancel := NewContext(ctx)
+	defer tabCancel()
+	if err := Do(tabCtx); err != nil {
+		t.Fatal(err)
+	}
+	id := FromContext(tabCtx).Target.TargetID
+
+	// The browser sends no reply to a command that is pending when the target
+	// goes away. The command must end with an error and not wait for its context.
+	go func() {
+		time.Sleep(200 * time.Millisecond)
+		if _, err := CallBrowser(ctx, target.CloseTarget, target.CloseTargetParams{TargetID: id}); err != nil {
+			t.Error(err)
+		}
+	}()
+	rctx, rcancel := context.WithTimeout(tabCtx, 10*time.Second)
+	defer rcancel()
+	_, err := Call(rctx, runtime.Evaluate, runtime.EvaluateParams{
+		Expression:   `new Promise(() => {})`,
+		AwaitPromise: ptr(true),
+	})
+	if !errors.Is(err, ErrTargetDetached) {
+		t.Fatalf("want ErrTargetDetached, got %v", err)
+	}
+
+	// A later command fails at once.
+	if _, err := Call(rctx, runtime.Evaluate, runtime.EvaluateParams{Expression: `1`}); !errors.Is(err, ErrTargetDetached) {
+		t.Fatalf("want ErrTargetDetached for a later command, got %v", err)
 	}
 }

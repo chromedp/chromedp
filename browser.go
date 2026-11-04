@@ -203,6 +203,7 @@ func (b *Browser) newTarget(ctx context.Context, targetID target.ID, sessionID t
 		SessionID: sessionID,
 
 		messageQueue:  make(chan *cdproto.Message, 1024),
+		detached:      make(chan struct{}),
 		frames:        make(map[cdp.FrameID]*Frame),
 		execContexts:  make(map[cdp.FrameID]runtime.ExecutionContextID),
 		execUniqueIDs: make(map[cdp.FrameID]string),
@@ -418,6 +419,15 @@ func (b *Browser) run(ctx context.Context) {
 		case sessionID := <-delTabQueue:
 			if _, ok := b.pages[sessionID]; !ok {
 				b.errf("executor for %q doesn't exist", sessionID)
+			}
+			if page, ok := b.pages[sessionID]; ok {
+				// Tell the target after its last routed message. The target
+				// then ends the commands that wait for a reply that never comes.
+				select {
+				case <-ctx.Done():
+					return
+				case page.messageQueue <- detachedMessage:
+				}
 			}
 			delete(b.pages, sessionID)
 

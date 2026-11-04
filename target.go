@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"sync"
 	"sync/atomic"
 
@@ -26,6 +27,10 @@ type Target struct {
 	listeners   []cancelableListener
 
 	messageQueue chan *cdproto.Message
+
+	// detached closes after the target has handled every message that the
+	// browser routed to it before the detach.
+	detached chan struct{}
 
 	// events holds the subscriptions made with Subscribe.
 	events subscribers
@@ -121,6 +126,10 @@ func (t *Target) run(ctx context.Context) {
 				return
 
 			case msg := <-t.messageQueue:
+				if msg == detachedMessage {
+					close(t.detached)
+					continue
+				}
 				if msg.ID != 0 {
 					t.listenersMu.Lock()
 					t.listeners = runListeners(t.listeners, msg)
@@ -172,10 +181,16 @@ func (t *Target) run(ctx context.Context) {
 	}
 }
 
+// detachedMessage is the message that the browser puts in the queue of a target
+// after the last message that it routes to the target.
+var detachedMessage = new(cdproto.Message)
+
 // Call sends the command to the target, waits for the response, and decodes
 // the result into res. It satisfies [cdp.Session].
 //
-// Call returns a browser error as a [*cdproto.Error]. It returns an error when
+// Call returns a browser error as a [*cdproto.Error]. It returns an error that
+// wraps [ErrTargetDetached] when the browser detaches the target before it
+// replies, for example when the page closes. It returns an error when
 // the connection to the browser is lost, also when ctx never ends. The error
 // wraps the reason of the loss and [context.Canceled].
 func (t *Target) Call(ctx context.Context, method string, params, res any) error {
@@ -218,6 +233,8 @@ func (t *Target) Call(ctx context.Context, method string, params, res any) error
 		return ctx.Err()
 	case <-t.browser.LostConnection:
 		return t.browser.lostError(ctx)
+	case <-t.detached:
+		return t.detachedError()
 	case t.browser.cmdQueue <- cmd:
 	}
 
@@ -237,7 +254,21 @@ func (t *Target) Call(ctx context.Context, method string, params, res any) error
 		return t.browser.lostError(ctx)
 	case msg := <-ch:
 		return decodeReply(msg, res)
+	case <-t.detached:
+		// The target handled every earlier message before it closed detached,
+		// so a reply that exists is in the channel by now.
+		select {
+		case msg := <-ch:
+			return decodeReply(msg, res)
+		default:
+		}
+		return t.detachedError()
 	}
+}
+
+// detachedError returns the error of a command on a detached target.
+func (t *Target) detachedError() error {
+	return fmt.Errorf("target %s: %w: inspected target navigated or closed", t.TargetID, ErrTargetDetached)
 }
 
 // Subscribe starts to buffer the target events with the method, and returns
@@ -307,7 +338,7 @@ func (t *Target) documentUpdated(ctx context.Context) {
 
 	f.Nodes = make(map[cdp.NodeID]*Node)
 	res, err := cdp.Call(ctx, t, dom.GetDocument, dom.GetDocumentParams{})
-	if errors.Is(err, context.Canceled) {
+	if errors.Is(err, context.Canceled) || errors.Is(err, ErrTargetDetached) {
 		return // TODO: perhaps not necessary, but useful to keep the tests less noisy
 	}
 	if err != nil {
