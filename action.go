@@ -213,9 +213,9 @@ func ListenBrowser(ctx context.Context, fn func(ev any)) error {
 
 // Detached returns a channel that closes when the browser detaches the target
 // of the context, for example when the page closes. It returns
-// [ErrInvalidContext] when ctx is not a chromedp context. As [Listen]
-// does, it starts the browser and opens the target when the context has none
-// yet, and it returns the error if that fails.
+// [ErrInvalidContext] when ctx is not a chromedp context. Unlike [Listen], it
+// does not open a target. It returns [ErrNoTarget] when the context has no
+// target yet, so a check never opens a tab that the program did not ask for.
 //
 // The channel closes after the target handled every message that the browser
 // sent to it before the detach. So a func of Listen saw every event of the
@@ -237,13 +237,22 @@ func ListenBrowser(ctx context.Context, fn func(ev any)) error {
 //	}
 //
 // The channel does not close when the context ends first, because the target
-// stops to read its messages then. Use ctx.Done for the end of the context.
+// stops to read its messages then. When the context ends at about the time of
+// the detach, a func that waits can see only ctx.Done. So wait on ctx.Done too.
+//
+// Detached can run on any goroutine.
 func Detached(ctx context.Context) (<-chan struct{}, error) {
-	c, err := initContextTarget(ctx)
-	if err != nil {
-		return nil, err
+	c := FromContext(ctx)
+	if c == nil {
+		return nil, ErrInvalidContext
 	}
-	return c.Target.detached, nil
+	c.targetMu.Lock()
+	t := c.Target
+	c.targetMu.Unlock()
+	if t == nil {
+		return nil, ErrNoTarget
+	}
+	return t.detached, nil
 }
 
 // eventsOnly returns a func that calls fn for each event, and skips the replies
