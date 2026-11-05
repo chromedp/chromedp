@@ -831,6 +831,8 @@ if err := chromedp.Do(ctx, chromedp.Navigate(ts.URL)); err != nil {
 // that arrived before the reply to the navigation are in it.
 ```
 
+The [timeline](https://github.com/chromedp/examples/tree/main/timeline) example does this for a whole page load and checks the order.
+
 Use `Events` unless you need the order. The func must return fast, must not run a command and must not call `Listen`, because the loop that reads the messages of the tab calls it. It must not panic. See the documentation of `Listen`. `ListenBrowser` is the same for the events of the browser, such as `target.TargetCreated`.
 
 ### 29. Know when a tab goes away
@@ -862,7 +864,7 @@ go func() {
 
 A command that waits for a reply when the tab goes away returns an error that wraps `ErrTargetDetached`. The channel does not close when the context ends first, so wait on `ctx.Done` too.
 
-`Detached` does not open a tab. It returns `ErrNoTarget` when the context has no tab yet, so call it after the first `Run`.
+`Detached` does not open a tab. It returns `ErrNoTarget` when the context has no tab yet, so call it after the first `Run`. The [contexts](https://github.com/chromedp/examples/tree/main/contexts) example closes a tab and waits for the channel.
 
 ### 30. See the events of the start of a tab
 
@@ -891,7 +893,7 @@ if err := chromedp.Do(tabCtx); err != nil {
 }
 ```
 
-The rules of `Listen` hold for the func. Give the option more than once to add several funcs.
+The rules of `Listen` hold for the func. Give the option more than once to add several funcs. The [contexts](https://github.com/chromedp/examples/tree/main/contexts) example attaches to a tab with two iframes, and shows that a `Listen` call after the attach sees none of these events.
 
 ## What the new API removes
 

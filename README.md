@@ -80,7 +80,7 @@ See the [Go reference][goref-chromedp] for the documentation and examples.
 
 ## More examples
 
-The [examples][chromedp-examples] repository has 45 programs for larger tasks.
+The [examples][chromedp-examples] repository has 46 programs for larger tasks.
 Each program is one `main.go` file. Run one with `go run`, for example
 `go run github.com/chromedp/examples/tabs@latest`. Every program takes the flag `-v`
 to print the protocol messages. Every program except `remote` takes the flag
@@ -122,6 +122,7 @@ Events and the protocol:
 
 - [eventsiter](https://github.com/chromedp/examples/tree/main/eventsiter) reads the events of a page with iterators, and waits for the network to be idle.
 - [timeline](https://github.com/chromedp/examples/tree/main/timeline) puts the events of every type in one timeline, in the order in which Chrome sent them, with `Listen`.
+- [contexts](https://github.com/chromedp/examples/tree/main/contexts) attaches to a tab that runs already and lists its JavaScript contexts, with `WithListener` and `Detached`.
 - [console](https://github.com/chromedp/examples/tree/main/console) reads the console and the uncaught exceptions of a page.
 - [dialogs](https://github.com/chromedp/examples/tree/main/dialogs) answers alert, confirm, prompt and beforeunload dialogs.
 - [popups](https://github.com/chromedp/examples/tree/main/popups) works with popups and several targets, and with browser contexts.
