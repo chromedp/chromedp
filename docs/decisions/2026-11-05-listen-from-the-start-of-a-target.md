@@ -1,11 +1,11 @@
 # Listen to a target from its start with WithListener
 
-Status: Proposed. Amends 2026-11-04-export-the-ordered-event-listener.md.
+Status: Amends 2026-11-04-export-the-ordered-event-listener.md.
 
-This change adds the context option `WithListener`. onsi, the maintainer of
-the testing framework Biloba, asked for it after the discussion
-https://github.com/chromedp/chromedp/discussions/1645. The maintainer has not
-decided on it yet.
+The maintainer decided on 2026-11-06 to add the context option
+`WithListener`. onsi, the maintainer of the testing framework Biloba, asked for
+it after the discussion https://github.com/chromedp/chromedp/discussions/1645,
+and sent the change as a pull request.
 
 ## Why
 

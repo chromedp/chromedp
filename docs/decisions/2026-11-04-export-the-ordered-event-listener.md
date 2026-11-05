@@ -1,6 +1,6 @@
 # Export the ordered event listener as Listen and ListenBrowser
 
-Status: Amends 2026-10-03-generic-iterator-api-instead-of-action.md. Amended by 2026-11-05-listen-from-the-start-of-a-target.md, which is proposed.
+Status: Amends 2026-10-03-generic-iterator-api-instead-of-action.md. Amended by 2026-11-05-listen-from-the-start-of-a-target.md.
 
 The maintainer decided on 2026-11-04 that the package exports its ordered event
 listener as the funcs `Listen` and `ListenBrowser`. The change started with
@@ -62,8 +62,8 @@ another goroutine:
   recommended it as the only API. It cannot serve code that must start to
   listen on a tab that already runs, which is what `ListenTarget` did. It can be
   added later if a program needs the events of the start of a tab. The
-  proposed decision `2026-11-05-listen-from-the-start-of-a-target.md` adds it
-  as `WithListener`, next to `Listen`.
+  decision `2026-11-05-listen-from-the-start-of-a-target.md` adds it as
+  `WithListener`, next to `Listen`.
 - A typed `Listen[E]`. Several typed listeners that write to one place also
   see the order across the types, but a func that switches on `any` is simpler
   for this use.

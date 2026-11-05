@@ -1,11 +1,12 @@
 # Export the detach of a target as Detached
 
-Status: Proposed.
+Status: Decided.
 
-This change lets a program see that the browser detached the target of a
-context. onsi, the maintainer of the testing framework Biloba, asked for it
-after the discussion https://github.com/chromedp/chromedp/discussions/1645. The
-maintainer has not decided on it yet.
+The maintainer decided on 2026-11-06 that a program can see that the browser
+detached the target of a context. onsi, the maintainer of the testing framework
+Biloba, asked for it after the discussion
+https://github.com/chromedp/chromedp/discussions/1645, and sent the change as
+a pull request.
 
 ## Why
 

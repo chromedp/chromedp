@@ -1,11 +1,12 @@
 # Route the detach of a target after its messages
 
-Status: Proposed.
+Status: Decided.
 
-This change fixes a race in the routing of the messages of a target. onsi,
-the maintainer of the testing framework Biloba, found it after the fix for the
-discussion https://github.com/chromedp/chromedp/discussions/1645. The
-maintainer has not decided on it yet.
+The maintainer decided on 2026-11-06 to fix a race in the routing of the
+messages of a target. onsi, the maintainer of the testing framework Biloba,
+found it after the fix for the discussion
+https://github.com/chromedp/chromedp/discussions/1645, and sent the change as
+a pull request.
 
 ## The problem
 

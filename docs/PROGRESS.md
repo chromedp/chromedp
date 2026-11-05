@@ -7,7 +7,7 @@ in [`decisions/`](decisions/README.md).
 
 ## Changes after v0.22.1
 
-These changes are not in a release yet. Each one has its own test.
+These changes are not in a release yet. The first release that has them is v0.23.0. Each one has its own test.
 
 - Fixed: the browser routed the detach of a target before a reply or an event that Chrome sent earlier, about half of the time. The command then returned `ErrTargetDetached`, and `Listen` missed the event. The decision is in `decisions/2026-11-05-route-the-detach-after-the-messages.md`.
 - Added: `Detached` returns a channel that closes when the browser detaches the target of the context. The decision is in `decisions/2026-11-05-export-the-detach-of-a-target.md`.
