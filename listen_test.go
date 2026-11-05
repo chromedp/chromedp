@@ -2,12 +2,14 @@ package chromedp
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"slices"
 	"sync"
 	"testing"
 
 	"github.com/chromedp/cdproto"
+	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
@@ -184,5 +186,102 @@ func TestEventsOnly(t *testing.T) {
 	fn(&cdproto.Message{ID: 2})
 	if len(got) != 1 || got[0] != any(event) {
 		t.Fatalf("want only the event, got %v", got)
+	}
+}
+
+// defaultContextFrames returns the frames that have a default JavaScript
+// context in the events.
+func defaultContextFrames(t *testing.T, events []any) map[cdp.FrameID]bool {
+	t.Helper()
+	frames := make(map[cdp.FrameID]bool)
+	for _, ev := range events {
+		e, ok := ev.(*runtime.EventExecutionContextCreated)
+		if !ok || len(e.Context.AuxData) == 0 {
+			continue
+		}
+		var aux struct {
+			IsDefault bool        `json:"isDefault"`
+			FrameID   cdp.FrameID `json:"frameId"`
+		}
+		if err := json.Unmarshal(e.Context.AuxData, &aux); err != nil {
+			t.Fatal(err)
+		}
+		if aux.IsDefault {
+			frames[aux.FrameID] = true
+		}
+	}
+	return frames
+}
+
+// frameIDs returns the id of each frame in the tree.
+func frameIDs(tree *page.FrameTree) []cdp.FrameID {
+	ids := []cdp.FrameID{tree.Frame.ID}
+	for _, child := range tree.ChildFrames {
+		ids = append(ids, frameIDs(child)...)
+	}
+	return ids
+}
+
+func TestWithListenerNewTab(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+	// Two funcs, so that the option works more than once.
+	var r1, r2 recorder
+	tabCtx, tabCancel := NewContext(ctx, WithListener(r1.add), WithListener(r2.add))
+	defer tabCancel()
+	if err := Do(tabCtx); err != nil {
+		t.Fatal(err)
+	}
+
+	// Runtime.enable announces the context of the blank page, during the
+	// first Do. A func of Listen after Do does not see it.
+	id := cdp.FrameID(FromContext(tabCtx).Target.TargetID)
+	for i, r := range []*recorder{&r1, &r2} {
+		events := r.snapshot()
+		if !defaultContextFrames(t, events)[id] {
+			t.Fatalf("func %d has no runtime.EventExecutionContextCreated for the frame %s, got %d events", i+1, id, len(events))
+		}
+		for _, ev := range events {
+			if _, ok := ev.(*cdproto.Message); ok {
+				t.Fatalf("func %d got a reply to a command: %v", i+1, ev)
+			}
+		}
+	}
+}
+
+func TestWithListenerTargetID(t *testing.T) {
+	t.Parallel()
+
+	// A tab with an iframe, which has its own JavaScript context.
+	ctx, cancel := testAllocate(t, "iframe.html")
+	defer cancel()
+	id := FromContext(ctx).Target.TargetID
+
+	// Attach a second context to the tab that runs already. Leave the tab
+	// open, because the first context closes it.
+	var r recorder
+	frameCtx, frameCancel := NewContext(ctx, WithTargetID(id), WithDetachOnCancel(), WithListener(r.add))
+	defer frameCancel()
+	tree, err := Run(frameCtx, func(ctx context.Context, t *Target) (*page.FrameTree, error) {
+		res, err := cdp.Call(ctx, t, page.GetFrameTree, cdp.Empty{})
+		return res.FrameTree, err
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ids := frameIDs(tree)
+	if len(ids) != 2 {
+		t.Fatalf("want the page and the iframe, got the frames %v", ids)
+	}
+
+	// Runtime.enable announces the contexts that exist, and the func sees
+	// the context of each frame.
+	frames := defaultContextFrames(t, r.snapshot())
+	for _, id := range ids {
+		if !frames[id] {
+			t.Errorf("no runtime.EventExecutionContextCreated for the frame %s, got the frames %v", id, frames)
+		}
 	}
 }

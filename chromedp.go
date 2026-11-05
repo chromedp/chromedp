@@ -95,6 +95,10 @@ type Context struct {
 	// parent context.
 	BrowserContextID cdp.BrowserContextID
 
+	// listeners holds the funcs of WithListener. attachTarget adds them to the
+	// target before it sends a command to the target.
+	listeners []func(ev any)
+
 	// browserOpts holds the browser options that NewContext receives from
 	// WithBrowserOption. Run uses them when it allocates a browser.
 	browserOpts []BrowserOption
@@ -568,6 +572,11 @@ func (c *Context) attachTarget(ctx context.Context, targetID target.ID) error {
 	if err != nil {
 		return err
 	}
+	// Add the funcs of WithListener before the target reads a message, so
+	// that they see every event that reaches the target.
+	for _, fn := range c.listeners {
+		t.listen(ctx, eventsOnly(fn))
+	}
 	c.targetMu.Lock()
 	c.Target = t
 	c.targetMu.Unlock()
@@ -722,6 +731,27 @@ func WithDetachOnCancel() ContextOption {
 // docs/decisions/2026-10-04-keep-site-isolation-on.md.
 func WithTargetID(id target.ID) ContextOption {
 	return func(c *Context) { c.targetID = id }
+}
+
+// WithListener makes the context call fn for each event of its target, from
+// the first message of the target. It is [Listen] from the start of the target.
+// The first Run adds fn to the target before it sends a command to the target,
+// for a new tab and for a target that [WithTargetID] names.
+//
+// So fn sees the events that the start causes. For example, the start sends
+// Runtime.enable, and Chrome answers with a [runtime.EventExecutionContextCreated]
+// for each JavaScript context that the target already has. A func that Listen
+// adds after the first Run does not see these events.
+//
+// The rules of Listen hold for fn. fn gets the events only. It runs on the
+// goroutine that reads the messages of the tab, in the order of arrival. It
+// must return fast, it must not run a command or call Listen, and it must not
+// panic. fn gets events as long as the target runs.
+//
+// Give the option more than once to add several funcs. The target calls them
+// in the order of the options. A child context does not inherit them.
+func WithListener(fn func(ev any)) ContextOption {
+	return func(c *Context) { c.listeners = append(c.listeners, fn) }
 }
 
 // CreateBrowserContextOption is an option for the creation of a BrowserContext.
