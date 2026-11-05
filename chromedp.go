@@ -54,9 +54,10 @@ type Context struct {
 	// separate browser tab (page).
 	Target *Target
 
-	// targetMu protects the write of Target in attachTarget and the read of
-	// Target in the cancellation watcher of NewContext. The watcher runs on
-	// its own goroutine, and the context can end while attachTarget runs. The
+	// targetMu protects the write of Target in attachTarget, and the reads of
+	// Target in the cancellation watcher of NewContext and in Detached. The
+	// watcher runs on its own goroutine, and the context can end while
+	// attachTarget runs. Detached can run on any goroutine. The
 	// goroutine that runs the actions needs no lock to read Target, because it
 	// is the only one that writes it.
 	targetMu sync.Mutex
@@ -746,7 +747,8 @@ func WithTargetID(id target.ID) ContextOption {
 // The rules of Listen hold for fn. fn gets the events only. It runs on the
 // goroutine that reads the messages of the tab, in the order of arrival. It
 // must return fast, it must not run a command or call Listen, and it must not
-// panic. fn gets events as long as the target runs.
+// panic. fn gets events as long as the target runs. The target runs as long as
+// the context that the first Run gets, which can be a child of this context.
 //
 // Give the option more than once to add several funcs. The target calls them
 // in the order of the options. A child context does not inherit them.

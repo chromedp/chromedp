@@ -338,6 +338,23 @@ func TestDetached(t *testing.T) {
 	}
 }
 
+func TestDetachedNoTarget(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+	// a new context that no Run has used, so it has no tab yet
+	tabCtx, tabCancel := NewContext(ctx)
+	defer tabCancel()
+
+	if _, err := Detached(tabCtx); !errors.Is(err, ErrNoTarget) {
+		t.Fatalf("want ErrNoTarget, got %v", err)
+	}
+	if FromContext(tabCtx).Target != nil {
+		t.Fatal("Detached opened a target")
+	}
+}
+
 func TestDetachedInvalidContext(t *testing.T) {
 	t.Parallel()
 

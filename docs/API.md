@@ -862,6 +862,8 @@ go func() {
 
 A command that waits for a reply when the tab goes away returns an error that wraps `ErrTargetDetached`. The channel does not close when the context ends first, so wait on `ctx.Done` too.
 
+`Detached` does not open a tab. It returns `ErrNoTarget` when the context has no tab yet, so call it after the first `Run`.
+
 ### 30. See the events of the start of a tab
 
 The first `Run` attaches the tab and sends `Runtime.enable`. Chrome answers with a `runtime.EventExecutionContextCreated` for each JavaScript context that the tab already has. `Listen` starts after the first `Run`, so it misses these events. `WithListener` adds the func before the first command, so the func sees every event of the tab. It works for a new tab and for a tab that `WithTargetID` names.
@@ -1269,6 +1271,7 @@ ErrNotSelected
 ErrInvalidBoxModel
 ErrChannelClosed
 ErrTargetDetached
+ErrNoTarget
 ErrInvalidTarget
 ErrPageLoad
 ErrNoDisplay

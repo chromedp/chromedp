@@ -37,13 +37,21 @@ record of the sessions that detached.
 - A receive-only channel gives both needs. A `select` with a `default` case is
   the check that does not block. A goroutine that waits on the channel runs a
   func once, and a channel that already closed lets it run at once.
-- As `Listen` does, `Detached` starts the browser and opens the target when the
-  context has none yet. It returns `ErrInvalidContext` when ctx is not a
-  chromedp context. All the funcs that find the target from the context follow
-  this rule, so a program does not have to learn an exception.
+- `Detached` does not open a target. It returns the new error `ErrNoTarget`
+  when the context has none yet, and `ErrInvalidContext` when ctx is not a
+  chromedp context. It reads the target under the lock that `attachTarget`
+  holds when it sets the target, so it can run on any goroutine.
+- The first version opened the target, as `Listen` does. Biloba then built on
+  it, and every check had to make sure first that the context had a target.
+  Without that, a check on a new context opened a tab that the program did not
+  ask for, and the context of the check, which can be short, owned the tab. The
+  check also read `Target` outside the lock. A program listens to drive a tab,
+  so `Listen` opens one. A program asks whether a tab went away about a tab
+  that it already has.
 - The channel does not close when the context ends first. The target then
-  stops to read its messages, and a detach after that does not reach it. Use
-  `ctx.Done` for the end of the context.
+  stops to read its messages, and a detach after that does not reach it. When
+  the context ends at about the time of the detach, a func that waits can see
+  only `ctx.Done`. Use `ctx.Done` for the end of the context.
 
 ## What was not done
 
@@ -53,9 +61,5 @@ record of the sessions that detached.
   package-level func finds the target from the context, as `Listen` does. The
   exported methods `Call` and `Subscribe` exist because `Target` implements
   `cdp.Session`.
-- A func that returns an error when the context has no target yet, and does not
-  open one. It avoids a tab that the program did not ask for. But `Listen`,
-  `Events` and `WaitNewTarget` open the target, and the first `Run` opens it
-  anyway.
 - A callback option such as `OnDetach(ctx, fn)`. A channel gives the same thing
   with a `select` or a goroutine, and it composes with other channels.

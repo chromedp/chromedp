@@ -97,6 +97,10 @@ const (
 	// to a command that is still pending when this happens.
 	ErrTargetDetached Error = "target detached"
 
+	// ErrNoTarget is the error of a func that reads the target of a context
+	// that has no target yet. The first Run opens the target.
+	ErrNoTarget Error = "context has no target"
+
 	// ErrInvalidTarget is the invalid target error.
 	ErrInvalidTarget Error = "invalid target"
 
