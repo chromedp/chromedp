@@ -34,6 +34,7 @@ add.
 | 2026-10-04 | [The pipe works on Windows](2026-10-04-the-pipe-works-on-windows.md) | Amends 2026-10-03-use-a-pipe-to-the-browser-by-default.md and 2026-10-04-the-core-uses-only-the-standard-library.md |
 | 2026-10-06 | [Support Go 1.25 and later](2026-10-06-support-go-1-25-and-later.md) | Amends 2026-10-03-the-minimum-go-version-is-1-27.md. Amended by 2026-10-11-remote-is-a-package-of-the-core-module.md |
 | 2026-10-11 | [The remote package is part of the core module](2026-10-11-remote-is-a-package-of-the-core-module.md) | Amends 2026-10-04-the-core-uses-only-the-standard-library.md, 2026-10-03-use-a-pipe-to-the-browser-by-default.md, 2026-10-03-a-visible-window-is-an-opt-in.md and 2026-10-06-support-go-1-25-and-later.md |
-| 2026-11-04 | [Export the ordered event listener as Listen and ListenBrowser](2026-11-04-export-the-ordered-event-listener.md) | Amends 2026-10-03-generic-iterator-api-instead-of-action.md |
+| 2026-11-04 | [Export the ordered event listener as Listen and ListenBrowser](2026-11-04-export-the-ordered-event-listener.md) | Amends 2026-10-03-generic-iterator-api-instead-of-action.md. Amended by 2026-11-05-listen-from-the-start-of-a-target.md, which is proposed |
 | 2026-11-05 | [Route the detach of a target after its messages](2026-11-05-route-the-detach-after-the-messages.md) | Proposed |
 | 2026-11-05 | [Export the detach of a target as Detached](2026-11-05-export-the-detach-of-a-target.md) | Proposed |
+| 2026-11-05 | [Listen to a target from its start with WithListener](2026-11-05-listen-from-the-start-of-a-target.md) | Proposed. Amends 2026-11-04-export-the-ordered-event-listener.md |

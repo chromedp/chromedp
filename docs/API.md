@@ -862,6 +862,35 @@ go func() {
 
 A command that waits for a reply when the tab goes away returns an error that wraps `ErrTargetDetached`. The channel does not close when the context ends first, so wait on `ctx.Done` too.
 
+### 30. See the events of the start of a tab
+
+The first `Run` attaches the tab and sends `Runtime.enable`. Chrome answers with a `runtime.EventExecutionContextCreated` for each JavaScript context that the tab already has. `Listen` starts after the first `Run`, so it misses these events. `WithListener` adds the func before the first command, so the func sees every event of the tab. It works for a new tab and for a tab that `WithTargetID` names.
+
+```go
+var mu sync.Mutex
+contexts := map[runtime.ExecutionContextID]string{}
+tabCtx, cancel := chromedp.NewContext(ctx,
+	chromedp.WithTargetID(id),
+	chromedp.WithListener(func(ev any) {
+		// This runs in the loop of the tab. Return fast, and run no command.
+		if ev, ok := ev.(*runtime.EventExecutionContextCreated); ok {
+			mu.Lock()
+			defer mu.Unlock()
+			contexts[ev.Context.ID] = ev.Context.Origin
+		}
+	}),
+)
+defer cancel()
+
+// The first Do attaches the tab. When it returns, contexts holds every
+// context of the frames that the tab already had.
+if err := chromedp.Do(tabCtx); err != nil {
+	panic(err)
+}
+```
+
+The rules of `Listen` hold for the func. Give the option more than once to add several funcs.
+
 ## What the new API removes
 
 The new API removes the interface `Action`, the type `ActionFunc`, the type `Tasks`, and the funcs `ListenTarget` and `ListenBrowser`. `Listen` and `ListenBrowser` bring back the ordered listener, with one more result, an error, and see example 28. It also removes the types `QueryAction`, `NavigateAction`, `EvaluateAction`, `CallAction`, `PollAction`, `MouseAction`, `KeyAction` and `EmulateAction`. Each type is now `Action[T]`. It also removes the six lookup options that start with `By`, except `ByFunc`. A selector type replaces each of them. `docs/MIGRATION.md` lists every change, with the old name and the new name.
@@ -1047,6 +1076,7 @@ func WithDebugf(f func(string, ...any)) ContextOption
 func WithDetachOnCancel() ContextOption
 func WithErrorf(f func(string, ...any)) ContextOption
 func WithExistingBrowserContext(id cdp.BrowserContextID) ContextOption
+func WithListener(fn func(ev any)) ContextOption
 func WithLogf(f func(string, ...any)) ContextOption
 func WithNewBrowserContext(options ...CreateBrowserContextOption) ContextOption
 func WithNewWindow(newWindow bool) ContextOption

@@ -176,7 +176,8 @@ func BrowserEvents[E any](ctx context.Context, ev cdp.Event[E]) iter.Seq2[E, err
 // fn gets the events and nothing else, as pointers to the event types of
 // cdproto, such as *page.EventLoadEventFired. It gets no reply to a command.
 // It sees the events that arrive after Listen returns, so call Listen before
-// the action that causes the events.
+// the action that causes the events. To see the events of the start of the
+// target, such as the answer to Runtime.enable, use [WithListener].
 //
 // fn runs inside the loop that reads the messages of the tab. For this reason:
 //
