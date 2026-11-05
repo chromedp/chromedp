@@ -5,6 +5,12 @@ crashes can resume. Update it when a piece of work starts or ends. Work that
 is known and not done goes in [`BACKLOG.md`](BACKLOG.md), and a decision goes
 in [`decisions/`](decisions/README.md).
 
+## Changes after v0.22.1
+
+These changes are not in a release yet. Each one has its own test.
+
+- Fixed: the browser routed the detach of a target before a reply or an event that Chrome sent earlier, about half of the time. The command then returned `ErrTargetDetached`, and `Listen` missed the event. The decision is in `decisions/2026-11-05-route-the-detach-after-the-messages.md`.
+
 ## Changes after v0.20.1
 
 These changes are not in a release yet. The first release that has them is v0.21.0.

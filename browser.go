@@ -339,11 +339,11 @@ func (b *Browser) run(ctx context.Context) {
 	defer b.conn.Close()
 	defer b.events.close()
 
-	// incomingQueue is the queue of incoming target events, to be routed by
-	// their session ID.
-	incomingQueue := make(chan *cdproto.Message, 1)
-
-	delTabQueue := make(chan target.SessionID, 1)
+	// incomingQueue is the queue of the messages of the targets, to be routed
+	// by their session ID. It also holds the detach of each session, in the
+	// order in which the browser sent it. So the loop routes a detach after
+	// every message of the session that the browser sent before it.
+	incomingQueue := make(chan sessionMessage, 1)
 
 	// This goroutine reads events from the websocket connection all the time.
 	// It needs its own goroutine, because a websocket read blocks and cannot
@@ -369,7 +369,7 @@ func (b *Browser) run(ctx context.Context) {
 				case <-ctx.Done():
 					b.lostReason = ctx.Err()
 					return
-				case incomingQueue <- msg:
+				case incomingQueue <- sessionMessage{msg: msg}:
 				}
 
 			case msg.Method != "":
@@ -384,7 +384,12 @@ func (b *Browser) run(ctx context.Context) {
 				b.listenersMu.Unlock()
 
 				if ev, ok := ev.(*target.EventDetachedFromTarget); ok {
-					delTabQueue <- ev.SessionID
+					select {
+					case <-ctx.Done():
+						b.lostReason = ctx.Err()
+						return
+					case incomingQueue <- sessionMessage{detached: ev.SessionID}:
+					}
 				}
 
 			case msg.ID != 0:
@@ -416,23 +421,26 @@ func (b *Browser) run(ctx context.Context) {
 			}
 			b.pages[t.SessionID] = t
 
-		case sessionID := <-delTabQueue:
-			if _, ok := b.pages[sessionID]; !ok {
-				b.errf("executor for %q doesn't exist", sessionID)
-			}
-			if page, ok := b.pages[sessionID]; ok {
-				// Tell the target after its last routed message. The target
-				// then ends the commands that wait for a reply that never comes.
-				select {
-				case <-ctx.Done():
-					return
-				case page.messageQueue <- detachedMessage:
-				}
-			}
-			delete(b.pages, sessionID)
-
 		case m := <-incomingQueue:
-			page, ok := b.pages[m.SessionID]
+			if m.msg == nil {
+				sessionID := m.detached
+				if _, ok := b.pages[sessionID]; !ok {
+					b.errf("executor for %q doesn't exist", sessionID)
+				}
+				if page, ok := b.pages[sessionID]; ok {
+					// Tell the target after its last routed message. The target
+					// then ends the commands that wait for a reply that never comes.
+					select {
+					case <-ctx.Done():
+						return
+					case page.messageQueue <- detachedMessage:
+					}
+				}
+				delete(b.pages, sessionID)
+				continue
+			}
+
+			page, ok := b.pages[m.msg.SessionID]
 			if !ok {
 				// A page that we closed recently still sends events.
 				continue
@@ -441,13 +449,21 @@ func (b *Browser) run(ctx context.Context) {
 			select {
 			case <-ctx.Done():
 				return
-			case page.messageQueue <- m:
+			case page.messageQueue <- m.msg:
 			}
 
 		case <-b.LostConnection:
 			return // to avoid "write: broken pipe" errors
 		}
 	}
+}
+
+// sessionMessage is an item of the queue from the goroutine that reads the
+// messages of the browser to the loop that routes them. It holds a message of a
+// target, or the detach of the session detached when msg is nil.
+type sessionMessage struct {
+	msg      *cdproto.Message
+	detached target.SessionID
 }
 
 // noteReadError records why the connection to the browser is lost. The reader

@@ -3,12 +3,13 @@
 This document lists the public API changes from `chromedp` v0.16.0 to v0.21.0.
 Version v0.20.0 uses `cdproto` v0.157.8. The release v0.157.3 is the first one of
 the typed API, and v0.157.4 makes some optional numbers pointers. The versions v0.157.0, v0.157.1 and v0.157.2 of `cdproto` have the old API. The
-document has eleven parts, in the order of the changes: the move to `cdproto`
+document has twelve parts, in the order of the changes: the move to `cdproto`
 v0.157.1, the move to the typed `cdproto`, the move to the generic action API,
 the move to typed selectors, the pipe transport, the options for a visible
 window, the changes in v0.18.0, the move of the websocket code to the package
 `remote`, the move to `cdproto` v0.157.4, the changes in v0.19.0 and
-v0.20.0, and the move of `remote` into the core module in v0.21.0. Apply the parts in this order. A later part can replace a rule of an
+v0.20.0, the move of `remote` into the core module in v0.21.0, and the
+changes after v0.22.1. Apply the parts in this order. A later part can replace a rule of an
 earlier part.
 
 ## Migrate to cdproto v0.157.1
@@ -332,3 +333,9 @@ require github.com/chromedp/chromedp/remote v0.2.0
 While the file keeps the line, Go reports an ambiguous import, because the old module and the core module both have the package `github.com/chromedp/chromedp/remote`. Run `go mod tidy` to remove the line. Then run `go get github.com/chromedp/chromedp@v0.21.0`. The dependencies `gobwas/ws`, `gobwas/httphead`, `gobwas/pool` and `golang.org/x/sys` leave the build of the program, unless the program needs them for another reason. See `docs/decisions/2026-10-11-remote-is-a-package-of-the-core-module.md`.
 
 The error values of a normal close are the same as before. `Conn.Read` returns `io.EOF` when the browser closes the connection with the code 1000 or 1001. A close with another code now gives an error that has the code and the reason.
+
+## Changes after v0.22.1
+
+These changes are not in a release yet. No old code needs a change.
+
+- A command that Chrome answers just before it detaches the target returns the reply. Before, the browser sometimes routed the detach first and dropped the reply, so the command returned an error that wraps `ErrTargetDetached`. In the same way, a func of `Listen` sometimes missed an event that arrived just before the detach. See `docs/decisions/2026-11-05-route-the-detach-after-the-messages.md`.
