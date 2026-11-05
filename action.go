@@ -210,6 +210,41 @@ func ListenBrowser(ctx context.Context, fn func(ev any)) error {
 	return nil
 }
 
+// Detached returns a channel that closes when the browser detaches the target
+// of the context, for example when the page closes. It returns
+// [ErrInvalidContext] when ctx is not a chromedp context. As [Listen]
+// does, it starts the browser and opens the target when the context has none
+// yet, and it returns the error if that fails.
+//
+// The channel closes after the target handled every message that the browser
+// sent to it before the detach. So a func of Listen saw every event of the
+// target, and every reply that the browser sent reached its command, before
+// the channel closes. A command that still waits for a reply then returns an
+// error that wraps [ErrTargetDetached].
+//
+// A detach that happened before the call gives a channel that is closed. To
+// check without a wait, use a select with a default case:
+//
+//	ch, err := chromedp.Detached(ctx)
+//	if err != nil {
+//		return err
+//	}
+//	select {
+//	case <-ch:
+//		// the tab is gone
+//	default:
+//	}
+//
+// The channel does not close when the context ends first, because the target
+// stops to read its messages then. Use ctx.Done for the end of the context.
+func Detached(ctx context.Context) (<-chan struct{}, error) {
+	c, err := initContextTarget(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return c.Target.detached, nil
+}
+
 // eventsOnly returns a func that calls fn for each event, and skips the replies
 // to commands that the internal listeners also get.
 func eventsOnly(fn func(ev any)) func(ev any) {

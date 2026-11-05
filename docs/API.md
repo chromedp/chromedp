@@ -833,6 +833,35 @@ if err := chromedp.Do(ctx, chromedp.Navigate(ts.URL)); err != nil {
 
 Use `Events` unless you need the order. The func must return fast, must not run a command and must not call `Listen`, because the loop that reads the messages of the tab calls it. It must not panic. See the documentation of `Listen`. `ListenBrowser` is the same for the events of the browser, such as `target.TargetCreated`.
 
+### 29. Know when a tab goes away
+
+A page can close itself, or another tab can close it. `Detached` returns a channel that closes when the browser detaches the target of the context. It closes after the target handled every message that the browser sent before the detach. So a func of `Listen` saw every event of the tab, and every reply that the browser sent reached its command.
+
+```go
+ch, err := chromedp.Detached(ctx)
+if err != nil {
+	panic(err)
+}
+
+// A check that does not wait.
+select {
+case <-ch:
+	log.Print("the tab is gone")
+default:
+}
+
+// A func that runs once. It runs at once when the tab is already gone.
+go func() {
+	select {
+	case <-ch:
+		log.Print("the tab is gone")
+	case <-ctx.Done():
+	}
+}()
+```
+
+A command that waits for a reply when the tab goes away returns an error that wraps `ErrTargetDetached`. The channel does not close when the context ends first, so wait on `ctx.Done` too.
+
 ## What the new API removes
 
 The new API removes the interface `Action`, the type `ActionFunc`, the type `Tasks`, and the funcs `ListenTarget` and `ListenBrowser`. `Listen` and `ListenBrowser` bring back the ordered listener, with one more result, an error, and see example 28. It also removes the types `QueryAction`, `NavigateAction`, `EvaluateAction`, `CallAction`, `PollAction`, `MouseAction`, `KeyAction` and `EmulateAction`. Each type is now `Action[T]`. It also removes the six lookup options that start with `By`, except `ByFunc`. A selector type replaces each of them. `docs/MIGRATION.md` lists every change, with the old name and the new name.
@@ -855,6 +884,7 @@ func Call[P, R any](ctx context.Context, cmd cdp.Command[P, R], params P) (R, er
 func CallBrowser[P, R any](ctx context.Context, cmd cdp.Command[P, R], params P) (R, error)
 func Cancel(ctx context.Context) error
 func Console(ctx context.Context) iter.Seq2[ConsoleMessage, error]
+func Detached(ctx context.Context) (<-chan struct{}, error)
 func DisableGPU(a *ExecAllocator)
 func Do(ctx context.Context, steps ...Action[Void]) error
 func EmulateLandscape(p1 *emulation.SetDeviceMetricsOverrideParams, p2 *emulation.SetTouchEmulationEnabledParams)

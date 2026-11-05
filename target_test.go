@@ -17,6 +17,7 @@ import (
 	"github.com/chromedp/cdproto"
 	"github.com/chromedp/cdproto/cdp"
 	"github.com/chromedp/cdproto/dom"
+	"github.com/chromedp/cdproto/inspector"
 	"github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/cdproto/target"
 )
@@ -250,5 +251,97 @@ func TestCallOnDetachedTarget(t *testing.T) {
 	// A later command fails at once.
 	if _, err := Call(rctx, runtime.Evaluate, runtime.EvaluateParams{Expression: `1`}); !errors.Is(err, ErrTargetDetached) {
 		t.Fatalf("want ErrTargetDetached for a later command, got %v", err)
+	}
+}
+
+func TestDetached(t *testing.T) {
+	t.Parallel()
+
+	ctx, cancel := testAllocate(t, "")
+	defer cancel()
+	// a tab of its own, that the browser closes
+	tabCtx, tabCancel := NewContext(ctx)
+	defer tabCancel()
+	if err := Do(tabCtx); err != nil {
+		t.Fatal(err)
+	}
+	tgt := FromContext(tabCtx).Target
+
+	ch, err := Detached(tabCtx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-ch:
+		t.Fatal("the channel is closed before the tab closes")
+	default:
+	}
+
+	// The listener and the subscription get the same events from the same
+	// loop. The page logs all the time, so events arrive until the tab closes.
+	// Chrome sends inspector.EventDetached just before the detach. The
+	// listener is slow on it, so that a channel that closes too early shows.
+	var r recorder
+	if err := Listen(tabCtx, func(ev any) {
+		switch ev.(type) {
+		case *runtime.EventConsoleAPICalled:
+			r.add(ev)
+		case *inspector.EventDetached:
+			time.Sleep(100 * time.Millisecond)
+			r.add(ev)
+		}
+	}); err != nil {
+		t.Fatal(err)
+	}
+	events, stop := tgt.events.subscribeMany(cdproto.EventRuntimeConsoleAPICalled, cdproto.EventInspectorDetached)
+	defer stop()
+	if _, err := Run(tabCtx, Evaluate[any](`setInterval(() => console.log("tick"), 0), 1`)); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := CallBrowser(ctx, target.CloseTarget, target.CloseTargetParams{TargetID: tgt.TargetID}); err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-ch:
+	case <-time.After(10 * time.Second):
+		t.Fatal("the channel did not close after the tab closed")
+	}
+
+	// When the channel closes, the listener saw every event that the target
+	// got. The subscription delivers them later, so it has no more.
+	seen := len(r.snapshot())
+	if seen == 0 {
+		t.Fatal("the listener saw no event")
+	}
+	for i := range seen {
+		select {
+		case <-events:
+		case <-time.After(10 * time.Second):
+			t.Fatalf("the subscription has %d events, and the listener saw %d", i, seen)
+		}
+	}
+	select {
+	case <-events:
+		t.Fatalf("the subscription has more events than the %d that the listener saw before the channel closed", seen)
+	case <-time.After(200 * time.Millisecond):
+	}
+
+	// A call after the detach gets a closed channel.
+	later, err := Detached(tabCtx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	select {
+	case <-later:
+	default:
+		t.Fatal("the channel of a call after the detach is not closed")
+	}
+}
+
+func TestDetachedInvalidContext(t *testing.T) {
+	t.Parallel()
+
+	if _, err := Detached(context.Background()); !errors.Is(err, ErrInvalidContext) {
+		t.Fatalf("want ErrInvalidContext, got %v", err)
 	}
 }
