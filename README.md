@@ -172,11 +172,16 @@ defer s.Stop()
 
 To draw one element and not the whole page, add
 `termcast.WithElement(chromedp.CSS("#chart"))` to the call of `termcast.Start`.
-The module `termcast` needs Go 1.25 or newer. The stream clears the terminal at
-each redraw. It holds the log lines while it
-runs, and prints them after the final frame. The type `termcast.Flags` adds the
-flags `-visible-on-terminal` and `-terminal-fps` to a program, as the programs
-in the [examples][chromedp-examples] repository have them.
+The module `termcast` needs Go 1.25 or newer. `Start` detects the graphics of
+the terminal. In kitty and Ghostty, the stream changes the picture with no
+flicker, and in other terminals it clears the terminal at each redraw. It holds
+the log lines while it runs, and prints them after the final frame.
+
+`termcast` has no flags. The program owns its flags and calls `termcast.Start`
+only when a flag asks for the stream. A nil stream is a stream that is off, so
+`defer s.Stop()` and `log.SetOutput(s.LogWriter())` work in either case. The
+programs in the [examples][chromedp-examples] repository define the flags
+`-visible-on-terminal` and `-terminal-fps` with a small helper of their own.
 
 ## Visible browser
 
