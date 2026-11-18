@@ -1,0 +1,25 @@
+<!doctype html>
+<html>
+<head>
+  <title>runtime leak</title>
+</head>
+<body>
+  <script>
+    // While the Runtime domain is enabled, Chrome formats the stack of an
+    // error that the page logs, and so it calls Error.prepareStackTrace.
+    // Nothing else in the page calls it for this error.
+    var detected = false;
+    var probe = new Error("probe");
+    Error.prepareStackTrace = function (err, frames) {
+      if (err === probe) {
+        detected = true;
+      }
+      return String(err);
+    };
+    console.debug(probe);
+    delete Error.prepareStackTrace;
+    window.pageGlobal = 1;
+    document.title = detected ? "detected" : "not detected";
+  </script>
+</body>
+</html>

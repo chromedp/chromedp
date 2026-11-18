@@ -97,6 +97,10 @@ const (
 	// to a command that is still pending when this happens.
 	ErrTargetDetached Error = "target detached"
 
+	// ErrRuntimeDisabled is the error of an action that needs the Runtime
+	// domain, on a context that has [WithRuntimeDisabled].
+	ErrRuntimeDisabled Error = "the Runtime domain is disabled, because the context has WithRuntimeDisabled"
+
 	// ErrNoTarget is the error of a func that reads the target of a context
 	// that has no target yet. The first Run opens the target.
 	ErrNoTarget Error = "context has no target"

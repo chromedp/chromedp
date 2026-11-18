@@ -69,6 +69,11 @@ func ExposeFunc[A, R any](name string, fn func(ctx context.Context, arg A) (R, e
 		if name == "" {
 			return errors.New("exposing a func: the name is empty")
 		}
+		// Chrome adds a binding to the page only when the Runtime domain is
+		// enabled, and it reports the calls with a Runtime event.
+		if t.noRuntime {
+			return fmt.Errorf("exposing func %q: %w", name, ErrRuntimeDisabled)
+		}
 		if strings.HasPrefix(name, exposePrefix) {
 			return fmt.Errorf("exposing func %q: the name starts with %q", name, exposePrefix)
 		}

@@ -895,6 +895,26 @@ if err := chromedp.Do(tabCtx); err != nil {
 
 The rules of `Listen` hold for the func. Give the option more than once to add several funcs. The [contexts](https://github.com/chromedp/examples/tree/main/contexts) example attaches to a tab with two iframes, and shows that a `Listen` call after the attach sees none of these events.
 
+### 31. Hide the protocol from the page
+
+While the Runtime domain is enabled, a page can tell that a program drives it, because Chrome prepares each argument of a console call for the protocol. `WithRuntimeDisabled` attaches without `Runtime.enable`.
+
+```go
+ctx, cancel := chromedp.NewContext(browserCtx, chromedp.WithRuntimeDisabled())
+defer cancel()
+
+// The queries run in an isolated world of each frame. It shares the DOM with
+// the page, but not its globals.
+text, err := chromedp.Run(ctx, chromedp.Text(chromedp.CSS("#title")))
+if err != nil {
+	panic(err)
+}
+// Evaluate runs in the main world of the page.
+n, err := chromedp.Run(ctx, chromedp.Evaluate[int](`window.count || 0`))
+```
+
+Chrome sends no Runtime events then. `Console` gets only the entries of the browser log, `Listen`, `Events` and `WithListener` get no Runtime events, and `ExposeFunc` returns an error that wraps `ErrRuntimeDisabled`. A predicate of `Poll` sees the DOM and not the globals of the page.
+
 ## What the new API removes
 
 The new API removes the interface `Action`, the type `ActionFunc`, the type `Tasks`, and the funcs `ListenTarget` and `ListenBrowser`. `Listen` and `ListenBrowser` bring back the ordered listener, with one more result, an error, and see example 28. It also removes the types `QueryAction`, `NavigateAction`, `EvaluateAction`, `CallAction`, `PollAction`, `MouseAction`, `KeyAction` and `EmulateAction`. Each type is now `Action[T]`. It also removes the six lookup options that start with `By`, except `ByFunc`. A selector type replaces each of them. `docs/MIGRATION.md` lists every change, with the old name and the new name.
@@ -1081,6 +1101,7 @@ func WithDetachOnCancel() ContextOption
 func WithErrorf(f func(string, ...any)) ContextOption
 func WithExistingBrowserContext(id cdp.BrowserContextID) ContextOption
 func WithListener(fn func(ev any)) ContextOption
+func WithRuntimeDisabled() ContextOption
 func WithLogf(f func(string, ...any)) ContextOption
 func WithNewBrowserContext(options ...CreateBrowserContextOption) ContextOption
 func WithNewWindow(newWindow bool) ContextOption
@@ -1274,6 +1295,7 @@ ErrInvalidBoxModel
 ErrChannelClosed
 ErrTargetDetached
 ErrNoTarget
+ErrRuntimeDisabled
 ErrInvalidTarget
 ErrPageLoad
 ErrNoDisplay

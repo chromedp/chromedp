@@ -5,6 +5,13 @@ crashes can resume. Update it when a piece of work starts or ends. Work that
 is known and not done goes in [`BACKLOG.md`](BACKLOG.md), and a decision goes
 in [`decisions/`](decisions/README.md).
 
+## Changes after v0.23.1
+
+These changes are not in a release yet. The first release that has them is v0.24.0. Each one has its own test.
+
+- Added: the context option `WithRuntimeDisabled` attaches without `Runtime.enable`, so that a page cannot tell from the console that the protocol drives it. The queries and `Poll` then run in an isolated world. `ExposeFunc` returns an error that wraps the new `ErrRuntimeDisabled`. Dušan Panić proposed it in the discussion 1647. The decision is in `decisions/2026-11-18-attach-with-the-runtime-domain-disabled.md`.
+- Fixed: a `Poll` in a frame took a read lock on `frameMu` twice, and hung when a frame event waited for the write lock between the two.
+
 ## Changes after v0.22.1
 
 These changes are not in a release yet. The first release that has them is v0.23.0. Each one has its own test.

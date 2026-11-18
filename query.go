@@ -257,7 +257,7 @@ func newSelector[S Selectable](sel S, opts []QueryOption) *Selector {
 // nil.
 func (s *Selector) run(ctx context.Context, t *Target, last func(context.Context, []*Node) error) error {
 	return retryWithSleep(ctx, s.retryInterval, func(ctx context.Context) (bool, error) {
-		frame, root, execCtx, ok := t.ensureFrame()
+		frame, root, execCtx, ok := t.ensureFrame(ctx)
 		if !ok {
 			return false, nil
 		}
@@ -266,10 +266,11 @@ func (s *Selector) run(ctx context.Context, t *Target, last func(context.Context
 		if fromNode == nil {
 			fromNode = root
 		} else {
-			frameID := t.enclosingFrame(fromNode)
-			t.frameMu.RLock()
-			execCtx = t.execContexts[frameID]
-			t.frameMu.RUnlock()
+			var err error
+			if execCtx, err = t.execContext(ctx, t.enclosingFrame(fromNode)); err != nil {
+				// The frame is not ready for a world yet, so try again.
+				return false, nil
+			}
 
 			// TODO: we probably want to use the nested frame
 			// instead. Note that util.go stores the nodes of the

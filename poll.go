@@ -30,7 +30,7 @@ func runPoll[T any](ctx context.Context, t *Target, p *pollTask) (T, error) {
 	)
 
 	for {
-		_, _, execCtx, ok = t.ensureFrame()
+		_, _, execCtx, ok = t.ensureFrame(ctx)
 		if ok {
 			break
 		}
@@ -40,10 +40,12 @@ func runPoll[T any](ctx context.Context, t *Target, p *pollTask) (T, error) {
 	}
 
 	if p.frame != nil {
-		t.frameMu.RLock()
-		frameID := t.enclosingFrame(p.frame)
-		execCtx = t.execContexts[frameID]
-		t.frameMu.RUnlock()
+		// enclosingFrame and execContext take frameMu themselves. A second
+		// read lock under a first one hangs when a writer waits between them.
+		var err error
+		if execCtx, err = t.execContext(ctx, t.enclosingFrame(p.frame)); err != nil {
+			return zero, err
+		}
 	}
 
 	args := make([]any, 0, len(p.args)+3)
